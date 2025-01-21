@@ -1,0 +1,68 @@
+{
+  "general": {
+    "css_selectors": {
+      "a[href*=dataset]": "dataset",
+      "a[href*=data]": "dataset",
+      "a[href*=supplementary]": "supplementary",
+      "a[href*=pdf]": "supplementary"
+    },
+    "xpaths": {
+    },
+    "bad_patterns": [
+    ],
+    "skip_llm_classification_patterns": {
+            "scholar.google.com": "Related Works"
+    }
+  },
+  "nature": {
+    "css_selectors": {
+      ".additional-information a": "supplementary",
+      "#data-availability-content a": "supplementary",
+      "#additional-information-section a": "supplementary",
+      "[data-title~=Supplementary] a": "supplementary",
+      "[data-title~=Data] a": "dataset"
+    },
+    "xpaths": {
+      "//h2[contains(text(), 'Source Data')]": "dataset"
+    }
+  },
+  "sciencedirect": {
+    "css_selectors": {
+      ".Appendices a": "dataset",
+      "#da0010 a": "dataset",
+      "#da0010 a": "dataset"
+    },
+    "xpaths": {
+      "//h2[contains(text(), 'Data and code availability')]": "dataset",
+      "//h4[contains(text(), 'Data and code availability')]": "dataset"
+    },
+    "bad_patterns": [
+      "/supporthub/"
+    ]
+  },
+  "thelancet": {
+    "css_selectors": {
+      ".article__sections .section-paragraph a[href*='dataset']": "dataset",
+      ".article__sections .refs .ref__title a[href*='dataset']": "dataset",
+      ".supplemental-information__item a": "supplementary"
+    }
+  },
+  "PMC": {
+    "css_selectors": {
+      "CHANGE HERE!!": "data availability"
+    },
+    "xpaths": {
+      "data_availability": {
+        "//section[h2[contains(text(), 'Data Availability')]]": "dataset",
+        "//section[h3[contains(text(), 'Data Availability')]]": "dataset",
+        "following-sibling::p[1]" : "dataset",
+        "//section[h2[contains(text(), 'Footnotes')]]": "dataset"
+      },
+      "supplementary_data": {
+        "//section[h2[contains(text(), 'Supplementary Material')]]": "supplementary",
+        "//section[h2[contains(text(), 'Extended Data')]]": "supplementary",
+        "//section[h3[contains(text(), 'Clinical Data')]]": "supplementary"
+      }
+    }
+  }
+}
