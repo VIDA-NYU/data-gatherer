@@ -1,0 +1,631 @@
+link,source_section,source_url,surrounding_text,download_link,dataset_identifier,data_repository,dataset_webpage,file_extension,content_type,title,id,description
+http://www.translational-genomics.uni-koeln.de/scientific-resources/,data_availability_elements,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4861069,,https://pmc.ncbi.nlm.nih.gov/articles/instance/4861069/bin/http://www.translational-genomics.uni-koeln.de/scientific-resources/,,,,,,,,
+https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE69091,data_availability_elements,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4861069,,https://pmc.ncbi.nlm.nih.gov/articles/instance/4861069/bin/https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE69091,,,,cgi?acc=GSE69091,,,,
+,,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4861069,,,EGAS00001000925,https://ega-archive.org/datasets/EGAS00001000925,na,,,,,
+,,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4861069,,,GSE69091,https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE69091,na,,,,,
+https://pmc.ncbi.nlm.nih.gov/articles/instance/4861069/bin/NIHMS782739-supplement-Tables.xlsx,supplementary_data_elements,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4861069,,https://pmc.ncbi.nlm.nih.gov/articles/instance/4861069/bin/https://pmc.ncbi.nlm.nih.gov/articles/instance/4861069/bin/NIHMS782739-supplement-Tables.xlsx,,,,xlsx,,,,
+https://www.ncbi.nlm.nih.gov/core/lw/2.0/html/tileshop_pmc/tileshop_pmc_inline.html?title=Click%20on%20image%20to%20zoom&p=PMC3&id=4861069_nihms782739f6.jpg,supplementary_data_elements,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4861069,,https://pmc.ncbi.nlm.nih.gov/articles/instance/4861069/bin/https://www.ncbi.nlm.nih.gov/core/lw/2.0/html/tileshop_pmc/tileshop_pmc_inline.html?title=Click%20on%20image%20to%20zoom&p=PMC3&id=4861069_nihms782739f6.jpg,,,,jpg,,,,
+https://pmc.ncbi.nlm.nih.gov/articles/PMC4861069/figure/F6/,supplementary_data_elements,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4861069,,https://pmc.ncbi.nlm.nih.gov/articles/instance/4861069/bin/https://pmc.ncbi.nlm.nih.gov/articles/PMC4861069/figure/F6/,,,,,,,,
+https://www.ncbi.nlm.nih.gov/core/lw/2.0/html/tileshop_pmc/tileshop_pmc_inline.html?title=Click%20on%20image%20to%20zoom&p=PMC3&id=4861069_nihms782739f7.jpg,supplementary_data_elements,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4861069,,https://pmc.ncbi.nlm.nih.gov/articles/instance/4861069/bin/https://www.ncbi.nlm.nih.gov/core/lw/2.0/html/tileshop_pmc/tileshop_pmc_inline.html?title=Click%20on%20image%20to%20zoom&p=PMC3&id=4861069_nihms782739f7.jpg,,,,jpg,,,,
+https://pmc.ncbi.nlm.nih.gov/articles/PMC4861069/figure/F7/,supplementary_data_elements,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4861069,,https://pmc.ncbi.nlm.nih.gov/articles/instance/4861069/bin/https://pmc.ncbi.nlm.nih.gov/articles/PMC4861069/figure/F7/,,,,,,,,
+https://www.ncbi.nlm.nih.gov/core/lw/2.0/html/tileshop_pmc/tileshop_pmc_inline.html?title=Click%20on%20image%20to%20zoom&p=PMC3&id=4861069_nihms782739f8.jpg,supplementary_data_elements,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4861069,,https://pmc.ncbi.nlm.nih.gov/articles/instance/4861069/bin/https://www.ncbi.nlm.nih.gov/core/lw/2.0/html/tileshop_pmc/tileshop_pmc_inline.html?title=Click%20on%20image%20to%20zoom&p=PMC3&id=4861069_nihms782739f8.jpg,,,,jpg,,,,
+https://pmc.ncbi.nlm.nih.gov/articles/PMC4861069/figure/F8/,supplementary_data_elements,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4861069,,https://pmc.ncbi.nlm.nih.gov/articles/instance/4861069/bin/https://pmc.ncbi.nlm.nih.gov/articles/PMC4861069/figure/F8/,,,,,,,,
+https://pmc.ncbi.nlm.nih.gov/articles/PMC4861069/#R11,supplementary_data_elements,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4861069,,https://pmc.ncbi.nlm.nih.gov/articles/instance/4861069/bin/https://pmc.ncbi.nlm.nih.gov/articles/PMC4861069/#R11,,,,,,,,
+https://www.ncbi.nlm.nih.gov/core/lw/2.0/html/tileshop_pmc/tileshop_pmc_inline.html?title=Click%20on%20image%20to%20zoom&p=PMC3&id=4861069_nihms782739f9.jpg,supplementary_data_elements,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4861069,,https://pmc.ncbi.nlm.nih.gov/articles/instance/4861069/bin/https://www.ncbi.nlm.nih.gov/core/lw/2.0/html/tileshop_pmc/tileshop_pmc_inline.html?title=Click%20on%20image%20to%20zoom&p=PMC3&id=4861069_nihms782739f9.jpg,,,,jpg,,,,
+https://pmc.ncbi.nlm.nih.gov/articles/PMC4861069/figure/F9/,supplementary_data_elements,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4861069,,https://pmc.ncbi.nlm.nih.gov/articles/instance/4861069/bin/https://pmc.ncbi.nlm.nih.gov/articles/PMC4861069/figure/F9/,,,,,,,,
+https://www.ncbi.nlm.nih.gov/core/lw/2.0/html/tileshop_pmc/tileshop_pmc_inline.html?title=Click%20on%20image%20to%20zoom&p=PMC3&id=4861069_nihms782739f10.jpg,supplementary_data_elements,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4861069,,https://pmc.ncbi.nlm.nih.gov/articles/instance/4861069/bin/https://www.ncbi.nlm.nih.gov/core/lw/2.0/html/tileshop_pmc/tileshop_pmc_inline.html?title=Click%20on%20image%20to%20zoom&p=PMC3&id=4861069_nihms782739f10.jpg,,,,jpg,,,,
+https://pmc.ncbi.nlm.nih.gov/articles/PMC4861069/figure/F10/,supplementary_data_elements,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4861069,,https://pmc.ncbi.nlm.nih.gov/articles/instance/4861069/bin/https://pmc.ncbi.nlm.nih.gov/articles/PMC4861069/figure/F10/,,,,,,,,
+https://www.ncbi.nlm.nih.gov/core/lw/2.0/html/tileshop_pmc/tileshop_pmc_inline.html?title=Click%20on%20image%20to%20zoom&p=PMC3&id=4861069_nihms782739f11.jpg,supplementary_data_elements,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4861069,,https://pmc.ncbi.nlm.nih.gov/articles/instance/4861069/bin/https://www.ncbi.nlm.nih.gov/core/lw/2.0/html/tileshop_pmc/tileshop_pmc_inline.html?title=Click%20on%20image%20to%20zoom&p=PMC3&id=4861069_nihms782739f11.jpg,,,,jpg,,,,
+https://pmc.ncbi.nlm.nih.gov/articles/PMC4861069/figure/F11/,supplementary_data_elements,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4861069,,https://pmc.ncbi.nlm.nih.gov/articles/instance/4861069/bin/https://pmc.ncbi.nlm.nih.gov/articles/PMC4861069/figure/F11/,,,,,,,,
+https://www.ncbi.nlm.nih.gov/protein/S02194,supplementary_data_elements,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4861069,,https://pmc.ncbi.nlm.nih.gov/articles/instance/4861069/bin/https://www.ncbi.nlm.nih.gov/protein/S02194,,,,,,,,
+https://www.ncbi.nlm.nih.gov/core/lw/2.0/html/tileshop_pmc/tileshop_pmc_inline.html?title=Click%20on%20image%20to%20zoom&p=PMC3&id=4861069_nihms782739f12.jpg,supplementary_data_elements,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4861069,,https://pmc.ncbi.nlm.nih.gov/articles/instance/4861069/bin/https://www.ncbi.nlm.nih.gov/core/lw/2.0/html/tileshop_pmc/tileshop_pmc_inline.html?title=Click%20on%20image%20to%20zoom&p=PMC3&id=4861069_nihms782739f12.jpg,,,,jpg,,,,
+https://pmc.ncbi.nlm.nih.gov/articles/PMC4861069/figure/F12/,supplementary_data_elements,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4861069,,https://pmc.ncbi.nlm.nih.gov/articles/instance/4861069/bin/https://pmc.ncbi.nlm.nih.gov/articles/PMC4861069/figure/F12/,,,,,,,,
+https://pmc.ncbi.nlm.nih.gov/articles/PMC4861069/#SD1,supplementary_data_elements,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4861069,,https://pmc.ncbi.nlm.nih.gov/articles/instance/4861069/bin/https://pmc.ncbi.nlm.nih.gov/articles/PMC4861069/#SD1,,,,,,,,
+https://www.ncbi.nlm.nih.gov/protein/S02297,supplementary_data_elements,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4861069,,https://pmc.ncbi.nlm.nih.gov/articles/instance/4861069/bin/https://www.ncbi.nlm.nih.gov/protein/S02297,,,,,,,,
+https://www.ncbi.nlm.nih.gov/core/lw/2.0/html/tileshop_pmc/tileshop_pmc_inline.html?title=Click%20on%20image%20to%20zoom&p=PMC3&id=4861069_nihms782739f13.jpg,supplementary_data_elements,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4861069,,https://pmc.ncbi.nlm.nih.gov/articles/instance/4861069/bin/https://www.ncbi.nlm.nih.gov/core/lw/2.0/html/tileshop_pmc/tileshop_pmc_inline.html?title=Click%20on%20image%20to%20zoom&p=PMC3&id=4861069_nihms782739f13.jpg,,,,jpg,,,,
+https://pmc.ncbi.nlm.nih.gov/articles/PMC4861069/figure/F13/,supplementary_data_elements,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4861069,,https://pmc.ncbi.nlm.nih.gov/articles/instance/4861069/bin/https://pmc.ncbi.nlm.nih.gov/articles/PMC4861069/figure/F13/,,,,,,,,
+https://www.ncbi.nlm.nih.gov/protein/S02243,supplementary_data_elements,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4861069,,https://pmc.ncbi.nlm.nih.gov/articles/instance/4861069/bin/https://www.ncbi.nlm.nih.gov/protein/S02243,,,,,,,,
+https://pmc.ncbi.nlm.nih.gov/articles/PMC4861069/#F1,supplementary_data_elements,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4861069,,https://pmc.ncbi.nlm.nih.gov/articles/instance/4861069/bin/https://pmc.ncbi.nlm.nih.gov/articles/PMC4861069/#F1,,,,,,,,
+https://www.ncbi.nlm.nih.gov/core/lw/2.0/html/tileshop_pmc/tileshop_pmc_inline.html?title=Click%20on%20image%20to%20zoom&p=PMC3&id=4861069_nihms782739f14.jpg,supplementary_data_elements,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4861069,,https://pmc.ncbi.nlm.nih.gov/articles/instance/4861069/bin/https://www.ncbi.nlm.nih.gov/core/lw/2.0/html/tileshop_pmc/tileshop_pmc_inline.html?title=Click%20on%20image%20to%20zoom&p=PMC3&id=4861069_nihms782739f14.jpg,,,,jpg,,,,
+https://pmc.ncbi.nlm.nih.gov/articles/PMC4861069/figure/F14/,supplementary_data_elements,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4861069,,https://pmc.ncbi.nlm.nih.gov/articles/instance/4861069/bin/https://pmc.ncbi.nlm.nih.gov/articles/PMC4861069/figure/F14/,,,,,,,,
+https://pmc.ncbi.nlm.nih.gov/articles/PMC4861069/#F4,supplementary_data_elements,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4861069,,https://pmc.ncbi.nlm.nih.gov/articles/instance/4861069/bin/https://pmc.ncbi.nlm.nih.gov/articles/PMC4861069/#F4,,,,,,,,
+https://www.ncbi.nlm.nih.gov/core/lw/2.0/html/tileshop_pmc/tileshop_pmc_inline.html?title=Click%20on%20image%20to%20zoom&p=PMC3&id=4861069_nihms782739f15.jpg,supplementary_data_elements,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4861069,,https://pmc.ncbi.nlm.nih.gov/articles/instance/4861069/bin/https://www.ncbi.nlm.nih.gov/core/lw/2.0/html/tileshop_pmc/tileshop_pmc_inline.html?title=Click%20on%20image%20to%20zoom&p=PMC3&id=4861069_nihms782739f15.jpg,,,,jpg,,,,
+https://pmc.ncbi.nlm.nih.gov/articles/PMC4861069/figure/F15/,supplementary_data_elements,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4861069,,https://pmc.ncbi.nlm.nih.gov/articles/instance/4861069/bin/https://pmc.ncbi.nlm.nih.gov/articles/PMC4861069/figure/F15/,,,,,,,,
+https://ega-archive.org/studies/EGAS50000000169,data availability,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC10972747,,,EGAS50000000169,https://ega-archive.org/studies/EGAS50000000169,na,,data_link,,,
+http://www.uni-koeln.de/med-fak/peiflyne/peiflyne.tgz,data availability,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC10972747,,,peiflyne,http://www.uni-koeln.de/med-fak/peiflyne/peiflyne.tgz,na,,data_link,,,
+41586_2024_7177_MOESM1_ESM.pdf,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC10972747,Supplementary Information Clinical course and tumour phylogeny determined for 65 patients with SCLC.,https://pmc.ncbi.nlm.nih.gov/articles/instance/10972747/bin/41586_2024_7177_MOESM1_ESM.pdf,,,,pdf,local-data,No Title,MOESM1,Clinical course and tumour phylogeny determined for 65 patients with SCLC.
+41586_2024_7177_MOESM2_ESM.pdf,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC10972747,Reporting Summary,https://pmc.ncbi.nlm.nih.gov/articles/instance/10972747/bin/41586_2024_7177_MOESM2_ESM.pdf,,,,pdf,local-data,No Title,MOESM2,Reporting Summary
+41586_2024_7177_MOESM3_ESM.pdf,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC10972747,Supplementary Fig. 1 Uncropped immunoblots from Extended Data Fig. 10a.,https://pmc.ncbi.nlm.nih.gov/articles/instance/10972747/bin/41586_2024_7177_MOESM3_ESM.pdf,,,,pdf,local-data,No Title,MOESM3,Uncropped immunoblots from Extended Data Fig. 10a.
+41586_2024_7177_MOESM4_ESM.xlsx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC10972747,Supplementary Tables Supplementary Tables 1–12.,https://pmc.ncbi.nlm.nih.gov/articles/instance/10972747/bin/41586_2024_7177_MOESM4_ESM.xlsx,,,,xlsx,local-data,No Title,MOESM4,Supplementary Tables 1–12.
+https://github.com/MD-Anderson-Bioinformatics/SCLC_Subtyping,data availability,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC10982990,,,SCLC_Subtyping,https://github.com/MD-Anderson-Bioinformatics/SCLC_Subtyping,na,,data_link,,,
+https://www.ncbi.nlm.nih.gov/gap/,data availability,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC10982990,,,phs003416.v1.p1,https://www.ncbi.nlm.nih.gov/gap/,na,,data_link,,,
+https://www.ncbi.nlm.nih.gov/pmc/articles/PMC10982990#SD1,data availability,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC10982990,,,GSE241673,https://www.ncbi.nlm.nih.gov/geo/,na,,data_link,,,
+https://pmc.ncbi.nlm.nih.gov/articles/instance/11178430/bin/EMS195999-supplement-Data_S1.csv,supplementary_data_elements,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC10982990,,https://pmc.ncbi.nlm.nih.gov/articles/instance/10982990/bin/https://pmc.ncbi.nlm.nih.gov/articles/instance/11178430/bin/EMS195999-supplement-Data_S1.csv,,,,csv,,,,
+https://pmc.ncbi.nlm.nih.gov/articles/instance/11178430/bin/EMS195999-supplement-Data_S2.csv,supplementary_data_elements,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC10982990,,https://pmc.ncbi.nlm.nih.gov/articles/instance/10982990/bin/https://pmc.ncbi.nlm.nih.gov/articles/instance/11178430/bin/EMS195999-supplement-Data_S2.csv,,,,csv,,,,
+https://pmc.ncbi.nlm.nih.gov/articles/instance/11178430/bin/EMS195999-supplement-Figure_S1.pdf,supplementary_data_elements,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC10982990,,https://pmc.ncbi.nlm.nih.gov/articles/instance/10982990/bin/https://pmc.ncbi.nlm.nih.gov/articles/instance/11178430/bin/EMS195999-supplement-Figure_S1.pdf,,,,pdf,,,,
+https://pmc.ncbi.nlm.nih.gov/articles/instance/11178430/bin/EMS195999-supplement-Table_S1.xlsx,supplementary_data_elements,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC10982990,,https://pmc.ncbi.nlm.nih.gov/articles/instance/10982990/bin/https://pmc.ncbi.nlm.nih.gov/articles/instance/11178430/bin/EMS195999-supplement-Table_S1.xlsx,,,,xlsx,,,,
+https://pmc.ncbi.nlm.nih.gov/articles/instance/11178430/bin/EMS195999-supplement-Table_S2.xlsx,supplementary_data_elements,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC10982990,,https://pmc.ncbi.nlm.nih.gov/articles/instance/10982990/bin/https://pmc.ncbi.nlm.nih.gov/articles/instance/11178430/bin/EMS195999-supplement-Table_S2.xlsx,,,,xlsx,,,,
+https://pmc.ncbi.nlm.nih.gov/articles/instance/11178430/bin/EMS195999-supplement-Table_S3.xlsx,supplementary_data_elements,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC10982990,,https://pmc.ncbi.nlm.nih.gov/articles/instance/10982990/bin/https://pmc.ncbi.nlm.nih.gov/articles/instance/11178430/bin/EMS195999-supplement-Table_S3.xlsx,,,,xlsx,,,,
+EMS195999-supplement-Data_S1.csv,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC10982990,"Data S1 
+         
+           RNA-seq data of cohort 1, related to Figure 1.",https://pmc.ncbi.nlm.nih.gov/articles/instance/10982990/bin/EMS195999-supplement-Data_S1.csv,,,,csv,local-data,"RNA-seq data of cohort 1, related to Figure 1.",SD1,No description
+EMS195999-supplement-Data_S2.csv,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC10982990,"Data S2 
+         
+           RNA-seq data of cohort 2, related to Figure 2.",https://pmc.ncbi.nlm.nih.gov/articles/instance/10982990/bin/EMS195999-supplement-Data_S2.csv,,,,csv,local-data,"RNA-seq data of cohort 2, related to Figure 2.",SD2,No description
+EMS195999-supplement-Figure_S1.pdf,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC10982990,Figure S1,https://pmc.ncbi.nlm.nih.gov/articles/instance/10982990/bin/EMS195999-supplement-Figure_S1.pdf,,,,pdf,local-data,No Title,SD3,No description
+EMS195999-supplement-Table_S1.xlsx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC10982990,Table S1,https://pmc.ncbi.nlm.nih.gov/articles/instance/10982990/bin/EMS195999-supplement-Table_S1.xlsx,,,,xlsx,local-data,No Title,SD4,No description
+EMS195999-supplement-Table_S2.xlsx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC10982990,Table S2,https://pmc.ncbi.nlm.nih.gov/articles/instance/10982990/bin/EMS195999-supplement-Table_S2.xlsx,,,,xlsx,local-data,No Title,SD5,No description
+EMS195999-supplement-Table_S3.xlsx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC10982990,Table S3,https://pmc.ncbi.nlm.nih.gov/articles/instance/10982990/bin/EMS195999-supplement-Table_S3.xlsx,,,,xlsx,local-data,No Title,SD6,No description
+http://github.com/dpeerlab,data_availability_elements,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8628860,,https://pmc.ncbi.nlm.nih.gov/articles/instance/8628860/bin/http://github.com/dpeerlab,,,,,,,,
+https://mskcc.ionpath.com/tracker,data_availability_elements,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8628860,,https://pmc.ncbi.nlm.nih.gov/articles/instance/8628860/bin/https://mskcc.ionpath.com/tracker,,,,,,,,
+,,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8628860,,,n/a,https://mskcc.ionpath.com/tracker,na,,,,,
+https://pmc.ncbi.nlm.nih.gov/articles/instance/8628860/bin/NIHMS1754019-supplement-1.pdf,supplementary_data_elements,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8628860,,https://pmc.ncbi.nlm.nih.gov/articles/instance/8628860/bin/https://pmc.ncbi.nlm.nih.gov/articles/instance/8628860/bin/NIHMS1754019-supplement-1.pdf,,,,pdf,,,,
+https://pmc.ncbi.nlm.nih.gov/articles/PMC8628860/#F1,supplementary_data_elements,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8628860,,https://pmc.ncbi.nlm.nih.gov/articles/instance/8628860/bin/https://pmc.ncbi.nlm.nih.gov/articles/PMC8628860/#F1,,,,,,,,
+https://pmc.ncbi.nlm.nih.gov/articles/PMC8628860/#SD1,supplementary_data_elements,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8628860,,https://pmc.ncbi.nlm.nih.gov/articles/instance/8628860/bin/https://pmc.ncbi.nlm.nih.gov/articles/PMC8628860/#SD1,,,,,,,,
+https://pmc.ncbi.nlm.nih.gov/articles/instance/8628860/bin/NIHMS1754019-supplement-2.xlsx,supplementary_data_elements,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8628860,,https://pmc.ncbi.nlm.nih.gov/articles/instance/8628860/bin/https://pmc.ncbi.nlm.nih.gov/articles/instance/8628860/bin/NIHMS1754019-supplement-2.xlsx,,,,xlsx,,,,
+https://pmc.ncbi.nlm.nih.gov/articles/instance/8628860/bin/NIHMS1754019-supplement-3.xlsx,supplementary_data_elements,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8628860,,https://pmc.ncbi.nlm.nih.gov/articles/instance/8628860/bin/https://pmc.ncbi.nlm.nih.gov/articles/instance/8628860/bin/NIHMS1754019-supplement-3.xlsx,,,,xlsx,,,,
+https://pmc.ncbi.nlm.nih.gov/articles/PMC8628860/#F2,supplementary_data_elements,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8628860,,https://pmc.ncbi.nlm.nih.gov/articles/instance/8628860/bin/https://pmc.ncbi.nlm.nih.gov/articles/PMC8628860/#F2,,,,,,,,
+https://pmc.ncbi.nlm.nih.gov/articles/instance/8628860/bin/NIHMS1754019-supplement-4.xlsx,supplementary_data_elements,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8628860,,https://pmc.ncbi.nlm.nih.gov/articles/instance/8628860/bin/https://pmc.ncbi.nlm.nih.gov/articles/instance/8628860/bin/NIHMS1754019-supplement-4.xlsx,,,,xlsx,,,,
+https://pmc.ncbi.nlm.nih.gov/articles/instance/8628860/bin/NIHMS1754019-supplement-5.xlsx,supplementary_data_elements,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8628860,,https://pmc.ncbi.nlm.nih.gov/articles/instance/8628860/bin/https://pmc.ncbi.nlm.nih.gov/articles/instance/8628860/bin/NIHMS1754019-supplement-5.xlsx,,,,xlsx,,,,
+https://pmc.ncbi.nlm.nih.gov/articles/instance/8628860/bin/NIHMS1754019-supplement-6.xlsx,supplementary_data_elements,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8628860,,https://pmc.ncbi.nlm.nih.gov/articles/instance/8628860/bin/https://pmc.ncbi.nlm.nih.gov/articles/instance/8628860/bin/NIHMS1754019-supplement-6.xlsx,,,,xlsx,,,,
+https://pmc.ncbi.nlm.nih.gov/articles/instance/8628860/bin/NIHMS1754019-supplement-7.xlsx,supplementary_data_elements,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8628860,,https://pmc.ncbi.nlm.nih.gov/articles/instance/8628860/bin/https://pmc.ncbi.nlm.nih.gov/articles/instance/8628860/bin/NIHMS1754019-supplement-7.xlsx,,,,xlsx,,,,
+https://pmc.ncbi.nlm.nih.gov/articles/instance/8628860/bin/NIHMS1754019-supplement-8.xlsx,supplementary_data_elements,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8628860,,https://pmc.ncbi.nlm.nih.gov/articles/instance/8628860/bin/https://pmc.ncbi.nlm.nih.gov/articles/instance/8628860/bin/NIHMS1754019-supplement-8.xlsx,,,,xlsx,,,,
+https://pmc.ncbi.nlm.nih.gov/articles/instance/8628860/bin/NIHMS1754019-supplement-9.xlsx,supplementary_data_elements,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8628860,,https://pmc.ncbi.nlm.nih.gov/articles/instance/8628860/bin/https://pmc.ncbi.nlm.nih.gov/articles/instance/8628860/bin/NIHMS1754019-supplement-9.xlsx,,,,xlsx,,,,
+https://pmc.ncbi.nlm.nih.gov/articles/PMC8628860/#F3,supplementary_data_elements,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8628860,,https://pmc.ncbi.nlm.nih.gov/articles/instance/8628860/bin/https://pmc.ncbi.nlm.nih.gov/articles/PMC8628860/#F3,,,,,,,,
+https://pmc.ncbi.nlm.nih.gov/articles/instance/8628860/bin/NIHMS1754019-supplement-10.xlsx,supplementary_data_elements,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8628860,,https://pmc.ncbi.nlm.nih.gov/articles/instance/8628860/bin/https://pmc.ncbi.nlm.nih.gov/articles/instance/8628860/bin/NIHMS1754019-supplement-10.xlsx,,,,xlsx,,,,
+https://pmc.ncbi.nlm.nih.gov/articles/instance/8628860/bin/NIHMS1754019-supplement-11.xlsx,supplementary_data_elements,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8628860,,https://pmc.ncbi.nlm.nih.gov/articles/instance/8628860/bin/https://pmc.ncbi.nlm.nih.gov/articles/instance/8628860/bin/NIHMS1754019-supplement-11.xlsx,,,,xlsx,,,,
+https://pmc.ncbi.nlm.nih.gov/articles/instance/8628860/bin/NIHMS1754019-supplement-12.xlsx,supplementary_data_elements,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8628860,,https://pmc.ncbi.nlm.nih.gov/articles/instance/8628860/bin/https://pmc.ncbi.nlm.nih.gov/articles/instance/8628860/bin/NIHMS1754019-supplement-12.xlsx,,,,xlsx,,,,
+https://pmc.ncbi.nlm.nih.gov/articles/instance/8628860/bin/NIHMS1754019-supplement-13.xlsx,supplementary_data_elements,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8628860,,https://pmc.ncbi.nlm.nih.gov/articles/instance/8628860/bin/https://pmc.ncbi.nlm.nih.gov/articles/instance/8628860/bin/NIHMS1754019-supplement-13.xlsx,,,,xlsx,,,,
+https://pmc.ncbi.nlm.nih.gov/articles/instance/8628860/bin/NIHMS1754019-supplement-14.xlsx,supplementary_data_elements,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8628860,,https://pmc.ncbi.nlm.nih.gov/articles/instance/8628860/bin/https://pmc.ncbi.nlm.nih.gov/articles/instance/8628860/bin/NIHMS1754019-supplement-14.xlsx,,,,xlsx,,,,
+https://pmc.ncbi.nlm.nih.gov/articles/PMC8628860/#F4,supplementary_data_elements,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8628860,,https://pmc.ncbi.nlm.nih.gov/articles/instance/8628860/bin/https://pmc.ncbi.nlm.nih.gov/articles/PMC8628860/#F4,,,,,,,,
+https://pmc.ncbi.nlm.nih.gov/articles/PMC8628860/#F5,supplementary_data_elements,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8628860,,https://pmc.ncbi.nlm.nih.gov/articles/instance/8628860/bin/https://pmc.ncbi.nlm.nih.gov/articles/PMC8628860/#F5,,,,,,,,
+https://pmc.ncbi.nlm.nih.gov/articles/PMC8628860/#F7,supplementary_data_elements,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8628860,,https://pmc.ncbi.nlm.nih.gov/articles/instance/8628860/bin/https://pmc.ncbi.nlm.nih.gov/articles/PMC8628860/#F7,,,,,,,,
+https://pmc.ncbi.nlm.nih.gov/articles/instance/8628860/bin/NIHMS1754019-supplement-15.xlsx,supplementary_data_elements,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8628860,,https://pmc.ncbi.nlm.nih.gov/articles/instance/8628860/bin/https://pmc.ncbi.nlm.nih.gov/articles/instance/8628860/bin/NIHMS1754019-supplement-15.xlsx,,,,xlsx,,,,
+https://pmc.ncbi.nlm.nih.gov/articles/instance/8628860/bin/NIHMS1754019-supplement-16.xlsx,supplementary_data_elements,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8628860,,https://pmc.ncbi.nlm.nih.gov/articles/instance/8628860/bin/https://pmc.ncbi.nlm.nih.gov/articles/instance/8628860/bin/NIHMS1754019-supplement-16.xlsx,,,,xlsx,,,,
+https://pmc.ncbi.nlm.nih.gov/articles/instance/8628860/bin/NIHMS1754019-supplement-17.xlsx,supplementary_data_elements,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8628860,,https://pmc.ncbi.nlm.nih.gov/articles/instance/8628860/bin/https://pmc.ncbi.nlm.nih.gov/articles/instance/8628860/bin/NIHMS1754019-supplement-17.xlsx,,,,xlsx,,,,
+https://pmc.ncbi.nlm.nih.gov/articles/instance/8628860/bin/NIHMS1754019-supplement-18.xlsx,supplementary_data_elements,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8628860,,https://pmc.ncbi.nlm.nih.gov/articles/instance/8628860/bin/https://pmc.ncbi.nlm.nih.gov/articles/instance/8628860/bin/NIHMS1754019-supplement-18.xlsx,,,,xlsx,,,,
+https://pmc.ncbi.nlm.nih.gov/articles/instance/8628860/bin/NIHMS1754019-supplement-19.xlsx,supplementary_data_elements,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8628860,,https://pmc.ncbi.nlm.nih.gov/articles/instance/8628860/bin/https://pmc.ncbi.nlm.nih.gov/articles/instance/8628860/bin/NIHMS1754019-supplement-19.xlsx,,,,xlsx,,,,
+https://pmc.ncbi.nlm.nih.gov/articles/instance/8628860/bin/NIHMS1754019-supplement-20.xlsx,supplementary_data_elements,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8628860,,https://pmc.ncbi.nlm.nih.gov/articles/instance/8628860/bin/https://pmc.ncbi.nlm.nih.gov/articles/instance/8628860/bin/NIHMS1754019-supplement-20.xlsx,,,,xlsx,,,,
+https://pmc.ncbi.nlm.nih.gov/articles/PMC8628860/#R37,supplementary_data_elements,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8628860,,https://pmc.ncbi.nlm.nih.gov/articles/instance/8628860/bin/https://pmc.ncbi.nlm.nih.gov/articles/PMC8628860/#R37,,,,,,,,
+https://pmc.ncbi.nlm.nih.gov/articles/PMC8628860/#R77,supplementary_data_elements,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8628860,,https://pmc.ncbi.nlm.nih.gov/articles/instance/8628860/bin/https://pmc.ncbi.nlm.nih.gov/articles/PMC8628860/#R77,,,,,,,,
+https://pmc.ncbi.nlm.nih.gov/articles/PMC8628860/#S14,supplementary_data_elements,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8628860,,https://pmc.ncbi.nlm.nih.gov/articles/instance/8628860/bin/https://pmc.ncbi.nlm.nih.gov/articles/PMC8628860/#S14,,,,,,,,
+https://pmc.ncbi.nlm.nih.gov/articles/instance/8628860/bin/NIHMS1754019-supplement-21.xlsx,supplementary_data_elements,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8628860,,https://pmc.ncbi.nlm.nih.gov/articles/instance/8628860/bin/https://pmc.ncbi.nlm.nih.gov/articles/instance/8628860/bin/NIHMS1754019-supplement-21.xlsx,,,,xlsx,,,,
+https://pmc.ncbi.nlm.nih.gov/articles/instance/8628860/bin/NIHMS1754019-supplement-22.xlsx,supplementary_data_elements,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8628860,,https://pmc.ncbi.nlm.nih.gov/articles/instance/8628860/bin/https://pmc.ncbi.nlm.nih.gov/articles/instance/8628860/bin/NIHMS1754019-supplement-22.xlsx,,,,xlsx,,,,
+https://pmc.ncbi.nlm.nih.gov/articles/instance/8628860/bin/NIHMS1754019-supplement-23.xlsx,supplementary_data_elements,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8628860,,https://pmc.ncbi.nlm.nih.gov/articles/instance/8628860/bin/https://pmc.ncbi.nlm.nih.gov/articles/instance/8628860/bin/NIHMS1754019-supplement-23.xlsx,,,,xlsx,,,,
+https://pmc.ncbi.nlm.nih.gov/articles/instance/8628860/bin/NIHMS1754019-supplement-24.xlsx,supplementary_data_elements,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8628860,,https://pmc.ncbi.nlm.nih.gov/articles/instance/8628860/bin/https://pmc.ncbi.nlm.nih.gov/articles/instance/8628860/bin/NIHMS1754019-supplement-24.xlsx,,,,xlsx,,,,
+https://pmc.ncbi.nlm.nih.gov/articles/instance/8628860/bin/NIHMS1754019-supplement-25.xlsx,supplementary_data_elements,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8628860,,https://pmc.ncbi.nlm.nih.gov/articles/instance/8628860/bin/https://pmc.ncbi.nlm.nih.gov/articles/instance/8628860/bin/NIHMS1754019-supplement-25.xlsx,,,,xlsx,,,,
+https://pmc.ncbi.nlm.nih.gov/articles/instance/8628860/bin/NIHMS1754019-supplement-26.gmt,supplementary_data_elements,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8628860,,https://pmc.ncbi.nlm.nih.gov/articles/instance/8628860/bin/https://pmc.ncbi.nlm.nih.gov/articles/instance/8628860/bin/NIHMS1754019-supplement-26.gmt,,,,gmt,,,,
+https://pmc.ncbi.nlm.nih.gov/articles/instance/8628860/bin/NIHMS1754019-supplement-27.gmt,supplementary_data_elements,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8628860,,https://pmc.ncbi.nlm.nih.gov/articles/instance/8628860/bin/https://pmc.ncbi.nlm.nih.gov/articles/instance/8628860/bin/NIHMS1754019-supplement-27.gmt,,,,gmt,,,,
+,,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3557461,,,EGAS00001000334,www.ebi.ac.uk,https://www.ebi.ac.uk/pride/archive/projects/EGAS00001000334,,,,,
+https://pmc.ncbi.nlm.nih.gov/articles/instance/3557461/bin/NIHMS426385-supplement-Suppl_Figures.pdf,supplementary_data_elements,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3557461,,https://pmc.ncbi.nlm.nih.gov/articles/instance/3557461/bin/https://pmc.ncbi.nlm.nih.gov/articles/instance/3557461/bin/NIHMS426385-supplement-Suppl_Figures.pdf,,,,pdf,,,,
+https://pmc.ncbi.nlm.nih.gov/articles/instance/3557461/bin/NIHMS426385-supplement-Suppl_Tables.xls,supplementary_data_elements,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3557461,,https://pmc.ncbi.nlm.nih.gov/articles/instance/3557461/bin/https://pmc.ncbi.nlm.nih.gov/articles/instance/3557461/bin/NIHMS426385-supplement-Suppl_Tables.xls,,,,xls,,,,
+,,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5313262,,,phs001249.v1.p1,n/a,na,,,,,
+https://pmc.ncbi.nlm.nih.gov/articles/instance/5313262/bin/NIHMS845798-supplement-1.pdf,supplementary_data_elements,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5313262,,https://pmc.ncbi.nlm.nih.gov/articles/instance/5313262/bin/https://pmc.ncbi.nlm.nih.gov/articles/instance/5313262/bin/NIHMS845798-supplement-1.pdf,,,,pdf,,,,
+https://pmc.ncbi.nlm.nih.gov/articles/instance/5313262/bin/NIHMS845798-supplement-2.xlsx,supplementary_data_elements,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5313262,,https://pmc.ncbi.nlm.nih.gov/articles/instance/5313262/bin/https://pmc.ncbi.nlm.nih.gov/articles/instance/5313262/bin/NIHMS845798-supplement-2.xlsx,,,,xlsx,,,,
+http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE60052,data_availability_elements,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4836692,,https://pmc.ncbi.nlm.nih.gov/articles/instance/4836692/bin/http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE60052,,,,cgi?acc=GSE60052,,,,
+http://www.ncbi.nlm.nih.gov/projects/gap/cgi-bin/study.cgi?study_id=phs001083.v1.p1,data_availability_elements,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4836692,,https://pmc.ncbi.nlm.nih.gov/articles/instance/4836692/bin/http://www.ncbi.nlm.nih.gov/projects/gap/cgi-bin/study.cgi?study_id=phs001083.v1.p1,,,,p1,,,,
+,,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4836692,,,GSE60052,http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE60052,na,,,,,
+,,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4836692,,,phs001083.v1.p1,http://www.ncbi.nlm.nih.gov/projects/gap/cgi-bin/study.cgi?study_id=phs001083.v1.p1,na,,,,,
+pgen.1005895.s001.docx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4836692,"S1 Fig 
+         
+           Genomic alterations in Chinese SCLC patients. 
+           Tumor samples (n = 99) are ordered from left to right based on SRSF1 copy number gains. Mutations and DNA copy number alterations of key SCLC oncogenic genes are indicated for each sample according to the color legend below the figure. The genomic alteration frequencies for each candidate gene are displayed on the left. 
+           (DOCX) 
+         
+         
+           
+             Click here for additional data file.",https://pmc.ncbi.nlm.nih.gov/articles/instance/4836692/bin/pgen.1005895.s001.docx,,,,docx,local-data,Genomic alterations in Chinese SCLC patients.,pgen.1005895.s001,Tumor samples (n = 99) are ordered from left to right based on SRSF1 copy number gains. Mutations and DNA copy number alterations of key SCLC oncogenic genes are indicated for each sample according to the color legend below the figure. The genomic alteration frequencies for each candidate gene are displayed on the left.
+pgen.1005895.s002.docx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4836692,"S2 Fig 
+         
+           SRSF1 gene copy number detection by FISH. 
+           Representative images show a) SRSF1 normal and b) SRSF1 copy number gain. Red signals represent SRSF1 gene and green signals represent of CEP17; c) SRSF1 CNV SCLC patient prevalence as well as other CNV segments across chromosome 17. Red lines indicate CN gains and green lines indicate CN losses. 
+           (DOCX) 
+         
+         
+           
+             Click here for additional data file.",https://pmc.ncbi.nlm.nih.gov/articles/instance/4836692/bin/pgen.1005895.s002.docx,,,,docx,local-data,SRSF1 gene copy number detection by FISH.,pgen.1005895.s002,Representative images show a) SRSF1 normal and b) SRSF1 copy number gain. Red signals represent SRSF1 gene and green signals represent of CEP17; c) SRSF1 CNV SCLC patient prevalence as well as other CNV segments across chromosome 17. Red lines indicate CN gains and green lines indicate CN losses.
+pgen.1005895.s003.docx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4836692,"S3 Fig 
+         
+           KM curves from indications in TCGA where at least 3 patients harbored a CN gain of SRSF1. 
+           Plots were generated in OncoLand (OmicSoft Corp; Cary, NC). 
+           (DOCX) 
+         
+         
+           
+             Click here for additional data file.",https://pmc.ncbi.nlm.nih.gov/articles/instance/4836692/bin/pgen.1005895.s003.docx,,,,docx,local-data,KM curves from indications in TCGA where at least 3 patients harbored a CN gain of SRSF1.,pgen.1005895.s003,"Plots were generated in OncoLand (OmicSoft Corp; Cary, NC)."
+pgen.1005895.s004.docx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4836692,"S4 Fig 
+         
+           (a): TaqMan assays of SRSF1 DNA CNs in 13 SCLC cell lines. (b): Western blots of SRSF1 show protein expression levels in SCLC cell lines. (c):NCI-H82, SHP-77 and NCI-H1048 were transfected with non-targeting control or SRSF1-directed siRNAs for 48 hrs, then treated with cisplatin (2.5ug/ml) or topotecan (2.5ug/ml) for 24 hrs. Cell growth and Caspase-3/7 activities were assessed and normalized against ctrl siRNA-transfected cells as 100% control. 
+           (DOCX) 
+         
+         
+           
+             Click here for additional data file.",https://pmc.ncbi.nlm.nih.gov/articles/instance/4836692/bin/pgen.1005895.s004.docx,,,,docx,local-data,No Title,pgen.1005895.s004,"(a): TaqMan assays of SRSF1 DNA CNs in 13 SCLC cell lines. (b): Western blots of SRSF1 show protein expression levels in SCLC cell lines. (c):NCI-H82, SHP-77 and NCI-H1048 were transfected with non-targeting control or SRSF1-directed siRNAs for 48 hrs, then treated with cisplatin (2.5ug/ml) or topotecan (2.5ug/ml) for 24 hrs. Cell growth and Caspase-3/7 activities were assessed and normalized against ctrl siRNA-transfected cells as 100% control."
+pgen.1005895.s005.docx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4836692,"S5 Fig 
+         
+           The association of SRSF1 gene expression with BIM gene expression in Chinese SCLC patients (N = 49). 
+           The correlation between SRSF1 and BIM gene expression is significant, which likely confirms SRSF1 over expression promotes alternative splicing of BIM. 
+           (DOCX) 
+         
+         
+           
+             Click here for additional data file.",https://pmc.ncbi.nlm.nih.gov/articles/instance/4836692/bin/pgen.1005895.s005.docx,,,,docx,local-data,The association of SRSF1 gene expression with BIM gene expression in Chinese SCLC patients (N = 49).,pgen.1005895.s005,"The correlation between SRSF1 and BIM gene expression is significant, which likely confirms SRSF1 over expression promotes alternative splicing of BIM."
+pgen.1005895.s006.docx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4836692,"S6 Fig 
+         
+           NCI-82, SHP-77 and NIH-H1048 cells were transfected with non-targeting and SRSF1 siRNAs respectively for 48 hrs and then seeded in sphere forming media and allowed to grow for 4 days. 
+           (a): Phase-contrast images of the sphere formation under each condition were captured. (b): viable cell mass quantitated by CTG assay. (c): Reconstitution of SRSF1 expression using a siRNA-resistant Flag-tagged SRSF1 expression construct was carried out in SRSF1 siRNA transfected NCI-H82 cells. Impact on sphere growth rate was assessed by CTG assay, and successful SRSF1 protein re-expression was confirmed by WB using either anti-SRSF1 antibody or anti-Flag antibody. (d): Clonogenic assays of DMS-114, NCI-82, SHP-77 and NIH-H1049. Cells were transfected with siRNAs for 48 hrs and then seeded in the methylcellulose medium for 7~14 days, colonies with more than 40 cells per colony were counted. 
+           (DOCX) 
+         
+         
+           
+             Click here for additional data file.",https://pmc.ncbi.nlm.nih.gov/articles/instance/4836692/bin/pgen.1005895.s006.docx,,,,docx,local-data,"NCI-82, SHP-77 and NIH-H1048 cells were transfected with non-targeting and SRSF1 siRNAs respectively for 48 hrs and then seeded in sphere forming media and allowed to grow for 4 days.",pgen.1005895.s006,"(a): Phase-contrast images of the sphere formation under each condition were captured. (b): viable cell mass quantitated by CTG assay. (c): Reconstitution of SRSF1 expression using a siRNA-resistant Flag-tagged SRSF1 expression construct was carried out in SRSF1 siRNA transfected NCI-H82 cells. Impact on sphere growth rate was assessed by CTG assay, and successful SRSF1 protein re-expression was confirmed by WB using either anti-SRSF1 antibody or anti-Flag antibody. (d): Clonogenic assays of DMS-114, NCI-82, SHP-77 and NIH-H1049. Cells were transfected with siRNAs for 48 hrs and then seeded in the methylcellulose medium for 7~14 days, colonies with more than 40 cells per colony were counted."
+pgen.1005895.s007.docx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4836692,"S7 Fig 
+         
+           (a)SHP-77 cells transfected with non-targeting control siRNA or SRSF1 siRNA were implanted into immunocompromised mice and tumor formation rates were monitored and measured. (b): SHP-77 cells were transfected with control or SRSF1 siRNA and then treated with topotecan or Cisplatin for the indicated times. SRSF1, phosphor-H2AX and phosphor-Chk2 were probed with their corresponding antibodies. 
+           (DOCX) 
+         
+         
+           
+             Click here for additional data file.",https://pmc.ncbi.nlm.nih.gov/articles/instance/4836692/bin/pgen.1005895.s007.docx,,,,docx,local-data,No Title,pgen.1005895.s007,"(a)SHP-77 cells transfected with non-targeting control siRNA or SRSF1 siRNA were implanted into immunocompromised mice and tumor formation rates were monitored and measured. (b): SHP-77 cells were transfected with control or SRSF1 siRNA and then treated with topotecan or Cisplatin for the indicated times. SRSF1, phosphor-H2AX and phosphor-Chk2 were probed with their corresponding antibodies."
+pgen.1005895.s008.docx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4836692,"S8 Fig 
+         
+           The association of SRSF1 gene expression with early stage and late stage (ES) SCLC patients in both our Chinese SCLC study (left figure) and George et al, study (right figure). 
+           P-value is calculated using Welch’s modified t-test. 
+           (DOCX) 
+         
+         
+           
+             Click here for additional data file.",https://pmc.ncbi.nlm.nih.gov/articles/instance/4836692/bin/pgen.1005895.s008.docx,,,,docx,local-data,"The association of SRSF1 gene expression with early stage and late stage (ES) SCLC patients in both our Chinese SCLC study (left figure) and George et al, study (right figure).",pgen.1005895.s008,P-value is calculated using Welch’s modified t-test.
+pgen.1005895.s009.docx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4836692,"S9 Fig 
+         
+           The association of SRSF1 gene expression with MYC CNV status. 
+           SCLC cell lines (left figure, N = 11) and our Chinese SCLC study (right figure, N = 49 patients with matched expression and CNV samples). P-value is estimated using standard t-test. 
+           (DOCX) 
+         
+         
+           
+             Click here for additional data file.",https://pmc.ncbi.nlm.nih.gov/articles/instance/4836692/bin/pgen.1005895.s009.docx,,,,docx,local-data,The association of SRSF1 gene expression with MYC CNV status.,pgen.1005895.s009,"SCLC cell lines (left figure, N = 11) and our Chinese SCLC study (right figure, N = 49 patients with matched expression and CNV samples). P-value is estimated using standard t-test."
+pgen.1005895.s010.docx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4836692,"S10 Fig 
+         
+           Identity check between matched SCLC tumor and normal specimens. 
+           Pearson correlation heatmap is used to compare 300 germline SNP profiles between each of the 25 tumors and matched normals. Gradient of colors: green = no correlation; yellow = low correlation; white = high correlation. 
+           (DOCX) 
+         
+         
+           
+             Click here for additional data file.",https://pmc.ncbi.nlm.nih.gov/articles/instance/4836692/bin/pgen.1005895.s010.docx,,,,docx,local-data,Identity check between matched SCLC tumor and normal specimens.,pgen.1005895.s010,Pearson correlation heatmap is used to compare 300 germline SNP profiles between each of the 25 tumors and matched normals. Gradient of colors: green = no correlation; yellow = low correlation; white = high correlation.
+pgen.1005895.s011.docx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4836692,"S11 Fig 
+         
+           Tumor growth curves for DMS114 and SHP77 parental cell lines. 
+           A total of 5–10 millioins cells were injected to establish xenograft tumors. 
+           (DOCX) 
+         
+         
+           
+             Click here for additional data file.",https://pmc.ncbi.nlm.nih.gov/articles/instance/4836692/bin/pgen.1005895.s011.docx,,,,docx,local-data,Tumor growth curves for DMS114 and SHP77 parental cell lines.,pgen.1005895.s011,A total of 5–10 millioins cells were injected to establish xenograft tumors.
+pgen.1005895.s012.xlsx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4836692,"S1 Table 
+         
+           Chinese patient clinical summary (n = 99). 
+           (XLSX) 
+         
+         
+           
+             Click here for additional data file.",https://pmc.ncbi.nlm.nih.gov/articles/instance/4836692/bin/pgen.1005895.s012.xlsx,,,,xlsx,local-data,Chinese patient clinical summary (n = 99).,pgen.1005895.s012,(XLSX)
+pgen.1005895.s013.xlsx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4836692,"S2 Table 
+         
+           Recurrent somatic mutated genes from 99 Chinese SCLC patients; additional recurrent rates from 51 SCLC Japanese patients in an independent study [ 5 ]. 
+           (XLSX) 
+         
+         
+           
+             Click here for additional data file.",https://pmc.ncbi.nlm.nih.gov/articles/instance/4836692/bin/pgen.1005895.s013.xlsx,,,,xlsx,local-data,Recurrent somatic mutated genes from 99 Chinese SCLC patients; additional recurrent rates from 51 SCLC Japanese patients in an independent study [,pgen.1005895.s013,(XLSX)
+pgen.1005895.s014.xlsx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4836692,"S3 Table 
+         
+           Cancer driver gene intersection by two methods and two public data sets in 99 Chinese SCLC. 
+           (XLSX) 
+         
+         
+           
+             Click here for additional data file.",https://pmc.ncbi.nlm.nih.gov/articles/instance/4836692/bin/pgen.1005895.s014.xlsx,,,,xlsx,local-data,Cancer driver gene intersection by two methods and two public data sets in 99 Chinese SCLC.,pgen.1005895.s014,(XLSX)
+pgen.1005895.s015.xlsx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4836692,"S4 Table 
+         
+           SNVs within DNA repair mechanisms in Chinese SCLC patients (n = 99) using nonsilent somatic SNVs and indels. 
+           (XLSX) 
+         
+         
+           
+             Click here for additional data file.",https://pmc.ncbi.nlm.nih.gov/articles/instance/4836692/bin/pgen.1005895.s015.xlsx,,,,xlsx,local-data,SNVs within DNA repair mechanisms in Chinese SCLC patients (n = 99) using nonsilent somatic SNVs and indels.,pgen.1005895.s015,(XLSX)
+pgen.1005895.s016.xlsx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4836692,"S5 Table 
+         
+           Patient counts harboring recurrent (prevalence>20%) gene-level somatic CNVs in discovery and validation cohorts (n = 96). 
+           (XLSX) 
+         
+         
+           
+             Click here for additional data file.",https://pmc.ncbi.nlm.nih.gov/articles/instance/4836692/bin/pgen.1005895.s016.xlsx,,,,xlsx,local-data,Patient counts harboring recurrent (prevalence>20%) gene-level somatic CNVs in discovery and validation cohorts (n = 96).,pgen.1005895.s016,(XLSX)
+pgen.1005895.s017.xlsx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4836692,"S6 Table 
+         
+           FISH assay confirmation of WES CN calls for SRSF1. 
+           (XLSX) 
+         
+         
+           
+             Click here for additional data file.",https://pmc.ncbi.nlm.nih.gov/articles/instance/4836692/bin/pgen.1005895.s017.xlsx,,,,xlsx,local-data,FISH assay confirmation of WES CN calls for SRSF1.,pgen.1005895.s017,(XLSX)
+pgen.1005895.s018.xlsx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4836692,"S7 Table 
+         
+           A. Kaplan-Meier analysis summary for SRSF1 DNA amplification and mRNA expression; B. Cox proportion hazard regression analysis summary for SRSF1 DNA amplification and mRNA over-expression. 
+           (XLSX) 
+         
+         
+           
+             Click here for additional data file.",https://pmc.ncbi.nlm.nih.gov/articles/instance/4836692/bin/pgen.1005895.s018.xlsx,,,,xlsx,local-data,No Title,pgen.1005895.s018,A. Kaplan-Meier analysis summary for SRSF1 DNA amplification and mRNA expression; B. Cox proportion hazard regression analysis summary for SRSF1 DNA amplification and mRNA over-expression.
+pgen.1005895.s019.xlsx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4836692,"S8 Table 
+         
+           Patient-specific somatic nonsilent SNVs/indels from 99 Chinese SCLC patients. 
+           (XLSX) 
+         
+         
+           
+             Click here for additional data file.",https://pmc.ncbi.nlm.nih.gov/articles/instance/4836692/bin/pgen.1005895.s019.xlsx,,,,xlsx,local-data,Patient-specific somatic nonsilent SNVs/indels from 99 Chinese SCLC patients.,pgen.1005895.s019,(XLSX)
+pgen.1005895.s020.xlsx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4836692,"S9 Table 
+         
+           Gene expression (RNASeq) of top up/down regulated genes between 48 tumor and 6 normal samples. 
+           (XLSX) 
+         
+         
+           
+             Click here for additional data file.",https://pmc.ncbi.nlm.nih.gov/articles/instance/4836692/bin/pgen.1005895.s020.xlsx,,,,xlsx,local-data,Gene expression (RNASeq) of top up/down regulated genes between 48 tumor and 6 normal samples.,pgen.1005895.s020,(XLSX)
+pgen.1005895.s021.xlsx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4836692,"S10 Table 
+         
+           WES coverage and depth statistics for 99 tumor specimens. 
+           (XLSX) 
+         
+         
+           
+             Click here for additional data file.",https://pmc.ncbi.nlm.nih.gov/articles/instance/4836692/bin/pgen.1005895.s021.xlsx,,,,xlsx,local-data,WES coverage and depth statistics for 99 tumor specimens.,pgen.1005895.s021,(XLSX)
+pgen.1005895.s022.xlsx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4836692,"S11 Table 
+         
+           Commercial Caucasian patient information. 
+           (XLSX) 
+         
+         
+           
+             Click here for additional data file.",https://pmc.ncbi.nlm.nih.gov/articles/instance/4836692/bin/pgen.1005895.s022.xlsx,,,,xlsx,local-data,Commercial Caucasian patient information.,pgen.1005895.s022,(XLSX)
+pgen.1005895.s023.xlsx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4836692,"S12 Table 
+         
+           Mater Regulator Analysis (Ingenuity Pathway Analysis) for differential expression genes between SRSF1 CN Gain / Amp and SRSF1 CN Neutral. 
+           (XLSX) 
+         
+         
+           
+             Click here for additional data file.",https://pmc.ncbi.nlm.nih.gov/articles/instance/4836692/bin/pgen.1005895.s023.xlsx,,,,xlsx,local-data,Mater Regulator Analysis (Ingenuity Pathway Analysis) for differential expression genes between SRSF1 CN Gain / Amp and SRSF1 CN Neutral.,pgen.1005895.s023,(XLSX)
+https://www.ncbi.nlm.nih.gov/gap/?term=PHS001049,data availability,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6141466,,,PHS001049,https://www.ncbi.nlm.nih.gov/gap/?term=PHS001049,na,,data_link,,,
+41467_2018_6162_MOESM1_ESM.pdf,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6141466,Supplementary Information,https://pmc.ncbi.nlm.nih.gov/articles/instance/6141466/bin/41467_2018_6162_MOESM1_ESM.pdf,,,,pdf,local-data,No Title,MOESM1,Supplementary Information
+41467_2018_6162_MOESM2_ESM.pdf,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6141466,Peer Review File,https://pmc.ncbi.nlm.nih.gov/articles/instance/6141466/bin/41467_2018_6162_MOESM2_ESM.pdf,,,,pdf,local-data,No Title,MOESM2,Peer Review File
+41467_2018_6162_MOESM3_ESM.pdf,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6141466,Description of Additional Supplementary Files,https://pmc.ncbi.nlm.nih.gov/articles/instance/6141466/bin/41467_2018_6162_MOESM3_ESM.pdf,,,,pdf,local-data,No Title,MOESM3,Description of Additional Supplementary Files
+41467_2018_6162_MOESM4_ESM.xlsx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6141466,Supplementary Data 1,https://pmc.ncbi.nlm.nih.gov/articles/instance/6141466/bin/41467_2018_6162_MOESM4_ESM.xlsx,,,,xlsx,local-data,No Title,MOESM4,Supplementary Data 1
+41467_2018_6162_MOESM5_ESM.xlsx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6141466,Supplementary Data 2,https://pmc.ncbi.nlm.nih.gov/articles/instance/6141466/bin/41467_2018_6162_MOESM5_ESM.xlsx,,,,xlsx,local-data,No Title,MOESM5,Supplementary Data 2
+41467_2018_6162_MOESM6_ESM.xlsx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6141466,Supplementary Data 3,https://pmc.ncbi.nlm.nih.gov/articles/instance/6141466/bin/41467_2018_6162_MOESM6_ESM.xlsx,,,,xlsx,local-data,No Title,MOESM6,Supplementary Data 3
+41467_2018_6162_MOESM7_ESM.xlsx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6141466,Supplementary Data 4,https://pmc.ncbi.nlm.nih.gov/articles/instance/6141466/bin/41467_2018_6162_MOESM7_ESM.xlsx,,,,xlsx,local-data,No Title,MOESM7,Supplementary Data 4
+41467_2018_6162_MOESM8_ESM.xlsx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6141466,Supplementary Data 5,https://pmc.ncbi.nlm.nih.gov/articles/instance/6141466/bin/41467_2018_6162_MOESM8_ESM.xlsx,,,,xlsx,local-data,No Title,MOESM8,Supplementary Data 5
+41467_2018_6162_MOESM9_ESM.xlsx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6141466,Supplementary Data 6,https://pmc.ncbi.nlm.nih.gov/articles/instance/6141466/bin/41467_2018_6162_MOESM9_ESM.xlsx,,,,xlsx,local-data,No Title,MOESM9,Supplementary Data 6
+41467_2018_6162_MOESM10_ESM.xlsx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6141466,Supplementary Data 7,https://pmc.ncbi.nlm.nih.gov/articles/instance/6141466/bin/41467_2018_6162_MOESM10_ESM.xlsx,,,,xlsx,local-data,No Title,MOESM10,Supplementary Data 7
+41467_2018_6162_MOESM11_ESM.xlsx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6141466,Supplementary Data 8,https://pmc.ncbi.nlm.nih.gov/articles/instance/6141466/bin/41467_2018_6162_MOESM11_ESM.xlsx,,,,xlsx,local-data,No Title,MOESM11,Supplementary Data 8
+41467_2018_6162_MOESM12_ESM.xlsx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6141466,Supplementary Data 9,https://pmc.ncbi.nlm.nih.gov/articles/instance/6141466/bin/41467_2018_6162_MOESM12_ESM.xlsx,,,,xlsx,local-data,No Title,MOESM12,Supplementary Data 9
+41467_2018_6162_MOESM13_ESM.xlsx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6141466,Supplementary Data 10,https://pmc.ncbi.nlm.nih.gov/articles/instance/6141466/bin/41467_2018_6162_MOESM13_ESM.xlsx,,,,xlsx,local-data,No Title,MOESM13,Supplementary Data 10
+41467_2018_6162_MOESM14_ESM.xlsx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6141466,Supplementary Data 11,https://pmc.ncbi.nlm.nih.gov/articles/instance/6141466/bin/41467_2018_6162_MOESM14_ESM.xlsx,,,,xlsx,local-data,No Title,MOESM14,Supplementary Data 11
+41467_2018_6162_MOESM15_ESM.xlsx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6141466,Supplementary Data 12,https://pmc.ncbi.nlm.nih.gov/articles/instance/6141466/bin/41467_2018_6162_MOESM15_ESM.xlsx,,,,xlsx,local-data,No Title,MOESM15,Supplementary Data 12
+https://www.ncbi.nlm.nih.gov/projects/gap/cgi-bin/study.cgi?study_id=phs001366.v1.p1,data_availability_elements,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5460863,,https://pmc.ncbi.nlm.nih.gov/articles/instance/5460863/bin/https://www.ncbi.nlm.nih.gov/projects/gap/cgi-bin/study.cgi?study_id=phs001366.v1.p1,,,,p1,,,,
+,,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5460863,,,phs001366.v1.p1,https://www.ncbi.nlm.nih.gov/projects/gap/cgi-bin/study.cgi?study_id=phs001366.v1.p1,na,,,,,
+pone.0179170.s001.xlsx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5460863,"S1 Table 
+         
+           Summary of potentially actionable genomic alterations. 
+           Detailed information on potentially therapeutically actionable alterations identified in 12 SCLC tumors. 
+           (XLSX) 
+         
+         
+           
+             Click here for additional data file.",https://pmc.ncbi.nlm.nih.gov/articles/instance/5460863/bin/pone.0179170.s001.xlsx,,,,xlsx,local-data,Summary of potentially actionable genomic alterations.,pone.0179170.s001,Detailed information on potentially therapeutically actionable alterations identified in 12 SCLC tumors.
+pone.0179170.s002.pdf,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5460863,"S1 File 
+         
+           Protocol. 
+           The protocol for this pilot study. 
+           (PDF) 
+         
+         
+           
+             Click here for additional data file.",https://pmc.ncbi.nlm.nih.gov/articles/instance/5460863/bin/pone.0179170.s002.pdf,,,,pdf,local-data,Protocol.,pone.0179170.s002,The protocol for this pilot study.
+pone.0179170.s003.pdf,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5460863,"S2 File 
+         
+           TREND checklist. 
+           The completed TREND checklist submitted for this manuscript. 
+           (PDF) 
+         
+         
+           
+             Click here for additional data file.",https://pmc.ncbi.nlm.nih.gov/articles/instance/5460863/bin/pone.0179170.s003.pdf,,,,pdf,local-data,TREND checklist.,pone.0179170.s003,The completed TREND checklist submitted for this manuscript.
+,,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4915822,,,EGAS00001000299,https://ega-archive.org/datasets/EGAS00001000299,na,,,,,
+https://pmc.ncbi.nlm.nih.gov/articles/instance/4915822/bin/NIHMS793416-supplement-Supplemental_Information.pdf,supplementary_data_elements,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4915822,,https://pmc.ncbi.nlm.nih.gov/articles/instance/4915822/bin/https://pmc.ncbi.nlm.nih.gov/articles/instance/4915822/bin/NIHMS793416-supplement-Supplemental_Information.pdf,,,,pdf,,,,
+https://pmc.ncbi.nlm.nih.gov/articles/instance/4915822/bin/NIHMS793416-supplement-Supplemental_Tables.xls,supplementary_data_elements,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4915822,,https://pmc.ncbi.nlm.nih.gov/articles/instance/4915822/bin/https://pmc.ncbi.nlm.nih.gov/articles/instance/4915822/bin/NIHMS793416-supplement-Supplemental_Tables.xls,,,,xls,,,,
+https://www.ncbi.nlm.nih.gov/sra?term=SRP052896,data availability,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11061608,,,SRP052896,https://www.ncbi.nlm.nih.gov/sra?term=SRP052896,na,,data_link,,,
+https://www.ncbi.nlm.nih.gov/projects/gap/cgi-bin/study.cgi?study_id=phs001823.v1.p1,data availability,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11061608,,,phs001823.v1.p1,https://www.ncbi.nlm.nih.gov/projects/gap/cgi-bin/study.cgi?study_id=phs001823.v1.p1,na,,data_link,,,
+https://data.broadinstitute.org/ccle_legacy_data/mRNA_expression/,data availability,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11061608,,,CCLE Legacy Data,https://data.broadinstitute.org/ccle_legacy_data/mRNA_expression/,na,,data_link,,,
+https://pmc.ncbi.nlm.nih.gov/articles/instance/11061608/bin/ccr-23-2360_supplementary_figure_s1_suppsf1.pdf,supplementary_data_elements,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11061608,,https://pmc.ncbi.nlm.nih.gov/articles/instance/11061608/bin/https://pmc.ncbi.nlm.nih.gov/articles/instance/11061608/bin/ccr-23-2360_supplementary_figure_s1_suppsf1.pdf,,,,pdf,,,,
+https://pmc.ncbi.nlm.nih.gov/articles/instance/11061608/bin/ccr-23-2360_supplementary_figure_s2_suppsf2.pdf,supplementary_data_elements,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11061608,,https://pmc.ncbi.nlm.nih.gov/articles/instance/11061608/bin/https://pmc.ncbi.nlm.nih.gov/articles/instance/11061608/bin/ccr-23-2360_supplementary_figure_s2_suppsf2.pdf,,,,pdf,,,,
+https://pmc.ncbi.nlm.nih.gov/articles/instance/11061608/bin/ccr-23-2360_supplementary_figure_s3_suppsf3.pdf,supplementary_data_elements,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11061608,,https://pmc.ncbi.nlm.nih.gov/articles/instance/11061608/bin/https://pmc.ncbi.nlm.nih.gov/articles/instance/11061608/bin/ccr-23-2360_supplementary_figure_s3_suppsf3.pdf,,,,pdf,,,,
+https://pmc.ncbi.nlm.nih.gov/articles/instance/11061608/bin/ccr-23-2360_supplementary_figure_s4_suppsf4.pdf,supplementary_data_elements,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11061608,,https://pmc.ncbi.nlm.nih.gov/articles/instance/11061608/bin/https://pmc.ncbi.nlm.nih.gov/articles/instance/11061608/bin/ccr-23-2360_supplementary_figure_s4_suppsf4.pdf,,,,pdf,,,,
+https://pmc.ncbi.nlm.nih.gov/articles/instance/11061608/bin/ccr-23-2360_supplementary_figure_s5_suppsf5.pdf,supplementary_data_elements,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11061608,,https://pmc.ncbi.nlm.nih.gov/articles/instance/11061608/bin/https://pmc.ncbi.nlm.nih.gov/articles/instance/11061608/bin/ccr-23-2360_supplementary_figure_s5_suppsf5.pdf,,,,pdf,,,,
+https://pmc.ncbi.nlm.nih.gov/articles/instance/11061608/bin/ccr-23-2360_supplementary_figure_s6_suppsf6.pdf,supplementary_data_elements,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11061608,,https://pmc.ncbi.nlm.nih.gov/articles/instance/11061608/bin/https://pmc.ncbi.nlm.nih.gov/articles/instance/11061608/bin/ccr-23-2360_supplementary_figure_s6_suppsf6.pdf,,,,pdf,,,,
+https://pmc.ncbi.nlm.nih.gov/articles/instance/11061608/bin/ccr-23-2360_supplementary_table_s1_suppst1.xlsx,supplementary_data_elements,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11061608,,https://pmc.ncbi.nlm.nih.gov/articles/instance/11061608/bin/https://pmc.ncbi.nlm.nih.gov/articles/instance/11061608/bin/ccr-23-2360_supplementary_table_s1_suppst1.xlsx,,,,xlsx,,,,
+https://pmc.ncbi.nlm.nih.gov/articles/instance/11061608/bin/ccr-23-2360_supplementary_table_s2_suppst2.xlsx,supplementary_data_elements,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11061608,,https://pmc.ncbi.nlm.nih.gov/articles/instance/11061608/bin/https://pmc.ncbi.nlm.nih.gov/articles/instance/11061608/bin/ccr-23-2360_supplementary_table_s2_suppst2.xlsx,,,,xlsx,,,,
+https://pmc.ncbi.nlm.nih.gov/articles/instance/11061608/bin/ccr-23-2360_supplementary_table_s3_suppst3.xlsx,supplementary_data_elements,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11061608,,https://pmc.ncbi.nlm.nih.gov/articles/instance/11061608/bin/https://pmc.ncbi.nlm.nih.gov/articles/instance/11061608/bin/ccr-23-2360_supplementary_table_s3_suppst3.xlsx,,,,xlsx,,,,
+https://pmc.ncbi.nlm.nih.gov/articles/instance/11061608/bin/ccr-23-2360_supplementary_table_s4_suppst4.xlsx,supplementary_data_elements,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11061608,,https://pmc.ncbi.nlm.nih.gov/articles/instance/11061608/bin/https://pmc.ncbi.nlm.nih.gov/articles/instance/11061608/bin/ccr-23-2360_supplementary_table_s4_suppst4.xlsx,,,,xlsx,,,,
+https://pmc.ncbi.nlm.nih.gov/articles/instance/11061608/bin/ccr-23-2360_supplementary_table_s5_suppst5.xlsx,supplementary_data_elements,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11061608,,https://pmc.ncbi.nlm.nih.gov/articles/instance/11061608/bin/https://pmc.ncbi.nlm.nih.gov/articles/instance/11061608/bin/ccr-23-2360_supplementary_table_s5_suppst5.xlsx,,,,xlsx,,,,
+https://pmc.ncbi.nlm.nih.gov/articles/instance/11061608/bin/ccr-23-2360_supplementary_table_s6_suppst6.xlsx,supplementary_data_elements,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11061608,,https://pmc.ncbi.nlm.nih.gov/articles/instance/11061608/bin/https://pmc.ncbi.nlm.nih.gov/articles/instance/11061608/bin/ccr-23-2360_supplementary_table_s6_suppst6.xlsx,,,,xlsx,,,,
+https://pmc.ncbi.nlm.nih.gov/articles/instance/11061608/bin/ccr-23-2360_supplementary_table_s7_suppst7.xlsx,supplementary_data_elements,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11061608,,https://pmc.ncbi.nlm.nih.gov/articles/instance/11061608/bin/https://pmc.ncbi.nlm.nih.gov/articles/instance/11061608/bin/ccr-23-2360_supplementary_table_s7_suppst7.xlsx,,,,xlsx,,,,
+https://pmc.ncbi.nlm.nih.gov/articles/instance/11061608/bin/ccr-23-2360_supplementary_table_s8_suppst8.xlsx,supplementary_data_elements,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11061608,,https://pmc.ncbi.nlm.nih.gov/articles/instance/11061608/bin/https://pmc.ncbi.nlm.nih.gov/articles/instance/11061608/bin/ccr-23-2360_supplementary_table_s8_suppst8.xlsx,,,,xlsx,,,,
+https://pmc.ncbi.nlm.nih.gov/articles/instance/11061608/bin/ccr-23-2360_supplementary_table_s9_suppst9.xlsx,supplementary_data_elements,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11061608,,https://pmc.ncbi.nlm.nih.gov/articles/instance/11061608/bin/https://pmc.ncbi.nlm.nih.gov/articles/instance/11061608/bin/ccr-23-2360_supplementary_table_s9_suppst9.xlsx,,,,xlsx,,,,
+ccr-23-2360_supplementary_figure_s1_suppsf1.pdf,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11061608,"Supplementary Figure S1 
+         
+           Characterisation of SMARCA4 mutations in lung cancer cell lines from the CCLE.",https://pmc.ncbi.nlm.nih.gov/articles/instance/11061608/bin/ccr-23-2360_supplementary_figure_s1_suppsf1.pdf,,,,pdf,local-data,No Title,No ID,Characterisation of SMARCA4 mutations in lung cancer cell lines from the CCLE.
+ccr-23-2360_supplementary_figure_s2_suppsf2.pdf,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11061608,"Supplementary Figure S2 
+         
+           Initial histopathological evaluation of SCLC xenografts.",https://pmc.ncbi.nlm.nih.gov/articles/instance/11061608/bin/ccr-23-2360_supplementary_figure_s2_suppsf2.pdf,,,,pdf,local-data,No Title,No ID,Initial histopathological evaluation of SCLC xenografts.
+ccr-23-2360_supplementary_figure_s3_suppsf3.pdf,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11061608,"Supplementary Figure S3 
+         
+           SCLC-specific markers are weak/lost in SMARCA4-deficient SCLC-Y cell lines.",https://pmc.ncbi.nlm.nih.gov/articles/instance/11061608/bin/ccr-23-2360_supplementary_figure_s3_suppsf3.pdf,,,,pdf,local-data,No Title,No ID,SCLC-specific markers are weak/lost in SMARCA4-deficient SCLC-Y cell lines.
+ccr-23-2360_supplementary_figure_s4_suppsf4.pdf,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11061608,"Supplementary Figure S4 
+         
+           H&E and immunohistochemistry of cell line xenografts H661, H1581 and SBC5.",https://pmc.ncbi.nlm.nih.gov/articles/instance/11061608/bin/ccr-23-2360_supplementary_figure_s4_suppsf4.pdf,,,,pdf,local-data,No Title,No ID,"H&E and immunohistochemistry of cell line xenografts H661, H1581 and SBC5."
+ccr-23-2360_supplementary_figure_s5_suppsf5.pdf,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11061608,"Supplementary Figure S5 
+         
+           SMARCA4-UT cluster validation.",https://pmc.ncbi.nlm.nih.gov/articles/instance/11061608/bin/ccr-23-2360_supplementary_figure_s5_suppsf5.pdf,,,,pdf,local-data,No Title,No ID,SMARCA4-UT cluster validation.
+ccr-23-2360_supplementary_figure_s6_suppsf6.pdf,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11061608,"Supplementary Figure S6 
+         
+           mRNA expression of SMARCA4-UT associated genes and YAP1 IHC.",https://pmc.ncbi.nlm.nih.gov/articles/instance/11061608/bin/ccr-23-2360_supplementary_figure_s6_suppsf6.pdf,,,,pdf,local-data,No Title,No ID,mRNA expression of SMARCA4-UT associated genes and YAP1 IHC.
+ccr-23-2360_supplementary_table_s1_suppst1.xlsx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11061608,"Supplementary Table S1 
+         
+           Immunohistochemistry antibodies, protocols and evaluation criteria.",https://pmc.ncbi.nlm.nih.gov/articles/instance/11061608/bin/ccr-23-2360_supplementary_table_s1_suppst1.xlsx,,,,xlsx,local-data,No Title,No ID,"Immunohistochemistry antibodies, protocols and evaluation criteria."
+ccr-23-2360_supplementary_table_s2_suppst2.xlsx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11061608,"Supplementary Table S2 
+         
+           Immunohistochemistry scoring table.",https://pmc.ncbi.nlm.nih.gov/articles/instance/11061608/bin/ccr-23-2360_supplementary_table_s2_suppst2.xlsx,,,,xlsx,local-data,No Title,No ID,Immunohistochemistry scoring table.
+ccr-23-2360_supplementary_table_s3_suppst3.xlsx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11061608,"Supplementary Table S3 
+         
+           Clinical profiles and immunohistochemistry of SMARCA4-UT patients.",https://pmc.ncbi.nlm.nih.gov/articles/instance/11061608/bin/ccr-23-2360_supplementary_table_s3_suppst3.xlsx,,,,xlsx,local-data,No Title,No ID,Clinical profiles and immunohistochemistry of SMARCA4-UT patients.
+ccr-23-2360_supplementary_table_s4_suppst4.xlsx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11061608,"Supplementary Table S4 
+         
+           Comparison of sequencing data between CCLE and UTSW.",https://pmc.ncbi.nlm.nih.gov/articles/instance/11061608/bin/ccr-23-2360_supplementary_table_s4_suppst4.xlsx,,,,xlsx,local-data,No Title,No ID,Comparison of sequencing data between CCLE and UTSW.
+ccr-23-2360_supplementary_table_s5_suppst5.xlsx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11061608,"Supplementary Table S5 
+         
+           CCLE cell lines used in Figure 4 and Supplementary Figure S6A.",https://pmc.ncbi.nlm.nih.gov/articles/instance/11061608/bin/ccr-23-2360_supplementary_table_s5_suppst5.xlsx,,,,xlsx,local-data,No Title,No ID,CCLE cell lines used in Figure 4 and Supplementary Figure S6A.
+ccr-23-2360_supplementary_table_s6_suppst6.xlsx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11061608,"Supplementary Table S6 
+         
+           List of cell lines from Figure 1D and their NE-score.",https://pmc.ncbi.nlm.nih.gov/articles/instance/11061608/bin/ccr-23-2360_supplementary_table_s6_suppst6.xlsx,,,,xlsx,local-data,No Title,No ID,List of cell lines from Figure 1D and their NE-score.
+ccr-23-2360_supplementary_table_s7_suppst7.xlsx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11061608,"Supplementary Table S7 
+         
+           26 mutated genes unique to SCLC-Y cell lines.",https://pmc.ncbi.nlm.nih.gov/articles/instance/11061608/bin/ccr-23-2360_supplementary_table_s7_suppst7.xlsx,,,,xlsx,local-data,No Title,No ID,26 mutated genes unique to SCLC-Y cell lines.
+ccr-23-2360_supplementary_table_s8_suppst8.xlsx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11061608,"Supplementary Table S8 
+         
+           Other mutations and copy number alterations associated with SCLC-Y.",https://pmc.ncbi.nlm.nih.gov/articles/instance/11061608/bin/ccr-23-2360_supplementary_table_s8_suppst8.xlsx,,,,xlsx,local-data,No Title,No ID,Other mutations and copy number alterations associated with SCLC-Y.
+ccr-23-2360_supplementary_table_s9_suppst9.xlsx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11061608,"Supplementary Table S9 
+         
+           SMARCA4-UT cell lines and patient samples based on unsupervised hierarchical clustering using YAP1 signature genes.",https://pmc.ncbi.nlm.nih.gov/articles/instance/11061608/bin/ccr-23-2360_supplementary_table_s9_suppst9.xlsx,,,,xlsx,local-data,No Title,No ID,SMARCA4-UT cell lines and patient samples based on unsupervised hierarchical clustering using YAP1 signature genes.
+CTM2-12-e1060-s002.docx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC9506422,"Supporting Information 
+         
+         
+           
+             Click here for additional data file.",https://pmc.ncbi.nlm.nih.gov/articles/instance/9506422/bin/CTM2-12-e1060-s002.docx,,,,docx,local-data,No Title,ctm21060-supitem-0001,Supporting Information
+CTM2-12-e1060-s003.xlsx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC9506422,"Supporting Information 
+         
+         
+           
+             Click here for additional data file.",https://pmc.ncbi.nlm.nih.gov/articles/instance/9506422/bin/CTM2-12-e1060-s003.xlsx,,,,xlsx,local-data,No Title,ctm21060-supitem-0002,Supporting Information
+CTM2-12-e1060-s004.xlsx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC9506422,"Supporting Information 
+         
+         
+           
+             Click here for additional data file.",https://pmc.ncbi.nlm.nih.gov/articles/instance/9506422/bin/CTM2-12-e1060-s004.xlsx,,,,xlsx,local-data,No Title,ctm21060-supitem-0003,Supporting Information
+CTM2-12-e1060-s001.xlsx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC9506422,"Supporting Information 
+         
+         
+           
+             Click here for additional data file.",https://pmc.ncbi.nlm.nih.gov/articles/instance/9506422/bin/CTM2-12-e1060-s001.xlsx,,,,xlsx,local-data,No Title,ctm21060-supitem-0004,Supporting Information
+CTM2-12-e1060-s005.xlsx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC9506422,"Supporting Information 
+         
+         
+           
+             Click here for additional data file.",https://pmc.ncbi.nlm.nih.gov/articles/instance/9506422/bin/CTM2-12-e1060-s005.xlsx,,,,xlsx,local-data,No Title,ctm21060-supitem-0005,Supporting Information
+pride:PXD030304,data availability,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC9387775,,,PXD030304,https://www.ebi.ac.uk/pride/archive/projects/PXD030304,https://www.ebi.ac.uk/pride/archive/projects/PXD030304,,data_link,,,
+10.5281/zenodo.6563157,data availability,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC9387775,,,10.5281/zenodo.6563157,https://doi.org/10.5281/zenodo.6563157,na,,data_link,,,
+https://www.ncbi.nlm.nih.gov/pmc/articles/PMC9387775#sec4.2.1,data availability,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC9387775,,,None,None,na,,data_link,,,
+mmc1.pdf,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC9387775,Document S1. Figures S1–S5,https://pmc.ncbi.nlm.nih.gov/articles/instance/9387775/bin/mmc1.pdf,,,,pdf,local-data,Document S1. Figures S1–S5,mmc1,No description
+mmc2.xlsx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC9387775,"Table S1. Sample and data processing information, related to Figure 1",https://pmc.ncbi.nlm.nih.gov/articles/instance/9387775/bin/mmc2.xlsx,,,,xlsx,local-data,"Table S1. Sample and data processing information, related to Figure 1",mmc2,No description
+mmc3.xlsx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC9387775,"Table S2. Protein matrix, related to Figure 1",https://pmc.ncbi.nlm.nih.gov/articles/instance/9387775/bin/mmc3.xlsx,,,,xlsx,local-data,"Table S2. Protein matrix, related to Figure 1",mmc3,No description
+mmc4.xlsx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC9387775,"Table S3. Cell type-enriched proteins and the tissue type in which it was quantified, related to Figure 2",https://pmc.ncbi.nlm.nih.gov/articles/instance/9387775/bin/mmc4.xlsx,,,,xlsx,local-data,"Table S3. Cell type-enriched proteins and the tissue type in which it was quantified, related to Figure 2",mmc4,No description
+mmc5.xlsx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC9387775,"Table S4. Multi-omic analyses, related to Figure 3",https://pmc.ncbi.nlm.nih.gov/articles/instance/9387775/bin/mmc5.xlsx,,,,xlsx,local-data,"Table S4. Multi-omic analyses, related to Figure 3",mmc5,No description
+mmc6.xlsx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC9387775,"Table S5. Drug-protein and CRISPR-protein association analysis, related to Figures 4 and 5",https://pmc.ncbi.nlm.nih.gov/articles/instance/9387775/bin/mmc6.xlsx,,,,xlsx,local-data,"Table S5. Drug-protein and CRISPR-protein association analysis, related to Figures 4 and 5",mmc6,No description
+mmc7.pdf,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC9387775,Document S2. Article plus supplemental information,https://pmc.ncbi.nlm.nih.gov/articles/instance/9387775/bin/mmc7.pdf,,,,pdf,local-data,Document S2. Article plus supplemental information,mmc7,No description
+https://pmc.ncbi.nlm.nih.gov/articles/instance/3665955/bin/srep01911-s1.pdf,supplementary_data_elements,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3665955,,https://pmc.ncbi.nlm.nih.gov/articles/instance/3665955/bin/https://pmc.ncbi.nlm.nih.gov/articles/instance/3665955/bin/srep01911-s1.pdf,,,,pdf,,,,
+srep01911-s1.pdf,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3665955,"Supplementary Information 
+           Supplementary Information",https://pmc.ncbi.nlm.nih.gov/articles/instance/3665955/bin/srep01911-s1.pdf,,,,pdf,local-data,Supplementary Information,d33e26,Supplementary Information
+https://www.nvbi.nlm.nih.gov/geo/,data_availability_elements,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC7842382,,https://pmc.ncbi.nlm.nih.gov/articles/instance/7842382/bin/https://www.nvbi.nlm.nih.gov/geo/,,,,,,,,
+https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE138474,data_availability_elements,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC7842382,,https://pmc.ncbi.nlm.nih.gov/articles/instance/7842382/bin/https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE138474,,,,cgi?acc=GSE138474,,,,
+https://pmc.ncbi.nlm.nih.gov/articles/PMC7842382/#F1,data_availability_elements,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC7842382,,https://pmc.ncbi.nlm.nih.gov/articles/instance/7842382/bin/https://pmc.ncbi.nlm.nih.gov/articles/PMC7842382/#F1,,,,,,,,
+https://pmc.ncbi.nlm.nih.gov/articles/PMC7842382/#F6,data_availability_elements,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC7842382,,https://pmc.ncbi.nlm.nih.gov/articles/instance/7842382/bin/https://pmc.ncbi.nlm.nih.gov/articles/PMC7842382/#F6,,,,,,,,
+https://pmc.ncbi.nlm.nih.gov/articles/PMC7842382/#F7,data_availability_elements,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC7842382,,https://pmc.ncbi.nlm.nih.gov/articles/instance/7842382/bin/https://pmc.ncbi.nlm.nih.gov/articles/PMC7842382/#F7,,,,,,,,
+https://pmc.ncbi.nlm.nih.gov/articles/PMC7842382/#F12,data_availability_elements,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC7842382,,https://pmc.ncbi.nlm.nih.gov/articles/instance/7842382/bin/https://pmc.ncbi.nlm.nih.gov/articles/PMC7842382/#F12,,,,,,,,
+,,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC7842382,,,GSE138474,https://www.nvbi.nlm.nih.gov/geo/,na,,,,,
+https://pmc.ncbi.nlm.nih.gov/articles/PMC7842382/figure/F7/,supplementary_data_elements,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC7842382,,https://pmc.ncbi.nlm.nih.gov/articles/instance/7842382/bin/https://pmc.ncbi.nlm.nih.gov/articles/PMC7842382/figure/F7/,,,,,,,,
+https://pmc.ncbi.nlm.nih.gov/articles/PMC7842382/figure/F8/,supplementary_data_elements,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC7842382,,https://pmc.ncbi.nlm.nih.gov/articles/instance/7842382/bin/https://pmc.ncbi.nlm.nih.gov/articles/PMC7842382/figure/F8/,,,,,,,,
+https://pmc.ncbi.nlm.nih.gov/articles/PMC7842382/figure/F9/,supplementary_data_elements,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC7842382,,https://pmc.ncbi.nlm.nih.gov/articles/instance/7842382/bin/https://pmc.ncbi.nlm.nih.gov/articles/PMC7842382/figure/F9/,,,,,,,,
+https://pmc.ncbi.nlm.nih.gov/articles/PMC7842382/figure/F10/,supplementary_data_elements,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC7842382,,https://pmc.ncbi.nlm.nih.gov/articles/instance/7842382/bin/https://pmc.ncbi.nlm.nih.gov/articles/PMC7842382/figure/F10/,,,,,,,,
+https://pmc.ncbi.nlm.nih.gov/articles/PMC7842382/figure/F11/,supplementary_data_elements,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC7842382,,https://pmc.ncbi.nlm.nih.gov/articles/instance/7842382/bin/https://pmc.ncbi.nlm.nih.gov/articles/PMC7842382/figure/F11/,,,,,,,,
+https://pmc.ncbi.nlm.nih.gov/articles/PMC7842382/figure/F12/,supplementary_data_elements,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC7842382,,https://pmc.ncbi.nlm.nih.gov/articles/instance/7842382/bin/https://pmc.ncbi.nlm.nih.gov/articles/PMC7842382/figure/F12/,,,,,,,,
+https://gygi.med.harvard.edu/publications/ccle,data_availability_elements,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC7339254,,https://pmc.ncbi.nlm.nih.gov/articles/instance/7339254/bin/https://gygi.med.harvard.edu/publications/ccle,,,,,,,,
+https://depmap.org/portal/,data_availability_elements,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC7339254,,https://pmc.ncbi.nlm.nih.gov/articles/instance/7339254/bin/https://depmap.org/portal/,,,,,,,,
+https://pmc.ncbi.nlm.nih.gov/articles/PMC7339254/#F1,supplementary_data_elements,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC7339254,,https://pmc.ncbi.nlm.nih.gov/articles/instance/7339254/bin/https://pmc.ncbi.nlm.nih.gov/articles/PMC7339254/#F1,,,,,,,,
+https://pmc.ncbi.nlm.nih.gov/articles/instance/7339254/bin/NIHMS1569324-supplement-FS1.pdf,supplementary_data_elements,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC7339254,,https://pmc.ncbi.nlm.nih.gov/articles/instance/7339254/bin/https://pmc.ncbi.nlm.nih.gov/articles/instance/7339254/bin/NIHMS1569324-supplement-FS1.pdf,,,,pdf,,,,
+https://pmc.ncbi.nlm.nih.gov/articles/PMC7339254/#F3,supplementary_data_elements,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC7339254,,https://pmc.ncbi.nlm.nih.gov/articles/instance/7339254/bin/https://pmc.ncbi.nlm.nih.gov/articles/PMC7339254/#F3,,,,,,,,
+https://pmc.ncbi.nlm.nih.gov/articles/PMC7339254/#F4,supplementary_data_elements,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC7339254,,https://pmc.ncbi.nlm.nih.gov/articles/instance/7339254/bin/https://pmc.ncbi.nlm.nih.gov/articles/PMC7339254/#F4,,,,,,,,
+https://pmc.ncbi.nlm.nih.gov/articles/instance/7339254/bin/NIHMS1569324-supplement-FS2.pdf,supplementary_data_elements,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC7339254,,https://pmc.ncbi.nlm.nih.gov/articles/instance/7339254/bin/https://pmc.ncbi.nlm.nih.gov/articles/instance/7339254/bin/NIHMS1569324-supplement-FS2.pdf,,,,pdf,,,,
+https://pmc.ncbi.nlm.nih.gov/articles/instance/7339254/bin/NIHMS1569324-supplement-FS3.pdf,supplementary_data_elements,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC7339254,,https://pmc.ncbi.nlm.nih.gov/articles/instance/7339254/bin/https://pmc.ncbi.nlm.nih.gov/articles/instance/7339254/bin/NIHMS1569324-supplement-FS3.pdf,,,,pdf,,,,
+https://pmc.ncbi.nlm.nih.gov/articles/instance/7339254/bin/NIHMS1569324-supplement-FS4.pdf,supplementary_data_elements,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC7339254,,https://pmc.ncbi.nlm.nih.gov/articles/instance/7339254/bin/https://pmc.ncbi.nlm.nih.gov/articles/instance/7339254/bin/NIHMS1569324-supplement-FS4.pdf,,,,pdf,,,,
+https://pmc.ncbi.nlm.nih.gov/articles/PMC7339254/#S14,supplementary_data_elements,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC7339254,,https://pmc.ncbi.nlm.nih.gov/articles/instance/7339254/bin/https://pmc.ncbi.nlm.nih.gov/articles/PMC7339254/#S14,,,,,,,,
+https://pmc.ncbi.nlm.nih.gov/articles/PMC7339254/#SD10,supplementary_data_elements,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC7339254,,https://pmc.ncbi.nlm.nih.gov/articles/instance/7339254/bin/https://pmc.ncbi.nlm.nih.gov/articles/PMC7339254/#SD10,,,,,,,,
+https://pmc.ncbi.nlm.nih.gov/articles/instance/7339254/bin/NIHMS1569324-supplement-FS5.pdf,supplementary_data_elements,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC7339254,,https://pmc.ncbi.nlm.nih.gov/articles/instance/7339254/bin/https://pmc.ncbi.nlm.nih.gov/articles/instance/7339254/bin/NIHMS1569324-supplement-FS5.pdf,,,,pdf,,,,
+https://pmc.ncbi.nlm.nih.gov/articles/PMC7339254/#F5,supplementary_data_elements,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC7339254,,https://pmc.ncbi.nlm.nih.gov/articles/instance/7339254/bin/https://pmc.ncbi.nlm.nih.gov/articles/PMC7339254/#F5,,,,,,,,
+https://pmc.ncbi.nlm.nih.gov/articles/PMC7339254/#F7,supplementary_data_elements,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC7339254,,https://pmc.ncbi.nlm.nih.gov/articles/instance/7339254/bin/https://pmc.ncbi.nlm.nih.gov/articles/PMC7339254/#F7,,,,,,,,
+https://pmc.ncbi.nlm.nih.gov/articles/PMC7339254/#SD13,supplementary_data_elements,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC7339254,,https://pmc.ncbi.nlm.nih.gov/articles/instance/7339254/bin/https://pmc.ncbi.nlm.nih.gov/articles/PMC7339254/#SD13,,,,,,,,
+https://pmc.ncbi.nlm.nih.gov/articles/instance/7339254/bin/NIHMS1569324-supplement-FS6.pdf,supplementary_data_elements,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC7339254,,https://pmc.ncbi.nlm.nih.gov/articles/instance/7339254/bin/https://pmc.ncbi.nlm.nih.gov/articles/instance/7339254/bin/NIHMS1569324-supplement-FS6.pdf,,,,pdf,,,,
+https://pmc.ncbi.nlm.nih.gov/articles/instance/7339254/bin/NIHMS1569324-supplement-TS1.xlsx,supplementary_data_elements,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC7339254,,https://pmc.ncbi.nlm.nih.gov/articles/instance/7339254/bin/https://pmc.ncbi.nlm.nih.gov/articles/instance/7339254/bin/NIHMS1569324-supplement-TS1.xlsx,,,,xlsx,,,,
+https://pmc.ncbi.nlm.nih.gov/articles/instance/7339254/bin/NIHMS1569324-supplement-TS2.xlsx,supplementary_data_elements,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC7339254,,https://pmc.ncbi.nlm.nih.gov/articles/instance/7339254/bin/https://pmc.ncbi.nlm.nih.gov/articles/instance/7339254/bin/NIHMS1569324-supplement-TS2.xlsx,,,,xlsx,,,,
+https://pmc.ncbi.nlm.nih.gov/articles/instance/7339254/bin/NIHMS1569324-supplement-TS3.xlsx,supplementary_data_elements,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC7339254,,https://pmc.ncbi.nlm.nih.gov/articles/instance/7339254/bin/https://pmc.ncbi.nlm.nih.gov/articles/instance/7339254/bin/NIHMS1569324-supplement-TS3.xlsx,,,,xlsx,,,,
+https://pmc.ncbi.nlm.nih.gov/articles/PMC7339254/#F2,supplementary_data_elements,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC7339254,,https://pmc.ncbi.nlm.nih.gov/articles/instance/7339254/bin/https://pmc.ncbi.nlm.nih.gov/articles/PMC7339254/#F2,,,,,,,,
+https://pmc.ncbi.nlm.nih.gov/articles/instance/7339254/bin/NIHMS1569324-supplement-TS4.xlsx,supplementary_data_elements,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC7339254,,https://pmc.ncbi.nlm.nih.gov/articles/instance/7339254/bin/https://pmc.ncbi.nlm.nih.gov/articles/instance/7339254/bin/NIHMS1569324-supplement-TS4.xlsx,,,,xlsx,,,,
+https://pmc.ncbi.nlm.nih.gov/articles/instance/7339254/bin/NIHMS1569324-supplement-TS5.xlsx,supplementary_data_elements,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC7339254,,https://pmc.ncbi.nlm.nih.gov/articles/instance/7339254/bin/https://pmc.ncbi.nlm.nih.gov/articles/instance/7339254/bin/NIHMS1569324-supplement-TS5.xlsx,,,,xlsx,,,,
+https://pmc.ncbi.nlm.nih.gov/articles/instance/7339254/bin/NIHMS1569324-supplement-TS6.xlsx,supplementary_data_elements,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC7339254,,https://pmc.ncbi.nlm.nih.gov/articles/instance/7339254/bin/https://pmc.ncbi.nlm.nih.gov/articles/instance/7339254/bin/NIHMS1569324-supplement-TS6.xlsx,,,,xlsx,,,,
+https://pmc.ncbi.nlm.nih.gov/articles/instance/7339254/bin/NIHMS1569324-supplement-TS7.xlsx,supplementary_data_elements,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC7339254,,https://pmc.ncbi.nlm.nih.gov/articles/instance/7339254/bin/https://pmc.ncbi.nlm.nih.gov/articles/instance/7339254/bin/NIHMS1569324-supplement-TS7.xlsx,,,,xlsx,,,,
+http://www.ebi.ac.uk/pride/archive/,data availability,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11252349/,,,PXD053567,http://www.ebi.ac.uk/pride/archive/,https://www.ebi.ac.uk/pride/archive/projects/PXD053567,,data_link,,,
+41598_2024_67079_MOESM1_ESM.zip,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11252349/,Supplementary Information.,https://pmc.ncbi.nlm.nih.gov/articles/instance/11252349/bin/41598_2024_67079_MOESM1_ESM.zip,,,,zip,local-data,No Title,MOESM1,Supplementary Information.
+https://pubs.acs.org/doi/10.1021/acs.jproteome.4c00338?goto=supporting-info,data_availability_elements,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11425778/,,https://pmc.ncbi.nlm.nih.gov/articles/instance/11425778/bin/https://pubs.acs.org/doi/10.1021/acs.jproteome.4c00338?goto=supporting-info,,,,4c00338?goto=supporting-info,,,,
+https://pmc.ncbi.nlm.nih.gov/articles/PMC11425778/#SD1,data_availability_elements,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11425778/,,https://pmc.ncbi.nlm.nih.gov/articles/instance/11425778/bin/https://pmc.ncbi.nlm.nih.gov/articles/PMC11425778/#SD1,,,,,,,,
+https://pubs.acs.org/doi/suppl/10.1021/acs.jproteome.4c00338/suppl_file/pr4c00338_si_001.pdf,data_availability_elements,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11425778/,,https://pmc.ncbi.nlm.nih.gov/articles/instance/11425778/bin/https://pubs.acs.org/doi/suppl/10.1021/acs.jproteome.4c00338/suppl_file/pr4c00338_si_001.pdf,,,,pdf,,,,
+https://pubs.acs.org/doi/suppl/10.1021/acs.jproteome.4c00338/suppl_file/pr4c00338_si_002.xlsx,data_availability_elements,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11425778/,,https://pmc.ncbi.nlm.nih.gov/articles/instance/11425778/bin/https://pubs.acs.org/doi/suppl/10.1021/acs.jproteome.4c00338/suppl_file/pr4c00338_si_002.xlsx,,,,xlsx,,,,
+https://pubs.acs.org/doi/suppl/10.1021/acs.jproteome.4c00338/suppl_file/pr4c00338_si_003.xlsx,data_availability_elements,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11425778/,,https://pmc.ncbi.nlm.nih.gov/articles/instance/11425778/bin/https://pubs.acs.org/doi/suppl/10.1021/acs.jproteome.4c00338/suppl_file/pr4c00338_si_003.xlsx,,,,xlsx,,,,
+https://pubs.acs.org/doi/suppl/10.1021/acs.jproteome.4c00338/suppl_file/pr4c00338_si_004.xlsx,data_availability_elements,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11425778/,,https://pmc.ncbi.nlm.nih.gov/articles/instance/11425778/bin/https://pubs.acs.org/doi/suppl/10.1021/acs.jproteome.4c00338/suppl_file/pr4c00338_si_004.xlsx,,,,xlsx,,,,
+https://pubs.acs.org/doi/10.1021/acs.jproteome.4c00338?ref=pdf,data_availability_elements,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11425778/,,https://pmc.ncbi.nlm.nih.gov/articles/instance/11425778/bin/https://pubs.acs.org/doi/10.1021/acs.jproteome.4c00338?ref=pdf,,,,4c00338?ref=pdf,,,,
+,,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11425778/,,,MSV000092944,https://massive.ucsd.edu/,https://massive.ucsd.edu/ProteoSAFe/dataset.jsp?accession=MSV000092944,,,,,
+,,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11425778/,,,n/a,https://pubs.acs.org/doi/10.1021/acs.jproteome.4c00338,na,,,,,
+https://pmc.ncbi.nlm.nih.gov/articles/instance/11425778/bin/NIHMS2020672-supplement-SI.pdf,supplementary_data_elements,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11425778/,,https://pmc.ncbi.nlm.nih.gov/articles/instance/11425778/bin/https://pmc.ncbi.nlm.nih.gov/articles/instance/11425778/bin/NIHMS2020672-supplement-SI.pdf,,,,pdf,,,,
+https://astrazenecagroup-dt.pharmacm.com/DT/Home,data availability,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11320025/,,,PXD052949,https://www.proteomexchange.org/,https://proteomecentral.proteomexchange.org/cgi/GetDataset?ID=PXD052949,,data_link,,,
+https://pmc.ncbi.nlm.nih.gov/articles/instance/11320025/bin/crc-24-0113_supplementary_methods_s1_suppsm1.pdf,supplementary_data_elements,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11320025/,,https://pmc.ncbi.nlm.nih.gov/articles/instance/11320025/bin/https://pmc.ncbi.nlm.nih.gov/articles/instance/11320025/bin/crc-24-0113_supplementary_methods_s1_suppsm1.pdf,,,,pdf,,,,
+https://pmc.ncbi.nlm.nih.gov/articles/instance/11320025/bin/crc-24-0113_supplementary_validation_data_s1_suppsd1.pdf,supplementary_data_elements,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11320025/,,https://pmc.ncbi.nlm.nih.gov/articles/instance/11320025/bin/https://pmc.ncbi.nlm.nih.gov/articles/instance/11320025/bin/crc-24-0113_supplementary_validation_data_s1_suppsd1.pdf,,,,pdf,,,,
+https://pmc.ncbi.nlm.nih.gov/articles/instance/11320025/bin/crc-24-0113_supplementary_validation_data_s2_suppsd2.pdf,supplementary_data_elements,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11320025/,,https://pmc.ncbi.nlm.nih.gov/articles/instance/11320025/bin/https://pmc.ncbi.nlm.nih.gov/articles/instance/11320025/bin/crc-24-0113_supplementary_validation_data_s2_suppsd2.pdf,,,,pdf,,,,
+https://pmc.ncbi.nlm.nih.gov/articles/instance/11320025/bin/crc-24-0113_supplementary_figure_s1_suppsf1.pdf,supplementary_data_elements,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11320025/,,https://pmc.ncbi.nlm.nih.gov/articles/instance/11320025/bin/https://pmc.ncbi.nlm.nih.gov/articles/instance/11320025/bin/crc-24-0113_supplementary_figure_s1_suppsf1.pdf,,,,pdf,,,,
+https://pmc.ncbi.nlm.nih.gov/articles/instance/11320025/bin/crc-24-0113_supplementary_figure_s2_suppsf2.pdf,supplementary_data_elements,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11320025/,,https://pmc.ncbi.nlm.nih.gov/articles/instance/11320025/bin/https://pmc.ncbi.nlm.nih.gov/articles/instance/11320025/bin/crc-24-0113_supplementary_figure_s2_suppsf2.pdf,,,,pdf,,,,
+https://pmc.ncbi.nlm.nih.gov/articles/instance/11320025/bin/crc-24-0113_supplementary_figure_s3_suppsf3.pdf,supplementary_data_elements,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11320025/,,https://pmc.ncbi.nlm.nih.gov/articles/instance/11320025/bin/https://pmc.ncbi.nlm.nih.gov/articles/instance/11320025/bin/crc-24-0113_supplementary_figure_s3_suppsf3.pdf,,,,pdf,,,,
+https://pmc.ncbi.nlm.nih.gov/articles/instance/11320025/bin/crc-24-0113_supplementary_figure_s4_suppsf4.pdf,supplementary_data_elements,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11320025/,,https://pmc.ncbi.nlm.nih.gov/articles/instance/11320025/bin/https://pmc.ncbi.nlm.nih.gov/articles/instance/11320025/bin/crc-24-0113_supplementary_figure_s4_suppsf4.pdf,,,,pdf,,,,
+https://pmc.ncbi.nlm.nih.gov/articles/instance/11320025/bin/crc-24-0113_supplementary_table_s1_suppst1.pdf,supplementary_data_elements,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11320025/,,https://pmc.ncbi.nlm.nih.gov/articles/instance/11320025/bin/https://pmc.ncbi.nlm.nih.gov/articles/instance/11320025/bin/crc-24-0113_supplementary_table_s1_suppst1.pdf,,,,pdf,,,,
+https://pmc.ncbi.nlm.nih.gov/articles/instance/11320025/bin/crc-24-0113_supplementary_table_s2_suppst2.pdf,supplementary_data_elements,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11320025/,,https://pmc.ncbi.nlm.nih.gov/articles/instance/11320025/bin/https://pmc.ncbi.nlm.nih.gov/articles/instance/11320025/bin/crc-24-0113_supplementary_table_s2_suppst2.pdf,,,,pdf,,,,
+https://pmc.ncbi.nlm.nih.gov/articles/instance/11320025/bin/crc-24-0113_supplementary_table_s3_suppst3.pdf,supplementary_data_elements,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11320025/,,https://pmc.ncbi.nlm.nih.gov/articles/instance/11320025/bin/https://pmc.ncbi.nlm.nih.gov/articles/instance/11320025/bin/crc-24-0113_supplementary_table_s3_suppst3.pdf,,,,pdf,,,,
+crc-24-0113_supplementary_methods_s1_suppsm1.pdf,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11320025/,"Supplementary Methods S1 
+         
+           Supplemental Materials and Methods concerning patient samples, cell lines, tissue culture, iMALDI-MS, Nano-LC-Orbitrap-MS, LC-MRM-MS",https://pmc.ncbi.nlm.nih.gov/articles/instance/11320025/bin/crc-24-0113_supplementary_methods_s1_suppsm1.pdf,,,,pdf,local-data,No Title,No ID,"Supplemental Materials and Methods concerning patient samples, cell lines, tissue culture, iMALDI-MS, Nano-LC-Orbitrap-MS, LC-MRM-MS"
+crc-24-0113_supplementary_validation_data_s1_suppsd1.pdf,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11320025/,"Supplementary Validation Data S1 
+         
+           Supplementary Validation Data demonstrating the performance of the iMALDI-MS assay",https://pmc.ncbi.nlm.nih.gov/articles/instance/11320025/bin/crc-24-0113_supplementary_validation_data_s1_suppsd1.pdf,,,,pdf,local-data,No Title,No ID,Supplementary Validation Data demonstrating the performance of the iMALDI-MS assay
+crc-24-0113_supplementary_validation_data_s2_suppsd2.pdf,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11320025/,"Supplementary Validation Data S2 
+         
+           Quality Assessment of the Global Proteomics Data",https://pmc.ncbi.nlm.nih.gov/articles/instance/11320025/bin/crc-24-0113_supplementary_validation_data_s2_suppsd2.pdf,,,,pdf,local-data,No Title,No ID,Quality Assessment of the Global Proteomics Data
+crc-24-0113_supplementary_figure_s1_suppsf1.pdf,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11320025/,"Supplementary Figure S1 
+         
+           Individual protein concentrations measured by iMALDI-MS for each sample, comparison of measured PTEN concentration to IHC H-score",https://pmc.ncbi.nlm.nih.gov/articles/instance/11320025/bin/crc-24-0113_supplementary_figure_s1_suppsf1.pdf,,,,pdf,local-data,No Title,No ID,"Individual protein concentrations measured by iMALDI-MS for each sample, comparison of measured PTEN concentration to IHC H-score"
+crc-24-0113_supplementary_figure_s2_suppsf2.pdf,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11320025/,"Supplementary Figure S2 
+         
+           Individual protein concentrations measured by iMALDI-MS for PTEN vs. IHC H-score",https://pmc.ncbi.nlm.nih.gov/articles/instance/11320025/bin/crc-24-0113_supplementary_figure_s2_suppsf2.pdf,,,,pdf,local-data,No Title,No ID,Individual protein concentrations measured by iMALDI-MS for PTEN vs. IHC H-score
+crc-24-0113_supplementary_figure_s3_suppsf3.pdf,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11320025/,"Supplementary Figure S3 
+         
+           Comparison of iMALDI and Global Proteomics results for primary vs metastatic samples",https://pmc.ncbi.nlm.nih.gov/articles/instance/11320025/bin/crc-24-0113_supplementary_figure_s3_suppsf3.pdf,,,,pdf,local-data,No Title,No ID,Comparison of iMALDI and Global Proteomics results for primary vs metastatic samples
+crc-24-0113_supplementary_figure_s4_suppsf4.pdf,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11320025/,"Supplementary Figure S4 
+         
+           Combination treatment of cell lines with capivasertib and an eIF2α inhibitor",https://pmc.ncbi.nlm.nih.gov/articles/instance/11320025/bin/crc-24-0113_supplementary_figure_s4_suppsf4.pdf,,,,pdf,local-data,No Title,No ID,Combination treatment of cell lines with capivasertib and an eIF2α inhibitor
+crc-24-0113_supplementary_table_s1_suppst1.pdf,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11320025/,"Supplementary Table S1 
+         
+           Detailed results of the label-free quantitation",https://pmc.ncbi.nlm.nih.gov/articles/instance/11320025/bin/crc-24-0113_supplementary_table_s1_suppst1.pdf,,,,pdf,local-data,No Title,No ID,Detailed results of the label-free quantitation
+crc-24-0113_supplementary_table_s2_suppst2.pdf,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11320025/,"Supplementary Table S2 
+         
+           Proteins expression differences between capivasertib-resistant vs. capivasertib-sensitive cells quantified by validated MRM-MS assays as compared to the profile observed in patient samples",https://pmc.ncbi.nlm.nih.gov/articles/instance/11320025/bin/crc-24-0113_supplementary_table_s2_suppst2.pdf,,,,pdf,local-data,No Title,No ID,Proteins expression differences between capivasertib-resistant vs. capivasertib-sensitive cells quantified by validated MRM-MS assays as compared to the profile observed in patient samples
+crc-24-0113_supplementary_table_s3_suppst3.pdf,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11320025/,"Supplementary Table S3 
+         
+           Detailed results of pathway mapping by Qiagen IPA",https://pmc.ncbi.nlm.nih.gov/articles/instance/11320025/bin/crc-24-0113_supplementary_table_s3_suppst3.pdf,,,,pdf,local-data,No Title,No ID,Detailed results of pathway mapping by Qiagen IPA
+https://pmc.ncbi.nlm.nih.gov/articles/PMC11066909/#CIT0028,data_availability_elements,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11066909/,,https://pmc.ncbi.nlm.nih.gov/articles/instance/11066909/bin/https://pmc.ncbi.nlm.nih.gov/articles/PMC11066909/#CIT0028,,,,,,,,
+,,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11066909/,,,PXD045268,www.ebi.ac.uk,https://www.ebi.ac.uk/pride/archive/projects/PXD045268,,,,,
+https://pmc.ncbi.nlm.nih.gov/articles/instance/11066909/bin/noad265_suppl_supplementary_figure_s1.jpeg,supplementary_data_elements,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11066909/,,https://pmc.ncbi.nlm.nih.gov/articles/instance/11066909/bin/https://pmc.ncbi.nlm.nih.gov/articles/instance/11066909/bin/noad265_suppl_supplementary_figure_s1.jpeg,,,,jpeg,,,,
+https://pmc.ncbi.nlm.nih.gov/articles/instance/11066909/bin/noad265_suppl_supplementary_figure_s2.jpeg,supplementary_data_elements,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11066909/,,https://pmc.ncbi.nlm.nih.gov/articles/instance/11066909/bin/https://pmc.ncbi.nlm.nih.gov/articles/instance/11066909/bin/noad265_suppl_supplementary_figure_s2.jpeg,,,,jpeg,,,,
+https://pmc.ncbi.nlm.nih.gov/articles/instance/11066909/bin/noad265_suppl_supplementary_figure_s3.jpeg,supplementary_data_elements,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11066909/,,https://pmc.ncbi.nlm.nih.gov/articles/instance/11066909/bin/https://pmc.ncbi.nlm.nih.gov/articles/instance/11066909/bin/noad265_suppl_supplementary_figure_s3.jpeg,,,,jpeg,,,,
+https://pmc.ncbi.nlm.nih.gov/articles/instance/11066909/bin/noad265_suppl_supplementary_figure_s4.jpeg,supplementary_data_elements,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11066909/,,https://pmc.ncbi.nlm.nih.gov/articles/instance/11066909/bin/https://pmc.ncbi.nlm.nih.gov/articles/instance/11066909/bin/noad265_suppl_supplementary_figure_s4.jpeg,,,,jpeg,,,,
+https://pmc.ncbi.nlm.nih.gov/articles/instance/11066909/bin/noad265_suppl_supplementary_figure_s5.jpeg,supplementary_data_elements,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11066909/,,https://pmc.ncbi.nlm.nih.gov/articles/instance/11066909/bin/https://pmc.ncbi.nlm.nih.gov/articles/instance/11066909/bin/noad265_suppl_supplementary_figure_s5.jpeg,,,,jpeg,,,,
+https://pmc.ncbi.nlm.nih.gov/articles/instance/11066909/bin/noad265_suppl_supplementary_figure_s6.jpeg,supplementary_data_elements,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11066909/,,https://pmc.ncbi.nlm.nih.gov/articles/instance/11066909/bin/https://pmc.ncbi.nlm.nih.gov/articles/instance/11066909/bin/noad265_suppl_supplementary_figure_s6.jpeg,,,,jpeg,,,,
+https://pmc.ncbi.nlm.nih.gov/articles/instance/11066909/bin/noad265_suppl_supplementary_figure_s7.jpeg,supplementary_data_elements,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11066909/,,https://pmc.ncbi.nlm.nih.gov/articles/instance/11066909/bin/https://pmc.ncbi.nlm.nih.gov/articles/instance/11066909/bin/noad265_suppl_supplementary_figure_s7.jpeg,,,,jpeg,,,,
+https://pmc.ncbi.nlm.nih.gov/articles/instance/11066909/bin/noad265_suppl_supplementary_figure_s8.jpeg,supplementary_data_elements,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11066909/,,https://pmc.ncbi.nlm.nih.gov/articles/instance/11066909/bin/https://pmc.ncbi.nlm.nih.gov/articles/instance/11066909/bin/noad265_suppl_supplementary_figure_s8.jpeg,,,,jpeg,,,,
+https://pmc.ncbi.nlm.nih.gov/articles/instance/11066909/bin/noad265_suppl_supplementary_table_s1.xlsx,supplementary_data_elements,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11066909/,,https://pmc.ncbi.nlm.nih.gov/articles/instance/11066909/bin/https://pmc.ncbi.nlm.nih.gov/articles/instance/11066909/bin/noad265_suppl_supplementary_table_s1.xlsx,,,,xlsx,,,,
+https://pmc.ncbi.nlm.nih.gov/articles/instance/11066909/bin/noad265_suppl_supplementary_table_s2.xlsx,supplementary_data_elements,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11066909/,,https://pmc.ncbi.nlm.nih.gov/articles/instance/11066909/bin/https://pmc.ncbi.nlm.nih.gov/articles/instance/11066909/bin/noad265_suppl_supplementary_table_s2.xlsx,,,,xlsx,,,,
+https://pmc.ncbi.nlm.nih.gov/articles/instance/11066909/bin/noad265_suppl_supplementary_table_s3.xlsx,supplementary_data_elements,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11066909/,,https://pmc.ncbi.nlm.nih.gov/articles/instance/11066909/bin/https://pmc.ncbi.nlm.nih.gov/articles/instance/11066909/bin/noad265_suppl_supplementary_table_s3.xlsx,,,,xlsx,,,,
+https://pmc.ncbi.nlm.nih.gov/articles/instance/11066909/bin/noad265_suppl_supplementary_table_s4.xlsx,supplementary_data_elements,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11066909/,,https://pmc.ncbi.nlm.nih.gov/articles/instance/11066909/bin/https://pmc.ncbi.nlm.nih.gov/articles/instance/11066909/bin/noad265_suppl_supplementary_table_s4.xlsx,,,,xlsx,,,,
+https://pmc.ncbi.nlm.nih.gov/articles/instance/11066909/bin/noad265_suppl_supplementary_table_s5.xlsx,supplementary_data_elements,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11066909/,,https://pmc.ncbi.nlm.nih.gov/articles/instance/11066909/bin/https://pmc.ncbi.nlm.nih.gov/articles/instance/11066909/bin/noad265_suppl_supplementary_table_s5.xlsx,,,,xlsx,,,,
+https://pmc.ncbi.nlm.nih.gov/articles/instance/11066909/bin/noad265_suppl_supplementary_table_s6.xlsx,supplementary_data_elements,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11066909/,,https://pmc.ncbi.nlm.nih.gov/articles/instance/11066909/bin/https://pmc.ncbi.nlm.nih.gov/articles/instance/11066909/bin/noad265_suppl_supplementary_table_s6.xlsx,,,,xlsx,,,,
+https://pmc.ncbi.nlm.nih.gov/articles/instance/11066909/bin/noad265_suppl_supplementary_table_s7.xlsx,supplementary_data_elements,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11066909/,,https://pmc.ncbi.nlm.nih.gov/articles/instance/11066909/bin/https://pmc.ncbi.nlm.nih.gov/articles/instance/11066909/bin/noad265_suppl_supplementary_table_s7.xlsx,,,,xlsx,,,,
+noad265_suppl_supplementary_figure_s1.jpeg,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11066909/,noad265_suppl_Supplementary_Figure_S1,https://pmc.ncbi.nlm.nih.gov/articles/instance/11066909/bin/noad265_suppl_supplementary_figure_s1.jpeg,,,,jpeg,local-data,No Title,sup1,No description
+noad265_suppl_supplementary_figure_s2.jpeg,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11066909/,noad265_suppl_Supplementary_Figure_S2,https://pmc.ncbi.nlm.nih.gov/articles/instance/11066909/bin/noad265_suppl_supplementary_figure_s2.jpeg,,,,jpeg,local-data,No Title,sup2,No description
+noad265_suppl_supplementary_figure_s3.jpeg,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11066909/,noad265_suppl_Supplementary_Figure_S3,https://pmc.ncbi.nlm.nih.gov/articles/instance/11066909/bin/noad265_suppl_supplementary_figure_s3.jpeg,,,,jpeg,local-data,No Title,sup3,No description
+noad265_suppl_supplementary_figure_s4.jpeg,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11066909/,noad265_suppl_Supplementary_Figure_S4,https://pmc.ncbi.nlm.nih.gov/articles/instance/11066909/bin/noad265_suppl_supplementary_figure_s4.jpeg,,,,jpeg,local-data,No Title,sup4,No description
+noad265_suppl_supplementary_figure_s5.jpeg,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11066909/,noad265_suppl_Supplementary_Figure_S5,https://pmc.ncbi.nlm.nih.gov/articles/instance/11066909/bin/noad265_suppl_supplementary_figure_s5.jpeg,,,,jpeg,local-data,No Title,sup5,No description
+noad265_suppl_supplementary_figure_s6.jpeg,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11066909/,noad265_suppl_Supplementary_Figure_S6,https://pmc.ncbi.nlm.nih.gov/articles/instance/11066909/bin/noad265_suppl_supplementary_figure_s6.jpeg,,,,jpeg,local-data,No Title,sup6,No description
+noad265_suppl_supplementary_figure_s7.jpeg,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11066909/,noad265_suppl_Supplementary_Figure_S7,https://pmc.ncbi.nlm.nih.gov/articles/instance/11066909/bin/noad265_suppl_supplementary_figure_s7.jpeg,,,,jpeg,local-data,No Title,sup7,No description
+noad265_suppl_supplementary_figure_s8.jpeg,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11066909/,noad265_suppl_Supplementary_Figure_S8,https://pmc.ncbi.nlm.nih.gov/articles/instance/11066909/bin/noad265_suppl_supplementary_figure_s8.jpeg,,,,jpeg,local-data,No Title,sup8,No description
+noad265_suppl_supplementary_table_s1.xlsx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11066909/,noad265_suppl_Supplementary_Table_S1,https://pmc.ncbi.nlm.nih.gov/articles/instance/11066909/bin/noad265_suppl_supplementary_table_s1.xlsx,,,,xlsx,local-data,No Title,sup9,No description
+noad265_suppl_supplementary_table_s2.xlsx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11066909/,noad265_suppl_Supplementary_Table_S2,https://pmc.ncbi.nlm.nih.gov/articles/instance/11066909/bin/noad265_suppl_supplementary_table_s2.xlsx,,,,xlsx,local-data,No Title,sup10,No description
+noad265_suppl_supplementary_table_s3.xlsx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11066909/,noad265_suppl_Supplementary_Table_S3,https://pmc.ncbi.nlm.nih.gov/articles/instance/11066909/bin/noad265_suppl_supplementary_table_s3.xlsx,,,,xlsx,local-data,No Title,sup11,No description
+noad265_suppl_supplementary_table_s4.xlsx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11066909/,noad265_suppl_Supplementary_Table_S4,https://pmc.ncbi.nlm.nih.gov/articles/instance/11066909/bin/noad265_suppl_supplementary_table_s4.xlsx,,,,xlsx,local-data,No Title,sup12,No description
+noad265_suppl_supplementary_table_s5.xlsx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11066909/,noad265_suppl_Supplementary_Table_S5,https://pmc.ncbi.nlm.nih.gov/articles/instance/11066909/bin/noad265_suppl_supplementary_table_s5.xlsx,,,,xlsx,local-data,No Title,sup13,No description
+noad265_suppl_supplementary_table_s6.xlsx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11066909/,noad265_suppl_Supplementary_Table_S6,https://pmc.ncbi.nlm.nih.gov/articles/instance/11066909/bin/noad265_suppl_supplementary_table_s6.xlsx,,,,xlsx,local-data,No Title,sup14,No description
+noad265_suppl_supplementary_table_s7.xlsx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11066909/,noad265_suppl_Supplementary_Table_S7,https://pmc.ncbi.nlm.nih.gov/articles/instance/11066909/bin/noad265_suppl_supplementary_table_s7.xlsx,,,,xlsx,local-data,No Title,sup15,No description
+https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11352417/#app1-biomolecules-14-00969,data availability,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11352417/,,,JPST002506,ProteomeXchange Consortium via jPOST partner repository,na,,data_link,,,
+https://pmc.ncbi.nlm.nih.gov/articles/PMC11352417/#app1-biomolecules-14-00969,data_availability_elements,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11352417/,,https://pmc.ncbi.nlm.nih.gov/articles/instance/11352417/bin/https://pmc.ncbi.nlm.nih.gov/articles/PMC11352417/#app1-biomolecules-14-00969,,,,,,,,
+https://proteomecentral.proteomexchange.org/cgi/GetDataset?ID=PXD049309,data_availability_elements,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11352417/,,https://pmc.ncbi.nlm.nih.gov/articles/instance/11352417/bin/https://proteomecentral.proteomexchange.org/cgi/GetDataset?ID=PXD049309,,,,,,,,
+,,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11352417/,,,PXD049309,https://proteomecentral.proteomexchange.org/cgi/GetDataset?ID=PXD049309,https://proteomecentral.proteomexchange.org/cgi/GetDataset?ID=PXD049309,,,,,
+https://www.mdpi.com/article/10.3390/biom14080969/s1,supplementary_data_elements,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11352417/,,https://pmc.ncbi.nlm.nih.gov/articles/instance/11352417/bin/https://www.mdpi.com/article/10.3390/biom14080969/s1,,,,,,,,
+https://pmc.ncbi.nlm.nih.gov/articles/instance/11352417/bin/biomolecules-14-00969-s001.zip,supplementary_data_elements,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11352417/,,https://pmc.ncbi.nlm.nih.gov/articles/instance/11352417/bin/https://pmc.ncbi.nlm.nih.gov/articles/instance/11352417/bin/biomolecules-14-00969-s001.zip,,,,zip,,,,
+biomolecules-14-00969-s001.zip,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11352417/,,https://pmc.ncbi.nlm.nih.gov/articles/instance/11352417/bin/biomolecules-14-00969-s001.zip,,,,zip,local-data,No Title,biomolecules-14-00969-s001,No description
+https://www.proteomexchange.org/,data_availability_elements,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC10855131/,,https://pmc.ncbi.nlm.nih.gov/articles/instance/10855131/bin/https://www.proteomexchange.org/,,,,,,,,
+,,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC10855131/,,,PXD047284,https://www.proteomexchange.org,na,,,,,
+http://proteomecentral.proteomexchange.org/cgi/GetDataset?ID=PXD042233,data availability,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11208500/,,,PXD042233,http://proteomecentral.proteomexchange.org/cgi/GetDataset?ID=PXD042233,https://proteomecentral.proteomexchange.org/cgi/GetDataset?ID=PXD042233,,data_link,,,
+41467_2024_48711_MOESM1_ESM.pdf,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11208500/,Supplementary Information,https://pmc.ncbi.nlm.nih.gov/articles/instance/11208500/bin/41467_2024_48711_MOESM1_ESM.pdf,,,,pdf,local-data,No Title,MOESM1,Supplementary Information
+41467_2024_48711_MOESM2_ESM.pdf,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11208500/,Reporting Summary,https://pmc.ncbi.nlm.nih.gov/articles/instance/11208500/bin/41467_2024_48711_MOESM2_ESM.pdf,,,,pdf,local-data,No Title,MOESM2,Reporting Summary
+41467_2024_48711_MOESM3_ESM.pdf,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11208500/,Peer Review File,https://pmc.ncbi.nlm.nih.gov/articles/instance/11208500/bin/41467_2024_48711_MOESM3_ESM.pdf,,,,pdf,local-data,No Title,MOESM3,Peer Review File
+41467_2024_48711_MOESM4_ESM.xlsx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11208500/,Supplementary Data 1,https://pmc.ncbi.nlm.nih.gov/articles/instance/11208500/bin/41467_2024_48711_MOESM4_ESM.xlsx,,,,xlsx,local-data,No Title,MOESM4,Supplementary Data 1
+41467_2024_48711_MOESM5_ESM.xlsx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11208500/,Supplementary Data 2,https://pmc.ncbi.nlm.nih.gov/articles/instance/11208500/bin/41467_2024_48711_MOESM5_ESM.xlsx,,,,xlsx,local-data,No Title,MOESM5,Supplementary Data 2
+41467_2024_48711_MOESM6_ESM.xlsx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11208500/,Supplementary Data 3,https://pmc.ncbi.nlm.nih.gov/articles/instance/11208500/bin/41467_2024_48711_MOESM6_ESM.xlsx,,,,xlsx,local-data,No Title,MOESM6,Supplementary Data 3
+41467_2024_48711_MOESM7_ESM.xlsx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11208500/,Supplementary Data 4,https://pmc.ncbi.nlm.nih.gov/articles/instance/11208500/bin/41467_2024_48711_MOESM7_ESM.xlsx,,,,xlsx,local-data,No Title,MOESM7,Supplementary Data 4
+41467_2024_48711_MOESM8_ESM.xlsx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11208500/,Supplementary Data 5,https://pmc.ncbi.nlm.nih.gov/articles/instance/11208500/bin/41467_2024_48711_MOESM8_ESM.xlsx,,,,xlsx,local-data,No Title,MOESM8,Supplementary Data 5
+41467_2024_48711_MOESM9_ESM.xlsx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11208500/,Supplementary Data 6,https://pmc.ncbi.nlm.nih.gov/articles/instance/11208500/bin/41467_2024_48711_MOESM9_ESM.xlsx,,,,xlsx,local-data,No Title,MOESM9,Supplementary Data 6
+41467_2024_48711_MOESM10_ESM.xlsx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11208500/,Supplementary Data 7,https://pmc.ncbi.nlm.nih.gov/articles/instance/11208500/bin/41467_2024_48711_MOESM10_ESM.xlsx,,,,xlsx,local-data,No Title,MOESM10,Supplementary Data 7
+41467_2024_48711_MOESM11_ESM.xlsx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11208500/,Supplementary Data 8,https://pmc.ncbi.nlm.nih.gov/articles/instance/11208500/bin/41467_2024_48711_MOESM11_ESM.xlsx,,,,xlsx,local-data,No Title,MOESM11,Supplementary Data 8
+41467_2024_48711_MOESM12_ESM.xlsx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11208500/,Supplementary Data 9,https://pmc.ncbi.nlm.nih.gov/articles/instance/11208500/bin/41467_2024_48711_MOESM12_ESM.xlsx,,,,xlsx,local-data,No Title,MOESM12,Supplementary Data 9
+41467_2024_48711_MOESM13_ESM.xlsx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11208500/,Supplementary Data 10,https://pmc.ncbi.nlm.nih.gov/articles/instance/11208500/bin/41467_2024_48711_MOESM13_ESM.xlsx,,,,xlsx,local-data,No Title,MOESM13,Supplementary Data 10
+41467_2024_48711_MOESM14_ESM.xlsx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11208500/,Supplementary Data 11,https://pmc.ncbi.nlm.nih.gov/articles/instance/11208500/bin/41467_2024_48711_MOESM14_ESM.xlsx,,,,xlsx,local-data,No Title,MOESM14,Supplementary Data 11
+41467_2024_48711_MOESM15_ESM.xlsx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11208500/,Supplementary Data 12,https://pmc.ncbi.nlm.nih.gov/articles/instance/11208500/bin/41467_2024_48711_MOESM15_ESM.xlsx,,,,xlsx,local-data,No Title,MOESM15,Supplementary Data 12
+41467_2024_48711_MOESM16_ESM.xlsx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11208500/,Supplementary Data 13,https://pmc.ncbi.nlm.nih.gov/articles/instance/11208500/bin/41467_2024_48711_MOESM16_ESM.xlsx,,,,xlsx,local-data,No Title,MOESM16,Supplementary Data 13
+41467_2024_48711_MOESM17_ESM.xlsx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11208500/,Supplementary Data 14,https://pmc.ncbi.nlm.nih.gov/articles/instance/11208500/bin/41467_2024_48711_MOESM17_ESM.xlsx,,,,xlsx,local-data,No Title,MOESM17,Supplementary Data 14
+41467_2024_48711_MOESM18_ESM.xlsx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11208500/,Source Data,https://pmc.ncbi.nlm.nih.gov/articles/instance/11208500/bin/41467_2024_48711_MOESM18_ESM.xlsx,,,,xlsx,local-data,No Title,MOESM18,Source Data
+https://pdc.cancer.gov/pdc/,data availability,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11129317/,,,PDC IDs,https://pdc.cancer.gov/pdc/,https://pdc.cancer.gov/pdc/study/PDC IDs,,data_link,,,
+https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11129317/#sec4.1,data availability,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11129317/,,,DOI listed in the key resources table,Mendeley Data,na,,data_link,,,
+https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11129317/#sec4.2.1,data availability,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11129317/,,,None,None,na,,data_link,,,
+mmc1.pdf,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11129317/,Document S1. Figures S1–S6,https://pmc.ncbi.nlm.nih.gov/articles/instance/11129317/bin/mmc1.pdf,,,,pdf,local-data,Document S1. Figures S1–S6,mmc1,No description
+mmc2.zip,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11129317/,File S1. Detailed Philosopher parameters for substitutant library scanning,https://pmc.ncbi.nlm.nih.gov/articles/instance/11129317/bin/mmc2.zip,,,,zip,local-data,File S1. Detailed Philosopher parameters for substitutant library scanning,mmc2,No description
+mmc3.xlsx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11129317/,"Table S1. Identified arginine to all other amino acid substitution peptides in different cancers, related to Figure 1",https://pmc.ncbi.nlm.nih.gov/articles/instance/11129317/bin/mmc3.xlsx,,,,xlsx,local-data,"Table S1. Identified arginine to all other amino acid substitution peptides in different cancers, related to Figure 1",mmc3,No description
+mmc4.xlsx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11129317/,"Table S2. Arginine-to-cysteine substitutants with codon-specific analysis in LSCC, related to Figure 3",https://pmc.ncbi.nlm.nih.gov/articles/instance/11129317/bin/mmc4.xlsx,,,,xlsx,local-data,"Table S2. Arginine-to-cysteine substitutants with codon-specific analysis in LSCC, related to Figure 3",mmc4,No description
+mmc5.xlsx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11129317/,"Table S3. Arginine substitutants codon-specific analysis in different cancers, related to Figure 1",https://pmc.ncbi.nlm.nih.gov/articles/instance/11129317/bin/mmc5.xlsx,,,,xlsx,local-data,"Table S3. Arginine substitutants codon-specific analysis in different cancers, related to Figure 1",mmc5,No description
+mmc6.xlsx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11129317/,"Table S4. Proteomic analysis of MDA-MB-231 cells treated with arginine depletion, related to Figure 4",https://pmc.ncbi.nlm.nih.gov/articles/instance/11129317/bin/mmc6.xlsx,,,,xlsx,local-data,"Table S4. Proteomic analysis of MDA-MB-231 cells treated with arginine depletion, related to Figure 4",mmc6,No description
+mmc7.xlsx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11129317/,"Table S5. Ontology-enrichment analysis of arginine-to-cysteine substitutants, related to Figure 5",https://pmc.ncbi.nlm.nih.gov/articles/instance/11129317/bin/mmc7.xlsx,,,,xlsx,local-data,"Table S5. Ontology-enrichment analysis of arginine-to-cysteine substitutants, related to Figure 5",mmc7,No description
+mmc8.xlsx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11129317/,"Table S6. Proteomics analysis of A549 cells treated with arginine depletion, related to Figure 5",https://pmc.ncbi.nlm.nih.gov/articles/instance/11129317/bin/mmc8.xlsx,,,,xlsx,local-data,"Table S6. Proteomics analysis of A549 cells treated with arginine depletion, related to Figure 5",mmc8,No description
+mmc9.xlsx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11129317/,"Table S7. DNA fragments of the plasmids used in this study, related to Figures 3, 4, and 5",https://pmc.ncbi.nlm.nih.gov/articles/instance/11129317/bin/mmc9.xlsx,,,,xlsx,local-data,"Table S7. DNA fragments of the plasmids used in this study, related to Figures 3, 4, and 5",mmc9,No description
+mmc10.pdf,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11129317/,Document S2. Article plus supplemental information,https://pmc.ncbi.nlm.nih.gov/articles/instance/11129317/bin/mmc10.pdf,,,,pdf,local-data,Document S2. Article plus supplemental information,mmc10,No description
+http://www.iprox.org,data availability,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11423856/,,,IPX0004230000,http://www.iprox.org,na,,data_link,,,
+https://pmc.ncbi.nlm.nih.gov/articles/instance/11423856/bin/qzae033_supplementary_data.zip,supplementary_data_elements,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11423856/,,https://pmc.ncbi.nlm.nih.gov/articles/instance/11423856/bin/https://pmc.ncbi.nlm.nih.gov/articles/instance/11423856/bin/qzae033_supplementary_data.zip,,,,zip,,,,
+qzae033_supplementary_data.zip,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11423856/,qzae033_Supplementary_Data,https://pmc.ncbi.nlm.nih.gov/articles/instance/11423856/bin/qzae033_supplementary_data.zip,,,,zip,local-data,No Title,sup1,No description
+jitc-2023-007588supp001.pdf,supplementary material inline,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11015306/,,https://pmc.ncbi.nlm.nih.gov/articles/instance/11015306/bin/jitc-2023-007588supp001.pdf,,,,pdf,local-data,No Title,SS1,
+jitc-2023-007588supp002.pdf,supplementary material inline,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11015306/,,https://pmc.ncbi.nlm.nih.gov/articles/instance/11015306/bin/jitc-2023-007588supp002.pdf,,,,pdf,local-data,No Title,SS2,
+jitc-2023-007588supp003.pdf,supplementary material inline,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11015306/,,https://pmc.ncbi.nlm.nih.gov/articles/instance/11015306/bin/jitc-2023-007588supp003.pdf,,,,pdf,local-data,No Title,SS3,
+http://proteomecentral.proteomexchange.org,data availability,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11062922/,,,MSV000092248,http://proteomecentral.proteomexchange.org,na,,data_link,,,
+https://doi.org/10.2210/pdb7ZWE/pdb,,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11062922/,,,7ZWE,doi.org,https://doi.org/10.2210/pdb7ZWE/pdb,,,,,
+https://doi.org/10.2210/pdb7A4Q/pdb,,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11062922/,,,7A4Q,doi.org,https://doi.org/10.2210/pdb7A4Q/pdb,,,,,
+https://doi.org/10.2210/pdb7ZWG/pdb,,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11062922/,,,7ZWG,doi.org,https://doi.org/10.2210/pdb7ZWG/pdb,,,,,
+41589_2023_1459_MOESM1_ESM.pdf,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11062922/,Reporting Summary,https://pmc.ncbi.nlm.nih.gov/articles/instance/11062922/bin/41589_2023_1459_MOESM1_ESM.pdf,,,,pdf,local-data,No Title,MOESM1,Reporting Summary
+41589_2023_1459_MOESM2_ESM.xlsx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11062922/,Supplementary Table 1 Compound annotation.,https://pmc.ncbi.nlm.nih.gov/articles/instance/11062922/bin/41589_2023_1459_MOESM2_ESM.xlsx,,,,xlsx,local-data,No Title,MOESM2,Compound annotation.
+41589_2023_1459_MOESM3_ESM.xlsx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11062922/,Supplementary Table 2 Drug matrix of target affinity values.,https://pmc.ncbi.nlm.nih.gov/articles/instance/11062922/bin/41589_2023_1459_MOESM3_ESM.xlsx,,,,xlsx,local-data,No Title,MOESM3,Drug matrix of target affinity values.
+41589_2023_1459_MOESM4_ESM.xlsx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11062922/,Supplementary Table 3 Selectivities of tool compounds.,https://pmc.ncbi.nlm.nih.gov/articles/instance/11062922/bin/41589_2023_1459_MOESM4_ESM.xlsx,,,,xlsx,local-data,No Title,MOESM4,Selectivities of tool compounds.
+41589_2023_1459_MOESM5_ESM.xlsx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11062922/,Supplementary Table 4 Results related to CK2 follow-up experiments.,https://pmc.ncbi.nlm.nih.gov/articles/instance/11062922/bin/41589_2023_1459_MOESM5_ESM.xlsx,,,,xlsx,local-data,No Title,MOESM5,Results related to CK2 follow-up experiments.
+41589_2023_1459_MOESM6_ESM.xlsx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11062922/,Supplementary Table 5 Results related to PKN3 follow-up experiments.,https://pmc.ncbi.nlm.nih.gov/articles/instance/11062922/bin/41589_2023_1459_MOESM6_ESM.xlsx,,,,xlsx,local-data,No Title,MOESM6,Results related to PKN3 follow-up experiments.
+41589_2023_1459_MOESM7_ESM.pdf,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11062922/,Source Data Fig. 3 Unprocessed western blots.,https://pmc.ncbi.nlm.nih.gov/articles/instance/11062922/bin/41589_2023_1459_MOESM7_ESM.pdf,,,,pdf,local-data,No Title,MOESM7,Unprocessed western blots.
+41589_2023_1459_MOESM8_ESM.pdf,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11062922/,Source Data Extended Data Fig. 4 Unprocessed western blots.,https://pmc.ncbi.nlm.nih.gov/articles/instance/11062922/bin/41589_2023_1459_MOESM8_ESM.pdf,,,,pdf,local-data,No Title,MOESM8,Unprocessed western blots.

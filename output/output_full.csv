@@ -1,0 +1,36 @@
+link,source_section,source_url,surrounding_text,download_link,dataset_identifier,data_repository,dataset_webpage,title,content_type,id,description,file_extension
+https://www.ncbi.nlm.nih.gov/projects/gap/cgi-bin/study.cgi?study_id=phs001366.v1.p1,data_availability_elements,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5460863,,https://pmc.ncbi.nlm.nih.gov/articles/instance/5460863/bin/https://www.ncbi.nlm.nih.gov/projects/gap/cgi-bin/study.cgi?study_id=phs001366.v1.p1,,,,,,,,p1
+,,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5460863,,,phs001366.v1.p1,https://www.ncbi.nlm.nih.gov/projects/gap/cgi-bin/study.cgi?study_id=phs001366.v1.p1,na,,,,,
+pone.0179170.s001.xlsx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5460863,"S1 Table 
+         
+           Summary of potentially actionable genomic alterations. 
+           Detailed information on potentially therapeutically actionable alterations identified in 12 SCLC tumors. 
+           (XLSX) 
+         
+         
+           
+             Click here for additional data file.",https://pmc.ncbi.nlm.nih.gov/articles/instance/5460863/bin/pone.0179170.s001.xlsx,,,,Summary of potentially actionable genomic alterations.,local-data,pone.0179170.s001,Detailed information on potentially therapeutically actionable alterations identified in 12 SCLC tumors.,xlsx
+pone.0179170.s002.pdf,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5460863,"S1 File 
+         
+           Protocol. 
+           The protocol for this pilot study. 
+           (PDF) 
+         
+         
+           
+             Click here for additional data file.",https://pmc.ncbi.nlm.nih.gov/articles/instance/5460863/bin/pone.0179170.s002.pdf,,,,Protocol.,local-data,pone.0179170.s002,The protocol for this pilot study.,pdf
+pone.0179170.s003.pdf,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5460863,"S2 File 
+         
+           TREND checklist. 
+           The completed TREND checklist submitted for this manuscript. 
+           (PDF) 
+         
+         
+           
+             Click here for additional data file.",https://pmc.ncbi.nlm.nih.gov/articles/instance/5460863/bin/pone.0179170.s003.pdf,,,,TREND checklist.,local-data,pone.0179170.s003,The completed TREND checklist submitted for this manuscript.,pdf
+,data_availability,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC9132937,,,PXD027488,http://www.ebi.ac.uk/pride/archive/projects/PXD027488,https://www.ebi.ac.uk/pride/archive/projects/PXD027488,,,,,
+,data_availability,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC9132937,,,PXD032161,http://www.ebi.ac.uk/pride/archive/projects/PXD032161,https://www.ebi.ac.uk/pride/archive/projects/PXD032161,,,,,
+41467_2022_30623_MOESM1_ESM.pdf,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC9132937,Supplementary Information,https://pmc.ncbi.nlm.nih.gov/articles/instance/9132937/bin/41467_2022_30623_MOESM1_ESM.pdf,,,,No Title,local-data,MOESM1,Supplementary Information,pdf
+41467_2022_30623_MOESM2_ESM.pdf,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC9132937,Peer Review File,https://pmc.ncbi.nlm.nih.gov/articles/instance/9132937/bin/41467_2022_30623_MOESM2_ESM.pdf,,,,No Title,local-data,MOESM2,Peer Review File,pdf
+41467_2022_30623_MOESM3_ESM.docx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC9132937,Description of Additional Supplementary Files,https://pmc.ncbi.nlm.nih.gov/articles/instance/9132937/bin/41467_2022_30623_MOESM3_ESM.docx,,,,No Title,local-data,MOESM3,Description of Additional Supplementary Files,docx
+41467_2022_30623_MOESM4_ESM.xlsx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC9132937,Supplementary Datasets,https://pmc.ncbi.nlm.nih.gov/articles/instance/9132937/bin/41467_2022_30623_MOESM4_ESM.xlsx,,,,No Title,local-data,MOESM4,Supplementary Datasets,xlsx

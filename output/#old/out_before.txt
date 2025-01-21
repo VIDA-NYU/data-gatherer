@@ -1,0 +1,33 @@
+Paper https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11252349/. gt_datasets: {'PXD053567'}
+Paper https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11252349/. extracted_datasets: {'PXD053567'}
+Paper https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11252349/. Precision: 1.0, Recall: 1.0
+Paper https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11425778/. gt_datasets: {'MSV000092944'}
+Paper https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11425778/. extracted_datasets: {'MSV000092944'}
+Paper https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11425778/. Precision: 1.0, Recall: 1.0
+Paper https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11320025/. gt_datasets: {'PXD052949', '6077-6129', nan}
+Paper https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11320025/. extracted_datasets: {'PXD052949', '6077-6129'}
+Paper https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11320025/. Precision: 1.0, Recall: 0.6666666666666666
+Paper https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11066909/. gt_datasets: {'PXD045268'}
+Paper https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11066909/. extracted_datasets: {'PXD045268'}
+Paper https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11066909/. Precision: 1.0, Recall: 1.0
+Paper https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11352417/. gt_datasets: {'PXD049309'}
+Paper https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11352417/. extracted_datasets: {'PXD049309', 'JPST002506'}
+Paper https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11352417/. Precision: 0.5, Recall: 1.0
+Paper https://www.ncbi.nlm.nih.gov/pmc/articles/PMC10855131/. gt_datasets: {'PXD047284'}
+Paper https://www.ncbi.nlm.nih.gov/pmc/articles/PMC10855131/. extracted_datasets: {'PXD047284', '10.6019/PXD047284'}
+Paper https://www.ncbi.nlm.nih.gov/pmc/articles/PMC10855131/. Precision: 0.5, Recall: 1.0
+Paper https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11129317/. gt_datasets: {'PDC000110', '10.17632/3wfxrz66w2.1', 'PDC000221', '10.17632/bvdn865y9c.1', 'PXD043612', 'PDC000204', 'PDC000153', 'PDC000234', 'PDC000270', 'PDC000198', 'PDC000125', 'PDC000127'}
+Paper https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11129317/. extracted_datasets: {'Mendeley Data', 'Mendeley', 'PDC commons', 'Pride'}
+Paper https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11129317/. Precision: 0.0, Recall: 0.0
+Paper https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11423856/. gt_datasets: {'IPX0004230000'}
+Paper https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11423856/. extracted_datasets: {'IPX0004230000'}
+Paper https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11423856/. Precision: 1.0, Recall: 1.0
+Paper https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11015306/. gt_datasets: {'empty'}
+Paper https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11015306/. extracted_datasets: {'empty'}
+Paper https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11015306/. Precision: 1.0, Recall: 1.0
+Paper https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11062922/. gt_datasets: {'7A4Q', '7ZWG', 'MSV000092248', '7ZWE'}
+Paper https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11062922/. extracted_datasets: {'7A4Q', '7ZWG', 'MSV000092248', '7ZWE'}
+Paper https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11062922/. Precision: 1.0, Recall: 1.0
+Paper https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11208500/. gt_datasets: {'PXD042233', 'ID OP_040'}
+Paper https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11208500/. extracted_datasets: {'PXD042233'}
+Paper https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11208500/. Precision: 1.0, Recall: 0.5
