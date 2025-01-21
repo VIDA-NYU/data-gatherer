@@ -1,0 +1,1552 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE pmc-articleset PUBLIC "-//NLM//DTD ARTICLE SET 2.0//EN" "https://dtd.nlm.nih.gov/ncbi/pmc/articleset/nlm-articleset-2.0.dtd">
+<pmc-articleset><article xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:mml="http://www.w3.org/1998/Math/MathML" article-type="research-article">
+  <?properties open_access?>
+  <front>
+    <journal-meta>
+      <journal-id journal-id-type="nlm-ta">PLoS Genet</journal-id>
+      <journal-id journal-id-type="iso-abbrev">PLoS Genet</journal-id>
+      <journal-id journal-id-type="publisher-id">plos</journal-id>
+      <journal-id journal-id-type="pmc">plosgen</journal-id>
+      <journal-title-group>
+        <journal-title>PLoS Genetics</journal-title>
+      </journal-title-group>
+      <issn pub-type="ppub">1553-7390</issn>
+      <issn pub-type="epub">1553-7404</issn>
+      <publisher>
+        <publisher-name>Public Library of Science</publisher-name>
+        <publisher-loc>San Francisco, CA USA</publisher-loc>
+      </publisher>
+    </journal-meta>
+    <article-meta>
+      <article-id pub-id-type="pmid">27093186</article-id>
+      <article-id pub-id-type="pmc">4836692</article-id>
+      <article-id pub-id-type="doi">10.1371/journal.pgen.1005895</article-id>
+      <article-id pub-id-type="publisher-id">PGENETICS-D-15-02542</article-id>
+      <article-categories>
+        <subj-group subj-group-type="heading">
+          <subject>Research Article</subject>
+        </subj-group>
+        <subj-group subj-group-type="Discipline-v3">
+          <subject>Medicine and Health Sciences</subject>
+          <subj-group>
+            <subject>Oncology</subject>
+            <subj-group>
+              <subject>Cancers and Neoplasms</subject>
+              <subj-group>
+                <subject>Lung and Intrathoracic Tumors</subject>
+                <subj-group>
+                  <subject>Small Cell Lung Cancer</subject>
+                </subj-group>
+              </subj-group>
+            </subj-group>
+          </subj-group>
+        </subj-group>
+        <subj-group subj-group-type="Discipline-v3">
+          <subject>Biology and life sciences</subject>
+          <subj-group>
+            <subject>Genetics</subject>
+            <subj-group>
+              <subject>Gene expression</subject>
+              <subj-group>
+                <subject>Gene regulation</subject>
+                <subj-group>
+                  <subject>Small interfering RNAs</subject>
+                </subj-group>
+              </subj-group>
+            </subj-group>
+          </subj-group>
+        </subj-group>
+        <subj-group subj-group-type="Discipline-v3">
+          <subject>Biology and life sciences</subject>
+          <subj-group>
+            <subject>Biochemistry</subject>
+            <subj-group>
+              <subject>Nucleic acids</subject>
+              <subj-group>
+                <subject>RNA</subject>
+                <subj-group>
+                  <subject>Non-coding RNA</subject>
+                  <subj-group>
+                    <subject>Small interfering RNAs</subject>
+                  </subj-group>
+                </subj-group>
+              </subj-group>
+            </subj-group>
+          </subj-group>
+        </subj-group>
+        <subj-group subj-group-type="Discipline-v3">
+          <subject>People and Places</subject>
+          <subj-group>
+            <subject>Population Groupings</subject>
+            <subj-group>
+              <subject>Ethnicities</subject>
+              <subj-group>
+                <subject>Chinese People</subject>
+              </subj-group>
+            </subj-group>
+          </subj-group>
+        </subj-group>
+        <subj-group subj-group-type="Discipline-v3">
+          <subject>Biology and Life Sciences</subject>
+          <subj-group>
+            <subject>Genetics</subject>
+            <subj-group>
+              <subject>Gene Expression</subject>
+            </subj-group>
+          </subj-group>
+        </subj-group>
+        <subj-group subj-group-type="Discipline-v3">
+          <subject>Medicine and Health Sciences</subject>
+          <subj-group>
+            <subject>Oncology</subject>
+            <subj-group>
+              <subject>Cancer Treatment</subject>
+            </subj-group>
+          </subj-group>
+        </subj-group>
+        <subj-group subj-group-type="Discipline-v3">
+          <subject>Medicine and Health Sciences</subject>
+          <subj-group>
+            <subject>Oncology</subject>
+            <subj-group>
+              <subject>Carcinogenesis</subject>
+            </subj-group>
+          </subj-group>
+        </subj-group>
+        <subj-group subj-group-type="Discipline-v3">
+          <subject>Biology and life sciences</subject>
+          <subj-group>
+            <subject>Genetics</subject>
+            <subj-group>
+              <subject>DNA</subject>
+              <subj-group>
+                <subject>DNA repair</subject>
+              </subj-group>
+            </subj-group>
+          </subj-group>
+        </subj-group>
+        <subj-group subj-group-type="Discipline-v3">
+          <subject>Biology and life sciences</subject>
+          <subj-group>
+            <subject>Biochemistry</subject>
+            <subj-group>
+              <subject>Nucleic acids</subject>
+              <subj-group>
+                <subject>DNA</subject>
+                <subj-group>
+                  <subject>DNA repair</subject>
+                </subj-group>
+              </subj-group>
+            </subj-group>
+          </subj-group>
+        </subj-group>
+        <subj-group subj-group-type="Discipline-v3">
+          <subject>Biology and Life Sciences</subject>
+          <subj-group>
+            <subject>Genetics</subject>
+            <subj-group>
+              <subject>Human Genetics</subject>
+            </subj-group>
+          </subj-group>
+        </subj-group>
+      </article-categories>
+      <title-group>
+        <article-title>Genomic Landscape Survey Identifies <italic>SRSF1</italic> as a Key Oncodriver in Small Cell Lung Cancer</article-title>
+        <alt-title alt-title-type="running-head"><italic>SRSF1</italic> Is a Key Oncodriver in Small Cell Lung Cancer</alt-title>
+      </title-group>
+      <contrib-group>
+        <contrib contrib-type="author" equal-contrib="yes">
+          <name>
+            <surname>Jiang</surname>
+            <given-names>Liyan</given-names>
+          </name>
+          <xref ref-type="aff" rid="aff001">
+            <sup>1</sup>
+          </xref>
+        </contrib>
+        <contrib contrib-type="author" equal-contrib="yes">
+          <name>
+            <surname>Huang</surname>
+            <given-names>Jiaqi</given-names>
+          </name>
+          <xref ref-type="aff" rid="aff002">
+            <sup>2</sup>
+          </xref>
+        </contrib>
+        <contrib contrib-type="author" equal-contrib="yes">
+          <name>
+            <surname>Higgs</surname>
+            <given-names>Brandon W.</given-names>
+          </name>
+          <xref ref-type="aff" rid="aff002">
+            <sup>2</sup>
+          </xref>
+        </contrib>
+        <contrib contrib-type="author" equal-contrib="yes">
+          <name>
+            <surname>Hu</surname>
+            <given-names>Zhibin</given-names>
+          </name>
+          <xref ref-type="aff" rid="aff003">
+            <sup>3</sup>
+          </xref>
+        </contrib>
+        <contrib contrib-type="author" equal-contrib="yes">
+          <name>
+            <surname>Xiao</surname>
+            <given-names>Zhan</given-names>
+          </name>
+          <xref ref-type="aff" rid="aff002">
+            <sup>2</sup>
+          </xref>
+        </contrib>
+        <contrib contrib-type="author">
+          <name>
+            <surname>Yao</surname>
+            <given-names>Xin</given-names>
+          </name>
+          <xref ref-type="aff" rid="aff002">
+            <sup>2</sup>
+          </xref>
+        </contrib>
+        <contrib contrib-type="author">
+          <name>
+            <surname>Conley</surname>
+            <given-names>Sarah</given-names>
+          </name>
+          <xref ref-type="aff" rid="aff002">
+            <sup>2</sup>
+          </xref>
+        </contrib>
+        <contrib contrib-type="author">
+          <name>
+            <surname>Zhong</surname>
+            <given-names>Haihong</given-names>
+          </name>
+          <xref ref-type="aff" rid="aff002">
+            <sup>2</sup>
+          </xref>
+        </contrib>
+        <contrib contrib-type="author">
+          <name>
+            <surname>Liu</surname>
+            <given-names>Zheng</given-names>
+          </name>
+          <xref ref-type="aff" rid="aff002">
+            <sup>2</sup>
+          </xref>
+        </contrib>
+        <contrib contrib-type="author">
+          <name>
+            <surname>Brohawn</surname>
+            <given-names>Philip</given-names>
+          </name>
+          <xref ref-type="aff" rid="aff002">
+            <sup>2</sup>
+          </xref>
+        </contrib>
+        <contrib contrib-type="author">
+          <name>
+            <surname>Shen</surname>
+            <given-names>Dong</given-names>
+          </name>
+          <xref ref-type="aff" rid="aff002">
+            <sup>2</sup>
+          </xref>
+        </contrib>
+        <contrib contrib-type="author">
+          <name>
+            <surname>Wu</surname>
+            <given-names>Song</given-names>
+          </name>
+          <xref ref-type="aff" rid="aff002">
+            <sup>2</sup>
+          </xref>
+        </contrib>
+        <contrib contrib-type="author">
+          <name>
+            <surname>Ge</surname>
+            <given-names>Xiaoxiao</given-names>
+          </name>
+          <xref ref-type="aff" rid="aff001">
+            <sup>1</sup>
+          </xref>
+        </contrib>
+        <contrib contrib-type="author">
+          <name>
+            <surname>Jiang</surname>
+            <given-names>Yue</given-names>
+          </name>
+          <xref ref-type="aff" rid="aff003">
+            <sup>3</sup>
+          </xref>
+        </contrib>
+        <contrib contrib-type="author">
+          <name>
+            <surname>Zhao</surname>
+            <given-names>Yizhuo</given-names>
+          </name>
+          <xref ref-type="aff" rid="aff001">
+            <sup>1</sup>
+          </xref>
+        </contrib>
+        <contrib contrib-type="author">
+          <name>
+            <surname>Lou</surname>
+            <given-names>Yuqing</given-names>
+          </name>
+          <xref ref-type="aff" rid="aff001">
+            <sup>1</sup>
+          </xref>
+        </contrib>
+        <contrib contrib-type="author">
+          <name>
+            <surname>Morehouse</surname>
+            <given-names>Chris</given-names>
+          </name>
+          <xref ref-type="aff" rid="aff002">
+            <sup>2</sup>
+          </xref>
+        </contrib>
+        <contrib contrib-type="author">
+          <name>
+            <surname>Zhu</surname>
+            <given-names>Wei</given-names>
+          </name>
+          <xref ref-type="aff" rid="aff002">
+            <sup>2</sup>
+          </xref>
+        </contrib>
+        <contrib contrib-type="author">
+          <name>
+            <surname>Sebastian</surname>
+            <given-names>Yinong</given-names>
+          </name>
+          <xref ref-type="aff" rid="aff002">
+            <sup>2</sup>
+          </xref>
+        </contrib>
+        <contrib contrib-type="author">
+          <name>
+            <surname>Czapiga</surname>
+            <given-names>Meggan</given-names>
+          </name>
+          <xref ref-type="aff" rid="aff002">
+            <sup>2</sup>
+          </xref>
+        </contrib>
+        <contrib contrib-type="author">
+          <name>
+            <surname>Oganesyan</surname>
+            <given-names>Vaheh</given-names>
+          </name>
+          <xref ref-type="aff" rid="aff002">
+            <sup>2</sup>
+          </xref>
+        </contrib>
+        <contrib contrib-type="author">
+          <name>
+            <surname>Fu</surname>
+            <given-names>Haihua</given-names>
+          </name>
+          <xref ref-type="aff" rid="aff004">
+            <sup>4</sup>
+          </xref>
+        </contrib>
+        <contrib contrib-type="author">
+          <name>
+            <surname>Niu</surname>
+            <given-names>Yanjie</given-names>
+          </name>
+          <xref ref-type="aff" rid="aff001">
+            <sup>1</sup>
+          </xref>
+        </contrib>
+        <contrib contrib-type="author">
+          <name>
+            <surname>Zhang</surname>
+            <given-names>Wei</given-names>
+          </name>
+          <xref ref-type="aff" rid="aff001">
+            <sup>1</sup>
+          </xref>
+        </contrib>
+        <contrib contrib-type="author">
+          <name>
+            <surname>Streicher</surname>
+            <given-names>Katie</given-names>
+          </name>
+          <xref ref-type="aff" rid="aff002">
+            <sup>2</sup>
+          </xref>
+        </contrib>
+        <contrib contrib-type="author">
+          <name>
+            <surname>Tice</surname>
+            <given-names>David</given-names>
+          </name>
+          <xref ref-type="aff" rid="aff002">
+            <sup>2</sup>
+          </xref>
+        </contrib>
+        <contrib contrib-type="author">
+          <name>
+            <surname>Zhao</surname>
+            <given-names>Heng</given-names>
+          </name>
+          <xref ref-type="aff" rid="aff001">
+            <sup>1</sup>
+          </xref>
+        </contrib>
+        <contrib contrib-type="author">
+          <name>
+            <surname>Zhu</surname>
+            <given-names>Meng</given-names>
+          </name>
+          <xref ref-type="aff" rid="aff003">
+            <sup>3</sup>
+          </xref>
+        </contrib>
+        <contrib contrib-type="author">
+          <name>
+            <surname>Xu</surname>
+            <given-names>Lin</given-names>
+          </name>
+          <xref ref-type="aff" rid="aff003">
+            <sup>3</sup>
+          </xref>
+        </contrib>
+        <contrib contrib-type="author">
+          <name>
+            <surname>Herbst</surname>
+            <given-names>Ronald</given-names>
+          </name>
+          <xref ref-type="aff" rid="aff002">
+            <sup>2</sup>
+          </xref>
+        </contrib>
+        <contrib contrib-type="author">
+          <name>
+            <surname>Su</surname>
+            <given-names>Xinying</given-names>
+          </name>
+          <xref ref-type="aff" rid="aff004">
+            <sup>4</sup>
+          </xref>
+        </contrib>
+        <contrib contrib-type="author">
+          <name>
+            <surname>Gu</surname>
+            <given-names>Yi</given-names>
+          </name>
+          <xref ref-type="aff" rid="aff004">
+            <sup>4</sup>
+          </xref>
+        </contrib>
+        <contrib contrib-type="author">
+          <name>
+            <surname>Li</surname>
+            <given-names>Shyoung</given-names>
+          </name>
+          <xref ref-type="aff" rid="aff005">
+            <sup>5</sup>
+          </xref>
+        </contrib>
+        <contrib contrib-type="author">
+          <name>
+            <surname>Huang</surname>
+            <given-names>Lihua</given-names>
+          </name>
+          <xref ref-type="aff" rid="aff005">
+            <sup>5</sup>
+          </xref>
+        </contrib>
+        <contrib contrib-type="author">
+          <name>
+            <surname>Gu</surname>
+            <given-names>Jianren</given-names>
+          </name>
+          <xref ref-type="aff" rid="aff006">
+            <sup>6</sup>
+          </xref>
+        </contrib>
+        <contrib contrib-type="author">
+          <name>
+            <surname>Han</surname>
+            <given-names>Baohui</given-names>
+          </name>
+          <xref ref-type="aff" rid="aff001">
+            <sup>1</sup>
+          </xref>
+        </contrib>
+        <contrib contrib-type="author">
+          <name>
+            <surname>Jallal</surname>
+            <given-names>Bahija</given-names>
+          </name>
+          <xref ref-type="aff" rid="aff002">
+            <sup>2</sup>
+          </xref>
+        </contrib>
+        <contrib contrib-type="author">
+          <name>
+            <surname>Shen</surname>
+            <given-names>Hongbing</given-names>
+          </name>
+          <xref ref-type="aff" rid="aff003">
+            <sup>3</sup>
+          </xref>
+          <xref ref-type="corresp" rid="cor001">*</xref>
+        </contrib>
+        <contrib contrib-type="author">
+          <name>
+            <surname>Yao</surname>
+            <given-names>Yihong</given-names>
+          </name>
+          <xref ref-type="aff" rid="aff002">
+            <sup>2</sup>
+          </xref>
+          <xref ref-type="corresp" rid="cor001">*</xref>
+        </contrib>
+      </contrib-group>
+      <aff id="aff001"><label>1</label>
+<addr-line>Department of Pulmonary, Shanghai Chest Hospital, Shanghai Jiao Tong University, Shanghai, China</addr-line></aff>
+      <aff id="aff002"><label>2</label>
+<addr-line>Medimmune, Gaithersburg, Maryland, United States of America</addr-line></aff>
+      <aff id="aff003"><label>3</label>
+<addr-line>Department of Epidemiology and Biostatistics, Collaborative Innovation Center of Cancer Medicine, Jiangsu Key Lab of Cancer Biomarkers, Prevention and Treatment, School of Public Health, Nanjing Medical University, Nanjing, China</addr-line></aff>
+      <aff id="aff004"><label>4</label>
+<addr-line>Asia &amp; Emerging Markets iMed, AstraZeneca R&amp;D, Shanghai, China</addr-line></aff>
+      <aff id="aff005"><label>5</label>
+<addr-line>Beijing Genomics Institute, Shenzhen GuangDong, China</addr-line></aff>
+      <aff id="aff006"><label>6</label>
+<addr-line>Shanghai Cancer Institute, Renji Hospital, Shanghai Jiaotong University School of Medicine, Shanghai, China</addr-line></aff>
+      <contrib-group>
+        <contrib contrib-type="editor">
+          <name>
+            <surname>Hammerman</surname>
+            <given-names>Peter</given-names>
+          </name>
+          <role>Editor</role>
+          <xref ref-type="aff" rid="edit1"/>
+        </contrib>
+      </contrib-group>
+      <aff id="edit1">
+        <addr-line>Dana Farber Cancer Institute, UNITED STATES</addr-line>
+      </aff>
+      <author-notes>
+        <fn fn-type="COI-statement" id="coi001">
+          <p>JH, BWH, ZX, SC, YX, SC, BZ, CS, DS, SW, KS, LZ, ZH,TC, WZ, YS, MC, VO, RH, BJ, and YY are employees of Medimmune. XS, YU, HF are employees of AstraZeneca. They own AstraZeneca stock.</p>
+        </fn>
+        <fn fn-type="con" id="contrib001">
+          <p>Conceived and designed the experiments: LJ JH BWH ZX ZH HS YY HZ. Performed the experiments: XY SC HZ ZL PB DS XG YJ YZ YL CM WZ YS MC VO HF YN WZ HZ MZ. Analyzed the data: LJ JH BWH ZX ZH HS YY HZ XY SC HZ ZL PB DS SW KS XG YJ YZ YL CM WZ YS MC VO HF YN WZ HZ MZ DT LX RH XS YG SL LH JG BH BJ. Contributed reagents/materials/analysis tools: LJ SH YL XG YJ MC. Wrote the paper: LJ JH BWH ZX ZH HS YY HZ LZ SD.</p>
+        </fn>
+        <corresp id="cor001">* E-mail: <email>hbshen@njmu.edu.cn</email> (HS); <email>oliver_67@yahoo.com</email> (YY)</corresp>
+      </author-notes>
+      <pub-date pub-type="epub">
+        <day>19</day>
+        <month>4</month>
+        <year>2016</year>
+      </pub-date>
+      <pub-date pub-type="collection">
+        <month>4</month>
+        <year>2016</year>
+      </pub-date>
+      <volume>12</volume>
+      <issue>4</issue>
+      <elocation-id>e1005895</elocation-id>
+      <history>
+        <date date-type="received">
+          <day>19</day>
+          <month>10</month>
+          <year>2015</year>
+        </date>
+        <date date-type="accepted">
+          <day>3</day>
+          <month>2</month>
+          <year>2016</year>
+        </date>
+      </history>
+      <permissions>
+        <copyright-statement>© 2016 Jiang et al</copyright-statement>
+        <copyright-year>2016</copyright-year>
+        <copyright-holder>Jiang et al</copyright-holder>
+        <license xlink:href="http://creativecommons.org/licenses/by/4.0/">
+          <license-p>This is an open access article distributed under the terms of the <ext-link ext-link-type="uri" xlink:href="http://creativecommons.org/licenses/by/4.0/">Creative Commons Attribution License</ext-link>, which permits unrestricted use, distribution, and reproduction in any medium, provided the original author and source are credited.</license-p>
+        </license>
+      </permissions>
+      <self-uri content-type="pdf" xlink:type="simple" xlink:href="pgen.1005895.pdf"/>
+      <abstract>
+        <p>Small cell lung cancer (SCLC) is an aggressive disease with poor survival. A few sequencing studies performed on limited number of samples have revealed potential disease-driving genes in SCLC, however, much still remains unknown, particularly in the Asian patient population. Here we conducted whole exome sequencing (WES) and transcriptomic sequencing of primary tumors from 99 Chinese SCLC patients. Dysregulation of tumor suppressor genes <italic>TP53</italic> and <italic>RB1</italic> was observed in 82% and 62% of SCLC patients, respectively, and more than half of the SCLC patients (62%) harbored <italic>TP53</italic> and <italic>RB1</italic> mutation and/or copy number loss. Additionally, Serine/Arginine Splicing Factor 1 (<italic>SRSF1</italic>) DNA copy number gain and mRNA over-expression was strongly associated with poor survival using both discovery and validation patient cohorts. Functional studies <italic>in vitro</italic> and <italic>in vivo</italic> demonstrate that SRSF1 is important for tumorigenicity of SCLC and may play a key role in DNA repair and chemo-sensitivity. These results strongly support SRSF1 as a prognostic biomarker in SCLC and provide a rationale for personalized therapy in SCLC.</p>
+      </abstract>
+      <abstract abstract-type="summary">
+        <title>Author Summary</title>
+        <p>SCLC patients are initially highly chemo-sensitive with response rates of greater than 80% in both limited and extensive diseases, but suffer uniform disease recurrence or progression in a very short period of time. In the absence of well-defined genomic biomarkers and insights into the resistance mechanism, many targeted treatments have yielded negative results in the last decade Using integrated next generation sequencing (NGS) technology in combination with a high quality surgical sample set with comprehensive clinical annotation, our study not only identified novel recurrent genetic alterations in genes such as CDH10 and DNA repair pathways which may influence outcomes in SCLC patients, but also discovered the expression of SRSF1, an RNA-splicing factor which can both regulate key oncogenic and survival pathways such as BCL2, and play a critical role in patient survival.</p>
+      </abstract>
+      <funding-group>
+        <funding-statement>This study was supported by MedImmune/AstraZeneca. The funders had no role in study design, data collection and analysis, decision to publish, or preparation of the manuscript.</funding-statement>
+      </funding-group>
+      <counts>
+        <fig-count count="5"/>
+        <table-count count="1"/>
+        <page-count count="22"/>
+      </counts>
+      <custom-meta-group>
+        <custom-meta id="data-availability">
+          <meta-name>Data Availability</meta-name>
+          <meta-value>All analysis results are within the paper and its Supporting Information files. RNASeq data has been deposited into GEO under accession GSE60052 (<ext-link ext-link-type="uri" xlink:href="http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE60052">http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE60052</ext-link>); while WES data was deposited into dBGaP under accession ID phs001083.v1.p1 (<ext-link ext-link-type="uri" xlink:href="http://www.ncbi.nlm.nih.gov/projects/gap/cgi-bin/study.cgi?study_id=phs001083.v1.p1">http://www.ncbi.nlm.nih.gov/projects/gap/cgi-bin/study.cgi?study_id=phs001083.v1.p1</ext-link>.)</meta-value>
+        </custom-meta>
+      </custom-meta-group>
+    </article-meta>
+    <notes>
+      <title>Data Availability</title>
+      <p>All analysis results are within the paper and its Supporting Information files. RNASeq data has been deposited into GEO under accession GSE60052 (<ext-link ext-link-type="uri" xlink:href="http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE60052">http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE60052</ext-link>); while WES data was deposited into dBGaP under accession ID phs001083.v1.p1 (<ext-link ext-link-type="uri" xlink:href="http://www.ncbi.nlm.nih.gov/projects/gap/cgi-bin/study.cgi?study_id=phs001083.v1.p1">http://www.ncbi.nlm.nih.gov/projects/gap/cgi-bin/study.cgi?study_id=phs001083.v1.p1</ext-link>.)</p>
+    </notes>
+  </front>
+  <body>
+    <sec sec-type="intro" id="sec001">
+      <title>Introduction</title>
+      <p>Small cell lung cancer (SCLC) represents 13% of all newly diagnosed cases of lung cancer worldwide with more than 180,000 cases per year [<xref rid="pgen.1005895.ref001" ref-type="bibr">1</xref>]. It is an aggressive neuroendocrine malignancy with a unique natural history of a short doubling time, high growth fraction, and early development of widespread metastases [<xref rid="pgen.1005895.ref002" ref-type="bibr">2</xref>]. Most patients are very sensitive to thoracic radiotherapy and platinum drugs such as cisplatin and carboplatin, but suffer disease recurrence or progression in a very short period of time following initial treatment [<xref rid="pgen.1005895.ref001" ref-type="bibr">1</xref>]. Currently, for recurrent or progressive SCLC, the only drug approved in the United States and Europe is topotecan, a topoisomerase 1 (<italic>Top1</italic>) inhibitor which provides some benefit, though the five year survival rate of SCLC has remained unchanged at~5% for the last four decades [<xref rid="pgen.1005895.ref002" ref-type="bibr">2</xref>].</p>
+      <p>To improve patient outcomes in SCLC, it is critical to understand the key genetic alterations that contribute to the specific disease phenotypes and their utility for potential therapeutic targets. However, systematic genetics and genomics analyses of large cohorts of SCLC patients remains a challenge, primarily because SCLC usually presents as extensive disease upon diagnosis and hence is rarely treated surgically, thus causing a lack of suitable tumor specimens for comprehensive analysis. To date, these types of extensive genome-wide molecular analyses have been performed on relatively small patient cohorts, which provide utility restricted to the disease population sampled [<xref rid="pgen.1005895.ref003" ref-type="bibr">3</xref>, <xref rid="pgen.1005895.ref004" ref-type="bibr">4</xref>, <xref rid="pgen.1005895.ref005" ref-type="bibr">5</xref>]. Within these studies, among genes recurrently affected by genomic alterations in SCLC, <italic>TP53</italic>, <italic>RB1</italic>, as well as the amplification of <italic>MYC</italic> family members and <italic>SOX2</italic> have been identified. However, the molecular factors related to chemo-sensitivity or resistance remain unknown. Additionally, clinical outcome such as survival in relation to genetic alterations remains unreported, particularly in the SCLC Chinese patient population.</p>
+      <p>Here, we conducted the first comprehensive genetic landscape survey of Chinese SCLC patients with whole exome sequencing (WES) and transcriptomic sequencing of primary tumors from 99 SCLC patients with detailed clinical history and survival data. Our study not only identified novel recurrent genetic alterations such as <italic>CDH10</italic> and DNA repair pathways which may influence outcomes in SCLC patients, but also revealed <italic>SRSF1</italic>, an RNA-splicing factor which can form complexes with TP53 and Top1, and plays a critical role in SCLC patient survival.</p>
+    </sec>
+    <sec sec-type="results" id="sec002">
+      <title>Results</title>
+      <sec id="sec003">
+        <title>Recurrent mutations in SCLC Chinese patients</title>
+        <p>WES of 25 normal [normal adjacent tissue (NAT) or blood] and matched tumor pairs, and 74 tumors only (no normal tissue) from Chinese SCLC patients revealed 32,566 somatic non-silent single nucleotide variants (SNVs) or insertion/deletions (indels), an average of 329 per patient and non-silent/silent ratio of 2.11. The patient summary is described in <bold><xref rid="pgen.1005895.t001" ref-type="table">Table 1</xref></bold>and <bold><xref ref-type="supplementary-material" rid="pgen.1005895.s012">S1 Table</xref></bold>. The most frequent transition and transversion changes were G&gt;A and G&gt;T, respectively, consistent with a previous report in SCLC [<xref rid="pgen.1005895.ref002" ref-type="bibr">2</xref>]. Genes harboring the most recurrent somatic SNVs or indels were <italic>TP53</italic> (82%), <italic>RB1</italic> (47%), <italic>CSMD3</italic> (47%), <italic>NOTCH1</italic> (18%) and <italic>NOTCH3</italic> (15%) (<bold><xref ref-type="supplementary-material" rid="pgen.1005895.s013">S2 Table</xref></bold>). <italic>TP53</italic> and <italic>RB1</italic> have been reported previously as the most recurrent genes harboring nonsilent somatic SNVs in SCLC [<xref rid="pgen.1005895.ref002" ref-type="bibr">2</xref>,<xref rid="pgen.1005895.ref003" ref-type="bibr">3</xref>,<xref rid="pgen.1005895.ref004" ref-type="bibr">4</xref>]. Oncogenic gain-of-function mutations in <italic>NOTCH1</italic> commonly occur in human T-cell acute lymphocytic leukemia (T-ALL) and B-cell chronic lymphocytic leukemia [<xref rid="pgen.1005895.ref006" ref-type="bibr">6</xref>,<xref rid="pgen.1005895.ref007" ref-type="bibr">7</xref>,<xref rid="pgen.1005895.ref008" ref-type="bibr">8</xref>]. Loss-of-function mutations in Notch receptors have been recently reported to likely play a tumor suppressor role in lung squamous cell carcinoma and SCLC patients [<xref rid="pgen.1005895.ref009" ref-type="bibr">9</xref>, <xref rid="pgen.1005895.ref010" ref-type="bibr">10</xref>]. Additionally, the concordance between the top 100 genes harboring the most recurrent nonsilent somatic SNVs or indels in this study and a recent WES study of Asian SCLC patients (Japanese; n = 51) was 62% (<bold><xref ref-type="supplementary-material" rid="pgen.1005895.s013">S2 Table</xref></bold>), with strong consistency of recurrence prevalence in <italic>TP53</italic> (82% vs. 80%), <italic>RB1</italic> (47% vs. 39%), and <italic>CSMD3</italic> (47% vs. 37%), among other genes, between the two studies [<xref rid="pgen.1005895.ref005" ref-type="bibr">5</xref>].</p>
+        <table-wrap id="pgen.1005895.t001" orientation="portrait" position="float">
+          <object-id pub-id-type="doi">10.1371/journal.pgen.1005895.t001</object-id>
+          <label>Table 1</label>
+          <caption>
+            <title>Summary of clinical features of SCLC patients.</title>
+          </caption>
+          <alternatives>
+            <graphic id="pgen.1005895.t001g" xlink:href="pgen.1005895.t001"/>
+            <table frame="hsides" rules="groups">
+              <colgroup span="1">
+                <col align="left" valign="middle" span="1"/>
+                <col align="left" valign="middle" span="1"/>
+              </colgroup>
+              <thead>
+                <tr>
+                  <th align="left" rowspan="1" colspan="1">Patients</th>
+                  <th align="left" rowspan="1" colspan="1">n = 99 (Chinese)</th>
+                </tr>
+                <tr>
+                  <th align="left" rowspan="1" colspan="1"> </th>
+                  <th align="left" rowspan="1" colspan="1">No. (%)</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td align="left" rowspan="1" colspan="1">
+                    <bold>Gender</bold>
+                  </td>
+                  <td align="left" rowspan="1" colspan="1"> </td>
+                </tr>
+                <tr>
+                  <td align="left" rowspan="1" colspan="1">    Male</td>
+                  <td align="left" rowspan="1" colspan="1">86(87%)</td>
+                </tr>
+                <tr>
+                  <td align="left" rowspan="1" colspan="1">    Female</td>
+                  <td align="left" rowspan="1" colspan="1">13(13%)</td>
+                </tr>
+                <tr>
+                  <td align="left" rowspan="1" colspan="1">
+                    <bold>Age (years)</bold>
+                  </td>
+                  <td align="left" rowspan="1" colspan="1"> </td>
+                </tr>
+                <tr>
+                  <td align="left" rowspan="1" colspan="1">    Mean</td>
+                  <td align="left" rowspan="1" colspan="1">57.92</td>
+                </tr>
+                <tr>
+                  <td align="left" rowspan="1" colspan="1">    Median</td>
+                  <td align="left" rowspan="1" colspan="1">57</td>
+                </tr>
+                <tr>
+                  <td align="left" rowspan="1" colspan="1">    Range</td>
+                  <td align="left" rowspan="1" colspan="1">36–78</td>
+                </tr>
+                <tr>
+                  <td align="left" rowspan="1" colspan="1">
+                    <bold>Outcome</bold>
+                  </td>
+                  <td align="left" rowspan="1" colspan="1"> </td>
+                </tr>
+                <tr>
+                  <td align="left" rowspan="1" colspan="1">    Follow-up (months)</td>
+                  <td align="left" rowspan="1" colspan="1">1–66.2</td>
+                </tr>
+                <tr>
+                  <td align="left" rowspan="1" colspan="1">    Median follow-up(months)</td>
+                  <td align="left" rowspan="1" colspan="1">21.3</td>
+                </tr>
+                <tr>
+                  <td align="left" rowspan="1" colspan="1">    Death</td>
+                  <td align="left" rowspan="1" colspan="1">43(43%)</td>
+                </tr>
+                <tr>
+                  <td align="left" rowspan="1" colspan="1">    Alive</td>
+                  <td align="left" rowspan="1" colspan="1">52(53%)</td>
+                </tr>
+                <tr>
+                  <td align="left" rowspan="1" colspan="1">    Lost to Follow-Up</td>
+                  <td align="left" rowspan="1" colspan="1">3(3%)</td>
+                </tr>
+                <tr>
+                  <td align="left" rowspan="1" colspan="1">
+                    <bold>Stage</bold>
+                  </td>
+                  <td align="left" rowspan="1" colspan="1"> </td>
+                </tr>
+                <tr>
+                  <td align="left" rowspan="1" colspan="1">    I</td>
+                  <td align="left" rowspan="1" colspan="1">18(18%)</td>
+                </tr>
+                <tr>
+                  <td align="left" rowspan="1" colspan="1">    II</td>
+                  <td align="left" rowspan="1" colspan="1">15(15%)</td>
+                </tr>
+                <tr>
+                  <td align="left" rowspan="1" colspan="1">    III</td>
+                  <td align="left" rowspan="1" colspan="1">62(63%)</td>
+                </tr>
+                <tr>
+                  <td align="left" rowspan="1" colspan="1">    IV</td>
+                  <td align="left" rowspan="1" colspan="1">4(4%)</td>
+                </tr>
+                <tr>
+                  <td align="left" rowspan="1" colspan="1">
+                    <bold>Cigarette Smoking</bold>
+                  </td>
+                  <td align="left" rowspan="1" colspan="1"> </td>
+                </tr>
+                <tr>
+                  <td align="left" rowspan="1" colspan="1">Smoker</td>
+                  <td align="left" rowspan="1" colspan="1">75(76%)</td>
+                </tr>
+                <tr>
+                  <td align="left" rowspan="1" colspan="1">Non-smoker</td>
+                  <td align="left" rowspan="1" colspan="1">24(24%)</td>
+                </tr>
+                <tr>
+                  <td align="left" rowspan="1" colspan="1">
+                    <bold>Precure Neochemotherapy</bold>
+                  </td>
+                  <td align="left" rowspan="1" colspan="1"> </td>
+                </tr>
+                <tr>
+                  <td align="left" rowspan="1" colspan="1">Treated</td>
+                  <td align="left" rowspan="1" colspan="1">8(9%)</td>
+                </tr>
+                <tr>
+                  <td align="left" rowspan="1" colspan="1">Naïve</td>
+                  <td align="left" rowspan="1" colspan="1">91(91%)</td>
+                </tr>
+                <tr>
+                  <td align="left" rowspan="1" colspan="1">
+                    <bold>Specimens</bold>
+                  </td>
+                  <td align="left" rowspan="1" colspan="1"> </td>
+                </tr>
+                <tr>
+                  <td align="left" rowspan="1" colspan="1">Tumor sample with matched normal</td>
+                  <td align="left" rowspan="1" colspan="1">25(25%)</td>
+                </tr>
+                <tr>
+                  <td align="left" rowspan="1" colspan="1">Tumor sample only</td>
+                  <td align="left" rowspan="1" colspan="1">74(75%)</td>
+                </tr>
+                <tr>
+                  <td align="left" rowspan="1" colspan="1">
+                    <bold>Sequencing summary</bold>
+                  </td>
+                  <td align="left" rowspan="1" colspan="1"> </td>
+                </tr>
+                <tr>
+                  <td align="left" rowspan="1" colspan="1">Exon seq</td>
+                  <td align="left" rowspan="1" colspan="1">99(100)</td>
+                </tr>
+                <tr>
+                  <td align="left" rowspan="1" colspan="1">RNA seq</td>
+                  <td align="left" rowspan="1" colspan="1">50(50%)</td>
+                </tr>
+              </tbody>
+            </table>
+          </alternatives>
+        </table-wrap>
+        <p>To further narrow down the most disease-relevant mutated genes, we first generated a list of genes harboring the most recurrent and significant nonsilent somatic mutations (identified with two independent algorithms). Then this list was intersected with two independent lists of significantly mutated genes in SCLC generated by both Peifer et al [<xref rid="pgen.1005895.ref004" ref-type="bibr">4</xref>] and Umemura et al [<xref rid="pgen.1005895.ref005" ref-type="bibr">5</xref>] studies. Aside from <italic>TP53</italic> and <italic>RB1</italic>, neural cell transmembrane genes <italic>TMEM132D</italic>, <italic>NCAM2</italic>, and <italic>CDH10</italic> were shared in all three independent studies (<bold><xref ref-type="supplementary-material" rid="pgen.1005895.s014">S3 Table</xref></bold>).The mutation rates of <italic>TMEM132D</italic>, <italic>NCAM2</italic>, <italic>CDH10</italic> in our Chinese patient cohort were 14%, 13% and 12%, respectively.</p>
+        <p>To evaluate the impact of these mutations in these three genes on patient outcomes, we used a Cox proportion hazard (PH) regression model to correlate the mutation status with survival. The patients were split into two groups: those harboring at least one nonsilent somatic mutation and those without. Among these three genes, patients with mutations in <italic>CDH10</italic>, a cadherin which is predominantly expressed in brain [<xref rid="pgen.1005895.ref011" ref-type="bibr">11</xref>], displayed a significant association with poor survival, after adjusting for age, gender, tumor stage, and chemotherapy status (p = 0.0127). Twelve of 99 patient harbored <italic>CDH10</italic> mutations, mostly located in the cadherin domain with high confidence protein affecting predictions (i.e. SIFT) (<bold><xref ref-type="fig" rid="pgen.1005895.g001">Fig 1</xref></bold>).</p>
+        <fig id="pgen.1005895.g001" orientation="portrait" position="float">
+          <object-id pub-id-type="doi">10.1371/journal.pgen.1005895.g001</object-id>
+          <label>Fig 1</label>
+          <caption>
+            <title>Mutations in <italic>CDH10</italic> associate with poor survival in Chinese SCLC patients.</title>
+            <p>a) Schematic representation of amino acid consequences from mutations identified in SCLC patients in human CDH10 protein b) Kaplan-Meier (KM) curves comparing survival between patients harboring at least one nonsilent mutation in <italic>CDH10</italic> (n = 12) and those not (n = 84).p* = log-rank test; p = Cox PH regression model; HR = hazard ratio</p>
+          </caption>
+          <graphic xlink:href="pgen.1005895.g001"/>
+        </fig>
+        <p>To better understand the genetic basis of chemo sensitivity and resistance in SCLC, we systematically surveyed SNVs and indels in all known DNA repair genes [<xref rid="pgen.1005895.ref012" ref-type="bibr">12</xref>]. Eighty-seven percent (87%) of patients harbored ≥1 nonsilent somatic SNV in a DNA repair gene besides <italic>TP53</italic> (<bold><xref ref-type="supplementary-material" rid="pgen.1005895.s015">S4 Table</xref></bold>); similarly, within a Japanese SCLC study cohort in a previous study, 69% of patients were identified by the same criterion [<xref rid="pgen.1005895.ref005" ref-type="bibr">5</xref>]. The patient prevalence of nonsilent somatic SNVs in genes classified as mismatch repair (MMR), nucleotide excision repair (NER), homologous recombination, or DNA polymerase were 22%, 30%, 26% and 35%, respectively. Twelve percent of patients harbored nonsilent somatic SNVs in DNA polymerase genes that are involved in DNA replication in NER and MMR (<italic>POLD1</italic> and <italic>POLE</italic>, [<xref rid="pgen.1005895.ref013" ref-type="bibr">13</xref>]). <italic>POD1</italic>, <italic>POLG</italic> and <italic>POLQ</italic> were most recurrently mutated among the 15 DNA polymerase genes. These somatic SNVs cause protein truncations and amino acid changes in the polymerase, exonuclease, and helicase domains (<bold><xref ref-type="fig" rid="pgen.1005895.g002">Fig 2A–2C</xref></bold>). Fanconi anemia pathway genes were most recurrent with prevalence of 36%. Within this specific pathway, multiple genes involved in DNA inter-strand crosslink repair such as <italic>FANCM</italic> (7%) and <italic>BRIP1</italic>/<italic>FANCJ</italic> (7%) were among the most mutated (<bold><xref ref-type="fig" rid="pgen.1005895.g002">Fig 2D</xref></bold>). Finally, 29% of patients harbored nonsilent somatic SNVs in genes that affect sensitivity of mammalian cells to topoisomerase inhibitors, in addition to <italic>TP53</italic> [<xref rid="pgen.1005895.ref014" ref-type="bibr">14</xref>].</p>
+        <fig id="pgen.1005895.g002" orientation="portrait" position="float">
+          <object-id pub-id-type="doi">10.1371/journal.pgen.1005895.g002</object-id>
+          <label>Fig 2</label>
+          <caption>
+            <title>Top mutated DNA polymerases and mutation prevalence in Fanconi anemia pathway genes in SCLC.</title>
+            <p><bold>a</bold>) Schematic representation of amino acid changes in human POLG, POLD1, POLQ proteins; <bold>b</bold>) the amino acid alterations in human POLG catalytic domain. Mutations were mapped onto the structure of human POLG using PDB Id entry 3IKM as template [<xref rid="pgen.1005895.ref006" ref-type="bibr">6</xref>]. <bold>c</bold>) Relevant amino acid alterations in POLD1. Mutations in human POLD1 gene were mapped onto structure of the yeast DNA polymerase subunit δ using PDB entry 3IAY Orange colored ribbon represents exonuclease domain, blue colored ribbon corresponds to polymerase domain, and the green ribbon represents the N-terminal portion of the protein [<xref rid="pgen.1005895.ref027" ref-type="bibr">27</xref>]. The mutations in both structures are shown in red spheres. <bold>d</bold>) Mutation prevalence in Fanconi anemia pathway genes.</p>
+          </caption>
+          <graphic xlink:href="pgen.1005895.g002"/>
+        </fig>
+      </sec>
+      <sec id="sec004">
+        <title>Recurrent somatic copy number variants SCLC Chinese patients</title>
+        <p>Somatic copy number variants (CNVs) were identified from exome-sequencing data. Our results confirmed key oncogenic genes with recurrent CN gains/amplifications that were previously reported in SCLC [<xref rid="pgen.1005895.ref003" ref-type="bibr">3</xref>, <xref rid="pgen.1005895.ref005" ref-type="bibr">5</xref>, <xref rid="pgen.1005895.ref015" ref-type="bibr">15</xref>,<xref rid="pgen.1005895.ref016" ref-type="bibr">16</xref>,<xref rid="pgen.1005895.ref017" ref-type="bibr">17</xref>], including <italic>MYC</italic> (8%), <italic>KIT</italic> (16%), and <italic>SOX2</italic> (67%). Significant copy number gains or amplifications were observed across a cluster on chromosome 3q26-29 [<xref rid="pgen.1005895.ref005" ref-type="bibr">5</xref>] (<bold><xref ref-type="supplementary-material" rid="pgen.1005895.s016">S5 Table</xref></bold>). Genes with CN losses previously reported in SCLC [<xref rid="pgen.1005895.ref002" ref-type="bibr">2</xref>, <xref rid="pgen.1005895.ref004" ref-type="bibr">4</xref>, <xref rid="pgen.1005895.ref005" ref-type="bibr">5</xref>] include <italic>RB1</italic> (34%), <italic>RASSF1</italic> (57%), <italic>FHIT</italic> (54%), <italic>KIF2A</italic> (16%), and <italic>PTEN</italic> (13%). A long segment along chromosome 3p22 was also detected to have significant CN loss. Recurrence rates of these genes affected by CNVs were comparable to those reported previously [<xref rid="pgen.1005895.ref003" ref-type="bibr">3</xref>, <xref rid="pgen.1005895.ref005" ref-type="bibr">5</xref>]. In addition, we found recurrent gains of <italic>SRSF1</italic> (50%) as well as concordant over-expression of mRNA for those patients with gains (p = 0.005; two-tailed two-sided Welch’s t-test; <bold><xref ref-type="fig" rid="pgen.1005895.g003">Fig 3A</xref></bold>). Among these 96 Chinese patients, 28% had both CN gain and mRNA over-expression of <italic>SRSF1</italic>; in an independent cohort of 25 Caucasian SCLC patients (commercially purchased specimens–see <xref ref-type="sec" rid="sec010">Methods</xref>), we identified 32% with the same result. Further, <italic>SRSF1</italic> CN gain was determined to be 30% (8/27 SCLC patients) in a re-analysis of the available WES data published from a previous Caucasian SCLC patient cohort–a result very similar between both Caucasian SCLC cohorts [<xref rid="pgen.1005895.ref003" ref-type="bibr">3</xref>]. CN gains/amplifications or losses and somatic SNVs for relevant genes are summarized in <bold><xref ref-type="supplementary-material" rid="pgen.1005895.s001">S1 Fig</xref></bold>.</p>
+        <fig id="pgen.1005895.g003" orientation="portrait" position="float">
+          <object-id pub-id-type="doi">10.1371/journal.pgen.1005895.g003</object-id>
+          <label>Fig 3</label>
+          <caption>
+            <title><italic>SRSF1</italic> CN gain and mRNA expression correlates with survival.</title>
+            <p>A: The time-to-event analysis schema with available patient specimens. In the time-to-event analyses, 96 Chinese primary SCLC patients with clinical outcome were divided into training and test cohorts according to the availabilities of matched normal, RNAseq and survival outcome information. The training set includes 22 patients with each patient having tumor and normal WES data and survival outcome. The test set includes 74 patient tumors only. Each patient has WES data from tumor and survival outcome. Among those patients, 48 patients have WES, RNAseq data, and survival outcome. <bold>b</bold>) <italic>SRSF1</italic> mRNA expression in CN gain group and no CN gain group (p = Welch’s t-test). <bold>c</bold>) Kaplan-Meier (KM) curves comparing survival between <italic>SRSF1</italic> low and high mRNA expression groups (n = 48). Similarly, KM curves used to evaluate the difference of survival between different <italic>SRSF1</italic> CN statuses in <bold>d)</bold> discovery set (n = 22), <bold>e</bold>) validation set (n = 74), and <bold>f</bold>) combination of discovery set and validation set (n = 96). p* = log-rank test; p = Cox PH regression model; HR = hazard ratio.</p>
+          </caption>
+          <graphic xlink:href="pgen.1005895.g003"/>
+        </fig>
+        <p><italic>SRSF1</italic> CN status was evaluated by FISH assay (N = 34). Using a FISH criterion described in the <bold>Methods</bold> for deviations from disomy [<xref rid="pgen.1005895.ref018" ref-type="bibr">18</xref>], the sensitivity and specificity were 47% and 71% respectively (positive and negative predictive values of 57% and 62%, respectively). This is comparable to a previous study’s concordance reported between FISH and sequencing using much greater sequencing depth (843X) detecting an EML4-ALK fusion in lung cancer [<xref rid="pgen.1005895.ref019" ref-type="bibr">19</xref>]. Further, a clinical study detecting ALK fusions in lung cancer reported a positive predictive value between sequencing and FISH as 68% (19/28) among diagnostic characterized patients, and only 46% (6/13) when reduced to those patients with clinical outcomes (11/13 were sequencing positive and partial responders to crizotinib) [<xref rid="pgen.1005895.ref020" ref-type="bibr">20</xref>]. These studies support both the lack of sensitivity in FISH assays compared to sequencing for detecting variants and comparability in concordance between these two assays in this study and two previous studies, both of which were detecting a much larger genetic variant (<bold><xref ref-type="supplementary-material" rid="pgen.1005895.s017">S6 Table</xref>; <xref ref-type="supplementary-material" rid="pgen.1005895.s002">S2 Fig</xref></bold>).</p>
+      </sec>
+      <sec id="sec005">
+        <title><italic>SRSF1</italic> CN gain and mRNA over-expression predicts poor survival in Chinese SCLC patients</title>
+        <p>For patients with both survival and WES data (N = 96), genes within CN gain or loss regions were correlated with survival. The cohorts were separated into a discovery set (patients with tumors/matched normal; N = 22) and a validation set (patients with tumors only; N = 74). Kaplan-Meier analyses were conducted between patients with or without CN gains in the discovery cohort first (see <xref ref-type="sec" rid="sec010">Methods</xref>). Then this gene list was reduced to those with log-rank p&lt;0.05 in the validation cohort. For the remaining genes, patients with both RNASeq and survival data were interrogated (N = 48) and <italic>SRSF1</italic> was the only gene that correlated between both CN gain and mRNA over-expression at a p&lt;0.05 (log-rank p = 0.008; <bold><xref ref-type="fig" rid="pgen.1005895.g003">Fig 3B</xref></bold>) as well as between over-expression and survival using a Cox proportion hazard (PH) regression model adjusting for age, gender, tumor stage, and chemotherapy status (p = 0.047; HR = 2.7; <bold><xref ref-type="fig" rid="pgen.1005895.g003">Fig 3C</xref></bold>). Patients with <italic>SRSF1</italic> mRNA over-expression or CN gain demonstrated significantly worse survival. The discovery (log-rank test p = 0.062), validation (log-rank test p = 0.03), and combined patient cohort (Cox PH p = 0.012; HR = 2.1; log-rank test p = 0.005) analyses are provided in <bold><xref ref-type="fig" rid="pgen.1005895.g003">Fig 3D–3F</xref></bold>and <bold><xref ref-type="supplementary-material" rid="pgen.1005895.s018">S7 Table</xref></bold> CN gains in <italic>SRSF1</italic> from The Cancer Genome Atlas (TCGA) were interrogated for correlation with survival (<bold><xref ref-type="supplementary-material" rid="pgen.1005895.s003">S3 Fig</xref></bold> to evaluate the specificity of <italic>SRSF1</italic> CN gains associating with survival in other cancer indications. We used a threshold of at least 3 patients for a particular cancer indication harboring a CN gain in <italic>SRSF1</italic> to minimize biases in sample groups for survival analysis. Among cancer indications in TCGA with ≥3 patients harboring CN gains in <italic>SRSF1</italic> (BRCA, KIRP, SARC, SKCM, and UCEC), uterine corpus endometrial carcinoma (UCEC) was the only indication with a correlation between <italic>SRSF1</italic> CN gain and poor survival (log-rank test p = 0.003), though the patient number with a CN gain group was highly unbalanced compared to those without (n = 8 vs. n = 437, respectively), likely driving the low p-value. This result demonstrates how this CN gain in <italic>SRSF1</italic> is specific to SCLC.</p>
+      </sec>
+      <sec id="sec006">
+        <title><italic>SRSF1</italic> is a key mediator of growth and survival in <italic>SRSF1</italic> high-expressing SCLC</title>
+        <p>We next evaluated SRSF1 as a potential tumor driver in SCLC. We first screened <italic>SRSF1</italic> DNA CNs in 13 SCLC cell lines using TaqMan assays. Five of thirteen had <italic>SRSF1</italic> CN&gt; = 3: Four including NCI-H82 had 3 copies, and DMS114 had 4 copies. These cell lines also expressed high levels of <italic>SRSF1</italic> protein (<bold><xref ref-type="supplementary-material" rid="pgen.1005895.s004">S4 Fig</xref></bold>). <italic>SRSF1</italic> siRNA was transfected into DMS114, and the growth effect of <italic>SRSF1</italic> ablation in two dimensional cell culture either alone or in conjunction with a sub-lethal dose of cisplatin or topotecan (two of the most common standard of care treatments in SCLC), was evaluated (<bold><xref ref-type="fig" rid="pgen.1005895.g004">Fig 4A</xref></bold>). SRSF1 knockdown alone caused a 35% decrease in the proliferation rate. Treatment with a low dose of cisplatin or topotecan only induced a modest decrease of cell growth. However, combination with <italic>SRSF1</italic> siRNA significantly enhanced the overall growth inhibition effect.</p>
+        <fig id="pgen.1005895.g004" orientation="portrait" position="float">
+          <object-id pub-id-type="doi">10.1371/journal.pgen.1005895.g004</object-id>
+          <label>Fig 4</label>
+          <caption>
+            <title>SRSF1 is required for tumorigenecity of SCLC.</title>
+            <p>(<bold>a</bold>) and (<bold>b</bold>): DMS114 cells were transfected with non-targeting control or SRSF1-directed siRNAs for 48 hrs, then treated with cisplatin (2.5ug/ml) or topotecan (2.5ug/ml) for 24 hrs. Cell growth (<bold>a</bold>) and Caspase-3/7 activities (<bold>b</bold>) were assessed and normalized against non-targeting ctrl siRNA-transfected cells as 100% control. (<bold>c</bold>): DMS114 cells were transfected with non-targeting and SRSF1 siRNAs for 48 hrs and then seeded in sphere forming media and allowed to grow for 4 days. Phase-contrast images of the sphere formation under each condition were captured and viable cell mass quantitated by CTG assay. (<bold>d</bold>): Reconstitution of SRSF1 expression using a siRNA-resistant Flag-tagged SRSF1 expression construct was carried out in SRSF1 siRNA transfected cells. Impact on sphere growth rate was assessed by CTG assay, and successful SRSF1 protein re-expression was confirmed using either anti-SRSF1 antibody or anti-Flag antibody. (<bold>e</bold>) DMS114 cells transfected with non-targeting control siRNA or SRSF1 siRNA were implanted into immunocompromised mice and tumor formation rates were monitored and measured as described in Materials and Methods.</p>
+          </caption>
+          <graphic xlink:href="pgen.1005895.g004"/>
+        </fig>
+        <p>SRSF1 has also been shown to regulate the BCL2 pathway by alternative splicing of BIM, which results in a protein lacking pro-apoptotic activity [<xref rid="pgen.1005895.ref021" ref-type="bibr">21</xref>, <xref rid="pgen.1005895.ref022" ref-type="bibr">22</xref>]. In this study, we see that <italic>SRSF1</italic> gene expression is positively correlated with BIM (r = 0.58, p&lt;0.0001) and <italic>SRSF1</italic> CN gain or amplification also shows concordantly high expression of BIM (<bold><xref ref-type="supplementary-material" rid="pgen.1005895.s005">S5 Fig</xref></bold>). Furthermore, we performed caspase-3/7 assays on similarly treated cells (<bold><xref ref-type="fig" rid="pgen.1005895.g004">Fig 4B</xref></bold>) to evaluate the synergistic effect between SRSF1 knockdown and standard chemotherapy. <italic>SRSF1</italic> siRNA alone induced modest but statistically significant caspase-3 activation, similar to cisplatin treatment alone. The combination of the two produced a substantially higher caspase induction. A similar trend was revealed with topotecan. Comparable results were also obtained in other SCLC models (<bold><xref ref-type="supplementary-material" rid="pgen.1005895.s004">S4 Fig</xref></bold>).</p>
+        <p>The effect of <italic>SRSF1</italic> knockdown on SCLC cells when grown as 3D spheroids was evaluated next. Cells transfected with non-targeting siRNA produced large and well-organized spheroids; in contrast, cells transfected with <italic>SRSF1</italic> siRNA did not form well-organized structures but mainly existed as single cells with poor viability (<bold><xref ref-type="fig" rid="pgen.1005895.g004">Fig 4C</xref></bold> and <bold><xref ref-type="supplementary-material" rid="pgen.1005895.s006">S6B Fig</xref></bold>). Results were confirmed by colony formation assays (<bold><xref ref-type="supplementary-material" rid="pgen.1005895.s006">S6D Fig</xref></bold>). The effect of <italic>SRSF1</italic> siRNA is mediated by specific target loss as demonstrated by a reconstitution study with a siRNA-resistant Flag-tagged expression construct which efficiently rescued the spheroid growth in the presence of the <italic>SRSF1</italic> siRNA (<bold><xref ref-type="fig" rid="pgen.1005895.g004">Fig 4D</xref></bold>). A similar rescue effect was also achieved in NCI-H82 cells (<bold><xref ref-type="supplementary-material" rid="pgen.1005895.s006">S6C Fig</xref></bold>).</p>
+      </sec>
+      <sec id="sec007">
+        <title><italic>SRSF1</italic> is required for in vivo tumorigenicity of SCLC</title>
+        <p>A tumor formation study was conducted using siRNA-transfected DMS114 and SHP-77 cells. Equal numbers of viable transfected cells were injected in immunocompromised mice and tumor growth was monitored for up to three weeks. <italic>SRSF1</italic> knockdown completely suppressed the tumor growth in both SCLC models (<bold><xref ref-type="fig" rid="pgen.1005895.g004">Fig 4E</xref></bold> and <bold><xref ref-type="supplementary-material" rid="pgen.1005895.s007">S7A Fig</xref></bold>).</p>
+      </sec>
+      <sec id="sec008">
+        <title><italic>SRSF1</italic> silencing triggers DNA-damage and suppresses <italic>PI3K/AKT</italic> and <italic>MEK/ERK</italic> pathways</title>
+        <p>DNA-damage induction as a potential effect of <italic>SRSF1</italic> knockdown based on our DNA-repair analysis was assessed. Inductions of p-H2AX and Chk2, established markers of DNA-strand breaks and DNA-repair response [<xref rid="pgen.1005895.ref023" ref-type="bibr">23</xref>, <xref rid="pgen.1005895.ref024" ref-type="bibr">24</xref>], were consistently observed upon SRSF1 abrogation in DMS114 and SHP-77 (<bold><xref ref-type="fig" rid="pgen.1005895.g005">Fig 5A</xref></bold> and <bold><xref ref-type="supplementary-material" rid="pgen.1005895.s007">S7B Fig</xref></bold>), and increased phosphorylations were observed when we combined <italic>SRSF1</italic> siRNA transfection and treatment with cisplatin or topotecan.</p>
+        <fig id="pgen.1005895.g005" orientation="portrait" position="float">
+          <object-id pub-id-type="doi">10.1371/journal.pgen.1005895.g005</object-id>
+          <label>Fig 5</label>
+          <caption>
+            <title>Mechanism of action for SRSF1 in SCLC.</title>
+            <p><bold>a</bold>) SRSF1 prevents DNA-damage. DMS114 cells were transfected with control or SRSF1 siRNA and then treated with topotecan or Cisplatin for the indicated times. SRSF1, phosphor-H2AX and phosphor-Chk2 were probed with their corresponding antibodies. <bold>b</bold>) <bold>c</bold>) SRSF1 mediates the activation of AKT and ERK pathways. DMS114 cells transfected with ctrl or SRSF1 siRNAs were lysed and applied to the phospho-kinase array as detailed in Materials and Methods. The dot blot result was further confirmed by western blot in both DMS114 and NCI-H1048 cells.</p>
+          </caption>
+          <graphic xlink:href="pgen.1005895.g005"/>
+        </fig>
+        <p>To better understand the role of <italic>SRSF1</italic> CN gain on downstream pathways in SCLC, we performed differential gene expression analysis between <italic>SRSF1</italic> CN gain and <italic>SRSF1</italic> CN neutral patients. A total of 861 genes were identified to be significantly expressed between these patient cohorts. Pathway analysis revealed that PIK3CA and MAPK3 were two of the top activated master regulators, which suggests that <italic>SRSF1</italic> CN gain regulates PI3K/Akt and MAPK pathway activity with certain causality (<bold><xref ref-type="supplementary-material" rid="pgen.1005895.s023">S12 Table</xref></bold>). Therefore, we investigated the impact of SRSF1 loss on both PI3K/Akt and Ras/Raf MAPK kinase signaling pathways in SCLC cells through phospho-kinase array profiling (<bold><xref ref-type="fig" rid="pgen.1005895.g005">Fig 5B</xref></bold>). Control siRNA-transfected DMS114 displayed strong phospho-AKT and ERK signals, which were abrogated by <italic>SRSF1</italic> siRNA. Western blot confirmed this in both DMS114 and NCI-H1048 cells (<bold><xref ref-type="fig" rid="pgen.1005895.g005">Fig 5C</xref></bold>). This demonstrated that SRSF1 promotes SCLC growth and survival by sustaining PI3K/AKT and MEK/ERK pathways, two of the most well-established oncogenic pathways.</p>
+      </sec>
+    </sec>
+    <sec sec-type="conclusions" id="sec009">
+      <title>Discussion</title>
+      <p>Our study represents the first comprehensive genetic landscape survey of Chinese SCLC patients with detailed clinical history, revealing key recurrent genetic alterations associated with patients’ outcomes.</p>
+      <p>Mutations identified in previous SCLC genomic studies shared little consensus for significantly mutated genes other than <italic>TP53</italic> and <italic>RB1</italic>. However, by leveraging our data with these previous SCLC studies, we were able to identify three additional common significantly mutated genes <italic>(TMEM132D</italic>, <italic>NCAM2</italic>, and <italic>CDH10</italic>) with over 10% prevalence in SCLC. Interestingly, all three genes encode transmembrane proteins involved in neural cell adhesion. This finding will need to be further evaluated for the impact on neuroendocrine association in SCLC.</p>
+      <p>Cadherins (CDHs) are important in maintenance of cell adhesion and polarity, alterations of which contribute to tumorigenesis. Recurrent mutations in <italic>CDH10</italic> have recently been reported in <italic>EGFR/KRAS/ALK</italic> mutation-negative lung adenocarcinoma in never-smokers [<xref rid="pgen.1005895.ref025" ref-type="bibr">25</xref>] and as a prognostic mutation signature in colorectal cancer [<xref rid="pgen.1005895.ref026" ref-type="bibr">26</xref>]. Our study indicated that <italic>CDH10</italic> is not only the most commonly and significantly mutated gene in SCLC but also associated with poor survival in SCLC. CDH1/E-cadherin, the founding member of the CDH/cadherin family, undergoes loss-of-function mutations across multiple tumor types such as breast, gastric, colorectal and ovarian cancer. Its functional inactivation contributes to cancer progression by increasing cell invasion, migration, metastasis and proliferation and EMT process [<xref rid="pgen.1005895.ref027" ref-type="bibr">27</xref>]. We speculate that the recurrent CDH10 mutations we detected in SCLC may perform similar roles as CDH1 mutations in other cancers to promote SCLC aggressiveness, leading to poor patient survival. We are currently conducting experiments to test this hypothesis.</p>
+      <p>Our study suggests that genetic alteration of DNA repair pathways influence chemotherapy outcomes in SCLC patients. The Fanconi anemia (FA) pathway is essential for the repair of DNA inter-strand cross-linking agents, such as cisplatin, which has been used as first-line treatment in SCLC. It was demonstrated several decades ago that the FA patient-derived cells which contain genetic defects in FA genes display hypersensitivity to DNA cross-linking agents [<xref rid="pgen.1005895.ref028" ref-type="bibr">28</xref>]. Our data strongly suggest that high prevalence mutations in FA pathway genes may contribute to initial hypersensitivity of SCLC to platinum-based treatment such as cisplatin. Multiple reports with experimental evidence show that the efficacy of various chemotherapeutic agents, including cisplatin, requires a functional TP53 protein for efficient induction of apoptosis and that loss of TP53 function enhances resistance to cytotoxic agents used in cancer therapy [<xref rid="pgen.1005895.ref029" ref-type="bibr">29</xref>,<xref rid="pgen.1005895.ref030" ref-type="bibr">30</xref>,<xref rid="pgen.1005895.ref031" ref-type="bibr">31</xref>]. Further, a combination of TP53 inactivation and MMR deficiency has also been observed to confer cisplatin resistance [<xref rid="pgen.1005895.ref032" ref-type="bibr">32</xref>]. Our data suggest that high frequency mutations in <italic>TP53</italic> combined with other DNA repair mutations such as mismatch repair, nucleotide excision repair, homologous recombination, and key DNA polymerases may confer early sensitivity and latent resistance to cisplatin in SCLC.</p>
+      <p>Of particular importance is our discovery of the prevalence of <italic>SRSF1</italic> CN gain and mRNA over-expression, and its role as a prognostic marker for poor patient survival—reported for the first time in SCLC. <italic>SRSF1</italic> occurs in the same protein complex with topoisomerase 1 (<italic>Top1</italic>) [<xref rid="pgen.1005895.ref033" ref-type="bibr">33</xref>]. Topotecan is a <italic>Top1</italic> inhibitor and the only agent with regulatory approval for the treatment of relapsed SCLC [<xref rid="pgen.1005895.ref034" ref-type="bibr">34</xref>]. In normal cells, Top1 cooperates with SRSF1 to prevent the formation of DNA-RNA hybrids (R-loops), unscheduled replication fork arrest, and genomic instability. In <italic>Top1</italic> deficient cells, R-loops are formed and lead to replication fork stalling, phosphorylation of H2AX, and genomic instability. Treatment of <italic>Top1+</italic> cells with diospyrin, to inhibit <italic>Top1</italic>phosphorylation of SRSF1 or with a siRNA targeting SRSF1 mimics a Top1-deficient phenotype [<xref rid="pgen.1005895.ref035" ref-type="bibr">35</xref>]. Although significant correlation between <italic>SRSF1</italic> and <italic>Top1</italic> gene expression is not observed in our data, our experiment clearly demonstrates that SRSF1 loss induces phosphorylated H2AX signal in SCLC cell lines, which suggests that SRSF1 may help maintain the genomic integrity of SCLC to safeguard against DNA-damage and cell death. With these factors in mind, we propose that SRSF1 may also rely on modulating H2AX signal to sustain the tumorigenicity in some SCLC tumor patients.</p>
+      <p>In the absence of specific limited stage (LS) or extensive stage (ES) disease determination in this study and a recent comprehensive SCLC study [<xref rid="pgen.1005895.ref009" ref-type="bibr">9</xref>], a simplified approach was used to classify SCLC patients into early and late stage disease activity. Based on known TNM information, early stage (TNM stage I/II) patients are M0, who are usually designated as LS patients, while late stage (TNM stage III/IV) patients are M1a or M1b, and usually classified into ES patients. We then evaluated <italic>SRSF1</italic> expression between early (TNM stage I/II) and late stage (TNM stage III/IV) SCLC patients. Results indicated that <italic>SRSF1</italic> gene expression does not significantly differ between these patient groups in both this study and the George et al study (p = 0.81 and p = 0.91, respectively; <bold><xref ref-type="supplementary-material" rid="pgen.1005895.s008">S8 Fig</xref></bold>). This may suggest that SRSF1 is not the key driver of cancer metastasis in SCLC.</p>
+      <p>SRSF1 is one of the critical downstream transcriptional targets of Myc [<xref rid="pgen.1005895.ref036" ref-type="bibr">36</xref>]. Myc family genes (<italic>MYC</italic> and <italic>MYCN</italic>) were shown to have significant CN gain or amplification events in our Chinese SCLC patients (14%). SRSF1 gene over-expression in both Myc and N-Myc amplified SCLC cell lines and Myc amplified SCLC tumor patients, however, was not observed (p = 0.29 and p = 0.33, respectively), though the number of amplified cell lines or patient tumors with available gene expression data was sparse for each comparison (<bold><xref ref-type="supplementary-material" rid="pgen.1005895.s009">S9 Fig</xref></bold>).</p>
+      <p><italic>SRSF1</italic> is a key cancer driver, as demonstrated by the profound tumor-suppressive effect of specific <italic>SRSF1</italic> knockdown in <italic>SRSF1</italic>-amplified or overexpressed SCLC models. Previous reports demonstrate that overexpression of <italic>SRSF1</italic> results in oncogenic transformation of immortalized rodent fibroblasts [<xref rid="pgen.1005895.ref037" ref-type="bibr">37</xref>], human mammary epithelial cells [<xref rid="pgen.1005895.ref038" ref-type="bibr">38</xref>] and mouse hepatocytes [<xref rid="pgen.1005895.ref039" ref-type="bibr">39</xref>]. In these models, SRSF1 overexpression promoted cell proliferation, resistance to apoptosis, and formed tumors in orthotopic mouse models. It is likely that this transformation is a cumulative result of SRSF1’s many different functions, including a combination of several alternatively spliced oncogenic variants in response to an increase in SRSF1 levels. A number of such variants have been identified, but these probably represent only a small fraction of potential effectors [<xref rid="pgen.1005895.ref040" ref-type="bibr">40</xref>]. Das et al, previously summarized various spliced products of SRSF1 and isoform mechanisms driving oncogenic phenotypes [<xref rid="pgen.1005895.ref040" ref-type="bibr">40</xref>], though these were not detected with reliability using RNASeq here–a challenge with this technology that currently persists in splice variant detection, especially in FFEE specimens. Furthermore, we demonstrate here that SRSF1 mediates the activation of both PI3K/AKT and MEK/ERK pathways as evidenced by both gene expression pathway analyses and the suppression of these pathways through SRSF1 knockdown. It is interesting to note that several SRSF1-regulated targets involved in regulating cell proliferation are downstream of these two pathways, including RPS6KB1, MKNK2, and CCND1 genes [<xref rid="pgen.1005895.ref037" ref-type="bibr">37</xref>, <xref rid="pgen.1005895.ref041" ref-type="bibr">41</xref>]. <italic>RPS6KB1</italic> encodes the protein S6 kinase 1, a downstream effector in the PI3K/AKT/mTOR signaling pathway and has been shown to be involved in mediating SRSF1-induced transformation [<xref rid="pgen.1005895.ref037" ref-type="bibr">37</xref>, <xref rid="pgen.1005895.ref042" ref-type="bibr">42</xref>]. <italic>MKNK2</italic> is an effector in the MAPK/ERK pathway [<xref rid="pgen.1005895.ref043" ref-type="bibr">43</xref>]. Splicing functionality has been shown to be critical for some, but not all oncogenic activities of SRSF1. An SRSF1 variant that is confined to the nucleus has been shown to be critical for its oncogenic role in mammary epithelial cells [<xref rid="pgen.1005895.ref038" ref-type="bibr">38</xref>]. However, this variant was not able to promote tumor formation in hepatocellular xenografts [<xref rid="pgen.1005895.ref039" ref-type="bibr">39</xref>]. In this particular model, SRSF1-mediated oncogenesis was attributed to activation of Raf-MEK-ERK pathway [<xref rid="pgen.1005895.ref039" ref-type="bibr">39</xref>]. This demonstrates that SRSF1 can be oncogenic via both nuclear and cytosolic activities through either canonical (splicing-related) or non-canonical (AKT/ERK-related) pathways under various cellular contexts. It may be of future interest to explore and pinpoint which effector pathway of SRSF1 drives its oncogenic roles in SCLCs. In conclusion, our discovery firmly establishes SRSF1 as a compelling therapeutic target for SCLC, especially for the population with poor outcome, as predicted by <italic>SRSF1</italic> over expression.</p>
+    </sec>
+    <sec sec-type="materials|methods" id="sec010">
+      <title>Methods</title>
+      <sec id="sec011">
+        <title>SCLC patient and sample summary</title>
+        <p>The study protocol and informed consent from all studies in this study were approved by the Ethics Committee of Shanghai Chest Hospital and Nanjing Medical University. Informed consent in writing was obtained from each patient and the study protocol conformed to the ethical guidelines of the 1975 Declaration of Helsinki as reflected in a priori approval by the Ethics Committee of Shanghai Chest Hospital and Nanjing Medical University.</p>
+        <p>Ninety-nine Chinese patients who were diagnosed with primary SCLC were recruited prospectively into an ongoing study at the Jiangsu Cancer Hospital or Shanghai Chest Hospital from July 2004 to July 2013. The diagnosis of SCLC was made by pathologists in the above hospitals by hematoxylin and eosin (H&amp;E) staining according to histology plus the immunohistochemistry for chromogranin A and synaptophysin. Patients were followed up prospectively via routine hospital visits or telephone calls. The phone calls were conducted by trained medical staff to patients or their family contacts once every three month until death or last time of follow-up. All patients were treated with at least one cycle of chemotherapy after surgery. The clinical features of the patients are summarized in <bold><xref rid="pgen.1005895.t001" ref-type="table">Table 1</xref></bold>and <bold><xref ref-type="supplementary-material" rid="pgen.1005895.s012">S1 Table</xref></bold>. Of the 99 patients, 25 had matched normal adjacent tissue or blood, while 74 patients only had tumor specimens. All tissues samples were FFPE archived samples collected from surgery (not biopsy). Eighty-six tumor samples were treatment naïve and 13 of 99 patients were treated with standard chemotherapy before surgery. Tumor contents in each tumor and normal adjacent tissue (NAT) was assessed by H&amp;E stain and the tumor and NAT were subjected to macro-dissection and tumor purity was &gt;70%; the tumor content in each NAT was&lt; 3%.</p>
+        <p>The Caucasian SCLC patient cohort consisted of 25 FFPE lung tumor tissue specimens with matched normal adjacent tissue pairs, which were purchased from Conversant Biologics, Inc (Huntsville, AL) (<bold><xref ref-type="supplementary-material" rid="pgen.1005895.s022">S11 Table</xref>)</bold>. The diagnosis of SCLC was confirmed by two independent pathologists in Medimmune by H&amp;E staining. All samples were treatment naïve surgical samples. All patients were Caucasian with 24 males and 1 female. The average age of the patients was 63.3 years (range of 40–76 years). The tumor stages ranged from stage I to IV. The tumor and NAT were macro-dissected and tumor purity was &gt;70%; the tumor content in each NAT was&lt; 3%.</p>
+      </sec>
+      <sec id="sec012">
+        <title>DNA sequence read mapping and variant calling</title>
+        <p>DNA whole exome sequence (WES) and RNA sequencing data (RNASeq) data was generated using the Illumina standard library preparation and sequencing protocols as described in [<xref rid="pgen.1005895.ref044" ref-type="bibr">44</xref>] The SureSelect Human All Exon V5 capture kit was used to capture coding regions of genes included in the major genomic databases. Paired end FASTQ files of 90mer sequence reads for both sequence data types were provided to MedImmune. RNASeq data has been deposited into GEO under accession GSE60052 while WES data was deposited into dBGaP under accession 12059.</p>
+        <p>All sequence data was QCd for read counts, quality values, kmer usage, GC-content, and all other relevant parameters with FastQC (v0.10.1). The DNA read sequences were aligned to the human genome (UCSC hg19; Feb 2009 release; Genome Reference Consortium GRCh37) using GATK (v2.3.4; [<xref rid="pgen.1005895.ref045" ref-type="bibr">45</xref>]) and both insertion/deletion (indel) realignment and PCR duplicate removal was conducted using GATK (v2.3.4; [<xref rid="pgen.1005895.ref045" ref-type="bibr">45</xref>]) and Picard (v1.85; [<xref rid="pgen.1005895.ref046" ref-type="bibr">46</xref>]) respectively. Both coverage and depth statistics for all 99 tumor specimens are provided in <bold><xref ref-type="supplementary-material" rid="pgen.1005895.s021">S10 Table</xref>.</bold></p>
+        <p>For the 25 tumor/normal matched Chinese and 25 tumor/normal matched Caucasian (commercially purchased) specimens, both Mutect (v1.1.4; [<xref rid="pgen.1005895.ref047" ref-type="bibr">47</xref>]) and SAMtools (v0.1.18; [<xref rid="pgen.1005895.ref048" ref-type="bibr">48</xref>]) were used to make somatic variant calls. SAMtools mpileup arguments: Qphred&gt;30 and mapping quality&gt;30 with minimum coverage &gt;20; MuTect arguments: default settings. GATK SomaticIndelDetector with default settings and SAMtools mpileup were used to identify small indels. The SNVs and indels which were in common between GATK and Samtools were retained. SNVs and indels were further filtered by 1000 genomes and NHLBI-ESP project with 6500 exomes minor allele frequency (MAF) in all races of &lt;1% or unknown MAF. The retained SNVs/indels were further filtered by dbSNP129 and dbSNP135, following known issues between the two dbSNP versions. Finally, genes were removed from the SNV/indel list that had been identified from a previous study as potential artifact genes, to further minimize false positive variant calls [<xref rid="pgen.1005895.ref049" ref-type="bibr">49</xref>] All dbSNPs which were retained in dbSNP135 and had Cosmic IDs were noted for further study.</p>
+        <p>For the 74 DNA tumor specimens without a matched normal specimen, Samtools mpileup was used to call SNVs and indels relative to the human reference genome (UCSC hg19; Feb 2009 release; Genome Reference Consortium GRCh37). Germline polymorphisms were removed by retaining only mutations with MAF in all races of &lt;1% or unknown MAF within the 1000 genomes and NHLBI-ESP project with 6500 exomes database. The retained SNVs/indels were further filtered by dbSNP129 and dbSNP135 similar to previously described. The most recurrent SNVs/indels between the matched and unmatched patient cohorts are provided in <bold><xref ref-type="supplementary-material" rid="pgen.1005895.s013">S2 Table</xref></bold>, along with patient recurrence summaries from a previous Japanese SCLC cohort of 51 patients, to highlight comparability in results and a validation of the SNV/indel calling strategy [<xref rid="pgen.1005895.ref005" ref-type="bibr">5</xref>]. A similar strategy for calling and filtering somatic SNVs in the absence of a matched germline control specimen was conducted in a previous prostate cancer whole exome study [<xref rid="pgen.1005895.ref050" ref-type="bibr">50</xref>]. All patient-level somatic SNV or indel calls with associated read depth and annotation parameters are provided in <bold><xref ref-type="supplementary-material" rid="pgen.1005895.s019">S8 Table</xref></bold>.</p>
+        <p>SNV and indel annotation was conducted with ANNOVAR [<xref rid="pgen.1005895.ref051" ref-type="bibr">51</xref>]</p>
+      </sec>
+      <sec id="sec013">
+        <title>Patient identity QC</title>
+        <p>To verify the identity and matching between the tumor and normal paired WES samples, a selection of 300 heterozygous single nucleotide polymorphisms (SNPs) with MAFs&gt;0.3 and &lt;0.7 were selected from the 1000 genomes database. All DNA samples were clustered to observe any major discrepancies in subject or specimen labeling (<bold><xref ref-type="supplementary-material" rid="pgen.1005895.s010">S10 Fig</xref></bold>).</p>
+      </sec>
+      <sec id="sec014">
+        <title>Recurrent driver gene identification</title>
+        <p>All somatic mutations in the coding regions (plus splicing mutations) were selected for driver gene prediction analysis to identify those genes with the most recurrent nonsilent mutations. MutsigCV [<xref rid="pgen.1005895.ref039" ref-type="bibr">39</xref>] and the method described by Youn et al [<xref rid="pgen.1005895.ref052" ref-type="bibr">52</xref>] were implemented independently and Q value&lt;0.05(MutsigCV) and Q value = 0.00 (Youn’s method) were used as thresholds to detect significantly recurrently mutated genes. Genes predicted by both methods were selected as high confidence driver genes (<bold><xref ref-type="supplementary-material" rid="pgen.1005895.s014">S3 Table</xref>)</bold>.</p>
+      </sec>
+      <sec id="sec015">
+        <title>DNA polymerases structure modeling</title>
+        <p>Amino acid change mutations were mapped onto corresponding structures using mutagenesis wizard implemented in PyMOL (Schrodinger, LLC). For POLG coordinates of human mitochondrial DNA polymerase holoenzyme from Protein Data Bank (PDB, [<xref rid="pgen.1005895.ref053" ref-type="bibr">53</xref>]) entry 3IKM [<xref rid="pgen.1005895.ref054" ref-type="bibr">54</xref>] were used. The Q52E mutation could not be mapped since that part of the protein was absent in the structure. For DNA polymerase delta subunit the PDB entry 3IAY of yeast that shares 48/65% sequence identity/similarity over 908 amino acids was used.</p>
+      </sec>
+      <sec id="sec016">
+        <title>RNA sequence read mapping and differential expression analysis</title>
+        <p>For RNASeq data, the average read count per mate was 50 million. RNA reads were mapped to the human genome (UCSC hg19; Feb 2009 release; Genome Reference Consortium GRCh37) using TopHat2 (v2.0.9; [<xref rid="pgen.1005895.ref055" ref-type="bibr">55</xref>, <xref rid="pgen.1005895.ref056" ref-type="bibr">56</xref>]) and the human reference gtf annotation file (GRCh37.68). Transcript counts were calculated and normalized using htseq-count and DESeq (v1.12.1; [<xref rid="pgen.1005895.ref057" ref-type="bibr">57</xref>]). The DESeq negative binomial distribution was used to calculate the p-value and fold changes between 48 lung tumor and 6 normal adjacent lung samples using adjusted p&lt;0.05 and |fold change|&gt;2 as a threshold. The full transcriptome summary table is provided (<bold><xref ref-type="supplementary-material" rid="pgen.1005895.s020">S9 Table</xref></bold>). Due to the low fidelity and lack of reproducibility in splice variant detection using RNASeq, analysis was not conducted to examine spliced products of SRSF1.</p>
+      </sec>
+      <sec id="sec017">
+        <title>Somatic copy number variation (CNV) analysis</title>
+        <p>For CNV analysis, the R package ExomeCNV [<xref rid="pgen.1005895.ref058" ref-type="bibr">58</xref>] was used. This method makes CNV calls not by defining a mandatory cut-off to detect gains or losses, rather the specificity and sensitivity (power) of detecting CNV based on depth of coverage and log ratio of all exons is calculated, and a CN call is made when sufficient specificity and sensitivity are achieved. We used default parameters setting of ExomeCNV (sensitivity and specificity = 99.9%). For the 22 tumor/normal matched Chinese as well as the 25 tumor/normal Caucasian (commercially purchased) specimens, the standard ExomeCNV pipeline was employed, in which a tumor and its adjacent normal pair were used to make the call. For the 74 tumor specimens without matched normal tissue, 1 normal FFPE lung tissue specimen (N08-4579A) was used as baseline with each of the 74 tumor specimens using ExomeCNV. This method was also conducted with 6 normal FFPE lung tissue specimens and results were very similar between the use of a single normal or average of 6 normals. The overview of the most prevalent CNV calls (≥20% patients harboring gains or losses, to limit the table size) for matched Chinese patient tumor/normal or Chinese patient tumor only results are provided in <bold><xref ref-type="supplementary-material" rid="pgen.1005895.s016">S5 Table</xref></bold>.</p>
+      </sec>
+      <sec id="sec018">
+        <title>TCGA data to evaluate SRSF1 CN gain correlation with survival in other indications</title>
+        <p>All cancer indications in TCGA were assessed for correlation with survival using OncoLand (OmicSoft Corp; Cary, NC). To avoid issues of unbalanced comparisons, only indications where at least 3 patients harboring a CN gain in SRSF1 were analyzed. These included: breast invasive carcinoma (BRCA), kidney renal papillary cell carcinoma (KIRP), sarcoma (SARC), skin cutaneous melanoma (SKCM), and uterine corpus endometrioid carcinoma (UCEC). UCEC was the only indication with a correlation between patients harboring CN gain of SRSF1 and poor survival (log-rank test p = 0.003), though the number of patients harboring a CN gain was highly unbalanced compared to those without (n = 8 vs. n = 437, respectively; <bold><xref ref-type="supplementary-material" rid="pgen.1005895.s003">S3 Fig</xref></bold>).</p>
+      </sec>
+      <sec id="sec019">
+        <title>Time-to-event analyses</title>
+        <p>Time-to-event analyses were used to correlate both the CN gain status of <italic>SRSF1</italic> and <italic>SRSF1</italic> gene expression with overall survival of Chinese SCLC patients. First, a Kaplan-Meier (KM) analysis was used to evaluate the difference of survival curves for <italic>SRSF1</italic> CN gain group and no CN gain group. Those genes with a trend of significance (log-rank p&lt;0.1) in the Chinese patient discovery cohort (n = 22; <italic>SRSF1</italic> in <bold><xref ref-type="fig" rid="pgen.1005895.g003">Fig 3D</xref></bold>) and with 10% CNV calls among the cohort were evaluated in the Chinese patient validation cohort (n = 74; 1,707 genes; <italic>SRSF1</italic> in <bold><xref ref-type="fig" rid="pgen.1005895.g003">Fig 3E</xref></bold>). Since the discovery cohort was approximately 1/3 the size of the validation cohort and thus less powered, a modest log-rank test threshold was used. Among those 1,707 genes, 215 had p-values&lt;0.05 from the log-rank test and CNV calls in more than 10% of the patients in the cohort. Among these 215 genes, <italic>SRSF1</italic> was the only gene that correlated with DNA CN gain status using a Welch’s modified t-test (p&lt;0.01; <bold><xref ref-type="fig" rid="pgen.1005895.g003">Fig 3B</xref></bold>).</p>
+        <p>Next, both the Chinese patient discovery and validation cohorts were combined (n = 96) and both a KM and multivariate Cox proportion hazard (PH) regression analysis was conducted to compare the <italic>SRSF1</italic> CN gain and no CN gain patient groups. Differences were assessed with p-values for the grouping difference (log-rank) and the hazard ratio with adjustment for age, gender, tumor stage and chemotherapy treatment status before sampling (Cox PH model; <bold><xref ref-type="fig" rid="pgen.1005895.g003">Fig 3F</xref></bold>).</p>
+        <p>Then, the gene expression of <italic>SRSF1</italic> in the 48 Chinese SCLC patients with RNASeq and clinical data were divided into two groups according to <italic>SRSF1</italic> gene expression level (&gt;75% percentile of overall expression and &lt; = 75% percentile of overall expression). Similar KM analysis as well as a Cox PH regression analysis was performed to compare the survival curves of <italic>SRSF1</italic> over- expressed versus not over-expressed groups with the same covariate adjustments in the Cox PH model as conducted previously with WES data (<bold><xref ref-type="fig" rid="pgen.1005895.g003">Fig 3C</xref></bold>). The R package survival was used to perform these analyses and model summaries are provided in both <bold><xref ref-type="fig" rid="pgen.1005895.g003">Fig 3</xref></bold> and <bold><xref ref-type="supplementary-material" rid="pgen.1005895.s018">S7A and S7B Table</xref></bold>.</p>
+        <p>A similar time-to-event analysis adjusting for age, gender, tumor stage and chemotherapy treatment status was conducted using the nonsilent mutation status to split patients into two groups.</p>
+      </sec>
+      <sec id="sec020">
+        <title>FISH confirmation of SRSF1 CN gain status</title>
+        <p>SRSF1 gene copy number change was conducted via a dual-probe FISH test. The SRSF1 FISH probe was a SpectrumRed (Cat #02N34-050, Enzo Life Sciences, Inc., New York, USA) labeled fluorescent DNA probe, generated in-house from a bacterial artificial clone CTD-2061E5 (Invitrogen, Carlsbad, USA). CEP17 probe (Vysis, Cat #06J37-017) was a SpectrumGreen labeled fluorescent DNA probe specific for the alpha satellite DNA sequence at the centromeric region of chromosome 17.</p>
+        <p>FISH assays were performed as reported previously. In brief, assays were run on 4 micron dewaxed and dehydrated FFPE samples from 34 small cell lung cancer patients. The SpotLight Tissue pretreatment Kit (Cat #00–8401, Invitrogen, Carlsbad, USA) was used for pretreatment according to the manufacturer’s instructions. Sections and probes were codenaturated at 79oC for 6 minutes and then hybridized at 37oC for 48 hours. After a quick post wash off process (0.3%NP40/2xSSC at 75.5 oC for 2 minutes, twice in 2×SSC at room temperature for 2 minutes), sections were finally mounted with 0.3μg/ml DAPI (Cat #H-1200, Vector Laboratories, Inc., Burlingame, USA).</p>
+        <p>CN gains were scored using the criteria outlined by Cappuzzo et al (18) where disomy was scored by ≤2 copies in ≥90% of cells, low trisomy was scored by ≤2 copies in ≥40% of cells and ≥3 copies in 10–40% of the cells, high trisomy was scored by ≤2 copies in ≥40% of the cells and ≥3 copies in ≥40% of the cells, and polysomy was scored by ≤2 copies in &lt;40% of the cells. High trisomy and polysomy were called CN gain positive. (<bold><xref ref-type="supplementary-material" rid="pgen.1005895.s017">S6 Table</xref></bold>).</p>
+      </sec>
+      <sec id="sec021">
+        <title>Taqman assay for SRSF1 CNV status in SCLC cell lines</title>
+        <p>Genomic DNA (gDNA) from cultured cells was prepared using QIAamp DNA Micro Kit. Copy number assay of SRSF1 (Hs00944074_cn) and reference assay RNase P (VIC) were ordered from ABI/Life Technologies. Assays were set up based on ABI reference with four replicates for each sample. The assays were run on ABI 7900HT (SDS v2.X) and the data files were analyzed using the CopyCaller Software. Reference probe RNAse-P was used to determine the SRSF1 copy number gain status: copy number &gt; 2 was considered a gain status.</p>
+      </sec>
+      <sec id="sec022">
+        <title>Cell culture, antibodies, and function assays</title>
+        <p>All SCLC cell lines were grown in RPMI1640 medium supplemented with 10% fetal bovine serum. SRSF1 (SF2/ASF) antibody (96) was supplied by Santa Cruz Biotechnology. Phospho-Histone H2A.X (Ser139) (20E3) and Phospho-Chk2 (Thr68) (C13C1) were supplied by Cell Signaling Technology. Cell proliferation was determined by CellTiter-Glo Luminescent Cell Viability Assay (Promega). Caspase-Glo 3/7 Assay Systems (Promega) were used to analyze cell apoptosis.</p>
+      </sec>
+      <sec id="sec023">
+        <title>siRNA transfection</title>
+        <p>SiRNA reverse transfections were carried out using Lipofectamine RNAiMAX (Life Technologies). siRNAs targeting SRSF1 were ordered as “HP custom siRNA” from Qiagen. The sequences is and CCAACAAGATAGAGTATAA (SRSF1 siRNA). AllStars Neg. Control siRNA (Qiagen) was used as negative control for transfection. Both control siRNA and SRSF1 siRNAs were transfected at a final concentration of 100nM. Culture medium were was replaced with fresh medium at 48 hour after transfection, and cell lysates were prepared at 72 hour for Western blotting.</p>
+      </sec>
+      <sec id="sec024">
+        <title>Colony formation assays</title>
+        <p>For clonogenic assay, SCLC cell lines were transfected with SRSF1 siRNAs for 48 hrs and then seeded in a 1% methylcellulose H4100 medium (StemCell Technologies) consisting of RPMI1640 medium with 10% FBS at 2,000 cells/mL. After 5 days, colonies with more than 40 cells per colony were counted.</p>
+      </sec>
+      <sec id="sec025">
+        <title>Sphere forming assays</title>
+        <p>SCLC cell lines were transfected with SRSF1 siRNAs for 48 hrs and then seeded in ultralow attachment plates (Corning) in sphere forming media: DMEM/F12 with 0.4% BSA, 10ng/mL bFGF, 20ng/mL EGF, 5ug/mL insulin, 1% KnockOut Serum Replacement (Life Technologies). Cells were treated with Cisplatin (0.001 ug– 10 ug/ml) for 4 days, after which viability of spheres was quantitated by CellTiter-Glo Assay (Promega). Images were taken with EVOS FL Auto Cell Imaging System.</p>
+      </sec>
+      <sec id="sec026">
+        <title>SRSF1 rescue assays</title>
+        <p>SCLC cell lines were cotransfected with 800 ng myc/flag-tagged SRSF1 vector (Origene) encoding the open reading frame of either the wildtype gene (NM_006924.4 with 25 nM of either non-targeting siRNA or SRSF1 siRNA-2 using Lipofectamine RNAiMAX (Life Technologies). SRSF1 siRNA targets the 3’UTR of SRSF1, and therefore does not affect expression of the SRSF1 ORF vector. After 48 hr, cells were harvested and then seeded in ultralow attachment plates (Corning) in sphere forming media: DMEM/F12 with 0.4% BSA, 10ng/mL bFGF, 20ng/mL EGF, 5ug/mL insulin, 1% KnockOut Serum Replacement (Life Technologies). Cells were also harvested and lysed with Novex Tris-Glycine SDS Sample Buffer (Life Technologies) for Western blotting. Viability of spheres was quantitated after 4 days by CellTiter-Glo Assay (Promega). Images were taken with EVOS FL Auto Cell Imaging System</p>
+      </sec>
+      <sec id="sec027">
+        <title>Xenograft studies in mice</title>
+        <p>All animal procedures were conducted in accordance with all appropriate regulatory standards under protocols approved by the Medimmune Institutional Animal Care and Use Committee. Since the SRSF1 siRNA had shown good knockdown efficacy of SRSF1 protein at day7 after transient transfection (by western blot of sphere assays), and prolonged effects on colony formation (about 2 weeks after transfection), we used transient siRNA knockdown in the mice xenograft study. Immunocompromised athymic nude (nu/nu) female mice were purchased from Harlon Laboratories at 3–4 week of age. SHP-77 and DMS-114 cells were transfected with either control siRNA or SRSF1 siRNA at a final concentration of 100nM. Two days after transfection, ten million viable cells in 50% matrigel were inoculated subcutaneously (SC) into right flank of each mouse. The length and width of each tumor was measured with an electronic cliper 2 times per week. Tumor growth curves of DMS114 and SHP77 parental cell lines are displayed in <bold><xref ref-type="supplementary-material" rid="pgen.1005895.s011">S11 Fig</xref></bold>. Tumor volume (mm3) was calculated based on the following formula: [length (mm) x width (mm)2] ÷ 2.</p>
+      </sec>
+    </sec>
+    <sec sec-type="supplementary-material" id="sec028">
+      <title>Supporting Information</title>
+      <supplementary-material content-type="local-data" id="pgen.1005895.s001">
+        <label>S1 Fig</label>
+        <caption>
+          <title>Genomic alterations in Chinese SCLC patients.</title>
+          <p>Tumor samples (n = 99) are ordered from left to right based on SRSF1 copy number gains. Mutations and DNA copy number alterations of key SCLC oncogenic genes are indicated for each sample according to the color legend below the figure. The genomic alteration frequencies for each candidate gene are displayed on the left.</p>
+          <p>(DOCX)</p>
+        </caption>
+        <media xlink:href="pgen.1005895.s001.docx">
+          <caption>
+            <p>Click here for additional data file.</p>
+          </caption>
+        </media>
+      </supplementary-material>
+      <supplementary-material content-type="local-data" id="pgen.1005895.s002">
+        <label>S2 Fig</label>
+        <caption>
+          <title>SRSF1 gene copy number detection by FISH.</title>
+          <p>Representative images show a) SRSF1 normal and b) SRSF1 copy number gain. Red signals represent SRSF1 gene and green signals represent of CEP17; c) SRSF1 CNV SCLC patient prevalence as well as other CNV segments across chromosome 17. Red lines indicate CN gains and green lines indicate CN losses.</p>
+          <p>(DOCX)</p>
+        </caption>
+        <media xlink:href="pgen.1005895.s002.docx">
+          <caption>
+            <p>Click here for additional data file.</p>
+          </caption>
+        </media>
+      </supplementary-material>
+      <supplementary-material content-type="local-data" id="pgen.1005895.s003">
+        <label>S3 Fig</label>
+        <caption>
+          <title>KM curves from indications in TCGA where at least 3 patients harbored a CN gain of SRSF1.</title>
+          <p>Plots were generated in OncoLand (OmicSoft Corp; Cary, NC).</p>
+          <p>(DOCX)</p>
+        </caption>
+        <media xlink:href="pgen.1005895.s003.docx">
+          <caption>
+            <p>Click here for additional data file.</p>
+          </caption>
+        </media>
+      </supplementary-material>
+      <supplementary-material content-type="local-data" id="pgen.1005895.s004">
+        <label>S4 Fig</label>
+        <caption>
+          <p>(a): TaqMan assays of SRSF1 DNA CNs in 13 SCLC cell lines. (b): Western blots of SRSF1 show protein expression levels in SCLC cell lines. (c):NCI-H82, SHP-77 and NCI-H1048 were transfected with non-targeting control or SRSF1-directed siRNAs for 48 hrs, then treated with cisplatin (2.5ug/ml) or topotecan (2.5ug/ml) for 24 hrs. Cell growth and Caspase-3/7 activities were assessed and normalized against ctrl siRNA-transfected cells as 100% control.</p>
+          <p>(DOCX)</p>
+        </caption>
+        <media xlink:href="pgen.1005895.s004.docx">
+          <caption>
+            <p>Click here for additional data file.</p>
+          </caption>
+        </media>
+      </supplementary-material>
+      <supplementary-material content-type="local-data" id="pgen.1005895.s005">
+        <label>S5 Fig</label>
+        <caption>
+          <title>The association of SRSF1 gene expression with BIM gene expression in Chinese SCLC patients (N = 49).</title>
+          <p>The correlation between SRSF1 and BIM gene expression is significant, which likely confirms SRSF1 over expression promotes alternative splicing of BIM.</p>
+          <p>(DOCX)</p>
+        </caption>
+        <media xlink:href="pgen.1005895.s005.docx">
+          <caption>
+            <p>Click here for additional data file.</p>
+          </caption>
+        </media>
+      </supplementary-material>
+      <supplementary-material content-type="local-data" id="pgen.1005895.s006">
+        <label>S6 Fig</label>
+        <caption>
+          <title>NCI-82, SHP-77 and NIH-H1048 cells were transfected with non-targeting and SRSF1 siRNAs respectively for 48 hrs and then seeded in sphere forming media and allowed to grow for 4 days.</title>
+          <p>(a): Phase-contrast images of the sphere formation under each condition were captured. (b): viable cell mass quantitated by CTG assay. (c): Reconstitution of SRSF1 expression using a siRNA-resistant Flag-tagged SRSF1 expression construct was carried out in SRSF1 siRNA transfected NCI-H82 cells. Impact on sphere growth rate was assessed by CTG assay, and successful SRSF1 protein re-expression was confirmed by WB using either anti-SRSF1 antibody or anti-Flag antibody. (d): Clonogenic assays of DMS-114, NCI-82, SHP-77 and NIH-H1049. Cells were transfected with siRNAs for 48 hrs and then seeded in the methylcellulose medium for 7~14 days, colonies with more than 40 cells per colony were counted.</p>
+          <p>(DOCX)</p>
+        </caption>
+        <media xlink:href="pgen.1005895.s006.docx">
+          <caption>
+            <p>Click here for additional data file.</p>
+          </caption>
+        </media>
+      </supplementary-material>
+      <supplementary-material content-type="local-data" id="pgen.1005895.s007">
+        <label>S7 Fig</label>
+        <caption>
+          <p>(a)SHP-77 cells transfected with non-targeting control siRNA or SRSF1 siRNA were implanted into immunocompromised mice and tumor formation rates were monitored and measured. (b): SHP-77 cells were transfected with control or SRSF1 siRNA and then treated with topotecan or Cisplatin for the indicated times. SRSF1, phosphor-H2AX and phosphor-Chk2 were probed with their corresponding antibodies.</p>
+          <p>(DOCX)</p>
+        </caption>
+        <media xlink:href="pgen.1005895.s007.docx">
+          <caption>
+            <p>Click here for additional data file.</p>
+          </caption>
+        </media>
+      </supplementary-material>
+      <supplementary-material content-type="local-data" id="pgen.1005895.s008">
+        <label>S8 Fig</label>
+        <caption>
+          <title>The association of SRSF1 gene expression with early stage and late stage (ES) SCLC patients in both our Chinese SCLC study (left figure) and George et al, study (right figure).</title>
+          <p>P-value is calculated using Welch’s modified t-test.</p>
+          <p>(DOCX)</p>
+        </caption>
+        <media xlink:href="pgen.1005895.s008.docx">
+          <caption>
+            <p>Click here for additional data file.</p>
+          </caption>
+        </media>
+      </supplementary-material>
+      <supplementary-material content-type="local-data" id="pgen.1005895.s009">
+        <label>S9 Fig</label>
+        <caption>
+          <title>The association of SRSF1 gene expression with MYC CNV status.</title>
+          <p>SCLC cell lines (left figure, N = 11) and our Chinese SCLC study (right figure, N = 49 patients with matched expression and CNV samples). P-value is estimated using standard t-test.</p>
+          <p>(DOCX)</p>
+        </caption>
+        <media xlink:href="pgen.1005895.s009.docx">
+          <caption>
+            <p>Click here for additional data file.</p>
+          </caption>
+        </media>
+      </supplementary-material>
+      <supplementary-material content-type="local-data" id="pgen.1005895.s010">
+        <label>S10 Fig</label>
+        <caption>
+          <title>Identity check between matched SCLC tumor and normal specimens.</title>
+          <p>Pearson correlation heatmap is used to compare 300 germline SNP profiles between each of the 25 tumors and matched normals. Gradient of colors: green = no correlation; yellow = low correlation; white = high correlation.</p>
+          <p>(DOCX)</p>
+        </caption>
+        <media xlink:href="pgen.1005895.s010.docx">
+          <caption>
+            <p>Click here for additional data file.</p>
+          </caption>
+        </media>
+      </supplementary-material>
+      <supplementary-material content-type="local-data" id="pgen.1005895.s011">
+        <label>S11 Fig</label>
+        <caption>
+          <title>Tumor growth curves for DMS114 and SHP77 parental cell lines.</title>
+          <p>A total of 5–10 millioins cells were injected to establish xenograft tumors.</p>
+          <p>(DOCX)</p>
+        </caption>
+        <media xlink:href="pgen.1005895.s011.docx">
+          <caption>
+            <p>Click here for additional data file.</p>
+          </caption>
+        </media>
+      </supplementary-material>
+      <supplementary-material content-type="local-data" id="pgen.1005895.s012">
+        <label>S1 Table</label>
+        <caption>
+          <title>Chinese patient clinical summary (n = 99).</title>
+          <p>(XLSX)</p>
+        </caption>
+        <media xlink:href="pgen.1005895.s012.xlsx">
+          <caption>
+            <p>Click here for additional data file.</p>
+          </caption>
+        </media>
+      </supplementary-material>
+      <supplementary-material content-type="local-data" id="pgen.1005895.s013">
+        <label>S2 Table</label>
+        <caption>
+          <title>Recurrent somatic mutated genes from 99 Chinese SCLC patients; additional recurrent rates from 51 SCLC Japanese patients in an independent study [<xref rid="pgen.1005895.ref005" ref-type="bibr">5</xref>].</title>
+          <p>(XLSX)</p>
+        </caption>
+        <media xlink:href="pgen.1005895.s013.xlsx">
+          <caption>
+            <p>Click here for additional data file.</p>
+          </caption>
+        </media>
+      </supplementary-material>
+      <supplementary-material content-type="local-data" id="pgen.1005895.s014">
+        <label>S3 Table</label>
+        <caption>
+          <title>Cancer driver gene intersection by two methods and two public data sets in 99 Chinese SCLC.</title>
+          <p>(XLSX)</p>
+        </caption>
+        <media xlink:href="pgen.1005895.s014.xlsx">
+          <caption>
+            <p>Click here for additional data file.</p>
+          </caption>
+        </media>
+      </supplementary-material>
+      <supplementary-material content-type="local-data" id="pgen.1005895.s015">
+        <label>S4 Table</label>
+        <caption>
+          <title>SNVs within DNA repair mechanisms in Chinese SCLC patients (n = 99) using nonsilent somatic SNVs and indels.</title>
+          <p>(XLSX)</p>
+        </caption>
+        <media xlink:href="pgen.1005895.s015.xlsx">
+          <caption>
+            <p>Click here for additional data file.</p>
+          </caption>
+        </media>
+      </supplementary-material>
+      <supplementary-material content-type="local-data" id="pgen.1005895.s016">
+        <label>S5 Table</label>
+        <caption>
+          <title>Patient counts harboring recurrent (prevalence&gt;20%) gene-level somatic CNVs in discovery and validation cohorts (n = 96).</title>
+          <p>(XLSX)</p>
+        </caption>
+        <media xlink:href="pgen.1005895.s016.xlsx">
+          <caption>
+            <p>Click here for additional data file.</p>
+          </caption>
+        </media>
+      </supplementary-material>
+      <supplementary-material content-type="local-data" id="pgen.1005895.s017">
+        <label>S6 Table</label>
+        <caption>
+          <title>FISH assay confirmation of WES CN calls for SRSF1.</title>
+          <p>(XLSX)</p>
+        </caption>
+        <media xlink:href="pgen.1005895.s017.xlsx">
+          <caption>
+            <p>Click here for additional data file.</p>
+          </caption>
+        </media>
+      </supplementary-material>
+      <supplementary-material content-type="local-data" id="pgen.1005895.s018">
+        <label>S7 Table</label>
+        <caption>
+          <p>A. Kaplan-Meier analysis summary for SRSF1 DNA amplification and mRNA expression; B. Cox proportion hazard regression analysis summary for SRSF1 DNA amplification and mRNA over-expression.</p>
+          <p>(XLSX)</p>
+        </caption>
+        <media xlink:href="pgen.1005895.s018.xlsx">
+          <caption>
+            <p>Click here for additional data file.</p>
+          </caption>
+        </media>
+      </supplementary-material>
+      <supplementary-material content-type="local-data" id="pgen.1005895.s019">
+        <label>S8 Table</label>
+        <caption>
+          <title>Patient-specific somatic nonsilent SNVs/indels from 99 Chinese SCLC patients.</title>
+          <p>(XLSX)</p>
+        </caption>
+        <media xlink:href="pgen.1005895.s019.xlsx">
+          <caption>
+            <p>Click here for additional data file.</p>
+          </caption>
+        </media>
+      </supplementary-material>
+      <supplementary-material content-type="local-data" id="pgen.1005895.s020">
+        <label>S9 Table</label>
+        <caption>
+          <title>Gene expression (RNASeq) of top up/down regulated genes between 48 tumor and 6 normal samples.</title>
+          <p>(XLSX)</p>
+        </caption>
+        <media xlink:href="pgen.1005895.s020.xlsx">
+          <caption>
+            <p>Click here for additional data file.</p>
+          </caption>
+        </media>
+      </supplementary-material>
+      <supplementary-material content-type="local-data" id="pgen.1005895.s021">
+        <label>S10 Table</label>
+        <caption>
+          <title>WES coverage and depth statistics for 99 tumor specimens.</title>
+          <p>(XLSX)</p>
+        </caption>
+        <media xlink:href="pgen.1005895.s021.xlsx">
+          <caption>
+            <p>Click here for additional data file.</p>
+          </caption>
+        </media>
+      </supplementary-material>
+      <supplementary-material content-type="local-data" id="pgen.1005895.s022">
+        <label>S11 Table</label>
+        <caption>
+          <title>Commercial Caucasian patient information.</title>
+          <p>(XLSX)</p>
+        </caption>
+        <media xlink:href="pgen.1005895.s022.xlsx">
+          <caption>
+            <p>Click here for additional data file.</p>
+          </caption>
+        </media>
+      </supplementary-material>
+      <supplementary-material content-type="local-data" id="pgen.1005895.s023">
+        <label>S12 Table</label>
+        <caption>
+          <title>Mater Regulator Analysis (Ingenuity Pathway Analysis) for differential expression genes between SRSF1 CN Gain / Amp and SRSF1 CN Neutral.</title>
+          <p>(XLSX)</p>
+        </caption>
+        <media xlink:href="pgen.1005895.s023.xlsx">
+          <caption>
+            <p>Click here for additional data file.</p>
+          </caption>
+        </media>
+      </supplementary-material>
+    </sec>
+  </body>
+  <back>
+    <ack>
+      <p>We thank all the study participants who took part in this work. We also thank Beijing Genomics Institute and WuXi AppTec for exome and RNA sequencing presented in this study.</p>
+    </ack>
+    <ref-list>
+      <title>References</title>
+      <ref id="pgen.1005895.ref001">
+        <label>1</label>
+        <mixed-citation publication-type="journal"><name><surname>Sher</surname><given-names>T</given-names></name>, <name><surname>Dy</surname><given-names>GK</given-names></name>, <name><surname>Adjei</surname><given-names>AA</given-names></name>. <article-title>Small cell lung cancer</article-title>. <source>Mayo Clin. Proc</source>. <year>2008</year>;<volume>83</volume>:<fpage>355</fpage>–<lpage>367</lpage>. <pub-id pub-id-type="doi">10.4065/83.3.355</pub-id>
+<pub-id pub-id-type="pmid">18316005</pub-id></mixed-citation>
+      </ref>
+      <ref id="pgen.1005895.ref002">
+        <label>2</label>
+        <mixed-citation publication-type="journal"><name><surname>Pietanza</surname><given-names>MC</given-names></name>, <name><surname>Byers</surname><given-names>LA</given-names></name>, <name><surname>Minna</surname><given-names>JD</given-names></name>, <name><surname>Rudin</surname><given-names>CM</given-names></name>. <article-title>Small cell lung cancer: will recent progress lead to improved outcomes?</article-title>
+<source>Clin Cancer Res</source>. <year>2015</year>;<volume>21</volume>:<fpage>2244</fpage>–<lpage>55</lpage>. <pub-id pub-id-type="doi">10.1158/1078-0432.CCR-14-2958</pub-id>
+<pub-id pub-id-type="pmid">25979931</pub-id></mixed-citation>
+      </ref>
+      <ref id="pgen.1005895.ref003">
+        <label>3</label>
+        <mixed-citation publication-type="journal"><name><surname>Rudin</surname><given-names>CM</given-names></name>, <name><surname>Durinck</surname><given-names>S</given-names></name>, <name><surname>Stawiski</surname><given-names>EW</given-names></name>, <name><surname>Poirier</surname><given-names>JT</given-names></name>, <name><surname>Modrusan</surname><given-names>Z</given-names></name>, <name><surname>Shames</surname><given-names>DS</given-names></name>, <etal>et al</etal>
+<article-title>Comprehensive genomic analysis identifies SOX2 as a frequently amplified gene in small-cell lung cancer</article-title>. <source>Nat Genet</source>. <year>2012</year>; <volume>44</volume>:<fpage>1111</fpage>–<lpage>6</lpage>. <pub-id pub-id-type="doi">10.1038/ng.2405</pub-id>
+<pub-id pub-id-type="pmid">22941189</pub-id></mixed-citation>
+      </ref>
+      <ref id="pgen.1005895.ref004">
+        <label>4</label>
+        <mixed-citation publication-type="journal"><name><surname>Peifer</surname><given-names>M</given-names></name>, <name><surname>Fernández-Cuesta</surname><given-names>L</given-names></name>, <name><surname>Sos</surname><given-names>ML</given-names></name>, <name><surname>George</surname><given-names>J</given-names></name>, <name><surname>Seidel</surname><given-names>D</given-names></name>, <name><surname>Kasper</surname><given-names>LH</given-names></name>, <etal>et al</etal>
+<article-title>Integrative genome analyses identify key somatic driver mutations of small-cell lung cancer</article-title>. <source>Nat Genet</source>. <year>2012</year>;<volume>44</volume>:<fpage>1104</fpage>–<lpage>10</lpage>. <pub-id pub-id-type="doi">10.1038/ng.2396</pub-id>
+<pub-id pub-id-type="pmid">22941188</pub-id></mixed-citation>
+      </ref>
+      <ref id="pgen.1005895.ref005">
+        <label>5</label>
+        <mixed-citation publication-type="journal"><name><surname>Umemura</surname><given-names>S</given-names></name>, <name><surname>Mimaki</surname><given-names>S</given-names></name>, <name><surname>Makinoshima</surname><given-names>H</given-names></name>, <name><surname>Tada</surname><given-names>S</given-names></name>, <name><surname>Ishii</surname><given-names>G</given-names></name>, <name><surname>Ohmatsu</surname><given-names>H</given-names></name>, <etal>et al</etal>
+<article-title>Therapeutic priority of the PI3K/AKT/mTOR pathway in small cell lung cancers as revealed by a comprehensive genomic analysis</article-title>. <source>J Thorac Oncol</source>. <year>2014</year>;<volume>9</volume>:<fpage>1324</fpage>–<lpage>31</lpage>. <pub-id pub-id-type="doi">10.1097/JTO.0000000000000250</pub-id>
+<pub-id pub-id-type="pmid">25122428</pub-id></mixed-citation>
+      </ref>
+      <ref id="pgen.1005895.ref006">
+        <label>6</label>
+        <mixed-citation publication-type="journal"><name><surname>Weng</surname><given-names>AP</given-names></name>, <name><surname>Ferrando</surname><given-names>AA</given-names></name>, <name><surname>Lee</surname><given-names>W</given-names></name>, <etal>et al</etal>
+<article-title>Activating mutations of NOTCH1 in human T cell acute lymphoblastic leukemia</article-title>. <source>Science</source>
+<year>2004</year>; <volume>306</volume>: <fpage>269</fpage>–<lpage>271</lpage>. <pub-id pub-id-type="pmid">15472075</pub-id></mixed-citation>
+      </ref>
+      <ref id="pgen.1005895.ref007">
+        <label>7</label>
+        <mixed-citation publication-type="journal"><name><surname>Park</surname><given-names>MJ</given-names></name>, <name><surname>Taki</surname><given-names>T</given-names></name>, <name><surname>Oda</surname><given-names>M</given-names></name>, <etal>et al</etal>
+<article-title>FBXW7 and NOTCH1 mutations in childhood T cell acute lymphoblastic leukaemia and T cell non-Hodgkin lymphoma</article-title>. <source>Br J Haematol</source>
+<year>2009</year></mixed-citation>
+      </ref>
+      <ref id="pgen.1005895.ref008">
+        <label>8</label>
+        <mixed-citation publication-type="journal"><name><surname>Adolfo</surname><given-names>A</given-names></name>. <name><surname>Ferrando</surname></name>, <article-title>The role of NOTCH1 signaling in T-ALL</article-title>. <source>Hematology Am Soc Hematol Educ Program</source>. <year>2009</year>; <volume>353–361</volume></mixed-citation>
+      </ref>
+      <ref id="pgen.1005895.ref009">
+        <label>9</label>
+        <mixed-citation publication-type="journal"><name><surname>George</surname><given-names>Julie</given-names></name>, <name><surname>Jing</surname><given-names>Shan Lim</given-names></name>, <name><surname>Se Jin</surname><given-names>Jang</given-names></name>, <name><surname>Cun</surname><given-names>Yupeng</given-names></name>, <name><surname>Luka Ozretić</surname><given-names>Gu Kong</given-names></name>, <etal>et al</etal>
+<article-title>Comprehensive genomic profiles of small cell lung cancer</article-title>. <source>Nature</source>. <year>2015</year>; <volume>524</volume>, <fpage>47</fpage>–<lpage>53</lpage>. <pub-id pub-id-type="doi">10.1038/nature14664</pub-id>
+<pub-id pub-id-type="pmid">26168399</pub-id></mixed-citation>
+      </ref>
+      <ref id="pgen.1005895.ref010">
+        <label>10</label>
+        <mixed-citation publication-type="journal"><collab>The Cancer Genome Atlas Research Network</collab>. <article-title>Comprehensive genomic characterization of squamous cell lung cancers</article-title>. <source>Nature</source>; <volume>489</volume>, <fpage>519</fpage>–<lpage>525</lpage>
+<pub-id pub-id-type="doi">10.1038/nature11404</pub-id>
+<pub-id pub-id-type="pmid">22960745</pub-id></mixed-citation>
+      </ref>
+      <ref id="pgen.1005895.ref011">
+        <label>11</label>
+        <mixed-citation publication-type="journal"><name><surname>Kools</surname><given-names>P</given-names></name>, <name><surname>Vanhalst</surname><given-names>K</given-names></name>, <name><surname>Van den Eynde</surname><given-names>E</given-names></name>, <name><surname>van Roy</surname><given-names>F</given-names></name>. <article-title>The human cadherin-10 gene: complete coding sequence, predominant expression in the brain, and mapping on chromosome 5p13-14</article-title>. <source>FEBS Lett</source>. <year>1999</year>; <volume>452</volume>: <fpage>328</fpage>–<lpage>34</lpage>. <pub-id pub-id-type="pmid">10386616</pub-id></mixed-citation>
+      </ref>
+      <ref id="pgen.1005895.ref012">
+        <label>12</label>
+        <mixed-citation publication-type="journal"><name><surname>Wood</surname><given-names>RD</given-names></name>, <name><surname>Mitchell</surname><given-names>M</given-names></name>, <name><surname>Lindahl</surname><given-names>T</given-names></name>. <article-title>Human DNA repair genes</article-title>. <source>Mutat Res</source>. <year>2005</year>;<volume>577</volume>: <fpage>275</fpage>–<lpage>83</lpage>. <pub-id pub-id-type="pmid">15922366</pub-id></mixed-citation>
+      </ref>
+      <ref id="pgen.1005895.ref013">
+        <label>13</label>
+        <mixed-citation publication-type="journal"><name><surname>Lange</surname><given-names>SS</given-names></name>, <name><surname>Takata</surname><given-names>K</given-names></name>, <name><surname>Wood</surname><given-names>RD</given-names></name>. <article-title>DNA polymerases and cancer</article-title>. <source>Nature Reviews Cancer</source>. <year>2011</year>;<volume>2</volume>: <fpage>96</fpage>–<lpage>110</lpage>.</mixed-citation>
+      </ref>
+      <ref id="pgen.1005895.ref014">
+        <label>14</label>
+        <mixed-citation publication-type="journal"><name><surname>Pommier</surname><given-names>Y</given-names></name>. <article-title>Topoisomerase I inhibitors: camptothecins and beyond</article-title>. <source>Nat Rev Cancer</source>. <year>2006</year>;<volume>6</volume>: <fpage>789</fpage>–<lpage>802</lpage>. <pub-id pub-id-type="pmid">16990856</pub-id></mixed-citation>
+      </ref>
+      <ref id="pgen.1005895.ref015">
+        <label>15</label>
+        <mixed-citation publication-type="journal"><name><surname>Arriola</surname><given-names>E</given-names></name>, <name><surname>Cañadas</surname><given-names>I</given-names></name>, <name><surname>Arumí</surname><given-names>M</given-names></name>, <name><surname>Rojo</surname><given-names>F</given-names></name>, <name><surname>Rovira</surname><given-names>A</given-names></name>, <name><surname>Albanell</surname><given-names>J</given-names></name>. <article-title>Genetic changes in small cell lung carcinoma</article-title>. <source>Clin Transl. Oncol</source>. <year>2008</year>;<volume>10</volume>: <fpage>189</fpage>–<lpage>197</lpage>. <pub-id pub-id-type="pmid">18411191</pub-id></mixed-citation>
+      </ref>
+      <ref id="pgen.1005895.ref016">
+        <label>16</label>
+        <mixed-citation publication-type="journal"><name><surname>D’Angelo</surname><given-names>SP</given-names></name>. <article-title>Pietanza MC. The molecular pathogenesis of small cell lung cancer</article-title>. <source>Cancer Biol Ther</source>. <year>2010</year>;<volume>10</volume>: <fpage>1</fpage>–<lpage>10</lpage>. <pub-id pub-id-type="pmid">21361067</pub-id></mixed-citation>
+      </ref>
+      <ref id="pgen.1005895.ref017">
+        <label>17</label>
+        <mixed-citation publication-type="journal"><name><surname>Medina</surname><given-names>PP</given-names></name>, <name><surname>Castillo</surname><given-names>SD</given-names></name>, <name><surname>Blanco</surname><given-names>S</given-names></name>, <name><surname>Sanz-Garcia</surname><given-names>M</given-names></name>, <name><surname>Largo</surname><given-names>C</given-names></name>, <name><surname>Alvarez</surname><given-names>S</given-names></name>, <etal>et al</etal>
+<article-title>The SRY-HMG box gene, SOX4, is a target of gene amplification at chromosome 6p in lung cancer</article-title>. <source>Hum. Mol. Genet</source>. <year>2009</year>;<volume>18</volume>:<fpage>1343</fpage>–<lpage>1352</lpage>. <pub-id pub-id-type="doi">10.1093/hmg/ddp034</pub-id>
+<pub-id pub-id-type="pmid">19153074</pub-id></mixed-citation>
+      </ref>
+      <ref id="pgen.1005895.ref018">
+        <label>18</label>
+        <mixed-citation publication-type="journal"><name><surname>Cappuzzo</surname><given-names>F</given-names></name>, <name><surname>Hirsch</surname><given-names>FR</given-names></name>, <name><surname>Rossi</surname><given-names>E</given-names></name>, <name><surname>Bartolini</surname><given-names>S</given-names></name>, <name><surname>Ceresoli</surname><given-names>GL</given-names></name>, <name><surname>Bemis</surname><given-names>L</given-names></name>, <etal>et al</etal>
+<article-title>Epidermal growth factor receptor gene and protein and gefitinib sensitivity in non-small-cell lung cancer</article-title>. <source>J Natl Cancer Inst</source>. <year>2005</year>;<volume>97</volume>:<fpage>643</fpage>–<lpage>55</lpage>. <pub-id pub-id-type="pmid">15870435</pub-id></mixed-citation>
+      </ref>
+      <ref id="pgen.1005895.ref019">
+        <label>19</label>
+        <mixed-citation publication-type="journal"><name><surname>Pekar-Zlotin</surname><given-names>M</given-names></name>, <name><surname>Hirsch</surname><given-names>FR</given-names></name>, <name><surname>Soussan-Gutman</surname><given-names>L</given-names></name>, <name><surname>Ilouze</surname><given-names>M</given-names></name>, <name><surname>Dvir</surname><given-names>A</given-names></name>, <name><surname>Boyle</surname><given-names>T</given-names></name>, <etal>et al</etal>
+<article-title>Fluorescence In Situ Hybridization, Immunohistochemistry, and Next-Generation Sequencing for Detection of EML4-ALK Rearrangement in Lung Cancer</article-title>. <source>Oncologist</source>. <year>2015</year>;<volume>20</volume>:<fpage>316</fpage>–<lpage>22</lpage>. <pub-id pub-id-type="doi">10.1634/theoncologist.2014-0389</pub-id>
+<pub-id pub-id-type="pmid">25721120</pub-id></mixed-citation>
+      </ref>
+      <ref id="pgen.1005895.ref020">
+        <label>20</label>
+        <mixed-citation publication-type="journal"><name><surname>Ali</surname><given-names>S</given-names></name>, <name><surname>Ou</surname><given-names>SH</given-names></name>, <name><surname>He</surname><given-names>J</given-names></name>, <name><surname>Peled</surname><given-names>N</given-names></name>, <name><surname>Chmielecki</surname><given-names>J</given-names></name>, <name><surname>Pinder</surname><given-names>MC</given-names></name>, <etal>et al</etal>
+<article-title>Identifying ALK rearrangements that are not detected by FISH with targeted next-generation sequencing of lung carcinoma</article-title>. <source>J Clin Oncol</source>. <year>2014</year>;<volume>32</volume>:<fpage>5s</fpage>.</mixed-citation>
+      </ref>
+      <ref id="pgen.1005895.ref021">
+        <label>21</label>
+        <mixed-citation publication-type="journal"><name><surname>Olga</surname><given-names>Anczuków</given-names></name>, <name><surname>Avi</surname><given-names>Z Rosenberg</given-names></name>, <name><surname>Martin</surname><given-names>Akerman</given-names></name>, <name><surname>Shipra</surname><given-names>Das</given-names></name>, <name><surname>Lixing</surname><given-names>Zhan</given-names></name>, <name><surname>Rotem</surname><given-names>Karni</given-names></name>, <name><surname>Senthil</surname><given-names>K Muthuswamy</given-names></name>, <name><surname>Adrian</surname><given-names>R Krainer</given-names></name>, <article-title>The splicing factor SRSF1 regulates apoptosis and proliferation to promote mammary epithelial cell transformation</article-title>. <source>Nature Structural &amp; Molecular Biology</source>
+<volume>19</volume>, <year>2012</year>; <fpage>220</fpage>–<lpage>228</lpage></mixed-citation>
+      </ref>
+      <ref id="pgen.1005895.ref022">
+        <label>22</label>
+        <mixed-citation publication-type="journal"><name><surname>Hannah</surname><given-names>L</given-names></name>. <name><surname>Gautrey</surname></name>, <name><surname>Alison</surname><given-names>J</given-names></name>. <article-title>Tyson-Capper, Regulation of Mcl-1 by SRSF1 and SRSF5 in Cancer Cells</article-title>. <year>2012</year>; <source>PLoS ONE</source>
+<volume>7</volume>(<issue>12</issue>): <fpage>e51497</fpage>
+<pub-id pub-id-type="doi">10.1371/journal.pone.0051497</pub-id>
+<pub-id pub-id-type="pmid">23284704</pub-id></mixed-citation>
+      </ref>
+      <ref id="pgen.1005895.ref023">
+        <label>23</label>
+        <mixed-citation publication-type="journal"><name><surname>Sedelnikova</surname><given-names>OA</given-names></name>, <name><surname>Rogakou</surname><given-names>EP</given-names></name>, <name><surname>Panuytin</surname><given-names>IG</given-names></name>, <name><surname>Bonner</surname><given-names>WM</given-names></name>. <article-title>Quantitative detection of (125)IdU-induced DNA double-strand breaks with gamma-H2AX antibody</article-title>. <source>Radiat Res</source>. <year>2002</year>; <volume>158</volume>:<fpage>486</fpage>–<lpage>49</lpage>. <pub-id pub-id-type="pmid">12236816</pub-id></mixed-citation>
+      </ref>
+      <ref id="pgen.1005895.ref024">
+        <label>24</label>
+        <mixed-citation publication-type="journal"><name><surname>Stevens</surname><given-names>C</given-names></name>, <name><surname>Smith</surname><given-names>L</given-names></name>, <name><surname>La Thangue</surname><given-names>NB</given-names></name>. <article-title>Chk2 activates E2F-1 in response to DNA damage</article-title>. <source>Nat Cell Biol</source>. <year>2003</year>;<volume>5</volume>:<fpage>4465</fpage>–<lpage>4479</lpage>.</mixed-citation>
+      </ref>
+      <ref id="pgen.1005895.ref025">
+        <label>25</label>
+        <mixed-citation publication-type="journal"><name><surname>Ahn</surname><given-names>JW</given-names></name>, <name><surname>Kim</surname><given-names>HS</given-names></name>, <name><surname>Yoon</surname><given-names>JK</given-names></name>, <name><surname>Jang</surname><given-names>H</given-names></name>, <name><surname>Han</surname><given-names>SM</given-names></name>, <name><surname>Eun</surname><given-names>S</given-names></name>, <etal>et al</etal>
+<article-title>Identification of somatic mutations in EGFR/KRAS/ALK-negative lung adenocarcinoma in never-smokers</article-title>. <source>Genome Med</source>. <year>2014</year>; <volume>6</volume>(<issue>2</issue>):<fpage>18</fpage>
+<pub-id pub-id-type="doi">10.1186/gm535</pub-id>
+<pub-id pub-id-type="pmid">24576404</pub-id></mixed-citation>
+      </ref>
+      <ref id="pgen.1005895.ref026">
+        <label>26</label>
+        <mixed-citation publication-type="journal"><name><surname>Yu</surname><given-names>J</given-names></name>, <name><surname>Wu</surname><given-names>WK</given-names></name>, <name><surname>Li</surname><given-names>X</given-names></name>, <name><surname>He</surname><given-names>J</given-names></name>, <name><surname>Li</surname><given-names>XX</given-names></name>, <name><surname>Ng</surname><given-names>SS</given-names></name>, <etal>et al</etal>
+<article-title>Novel recurrently mutated genes and a prognostic mutation signature in colorectal cancer</article-title>. <source>Gut</source>. <year>2015</year>; <volume>64</volume>(<issue>4</issue>):<fpage>636</fpage>–<lpage>4</lpage>. <pub-id pub-id-type="doi">10.1136/gutjnl-2013-306620</pub-id>
+<pub-id pub-id-type="pmid">24951259</pub-id></mixed-citation>
+      </ref>
+      <ref id="pgen.1005895.ref027">
+        <label>27</label>
+        <mixed-citation publication-type="journal"><name><surname>Swan</surname><given-names>MK</given-names></name>, <name><surname>Johnson</surname><given-names>RE</given-names></name>, <name><surname>Prakash</surname><given-names>L</given-names></name>, <name><surname>Prakash</surname><given-names>S</given-names></name>, <name><surname>Aggarwal</surname><given-names>AK</given-names></name>. <article-title>Structural basis of high-fidelity DNA synthesis by yeast DNA polymerase delta</article-title>. <source>Nat Struct Mol Biol</source>. <year>2009</year>; <volume>9</volume>:<fpage>979</fpage>–<lpage>86</lpage>.</mixed-citation>
+      </ref>
+      <ref id="pgen.1005895.ref028">
+        <label>28</label>
+        <mixed-citation publication-type="journal"><name><surname>Auerbach</surname><given-names>AD</given-names></name>. <article-title>A test for Fanconi’s anemia</article-title>. <source>Blood</source>. <year>1988</year>; <volume>72</volume>: <fpage>366</fpage>–<lpage>367</lpage>. <pub-id pub-id-type="pmid">3291985</pub-id></mixed-citation>
+      </ref>
+      <ref id="pgen.1005895.ref029">
+        <label>29</label>
+        <mixed-citation publication-type="journal"><name><surname>Owe</surname><given-names>S. W</given-names></name>, <name><surname>Ruley</surname><given-names>H. E</given-names></name>, <name><surname>Jacks</surname><given-names>T</given-names></name>, <name><surname>Housman</surname><given-names>E</given-names></name>. <article-title>p53-dependent apoptosis modulates the cytotoxicity of anticancer agents</article-title>. <source>Cell</source>. <year>1993</year>;<volume>74</volume>: <fpage>957</fpage>–<lpage>967</lpage>. <pub-id pub-id-type="pmid">8402885</pub-id></mixed-citation>
+      </ref>
+      <ref id="pgen.1005895.ref030">
+        <label>30</label>
+        <mixed-citation publication-type="journal"><name><surname>Vasey</surname><given-names>PA</given-names></name>, <name><surname>Jones</surname><given-names>NA</given-names></name>, <name><surname>Jenkins</surname><given-names>S</given-names></name>, <name><surname>Dive</surname><given-names>C</given-names></name>, <name><surname>Brown</surname><given-names>R</given-names></name>. <article-title>Cisplatin, camptothecin, and Taxol sensitivities of cells with p53-associated multidrug resistance</article-title>. <source>Mol. Pharmacol</source>. <year>1996</year>;<volume>50</volume>:<fpage>1536</fpage>–<lpage>1540</lpage>. <pub-id pub-id-type="pmid">8967975</pub-id></mixed-citation>
+      </ref>
+      <ref id="pgen.1005895.ref031">
+        <label>31</label>
+        <mixed-citation publication-type="journal"><name><surname>Vikhanskaya</surname><given-names>F</given-names></name>, <name><surname>Clerico</surname><given-names>L</given-names></name>, <name><surname>Valenti</surname><given-names>M</given-names></name>, <name><surname>Stanzione</surname><given-names>M. S</given-names></name>, <name><surname>Broggini</surname><given-names>M</given-names></name>, <name><surname>Parodi</surname><given-names>S</given-names></name>, <etal>et al</etal>
+<article-title>Mechanism of resistance to cisplatin in a human ovarian-carcinoma cell line selected for resistance to doxorubicin: possible role of p53</article-title>. <source>Int. J. Cancer</source>. <year>1997</year>;<volume>72</volume>: <fpage>155</fpage>–<lpage>159</lpage>. <pub-id pub-id-type="pmid">9212237</pub-id></mixed-citation>
+      </ref>
+      <ref id="pgen.1005895.ref032">
+        <label>32</label>
+        <mixed-citation publication-type="journal"><name><surname>Lin</surname><given-names>X</given-names></name>, <name><surname>Howell</surname><given-names>SB</given-names></name>. <article-title>DNA mismatch repair and p53 function are major determinants of the rate of development of cisplatin resistance</article-title>. <source>Mol Cancer Ther</source>. <year>2006</year>;<volume>5</volume>:<fpage>1239</fpage>–<lpage>47</lpage>. <pub-id pub-id-type="pmid">16731756</pub-id></mixed-citation>
+      </ref>
+      <ref id="pgen.1005895.ref033">
+        <label>33</label>
+        <mixed-citation publication-type="journal"><name><surname>Ishikawa</surname><given-names>T</given-names></name>, <name><surname>Krzysko</surname><given-names>KA</given-names></name>, <name><surname>Kowalska-Loth</surname><given-names>B</given-names></name>, <name><surname>Skrajna</surname><given-names>AM</given-names></name>, <name><surname>Czubaty</surname><given-names>A</given-names></name>, <name><surname>Girstun</surname><given-names>A</given-names></name>, <name><surname>Cieplak</surname><given-names>MK</given-names></name>, <name><surname>Lesyng</surname><given-names>B</given-names></name>, <name><surname>Staron</surname><given-names>K</given-names></name>. <article-title>Activities of topoisomerase I in its complex with SRSF1</article-title>. <source>Biochemistry</source>. <year>2012</year>
+<volume>51</volume>(<issue>8</issue>):<fpage>1803</fpage>–<lpage>16</lpage>
+<pub-id pub-id-type="doi">10.1021/bi300043t</pub-id>
+<pub-id pub-id-type="pmid">22320324</pub-id></mixed-citation>
+      </ref>
+      <ref id="pgen.1005895.ref034">
+        <label>34</label>
+        <mixed-citation publication-type="journal"><name><surname>Pillai</surname><given-names>RN</given-names></name>, <name><surname>Owonikoko</surname><given-names>TK</given-names></name>. <article-title>Small Cell Lung Cancer: Therapies and Targets</article-title>. <source>Semin Oncol</source>. <year>2014</year>; <volume>41</volume>:<fpage>133</fpage>–<lpage>142</lpage>. <pub-id pub-id-type="doi">10.1053/j.seminoncol.2013.12.015</pub-id>
+<pub-id pub-id-type="pmid">24565587</pub-id></mixed-citation>
+      </ref>
+      <ref id="pgen.1005895.ref035">
+        <label>35</label>
+        <mixed-citation publication-type="journal"><name><surname>Tuduri</surname><given-names>S</given-names></name>, <name><surname>Crabbé</surname><given-names>L</given-names></name>, <name><surname>Conti</surname><given-names>C</given-names></name>, <name><surname>Tourrière</surname><given-names>H</given-names></name>, <name><surname>Holtgreve-Grez</surname><given-names>H</given-names></name>, <name><surname>Jauch</surname><given-names>A</given-names></name>, <name><surname>Pantesco</surname><given-names>V</given-names></name>, <name><surname>De Vos</surname><given-names>J</given-names></name>, <name><surname>Thomas</surname><given-names>A</given-names></name>, <name><surname>Theillet</surname><given-names>C</given-names></name>, <name><surname>Pommier</surname><given-names>Y</given-names></name>, <name><surname>Tazi</surname><given-names>J</given-names></name>, <name><surname>Coquelle</surname><given-names>A</given-names></name>, <name><surname>Pasero</surname><given-names>P</given-names></name>. <article-title>Topoisomerase I suppresses genomic instability by preventing interference between replication and transcription</article-title>. <source>Nat Cell Biol</source>. <year>2009</year>;<volume>11</volume>(<issue>11</issue>):<fpage>1315</fpage>–<lpage>24</lpage>. <pub-id pub-id-type="doi">10.1038/ncb1984</pub-id>
+<pub-id pub-id-type="pmid">19838172</pub-id></mixed-citation>
+      </ref>
+      <ref id="pgen.1005895.ref036">
+        <label>36</label>
+        <mixed-citation publication-type="journal"><name><surname>Das</surname><given-names>S</given-names></name>, <name><surname>Anczuków</surname><given-names>O</given-names></name>, <name><surname>Akerman</surname><given-names>M</given-names></name>, <name><surname>Krainer</surname><given-names>AR</given-names></name>, <article-title>Oncogenic splicing factor SRSF1 is a critical transcriptional target of MYC</article-title>. <year>2012</year>; <source>Cell Rep</source>. <fpage>110</fpage>–<lpage>7</lpage>
+<pub-id pub-id-type="pmid">22545246</pub-id></mixed-citation>
+      </ref>
+      <ref id="pgen.1005895.ref037">
+        <label>37</label>
+        <mixed-citation publication-type="journal"><name><surname>Karni</surname><given-names>R.</given-names></name>, <name><surname>De Stanchina</surname><given-names>E.</given-names></name>, <name><surname>Lowe</surname><given-names>S. W.</given-names></name>, <name><surname>Sinha</surname><given-names>R.</given-names></name>, <name><surname>Mu</surname><given-names>D.</given-names></name>, <name><surname>Krainer</surname><given-names>A. R.</given-names></name>. <article-title>The gene encoding the splicing factor SF2/ASF is a proto-oncogene.</article-title>
+<source>Nature Structural and Molecular Biology</source>. <year>2007</year>; <volume>14</volume>(<issue>3</issue>):<fpage>185</fpage>–<lpage>193</lpage>. <pub-id pub-id-type="pmid">17310252</pub-id></mixed-citation>
+      </ref>
+      <ref id="pgen.1005895.ref038">
+        <label>38</label>
+        <mixed-citation publication-type="journal"><name><surname>Anczuków</surname><given-names>O1</given-names></name>, <name><surname>Rosenberg</surname><given-names>AZ</given-names></name>, <name><surname>Akerman</surname><given-names>M</given-names></name>, <name><surname>Das</surname><given-names>S</given-names></name>, <name><surname>Zhan</surname><given-names>L</given-names></name>, <name><surname>Karni</surname><given-names>R</given-names></name>, <etal>et al</etal>
+<article-title>The splicing factor SRSF1 regulates apoptosis and proliferation to promote mammary epithelial cell transformation.</article-title>
+<source>Nat Struct Mol Biol</source>. <year>2012</year>;<volume>19</volume>(<issue>2</issue>):<fpage>220</fpage>–<lpage>228</lpage>. <pub-id pub-id-type="doi">10.1038/nsmb.2207</pub-id>
+<pub-id pub-id-type="pmid">22245967</pub-id></mixed-citation>
+      </ref>
+      <ref id="pgen.1005895.ref039">
+        <label>39</label>
+        <mixed-citation publication-type="journal"><name><surname>Shimoni-Sebag</surname><given-names>A</given-names></name>, <name><surname>Lebenthal-Loinger</surname><given-names>I</given-names></name>, <name><surname>Zender</surname><given-names>L</given-names></name>, <name><surname>Karni</surname><given-names>R</given-names></name>. <article-title>RRM1 domain of the splicing oncoprotein SRSF1 is required for MEK1-MAPK-ERK activation and cellular transformation</article-title>. <source>Carcinogenesis</source>. <year>2013</year>;<volume>34</volume>:<fpage>2498</fpage>–<lpage>504</lpage>. <pub-id pub-id-type="doi">10.1093/carcin/bgt247</pub-id>
+<pub-id pub-id-type="pmid">23843040</pub-id></mixed-citation>
+      </ref>
+      <ref id="pgen.1005895.ref040">
+        <label>40</label>
+        <mixed-citation publication-type="journal"><name><surname>Das</surname><given-names>S</given-names></name>, <name><surname>Krainer</surname><given-names>AR</given-names></name>. <article-title>Emerging functions of SRSF1, splicing factor and oncoprotein, in RNA metabolism and cancer</article-title>. <source>Mol Cancer Res</source>. <year>2014</year>;<volume>12</volume>:<fpage>1195</fpage>–<lpage>204</lpage>. <pub-id pub-id-type="doi">10.1158/1541-7786.MCR-14-0131</pub-id>
+<pub-id pub-id-type="pmid">24807918</pub-id></mixed-citation>
+      </ref>
+      <ref id="pgen.1005895.ref041">
+        <label>41</label>
+        <mixed-citation publication-type="journal"><name><surname>Nicholas</surname><given-names>A. Olshavsky</given-names></name>, <name><surname>Clay</surname><given-names>E.S. Comstock</given-names></name>, <name><surname>Matthew J. Schiewer</surname></name>, <name><surname>Michael</surname><given-names>A. Augello</given-names></name>, <name><surname>Terry</surname><given-names>Hyslop</given-names></name>, <name><surname>Claudio</surname><given-names>Sette</given-names></name>, <etal>et al</etal>
+<article-title>Identification of ASF/SF2 as a critical, allele-specific effector of the cyclin D1b oncogene</article-title>. <source>Cancer Res</source>. <year>2010</year>; <volume>70</volume>(<issue>10</issue>):<fpage>3975</fpage>–<lpage>3984</lpage>. <pub-id pub-id-type="doi">10.1158/0008-5472.CAN-09-3468</pub-id>
+<pub-id pub-id-type="pmid">20460515</pub-id></mixed-citation>
+      </ref>
+      <ref id="pgen.1005895.ref042">
+        <label>42</label>
+        <mixed-citation publication-type="journal"><name><surname>Ben-Hur</surname><given-names>V</given-names></name>, <name><surname>Denichenko</surname><given-names>P</given-names></name>, <name><surname>Siegfried</surname><given-names>Z</given-names></name>, <name><surname>Maimon</surname><given-names>A</given-names></name>, <name><surname>Krainer</surname><given-names>AR</given-names></name>, <name><surname>Davidson</surname><given-names>B</given-names></name>, <etal>et al</etal>
+<article-title>S6K1 alternative splicing modulates its oncogenic activity and regulates mTORC1.</article-title>
+<source>Cell Rep</source>. <year>2013</year>;<volume>3</volume>:<fpage>103</fpage>–<lpage>15</lpage>. <pub-id pub-id-type="doi">10.1016/j.celrep.2012.11.020</pub-id>
+<pub-id pub-id-type="pmid">23273915</pub-id></mixed-citation>
+      </ref>
+      <ref id="pgen.1005895.ref043">
+        <label>43</label>
+        <mixed-citation publication-type="journal"><name><surname>Ge</surname><given-names>H</given-names></name>, <name><surname>Manley</surname><given-names>JL</given-names></name>. <article-title>A protein factor, ASF, controls cell-specific alternative splicing of SV40 early pre-mRNA in vitro</article-title>. <source>Cell</source>. <year>1990</year>; <volume>62</volume>:<fpage>25</fpage>–<lpage>34</lpage>. <pub-id pub-id-type="pmid">2163768</pub-id></mixed-citation>
+      </ref>
+      <ref id="pgen.1005895.ref044">
+        <label>44</label>
+        <mixed-citation publication-type="journal"><name><surname>Guo</surname><given-names>G</given-names></name>, <name><surname>Sun</surname><given-names>X</given-names></name>, <name><surname>Chen</surname><given-names>C</given-names></name>, <name><surname>Wu</surname><given-names>S</given-names></name>, <name><surname>Huang</surname><given-names>P</given-names></name>, <name><surname>Li</surname><given-names>Z</given-names></name><etal>et al</etal>
+<article-title>Whole-genome and whole-exome sequencing of bladder cancer identifies frequent alterations in genes involved in sister chromatid cohesion and segregation</article-title>. <source>Nat Genet</source>. <year>2013</year>; <volume>45</volume>(<issue>12</issue>):<fpage>1459</fpage>–<lpage>63</lpage>. <pub-id pub-id-type="doi">10.1038/ng.2798</pub-id>
+<pub-id pub-id-type="pmid">24121792</pub-id></mixed-citation>
+      </ref>
+      <ref id="pgen.1005895.ref045">
+        <label>45</label>
+        <mixed-citation publication-type="journal"><name><surname>McKenna</surname><given-names>A</given-names></name>, <name><surname>Hanna</surname><given-names>M</given-names></name>, <name><surname>Banks</surname><given-names>E</given-names></name>, <name><surname>Sivachenko</surname><given-names>A</given-names></name>, <name><surname>Cibulskis</surname><given-names>K</given-names></name>, <name><surname>Kernytsky</surname><given-names>A</given-names></name>, <etal>et al</etal>
+<article-title>The Genome Analysis Toolkit: a MapReduce framework for analyzing next-generation DNA sequencing data</article-title>. <source>Genome Res</source>. <year>2010</year>;<volume>20</volume>(<issue>9</issue>):<fpage>1297</fpage>–<lpage>303</lpage>. <pub-id pub-id-type="doi">10.1101/gr.107524.110</pub-id>
+<pub-id pub-id-type="pmid">20644199</pub-id></mixed-citation>
+      </ref>
+      <ref id="pgen.1005895.ref046">
+        <label>46</label>
+        <mixed-citation publication-type="journal"><name><surname>DePristo</surname><given-names>M</given-names></name>, <name><surname>Banks</surname><given-names>E</given-names></name>, <name><surname>Poplin</surname><given-names>R</given-names></name>, <name><surname>Garimella</surname><given-names>K</given-names></name>, <name><surname>Maguire</surname><given-names>J</given-names></name>, <name><surname>Hartl</surname><given-names>C</given-names></name>, <etal>et al</etal>
+<article-title>A framework for variation discovery and genotyping using next-generation DNA sequencing data</article-title>. <source>Nature Genetics</source>. <year>2011</year>;<volume>43</volume>:<fpage>491</fpage>–<lpage>498</lpage>. <pub-id pub-id-type="doi">10.1038/ng.806</pub-id>
+<pub-id pub-id-type="pmid">21478889</pub-id></mixed-citation>
+      </ref>
+      <ref id="pgen.1005895.ref047">
+        <label>47</label>
+        <mixed-citation publication-type="journal"><name><surname>Cibulskis</surname><given-names>K</given-names></name>, <name><surname>Lawrence</surname><given-names>MS</given-names></name>, <name><surname>Carter</surname><given-names>SL</given-names></name>, <name><surname>Sivachenko</surname><given-names>A</given-names></name>, <name><surname>Jaffe</surname><given-names>D</given-names></name>, <name><surname>Sougnez</surname><given-names>C</given-names></name>, <etal>et al</etal>
+<article-title>Sensitive detection of somatic point mutations in impure and heterogeneous cancer samples</article-title>. <source>Nat Biotechnology</source>. <year>2013</year>;<volume>31</volume>: <fpage>213</fpage>–<lpage>219</lpage>.</mixed-citation>
+      </ref>
+      <ref id="pgen.1005895.ref048">
+        <label>48</label>
+        <mixed-citation publication-type="journal"><name><surname>Li</surname><given-names>H</given-names></name>, <name><surname>Handsaker</surname><given-names>B</given-names></name>, <name><surname>Wysoker</surname><given-names>A</given-names></name>, <name><surname>Fennell</surname><given-names>T</given-names></name>, <name><surname>Ruan</surname><given-names>J</given-names></name>, <name><surname>Homer</surname><given-names>N</given-names></name>, <etal>et al</etal>
+<article-title>1000 Genome Project Data Processing Subgroup The Sequence alignment/map (SAM) format and SAMtools</article-title>. <source>Bioinformatics</source>. <year>2009</year>; <volume>25</volume>, <fpage>2078</fpage>–<lpage>9</lpage>. <pub-id pub-id-type="doi">10.1093/bioinformatics/btp352</pub-id>
+<pub-id pub-id-type="pmid">19505943</pub-id></mixed-citation>
+      </ref>
+      <ref id="pgen.1005895.ref049">
+        <label>49</label>
+        <mixed-citation publication-type="journal"><name><surname>Lawrence</surname><given-names>MS</given-names></name>, <name><surname>Stojanov</surname><given-names>P</given-names></name>, <name><surname>Polak</surname><given-names>P</given-names></name>, <name><surname>Kryukov</surname><given-names>GV</given-names></name>, <name><surname>Cibulskis</surname><given-names>K</given-names></name>, <name><surname>Sivachenko</surname><given-names>A</given-names></name>, <etal>et al</etal>
+<article-title>Mutational heterogeneity in cancer and the search for new cancer-associated genes</article-title>. <source>Nature</source>. <year>2013</year>;<volume>499</volume> (<issue>7457</issue>):<fpage>214</fpage>–<lpage>218</lpage>. <pub-id pub-id-type="doi">10.1038/nature12213</pub-id>
+<pub-id pub-id-type="pmid">23770567</pub-id></mixed-citation>
+      </ref>
+      <ref id="pgen.1005895.ref050">
+        <label>50</label>
+        <mixed-citation publication-type="journal"><name><surname>Kumar</surname><given-names>A</given-names></name>, <name><surname>White</surname><given-names>TA</given-names></name>, <name><surname>MacKenzie</surname><given-names>AP</given-names></name>, <name><surname>Clegg</surname><given-names>N</given-names></name>, <name><surname>Lee</surname><given-names>C</given-names></name>, <name><surname>Dumpit</surname><given-names>RF</given-names></name>, <etal>et al</etal>
+<article-title>Exome sequencing identifies a spectrum of mutation frequencies in advanced and lethal prostate cancers</article-title>. <source>Proc Natl Acad Sci U S A</source>. <year>2011</year>;<volume>108</volume>(<issue>41</issue>):<fpage>17087</fpage>–<lpage>92</lpage>. <pub-id pub-id-type="doi">10.1073/pnas.1108745108</pub-id>
+<pub-id pub-id-type="pmid">21949389</pub-id></mixed-citation>
+      </ref>
+      <ref id="pgen.1005895.ref051">
+        <label>51</label>
+        <mixed-citation publication-type="journal"><name><surname>Wang</surname><given-names>K</given-names></name>, <name><surname>Li</surname><given-names>M</given-names></name>, <name><surname>Hakonarson</surname><given-names>H</given-names></name>. <article-title>ANNOVAR: Functional annotation of genetic variants from next-generation sequencing data Nucleic Acids Research</article-title>. <year>2010</year>; <volume>38</volume>:<fpage>e164</fpage>.</mixed-citation>
+      </ref>
+      <ref id="pgen.1005895.ref052">
+        <label>52</label>
+        <mixed-citation publication-type="journal"><name><surname>Youn</surname><given-names>A</given-names></name>, <name><surname>Simon</surname><given-names>R</given-names></name>. <article-title>Identifying cancer driver genes in tumor genome sequencing studies</article-title>. <source>Bioinformatics</source>. <year>2011</year>;<volume>27</volume>(<issue>2</issue>):<fpage>175</fpage>–<lpage>8</lpage>. <pub-id pub-id-type="doi">10.1093/bioinformatics/btq630</pub-id>
+<pub-id pub-id-type="pmid">21169372</pub-id></mixed-citation>
+      </ref>
+      <ref id="pgen.1005895.ref053">
+        <label>53</label>
+        <mixed-citation publication-type="journal"><name><surname>Berman</surname><given-names>HM</given-names></name>, <name><surname>Westbrook</surname><given-names>J</given-names></name>, <name><surname>Feng</surname><given-names>Z</given-names></name>, <name><surname>Gilliland</surname><given-names>G</given-names></name>, <name><surname>Bhat</surname><given-names>TN</given-names></name>, <name><surname>Weissig</surname><given-names>H</given-names></name>, <etal>et al</etal>
+<article-title>The Protein Data Bank</article-title>. <source>Nucleic Acids Res</source>. <year>2000</year>;<volume>28</volume>(<issue>1</issue>):<fpage>235</fpage>–<lpage>42</lpage>. <pub-id pub-id-type="pmid">10592235</pub-id></mixed-citation>
+      </ref>
+      <ref id="pgen.1005895.ref054">
+        <label>54</label>
+        <mixed-citation publication-type="journal"><name><surname>Lee</surname><given-names>YS</given-names></name>, <name><surname>Kennedy</surname><given-names>WD</given-names></name>, <name><surname>Yin</surname><given-names>YW</given-names></name>. <article-title>Structural insight into processive human mitochondrial DNA synthesis and disease-related polymerase mutations</article-title>. <source>Cell</source>. <year>2009</year>;<volume>139</volume>(<issue>2</issue>):<fpage>312</fpage>–<lpage>24</lpage>. <pub-id pub-id-type="doi">10.1016/j.cell.2009.07.050</pub-id>
+<pub-id pub-id-type="pmid">19837034</pub-id></mixed-citation>
+      </ref>
+      <ref id="pgen.1005895.ref055">
+        <label>55</label>
+        <mixed-citation publication-type="journal"><name><surname>Kim</surname><given-names>D</given-names></name>, <name><surname>Pertea</surname><given-names>G</given-names></name>, <name><surname>Trapnell</surname><given-names>C</given-names></name>, <name><surname>Pimentel</surname><given-names>H</given-names></name>, <name><surname>Kelley</surname><given-names>R</given-names></name>, <name><surname>Salzberg</surname><given-names>SL</given-names></name>. <article-title>TopHat2: accurate alignment of transcriptomes in the presence of insertions, deletions and gene fusions</article-title>. <source>Genome Biol</source>. <year>2013</year>;<volume>14</volume>(<issue>4</issue>):<fpage>R36</fpage>
+<pub-id pub-id-type="doi">10.1186/gb-2013-14-4-r36</pub-id>
+<pub-id pub-id-type="pmid">23618408</pub-id></mixed-citation>
+      </ref>
+      <ref id="pgen.1005895.ref056">
+        <label>56</label>
+        <mixed-citation publication-type="journal"><name><surname>Langmead</surname><given-names>B</given-names></name>, <name><surname>Salzberg</surname><given-names>SL</given-names></name>. <article-title>Fast gapped-read alignment with Bowtie 2</article-title>. <source>Nat Methods</source>. <year>2012</year>;<volume>9</volume>(<issue>4</issue>):<fpage>357</fpage>–<lpage>359</lpage>. <pub-id pub-id-type="doi">10.1038/nmeth.1923</pub-id>
+<pub-id pub-id-type="pmid">22388286</pub-id></mixed-citation>
+      </ref>
+      <ref id="pgen.1005895.ref057">
+        <label>57</label>
+        <mixed-citation publication-type="journal"><name><surname>Anders</surname><given-names>S</given-names></name>, <name><surname>Huber</surname><given-names>W</given-names></name>. <article-title>Differential expression analysis for sequence count data</article-title>. <source>Genome Biology</source>. <year>2010</year>;<volume>11</volume>(<issue>10</issue>):<fpage>R106</fpage>
+<pub-id pub-id-type="doi">10.1186/gb-2010-11-10-r106</pub-id>
+<pub-id pub-id-type="pmid">20979621</pub-id></mixed-citation>
+      </ref>
+      <ref id="pgen.1005895.ref058">
+        <label>58</label>
+        <mixed-citation publication-type="journal"><name><surname>Sathirapongsasuti</surname><given-names>JF</given-names></name>, <name><surname>Lee</surname><given-names>H</given-names></name>, <name><surname>Horst</surname><given-names>BA</given-names></name>, <name><surname>Brunner</surname><given-names>G</given-names></name>, <name><surname>Cochran</surname><given-names>AJ</given-names></name>, <name><surname>Binder</surname><given-names>S</given-names></name>, <etal>et al</etal>
+<article-title>Exome sequencing-based copy-number variation and loss of heterozygosity detection: ExomeCNV</article-title>. <source>Bioinformatics</source>. <year>2011</year>;<volume>19</volume>:<fpage>2648</fpage>–<lpage>54</lpage>.</mixed-citation>
+      </ref>
+    </ref-list>
+  </back>
+</article>
+</pmc-articleset>

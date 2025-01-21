@@ -1,0 +1,110 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE pmc-articleset PUBLIC "-//NLM//DTD ARTICLE SET 2.0//EN" "https://dtd.nlm.nih.gov/ncbi/pmc/articleset/nlm-articleset-2.0.dtd">
+<pmc-articleset><article xmlns:mml="http://www.w3.org/1998/Math/MathML" xmlns:xlink="http://www.w3.org/1999/xlink" dtd-version="1.3" xml:lang="en" article-type="research-article">
+  <!--The publisher of this article does not allow downloading of the full text in XML form.-->
+  <?properties manuscript?>
+  <processing-meta base-tagset="archiving" mathml-version="3.0" table-model="xhtml" tagset-family="jats">
+    <restricted-by>pmc</restricted-by>
+  </processing-meta>
+  <front>
+    <journal-meta>
+      <journal-id journal-id-type="nlm-journal-id">101128775</journal-id>
+      <journal-id journal-id-type="pubmed-jr-id">30137</journal-id>
+      <journal-id journal-id-type="nlm-ta">J Proteome Res</journal-id>
+      <journal-id journal-id-type="iso-abbrev">J Proteome Res</journal-id>
+      <journal-title-group>
+        <journal-title>Journal of proteome research</journal-title>
+      </journal-title-group>
+      <issn pub-type="ppub">1535-3893</issn>
+      <issn pub-type="epub">1535-3907</issn>
+    </journal-meta>
+    <article-meta>
+      <article-id pub-id-type="pmid">38907724</article-id>
+      <article-id pub-id-type="pmc">11425778</article-id>
+      <article-id pub-id-type="doi">10.1021/acs.jproteome.4c00338</article-id>
+      <article-id pub-id-type="manuscript">NIHMS2020672</article-id>
+      <article-categories>
+        <subj-group subj-group-type="heading">
+          <subject>Article</subject>
+        </subj-group>
+      </article-categories>
+      <title-group>
+        <article-title>Proteomics Analysis of Interactions between Drug-Resistant and Drug-Sensitive Cancer Cells: Comparative Studies of Monoculture and Coculture Cell Systems</article-title>
+      </title-group>
+      <contrib-group>
+        <contrib contrib-type="author">
+          <name>
+            <surname>Peng</surname>
+            <given-names>Zongkai</given-names>
+          </name>
+          <aff id="A1">Department of Chemistry and Biochemistry, University of Oklahoma, Norman, Oklahoma 73019, United States</aff>
+        </contrib>
+        <contrib contrib-type="author">
+          <contrib-id contrib-id-type="orcid" authenticated="false">http://orcid.org/0000-0002-6813-7527</contrib-id>
+          <name>
+            <surname>Ahsan</surname>
+            <given-names>Nagib</given-names>
+          </name>
+          <xref rid="CR1" ref-type="corresp">*</xref>
+          <aff id="A2">Department of Chemistry and Biochemistry, University of Oklahoma, Norman, Oklahoma 73019, United States; Mass Spectrometry, Proteomics and Metabolomics Core Facility, Stephenson Life Sciences Research Center, University of Oklahoma, Norman, Oklahoma 73019, United States</aff>
+        </contrib>
+        <contrib contrib-type="author">
+          <contrib-id contrib-id-type="orcid" authenticated="false">http://orcid.org/0000-0003-0370-7450</contrib-id>
+          <name>
+            <surname>Yang</surname>
+            <given-names>Zhibo</given-names>
+          </name>
+          <xref rid="CR1" ref-type="corresp">*</xref>
+          <aff id="A3">Department of Chemistry and Biochemistry, University of Oklahoma, Norman, Oklahoma 73019, United States</aff>
+        </contrib>
+      </contrib-group>
+      <author-notes>
+        <corresp id="CR1"><label>*</label><bold>Corresponding Authors: Nagib Ahsan</bold> – Department of Chemistry and Biochemistry, University of Oklahoma, Norman, Oklahoma 73019, United States; Mass Spectrometry, Proteomics and Metabolomics Core Facility, Stephenson Life Sciences Research Center, University of Oklahoma, Norman, Oklahoma 73019, United States; <email>nahsan@ou.edu</email>, <bold>Zhibo Yang</bold> – Department of Chemistry and Biochemistry, University of Oklahoma, Norman, Oklahoma 73019, United States; <email>zhibo.yang@ou.edu</email></corresp>
+        <fn fn-type="COI-statement" id="FN2">
+          <p id="P44">The authors declare no competing financial interest.</p>
+        </fn>
+      </author-notes>
+      <pub-date pub-type="nihms-submitted">
+        <day>14</day>
+        <month>9</month>
+        <year>2024</year>
+      </pub-date>
+      <pub-date pub-type="ppub">
+        <day>05</day>
+        <month>7</month>
+        <year>2024</year>
+      </pub-date>
+      <pub-date pub-type="epub">
+        <day>22</day>
+        <month>6</month>
+        <year>2024</year>
+      </pub-date>
+      <pub-date pub-type="pmc-release">
+        <day>26</day>
+        <month>9</month>
+        <year>2024</year>
+      </pub-date>
+      <volume>23</volume>
+      <issue>7</issue>
+      <fpage>2608</fpage>
+      <lpage>2618</lpage>
+      <abstract id="ABS1">
+        <p id="P1">Cell–cell interactions, which allow cells to communicate with each other through molecules in their microenvironment, are critical for the growth, health, and functions of cells. Previous studies show that drug-resistant cells can interact with drug-sensitive cells to elevate their drug resistance level, which is partially responsible for cancer recurrence. Studying protein targets and pathways involved in cell–cell communication provides essential information for fundamental cell biology studies and therapeutics of human diseases. In the current studies, we performed direct coculture and indirect coculture of drug-resistant and drug-sensitive cell lines, aiming to investigate intracellular proteins responsible for cell communication. Comparative studies were carried out using monoculture cells. Shotgun bottom-up proteomics results indicate that the P53 signaling pathway has a strong association with drug resistance mechanisms, and multiple TP53-related proteins were upregulated in both direct and indirect coculture systems. In addition, cell–cell communication pathways, including the phagosome and the HIF-signaling pathway, contribute to both direct and indirect coculture systems. Consequently, AK3 and H3–3A proteins were identified as potential targets for cell–cell interactions that are relevant to drug resistance mechanisms. We propose that the P53 signaling pathway, in which mitochondrial proteins play an important role, is responsible for inducing drug resistance through communication between drug-resistant and drug-sensitive cancer cells.</p>
+      </abstract>
+      <abstract id="ABS2" abstract-type="graphical">
+        <title>Graphical Abstract</title>
+        <p id="P2">
+<graphic xlink:href="nihms-2020672-f0001.jpg" position="anchor"/>
+</p>
+      </abstract>
+      <kwd-group>
+        <kwd>drug resistance</kwd>
+        <kwd>cell–cell communication</kwd>
+        <kwd>quantitative proteomics</kwd>
+        <kwd>direct cell coculture</kwd>
+        <kwd>indirect cell coculture</kwd>
+      </kwd-group>
+    </article-meta>
+  </front>
+</article>
+</pmc-articleset>
