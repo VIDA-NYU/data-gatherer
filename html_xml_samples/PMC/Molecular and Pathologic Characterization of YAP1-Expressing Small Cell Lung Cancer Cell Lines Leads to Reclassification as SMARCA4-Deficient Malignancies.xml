@@ -1,0 +1,1120 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE pmc-articleset PUBLIC "-//NLM//DTD ARTICLE SET 2.0//EN" "https://dtd.nlm.nih.gov/ncbi/pmc/articleset/nlm-articleset-2.0.dtd">
+<pmc-articleset><article xmlns:mml="http://www.w3.org/1998/Math/MathML" xmlns:xlink="http://www.w3.org/1999/xlink" dtd-version="1.3" xml:lang="en" article-type="research-article">
+  <?properties open_access?>
+  <processing-meta base-tagset="archiving" mathml-version="3.0" table-model="xhtml" tagset-family="jats">
+    <restricted-by>pmc</restricted-by>
+  </processing-meta>
+  <front><journal-meta><journal-id journal-id-type="nlm-ta">Clin Cancer Res</journal-id><journal-id journal-id-type="iso-abbrev">Clin Cancer Res</journal-id><journal-title-group><journal-title>Clinical Cancer Research</journal-title></journal-title-group><issn pub-type="ppub">1078-0432</issn><issn pub-type="epub">1557-3265</issn><publisher><publisher-name>American Association for Cancer Research</publisher-name></publisher></journal-meta>
+<article-meta><article-id pub-id-type="pmid">38180245</article-id><article-id pub-id-type="pmc">11061608</article-id>
+<article-id pub-id-type="publisher-id">CCR-23-2360</article-id><article-id pub-id-type="doi">10.1158/1078-0432.CCR-23-2360</article-id><article-version id="ver1" article-version-type="VoR">Version of Record</article-version><article-categories><subj-group subj-group-type="category"><subject>Lung Cancer</subject></subj-group><subj-group subj-group-type="category"><subject>Preclinical Models</subject><subj-group subj-group-type="category"><subject>In Vitro Models of Cancer</subject><subject>Xenograft Models</subject></subj-group></subj-group><subj-group subj-group-type="category"><subject>Translational Research</subject></subj-group><subj-group subj-group-type="heading"><subject>Translational Cancer Mechanisms and Therapy</subject></subj-group></article-categories><title-group><article-title>Molecular and Pathologic Characterization of YAP1-Expressing Small Cell Lung Cancer Cell Lines Leads to Reclassification as SMARCA4-Deficient Malignancies</article-title><alt-title alt-title-type="short">SCLC-Y Cell Lines Represent SMARCA4-UT</alt-title></title-group><contrib-group><contrib contrib-type="author"><contrib-id contrib-id-type="orcid" authenticated="false">https://orcid.org/0000-0003-0516-7208</contrib-id><name><surname>Ng</surname><given-names>Jin</given-names></name><xref rid="aff1" ref-type="aff">1</xref><xref rid="aff2" ref-type="aff">2</xref></contrib><contrib contrib-type="author"><contrib-id contrib-id-type="orcid" authenticated="false">https://orcid.org/0000-0002-8592-5269</contrib-id><name><surname>Cai</surname><given-names>Ling</given-names></name><xref rid="aff3" ref-type="aff">3</xref><xref rid="aff4" ref-type="aff">4</xref><xref rid="aff5" ref-type="aff">5</xref></contrib><contrib contrib-type="author"><contrib-id contrib-id-type="orcid" authenticated="false">https://orcid.org/0000-0002-6688-5281</contrib-id><name><surname>Girard</surname><given-names>Luc</given-names></name><xref rid="aff5" ref-type="aff">5</xref><xref rid="aff6" ref-type="aff">6</xref></contrib><contrib contrib-type="author"><contrib-id contrib-id-type="orcid" authenticated="false">https://orcid.org/0000-0003-1600-5933</contrib-id><name><surname>Prall</surname><given-names>Owen W.J.</given-names></name><xref rid="aff7" ref-type="aff">7</xref></contrib><contrib contrib-type="author"><contrib-id contrib-id-type="orcid" authenticated="false">https://orcid.org/0000-0002-9579-6675</contrib-id><name><surname>Rajan</surname><given-names>Neeha</given-names></name><xref rid="aff8" ref-type="aff">8</xref></contrib><contrib contrib-type="author"><contrib-id contrib-id-type="orcid" authenticated="false">https://orcid.org/0000-0002-2476-3665</contrib-id><name><surname>Khoo</surname><given-names>Christine</given-names></name><xref rid="aff7" ref-type="aff">7</xref></contrib><contrib contrib-type="author"><contrib-id contrib-id-type="orcid" authenticated="false">https://orcid.org/0009-0002-8800-7057</contrib-id><name><surname>Batrouney</surname><given-names>Ahida</given-names></name><xref rid="aff8" ref-type="aff">8</xref></contrib><contrib contrib-type="author"><contrib-id contrib-id-type="orcid" authenticated="false">https://orcid.org/0000-0002-9258-3252</contrib-id><name><surname>Byrne</surname><given-names>David J.</given-names></name><xref rid="aff7" ref-type="aff">7</xref></contrib><contrib contrib-type="author"><contrib-id contrib-id-type="orcid" authenticated="false">https://orcid.org/0009-0009-5512-5947</contrib-id><name><surname>Boyd</surname><given-names>Danielle K.</given-names></name><xref rid="aff1" ref-type="aff">1</xref></contrib><contrib contrib-type="author"><contrib-id contrib-id-type="orcid" authenticated="false">https://orcid.org/0009-0000-5306-0830</contrib-id><name><surname>Kersbergen</surname><given-names>Ariena J.</given-names></name><xref rid="aff1" ref-type="aff">1</xref></contrib><contrib contrib-type="author"><contrib-id contrib-id-type="orcid" authenticated="false">https://orcid.org/0000-0001-8006-6832</contrib-id><name><surname>Christie</surname><given-names>Michael</given-names></name><xref rid="aff8" ref-type="aff">8</xref><xref rid="aff9" ref-type="aff">9</xref></contrib><contrib contrib-type="author"><contrib-id contrib-id-type="orcid" authenticated="false">https://orcid.org/0000-0002-7776-0767</contrib-id><name><surname>Minna</surname><given-names>John D.</given-names></name><xref rid="aff5" ref-type="aff">5</xref><xref rid="aff6" ref-type="aff">6</xref><xref rid="aff10" ref-type="aff">10</xref><xref rid="aff11" ref-type="aff">11</xref></contrib><contrib contrib-type="author" corresp="yes" equal-contrib="yes"><contrib-id contrib-id-type="orcid" authenticated="false">https://orcid.org/0000-0002-8995-3398</contrib-id><name><surname>Burr</surname><given-names>Marian L.</given-names></name><xref rid="aff12" ref-type="aff">12</xref><xref rid="aff13" ref-type="aff">13</xref><xref rid="aff14" ref-type="aff">14</xref><xref rid="num1" ref-type="author-notes">#</xref><xref rid="cor1" ref-type="corresp">*</xref></contrib><contrib contrib-type="author" corresp="yes" equal-contrib="yes"><contrib-id contrib-id-type="orcid" authenticated="false">https://orcid.org/0000-0002-7453-3366</contrib-id><name><surname>Sutherland</surname><given-names>Kate D.</given-names></name><xref rid="aff1" ref-type="aff">1</xref><xref rid="aff2" ref-type="aff">2</xref><xref rid="num1" ref-type="author-notes">#</xref><xref rid="cor1" ref-type="corresp">*</xref></contrib></contrib-group><aff id="aff1">
+<label>1</label>ACRF Cancer Biology and Stem Cells Division, The Walter and Eliza Hall Institute of Medical Research, Parkville, Victoria, Australia.</aff><aff id="aff2">
+<label>2</label>Department of Medical Biology, The University of Melbourne, Parkville, Victoria, Australia.</aff><aff id="aff3">
+<label>3</label>Quantitative Biomedical Research Center, Peter O'Donnell Jr. School of Public Health, UT Southwestern Medical Center, Dallas, Texas.</aff><aff id="aff4">
+<label>4</label>Children's Research Institute, UT Southwestern Medical Center, Dallas, Texas.</aff><aff id="aff5">
+<label>5</label>Simmons Comprehensive Cancer Center, UT Southwestern Medical Center, Dallas, Texas.</aff><aff id="aff6">
+<label>6</label>Hamon Center for Therapeutic Oncology Research, UT Southwestern Medical Center, Dallas, Texas.</aff><aff id="aff7">
+<label>7</label>Department of Anatomical Pathology, Peter MacCallum Cancer Centre, Melbourne, Victoria, Australia.</aff><aff id="aff8">
+<label>8</label>Department of Anatomical Pathology, The Royal Melbourne Hospital, Parkville, Victoria, Australia.</aff><aff id="aff9">
+<label>9</label>Personalised Oncology Division, The Walter and Eliza Hall Institute of Medical Research, Parkville, Victoria, Australia.</aff><aff id="aff10">
+<label>10</label>Department of Internal Medicine, UT Southwestern Medical Center, Dallas, Texas.</aff><aff id="aff11">
+<label>11</label>Department of Pharmacology, UT Southwestern Medical Center, Dallas, Texas.</aff><aff id="aff12">
+<label>12</label>Division of Genome Science and Cancer, The John Curtin School of Medical Research, The Australian National University, Canberra, Australian Capital Territory, Australia.</aff><aff id="aff13">
+<label>13</label>Department of Anatomical Pathology, ACT Pathology, Canberra Health Services, Canberra, Australian Capital Territory, Australia.</aff><aff id="aff14">
+<label>14</label>Sir Peter MacCallum Department of Oncology, University of Melbourne, Victoria, Australia.</aff><author-notes><fn fn-type="equal" id="num1"><label>#</label><p>Marian L. Burr and Kate D. Sutherland contributed equally as the co-senior authors of this article.</p></fn><corresp id="cor1">
+<label>*</label>
+<bold>Corresponding Authors:</bold> Kate D. Sutherland, ACRF Cancer Biology and Stem Cells Division, Walter and Eliza Hall Institute of Medical Research, 1G Royal Parade, Parkville, VIC 3052, Australia. E-mail: <email>sutherland.k@wehi.edu.au</email>; and Marian L. Burr, Division of Genome Science and Cancer, The John Curtin School of Medical Research, The Australian National University, ACT 2601, Australia. E-mail: <email>marian.burr@anu.edu.au</email></corresp><fn fn-type="other"><p>Clin Cancer Res 2024;30:1846–58</p></fn></author-notes><pub-date pub-type="ppub" iso-8601-date="2024-05-01"><day>01</day><month>5</month><year>2024</year></pub-date><pub-date pub-type="epub" iso-8601-date="2023-12-07"><day>07</day><month>12</month><year>2023</year></pub-date><volume>30</volume><issue>9</issue><fpage>1846</fpage><lpage>1858</lpage><history><date date-type="received" iso-8601-date="2023-08-04"><day>04</day><month>8</month><year>2023</year></date><date date-type="rev-recd" iso-8601-date="2023-10-08"><day>08</day><month>10</month><year>2023</year></date><date date-type="accepted" iso-8601-date="2023-12-01"><day>01</day><month>12</month><year>2023</year></date></history><permissions><copyright-statement>©2023 The Authors; Published by the American Association for Cancer Research</copyright-statement><copyright-year>2023</copyright-year><copyright-holder>American Association for Cancer Research</copyright-holder><license><ali:license_ref xmlns:ali="http://www.niso.org/schemas/ali/1.0/" specific-use="textmining" content-type="ccbylicense">https://creativecommons.org/licenses/by/4.0/</ali:license_ref><license-p>This open access article is distributed under the Creative Commons Attribution 4.0 International (CC BY 4.0) license.</license-p></license></permissions><self-uri xlink:href="1846.pdf"/><abstract><title>Abstract</title><sec><title>Purpose:</title><p>The classification of small cell lung cancer (SCLC) into distinct molecular subtypes defined by ASCL1, NEUROD1, POU2F3, or YAP1 (SCLC-A, -N, -P, or -Y) expression, paves the way for a personalized treatment approach. However, the existence of a distinct YAP1-expressing SCLC subtype remains controversial.</p></sec><sec><title>Experimental Design:</title><p>To better understand YAP1-expressing SCLC, the mutational landscape of human SCLC cell lines was interrogated to identify pathogenic alterations unique to SCLC-Y. Xenograft tumors, generated from cell lines representing the four SCLC molecular subtypes, were evaluated by a panel of pathologists who routinely diagnose thoracic malignancies. Diagnoses were complemented by transcriptomic analysis of primary tumors and human cell line datasets. Protein expression profiles were validated in patient tumor tissue.</p></sec><sec><title>Results:</title><p>Unexpectedly, pathogenic mutations in <italic toggle="yes">SMARCA4</italic> were identified in six of eight SCLC-Y cell lines and correlated with reduced SMARCA4 mRNA and protein expression. Pathologist evaluations revealed that SMARCA4-deficient SCLC-Y tumors exhibited features consistent with thoracic SMARCA4-deficient undifferentiated tumors (SMARCA4-UT). Similarly, the transcriptional profile <italic toggle="yes">SMARCA4</italic>-mutant SCLC-Y lines more closely resembled primary SMARCA4-UT, or SMARCA4-deficient non–small cell carcinoma, than SCLC. Furthermore, SMARCA4-UT patient samples were associated with a YAP1 transcriptional signature and exhibited strong YAP1 protein expression. Together, we found little evidence to support a diagnosis of SCLC for any of the YAP1-expressing cell lines originally used to define the SCLC-Y subtype.</p></sec><sec><title>Conclusions:</title><p>SMARCA4-mutant SCLC-Y cell lines exhibit characteristics consistent with SMARCA4-deficient malignancies rather than SCLC. Our findings suggest that, unlike ASCL1, NEUROD1, and POU2F3, YAP1 is not a subtype defining transcription factor in SCLC.</p><p>
+<italic toggle="yes">
+<ext-link xlink:href="https://aacrjournals.org/clincancerres/article/doi/10.1158/1078-0432.CCR-24-0227" ext-link-type="uri" xlink:show="new">See related commentary by Rekhtman, p. 1708</ext-link>
+</italic>
+</p></sec></abstract><funding-group><award-group id="funding-1"><funding-source>
+<institution-wrap><institution>National Health and Medical Research Council (NHMRC)</institution><institution-id institution-id-type="DOI">10.13039/501100000925</institution-id></institution-wrap>
+</funding-source><award-id>1159955</award-id><principal-award-recipient>
+<name><surname>Sutherland</surname><given-names>K.D.</given-names></name>
+</principal-award-recipient></award-group><award-group id="funding-2"><funding-source>
+<institution-wrap><institution>National Health and Medical Research Council (NHMRC)</institution><institution-id institution-id-type="DOI">10.13039/501100000925</institution-id></institution-wrap>
+</funding-source><award-id>1196598</award-id><principal-award-recipient>
+<name><surname>Burr</surname><given-names>M.L.</given-names></name>
+</principal-award-recipient></award-group><award-group id="funding-3"><funding-source>
+<institution-wrap><institution>National Health and Medical Research Council (NHMRC)</institution><institution-id institution-id-type="DOI">10.13039/501100000925</institution-id></institution-wrap>
+</funding-source><award-id>2010275</award-id><principal-award-recipient>
+<name><surname>Burr</surname><given-names>M.L.</given-names></name>
+<name><surname>Sutherland</surname><given-names>K.D.</given-names></name>
+</principal-award-recipient></award-group><award-group id="funding-4"><funding-source>
+<institution-wrap><institution>National Health and Medical Research Council (NHMRC)</institution><institution-id institution-id-type="DOI">10.13039/501100000925</institution-id></institution-wrap>
+</funding-source><award-id>1164054</award-id><principal-award-recipient>
+<name><surname>Burr</surname><given-names>M.L.</given-names></name>
+</principal-award-recipient></award-group><award-group id="funding-5"><funding-source>
+<institution-wrap><institution>All of Us Research Program</institution><institution-id institution-id-type="DOI">10.13039/100023885</institution-id></institution-wrap>
+</funding-source><award-id>P50 CA070907</award-id><principal-award-recipient>
+<name><surname>Cai</surname><given-names>L.</given-names></name>
+<name><surname>Girard</surname><given-names>L.</given-names></name>
+<name><surname>Minna</surname><given-names>J.D.</given-names></name>
+</principal-award-recipient></award-group><award-group id="funding-6"><funding-source>
+<institution-wrap><institution>All of Us Research Program</institution><institution-id institution-id-type="DOI">10.13039/100023885</institution-id></institution-wrap>
+</funding-source><award-id>CA213338</award-id><principal-award-recipient>
+<name><surname>Minna</surname><given-names>J.D.</given-names></name>
+</principal-award-recipient></award-group><award-group id="funding-7"><funding-source>
+<institution-wrap><institution>All of Us Research Program</institution><institution-id institution-id-type="DOI">10.13039/100023885</institution-id></institution-wrap>
+</funding-source><award-id>CA213274</award-id><principal-award-recipient>
+<name><surname>Minna</surname><given-names>J.D.</given-names></name>
+</principal-award-recipient></award-group><award-group id="funding-8"><funding-source>
+<institution-wrap><institution>Cancer Prevention and Research Institute of Texas (CPRIT)</institution><institution-id institution-id-type="DOI">10.13039/100004917</institution-id></institution-wrap>
+</funding-source><award-id>RP150596</award-id><principal-award-recipient>
+<name><surname>Cai</surname><given-names>L.</given-names></name>
+</principal-award-recipient></award-group></funding-group><counts><page-count count="13"/></counts></article-meta></front>
+  <body>
+    <boxed-text position="margin" id="b1">
+      <caption>
+        <title>Translational Relevance</title>
+      </caption>
+      <p>In this study, we perform an in-depth characterization of the YAP1-expressing human SCLC cell lines, utilized widely for studying subtype-specific vulnerabilities in SCLC. Genomic analyses identified an association between SCLC-Y cell lines and pathogenic alterations in <italic toggle="yes">SMARCA4</italic>. Morphologic and molecular evaluations performed with <italic toggle="yes">SMARCA4</italic>-mutant SCLC-Y lines revealed inconsistencies with an SCLC diagnosis. Rather, <italic toggle="yes">SMARCA4</italic>-mutant SCLC-Y cells represent SMARCA4-deficient undifferentiated tumors (SMARCA4-UT), a recently described lung malignancy that can mimic SCLC. Importantly, we show that primary human SMARCA4-UT also express high levels of YAP1. Our results suggest that YAP1 is not a reliable subtype defining transcription factor for SCLC. Importantly, cell lines commonly used as preclinical models of YAP1-expressing SCLC are in fact SMARCA4-UT, for which to date there has been a lack of representative human disease models. Thus, these preclinical models previously thought to be SCLC now represent a new preclinical model resource for study of SMARCA4-UT.</p>
+    </boxed-text>
+    <sec sec-type="intro" id="sec2">
+      <title>Introduction</title>
+      <p>Small cell lung cancer (SCLC) is the deadliest form of lung cancer with limited durable responses to platinum-based chemotherapy and immune checkpoint blockade-based immunotherapy (<xref rid="bib1" ref-type="bibr">1</xref>). Unlike lung adenocarcinoma, where the development of therapies targeting specific driver oncogenes has enabled genetic alteration-based stratification, recurrent targetable mutations have not been identified in SCLC. The recent classification of SCLC into four molecular subtypes based on transcription factor expression therefore represents a major advance, providing a new paradigm to facilitate better understanding of SCLC biology and a path towards the development of molecularly targeted treatments (<xref rid="bib2" ref-type="bibr">2, 3</xref>). These four molecular subtypes are defined by the dominant expression of <italic toggle="yes">ASCL1</italic> (SCLC-A), <italic toggle="yes">NEUROD1</italic> (SCLC-N), <italic toggle="yes">POU2F3</italic> (SCLC-P), or <italic toggle="yes">YAP1</italic> (SCLC-Y). Indeed, recent studies characterizing human SCLC cell lines have identified several subtype-specific therapeutic vulnerabilities (<xref rid="bib4" ref-type="bibr">4</xref>). For example, Delta-like ligand 3 (DLL3), an inhibitory Notch ligand, is the target of a plethora of clinical therapeutics in SCLC and is reported to exhibit high expression in SCLC-A tumors (<xref rid="bib5" ref-type="bibr">5</xref>).</p>
+      <p>The seminal initial classification of SCLC subtypes was based on RNA-sequencing data from SCLC cell line data in the Cancer Cell Line Encyclopedia (CCLE; ref. <xref rid="bib2" ref-type="bibr">2</xref>) and deposited data from two well-characterized SCLC patient cohorts [Rudin and colleagues (<xref rid="bib6" ref-type="bibr">6</xref>) and George and colleagues (<xref rid="bib7" ref-type="bibr">7</xref>)]. Although the SCLC-A, SCLC-N, and SCLC-P groups within this classification are comprised of both primary tumors and cell lines, notably the SCLC-Y group consists mostly of cell lines (<xref rid="bib6" ref-type="bibr">6</xref>). Furthermore, although a follow-up study performing immunohistochemistry (IHC) in a well-characterized patient cohort validated the presence of NEUROD1, ASCL1, and POU2F3 expressing primary SCLC tumors, a distinct YAP1 expressing SCLC subtype was not identified (<xref rid="bib8" ref-type="bibr">8</xref>). Nevertheless, YAP1 expressing SCLC cells have been detected in patient-derived xenografts, genetically engineered mouse (GEM) models, and some patient cohorts (<xref rid="bib9" ref-type="bibr">9–11</xref>). In most cases, YAP1 expression in these settings was focal or heterogenous, although rare YAP1 dominant primary SCLC tumors have been reported (<xref rid="bib12" ref-type="bibr">12</xref>). Together, these observations have fuelled the controversy around the existence of SCLC-Y as a <italic toggle="yes">bona fide</italic> SCLC subtype (<xref rid="bib8" ref-type="bibr">8, 11, 13</xref>).</p>
+      <p>YAP1 expressing SCLC cells are characterized by low expression of classical neuroendocrine markers synaptophysin, chromogranin A, NCAM1 (CD56), and INSM1. Although substantial expression of classic neuroendocrine markers helps validate a SCLC diagnosis, 5% to 10% of SCLC primary tumors may show low or absent neuroendocrine marker expression (<xref rid="bib14" ref-type="bibr">14</xref>). Thus, a histologic diagnosis of SCLC can be made in the absence of positive neuroendocrine marker IHC if the tumor morphology is characteristic (<xref rid="bib15" ref-type="bibr">15</xref>). Nevertheless, neuroendocrine marker low/negative SCLC presents a clinical diagnostic challenge as there are several other malignancies that can pathologically mimic SCLC, such as basaloid squamous cell carcinoma and poorly differentiated adenocarcinoma, which must be excluded (<xref rid="bib14" ref-type="bibr">14</xref>). Importantly, many of the tumors that can mimic SCLC express YAP1, which is an additional complicating factor to the use of YAP1 as a defining factor for SCLC. Because there are standard treatment regimens applied when a patient receives a clinical/pathologic diagnosis of SCLC, it is of substantial importance to be sure of this diagnosis when lung tumors posing diagnostic problems such as a YAP1 expressing, neuroendocrine marker low expressing tumor are encountered.</p>
+      <p>Although the role of YAP1 as a subtype defining transcription factor for SCLC remains controversial, the existence of a subset of SCLC tumors that lack expression of NEUROD1, ASCL1, or POU2F3 and characteristically exhibit low expression of neuroendocrine markers is well recognized and has been reproducibly identified in several SCLC patient cohorts (<xref rid="bib8" ref-type="bibr">8, 12, 13</xref>). This subset of neuroendocrine low and A/N/P negative SCLC tumors has become particularly significant following the recognition that these tumors typically express higher levels of inflammation-associated genes and have increased T-cell infiltration compared with “classical” neuroendocrine high SCLC and thus are potentially the most likely to benefit from immune checkpoint blockade immune therapy (<xref rid="bib13" ref-type="bibr">13, 16</xref>). In some studies these A/N/P negative tumors have been termed “triple negative,” while other studies have termed them neuroendocrine low SCLC with an “inflamed” gene signature “SCLC-I.” Importantly, retrospective stratification of patients with SCLC in the IMpower133 clinical trial demonstrates that patients with SCLC-I tumors show increased survival following chemoimmunotherapy with atezolizumab (anti-PD-L1) and etoposide, compared with SCLC-A, -N, or -P (<xref rid="bib13" ref-type="bibr">13</xref>).</p>
+      <p>Given the apparent increased responsiveness of SCLC-I subtype tumors to immunotherapy, there is a critical need to better understand the origin and biology of these tumors. Notably, overlapping features of low neuroendocrine marker expression and an “inflamed” gene signature in cell lines defined as SCLC-Y has meant that these lines have frequently been used as models of non-neurodocrine, “inflamed” or “triple negative” SCLC (<xref rid="bib17" ref-type="bibr">17</xref>). However, the relationship between SCLC-I and the initially defined SCLC-Y subtype, and whether these YAP1 positive SCLC-Y cell lines present a reliable model of “neurodocrine low” SCLC, has not been clearly defined. This is of particular significance given that YAP1 expression has been reported to be an unreliable marker of SCLC-I in clinical cohorts (<xref rid="bib13" ref-type="bibr">13, 18</xref>). To better understand the biology and origins of SCLC-Y, we therefore performed a comprehensive molecular and histologic characterization of the tumor lines used to define this proposed subtype of SCLC.</p>
+    </sec>
+    <sec sec-type="methods" id="sec3">
+      <title>Materials and Methods</title>
+      <sec id="sec3-1">
+        <title>Cell culture and transplantation studies</title>
+        <p>The following human SCLC cell lines were purchased from ATCC: NCI-H69 (RRID:CVCL_1579), NCI-H1092 (RRID:CVCL_1454), NCI-H2227 (RRID:CVCL_1542), NCI-H2171 (RRID:CVCL_1536), NCI-H1694 (RRID:CVCL_1489), NCI-H211 (RRID:CVCL_1529), NCI-H1048 (RRID:CVCL_1453), NCI-H1341 (RRID:CVCL_1463), SW1271 (RRID:CVCL_1716), NCI-H841 (RRID:CVCL_1595), DMS114 (RRID:CVCL_1174), NCI-H196 (RRID:CVCL_1509), NCI-H661 (RRID:CVCL_1577), and NCI-H1581 (RRID:CVCL_1479). Human SCLC cell line SBC5 (RRID:CVCL_1679) was obtained directly from Cell Bank Australia. Human SCLC cell lines NCI-H82 (RRID:CVCL_1591), NCI-H446 (RRID:CVCL_1562), and NCI-H146 (RRID:CVCL_1473) were obtained from Dr. Marian L. Burr (The John Curtin School of Medical Research) and NCI-H526 (RRID:CVCL_1569) was obtained from Dr. David Huang (Walter and Eliza Hall Institute). All cell lines were cultured according to the manufacturer's recommendations with routine PCR-based mycoplasma testing every 3 months. All cell lines were authenticated by short tandem repeat (STR) profiling from the cell banks they were originally purchased from and by the Australian Genome Research Facility (Melbourne). The cell lines in this study were cultured for fewer than 6 months after receipt. Tumor xenografts were generated by subcutaneous injection of 1 × 10<sup>6</sup> cells in 50% growth factor reduced Matrigel (BD Biosciences) into the flanks of CBA.Nude mice and harvested for paraffin embedding once tumors reached a volume of 200 to 1,000 mm<sup>3</sup>. All animal experiments were conducted according to the regulatory standards approved by the Walter and Eliza Hall Institute Animal Ethics Committee.</p>
+      </sec>
+      <sec id="sec3-2">
+        <title>Histology and IHC</title>
+        <p>Subcutaneous tumors were harvested and fixed in 10% (v/v) neutral-buffered formalin at room temperature or 4% (w/v) paraformaldehyde at 4°C for at least 24 hours. Fixed samples were dehydrated, cleared, and embedded in paraffin. Sections 3 μm thick were stained with haematoxylin and eosin (H&amp;E) and sections 4-μm thick were immunostained. The following antibodies for IHC were purchased from Abcam: anti-SMARCA4 (#ab110641:RRID:AB_10861578), anti-synaptophysin (#ab32127:RRID:AB_2286949), anti-Claudin 4 (#ab53156:RRID:AB_869176), and anti-wide-spectrum cytokeratin (#ab9377:RRID:AB_307222). The following antibodies were purchased from Cell Signaling Technology: anti-RB1 (#9309:RRID:AB_823629), anti-YAP1 (#14074: RRID:AB_2650491), and anti-SMARCA2 (#11966:RRID:AB_2797783). Anti-CD56 was purchased from Millipore Sigma (#AB5032:RRID:AB_2291692), anti-INSM1 was purchased from Santa Cruz Biotechnology (#sc271408:RRID:AB_10607955), anti-TTF1 was purchased from Leica Biosystems (#NCL-TTF-1:RRID:AB_442138), anti-p40 was purchased from Biocare Medical (#ACI3066 A, C: RRID:AB_2858274), and Roche (#790–4950: RRID:AB_2935820). A complete list of antibody dilutions, antigen retrieval conditions, and detection solutions are detailed in Supplementary Table S1.</p>
+        <p>Primary antibodies (SMARCA4, INSM1, TTF1, p40, and RB1) were stained using the Roche Ventana BenchMark ULTRA automated staining system. While staining with primary antibodies (CD56, synaptophysin, wide-spectrum cytokeratin, YAP1, SMARCA2, and Claudin 4) was performed on either the Dako Omnis or Leica Bond automated staining system, using standard protocols. Stained xenografts were evaluated by M.L.B. for either nuclear, membranous, or cytoplasmic staining and <italic toggle="yes">H</italic> scores were calculated as described previously (Supplementary Table S1; ref. <xref rid="bib8" ref-type="bibr">8</xref>).</p>
+      </sec>
+      <sec id="sec3-3">
+        <title>Pathology assessment of cell line xenografts</title>
+        <p>Five anatomical pathologists who routinely diagnose thoracic malignancies across different hospitals within Australia were recruited. Prior to examination of the cell line xenografts, pathologists were provided with the same clinical history for all slides: 60-year-old male with a lung mass and mediastinal lymphadenopathy.</p>
+        <p>Pathologists were first asked to assess the H&amp;E xenografts, in a blinded fashion, and provide a provisional diagnosis, as a “yes” or “no,” of whether the H&amp;E appearances of each xenograft were consistent with a pathologic diagnosis of SCLC. Following this provisional diagnosis, the pathologists were provided with images of IHC staining and a table (Supplementary Table S2) summarizing the immunophenotype of each xenograft together with a link to the <italic toggle="yes">Thoracic SMARCA4-deficient undifferentiated tumor</italic> chapter in the 5th Edition of WHO Classification of Tumors (<xref rid="bib15" ref-type="bibr">15</xref>). Pathologic assessment of each xenograft was performed independently with each pathologist blinded to the provisional and re-evaluated diagnosis from the other pathologists.</p>
+      </sec>
+      <sec id="sec3-4">
+        <title>Ethics and patient samples</title>
+        <p>All procedures performed in this study involving patient material were in accordance with the ethical standards of the institutional research committees and with the Declaration of Helsinki. This study was approved by the Walter and Eliza Hall Institute Human Research Ethics Committee (#22/7), Australian Capital Territory (ACT) Health Human Research Ethics Committee (2022.LRE.00216, 2022/ETH02563) and Peter MacCallum Cancer Centre Human Research Ethics Committee (HREC no.: 03/90). Tumor samples from patients diagnosed with SMARCA4-UT were identified through review of pathology records at Peter MacCallum Cancer Centre and Canberra Hospital. The clinical profiles for all SMARCA4-UT patients such as sex and age at diagnosis are summarized in Supplementary Table S3. Clinical profiles for Case 1, Case 2, and Case 3 were not collected as the ethics under which these samples were collected did not permit for this. In addition, the results of the diagnostic immunohistochemical panel performed for these samples are summarized in Supplementary Table S3. H&amp;E stained slides and IHC were reviewed by pathologists involved in this study to verify the original diagnosis of SMARCA4-UT and sections from stored FFPE samples were additionally stained for YAP1 (Supplementary Table S1). H&amp;E scans of the patient biopsy blocks from which cell lines NCI-H661 and NCI-H1581 were derived, were acquired through UTSW.</p>
+      </sec>
+      <sec id="sec3-5">
+        <title>Multi-omics analysis of cell line and patient samples</title>
+        <p>SCLC class was determined by CCLE RNA-seq (<xref rid="bib19" ref-type="bibr">19, 20</xref>) or the separate SCLC molecular dataset for RNA-seq and whole-exome sequencing performed by the Hamon Center (deposited at dbGaP Study Accession: phs001823.v1.p1; <ext-link xlink:href="https://www.ncbi.nlm.nih.gov/projects/gap/cgi-bin/study.cgi?study_id=phs001823.v1.p1" ext-link-type="uri" xlink:show="new">https://www.ncbi.nlm.nih.gov/projects/gap/cgi-bin/study.cgi?study_id=phs001823.v1.p1</ext-link>) and cited in Cai and colleagues (<xref rid="bib16" ref-type="bibr">16</xref>) data for driver transcription factors; <italic toggle="yes">ASCL1</italic>, <italic toggle="yes">NEUROD1</italic>, <italic toggle="yes">POU2F3</italic>, and <italic toggle="yes">YAP</italic>. For each cell line, the transcription factor with the highest expression among the four is used to assign the transcription factor class. These annotations were concordant with that described by Rudin and colleagues (<xref rid="bib2" ref-type="bibr">2</xref>) except for one cell line (H2227), which was annotated SCLC-A using the UTSW dataset (Supplementary Table S4). Mutations present in over 50% of cell lines within each molecular subtype were extracted via cBioportal.org (<xref rid="bib21" ref-type="bibr">21, 22</xref>). Known pathogenic mutations were annotated using OncoKB (RRID:SCR_014782) and <ext-link xlink:href="https://cancerhotspots.org" ext-link-type="uri" xlink:show="new">https://cancerhotspots.org</ext-link> available through cBioportal.org (RRID:SCR_014555).</p>
+        <p>We used the following datasets from UT Lung SPORE: microarray, RNA-seq gene expression data and mutation data (dbGAP Study Accession No.: phs001823.v1.p1). We used the following datasets from DepMap (<xref rid="bib19" ref-type="bibr">19</xref>): RNA-seq(CCLE_depMap_19Q1_TPM.csv), microarray (CCLE_Expression_Entrez_2012–09–29.gct), proteomics (Table_S2_Protein_Quant_Normalized.xlsx; ref. <xref rid="bib20" ref-type="bibr">20</xref>), mutation (downloaded as CCLE_DepMap_18q3_maf_20180718.txt), and structural variation (CCLE_translocations_SvABA_20181221.xlsx) datasets. For each cell line, we computed the neuroendocrine (NE) score as described previously (<xref rid="bib23" ref-type="bibr">23</xref>), but with the updated NE signature based on RNA-seq data (<xref rid="bib16" ref-type="bibr">16</xref>). Le Loarer datasets (<xref rid="bib24" ref-type="bibr">24</xref>) were downloaded from SRA under accession no. SRP052896 and processed using the RNA-seq pipeline (<ext-link xlink:href="https://git.biohpc.swmed.edu/BICF/Astrocyte/rnaseq" ext-link-type="uri" xlink:show="new">https://git.biohpc.swmed.edu/BICF/Astrocyte/rnaseq</ext-link>) from UTSW Bioinformatics Core Facility. The CCLE cell lines annotated as SCLC, NSCLC, or SCCOHT was merged with the Le Loarer RNA-seq data and were quantile normalized. We used a previously published YAP1 SCLC gene signature (<xref rid="bib10" ref-type="bibr">10</xref>) for unsupervised hierarchal clustering of CCLE cell lines and Le Loarer patient samples.</p>
+        <p>To analyze mRNA expression of markers associated with SMARCA4 and a neuroendocrine phenotype, CCLE cell lines were grouped into “SMARCA4-UT cluster” (<italic toggle="yes">n</italic> = 7), “SMARCA4 mutant NSCLC” (<italic toggle="yes">n</italic> = 31), “SMARCA4 proficient NSCLC” (<italic toggle="yes">n</italic> = 88), and “SCLC-A, -N, -P” (<italic toggle="yes">n</italic> = 43). See Supplementary Table S5 for a full annotated list of cell lines. Gene expression (<italic toggle="yes">Z</italic>-score; log RNAseq RPKM) values were accessed through cBioportal.org (<xref rid="bib21" ref-type="bibr">21, 22</xref>).</p>
+      </sec>
+      <sec id="sec3-6">
+        <title>Statistical analysis</title>
+        <p>All statistical analyses were conducted in Graph Pad Prism Version 9 (RRID:SCR_002798) or R studio Version 4.0.2 (RRID:SCR_001905). Data were assessed for normal distribution using a Shapiro–Wilk test. Data were considered normally distributed if the <italic toggle="yes">P</italic>-value was &gt; 0.05. If the data were not normally distributed, a Kruskal–Wallis test with a Dunn's multiple comparison test (between group) was conducted for multiple groups, or a Mann–Whitney test comparing tanks between two groups. The level of significance was set to <italic toggle="yes">P</italic> &lt; 0.05.</p>
+      </sec>
+      <sec sec-type="data-availability" id="sec3-7">
+        <title>Data availability</title>
+        <p>The DNA and mRNA expression sequencing data generated by UTSW are available in Supplementary Table S4. The NE score for SCLC cell lines is available in Supplementary Table S6. The data analysed in this study were obtained from Sequence Read Archive (SRA; RRID:SCR_004891) at SRP052896 (<ext-link xlink:href="https://www.ncbi.nlm.nih.gov/sra?term=SRP052896" ext-link-type="uri" xlink:show="new">https://www.ncbi.nlm.nih.gov/sra?term=SRP052896</ext-link>); from database of Genotypes and Phenotypes (dbGaP) (RRID:SCR_002709) at phs001823.v1.p1 (<ext-link xlink:href="https://www.ncbi.nlm.nih.gov/projects/gap/cgi-bin/study.cgi?study_id=phs001823.v1.p1" ext-link-type="uri" xlink:show="new">https://www.ncbi.nlm.nih.gov/projects/gap/cgi-bin/study.cgi?study_id=phs001823.v1.p1</ext-link>); from Dependency Map (DepMap) (RRID:SCR_017655) at 19Q1 (<ext-link xlink:href="https://depmap.org/portal/download/all/?releasename=DepMap+Public+19Q1" ext-link-type="uri" xlink:show="new">https://depmap.org/portal/download/all/?releasename=DepMap+Public+19Q1</ext-link>), 18Q3 (<ext-link xlink:href="https://depmap.org/portal/download/all/?releasename=DepMap+Public+18Q3" ext-link-type="uri" xlink:show="new">https://depmap.org/portal/download/all/?releasename=DepMap+Public+18Q3</ext-link>), CCLE2019 (<ext-link xlink:href="https://depmap.org/portal/download/all/?releasename=CCLE+2019" ext-link-type="uri" xlink:show="new">https://depmap.org/portal/download/all/?releasename=CCLE+2019</ext-link>); from the Broad Institute (RRID:SCR_013836) at CCLE Legacy Data (<ext-link xlink:href="https://data.broadinstitute.org/ccle_legacy_data/mRNA_expression/" ext-link-type="uri" xlink:show="new">https://data.broadinstitute.org/ccle_legacy_data/mRNA_expression/</ext-link>); and from original articles Nusinow and colleagues (<xref rid="bib20" ref-type="bibr">20</xref>) at Supplementary Table S2.</p>
+      </sec>
+    </sec>
+    <sec sec-type="results" id="sec4">
+      <title>Results</title>
+      <sec id="sec4-1">
+        <title>Pathogenic <italic toggle="yes">SMARCA4</italic> mutations are enriched in SCLC-Y</title>
+        <p>SCLC almost universally harbors mutations of both <italic toggle="yes">TP53</italic> and <italic toggle="yes">RB1</italic>, unusually however, SCLC-Y cell lines frequently lack <italic toggle="yes">RB1</italic> mutations (<xref rid="bib25" ref-type="bibr">25</xref>). We therefore interrogated the mutational landscape of 50 SCLC cell lines used to classify the SCLC-Y subtype through the Cancer Cell Line Encyclopaedia (CCLE) and Hamon Center genomic datasets (<xref rid="bib19" ref-type="bibr">19</xref>) and identified 26 frequently mutated genes unique to SCLC-Y cell lines (<xref rid="fig1" ref-type="fig">Fig. 1A</xref>; Supplementary Table S7). This dataset included all eight YAP1 expressing SCLC lines previously included in the classification of the SCLC-Y lineage (<xref rid="bib2" ref-type="bibr">2</xref>). Notably, mutations in <italic toggle="yes">SMARCA4</italic> (also known as <italic toggle="yes">BRG1</italic>), which encodes an ATPase subunit of SWI/SNF chromatin-remodeling complexes (<xref rid="bib26" ref-type="bibr">26</xref>), were observed in six out of eight SCLC-Y lines and found mutually exclusive with <italic toggle="yes">RB1</italic> mutations (<xref rid="fig1" ref-type="fig">Fig. 1B</xref>; Supplementary Fig. S1A). All cancer cell lines harbouring frame shift or nonsense mutations in <italic toggle="yes">SMARCA4</italic> showed reduced SMARCA4 mRNA and protein abundance (<xref rid="fig1" ref-type="fig">Fig. 1C</xref>; Supplementary Fig. S1B), consistent with the <italic toggle="yes">SMARCA4</italic> “class 1 alterations” observed in non–small cell lung carcinoma (NSCLC; ref. <xref rid="bib27" ref-type="bibr">27</xref>). All six <italic toggle="yes">SMARCA4</italic>-mutant SCLC-Y lines also harboured <italic toggle="yes">TP53</italic> mutations, but other genomic alterations previously observed to co-occur with <italic toggle="yes">SMARCA4</italic>-mutant NSCLC, such as <italic toggle="yes">STK11</italic>, <italic toggle="yes">KEAP1</italic>, and <italic toggle="yes">KRAS</italic>, were not identified (Supplementary Table S8). Furthermore, in line with the specific enrichment of <italic toggle="yes">SMARCA4</italic> mutations in SCLC-Y tumors, <italic toggle="yes">SMARCA4</italic>-mutant SCLC cell lines exhibited significantly lower expression of a previously defined neuroendocrine (NE) transcriptomic signature (<xref rid="bib16" ref-type="bibr">16, 23</xref>) compared with <italic toggle="yes">SMARCA4</italic> wildtype SCLC cell lines (<xref rid="fig1" ref-type="fig">Fig. 1D</xref>; Supplementary Table S6).</p>
+        <fig position="float" id="fig1">
+          <label>Figure 1.</label>
+          <caption>
+            <p>
+<italic toggle="yes">SMARCA4</italic> mutations are enriched within SCLC-Y cell lines. <bold>A,</bold> Venn diagram showing co-occurring and subtype-specific mutations associated with each SCLC molecular subtype. Genetic mutations that are present in at least 50% of samples within each SCLC subtype based on Rudin and colleagues (<xref rid="bib2" ref-type="bibr">2</xref>) were identified through cBioportal. There are 26 mutations exclusive to SCLC-Y cell lines (Supplementary Table S7). <bold>B,</bold> Of all 26 mutations identified, <italic toggle="yes">SMARCA4</italic> mutations were present in six of eight SCLC-Y cell lines, together with <italic toggle="yes">TP53</italic> mutations on an <italic toggle="yes">RB1</italic> wild-type background. *, H157DM was previously annotated in CCLE as H1339. <bold>C,</bold> All cell lines in the CCLE (lung and nonlung cancer cell lines) that had complete proteomic and RNA-seq profiles were interrogated for the correlation between SMARCA4 protein and mRNA. There is a positive correlation (Pearson correlation = 0.53; <italic toggle="yes">P</italic> = 1.5e−27) between low <italic toggle="yes">SMARCA4</italic> mRNA and loss of SMARCA4 protein. <bold>D,</bold> SCLC cell lines with <italic toggle="yes">SMARCA4</italic> mutations have a significantly lower NE-score compared with wild-type (WT) <italic toggle="yes">SMARCA4</italic> SCLC cell lines (Mann–Whitney test; **, <italic toggle="yes">P</italic> = 0.0068). SCLC cell lines in the CCLE were binned into <italic toggle="yes">SMARCA4</italic> mutant and WT groups. NE scoring was performed using a previously published 50-gene transcriptomic signature (<xref rid="bib16" ref-type="bibr">16</xref>).</p>
+          </caption>
+          <alt-text>Figure 1. SMARCA4 mutations are enriched within SCLC-Y cell lines. A, Venn diagram showing co-occurring and subtype-specific mutations associated with each SCLC molecular subtype. Genetic mutations that are present in at least 50% of samples within each SCLC subtype based on Rudin and colleagues (2) were identified through cBioportal. There are 26 mutations exclusive to SCLC-Y cell lines (Supplementary Table S7). B, Of all 26 mutations identified, SMARCA4 mutations were present in six of eight SCLC-Y cell lines, together with TP53 mutations on an RB1 wild-type background. *, H157DM was previously annotated in CCLE as H1339. C, All cell lines in the CCLE (lung and nonlung cancer cell lines) that had complete proteomic and RNA-seq profiles were interrogated for the correlation between SMARCA4 protein and mRNA. There is a positive correlation (Pearson correlation = 0.53; P = 1.5e−27) between low SMARCA4 mRNA and loss of SMARCA4 protein. D, SCLC cell lines with SMARCA4 mutations have a significantly lower NE-score compared with wild-type (WT) SMARCA4 SCLC cell lines (Mann–Whitney test; **, P = 0.0068). SCLC cell lines in the CCLE were binned into SMARCA4 mutant and WT groups. NE scoring was performed using a previously published 50-gene transcriptomic signature (16).</alt-text>
+          <graphic xlink:href="1846fig1" position="float"/>
+        </fig>
+      </sec>
+      <sec id="sec4-2">
+        <title>Histopathologic classification of SMARCA4-deficient SCLC-Y</title>
+        <p>Inactivating mutations in <italic toggle="yes">SMARCA4</italic> are characteristic of small cell carcinoma of the ovary, hypercalcaemic type (SCCOHT) and can also occur in malignant rhabdoid tumors (<xref rid="bib24" ref-type="bibr">24</xref>). Within the thorax, SMARCA4 loss is seen in two different settings; either in NSCLC harbouring <italic toggle="yes">SMARCA4</italic> mutations (<xref rid="bib27" ref-type="bibr">27</xref>), or in thoracic SMARCA4-deficient undifferentiated tumors (previously named SMARCA4-deficient thoracic sarcoma; ref. <xref rid="bib24" ref-type="bibr">24</xref>). Although SMARCA4-deficient NSCLC (frequently adenocarcinomas) may display histologic features of de-differentiation including loss of TTF1 expression and a solid growth pattern; thoracic SMARCA4-deficient undifferentiated tumors (SMARCA4-UT) show undifferentiated round cell or rhabdoid features and reduced expression of epithelial markers such as cytokeratins and claudin-4. To better define the identity of <italic toggle="yes">SMARCA4</italic>-mutant SCLC-Y tumors, we established a panel of SCLC xenograft models derived from cell lines representative of all SCLC transcriptional subtypes, including three <italic toggle="yes">SMARCA4</italic>-mutant SCLC-Y lines. As SCLC diagnosis is primarily based on morphologic assessment of the tumor (<xref rid="bib28" ref-type="bibr">28</xref>), five pathologists who routinely report thoracic pathology were asked to independently evaluate the de-identified H&amp;E slides and indicate whether the tumor morphology was consistent with SCLC (<xref rid="fig2" ref-type="fig">Fig. 2A</xref>). Although there was some variability in individual pathologist assessments for SCLC-A, -N, and -P tumors, there was near complete consensus that the H&amp;E appearances of four of five SCLC-Y tumors were not consistent with SCLC (<xref rid="fig2" ref-type="fig">Fig. 2B</xref>; Supplementary Figs. S2A and S2B).</p>
+        <fig position="float" id="fig2">
+          <label>Figure 2.</label>
+          <caption>
+            <p>SMARCA4-deficient SCLC cell lines are morphologically and immunophenotypically similar to SMARCA4-UT. <bold>A,</bold> Outline of the methodology employed for assessing SMARCA4-deficient SCLC cell lines by a panel of five anatomical pathologists. <bold>B,</bold> Representative H&amp;E images of cell line xenografts diagnosed as high-grade NE carcinoma (SCLC) and other malignant neoplasms (non-SCLC). Scale bar = 100 μm. <bold>C,</bold> Heatmap of re-evaluated diagnosis of SCLC cell line xenografts (row) and each pathologists’ classification (column). Abbreviations: LCNEC, large cell neuroendocrine cancer; SMARCA4-UT, SMARCA4-deficient undifferentiated tumor; SCLC/LCNEC, combined SCLC and LCNEC components; Other, undifferentiated tumor or small blue round cell tumor.</p>
+          </caption>
+          <alt-text>Figure 2. SMARCA4-deficient SCLC cell lines are morphologically and immunophenotypically similar to SMARCA4-UT. A, Outline of the methodology employed for assessing SMARCA4-deficient SCLC cell lines by a panel of five anatomical pathologists. B, Representative H&amp;E images of cell line xenografts diagnosed as high-grade NE carcinoma (SCLC) and other malignant neoplasms (non-SCLC). Scale bar = 100 μm. C, Heatmap of re-evaluated diagnosis of SCLC cell line xenografts (row) and each pathologists’ classification (column). Abbreviations: LCNEC, large cell neuroendocrine cancer; SMARCA4-UT, SMARCA4-deficient undifferentiated tumor; SCLC/LCNEC, combined SCLC and LCNEC components; Other, undifferentiated tumor or small blue round cell tumor.</alt-text>
+          <graphic xlink:href="1846fig2" position="float"/>
+        </fig>
+        <p>Pathologists were then provided with an IHC panel encompassing standard diagnostic markers of thoracic malignancies (Supplementary Table S2) and asked to provide an updated diagnosis (<xref rid="fig2" ref-type="fig">Fig. 2C</xref>). All three of the SMARCA4-deficient SCLC-Y xenograft tumors (SW1271, H841, and DMS114) were favoured by pathologists to represent either SMARCA4-UT or SMARCA4-deficient NSCLC, rather than SCLC (<xref rid="fig2" ref-type="fig">Fig. 2C</xref>; ref. <xref rid="bib15" ref-type="bibr">15</xref>). IHC for SMARCA4 confirmed that these three SCLC-Y tumors harboring <italic toggle="yes">SMARCA4</italic> mutations were SMARCA4-deficient, whereas SMARCA4 protein expression was retained in all other tumors (<xref rid="fig3" ref-type="fig">Fig. 3</xref>; Supplementary Table S2). In contrast to other SCLC subtypes, these SMARCA4-deficient SCLC-Y tumors showed expression of RB1, weak cytokeratin staining and isolated expression of synaptophysin in the absence of other neuroendocrine markers INSM1 and CD56 (<xref rid="fig3" ref-type="fig">Fig. 3</xref>; Supplementary Fig. S3A). This IHC profile would be highly unusual for SCLC but is characteristic of thoracic SMARCA4-UT (<xref rid="bib29" ref-type="bibr">29</xref>). We observed high concordance between neuroendocrine marker mRNA and protein expression (Supplementary Fig. S3B). Of the two SMARCA4 proficient SCLC-Y lines (H1341 and H196), only H1341 was considered morphologically and immunophenotypically consistent with SCLC (<xref rid="fig2" ref-type="fig">Fig. 2B</xref> and <xref rid="fig2" ref-type="fig">C</xref>; Supplementary Fig. S3C). Conversely, all five pathologists independently designated H196 to be a sarcomatoid (spindle cell) malignancy (<xref rid="fig2" ref-type="fig">Fig. 2B</xref> and <xref rid="fig2" ref-type="fig">C</xref>), with a differential diagnosis including sarcomatoid carcinoma, sarcoma, malignant mesothelioma, and melanoma.</p>
+        <fig position="float" id="fig3">
+          <label>Figure 3.</label>
+          <caption>
+            <p>Distinct immunophenotype of SMARCA4-mutant compared with SMARCA4-WT SCLC cell lines. Representative IHC images of SMARCA4, synaptophysin (SYN), CD56, TTF1, INSM1, and RB1 in <italic toggle="yes">SMARCA4</italic>-WT, NE-high SCLC cell line (H1092) compared with <italic toggle="yes">SMARCA4</italic>-mutant SCLC cell lines. Scale bar = 100 μm.</p>
+          </caption>
+          <alt-text>Figure 3. Distinct immunophenotype of SMARCA4-mutant compared with SMARCA4-WT SCLC cell lines. Representative IHC images of SMARCA4, synaptophysin (SYN), CD56, TTF1, INSM1, and RB1 in SMARCA4-WT, NE-high SCLC cell line (H1092) compared with SMARCA4-mutant SCLC cell lines. Scale bar = 100 μm.</alt-text>
+          <graphic xlink:href="1846fig3" position="float"/>
+        </fig>
+        <p>To further validate the identity of the SCLC-Y lines, we reviewed the data in CCLE and compared it to independent DNA-sequencing, RNA-sequencing (RNA-seq) and signature-based histologic analysis of the same tumor lines undertaken at UT Southwestern Medical Center (UTSW; Supplementary Table S4). This comparison demonstrated high concordance between independent sequencing datasets but revealed that two of the eight previously annotated SCLC-Y lines (H1339 and H2286) were derived from tumors with a primary histologic diagnosis of NSCLC tumors rather than SCLC (<xref rid="bib30" ref-type="bibr">30</xref>). The H157DM (<italic toggle="yes">TP53</italic><sup>mut</sup>, <italic toggle="yes">RB1</italic><sup>wt</sup>, <italic toggle="yes">SMARCA4</italic><sup>truncating</sup>) was previously thought to be the SCLC line H1339 but was more recently identified to be the lung squamous cell carcinoma line H157, an identity that was confirmed on comparison with UTSW data (Supplementary Table S4). In addition, H2286 (<italic toggle="yes">TP53</italic><sup>mut</sup>, <italic toggle="yes">RB1</italic><sup>wt</sup>, <italic toggle="yes">SMARCA4</italic><sup>missense</sup>) was derived from a tumor that showed mixed histology and was classified as an adenocarcinoma by UTSW according to an adenocarcinoma-squamous cell carcinoma RNA-seq signature (<xref rid="bib30" ref-type="bibr">30</xref>). Thus, in addition to the five SCLC-Y lines directly examined in this study, these findings suggest that an additional two previously designated SCLC-Y lines (H1339/H157DM and H2286) are <italic toggle="yes">SMARCA4</italic>-mutant NSCLC rather than SCLC. On review of the origin of the final SCLC-Y line H1341, this line was derived from a biopsy of a cervical tumor in 26-year-old female. Importantly, this patient had no lung tumor on CT scan and there was no evidence of disease spread outside the cervix. This tumor was therefore diagnosed as a primary small cell carcinoma of the cervix (<xref rid="bib31" ref-type="bibr">31</xref>). Consistent with our pathological evaluation of the H1341 xenograft (<xref rid="fig2" ref-type="fig">Fig. 2B</xref>; Supplementary Fig. S2A), the morphologic appearances of small cell neuroendocrine carcinomas (SCNEC) of the cervix can be indistinguishable from SCLC (<xref rid="bib32" ref-type="bibr">32</xref>). However, cervical SCNEC tumors are typically associated with high-risk human papillomavirus (HPV) infection and have a distinct molecular profile compared with SCLC, with a lower frequency of <italic toggle="yes">TP53</italic> and <italic toggle="yes">RB1</italic> mutations (<xref rid="bib33" ref-type="bibr">33</xref>). In keeping with a diagnosis of cervical SCNEC, H1341 lacks mutations in <italic toggle="yes">TP53</italic> and <italic toggle="yes">RB1</italic> and instead possesses mutations frequently seen in cervical SCNEC including a gain-of-function mutations in <italic toggle="yes">PIK3CA</italic> (E524K) and a <italic toggle="yes">PTEN</italic> deletion (<xref rid="bib22" ref-type="bibr">22, 33–35</xref>). Furthermore, H1341 is positive for HPV (<ext-link xlink:href="https://www.atcc.org/products/crl-5864" ext-link-type="uri" xlink:show="new">https://www.atcc.org/products/crl-5864</ext-link>, accessed October 31, 2023). Interestingly, H1341 also possesses a <italic toggle="yes">SMARCB1</italic> deletion, which has previously been reported in cervical SCNEC (<xref rid="bib34" ref-type="bibr">34</xref>). Taken together, our findings demonstrate that all cancer cell lines originally used to classify the SCLC-Y subtype show clinical, molecular, morphologic, and/or transcriptomic features that are inconsistent with a diagnosis of SCLC (<xref rid="tbl1" ref-type="table">Table 1</xref>).</p>
+        <table-wrap position="float" id="tbl1">
+          <label>Table 1.</label>
+          <caption>
+            <p>Revised tumor classification for previously designated SCLC-Y lines.</p>
+          </caption>
+          <table frame="hsides" rules="groups">
+            <thead>
+              <tr>
+                <th align="left" rowspan="1" colspan="1">Cell line</th>
+                <th align="left" rowspan="1" colspan="1">DepMap ID</th>
+                <th align="left" rowspan="1" colspan="1">Revised tumor classification</th>
+                <th align="left" rowspan="1" colspan="1">Age/sex</th>
+                <th align="left" rowspan="1" colspan="1">Smoking status</th>
+                <th align="left" rowspan="1" colspan="1">NE-score (CCLE RNA-seq)</th>
+                <th align="left" rowspan="1" colspan="1">
+<italic toggle="yes">TP53</italic>
+</th>
+                <th align="left" rowspan="1" colspan="1">
+<italic toggle="yes">RB1</italic>
+</th>
+                <th align="left" rowspan="1" colspan="1">
+<italic toggle="yes">SMARCA4</italic>
+</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td align="left" rowspan="1" colspan="1">H1341</td>
+                <td align="left" rowspan="1" colspan="1">ACH-000129</td>
+                <td align="left" rowspan="1" colspan="1">Small cell neuroendocrine carcinoma of the cervix</td>
+                <td align="left" rowspan="1" colspan="1">26/F</td>
+                <td align="left" rowspan="1" colspan="1">Smoker</td>
+                <td align="left" rowspan="1" colspan="1">0.2294</td>
+                <td align="left" rowspan="1" colspan="1">WT</td>
+                <td align="left" rowspan="1" colspan="1">WT</td>
+                <td align="left" rowspan="1" colspan="1">WT</td>
+              </tr>
+              <tr>
+                <td align="left" rowspan="1" colspan="1">DMS114</td>
+                <td align="left" rowspan="1" colspan="1">ACH-000530</td>
+                <td align="left" rowspan="1" colspan="1">SMARCA4-UT</td>
+                <td align="left" rowspan="1" colspan="1">68/M</td>
+                <td align="left" rowspan="1" colspan="1">Unknown</td>
+                <td align="left" rowspan="1" colspan="1">0.1365</td>
+                <td align="left" rowspan="1" colspan="1">
+<bold>T</bold>
+</td>
+                <td align="left" rowspan="1" colspan="1">WT</td>
+                <td align="left" rowspan="1" colspan="1">
+<bold>T</bold>
+</td>
+              </tr>
+              <tr>
+                <td align="left" rowspan="1" colspan="1">SBC5</td>
+                <td align="left" rowspan="1" colspan="1">ACH-000670</td>
+                <td align="left" rowspan="1" colspan="1">SMARCA4-UT</td>
+                <td align="left" rowspan="1" colspan="1">65/M</td>
+                <td align="left" rowspan="1" colspan="1">Unknown</td>
+                <td align="left" rowspan="1" colspan="1">−0.2384</td>
+                <td align="left" rowspan="1" colspan="1">
+<bold>M</bold>
+</td>
+                <td align="left" rowspan="1" colspan="1">WT</td>
+                <td align="left" rowspan="1" colspan="1">
+<bold>T</bold>
+</td>
+              </tr>
+              <tr>
+                <td align="left" rowspan="1" colspan="1">H841</td>
+                <td align="left" rowspan="1" colspan="1">ACH-000292</td>
+                <td align="left" rowspan="1" colspan="1">SMARCA4-UT</td>
+                <td align="left" rowspan="1" colspan="1">51/M</td>
+                <td align="left" rowspan="1" colspan="1">Smoker</td>
+                <td align="left" rowspan="1" colspan="1">−0.3397</td>
+                <td align="left" rowspan="1" colspan="1">
+<bold>M</bold>
+</td>
+                <td align="left" rowspan="1" colspan="1">WT</td>
+                <td align="left" rowspan="1" colspan="1">
+<bold>T</bold>
+</td>
+              </tr>
+              <tr>
+                <td align="left" rowspan="1" colspan="1">H2286</td>
+                <td align="left" rowspan="1" colspan="1">ACH-000912</td>
+                <td align="left" rowspan="1" colspan="1">Adenocarcinoma</td>
+                <td align="left" rowspan="1" colspan="1">57/F</td>
+                <td align="left" rowspan="1" colspan="1">Smoker</td>
+                <td align="left" rowspan="1" colspan="1">−0.6746</td>
+                <td align="left" rowspan="1" colspan="1">
+<bold>T</bold>
+</td>
+                <td align="left" rowspan="1" colspan="1">WT</td>
+                <td align="left" rowspan="1" colspan="1">
+<bold>M</bold>
+</td>
+              </tr>
+              <tr>
+                <td align="left" rowspan="1" colspan="1">H157DM<xref rid="tb1fn1" ref-type="table-fn"><sup>a</sup></xref></td>
+                <td align="left" rowspan="1" colspan="1">ACH-000921</td>
+                <td align="left" rowspan="1" colspan="1">Squamous cell carcinoma</td>
+                <td align="left" rowspan="1" colspan="1">59/M</td>
+                <td align="left" rowspan="1" colspan="1">Unknown</td>
+                <td align="left" rowspan="1" colspan="1">−0.7356</td>
+                <td align="left" rowspan="1" colspan="1">
+<bold>T</bold>
+</td>
+                <td align="left" rowspan="1" colspan="1">WT</td>
+                <td align="left" rowspan="1" colspan="1">
+<bold>T</bold>
+</td>
+              </tr>
+              <tr>
+                <td align="left" rowspan="1" colspan="1">H196</td>
+                <td align="left" rowspan="1" colspan="1">ACH-000752</td>
+                <td align="left" rowspan="1" colspan="1">Sarcomatoid malignancy</td>
+                <td align="left" rowspan="1" colspan="1">68/M</td>
+                <td align="left" rowspan="1" colspan="1">Nonsmoker</td>
+                <td align="left" rowspan="1" colspan="1">−0.7438</td>
+                <td align="left" rowspan="1" colspan="1">
+<bold>M</bold>
+</td>
+                <td align="left" rowspan="1" colspan="1">
+<bold>T</bold>
+</td>
+                <td align="left" rowspan="1" colspan="1">WT</td>
+              </tr>
+              <tr>
+                <td align="left" rowspan="1" colspan="1">SW1271</td>
+                <td align="left" rowspan="1" colspan="1">ACH-000890</td>
+                <td align="left" rowspan="1" colspan="1">SMARCA4-deficient malignancy</td>
+                <td align="left" rowspan="1" colspan="1">69/M</td>
+                <td align="left" rowspan="1" colspan="1">Unknown</td>
+                <td align="left" rowspan="1" colspan="1">−0.8004</td>
+                <td align="left" rowspan="1" colspan="1">
+<bold>M</bold>
+</td>
+                <td align="left" rowspan="1" colspan="1">WT</td>
+                <td align="left" rowspan="1" colspan="1">
+<bold>M</bold>
+</td>
+              </tr>
+            </tbody>
+          </table>
+          <table-wrap-foot>
+            <fn>
+              <p>Abbreviations: F, female; M, male; WT, wild type; T, truncating mutation; M, missense mutation.</p>
+            </fn>
+            <fn id="tb1fn1">
+              <p>
+<sup>a</sup>H157DM was previously named H1339 in CCLE.</p>
+            </fn>
+          </table-wrap-foot>
+        </table-wrap>
+      </sec>
+      <sec id="sec4-3">
+        <title>SMARCA4-deficient SCLC cell lines have a similar transcriptome to SMARCA4-UT</title>
+        <p>
+<italic toggle="yes">SMARCA4</italic> and <italic toggle="yes">SMARCA2</italic> encode mutually exclusive core ATPase subunits of SWI/SNF chromatin remodeling complexes (<xref rid="bib26" ref-type="bibr">26, 27</xref>). In contrast to SMARCA4-deficient NSCLC in which SMARCA2 is essential for survival (<xref rid="bib36" ref-type="bibr">36</xref>), SMARCA4-UT and SCCOHT typically exhibit concurrent silencing of <italic toggle="yes">SMARCA2</italic> expression (<xref rid="bib29" ref-type="bibr">29, 37</xref>). Disruption of SWI/SNF function in these tumors leads to broad transcriptional dysregulation and remarkably this epigenetic reprogramming appears to be a more dominant driver of phenotype than the tissue of origin. Thus, the transcriptome of thoracic SMARCA4-UT more closely resembles SCCOHT than SMARCA4-deficient NSCLC (<xref rid="bib24" ref-type="bibr">24</xref>). To investigate whether the transcriptional profile of <italic toggle="yes">SMARCA4</italic>-mutant SCLC-Y lines are closely related to SMARCA4-UT or to other SCLC subtypes, we integrated RNA sequencing data from all SCLC, NSCLC, and SCCOHT cell lines in CCLE with RNA-seq data from primary tumors, including primary thoracic SMARCA4-UT, SCCOHT, and unclassified thoracic sarcomas (<xref rid="bib24" ref-type="bibr">24</xref>). Unsupervised hierarchical clustering using a previously defined set of differentially expressed genes in primary SMARCA4-UT compared with SMARCA4-deficient NSCLC (<xref rid="bib24" ref-type="bibr">24</xref>) revealed clustering of three SMARCA4-deficient SCLC-Y lines (H841, DMS114, SBC5) with primary thoracic SMARCA4-UT and SCCOHT (<xref rid="fig4" ref-type="fig">Fig. 4A</xref>). SBC5 had a similar immunophenotype (Supplementary Fig. S4) to <italic toggle="yes">SMARCA4</italic>-mutant SCLC-Y cell lines H841, DMS114, and SW1271 (<xref rid="fig3" ref-type="fig">Fig. 3</xref>). Conversely, the other SMARCA4-deficient SCLC-Y lines (SW1271 and H2286) clustered with <italic toggle="yes">SMARCA4</italic>-mutant NSCLC rather than SCLC (<xref rid="fig4" ref-type="fig">Fig. 4A</xref>). This observation was replicated through principal component (PC) analysis (Supplementary Fig. S5A), with the PC2 dimension found to be influenced by the data source (i.e., CCLE or ref. <xref rid="bib24" ref-type="bibr">24</xref>; Supplementary Fig. S5B). Using the top 50 genes from PC1, PC3, and PC4 for unsupervised hierarchical clustering using the top 50 genes from PC1, PC3, and PC4 confirmed the clustering of <italic toggle="yes">SMARCA4</italic>-mutant SCLC-Y cell lines with SMARCA4-UT and SCCOHT samples (Supplementary Fig. S5C).</p>
+        <fig position="float" id="fig4">
+          <label>Figure 4.</label>
+          <caption>
+            <p>SCLC-Y cell lines with SMARCA4 loss share a similar transcriptome to SMARCA4-UT. <bold>A,</bold> Unsupervised hierarchical clustering, based on differentially expressed genes in primary SMARCA4-UT compared with primary <italic toggle="yes">SMARCA4</italic>-mutant NSCLC identified by Le Loarer and colleagues (<xref rid="bib24" ref-type="bibr">24</xref>; <italic toggle="yes">n</italic> = 758 genes), was performed on SCCOHT and lung carcinoma samples [cell lines from the CCLE and bulk-RNA sequenced patient samples from Le Loarer and colleagues (<xref rid="bib24" ref-type="bibr">24</xref>)]. Inset: SMARCA4-UT cluster from <bold>A</bold> with cell line and sample annotation. <bold>B,</bold> mRNA expression of <italic toggle="yes">SMARCA4</italic>, <italic toggle="yes">SMARCA2</italic>, and <italic toggle="yes">CLDN4</italic> (claudin-4) in cell lines of the SMARCA4-UT cluster, SMARCA4 mutant NSCLC, SMARCA4 proficient NSCLC, and SCLC-A, -N, -P (Supplementary Table S5). Kruskal–Wallis test with a Dunn multiple comparison test; *, <italic toggle="yes">P</italic> &lt; 0.05; **, <italic toggle="yes">P</italic> &lt; 0.01; ***, <italic toggle="yes">P</italic> &lt; 0.001; ****, <italic toggle="yes">P</italic> &lt; 0.0001; ns, <italic toggle="yes">P</italic> ≥ 0.05. <bold>C,</bold> IHC of SMARCA2 and claudin-4 in <italic toggle="yes">SMARCA4</italic>-WT and <italic toggle="yes">SMARCA4</italic>-mutant cell line xenografts. Scale bar = 100 μm.</p>
+          </caption>
+          <alt-text>Figure 4. SCLC-Y cell lines with SMARCA4 loss share a similar transcriptome to SMARCA4-UT. A, Unsupervised hierarchical clustering, based on differentially expressed genes in primary SMARCA4-UT compared with primary SMARCA4-mutant NSCLC identified by Le Loarer and colleagues (24; n = 758 genes), was performed on SCCOHT and lung carcinoma samples [cell lines from the CCLE and bulk-RNA sequenced patient samples from Le Loarer and colleagues (24)]. Inset: SMARCA4-UT cluster from A with cell line and sample annotation. B, mRNA expression of SMARCA4, SMARCA2, and CLDN4 (claudin-4) in cell lines of the SMARCA4-UT cluster, SMARCA4 mutant NSCLC, SMARCA4 proficient NSCLC, and SCLC-A, -N, -P (Supplementary Table S5). Kruskal–Wallis test with a Dunn multiple comparison test; *, P &lt; 0.05; **, P &lt; 0.01; ***, P &lt; 0.001; ****, P &lt; 0.0001; ns, P ≥ 0.05. C, IHC of SMARCA2 and claudin-4 in SMARCA4-WT and SMARCA4-mutant cell line xenografts. Scale bar = 100 μm.</alt-text>
+          <graphic xlink:href="1846fig4" position="float"/>
+        </fig>
+        <p>In addition to the SCLC-Y lines, four <italic toggle="yes">SMARCA4</italic>-mutant NSCLC lines (H522, H2077, H1581, H661) localized to the SMARCA4-UT/SCCOHT cluster (<xref rid="fig4" ref-type="fig">Fig. 4A</xref>). The primary tumors from which the H1581 and H661 cell lines were derived, lacked morphologic features of differentiated adenocarcinoma or squamous cell carcinoma (Supplementary Fig. S4). Furthermore, all the SMARCA4-deficient lung cancer cell lines localising to this SMARCA4-UT cluster showed a gene expression profile characteristic of SMARCA4-UT, which was distinct from that of SCLC and <italic toggle="yes">SMARCA4</italic>-mutant NSCLC (<xref rid="bib29" ref-type="bibr">29</xref>). This included SMARCA4/SMARCA2 co-deficiency, low Claudin-4, variable expression of stem cells markers SALL4, SOX2, and CD34, synaptophysin expression and absent INSM1 and NCAM1 expression (<xref rid="fig4" ref-type="fig">Fig. 4B</xref> and <xref rid="fig4" ref-type="fig">C</xref>; Supplementary Fig. S6A). Taken together, our findings demonstrate that six lines all coming from thoracic malignancies and previously designated as SCLC, harbor <italic toggle="yes">SMARCA4</italic> mutations and display histologic, and a lack of neuroendocrine features, consistent with either SMARCA4-deficient NSCLC or thoracic SMARCA4-UT rather than SCLC.</p>
+      </sec>
+      <sec id="sec4-4">
+        <title>SMARCA4-UT express YAP1</title>
+        <p>Although transcriptional expression of YAP1 was initially used to stratify the SCLC-Y subtype (<xref rid="bib2" ref-type="bibr">2</xref>), IHC staining of SCLC patient samples has largely failed to support YAP1 as a defining molecular marker in SCLC (<xref rid="bib8" ref-type="bibr">8</xref>). To first correlate YAP1 mRNA and protein expression, we performed YAP1 IHC on <italic toggle="yes">SMARCA4</italic>-mutant (SW1271, H841, DMS114, H661, and H1581) and <italic toggle="yes">SMARCA4</italic>-wildtype (H2171, H1092, and H526) cell line xenografts. Consistent with the high YAP1 mRNA expression seen in SCLC-Y cell lines (<xref rid="bib2" ref-type="bibr">2</xref>), strong YAP1 protein expression was observed in all tumor cell lines within the SMARCA4-UT cluster and NSCLC cluster (<xref rid="fig5" ref-type="fig">Fig. 5A</xref>). Interestingly, the cervical SCNEC line H1341 showed patchy expression of YAP1 and had the strongest neuroendocrine marker expression of the previously designated SCLC-Y lines (Supplementary Fig. S6B; <xref rid="tbl1" ref-type="table">Table 1</xref>).</p>
+        <fig position="float" id="fig5">
+          <label>Figure 5.</label>
+          <caption>
+            <p>YAP1 is expressed in SMARCA4-UT primary samples. <bold>A,</bold> Unsupervised hierarchical clustering, based on a SCLC-specific YAP1 signature (<italic toggle="yes">n</italic> = 49 genes) identified by Pearsall and colleagues (<xref rid="bib10" ref-type="bibr">10</xref>), was performed on SCCOHT and lung carcinoma samples [cell lines from the CCLE and bulk-RNA sequenced patient samples from Le Loarer and colleagues (<xref rid="bib24" ref-type="bibr">24</xref>)]. Cell lines that cluster with the SMARCA4-UT samples are highlighted in the gray box. <bold>B,</bold> YAP1 IHC on SCLC-A/N/P and <italic toggle="yes">SMARCA4</italic>-mutant cell line xenografts. Scale bar = 100 μm. <bold>C,</bold> H&amp;E, SMARCA4, and YAP1 IHC in primary SMARCA4-UT samples (<italic toggle="yes">n</italic> = 6) together with an SCLC patient sample. Scale bar = 100 μm.</p>
+          </caption>
+          <alt-text>Figure 5. YAP1 is expressed in SMARCA4-UT primary samples. A, Unsupervised hierarchical clustering, based on a SCLC-specific YAP1 signature (n = 49 genes) identified by Pearsall and colleagues (10), was performed on SCCOHT and lung carcinoma samples [cell lines from the CCLE and bulk-RNA sequenced patient samples from Le Loarer and colleagues (24)]. Cell lines that cluster with the SMARCA4-UT samples are highlighted in the gray box. B, YAP1 IHC on SCLC-A/N/P and SMARCA4-mutant cell line xenografts. Scale bar = 100 μm. C, H&amp;E, SMARCA4, and YAP1 IHC in primary SMARCA4-UT samples (n = 6) together with an SCLC patient sample. Scale bar = 100 μm.</alt-text>
+          <graphic xlink:href="1846fig5" position="float"/>
+        </fig>
+        <p>To validate whether our findings in cell line xenografts are representative of primary SMARCA4-UT tumors in patients, we initially made use of a YAP1 signature, previously used to interrogated YAP1 expression in SCLC Circulating Tumor Xenograft (CTX) models (<xref rid="bib10" ref-type="bibr">10</xref>). As expected, SCLC cell lines representing the -A, -N, and -P subtypes exhibited low YAP1 signature expression and displayed a distinct clustering pattern (<xref rid="fig5" ref-type="fig">Fig. 5B</xref>). Conversely, <italic toggle="yes">SMARCA4</italic>-mutant SCLC-Y cell lines clustered with primary thoracic SMARCA4-UT and SCCOHT patient samples (<xref rid="fig5" ref-type="fig">Fig. 5B</xref>; Supplementary Table S9; <xref rid="fig5" ref-type="fig">Fig. 5B</xref>). Moreover, <italic toggle="yes">YAP1</italic> mRNA expression was comparable between SMARCA4-UT and <italic toggle="yes">SMARCA4</italic>-mutant NSCLC (Supplementary Fig. S6A), consistent with the proposed oncogenic role of YAP1 in NSCLC (<xref rid="bib38" ref-type="bibr">38</xref>). To validate these findings at the protein level, we performed IHC staining for YAP1 on primary SMARCA4-UT patient samples (<italic toggle="yes">n</italic> = 6; <xref rid="fig5" ref-type="fig">Fig. 5C</xref>). Indeed, in addition to displaying a characteristic undifferentiated morphology with loss of SMARCA4 expression, SMARCA4-UT patient material showed strong expression of YAP1 (<xref rid="fig5" ref-type="fig">Fig. 5C</xref>). Critically, this was in stark contrast to the lack of YAP1 expression seen in a primary SCLC tumor, where high YAP1 expression is detected specifically in endothelial and stromal cells (<xref rid="fig5" ref-type="fig">Fig. 5C</xref>; ref. <xref rid="bib8" ref-type="bibr">8</xref>). Our findings demonstrate that, in contrast to SCLC (<xref rid="bib8" ref-type="bibr">8</xref>), both xenografts of SMARCA4-mutant cell lines previously classified as SCLC-Y and patient-derived primary SMARCA4-UT tumor samples show diffuse, uniformly strong YAP1 protein staining. Thus, altogether our findings indicate that diffuse YAP1 expression is a consistent feature of SMARCA4-UT, explaining how previous erroneous annotation of both SMARCA4-UT cell lines and YAP1-positive NSCLC lines as SCLC, led to the grouping of these lines within a distinct YAP1-positive SCLC subgroup.</p>
+      </sec>
+    </sec>
+    <sec sec-type="discussion" id="sec5">
+      <title>Discussion</title>
+      <p>Understanding SCLC heterogeneity and the distinct biology of the proposed SCLC subtypes is critical for the development of targeted therapies for this devastating disease. Here, we shed light on the origins of the proposed controversial “SCLC-Y” subtype, making the surprising observation that the majority of SCLC-Y tumor cell lines, on which the classification of SCLC-Y category was largely based, harbour <italic toggle="yes">SMARCA4</italic> mutations. Detailed molecular and histopathological characterisation of these tumors revealed that these tumors show features in keeping with SMARCA4-deficient malignancies rather than SCLC.</p>
+      <p>Several of the SCLC-Y tumor lines showed close transcriptional similarities with primary thoracic SMARCA4-UT. These tumors showed pathologic features consistent with SMARCA4-UT and gene expression profiles consistent with this diagnosis, including loss of both SMARCA4 and SMARCA2 expression and low claudin-4. In contrast to SCLC-A, -N, and -P subtypes, these SMARCA4-deficient SCLC-Y tumors retained RB1 expression and expressed synaptophysin, but lacked both CD56 and INSM1, a profile that is characteristic of SMARCA4-UT. Interestingly, <italic toggle="yes">SMARCA4</italic> inactivating mutations were recently detected in 1.5% of SCLC patient samples (<xref rid="bib39" ref-type="bibr">39</xref>). Although these tumors also harbored <italic toggle="yes">TP53</italic> and <italic toggle="yes">RB1</italic> genetic alternations, importantly accompanying histopathology was not available, thus the inclusion of SCLC mimics, such as SMARCA4-UT could not be excluded.</p>
+      <p>The classification of SCLC subtypes was based both on primary SCLC samples as well as SCLC cell lines, however, cell lines were particularly enriched within the SCLC-Y category (<xref rid="bib2" ref-type="bibr">2</xref>). All of these lines were developed between 1975 and 1991 from patients clinically diagnosed as having SCLC, in nearly every case by pathologists recognized as world experts in SCLC diagnosis working as part of a group with extensive experience in SCLC clinical trials (NCI-Navy Medical Oncology Branch; ref. <xref rid="bib40" ref-type="bibr">40</xref>). Nevertheless, these diagnoses were made well before our current knowledge of the key genomic features and IHC markers characteristic of SCLC and other lung tumors, such as SMARCA4 deficient malignancies. Thoracic SMARCA4-UT is a recognized mimic of SCLC, and 23% of SMARCA4-UT in a recent series were initially diagnosed as small cell or large cell neuroendocrine carcinoma (<xref rid="bib29" ref-type="bibr">29</xref>). Like SCLC, SMARCA4-UT typically occurs in middle-aged smokers and can mimic several histological features of SCLC including small cell morphology, high proliferation index, crush artefact, and synaptophysin expression (<xref rid="bib29" ref-type="bibr">29</xref>). These features may account for the original SCLC diagnosis, however the morphology and IHC profile of the SMARCA4-deficient SCLC-Y xenografts were unanimously considered by a panel of pathologists to be consistent with thoracic SMARCA4-UT or SMARCA4-deficient carcinoma as opposed to SCLC. Although we did not identify <italic toggle="yes">SMARCA4</italic> mutations in two of the eight SCLC-Y lines, one of these lines was pathologically not consistent with SCLC and the other was derived from a 26-year-old patient diagnosed with a primary small cell carcinoma of the cervix rather than SCLC. Thus, altogether we found little evidence to support a diagnosis of SCLC for any of the SCLC-Y lines tested (<xref rid="tbl1" ref-type="table">Table 1</xref>).</p>
+      <p>The expression of YAP1 is inversely correlated with the expression of neuroendocrine markers in SCLC, and thus “classical” neuroendocrine high SCLC lacks expression of YAP1. In contrast, YAP1 is expressed in NSCLC, including adenocarcinoma, squamous cell carcinoma, and a proportion of large cell neuroendocrine carcinomas (<xref rid="bib8" ref-type="bibr">8, 41</xref>). Importantly, here we also demonstrate that primary SMARCA4-UT universally exhibit diffuse and strong expression of YAP1 protein. The expression of YAP1 in multiple lung malignancies therefore complicates the use of YAP1 expression to define a specific subtype of SCLC, particularly given the occurrence of combined tumors in which YAP1 expressing NSCLC may be admixed with SCLC, and the existence of YAP1-positive tumors that can mimic SCLC histologically, such as basaloid squamous cell carcinoma, poorly differentiated adenocarcinoma, high-grade adenoid cystic carcinoma, and SMARCA4-UT.</p>
+      <p>Altogether, our findings suggest that, unlike ASCL1, NEUROD1, and POU2F3, YAP1 is not a subtype defining transcription factor in SCLC. This is consistent with a recent study in a patient cohort, which failed to identify a distinct YAP1 expressing SCLC subtype (<xref rid="bib8" ref-type="bibr">8</xref>). Although focal YAP1 expression has been detected in some primary SCLC samples (<xref rid="bib11" ref-type="bibr">11</xref>), our findings together with recent studies in SCLC xenograft and GEM models suggests that this is due to intratumoral heterogeneity (<xref rid="bib9" ref-type="bibr">9, 10, 13, 42</xref>). In this context, classical ASCL1 driven SCLC can transition to a “neuroendocrine low” phenotype, which is associated with expression of YAP1. This phenotypic plasticity is a feature of <italic toggle="yes">RB1</italic> null SCLC, and the emergence of neuroendocrine low, YAP1 expressing cells has been associated with chemoresistance, activation of Notch signaling, and expression of mesenchymal and inflammation-associated genes (<xref rid="bib10" ref-type="bibr">10, 13, 42</xref>).</p>
+      <p>Importantly, our findings demonstrate that the patient-derived cancer cell lines initially used to define the SCLC-Y subtype actually represent SMARCA4-UT, NSCLC, or other SCLC mimics, and therefore are not representative models of “triple negative” or “inflamed” SCLC. We also stress that a subset of human SCLC tumors exhibit a triple A/N/P negative phenotype, low neuroendocrine marker expression and a more “inflamed” gene signature. However, there is little evidence to date supporting the use of YAP1 as a reliable marker for these tumors. Although the majority of CCLE cell lines defined as SCLC-Y appear to be SMARCA4-deficient malignancies, this is likely because these tumors were diagnosed historically, without access to immunohistochemical and molecular testing used today and before SMARCA4-deficient lung malignancies were a recognized disease entity. We therefore do not anticipate that “triple negative” or “SCLC-I” tumors identified in recent, thoroughly histopathologically characterized SCLC cohorts are likely to represent SMARCA4-UT. However, our work highlights the importance of comprehensive histopathologic and molecular characterization of SCLC tumors subtyped in clinical cohorts, with particular focus on excluding potential SCLC mimics for tumors that lack neuroendocrine marker expression or have an unusual molecular background, for example retained expression of wild-type RB.</p>
+      <p>SMARCA4-UT is a highly aggressive lung malignancy for which effective treatments are needed. Furthermore, these tumors exhibit shared transcriptomic and phenotypic features with aggressive SMARCA4-deficient malignancies occurring at other sites, including SSCOHT and malignant rhabdoid tumor. SMARCA4-UT typically present as a large central thoracic tumor involving the pulmonary hilum and/or mediastinum in young to middle-aged smokers. Histologically the tumor consists of sheets of variably discohesive epithelioid cells, which typically have prominent nucleoli and frequently show focal rhabdoid morphology. SMARCA4-UT lack clear evidence of epithelial differentiation and the characteristic diagnostic IHC profile is weak or absent expression of epithelial markers such as Cytokeratins and Claudin-4, negative or focal TTF-1 or p40 staining, and loss of SMARCA4 expression. In addition, some cases show expression of stem cell markers such as CD34, SOX2, or SALL4 (<xref rid="bib15" ref-type="bibr">15</xref>). Approximately 70% of SMARCA4-UT show IHC staining for synaptophysin but other neuroendocrine markers such as CD56 and INSM1 are typically negative (<xref rid="bib29" ref-type="bibr">29</xref>).</p>
+      <p>Given the broad use of the SCLC-Y cell lines we now identify to be SMARCA4-UT in therapeutic studies, our findings provide new insight into potential therapeutic vulnerabilities in SMARCA4-deficient malignancies. For example, the IL-15 super-agonist, N-808 (<xref rid="bib43" ref-type="bibr">43</xref>), arginine deprivation (<xref rid="bib44" ref-type="bibr">44</xref>), and inhibition of Aurora kinase B (<xref rid="bib45" ref-type="bibr">45</xref>), checkpoint kinase 1 (CHK1; ref. <xref rid="bib46" ref-type="bibr">46</xref>) have all demonstrated anticancer activity in SMARCA4-deficient SCLC-Y cell lines. Furthermore, findings from preclinical studies employing these SMARCA4-deficient SCLC-Y cell lines have been used as a basis to initiate clinical trials in SCLC, highlighting the clinical importance of resolving the identity of these tumors (<xref rid="bib47" ref-type="bibr">47, 48</xref>). In contrast to SCLC, emerging evidence suggests that SMARCA4-UT may respond poorly to chemotherapy (<xref rid="bib49" ref-type="bibr">49, 50</xref>). Conversely, several of the SCLC-Y lines that we now identify to be SMARCA4-UT have previously been shown to be sensitive to CDK4/6 inhibitors (<xref rid="bib25" ref-type="bibr">25</xref>), and consistent with this SMARCA4-deficiency, has been shown to be a strong predictor of sensitivity to CDK4/6 inhibitors in NSCLC and SCCOHT tumor models (<xref rid="bib51" ref-type="bibr">51, 52</xref>). The cell lines we have identified as SMARCA4-UT have higher expression of immune and MHC antigen presentation genes than classical neuroendocrine SCLC-A and SCLC-N, raising the possibility that these tumors may respond to immunotherapy. Interestingly, there are several reports of SMARCA4-UT exhibiting responses to immune checkpoint blockade with anti-PD-1 or anti-PD-L1 therapy (<xref rid="bib53" ref-type="bibr">53, 54</xref>).</p>
+      <p>Taken together, these SMARCA4-deficient cell lines previously characterized as SCLC-Y may serve as patient derived preclinical models of SMARCA4-UT to accelerate the discovery of new therapeutics for this aggressive malignancy.</p>
+    </sec>
+    <sec sec-type="supplementary-material">
+      <title>Supplementary Material</title>
+      <supplementary-material position="float" content-type="local-data">
+        <label>Supplementary Figure S1</label>
+        <caption>
+          <p>Characterisation of SMARCA4 mutations in lung cancer cell lines from the CCLE.</p>
+        </caption>
+        <media xlink:href="ccr-23-2360_supplementary_figure_s1_suppsf1.pdf"/>
+      </supplementary-material>
+      <supplementary-material position="float" content-type="local-data">
+        <label>Supplementary Figure S2</label>
+        <caption>
+          <p>Initial histopathological evaluation of SCLC xenografts.</p>
+        </caption>
+        <media xlink:href="ccr-23-2360_supplementary_figure_s2_suppsf2.pdf"/>
+      </supplementary-material>
+      <supplementary-material position="float" content-type="local-data">
+        <label>Supplementary Figure S3</label>
+        <caption>
+          <p>SCLC-specific markers are weak/lost in SMARCA4-deficient SCLC-Y cell lines.</p>
+        </caption>
+        <media xlink:href="ccr-23-2360_supplementary_figure_s3_suppsf3.pdf"/>
+      </supplementary-material>
+      <supplementary-material position="float" content-type="local-data">
+        <label>Supplementary Figure S4</label>
+        <caption>
+          <p>H&amp;E and immunohistochemistry of cell line xenografts H661, H1581 and SBC5.</p>
+        </caption>
+        <media xlink:href="ccr-23-2360_supplementary_figure_s4_suppsf4.pdf"/>
+      </supplementary-material>
+      <supplementary-material position="float" content-type="local-data">
+        <label>Supplementary Figure S5</label>
+        <caption>
+          <p>SMARCA4-UT cluster validation.</p>
+        </caption>
+        <media xlink:href="ccr-23-2360_supplementary_figure_s5_suppsf5.pdf"/>
+      </supplementary-material>
+      <supplementary-material position="float" content-type="local-data">
+        <label>Supplementary Figure S6</label>
+        <caption>
+          <p>mRNA expression of SMARCA4-UT associated genes and YAP1 IHC.</p>
+        </caption>
+        <media xlink:href="ccr-23-2360_supplementary_figure_s6_suppsf6.pdf"/>
+      </supplementary-material>
+      <supplementary-material position="float" content-type="local-data">
+        <label>Supplementary Table S1</label>
+        <caption>
+          <p>Immunohistochemistry antibodies, protocols and evaluation criteria.</p>
+        </caption>
+        <media xlink:href="ccr-23-2360_supplementary_table_s1_suppst1.xlsx"/>
+      </supplementary-material>
+      <supplementary-material position="float" content-type="local-data">
+        <label>Supplementary Table S2</label>
+        <caption>
+          <p>Immunohistochemistry scoring table.</p>
+        </caption>
+        <media xlink:href="ccr-23-2360_supplementary_table_s2_suppst2.xlsx"/>
+      </supplementary-material>
+      <supplementary-material position="float" content-type="local-data">
+        <label>Supplementary Table S3</label>
+        <caption>
+          <p>Clinical profiles and immunohistochemistry of SMARCA4-UT patients.</p>
+        </caption>
+        <media xlink:href="ccr-23-2360_supplementary_table_s3_suppst3.xlsx"/>
+      </supplementary-material>
+      <supplementary-material position="float" content-type="local-data">
+        <label>Supplementary Table S4</label>
+        <caption>
+          <p>Comparison of sequencing data between CCLE and UTSW.</p>
+        </caption>
+        <media xlink:href="ccr-23-2360_supplementary_table_s4_suppst4.xlsx"/>
+      </supplementary-material>
+      <supplementary-material position="float" content-type="local-data">
+        <label>Supplementary Table S5</label>
+        <caption>
+          <p>CCLE cell lines used in Figure 4 and Supplementary Figure S6A.</p>
+        </caption>
+        <media xlink:href="ccr-23-2360_supplementary_table_s5_suppst5.xlsx"/>
+      </supplementary-material>
+      <supplementary-material position="float" content-type="local-data">
+        <label>Supplementary Table S6</label>
+        <caption>
+          <p>List of cell lines from Figure 1D and their NE-score.</p>
+        </caption>
+        <media xlink:href="ccr-23-2360_supplementary_table_s6_suppst6.xlsx"/>
+      </supplementary-material>
+      <supplementary-material position="float" content-type="local-data">
+        <label>Supplementary Table S7</label>
+        <caption>
+          <p>26 mutated genes unique to SCLC-Y cell lines.</p>
+        </caption>
+        <media xlink:href="ccr-23-2360_supplementary_table_s7_suppst7.xlsx"/>
+      </supplementary-material>
+      <supplementary-material position="float" content-type="local-data">
+        <label>Supplementary Table S8</label>
+        <caption>
+          <p>Other mutations and copy number alterations associated with SCLC-Y.</p>
+        </caption>
+        <media xlink:href="ccr-23-2360_supplementary_table_s8_suppst8.xlsx"/>
+      </supplementary-material>
+      <supplementary-material position="float" content-type="local-data">
+        <label>Supplementary Table S9</label>
+        <caption>
+          <p>SMARCA4-UT cell lines and patient samples based on unsupervised hierarchical clustering using YAP1 signature genes.</p>
+        </caption>
+        <media xlink:href="ccr-23-2360_supplementary_table_s9_suppst9.xlsx"/>
+      </supplementary-material>
+    </sec>
+  </body>
+  <back>
+    <ack>
+      <title>Acknowledgments</title>
+      <p>We thank E. Tsui and the WEHI Histology Facility for providing IHC expertise. We are grateful to D. Boyd, L. Scott, and R. Monaghan for technical support and animal husbandry, and M. Papari-Zareei and V. Stasny for aid in searching for the original biopsies for each cell line and preservation of SCLC lines. K.D. Sutherland was supported by the Peter and Julie Alston Centenary Fellowship and an Australian National Health and Medical Research Council (NHMRC) Project Grant 1159955. M.L. Burr was supported by a Snow Fellowship from the Snow Medical Research Foundation, NHMRC Investigator Grant 1196598 and Project Grant 1164054. K.D. Sutherland and M.L. Burr are supported by NHMRC Synergy Grant 2010275. J.D. Minna, L. Girard, and L. Cai are supported by P50 CA070907, J.D. Minna by CA213338 and CA213274. The bioinformatic analysis was funded by the Cancer Prevention and Research Institute of Texas (RP150596) and UTSW ACS-IRG (IRG-21–142–16). This work was made possible through the Victorian Government Operational Infrastructure Support and Australian Government.</p>
+      <p>The publication costs of this article were defrayed in part by the payment of publication fees. Therefore, and solely to indicate this fact, this article is hereby marked “advertisement” in accordance with 18 USC section 1734.</p>
+    </ack>
+    <fn-group>
+      <fn fn-type="supplementary-material">
+        <p>
+<bold>Note:</bold> Supplementary data for this article are available at Clinical Cancer Research Online (http://clincancerres.aacrjournals.org/).</p>
+      </fn>
+    </fn-group>
+    <sec id="sec6">
+      <title>Authors' Disclosures</title>
+      <p>J.D. Minna reports grants from NCI and personal fees from NIH and University of Texas Southwestern Medical Center during the conduct of the study. M.L. Burr reports grants from Snow Medical Research Foundation and NHMRC during the conduct of the study. K.D. Sutherland reports grants from National Health and Medical Research Council (NHMRC) and Peter and Julie Alston Centenary Fellowship during the conduct of the study. No disclosures were reported by the other authors.</p>
+    </sec>
+    <sec id="sec7">
+      <title>Authors' Contributions</title>
+      <p>
+<bold>J. Ng:</bold> Conceptualization, data curation, formal analysis, investigation, visualization, methodology, writing–original draft, writing–review and editing. <bold>L. Cai:</bold> Data curation, software, formal analysis, funding acquisition, investigation, visualization, methodology, writing–original draft, writing–review and editing. <bold>L. Girard:</bold> Data curation, software, formal analysis, writing–review and editing. <bold>O.W.J. Prall:</bold> Resources, investigation, writing–review and editing. <bold>N. Rajan:</bold> Investigation, writing–review and editing. <bold>C. Khoo:</bold> Investigation, writing–review and editing. <bold>A. Batrouney:</bold> Investigation, writing–review and editing. <bold>D.J. Byrne:</bold> Investigation, writing–review and editing. <bold>D.K. Boyd:</bold> Investigation, writing–review and editing. <bold>A.J. Kersbergen:</bold> Investigation, writing–review and editing. <bold>M. Christie:</bold> Resources, supervision, investigation, writing–review and editing. <bold>J.D. Minna:</bold> Resources, supervision, funding acquisition, validation, writing–original draft, project administration, writing–review and editing. <bold>M.L. Burr:</bold> Conceptualization, resources, data curation, formal analysis, supervision, funding acquisition, validation, investigation, visualization, methodology, writing–original draft, project administration, writing–review and editing. <bold>K.D. Sutherland:</bold> Conceptualization, resources, formal analysis, supervision, funding acquisition, validation, visualization, methodology, writing–original draft, project administration, writing–review and editing.</p>
+    </sec>
+    <ref-list>
+      <title>References</title>
+      <ref id="bib1">
+        <label>1.</label>
+        <mixed-citation publication-type="journal">
+<person-group person-group-type="author">
+<string-name>
+<surname>Rudin</surname>
+<given-names>CM</given-names>
+</string-name>, <string-name><surname>Brambilla</surname><given-names>E</given-names></string-name>, <string-name><surname>Faivre-Finn</surname><given-names>C</given-names></string-name>, <string-name><surname>Sage</surname><given-names>J</given-names></string-name></person-group>. <article-title>Small-cell lung cancer</article-title>. 
+<source>Nat Rev Dis Primers</source><year>2021</year>;<volume>7</volume>:<fpage>1</fpage>–<lpage>20</lpage>.<pub-id pub-id-type="pmid">33414454</pub-id>
+</mixed-citation>
+      </ref>
+      <ref id="bib2">
+        <label>2.</label>
+        <mixed-citation publication-type="journal">
+<person-group person-group-type="author">
+<string-name>
+<surname>Rudin</surname>
+<given-names>CM</given-names>
+</string-name>, <string-name><surname>Poirier</surname><given-names>JT</given-names></string-name>, <string-name><surname>Byers</surname><given-names>LA</given-names></string-name>, <string-name><surname>Dive</surname><given-names>C</given-names></string-name>, <string-name><surname>Dowlati</surname><given-names>A</given-names></string-name>, <string-name><surname>George</surname><given-names>J</given-names></string-name>, 
+<etal/></person-group>. <article-title>Molecular subtypes of small cell lung cancer: a synthesis of human and mouse model data</article-title>. 
+<source>Nat Rev Cancer</source><year>2019</year>;<volume>19</volume>:<fpage>289</fpage>–<lpage>97</lpage>.<pub-id pub-id-type="pmid">30926931</pub-id>
+</mixed-citation>
+      </ref>
+      <ref id="bib3">
+        <label>3.</label>
+        <mixed-citation publication-type="journal">
+<person-group person-group-type="author">
+<string-name>
+<surname>Poirier</surname>
+<given-names>JT</given-names>
+</string-name>, <string-name><surname>George</surname><given-names>J</given-names></string-name>, <string-name><surname>Owonikoko</surname><given-names>TK</given-names></string-name>, <string-name><surname>Berns</surname><given-names>A</given-names></string-name>, <string-name><surname>Brambilla</surname><given-names>E</given-names></string-name>, <string-name><surname>Byers</surname><given-names>LA</given-names></string-name>, 
+<etal/></person-group>. <article-title>New approaches to SCLC therapy: from the laboratory to the clinic</article-title>. 
+<source>J Thorac Oncol</source><year>2020</year>;<volume>15</volume>:<fpage>520</fpage>–<lpage>40</lpage>.<pub-id pub-id-type="pmid">32018053</pub-id>
+</mixed-citation>
+      </ref>
+      <ref id="bib4">
+        <label>4.</label>
+        <mixed-citation publication-type="journal">
+<person-group person-group-type="author">
+<string-name>
+<surname>Megyesfalvi</surname>
+<given-names>Z</given-names>
+</string-name>, <string-name><surname>Gay</surname><given-names>CM</given-names></string-name>, <string-name><surname>Popper</surname><given-names>H</given-names></string-name>, <string-name><surname>Pirker</surname><given-names>R</given-names></string-name>, <string-name><surname>Ostoros</surname><given-names>G</given-names></string-name>, <string-name><surname>Heeke</surname><given-names>S</given-names></string-name>, 
+<etal/></person-group>. <article-title>Clinical insights into small cell lung cancer: tumor heterogeneity, diagnosis, therapy, and future directions</article-title>. 
+<source>CA Cancer J Clin</source><year>2023</year>;<volume>73</volume>:<fpage>620</fpage>–<lpage>52</lpage>.<pub-id pub-id-type="pmid">37329269</pub-id>
+</mixed-citation>
+      </ref>
+      <ref id="bib5">
+        <label>5.</label>
+        <mixed-citation publication-type="journal">
+<person-group person-group-type="author">
+<string-name>
+<surname>Rudin</surname>
+<given-names>CM</given-names>
+</string-name>, <string-name><surname>Reck</surname><given-names>M</given-names></string-name>, <string-name><surname>Johnson</surname><given-names>ML</given-names></string-name>, <string-name><surname>Blackhall</surname><given-names>F</given-names></string-name>, <string-name><surname>Hann</surname><given-names>CL</given-names></string-name>, <string-name><surname>Yang</surname><given-names>JC-H</given-names></string-name>, 
+<etal/></person-group>. <article-title>Emerging therapies targeting the Delta-like ligand 3 (DLL3) in small cell lung cancer</article-title>. 
+<source>J Hematol Oncol</source><year>2023</year>;<volume>16</volume>:<fpage>66</fpage>.<pub-id pub-id-type="pmid">37355629</pub-id>
+</mixed-citation>
+      </ref>
+      <ref id="bib6">
+        <label>6.</label>
+        <mixed-citation publication-type="journal">
+<person-group person-group-type="author">
+<string-name>
+<surname>Rudin</surname>
+<given-names>CM</given-names>
+</string-name>, <string-name><surname>Durinck</surname><given-names>S</given-names></string-name>, <string-name><surname>Stawiski</surname><given-names>EW</given-names></string-name>, <string-name><surname>Poirier</surname><given-names>JT</given-names></string-name>, <string-name><surname>Modrusan</surname><given-names>Z</given-names></string-name>, <string-name><surname>Shames</surname><given-names>DS</given-names></string-name>, 
+<etal/></person-group>. <article-title>Comprehensive genomic analysis identifies SOX2 as a frequently amplified gene in small-cell lung cancer</article-title>. 
+<source>Nat Genet</source><year>2012</year>;<volume>44</volume>:<fpage>1111</fpage>–<lpage>6</lpage>.<pub-id pub-id-type="pmid">22941189</pub-id>
+</mixed-citation>
+      </ref>
+      <ref id="bib7">
+        <label>7.</label>
+        <mixed-citation publication-type="journal">
+<person-group person-group-type="author">
+<string-name>
+<surname>George</surname>
+<given-names>J</given-names>
+</string-name>, <string-name><surname>Lim</surname><given-names>JS</given-names></string-name>, <string-name><surname>Jang</surname><given-names>SJ</given-names></string-name>, <string-name><surname>Cun</surname><given-names>Y</given-names></string-name>, <string-name><surname>Ozretić</surname><given-names>L</given-names></string-name>, <string-name><surname>Kong</surname><given-names>G</given-names></string-name>, 
+<etal/></person-group>. <article-title>Comprehensive genomic profiles of small cell lung cancer</article-title>. 
+<source>Nature</source><year>2015</year>;<volume>524</volume>:<fpage>47</fpage>–<lpage>53</lpage>.<pub-id pub-id-type="pmid">26168399</pub-id>
+</mixed-citation>
+      </ref>
+      <ref id="bib8">
+        <label>8.</label>
+        <mixed-citation publication-type="journal">
+<person-group person-group-type="author">
+<string-name>
+<surname>Baine</surname>
+<given-names>MK</given-names>
+</string-name>, <string-name><surname>Hsieh</surname><given-names>M-S</given-names></string-name>, <string-name><surname>Lai</surname><given-names>WV</given-names></string-name>, <string-name><surname>Egger</surname><given-names>JV</given-names></string-name>, <string-name><surname>Jungbluth</surname><given-names>AA</given-names></string-name>, <string-name><surname>Daneshbod</surname><given-names>Y</given-names></string-name>, 
+<etal/></person-group>. <article-title>SCLC subtypes defined by ASCL1, NEUROD1, POU2F3, and YAP1: a comprehensive immunohistochemical and histopathologic characterization</article-title>. 
+<source>J Thorac Oncol</source><year>2020</year>;<volume>15</volume>:<fpage>1823</fpage>–<lpage>35</lpage>.<pub-id pub-id-type="pmid">33011388</pub-id>
+</mixed-citation>
+      </ref>
+      <ref id="bib9">
+        <label>9.</label>
+        <mixed-citation publication-type="journal">
+<person-group person-group-type="author">
+<string-name>
+<surname>Ireland</surname>
+<given-names>AS</given-names>
+</string-name>, <string-name><surname>Micinski</surname><given-names>AM</given-names></string-name>, <string-name><surname>Kastner</surname><given-names>DW</given-names></string-name>, <string-name><surname>Guo</surname><given-names>B</given-names></string-name>, <string-name><surname>Wait</surname><given-names>SJ</given-names></string-name>, <string-name><surname>Spainhower</surname><given-names>KB</given-names></string-name>, 
+<etal/></person-group>. <article-title>MYC drives temporal evolution of small cell lung cancer subtypes by reprogramming neuroendocrine fate</article-title>. 
+<source>Cancer Cell</source><year>2020</year>;<volume>38</volume>:<fpage>60</fpage>–<lpage>78</lpage>.<pub-id pub-id-type="pmid">32473656</pub-id>
+</mixed-citation>
+      </ref>
+      <ref id="bib10">
+        <label>10.</label>
+        <mixed-citation publication-type="journal">
+<person-group person-group-type="author">
+<string-name>
+<surname>Pearsall</surname>
+<given-names>SM</given-names>
+</string-name>, <string-name><surname>Humphrey</surname><given-names>S</given-names></string-name>, <string-name><surname>Revill</surname><given-names>M</given-names></string-name>, <string-name><surname>Morgan</surname><given-names>D</given-names></string-name>, <string-name><surname>Frese</surname><given-names>KK</given-names></string-name>, <string-name><surname>Galvin</surname><given-names>M</given-names></string-name>, 
+<etal/></person-group>. <article-title>The rare YAP1 subtype of SCLC revisited in a biobank of 39 circulating tumor cell patient derived explant models: a brief report</article-title>. 
+<source>J Thorac Oncol</source><year>2020</year>;<volume>15</volume>:<fpage>1836</fpage>–<lpage>43</lpage>.<pub-id pub-id-type="pmid">32721553</pub-id>
+</mixed-citation>
+      </ref>
+      <ref id="bib11">
+        <label>11.</label>
+        <mixed-citation publication-type="journal">
+<person-group person-group-type="author">
+<string-name>
+<surname>Owonikoko</surname>
+<given-names>TK</given-names>
+</string-name>, <string-name><surname>Dwivedi</surname><given-names>B</given-names></string-name>, <string-name><surname>Chen</surname><given-names>Z</given-names></string-name>, <string-name><surname>Zhang</surname><given-names>C</given-names></string-name>, <string-name><surname>Barwick</surname><given-names>B</given-names></string-name>, <string-name><surname>Ernani</surname><given-names>V</given-names></string-name>, 
+<etal/></person-group>. <article-title>YAP1 expression in SCLC defines a distinct subtype with T-cell–inflamed phenotype</article-title>. 
+<source>J Thorac Oncol</source><year>2021</year>;<volume>16</volume>:<fpage>464</fpage>–<lpage>76</lpage>.<pub-id pub-id-type="pmid">33248321</pub-id>
+</mixed-citation>
+      </ref>
+      <ref id="bib12">
+        <label>12.</label>
+        <mixed-citation publication-type="journal">
+<person-group person-group-type="author">
+<string-name>
+<surname>Qu</surname>
+<given-names>S</given-names>
+</string-name>, <string-name><surname>Fetsch</surname><given-names>P</given-names></string-name>, <string-name><surname>Thomas</surname><given-names>A</given-names></string-name>, <string-name><surname>Pommier</surname><given-names>Y</given-names></string-name>, <string-name><surname>Schrump</surname><given-names>DS</given-names></string-name>, <string-name><surname>Miettinen</surname><given-names>MM</given-names></string-name>, 
+<etal/></person-group>. <article-title>Molecular subtypes of primary SCLC tumors and their associations with neuroendocrine and therapeutic markers</article-title>. 
+<source>J Thorac Oncol</source><year>2022</year>;<volume>17</volume>:<fpage>141</fpage>–<lpage>53</lpage>.<pub-id pub-id-type="pmid">34534680</pub-id>
+</mixed-citation>
+      </ref>
+      <ref id="bib13">
+        <label>13.</label>
+        <mixed-citation publication-type="journal">
+<person-group person-group-type="author">
+<string-name>
+<surname>Gay</surname>
+<given-names>CM</given-names>
+</string-name>, <string-name><surname>Stewart</surname><given-names>CA</given-names></string-name>, <string-name><surname>Park</surname><given-names>EM</given-names></string-name>, <string-name><surname>Diao</surname><given-names>L</given-names></string-name>, <string-name><surname>Groves</surname><given-names>SM</given-names></string-name>, <string-name><surname>Heeke</surname><given-names>S</given-names></string-name>, 
+<etal/></person-group>. <article-title>Patterns of transcription factor programs and immune pathway activation define four major subtypes of SCLC with distinct therapeutic vulnerabilities</article-title>. 
+<source>Cancer Cell</source><year>2021</year>;<volume>39</volume>:<fpage>346</fpage>–<lpage>60</lpage>.<pub-id pub-id-type="pmid">33482121</pub-id>
+</mixed-citation>
+      </ref>
+      <ref id="bib14">
+        <label>14.</label>
+        <mixed-citation publication-type="journal">
+<person-group person-group-type="author">
+<string-name>
+<surname>Rekhtman</surname>
+<given-names>N</given-names>
+</string-name>
+</person-group>. <article-title>Lung neuroendocrine neoplasms: recent progress and persistent challenges</article-title>. 
+<source>Mod Pathol</source><year>2022</year>;<volume>35</volume>:<fpage>36</fpage>–<lpage>50</lpage>.<pub-id pub-id-type="pmid">34663914</pub-id>
+</mixed-citation>
+      </ref>
+      <ref id="bib15">
+        <label>15.</label>
+        <mixed-citation publication-type="journal">
+<person-group person-group-type="author">
+<string-name>
+<surname>Nicholson</surname>
+<given-names>AG</given-names>
+</string-name>, <string-name><surname>Tsao</surname><given-names>MS</given-names></string-name>, <string-name><surname>Beasley</surname><given-names>MB</given-names></string-name>, <string-name><surname>Borczuk</surname><given-names>AC</given-names></string-name>, <string-name><surname>Brambilla</surname><given-names>E</given-names></string-name>, <string-name><surname>Cooper</surname><given-names>WA</given-names></string-name>, 
+<etal/></person-group>. <article-title>The 2021 WHO classification of lung tumors: impact of advances since 2015</article-title>. 
+<source>J Thorac Oncol</source><year>2022</year>;<volume>17</volume>:<fpage>362</fpage>–<lpage>87</lpage>.<pub-id pub-id-type="pmid">34808341</pub-id>
+</mixed-citation>
+      </ref>
+      <ref id="bib16">
+        <label>16.</label>
+        <mixed-citation publication-type="journal">
+<person-group person-group-type="author">
+<string-name>
+<surname>Cai</surname>
+<given-names>L</given-names>
+</string-name>, <string-name><surname>Liu</surname><given-names>H</given-names></string-name>, <string-name><surname>Huang</surname><given-names>F</given-names></string-name>, <string-name><surname>Fujimoto</surname><given-names>J</given-names></string-name>, <string-name><surname>Girard</surname><given-names>L</given-names></string-name>, <string-name><surname>Chen</surname><given-names>J</given-names></string-name>, 
+<etal/></person-group>. <article-title>Cell-autonomous immune gene expression is repressed in pulmonary neuroendocrine cells and small cell lung cancer</article-title>. 
+<source>Commun Biol</source><year>2021</year>;<volume>4</volume>:<fpage>1</fpage>–<lpage>13</lpage>.<pub-id pub-id-type="pmid">33398033</pub-id>
+</mixed-citation>
+      </ref>
+      <ref id="bib17">
+        <label>17.</label>
+        <mixed-citation publication-type="journal">
+<person-group person-group-type="author">
+<string-name>
+<surname>Tlemsani</surname>
+<given-names>C</given-names>
+</string-name>, <string-name><surname>Pongor</surname><given-names>L</given-names></string-name>, <string-name><surname>Elloumi</surname><given-names>F</given-names></string-name>, <string-name><surname>Girard</surname><given-names>L</given-names></string-name>, <string-name><surname>Huffman</surname><given-names>KE</given-names></string-name>, <string-name><surname>Roper</surname><given-names>N</given-names></string-name>, 
+<etal/></person-group>. <article-title>SCLC-CellMiner: a resource for small cell lung cancer cell line genomics and pharmacology based on genomic signatures</article-title>. 
+<source>Cell Rep</source><year>2020</year>;<volume>33</volume>:<fpage>108296</fpage>.<pub-id pub-id-type="pmid">33086069</pub-id>
+</mixed-citation>
+      </ref>
+      <ref id="bib18">
+        <label>18.</label>
+        <mixed-citation publication-type="journal">
+<person-group person-group-type="author">
+<string-name>
+<surname>Tian</surname>
+<given-names>Y</given-names>
+</string-name>, <string-name><surname>Li</surname><given-names>Q</given-names></string-name>, <string-name><surname>Yang</surname><given-names>Z</given-names></string-name>, <string-name><surname>Zhang</surname><given-names>S</given-names></string-name>, <string-name><surname>Xu</surname><given-names>J</given-names></string-name>, <string-name><surname>Wang</surname><given-names>Z</given-names></string-name>, 
+<etal/></person-group>. <article-title>Single-cell transcriptomic profiling reveals the tumor heterogeneity of small-cell lung cancer</article-title>. 
+<source>Sig Transduct Target Ther</source><year>2022</year>;<volume>7</volume>:<fpage>1</fpage>–<lpage>16</lpage>.</mixed-citation>
+      </ref>
+      <ref id="bib19">
+        <label>19.</label>
+        <mixed-citation publication-type="journal">
+<person-group person-group-type="author">
+<string-name>
+<surname>Ghandi</surname>
+<given-names>M</given-names>
+</string-name>, <string-name><surname>Huang</surname><given-names>FW</given-names></string-name>, <string-name><surname>Jané-Valbuena</surname><given-names>J</given-names></string-name>, <string-name><surname>Kryukov</surname><given-names>GV</given-names></string-name>, <string-name><surname>Lo</surname><given-names>CC</given-names></string-name>, <string-name><surname>McDonald</surname><given-names>ER</given-names></string-name>, 
+<etal/></person-group>. <article-title>Next-generation characterization of the cancer cell line encyclopedia</article-title>. 
+<source>Nature</source><year>2019</year>;<volume>569</volume>:<fpage>503</fpage>–<lpage>8</lpage>.<pub-id pub-id-type="pmid">31068700</pub-id>
+</mixed-citation>
+      </ref>
+      <ref id="bib20">
+        <label>20.</label>
+        <mixed-citation publication-type="journal">
+<person-group person-group-type="author">
+<string-name>
+<surname>Nusinow</surname>
+<given-names>DP</given-names>
+</string-name>, <string-name><surname>Szpyt</surname><given-names>J</given-names></string-name>, <string-name><surname>Ghandi</surname><given-names>M</given-names></string-name>, <string-name><surname>Rose</surname><given-names>CM</given-names></string-name>, <string-name><surname>McDonald</surname><given-names>ER</given-names></string-name>, <string-name><surname>Kalocsay</surname><given-names>M</given-names></string-name>, 
+<etal/></person-group>. <article-title>Quantitative proteomics of the cancer cell line encyclopedia</article-title>. 
+<source>Cell</source><year>2020</year>;<volume>180</volume>:<fpage>387</fpage>–<lpage>402</lpage>.<pub-id pub-id-type="pmid">31978347</pub-id>
+</mixed-citation>
+      </ref>
+      <ref id="bib21">
+        <label>21.</label>
+        <mixed-citation publication-type="journal">
+<person-group person-group-type="author">
+<string-name>
+<surname>Cerami</surname>
+<given-names>E</given-names>
+</string-name>, <string-name><surname>Gao</surname><given-names>J</given-names></string-name>, <string-name><surname>Dogrusoz</surname><given-names>U</given-names></string-name>, <string-name><surname>Gross</surname><given-names>BE</given-names></string-name>, <string-name><surname>Sumer</surname><given-names>SO</given-names></string-name>, <string-name><surname>Aksoy</surname><given-names>BA</given-names></string-name>, 
+<etal/></person-group>. <article-title>The cBio cancer genomics portal: an open platform for exploring multidimensional cancer genomics data</article-title>. 
+<source>Cancer Discov</source><year>2012</year>;<volume>2</volume>:<fpage>401</fpage>–<lpage>4</lpage>.<pub-id pub-id-type="pmid">22588877</pub-id>
+</mixed-citation>
+      </ref>
+      <ref id="bib22">
+        <label>22.</label>
+        <mixed-citation publication-type="journal">
+<person-group person-group-type="author">
+<string-name>
+<surname>Gao</surname>
+<given-names>J</given-names>
+</string-name>, <string-name><surname>Aksoy</surname><given-names>BA</given-names></string-name>, <string-name><surname>Dogrusoz</surname><given-names>U</given-names></string-name>, <string-name><surname>Dresdner</surname><given-names>G</given-names></string-name>, <string-name><surname>Gross</surname><given-names>B</given-names></string-name>, <string-name><surname>Sumer</surname><given-names>SO</given-names></string-name>, 
+<etal/></person-group>. <article-title>Integrative analysis of complex cancer genomics and clinical profiles using the cBioPortal</article-title>. 
+<source>Sci Signal</source><year>2013</year>;<volume>6</volume>:<fpage>pl1–</fpage>.<pub-id pub-id-type="pmid">23550210</pub-id>
+</mixed-citation>
+      </ref>
+      <ref id="bib23">
+        <label>23.</label>
+        <mixed-citation publication-type="journal">
+<person-group person-group-type="author">
+<string-name>
+<surname>Zhang</surname>
+<given-names>W</given-names>
+</string-name>, <string-name><surname>Girard</surname><given-names>L</given-names></string-name>, <string-name><surname>Zhang</surname><given-names>Y-A</given-names></string-name>, <string-name><surname>Haruki</surname><given-names>T</given-names></string-name>, <string-name><surname>Papari-Zareei</surname><given-names>M</given-names></string-name>, <string-name><surname>Stastny</surname><given-names>V</given-names></string-name>, 
+<etal/></person-group>. <article-title>Small cell lung cancer tumors and preclinical models display heterogeneity of neuroendocrine phenotypes</article-title>. 
+<source>Transl Lung Cancer Res</source><year>2018</year>;<volume>7</volume>:<fpage>32</fpage>–<lpage>49</lpage>.<pub-id pub-id-type="pmid">29535911</pub-id>
+</mixed-citation>
+      </ref>
+      <ref id="bib24">
+        <label>24.</label>
+        <mixed-citation publication-type="journal">
+<person-group person-group-type="author">
+<string-name>
+<surname>Le Loarer</surname>
+<given-names>F</given-names>
+</string-name>, <string-name><surname>Watson</surname><given-names>S</given-names></string-name>, <string-name><surname>Pierron</surname><given-names>G</given-names></string-name>, <string-name><surname>de Montpreville</surname><given-names>VT</given-names></string-name>, <string-name><surname>Ballet</surname><given-names>S</given-names></string-name>, <string-name><surname>Firmin</surname><given-names>N</given-names></string-name>, 
+<etal/></person-group>. <article-title>SMARCA4 inactivation defines a group of undifferentiated thoracic malignancies transcriptionally related to BAF-deficient sarcomas</article-title>. 
+<source>Nat Genet</source><year>2015</year>;<volume>47</volume>:<fpage>1200</fpage>–<lpage>5</lpage>.<pub-id pub-id-type="pmid">26343384</pub-id>
+</mixed-citation>
+      </ref>
+      <ref id="bib25">
+        <label>25.</label>
+        <mixed-citation publication-type="journal">
+<person-group person-group-type="author">
+<string-name>
+<surname>McColl</surname>
+<given-names>K</given-names>
+</string-name>, <string-name><surname>Wildey</surname><given-names>G</given-names></string-name>, <string-name><surname>Sakre</surname><given-names>N</given-names></string-name>, <string-name><surname>Lipka</surname><given-names>MB</given-names></string-name>, <string-name><surname>Behtaj</surname><given-names>M</given-names></string-name>, <string-name><surname>Kresak</surname><given-names>A</given-names></string-name>, 
+<etal/></person-group>. <article-title>Reciprocal expression of INSM1 and YAP1 defines subgroups in small cell lung cancer</article-title>. 
+<source>Oncotarget</source><year>2017</year>;<volume>8</volume>:<fpage>73745</fpage>–<lpage>56</lpage>.<pub-id pub-id-type="pmid">29088741</pub-id>
+</mixed-citation>
+      </ref>
+      <ref id="bib26">
+        <label>26.</label>
+        <mixed-citation publication-type="journal">
+<person-group person-group-type="author">
+<string-name>
+<surname>Pan</surname>
+<given-names>J</given-names>
+</string-name>, <string-name><surname>McKenzie</surname><given-names>ZM</given-names></string-name>, <string-name><surname>D'Avino</surname><given-names>AR</given-names></string-name>, <string-name><surname>Mashtalir</surname><given-names>N</given-names></string-name>, <string-name><surname>Lareau</surname><given-names>CA</given-names></string-name>, <string-name><surname>Pierre</surname><given-names>RS</given-names></string-name>, 
+<etal/></person-group>. <article-title>The ATPase module of mammalian SWI/SNF family complexes mediates subcomplex identity and catalytic activity–independent genomic targeting</article-title>. 
+<source>Nat Genet</source><year>2019</year>;<volume>51</volume>:<fpage>618</fpage>–<lpage>26</lpage>.<pub-id pub-id-type="pmid">30858614</pub-id>
+</mixed-citation>
+      </ref>
+      <ref id="bib27">
+        <label>27.</label>
+        <mixed-citation publication-type="journal">
+<person-group person-group-type="author">
+<string-name>
+<surname>Schoenfeld</surname>
+<given-names>AJ</given-names>
+</string-name>, <string-name><surname>Bandlamudi</surname><given-names>C</given-names></string-name>, <string-name><surname>Lavery</surname><given-names>JA</given-names></string-name>, <string-name><surname>Montecalvo</surname><given-names>J</given-names></string-name>, <string-name><surname>Namakydoust</surname><given-names>A</given-names></string-name>, <string-name><surname>Rizvi</surname><given-names>H</given-names></string-name>, 
+<etal/></person-group>. <article-title>The genomic landscape of SMARCA4 alterations and associations with outcomes in patients with lung cancer</article-title>. 
+<source>Clin Cancer Res</source><year>2020</year>;<volume>26</volume>:<fpage>5701</fpage>–<lpage>8</lpage>.<pub-id pub-id-type="pmid">32709715</pub-id>
+</mixed-citation>
+      </ref>
+      <ref id="bib28">
+        <label>28.</label>
+        <mixed-citation publication-type="journal">
+<person-group person-group-type="author">
+<string-name>
+<surname>Nicholson</surname>
+<given-names>AG</given-names>
+</string-name>, <string-name><surname>Scagliotti</surname><given-names>G</given-names></string-name>, <string-name><surname>Tsao</surname><given-names>MS</given-names></string-name>, <string-name><surname>Yatabe</surname><given-names>Y</given-names></string-name>, <string-name><surname>Travis</surname><given-names>WD</given-names></string-name></person-group>. <article-title>2021 WHO classification of lung cancer: a globally applicable and molecular biomarker-relevant classification</article-title>. 
+<source>J Thorac Oncol</source><year>2022</year>;<volume>17</volume>:<fpage>e80</fpage>–<lpage>3</lpage>.<pub-id pub-id-type="pmid">36031295</pub-id>
+</mixed-citation>
+      </ref>
+      <ref id="bib29">
+        <label>29.</label>
+        <mixed-citation publication-type="journal">
+<person-group person-group-type="author">
+<string-name>
+<surname>Rekhtman</surname>
+<given-names>N</given-names>
+</string-name>, <string-name><surname>Montecalvo</surname><given-names>J</given-names></string-name>, <string-name><surname>Chang</surname><given-names>JC</given-names></string-name>, <string-name><surname>Alex</surname><given-names>D</given-names></string-name>, <string-name><surname>Ptashkin</surname><given-names>RN</given-names></string-name>, <string-name><surname>Ai</surname><given-names>N</given-names></string-name>, 
+<etal/></person-group>. <article-title>SMARCA4-deficient thoracic sarcomatoid tumors represent primarily smoking-related undifferentiated carcinomas rather than primary thoracic sarcomas</article-title>. 
+<source>J Thorac Oncol</source><year>2020</year>;<volume>15</volume>:<fpage>231</fpage>–<lpage>47</lpage>.<pub-id pub-id-type="pmid">31751681</pub-id>
+</mixed-citation>
+      </ref>
+      <ref id="bib30">
+        <label>30.</label>
+        <mixed-citation publication-type="journal">
+<person-group person-group-type="author">
+<string-name>
+<surname>Girard</surname>
+<given-names>L</given-names>
+</string-name>, <string-name><surname>Rodriguez-Canales</surname><given-names>J</given-names></string-name>, <string-name><surname>Behrens</surname><given-names>C</given-names></string-name>, <string-name><surname>Thompson</surname><given-names>DM</given-names></string-name>, <string-name><surname>Botros</surname><given-names>IW</given-names></string-name>, <string-name><surname>Tang</surname><given-names>H</given-names></string-name>, 
+<etal/></person-group>. <article-title>An expression signature as an aid to the histologic classification of non–small cell lung cancer</article-title>. 
+<source>Clin Cancer Res</source><year>2016</year>;<volume>22</volume>:<fpage>4880</fpage>–<lpage>9</lpage>.<pub-id pub-id-type="pmid">27354471</pub-id>
+</mixed-citation>
+      </ref>
+      <ref id="bib31">
+        <label>31.</label>
+        <mixed-citation publication-type="journal">
+<person-group person-group-type="author">
+<string-name>
+<surname>Johnson</surname>
+<given-names>BE</given-names>
+</string-name>, <string-name><surname>Whang-Peng</surname><given-names>J</given-names></string-name>, <string-name><surname>Naylor</surname><given-names>SL</given-names></string-name>, <string-name><surname>Zbar</surname><given-names>B</given-names></string-name>, <string-name><surname>Brauch</surname><given-names>H</given-names></string-name>, <string-name><surname>Lee</surname><given-names>E</given-names></string-name>, 
+<etal/></person-group>. <article-title>Retention of chromosome 3 in extrapulmonary small cell cancer shown by molecular and cytogenetic studies</article-title>. 
+<source>J Natl Cancer Inst</source><year>1989</year>;<volume>81</volume>:<fpage>1223</fpage>–<lpage>8</lpage>.<pub-id pub-id-type="pmid">2569043</pub-id>
+</mixed-citation>
+      </ref>
+      <ref id="bib32">
+        <label>32.</label>
+        <mixed-citation publication-type="book">
+<collab>WHO Classification of Tumours Editorial Board</collab>. 
+<source>Female genital tumours</source> [<comment>Internet</comment>]. <edition>5th ed.</edition><publisher-loc>Lyon, France</publisher-loc>: 
+<publisher-name>International Agency for Research on Cancer</publisher-name>; 
+<year>2020</year>. <comment>Available from</comment>: <ext-link xlink:href="https://publications.iarc.fr/592" ext-link-type="uri" xlink:show="new">https://publications.iarc.fr/592</ext-link></mixed-citation>
+      </ref>
+      <ref id="bib33">
+        <label>33.</label>
+        <mixed-citation publication-type="journal">
+<person-group person-group-type="author">
+<string-name>
+<surname>Pei</surname>
+<given-names>X</given-names>
+</string-name>, <string-name><surname>Xiang</surname><given-names>L</given-names></string-name>, <string-name><surname>Chen</surname><given-names>W</given-names></string-name>, <string-name><surname>Jiang</surname><given-names>W</given-names></string-name>, <string-name><surname>Yin</surname><given-names>L</given-names></string-name>, <string-name><surname>Shen</surname><given-names>X</given-names></string-name>, 
+<etal/></person-group>. <article-title>The next generation sequencing of cancer-related genes in small cell neuroendocrine carcinoma of the cervix</article-title>. 
+<source>Gynecol Oncol</source><year>2021</year>;<volume>161</volume>:<fpage>779</fpage>–<lpage>86</lpage>.<pub-id pub-id-type="pmid">33888337</pub-id>
+</mixed-citation>
+      </ref>
+      <ref id="bib34">
+        <label>34.</label>
+        <mixed-citation publication-type="journal">
+<person-group person-group-type="author">
+<string-name>
+<surname>Frumovitz</surname>
+<given-names>M</given-names>
+</string-name>, <string-name><surname>Burzawa</surname><given-names>JK</given-names></string-name>, <string-name><surname>Byers</surname><given-names>LA</given-names></string-name>, <string-name><surname>Lyons</surname><given-names>YA</given-names></string-name>, <string-name><surname>Ramalingam</surname><given-names>P</given-names></string-name>, <string-name><surname>Coleman</surname><given-names>RC</given-names></string-name>, 
+<etal/></person-group>. <article-title>Sequencing of mutational hotspots in cancer-related genes in small cell neuroendocrine cervical cancer</article-title>. 
+<source>Gynecol Oncol</source><year>2016</year>;<volume>141</volume>:<fpage>588</fpage>–<lpage>91</lpage>.<pub-id pub-id-type="pmid">27079212</pub-id>
+</mixed-citation>
+      </ref>
+      <ref id="bib35">
+        <label>35.</label>
+        <mixed-citation publication-type="journal">
+<person-group person-group-type="author">
+<string-name>
+<surname>Xing</surname>
+<given-names>D</given-names>
+</string-name>, <string-name><surname>Zheng</surname><given-names>G</given-names></string-name>, <string-name><surname>Schoolmeester</surname><given-names>JK</given-names></string-name>, <string-name><surname>Li</surname><given-names>Z</given-names></string-name>, <string-name><surname>Pallavajjala</surname><given-names>A</given-names></string-name>, <string-name><surname>Haley</surname><given-names>L</given-names></string-name>, 
+<etal/></person-group>. <article-title>Next-generation sequencing reveals recurrent somatic mutations in small cell neuroendocrine carcinoma of the uterine cervix</article-title>. 
+<source>Am J Surg Pathol</source><year>2018</year>;<volume>42</volume>:<fpage>750</fpage>.<pub-id pub-id-type="pmid">29505425</pub-id>
+</mixed-citation>
+      </ref>
+      <ref id="bib36">
+        <label>36.</label>
+        <mixed-citation publication-type="journal">
+<person-group person-group-type="author">
+<string-name>
+<surname>Hoffman</surname>
+<given-names>GR</given-names>
+</string-name>, <string-name><surname>Rahal</surname><given-names>R</given-names></string-name>, <string-name><surname>Buxton</surname><given-names>F</given-names></string-name>, <string-name><surname>Xiang</surname><given-names>K</given-names></string-name>, <string-name><surname>McAllister</surname><given-names>G</given-names></string-name>, <string-name><surname>Frias</surname><given-names>E</given-names></string-name>, 
+<etal/></person-group>. <article-title>Functional epigenetics approach identifies BRM/SMARCA2 as a critical synthetic lethal target in BRG1-deficient cancers</article-title>. 
+<source>Proc Natl Acad Sci USA</source><year>2014</year>;<volume>111</volume>:<fpage>3128</fpage>–<lpage>33</lpage>.<pub-id pub-id-type="pmid">24520176</pub-id>
+</mixed-citation>
+      </ref>
+      <ref id="bib37">
+        <label>37.</label>
+        <mixed-citation publication-type="journal">
+<person-group person-group-type="author">
+<string-name>
+<surname>Karnezis</surname>
+<given-names>AN</given-names>
+</string-name>, <string-name><surname>Wang</surname><given-names>Y</given-names></string-name>, <string-name><surname>Ramos</surname><given-names>P</given-names></string-name>, <string-name><surname>Hendricks</surname><given-names>WP</given-names></string-name>, <string-name><surname>Oliva</surname><given-names>E</given-names></string-name>, <string-name><surname>D'Angelo</surname><given-names>E</given-names></string-name>, 
+<etal/></person-group>. <article-title>Dual loss of the SWI/SNF complex ATPases SMARCA4/BRG1 and SMARCA2/BRM is highly sensitive and specific for small cell carcinoma of the ovary, hypercalcaemic type</article-title>. 
+<source>J Pathol</source><year>2016</year>;<volume>238</volume>:<fpage>389</fpage>–<lpage>400</lpage>.<pub-id pub-id-type="pmid">26356327</pub-id>
+</mixed-citation>
+      </ref>
+      <ref id="bib38">
+        <label>38.</label>
+        <mixed-citation publication-type="journal">
+<person-group person-group-type="author">
+<string-name>
+<surname>Lo Sardo</surname>
+<given-names>F</given-names>
+</string-name>, <string-name><surname>Strano</surname><given-names>S</given-names></string-name>, <string-name><surname>Blandino</surname><given-names>G</given-names></string-name></person-group>. <article-title>YAP and TAZ in lung cancer: oncogenic role and clinical targeting</article-title>. 
+<source>Cancers (Basel)</source><year>2018</year>;<volume>10</volume>:<fpage>137</fpage>.<pub-id pub-id-type="pmid">29734788</pub-id>
+</mixed-citation>
+      </ref>
+      <ref id="bib39">
+        <label>39.</label>
+        <mixed-citation publication-type="journal">
+<person-group person-group-type="author">
+<string-name>
+<surname>Sivakumar</surname>
+<given-names>S</given-names>
+</string-name>, <string-name><surname>Moore</surname><given-names>JA</given-names></string-name>, <string-name><surname>Montesion</surname><given-names>M</given-names></string-name>, <string-name><surname>Sharaf</surname><given-names>R</given-names></string-name>, <string-name><surname>Lin</surname><given-names>DI</given-names></string-name>, <string-name><surname>Colón</surname><given-names>CI</given-names></string-name>, 
+<etal/></person-group>. <article-title>Integrative analysis of a large real-world cohort of small cell lung cancer identifies distinct genetic subtypes and insights into histologic transformation</article-title>. 
+<source>Cancer Discov</source><year>2023</year>;<volume>13</volume>:<fpage>1572</fpage>–<lpage>91</lpage>.<pub-id pub-id-type="pmid">37062002</pub-id>
+</mixed-citation>
+      </ref>
+      <ref id="bib40">
+        <label>40.</label>
+        <mixed-citation publication-type="journal">
+<person-group person-group-type="author">
+<string-name>
+<surname>Carney</surname>
+<given-names>DN</given-names>
+</string-name>, <string-name><surname>Gazdar</surname><given-names>AF</given-names></string-name>, <string-name><surname>Bepler</surname><given-names>G</given-names></string-name>, <string-name><surname>Guccion</surname><given-names>JG</given-names></string-name>, <string-name><surname>Marangos</surname><given-names>PJ</given-names></string-name>, <string-name><surname>Moody</surname><given-names>TW</given-names></string-name>, 
+<etal/></person-group>. <article-title>Establishment and identification of small cell lung cancer cell lines having classic and variant features</article-title>. 
+<source>Cancer Res</source><year>1985</year>;<volume>45</volume>:<fpage>2913</fpage>–<lpage>23</lpage>.<pub-id pub-id-type="pmid">2985257</pub-id>
+</mixed-citation>
+      </ref>
+      <ref id="bib41">
+        <label>41.</label>
+        <mixed-citation publication-type="journal">
+<person-group person-group-type="author">
+<string-name>
+<surname>Ito</surname>
+<given-names>T</given-names>
+</string-name>, <string-name><surname>Matsubara</surname><given-names>D</given-names></string-name>, <string-name><surname>Tanaka</surname><given-names>I</given-names></string-name>, <string-name><surname>Makiya</surname><given-names>K</given-names></string-name>, <string-name><surname>Tanei</surname><given-names>Z</given-names></string-name>, <string-name><surname>Kumagai</surname><given-names>Y</given-names></string-name>, 
+<etal/></person-group>. <article-title>Loss of YAP1 defines neuroendocrine differentiation of lung tumors</article-title>. 
+<source>Cancer Sci</source><year>2016</year>;<volume>107</volume>:<fpage>1527</fpage>–<lpage>38</lpage>.<pub-id pub-id-type="pmid">27418196</pub-id>
+</mixed-citation>
+      </ref>
+      <ref id="bib42">
+        <label>42.</label>
+        <mixed-citation publication-type="journal">
+<person-group person-group-type="author">
+<string-name>
+<surname>Shue</surname>
+<given-names>YT</given-names>
+</string-name>, <string-name><surname>Drainas</surname><given-names>AP</given-names></string-name>, <string-name><surname>Li</surname><given-names>NY</given-names></string-name>, <string-name><surname>Pearsall</surname><given-names>SM</given-names></string-name>, <string-name><surname>Morgan</surname><given-names>D</given-names></string-name>, <string-name><surname>Sinnott-Armstrong</surname><given-names>N</given-names></string-name>, 
+<etal/></person-group>. <article-title>A conserved YAP/Notch/REST network controls the neuroendocrine cell fate in the lungs</article-title>. 
+<source>Nat Commun</source><year>2022</year>;<volume>13</volume>:<fpage>2690</fpage>.<pub-id pub-id-type="pmid">35577801</pub-id>
+</mixed-citation>
+      </ref>
+      <ref id="bib43">
+        <label>43.</label>
+        <mixed-citation publication-type="journal">
+<person-group person-group-type="author">
+<string-name>
+<surname>Fousek</surname>
+<given-names>K</given-names>
+</string-name>, <string-name><surname>Horn</surname><given-names>LA</given-names></string-name>, <string-name><surname>Qin</surname><given-names>H</given-names></string-name>, <string-name><surname>Dahut</surname><given-names>M</given-names></string-name>, <string-name><surname>Iida</surname><given-names>M</given-names></string-name>, <string-name><surname>Yacubovich</surname><given-names>D</given-names></string-name>, 
+<etal/></person-group>. <article-title>An interleukin-15 superagonist enables antitumor efficacy of natural killer cells against all molecular variants of SCLC</article-title>. 
+<source>J Thorac Oncol</source><year>2023</year>;<volume>18</volume>:<fpage>350</fpage>–<lpage>68</lpage>.<pub-id pub-id-type="pmid">36410696</pub-id>
+</mixed-citation>
+      </ref>
+      <ref id="bib44">
+        <label>44.</label>
+        <mixed-citation publication-type="journal">
+<person-group person-group-type="author">
+<string-name>
+<surname>Kelly</surname>
+<given-names>MP</given-names>
+</string-name>, <string-name><surname>Jungbluth</surname><given-names>AA</given-names></string-name>, <string-name><surname>Wu</surname><given-names>B-W</given-names></string-name>, <string-name><surname>Bomalaski</surname><given-names>J</given-names></string-name>, <string-name><surname>Old</surname><given-names>LJ</given-names></string-name>, <string-name><surname>Ritter</surname><given-names>G</given-names></string-name></person-group>. <article-title>Arginine deiminase PEG20 inhibits growth of small cell lung cancers lacking expression of argininosuccinate synthetase</article-title>. 
+<source>Br J Cancer</source><year>2012</year>;<volume>106</volume>:<fpage>324</fpage>–<lpage>32</lpage>.<pub-id pub-id-type="pmid">22134507</pub-id>
+</mixed-citation>
+      </ref>
+      <ref id="bib45">
+        <label>45.</label>
+        <mixed-citation publication-type="journal">
+<person-group person-group-type="author">
+<string-name>
+<surname>Helfrich</surname>
+<given-names>BA</given-names>
+</string-name>, <string-name><surname>Kim</surname><given-names>J</given-names></string-name>, <string-name><surname>Gao</surname><given-names>D</given-names></string-name>, <string-name><surname>Chan</surname><given-names>DC</given-names></string-name>, <string-name><surname>Zhang</surname><given-names>Z</given-names></string-name>, <string-name><surname>Tan</surname><given-names>A-C</given-names></string-name>, 
+<etal/></person-group>. <article-title>Barasertib (AZD1152), a small molecule Aurora B inhibitor, inhibits the growth of SCLC cell lines in vitro and in vivo</article-title>. 
+<source>Mol Cancer Ther</source><year>2016</year>;<volume>15</volume>:<fpage>2314</fpage>–<lpage>22</lpage>.<pub-id pub-id-type="pmid">27496133</pub-id>
+</mixed-citation>
+      </ref>
+      <ref id="bib46">
+        <label>46.</label>
+        <mixed-citation publication-type="journal">
+<person-group person-group-type="author">
+<string-name>
+<surname>Hsu</surname>
+<given-names>W-H</given-names>
+</string-name>, <string-name><surname>Zhao</surname><given-names>X</given-names></string-name>, <string-name><surname>Zhu</surname><given-names>J</given-names></string-name>, <string-name><surname>Kim</surname><given-names>I-K</given-names></string-name>, <string-name><surname>Rao</surname><given-names>G</given-names></string-name>, <string-name><surname>McCutcheon</surname><given-names>J</given-names></string-name>, 
+<etal/></person-group>. <article-title>Checkpoint kinase 1 inhibition enhances cisplatin cytotoxicity and overcomes cisplatin resistance in SCLC by promoting mitotic cell death</article-title>. 
+<source>J Thorac Oncol</source><year>2019</year>;<volume>14</volume>:<fpage>1032</fpage>–<lpage>45</lpage>.<pub-id pub-id-type="pmid">30771522</pub-id>
+</mixed-citation>
+      </ref>
+      <ref id="bib47">
+        <label>47.</label>
+        <mixed-citation publication-type="journal">
+<person-group person-group-type="author">
+<string-name>
+<surname>Wildey</surname>
+<given-names>G</given-names>
+</string-name>, <string-name><surname>Shay</surname><given-names>AM</given-names></string-name>, <string-name><surname>McColl</surname><given-names>KS</given-names></string-name>, <string-name><surname>Yoon</surname><given-names>S</given-names></string-name>, <string-name><surname>Shatat</surname><given-names>MA</given-names></string-name>, <string-name><surname>Perwez</surname><given-names>A</given-names></string-name>, 
+<etal/></person-group>. <article-title>Retinoblastoma expression and targeting by CDK4/6 inhibitors in small cell lung cancer</article-title>. 
+<source>Mol Cancer Ther</source><year>2023</year>;<volume>22</volume>:<fpage>264</fpage>–<lpage>73</lpage>.<pub-id pub-id-type="pmid">36399634</pub-id>
+</mixed-citation>
+      </ref>
+      <ref id="bib48">
+        <label>48.</label>
+        <mixed-citation publication-type="journal">
+<person-group person-group-type="author">
+<string-name>
+<surname>Guo</surname>
+<given-names>C</given-names>
+</string-name>, <string-name><surname>Wan</surname><given-names>R</given-names></string-name>, <string-name><surname>He</surname><given-names>Y</given-names></string-name>, <string-name><surname>Lin</surname><given-names>S-H</given-names></string-name>, <string-name><surname>Cao</surname><given-names>J</given-names></string-name>, <string-name><surname>Qiu</surname><given-names>Y</given-names></string-name>, 
+<etal/></person-group>. <article-title>Therapeutic targeting of the mevalonate–geranylgeranyl diphosphate pathway with statins overcomes chemotherapy resistance in small cell lung cancer</article-title>. 
+<source>Nat Cancer</source><year>2022</year>;<volume>3</volume>:<fpage>614</fpage>–<lpage>28</lpage>.<pub-id pub-id-type="pmid">35449308</pub-id>
+</mixed-citation>
+      </ref>
+      <ref id="bib49">
+        <label>49.</label>
+        <mixed-citation publication-type="journal">
+<person-group person-group-type="author">
+<string-name>
+<surname>Henon</surname>
+<given-names>C</given-names>
+</string-name>, <string-name><surname>Blay</surname><given-names>J-Y</given-names></string-name>, <string-name><surname>Massard</surname><given-names>C</given-names></string-name>, <string-name><surname>Mir</surname><given-names>O</given-names></string-name>, <string-name><surname>Bahleda</surname><given-names>R</given-names></string-name>, <string-name><surname>Dumont</surname><given-names>S</given-names></string-name>, 
+<etal/></person-group>. <article-title>Long lasting major response to pembrolizumab in a thoracic malignant rhabdoid-like SMARCA4-deficient tumor</article-title>. 
+<source>Ann Oncol</source><year>2019</year>;<volume>30</volume>:<fpage>1401</fpage>–<lpage>3</lpage>.<pub-id pub-id-type="pmid">31114851</pub-id>
+</mixed-citation>
+      </ref>
+      <ref id="bib50">
+        <label>50.</label>
+        <mixed-citation publication-type="journal">
+<person-group person-group-type="author">
+<string-name>
+<surname>Iijima</surname>
+<given-names>Y</given-names>
+</string-name>, <string-name><surname>Sakakibara</surname><given-names>R</given-names></string-name>, <string-name><surname>Ishizuka</surname><given-names>M</given-names></string-name>, <string-name><surname>Honda</surname><given-names>T</given-names></string-name>, <string-name><surname>Shirai</surname><given-names>T</given-names></string-name>, <string-name><surname>Okamoto</surname><given-names>T</given-names></string-name>, 
+<etal/></person-group>. <article-title>Notable response to nivolumab during the treatment of SMARCA4-deficient thoracic sarcoma: a case report</article-title>. 
+<source>Immunotherapy</source><year>2020</year>;<volume>12</volume>:<fpage>563</fpage>–<lpage>9</lpage>.<pub-id pub-id-type="pmid">32363992</pub-id>
+</mixed-citation>
+      </ref>
+      <ref id="bib51">
+        <label>51.</label>
+        <mixed-citation publication-type="journal">
+<person-group person-group-type="author">
+<string-name>
+<surname>Xue</surname>
+<given-names>Y</given-names>
+</string-name>, <string-name><surname>Meehan</surname><given-names>B</given-names></string-name>, <string-name><surname>Fu</surname><given-names>Z</given-names></string-name>, <string-name><surname>Wang</surname><given-names>XQD</given-names></string-name>, <string-name><surname>Fiset</surname><given-names>PO</given-names></string-name>, <string-name><surname>Rieker</surname><given-names>R</given-names></string-name>, 
+<etal/></person-group>. <article-title>SMARCA4 loss is synthetic lethal with CDK4/6 inhibition in non-small cell lung cancer</article-title>. 
+<source>Nat Commun</source><year>2019</year>;<volume>10</volume>:<fpage>1</fpage>–<lpage>13</lpage>.<pub-id pub-id-type="pmid">30602773</pub-id>
+</mixed-citation>
+      </ref>
+      <ref id="bib52">
+        <label>52.</label>
+        <mixed-citation publication-type="journal">
+<person-group person-group-type="author">
+<string-name>
+<surname>Xue</surname>
+<given-names>Y</given-names>
+</string-name>, <string-name><surname>Meehan</surname><given-names>B</given-names></string-name>, <string-name><surname>Macdonald</surname><given-names>E</given-names></string-name>, <string-name><surname>Venneti</surname><given-names>S</given-names></string-name>, <string-name><surname>Wang</surname><given-names>XQD</given-names></string-name>, <string-name><surname>Witkowski</surname><given-names>L</given-names></string-name>, 
+<etal/></person-group>. <article-title>CDK4/6 inhibitors target SMARCA4-determined cyclin D1 deficiency in hypercalcemic small cell carcinoma of the ovary</article-title>. 
+<source>Nat Commun</source><year>2019</year>;<volume>10</volume>:<fpage>558</fpage>.<pub-id pub-id-type="pmid">30718512</pub-id>
+</mixed-citation>
+      </ref>
+      <ref id="bib53">
+        <label>53.</label>
+        <mixed-citation publication-type="journal">
+<person-group person-group-type="author">
+<string-name>
+<surname>Shi</surname>
+<given-names>L</given-names>
+</string-name>, <string-name><surname>Lin</surname><given-names>L</given-names></string-name>, <string-name><surname>Ding</surname><given-names>Y</given-names></string-name>, <string-name><surname>Zeng</surname><given-names>Y</given-names></string-name>, <string-name><surname>Chen</surname><given-names>X</given-names></string-name></person-group>. <article-title>Case report: a rapid response to immunotherapy in a thoracic SMARCA4-deficient undifferentiated tumor with respiratory failure</article-title>. 
+<source>Front Oncol</source><year>2022</year>;<volume>12</volume>:<fpage>1020875</fpage>.<pub-id pub-id-type="pmid">36452500</pub-id>
+</mixed-citation>
+      </ref>
+      <ref id="bib54">
+        <label>54.</label>
+        <mixed-citation publication-type="journal">
+<person-group person-group-type="author">
+<string-name>
+<surname>Kunimasa</surname>
+<given-names>K</given-names>
+</string-name>, <string-name><surname>Okami</surname><given-names>J</given-names></string-name>, <string-name><surname>Takenaka</surname><given-names>S</given-names></string-name>, <string-name><surname>Honma</surname><given-names>K</given-names></string-name>, <string-name><surname>Kukita</surname><given-names>Y</given-names></string-name>, <string-name><surname>Nagata</surname><given-names>S</given-names></string-name>, 
+<etal/></person-group>. <article-title>Conversion surgery for advanced thoracic SMARCA4-deficient undifferentiated tumor with atezolizumab in combination with bevacizumab, paclitaxel, and carboplatin treatment: a case report</article-title>. 
+<source>JTO Clin Res Rep</source><year>2021</year>;<volume>2</volume>:<fpage>100235</fpage>.<pub-id pub-id-type="pmid">34746887</pub-id>
+</mixed-citation>
+      </ref>
+    </ref-list>
+  </back>
+</article>
+</pmc-articleset>
