@@ -1,0 +1,236 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE pmc-articleset PUBLIC "-//NLM//DTD ARTICLE SET 2.0//EN" "https://dtd.nlm.nih.gov/ncbi/pmc/articleset/nlm-articleset-2.0.dtd">
+<pmc-articleset><article xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:mml="http://www.w3.org/1998/Math/MathML" article-type="research-article">
+  <!--The publisher of this article does not allow downloading of the full text in XML form.-->
+  <?properties manuscript?>
+  <front>
+    <journal-meta>
+      <journal-id journal-id-type="nlm-journal-id">101130617</journal-id>
+      <journal-id journal-id-type="pubmed-jr-id">29778</journal-id>
+      <journal-id journal-id-type="nlm-ta">Cancer Cell</journal-id>
+      <journal-id journal-id-type="iso-abbrev">Cancer Cell</journal-id>
+      <journal-title-group>
+        <journal-title>Cancer cell</journal-title>
+      </journal-title-group>
+      <issn pub-type="ppub">1535-6108</issn>
+      <issn pub-type="epub">1878-3686</issn>
+    </journal-meta>
+    <article-meta>
+      <article-id pub-id-type="pmid">28196596</article-id>
+      <article-id pub-id-type="pmc">5313262</article-id>
+      <article-id pub-id-type="doi">10.1016/j.ccell.2017.01.006</article-id>
+      <article-id pub-id-type="manuscript">NIHMS845798</article-id>
+      <article-categories>
+        <subj-group subj-group-type="heading">
+          <subject>Article</subject>
+        </subj-group>
+      </article-categories>
+      <title-group>
+        <article-title>Chemosensitive relapse in small cell lung cancer proceeds through an EZH2-SLFN11 axis</article-title>
+      </title-group>
+      <contrib-group>
+        <contrib contrib-type="author">
+          <name>
+            <surname>Gardner</surname>
+            <given-names>Eric E.</given-names>
+          </name>
+          <xref ref-type="aff" rid="A1">1</xref>
+          <xref ref-type="aff" rid="A2">2</xref>
+        </contrib>
+        <contrib contrib-type="author">
+          <name>
+            <surname>Lok</surname>
+            <given-names>Benjamin H.</given-names>
+          </name>
+          <xref ref-type="aff" rid="A2">2</xref>
+          <xref ref-type="aff" rid="A3">3</xref>
+        </contrib>
+        <contrib contrib-type="author">
+          <name>
+            <surname>Schneeberger</surname>
+            <given-names>Valentina E.</given-names>
+          </name>
+          <xref ref-type="aff" rid="A2">2</xref>
+        </contrib>
+        <contrib contrib-type="author">
+          <name>
+            <surname>Desmeules</surname>
+            <given-names>Patrice</given-names>
+          </name>
+          <xref ref-type="aff" rid="A4">4</xref>
+        </contrib>
+        <contrib contrib-type="author">
+          <name>
+            <surname>Miles</surname>
+            <given-names>Linde A.</given-names>
+          </name>
+          <xref ref-type="aff" rid="A2">2</xref>
+        </contrib>
+        <contrib contrib-type="author">
+          <name>
+            <surname>Arnold</surname>
+            <given-names>Paige K.</given-names>
+          </name>
+          <xref ref-type="aff" rid="A5">5</xref>
+        </contrib>
+        <contrib contrib-type="author">
+          <name>
+            <surname>Ni</surname>
+            <given-names>Andy</given-names>
+          </name>
+          <xref ref-type="aff" rid="A6">6</xref>
+        </contrib>
+        <contrib contrib-type="author">
+          <name>
+            <surname>Khodos</surname>
+            <given-names>Inna</given-names>
+          </name>
+          <xref ref-type="aff" rid="A7">7</xref>
+        </contrib>
+        <contrib contrib-type="author">
+          <name>
+            <surname>de Stanchina</surname>
+            <given-names>Elisa</given-names>
+          </name>
+          <xref ref-type="aff" rid="A2">2</xref>
+          <xref ref-type="aff" rid="A7">7</xref>
+        </contrib>
+        <contrib contrib-type="author">
+          <name>
+            <surname>Nguyen</surname>
+            <given-names>Thuyen</given-names>
+          </name>
+          <xref ref-type="aff" rid="A8">8</xref>
+        </contrib>
+        <contrib contrib-type="author">
+          <name>
+            <surname>Sage</surname>
+            <given-names>Julien</given-names>
+          </name>
+          <xref ref-type="aff" rid="A8">8</xref>
+        </contrib>
+        <contrib contrib-type="author">
+          <name>
+            <surname>Campbell</surname>
+            <given-names>John E.</given-names>
+          </name>
+          <xref ref-type="aff" rid="A9">9</xref>
+        </contrib>
+        <contrib contrib-type="author">
+          <name>
+            <surname>Ribich</surname>
+            <given-names>Scott</given-names>
+          </name>
+          <xref ref-type="aff" rid="A9">9</xref>
+        </contrib>
+        <contrib contrib-type="author">
+          <name>
+            <surname>Rekhtman</surname>
+            <given-names>Natasha</given-names>
+          </name>
+          <xref ref-type="aff" rid="A4">4</xref>
+        </contrib>
+        <contrib contrib-type="author">
+          <name>
+            <surname>Dowlati</surname>
+            <given-names>Afshin</given-names>
+          </name>
+          <xref ref-type="aff" rid="A10">10</xref>
+        </contrib>
+        <contrib contrib-type="author">
+          <name>
+            <surname>Massion</surname>
+            <given-names>Pierre P.</given-names>
+          </name>
+          <xref ref-type="aff" rid="A11">11</xref>
+        </contrib>
+        <contrib contrib-type="author">
+          <name>
+            <surname>Rudin</surname>
+            <given-names>Charles M.</given-names>
+          </name>
+          <xref ref-type="aff" rid="A2">2</xref>
+          <xref ref-type="aff" rid="A12">12</xref>
+          <xref ref-type="aff" rid="A13">13</xref>
+          <xref ref-type="corresp" rid="cor1">*</xref>
+        </contrib>
+        <contrib contrib-type="author">
+          <name>
+            <surname>Poirier</surname>
+            <given-names>John T.</given-names>
+          </name>
+          <xref ref-type="aff" rid="A2">2</xref>
+          <xref ref-type="aff" rid="A12">12</xref>
+          <xref ref-type="aff" rid="A13">13</xref>
+          <xref ref-type="corresp" rid="cor1">*</xref>
+        </contrib>
+      </contrib-group>
+      <aff id="A1"><label>1</label>Pharmacology Graduate Training Program, Department of Pharmacology and Molecular Sciences, Johns Hopkins University, Baltimore, MD</aff>
+      <aff id="A2"><label>2</label>Molecular Pharmacology Program, Memorial Sloan Kettering Cancer Center, New York, NY</aff>
+      <aff id="A3"><label>3</label>Department of Radiation Oncology, Memorial Sloan Kettering Cancer Center, New York, NY</aff>
+      <aff id="A4"><label>4</label>Department of Pathology, Memorial Sloan Kettering Cancer Center, New York, NY</aff>
+      <aff id="A5"><label>5</label>Louis V. Gerstner, Jr., Graduate School of Biomedical Sciences, Memorial Sloan Kettering Cancer Center, New York, NY</aff>
+      <aff id="A6"><label>6</label>Department of Epidemiology and Biostatistics, Memorial Sloan Kettering Cancer Center, New York, NY</aff>
+      <aff id="A7"><label>7</label>Anti-Tumor Assessment Core Facility, Memorial Sloan Kettering Cancer Center, New York, NY</aff>
+      <aff id="A8"><label>8</label>Departments of Pediatrics and Genetics, Stanford University, Stanford, CA</aff>
+      <aff id="A9"><label>9</label>Epizyme, Inc., 400 Technology Square, Cambridge, MA</aff>
+      <aff id="A10"><label>10</label>Case Western Reserve University and University Hospitals Case Medical Center, Cleveland, OH</aff>
+      <aff id="A11"><label>11</label>Vanderbilt Ingram Cancer Center, Vanderbilt University Medical Center, Nashville, TN</aff>
+      <aff id="A12"><label>12</label>Weill Cornell Medical College, New York, NY</aff>
+      <aff id="A13"><label>13</label>Department of Medicine, Memorial Sloan Kettering Cancer Center, New York, NY</aff>
+      <author-notes>
+        <corresp id="cor1"><label>*</label><bold>Correspondence:</bold><email>rudinc@mskcc.org</email> (C.M.R.), <email>poirierj@mskcc.org</email> (J.T.P.)<sup><xref ref-type="author-notes" rid="FN1">1</xref></sup></corresp>
+        <fn id="FN1">
+          <label>1</label>
+          <p id="P1">Lead contact: <email>poirierj@mskcc.org</email></p>
+        </fn>
+      </author-notes>
+      <pub-date pub-type="nihms-submitted">
+        <day>27</day>
+        <month>1</month>
+        <year>2017</year>
+      </pub-date>
+      <pub-date pub-type="ppub">
+        <day>13</day>
+        <month>2</month>
+        <year>2017</year>
+      </pub-date>
+      <pub-date pub-type="pmc-release">
+        <day>13</day>
+        <month>2</month>
+        <year>2018</year>
+      </pub-date>
+      <volume>31</volume>
+      <issue>2</issue>
+      <fpage>286</fpage>
+      <lpage>299</lpage>
+      <!--elocation-id from pubmed: 10.1016/j.ccell.2017.01.006-->
+      <abstract id="Abs1">
+        <title>SUMMARY</title>
+        <p id="P2">Small cell lung cancer is initially highly responsive to cisplatin and etoposide but in almost every case becomes rapidly chemoresistant, leading to death within one year. We modeled acquired chemoresistance in vivo using a series of patient-derived xenografts to generate paired chemosensitive and chemoresistant cancers. Multiple chemoresistant models demonstrated suppression of <italic>SLFN11</italic>, a factor implicated in DNA damage repair deficiency. In vivo silencing of <italic>SLFN11</italic> was associated with marked deposition of H3K27me3, a histone modification placed by EZH2, within the gene body of <italic>SLFN11</italic>, inducing local chromatin condensation and gene silencing. Inclusion of an EZH2 inhibitor with standard cytotoxic therapies prevented emergence of acquired resistance and augmented chemotherapeutic efficacy in both chemosensitive and chemoresistant models of small cell lung cancer.</p>
+      </abstract>
+      <abstract abstract-type="graphical" id="Abs2">
+        <title>Graphical abstract</title>
+        <p id="P3">
+          <graphic xlink:href="nihms845798f8.jpg" position="anchor" orientation="portrait"/>
+        </p>
+      </abstract>
+      <abstract abstract-type="toc" id="Abs3">
+        <title>eTOC blurb/In brief</title>
+        <p id="P4">By generating paired chemonaive and chemoresistant small cell lung cancer (SCLC) patient derived xenograft models, Gardner et al. find that EZH2 promotes chemoresistance by epigenetically silencing <italic>SLFN11</italic>. EZH2 inhibition prevents acquisition of chemoresistance and improves chemotherapeutic efficacy in SCLC.</p>
+      </abstract>
+      <kwd-group>
+        <kwd>small cell lung cancer</kwd>
+        <kwd>EZH2</kwd>
+        <kwd>acquired resistance</kwd>
+        <kwd>SLFN11</kwd>
+        <kwd>TWIST1</kwd>
+        <kwd>patient-derived xenograft</kwd>
+        <kwd>EPZ011989</kwd>
+        <kwd>cisplatin</kwd>
+        <kwd>etoposide</kwd>
+      </kwd-group>
+    </article-meta>
+  </front>
+</article>
+</pmc-articleset>

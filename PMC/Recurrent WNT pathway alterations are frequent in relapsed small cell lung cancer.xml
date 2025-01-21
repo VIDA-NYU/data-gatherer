@@ -1,0 +1,1923 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE pmc-articleset PUBLIC "-//NLM//DTD ARTICLE SET 2.0//EN" "https://dtd.nlm.nih.gov/ncbi/pmc/articleset/nlm-articleset-2.0.dtd">
+<pmc-articleset><article xmlns:mml="http://www.w3.org/1998/Math/MathML" xmlns:xlink="http://www.w3.org/1999/xlink" article-type="research-article">
+  <?properties open_access?>
+  <front>
+    <journal-meta>
+      <journal-id journal-id-type="nlm-ta">Nat Commun</journal-id>
+      <journal-id journal-id-type="iso-abbrev">Nat Commun</journal-id>
+      <journal-title-group>
+        <journal-title>Nature Communications</journal-title>
+      </journal-title-group>
+      <issn pub-type="epub">2041-1723</issn>
+      <publisher>
+        <publisher-name>Nature Publishing Group UK</publisher-name>
+        <publisher-loc>London</publisher-loc>
+      </publisher>
+    </journal-meta>
+    <article-meta>
+      <article-id pub-id-type="pmid">30224629</article-id>
+      <article-id pub-id-type="pmc">6141466</article-id>
+      <article-id pub-id-type="publisher-id">6162</article-id>
+      <article-id pub-id-type="doi">10.1038/s41467-018-06162-9</article-id>
+      <article-categories>
+        <subj-group subj-group-type="heading">
+          <subject>Article</subject>
+        </subj-group>
+      </article-categories>
+      <title-group>
+        <article-title>Recurrent WNT pathway alterations are frequent in relapsed small cell lung cancer</article-title>
+      </title-group>
+      <contrib-group>
+        <contrib contrib-type="author" equal-contrib="yes">
+          <contrib-id contrib-id-type="orcid">http://orcid.org/0000-0002-2502-8961</contrib-id>
+          <name>
+            <surname>Wagner</surname>
+            <given-names>Alex H.</given-names>
+          </name>
+          <xref ref-type="aff" rid="Aff1">1</xref>
+        </contrib>
+        <contrib contrib-type="author" equal-contrib="yes">
+          <name>
+            <surname>Devarakonda</surname>
+            <given-names>Siddhartha</given-names>
+          </name>
+          <xref ref-type="aff" rid="Aff2">2</xref>
+          <xref ref-type="aff" rid="Aff3">3</xref>
+        </contrib>
+        <contrib contrib-type="author">
+          <name>
+            <surname>Skidmore</surname>
+            <given-names>Zachary L.</given-names>
+          </name>
+          <xref ref-type="aff" rid="Aff1">1</xref>
+        </contrib>
+        <contrib contrib-type="author">
+          <contrib-id contrib-id-type="orcid">http://orcid.org/0000-0002-6299-9230</contrib-id>
+          <name>
+            <surname>Krysiak</surname>
+            <given-names>Kilannin</given-names>
+          </name>
+          <xref ref-type="aff" rid="Aff1">1</xref>
+          <xref ref-type="aff" rid="Aff2">2</xref>
+        </contrib>
+        <contrib contrib-type="author">
+          <contrib-id contrib-id-type="orcid">http://orcid.org/0000-0003-3799-809X</contrib-id>
+          <name>
+            <surname>Ramu</surname>
+            <given-names>Avinash</given-names>
+          </name>
+          <xref ref-type="aff" rid="Aff1">1</xref>
+        </contrib>
+        <contrib contrib-type="author">
+          <name>
+            <surname>Trani</surname>
+            <given-names>Lee</given-names>
+          </name>
+          <xref ref-type="aff" rid="Aff1">1</xref>
+        </contrib>
+        <contrib contrib-type="author">
+          <name>
+            <surname>Kunisaki</surname>
+            <given-names>Jason</given-names>
+          </name>
+          <xref ref-type="aff" rid="Aff1">1</xref>
+        </contrib>
+        <contrib contrib-type="author">
+          <name>
+            <surname>Masood</surname>
+            <given-names>Ashiq</given-names>
+          </name>
+          <xref ref-type="aff" rid="Aff2">2</xref>
+          <xref ref-type="aff" rid="Aff3">3</xref>
+          <xref ref-type="aff" rid="Aff9">9</xref>
+        </contrib>
+        <contrib contrib-type="author">
+          <name>
+            <surname>Waqar</surname>
+            <given-names>Saiama N.</given-names>
+          </name>
+          <xref ref-type="aff" rid="Aff2">2</xref>
+          <xref ref-type="aff" rid="Aff3">3</xref>
+        </contrib>
+        <contrib contrib-type="author">
+          <name>
+            <surname>Spies</surname>
+            <given-names>Nicholas C.</given-names>
+          </name>
+          <xref ref-type="aff" rid="Aff1">1</xref>
+        </contrib>
+        <contrib contrib-type="author">
+          <name>
+            <surname>Morgensztern</surname>
+            <given-names>Daniel</given-names>
+          </name>
+          <xref ref-type="aff" rid="Aff2">2</xref>
+          <xref ref-type="aff" rid="Aff3">3</xref>
+        </contrib>
+        <contrib contrib-type="author">
+          <name>
+            <surname>Waligorski</surname>
+            <given-names>Jason</given-names>
+          </name>
+          <xref ref-type="aff" rid="Aff1">1</xref>
+        </contrib>
+        <contrib contrib-type="author">
+          <name>
+            <surname>Ponce</surname>
+            <given-names>Jennifer</given-names>
+          </name>
+          <xref ref-type="aff" rid="Aff1">1</xref>
+        </contrib>
+        <contrib contrib-type="author">
+          <name>
+            <surname>Fulton</surname>
+            <given-names>Robert S.</given-names>
+          </name>
+          <xref ref-type="aff" rid="Aff1">1</xref>
+        </contrib>
+        <contrib contrib-type="author">
+          <name>
+            <surname>Maggi</surname>
+            <given-names>Leonard B.</given-names>
+            <suffix>Jr.</suffix>
+          </name>
+          <xref ref-type="aff" rid="Aff2">2</xref>
+          <xref ref-type="aff" rid="Aff3">3</xref>
+          <xref ref-type="aff" rid="Aff4">4</xref>
+        </contrib>
+        <contrib contrib-type="author">
+          <name>
+            <surname>Weber</surname>
+            <given-names>Jason D.</given-names>
+          </name>
+          <xref ref-type="aff" rid="Aff2">2</xref>
+          <xref ref-type="aff" rid="Aff3">3</xref>
+          <xref ref-type="aff" rid="Aff4">4</xref>
+        </contrib>
+        <contrib contrib-type="author">
+          <name>
+            <surname>Watson</surname>
+            <given-names>Mark A.</given-names>
+          </name>
+          <xref ref-type="aff" rid="Aff3">3</xref>
+        </contrib>
+        <contrib contrib-type="author">
+          <name>
+            <surname>O’Conor</surname>
+            <given-names>Christopher J.</given-names>
+          </name>
+          <xref ref-type="aff" rid="Aff5">5</xref>
+        </contrib>
+        <contrib contrib-type="author">
+          <name>
+            <surname>Ritter</surname>
+            <given-names>Jon H.</given-names>
+          </name>
+          <xref ref-type="aff" rid="Aff5">5</xref>
+        </contrib>
+        <contrib contrib-type="author">
+          <name>
+            <surname>Olsen</surname>
+            <given-names>Rachelle R.</given-names>
+          </name>
+          <xref ref-type="aff" rid="Aff6">6</xref>
+        </contrib>
+        <contrib contrib-type="author">
+          <name>
+            <surname>Cheng</surname>
+            <given-names>Haixia</given-names>
+          </name>
+          <xref ref-type="aff" rid="Aff6">6</xref>
+        </contrib>
+        <contrib contrib-type="author">
+          <name>
+            <surname>Mukhopadhyay</surname>
+            <given-names>Anandaroop</given-names>
+          </name>
+          <xref ref-type="aff" rid="Aff6">6</xref>
+        </contrib>
+        <contrib contrib-type="author">
+          <contrib-id contrib-id-type="orcid">http://orcid.org/0000-0003-0569-5326</contrib-id>
+          <name>
+            <surname>Can</surname>
+            <given-names>Ismail</given-names>
+          </name>
+          <xref ref-type="aff" rid="Aff6">6</xref>
+        </contrib>
+        <contrib contrib-type="author">
+          <name>
+            <surname>Cessna</surname>
+            <given-names>Melissa H.</given-names>
+          </name>
+          <xref ref-type="aff" rid="Aff7">7</xref>
+        </contrib>
+        <contrib contrib-type="author">
+          <name>
+            <surname>Oliver</surname>
+            <given-names>Trudy G.</given-names>
+          </name>
+          <xref ref-type="aff" rid="Aff6">6</xref>
+        </contrib>
+        <contrib contrib-type="author">
+          <name>
+            <surname>Mardis</surname>
+            <given-names>Elaine R.</given-names>
+          </name>
+          <xref ref-type="aff" rid="Aff1">1</xref>
+          <xref ref-type="aff" rid="Aff3">3</xref>
+          <xref ref-type="aff" rid="Aff8">8</xref>
+          <xref ref-type="aff" rid="Aff10">10</xref>
+        </contrib>
+        <contrib contrib-type="author">
+          <name>
+            <surname>Wilson</surname>
+            <given-names>Richard K.</given-names>
+          </name>
+          <xref ref-type="aff" rid="Aff1">1</xref>
+          <xref ref-type="aff" rid="Aff3">3</xref>
+          <xref ref-type="aff" rid="Aff8">8</xref>
+          <xref ref-type="aff" rid="Aff10">10</xref>
+        </contrib>
+        <contrib contrib-type="author" corresp="yes">
+          <name>
+            <surname>Griffith</surname>
+            <given-names>Malachi</given-names>
+          </name>
+          <address>
+            <email>mgriffit@wustl.edu</email>
+          </address>
+          <xref ref-type="aff" rid="Aff1">1</xref>
+          <xref ref-type="aff" rid="Aff2">2</xref>
+          <xref ref-type="aff" rid="Aff3">3</xref>
+          <xref ref-type="aff" rid="Aff8">8</xref>
+        </contrib>
+        <contrib contrib-type="author" corresp="yes">
+          <contrib-id contrib-id-type="orcid">http://orcid.org/0000-0002-0843-4271</contrib-id>
+          <name>
+            <surname>Griffith</surname>
+            <given-names>Obi L.</given-names>
+          </name>
+          <address>
+            <email>obigriffith@wustl.edu</email>
+          </address>
+          <xref ref-type="aff" rid="Aff1">1</xref>
+          <xref ref-type="aff" rid="Aff2">2</xref>
+          <xref ref-type="aff" rid="Aff3">3</xref>
+          <xref ref-type="aff" rid="Aff8">8</xref>
+        </contrib>
+        <contrib contrib-type="author" corresp="yes">
+          <name>
+            <surname>Govindan</surname>
+            <given-names>Ramaswamy</given-names>
+          </name>
+          <address>
+            <email>rgovindan@wustl.edu</email>
+          </address>
+          <xref ref-type="aff" rid="Aff2">2</xref>
+          <xref ref-type="aff" rid="Aff3">3</xref>
+        </contrib>
+        <aff id="Aff1"><label>1</label><institution-wrap><institution-id institution-id-type="ISNI">0000 0001 2355 7002</institution-id><institution-id institution-id-type="GRID">grid.4367.6</institution-id><institution>McDonnell Genome Institute, </institution><institution>Washington University School of Medicine, </institution></institution-wrap>St. Louis, MO 63108 USA </aff>
+        <aff id="Aff2"><label>2</label><institution-wrap><institution-id institution-id-type="ISNI">0000 0001 2355 7002</institution-id><institution-id institution-id-type="GRID">grid.4367.6</institution-id><institution>Division of Oncology, Department of Medicine, </institution><institution>Washington University School of Medicine, </institution></institution-wrap>St. Louis, MO 63110 USA </aff>
+        <aff id="Aff3"><label>3</label><institution-wrap><institution-id institution-id-type="ISNI">0000 0001 2355 7002</institution-id><institution-id institution-id-type="GRID">grid.4367.6</institution-id><institution>Alvin J Siteman Cancer Center, </institution><institution>Washington University, </institution></institution-wrap>St. Louis, MO 63110 USA </aff>
+        <aff id="Aff4"><label>4</label><institution-wrap><institution-id institution-id-type="ISNI">0000 0001 2355 7002</institution-id><institution-id institution-id-type="GRID">grid.4367.6</institution-id><institution>ICCE Institute, </institution><institution>Washington University School of Medicine, </institution></institution-wrap>St. Louis, MO 63110 USA </aff>
+        <aff id="Aff5"><label>5</label><institution-wrap><institution-id institution-id-type="ISNI">0000 0001 2355 7002</institution-id><institution-id institution-id-type="GRID">grid.4367.6</institution-id><institution>Department of Pathology and Immunology, </institution><institution>Washington University School of Medicine, </institution></institution-wrap>St. Louis, MO 63110 USA </aff>
+        <aff id="Aff6"><label>6</label><institution-wrap><institution-id institution-id-type="ISNI">0000 0004 0422 3447</institution-id><institution-id institution-id-type="GRID">grid.479969.c</institution-id><institution>Department of Oncological Sciences, University of Utah, </institution><institution>Huntsman Cancer Institute, </institution></institution-wrap>Salt Lake City, UT 84112 USA </aff>
+        <aff id="Aff7"><label>7</label><institution-wrap><institution-id institution-id-type="ISNI">0000 0004 0460 774X</institution-id><institution-id institution-id-type="GRID">grid.420884.2</institution-id><institution>Intermountain Healthcare BioRepository and Department of Pathology, </institution><institution>Intermountain Healthcare, </institution></institution-wrap>Salt Lake City, UT 84103 USA </aff>
+        <aff id="Aff8"><label>8</label><institution-wrap><institution-id institution-id-type="ISNI">0000 0001 2355 7002</institution-id><institution-id institution-id-type="GRID">grid.4367.6</institution-id><institution>Department of Genetics, </institution><institution>Washington University School of Medicine, </institution></institution-wrap>St. Louis, MO 63110 USA </aff>
+        <aff id="Aff9"><label>9</label><institution-wrap><institution-id institution-id-type="ISNI">0000 0004 0383 1037</institution-id><institution-id institution-id-type="GRID">grid.419820.6</institution-id><institution>Present Address: Saint Luke’s Health System, </institution></institution-wrap>Kansas City, MO USA </aff>
+        <aff id="Aff10"><label>10</label><institution-wrap><institution-id institution-id-type="ISNI">0000 0004 0392 3476</institution-id><institution-id institution-id-type="GRID">grid.240344.5</institution-id><institution>Present Address: Nationwide Children’s Hospital, </institution></institution-wrap>Columbus, OH USA </aff>
+      </contrib-group>
+      <pub-date pub-type="epub">
+        <day>17</day>
+        <month>9</month>
+        <year>2018</year>
+      </pub-date>
+      <pub-date pub-type="pmc-release">
+        <day>17</day>
+        <month>9</month>
+        <year>2018</year>
+      </pub-date>
+      <pub-date pub-type="collection">
+        <year>2018</year>
+      </pub-date>
+      <volume>9</volume>
+      <elocation-id>3787</elocation-id>
+      <history>
+        <date date-type="received">
+          <day>2</day>
+          <month>2</month>
+          <year>2018</year>
+        </date>
+        <date date-type="accepted">
+          <day>13</day>
+          <month>8</month>
+          <year>2018</year>
+        </date>
+      </history>
+      <permissions>
+        <copyright-statement>© The Author(s) 2018</copyright-statement>
+        <license license-type="OpenAccess">
+          <license-p><bold>Open Access</bold> This article is licensed under a Creative Commons Attribution 4.0 International License, which permits use, sharing, adaptation, distribution and reproduction in any medium or format, as long as you give appropriate credit to the original author(s) and the source, provide a link to the Creative Commons license, and indicate if changes were made. The images or other third party material in this article are included in the article’s Creative Commons license, unless indicated otherwise in a credit line to the material. If material is not included in the article’s Creative Commons license and your intended use is not permitted by statutory regulation or exceeds the permitted use, you will need to obtain permission directly from the copyright holder. To view a copy of this license, visit <ext-link ext-link-type="uri" xlink:href="http://creativecommons.org/licenses/by/4.0/">http://creativecommons.org/licenses/by/4.0/</ext-link>.</license-p>
+        </license>
+      </permissions>
+      <abstract id="Abs1">
+        <p id="Par1">Nearly all patients with small cell lung cancer (SCLC) eventually relapse with chemoresistant disease. The molecular mechanisms driving chemoresistance in SCLC remain un-characterized. Here, we describe whole-exome sequencing of paired SCLC tumor samples procured at diagnosis and relapse from 12 patients, and unpaired relapse samples from 18 additional patients. Multiple somatic copy number alterations, including gains in <italic>ABCC1</italic> and deletions in <italic>MYCL, MSH2</italic>, and <italic>MSH6</italic>, are identifiable in relapsed samples. Relapse samples also exhibit recurrent mutations and loss of heterozygosity in regulators of WNT signaling, including <italic>CHD8</italic> and <italic>APC</italic>. Analysis of RNA-sequencing data shows enrichment for an ASCL1-low expression subtype and WNT activation in relapse samples. Activation of WNT signaling in chemosensitive human SCLC cell lines through APC knockdown induces chemoresistance. Additionally, in vitro-derived chemoresistant cell lines demonstrate increased WNT activity. Overall, our results suggest WNT signaling activation as a mechanism of chemoresistance in relapsed SCLC.</p>
+      </abstract>
+      <abstract id="Abs2" abstract-type="web-summary">
+        <p id="Par2">Small cell lung cancer (SCLC) patients frequently relapse and become resistant to chemotherapy. Here, the authors analyse the genomic and transcriptomic landscape of primary and relapsed SCLC patients as well as in vitro models, and discover that activation of WNT signalling can drive chemotherapy resistance.</p>
+      </abstract>
+      <custom-meta-group>
+        <custom-meta>
+          <meta-name>issue-copyright-statement</meta-name>
+          <meta-value>© The Author(s) 2018</meta-value>
+        </custom-meta>
+      </custom-meta-group>
+    </article-meta>
+  </front>
+  <body>
+    <sec id="Sec1" sec-type="introduction">
+      <title>Introduction</title>
+      <p id="Par3">Lung cancer is the leading cause of cancer-related death. Nearly 13% of patients with lung cancer are diagnosed with small cell lung cancer (SCLC)<sup><xref ref-type="bibr" rid="CR1">1</xref></sup>. SCLC is a highly aggressive malignancy that is characterized by a short doubling time and tendency to metastasize early. Although patients with newly diagnosed SCLC often achieve dramatic responses to initial treatment with platinum doublet chemotherapy, most patients relapse with rapidly worsening disease that is resistant to further treatment. The median survival in patients with SCLC is ~7 months, and this has not substantially changed in the past few decades—owing to the lack of effective treatment options for patients with relapsed disease<sup><xref ref-type="bibr" rid="CR2">2</xref></sup>. Therefore, understanding the molecular basis of treatment resistance and identifying therapeutic vulnerabilities is necessary to improve outcomes in patients with relapsed SCLC.</p>
+      <p id="Par4">SCLC is characterized by a variety of genomic alterations and relatively higher mutation rate per megabase (Mb) compared to many other malignancies<sup><xref ref-type="bibr" rid="CR3">3</xref>,<xref ref-type="bibr" rid="CR4">4</xref></sup>, and is associated with heavy tobacco smoking. Comprehensive genomic analyses of human SCLC have shown inactivation of the tumor suppressors <italic>TP53</italic> and <italic>RB1</italic> to be a characteristic feature of this disease<sup><xref ref-type="bibr" rid="CR3">3</xref></sup>. SCLC is a high grade neuroendocrine tumor, and differentiation in SCLC is driven predominantly by the lineage factors ASCL1 and NEUROD1, which play a crucial role in cell survival<sup><xref ref-type="bibr" rid="CR5">5</xref>,<xref ref-type="bibr" rid="CR6">6</xref></sup>. Although subtyping SCLCs based on the lineage survival factor they overexpress is not performed in the clinical setting, ASCL1 and NEURDO1 predominant SCLCs are characterized by significant differences in their genetic and epigenetic profiles. In addition to these alterations, SCLCs also show alterations in pathways that regulate neuroendocrine differentiation (such as NOTCH signaling) and amplifications in oncogenes such as <italic>SOX2</italic>, <italic>MYC, MYCL</italic>, and <italic>MYCN</italic>. While the genomic landscape of treatment-naive SCLC has been well described by different groups, very few samples profiled to date have been obtained from patients with relapsed disease in these studies<sup><xref ref-type="bibr" rid="CR3">3</xref>,<xref ref-type="bibr" rid="CR7">7</xref>–<xref ref-type="bibr" rid="CR9">9</xref></sup>. Therefore, the genomic landscape of relapsed SCLC and the molecular mechanisms that drive chemotherapy resistance in this disease continue to remain poorly defined.</p>
+      <p id="Par5">The primary objective of our study is to understand the molecular mechanisms underlying chemotherapy resistance in patients with relapsed SCLC, as a means to circumvent traditional chemotherapy resistance with novel therapeutic approaches. To this end, we performed whole-exome sequencing (WES) of SCLC tumor samples obtained from 30 patients following relapse (relapse samples). Representative slides from these samples were reviewed and confirmed to be SCLC by two pathologists independently (Supplementary tables <xref rid="MOESM1" ref-type="media">1</xref> and <xref rid="MOESM1" ref-type="media">2</xref>, <xref rid="MOESM4" ref-type="media">Supplementary Data</xref>). Corresponding chemotherapy-naive tumor samples were available for 12 patients (treatment-naive samples). Additionally, we performed tumor RNA-sequencing of samples obtained at relapse from 18 of the 30 patients. Here we highlight the key similarities and differences in the genomic landscape of primary and relapsed SCLCs. We also demonstrate how integrative analysis of RNA and DNA sequencing data from these tumors identify activation of canonical WNT signaling as a likely mechanism of chemotherapy resistance in SCLCs.</p>
+    </sec>
+    <sec id="Sec2" sec-type="results">
+      <title>Results</title>
+      <sec id="Sec3">
+        <title>The mutational landscape of relapsed SCLCs</title>
+        <p id="Par6">Consistent with previously published studies, the total tumor mutation burden (TMB) of single-nucleotide variants (SNVs) and small insertions and deletions (indels) was high for both chemotherapy-naive and relapsed samples, due to the strong association between heavy cigarette smoking and SCLC tumorigenesis<sup><xref ref-type="bibr" rid="CR3">3</xref>,<xref ref-type="bibr" rid="CR4">4</xref>,<xref ref-type="bibr" rid="CR8">8</xref>,<xref ref-type="bibr" rid="CR9">9</xref></sup>. TMB was not significantly different between treatment-naive and relapsed SCLC samples (8.31/Mb [range: 1.50–16.87] vs. 8.37/Mb [range: 1.38–14.04]; <italic>p</italic> = 0.93, unpaired <italic>t-</italic> test). As expected, a single tumor sample obtained from a never-smoker (SCLC17), demonstrated a much lower mutational burden (1.40/Mb in chemotherapy-naive and 1.50/Mb in relapsed samples, respectively). Tumor samples obtained from all patients with a history of smoking were enriched for C &gt; A||G &gt; T transversions, and the samples from SCLC17 contained a lower proportion of C &gt; A transversions. A comparison of the mutation patterns between relapse and treatment-naive samples by deconstructSigs<sup><xref ref-type="bibr" rid="CR10">10</xref></sup> failed to show an enrichment for the pancreatic platinum-response-associated mutation signature in relapse samples (signature 3, Supplementary fig. <xref rid="MOESM1" ref-type="media">1</xref>), possibly owing to the similarity in context between smoking and platinum-associated mutation signatures<sup><xref ref-type="bibr" rid="CR11">11</xref></sup>, and to the overwhelming proportion of smoking-associated mutations across our samples. Consistent with previous observations made from genomes of irradiated tumors, relapse SCLC samples obtained from patients with limited stage SCLC who were treated with radiation (<italic>N</italic> = 14) were enriched for indels when compared to samples that were not irradiated (<italic>N</italic> = 16; <italic>p</italic> = 3.67e−13, unpaired <italic>t-</italic> test)<sup><xref ref-type="bibr" rid="CR12">12</xref></sup>. For two individuals, metastatic sites were sectioned and sequenced, indicating little spatial heterogeneity in mutations within a metastatic site; however, distinct subsets of mutations were identified in samples collected from different metastatic sites within the same patient (Supplementary fig. <xref rid="MOESM1" ref-type="media">2</xref>).</p>
+        <p id="Par7">We observed <italic>TP53</italic> and <italic>RB1</italic> mutations in the majority of treatment-naive (<italic>TP53</italic> in 11 of 12, <italic>RB1</italic> in 10 of 12 patients) and relapse samples (<italic>TP53</italic> in 29 of 30, <italic>RB1</italic> in 21 of 30 patients). Loss of heterozygosity (LoH) of <italic>TP53</italic> was observed in the one sample lacking a detectable <italic>TP53</italic> mutation, and <italic>RB1</italic> LoH was observed in seven of nine samples where no <italic>RB1</italic> mutations were detected. These results are concordant with previous findings that RB1 is likely altered by intronic, epigenetic or large structural rearrangements that are not identifiable by WES in the remaining two treatment-naive samples. Together, 100% and 93% of relapse SCLC samples showed a mutation or LoH in TP53 and RB1 respectively, indicating that alterations in these genes are a characteristic feature of relapsed disease, similar to prior observations of their prevalence in primary SCLCs<sup><xref ref-type="bibr" rid="CR3">3</xref></sup>. Including <italic>TP53</italic> and <italic>RB1</italic>, a total of 30 genes were mutated at a statistically significant level using MuSiC<sup><xref ref-type="bibr" rid="CR13">13</xref></sup> (FDR CT, <italic>Q</italic> &lt; 0.1) when evaluating only relapse SCLC samples (Fig. <xref rid="Fig1" ref-type="fig">1</xref>)<sup><xref ref-type="bibr" rid="CR13">13</xref>,<xref ref-type="bibr" rid="CR14">14</xref></sup>. <italic>COL11A1</italic> (<italic>Q</italic> = 8.06e−07, Supplementary table <xref rid="MOESM1" ref-type="media">3</xref>), which codes for the alpha I chain of type XI collagen, was the most significantly mutated gene (SMG) after <italic>TP53</italic> and <italic>RB1</italic>. COL11A1 is an important component of the extracellular matrix and its dysregulation has been shown to mediate resistance to platinum chemotherapy<sup><xref ref-type="bibr" rid="CR15">15</xref></sup>.<fig id="Fig1"><label>Fig. 1</label><caption><p>Significantly mutated genes in relapsed SCLC. Mutation burdens (mutations/mega-base pair) are displayed on the <italic>x</italic>-axis panel (top), and cohort mutation percentage by gene is displayed on the <italic>y</italic>-axis panel (left). Displayed genes are significantly mutated in relapsed SCLC compared to background mutation rates (FDR &lt; 0.1). Each column represents an individual sample (listed at bottom). Coloring of patient-gene intersection grid denotes mutation type (top legend, center panel) and tumor site (bottom legend, bottom panel). Black dots on sample-gene squares indicate loss of heterozygosity (LoH) of that gene in that sample. TN treatment-naive, R relapsed, LN lymph node, AG adrenal gland, LU lung, BR breast, KI kidney, LI liver</p></caption><graphic xlink:href="41467_2018_6162_Fig1_HTML" id="d29e793"/></fig></p>
+        <p id="Par8">We also observed multiple recurrent somatic copy number alterations in relapsed SCLCs by GISTIC analysis (<italic>Q</italic> &lt; 0.1) (Supplementary table <xref rid="MOESM1" ref-type="media">4</xref>)<sup><xref ref-type="bibr" rid="CR16">16</xref></sup>, some of which are likely to play a crucial role in mediating chemotherapy resistance. Among these was <italic>ABCC1</italic> (<italic>N</italic> = 7), also known as <italic>MRP1</italic> (multidrug resistance-associated protein 1), an ATP-binding cassette membrane protein that transports physiologic substrates and drugs out of the cytoplasm<sup><xref ref-type="bibr" rid="CR17">17</xref></sup>. <italic>ABCC1</italic> mRNA was first isolated from a multi-drug resistant SCLC cell line (H69-AR), where it is upregulated through amplification<sup><xref ref-type="bibr" rid="CR18">18</xref></sup>. We also observed deletions in mismatch repair (MMR) genes <italic>MSH2</italic> (<italic>N</italic> = 5) and <italic>MSH6</italic> (<italic>N</italic> = 5) at a significant level in relapse samples. Treatment-naive samples in our analysis did not show either of these copy number alterations at a significant level. Additionally, <italic>MSH6</italic> mutations were observed only in relapse SCLC samples (<italic>N</italic> = 3), and none of the treatment-naive samples in our cohort. These observations are concordant with previously reported associations between MMR deficiency and cisplatin resistance in ovarian and colon cancer cell lines<sup><xref ref-type="bibr" rid="CR19">19</xref></sup>.</p>
+        <p id="Par9">In addition to our relapsed mutational landscape analysis, we also compared non-synonymous mutation data between patient matched treatment-naive and relapsed sample pairs to identify relapse-acquired mutations. The high background mutation rate of SCLC and limited number of patient-matched paired samples, however, restricted our ability to statistically identify relapse-acquired mutations of interest. We therefore adopted a knowledge-based approach to identify genes of interest. We observed a total of 938 relapse-acquired mutations in 882 genes across the twelve paired samples. From these 882 genes, 603 were altered in relapse samples and none of the treatment-naive samples (Supplementary table <xref rid="MOESM1" ref-type="media">5</xref>). We then stringently filtered our list of 603 genes to only include genes with a known or predicted role in cancer. For this purpose, we utilized a list of 114 genes that were mutated at a statistically significant level across 21 cancer types in The Cancer Genome Atlas (TCGA) pan-cancer analysis (Supplementary table <xref rid="MOESM1" ref-type="media">6</xref>)<sup><xref ref-type="bibr" rid="CR20">20</xref></sup>. Our filtering resulted in the nomination of seven genes—<italic>CHD8, APC, DDX3X, MBD1, RHOA, RUNX1</italic>, and <italic>SMARCA4</italic> as candidates for further analysis. Among these, recurrent mutations were observed in <italic>CHD8</italic> (<italic>N</italic> = 6 of 30 patients), <italic>APC</italic> (<italic>N</italic> = 4), <italic>MBD1</italic> (<italic>N</italic> = 3), and <italic>DDX3X</italic> (<italic>N</italic> = 2).</p>
+      </sec>
+      <sec id="Sec4">
+        <title>Chemotherapy resistance and non-neuroendocrine differentiation</title>
+        <p id="Par10">Due to the striking similarity of the mutational landscape of primary and relapsed SCLCs, we investigated the role of transcriptional changes that may account for acquired chemotherapy resistance. SCLC is a neuroendocrine malignancy with demonstrated dysregulation of neuroendocrine lineage survival factors such as ASCL1 and NEUROD1<sup><xref ref-type="bibr" rid="CR5">5</xref>,<xref ref-type="bibr" rid="CR6">6</xref></sup>. Previous studies of treatment-naive SCLC samples indicated that the majority of these tumors belong to a subtype that overexpresses ASCL1. ASCL1-high cell lines and murine tumors are typically enriched for <italic>MYCL</italic> amplifications or overexpression<sup><xref ref-type="bibr" rid="CR5">5</xref>,<xref ref-type="bibr" rid="CR6">6</xref></sup>. Contrary to what has been observed in treatment-naive SCLCs, we observed deletions encompassing <italic>MYCL</italic> (<italic>N</italic> = 4) at a statistically significant level in relapsed SCLC samples (<italic>Q</italic> &lt; 0.1; Supplementary table <xref rid="MOESM1" ref-type="media">4</xref>). Additionally, RNA-sequencing data showed a higher than expected proportion<sup><xref ref-type="bibr" rid="CR6">6</xref></sup> of ASCL1-low tumors (50% vs. 18%; <italic>p</italic> = 0.01, Fisher’s exact test) in our cohort of relapsed SCLC samples (Fig. <xref rid="Fig2" ref-type="fig">2a</xref>).<fig id="Fig2"><label>Fig. 2</label><caption><p>Relapsed human SCLC samples are enriched for ASCL1-low subtype and show a higher level of WNT activity. <bold>a</bold> Categorization of relapsed SCLC into ASCL1-high (left), NEUROD1-high (right), and ASCL1 and NEUROD1-low (dual negative; center) expression sub-types. Overall, our cohort of relapsed samples was enriched for ASCL1-low samples, when compared to treatment-naive samples that were sequenced in other studies (50% vs. 18%; <italic>p</italic> = 0.01, Fisher’s exact test). Violin plots demonstrating differential ssGSEA enrichment scores between relapsed samples and treatment-naive SCLC samples (George et al.) for <bold>b</bold> ASCL1 (Borromeo et al. signature) and WNT pathway activation using <bold>c</bold> APC upregulated targets from Lin et al. and <bold>d</bold> CTNNB1 oncogenic signature from Bild et al. Gray boxes represent quartiles encompassing the mean (white dot), and whiskers extend to all data points within 1.5 interquartile range (IQR). Individual data points are overlaid as black dots. Unpaired Student’s <italic>t</italic> test was used to calculate two-tailed <italic>p</italic> values. Color scale for <bold>a</bold> increases from blue (low relative expression) to red (high relative expression)</p></caption><graphic xlink:href="41467_2018_6162_Fig2_HTML" id="d29e972"/></fig></p>
+        <p id="Par11">We utilized previously published RNA-sequencing data from 80 treatment-naive SCLC samples<sup><xref ref-type="bibr" rid="CR3">3</xref></sup> to compare their expression profiles to our relapse SCLC samples using the single-sample gene set enrichment analysis (ssGSEA) method<sup><xref ref-type="bibr" rid="CR21">21</xref></sup>. Acknowledging the caveat that any observed differences could be due to a combination of true biological differences and batch effects across studies, we compared ASCL1-driven gene expression (defined by Borromeo et al.<sup><xref ref-type="bibr" rid="CR5">5</xref></sup>) enrichment scores between the 80 treatment-naive and 18 relapsed SCLC samples. This showed significantly lower ssGSEA scores for ASCL1-driven gene expression among relapse samples (<italic>p</italic> &lt; 0.05, unpaired <italic>t-</italic> test) (Fig. <xref rid="Fig2" ref-type="fig">2b</xref>).</p>
+        <p id="Par12">To test this at the protein level, we obtained an independent set of 12 pre-treatment and 10 post-treatment human SCLC samples from patients who received standard platinum chemotherapy. Immunohistochemistry for ASCL1 revealed a significant reduction in ASCL1-positive (ASCL1+) samples post-treatment (from 6 of 12 ASCL1+ pre-treatment to 0 of 10 ASCL1+ post treatment, <italic>p</italic> = 0.0152, Fisher’s exact test; Fig. <xref rid="Fig3" ref-type="fig">3a, b</xref>). Consistent with these data, both <italic>MYCL</italic> and <italic>ASCL1</italic> were downregulated in two independent matched pairs of chemotherapy sensitive and resistant human SCLC cell lines (Fig. <xref rid="Fig3" ref-type="fig">3c</xref>). Collectively, these findings suggest a link between non-neuroendocrine differentiation and chemotherapy resistance in SCLCs. This hypothesis is concordant with in vitro data from other studies that have shown an association between non-neuroendocrine differentiation and chemotherapy resistance in SCLC<sup><xref ref-type="bibr" rid="CR22">22</xref>,<xref ref-type="bibr" rid="CR23">23</xref></sup>.<fig id="Fig3"><label>Fig. 3</label><caption><p>ASCL1 and MYCL are downregulated in post-chemotherapy human SCLC tissue and chemotherapy resistant cell lines. <bold>a</bold> Contingency table with number of chemotherapy naive (pre) and post-chemotherapy (post) SCLC human samples stained with antibodies to ASCL1. <bold>b</bold> Representative IHC for ASCL1 positive staining (brown) and negative staining (blue). Scale bar represents 20 μm. <bold>c</bold> RNA expression (counts) for indicated genes (ASCL1, MYCL) from matched pairs of chemotherapy-naive and resistant human SCLC cell lines performed in biological duplicate and compared using unpaired <italic>t-</italic> tests. H1048 NCI-H1048, P parental cells, CR cisplatin resistant, ECR etoposide and cisplatin resistant, *<italic>p</italic> &lt; 0.05, NS not significant. Error bars are mean ± standard error</p></caption><graphic xlink:href="41467_2018_6162_Fig3_HTML" id="d29e1045"/></fig></p>
+      </sec>
+      <sec id="Sec5">
+        <title>WNT signaling and chemotherapy resistance in SCLC</title>
+        <p id="Par13">Based on our observations that markers of non-neuroendocrine differentiation are linked to chemotherapy resistance, we hypothesized that chemotherapy resistance would be driven by one or more modulators of cellular differentiation. Evaluating our previously identified relapse-acquired genes, we observed that mutations in <italic>APC</italic> and <italic>CHD8</italic> were both mutually exclusive and present in nearly one third of relapse SCLC samples (<italic>N</italic> = 4, 6, respectively; Supplementary fig. <xref rid="MOESM1" ref-type="media">3</xref>). <italic>APC</italic>, which is mutated in several cancers, is a well-established negative regulator of CTNNB1 (β-catenin) and WNT signaling<sup><xref ref-type="bibr" rid="CR24">24</xref></sup>. Similarly, CHD8 inhibits CTNNB1-mediated transcription in the nucleus and is recurrently mutated in prostate and gastric cancers<sup><xref ref-type="bibr" rid="CR25">25</xref>–<xref ref-type="bibr" rid="CR28">28</xref></sup>. Due to the role of WNT signaling in cellular differentiation and in driving treatment resistance in other cancers, we hypothesized that this pathway may play an important role in the acquisition of chemotherapy resistance in relapsed SCLC<sup><xref ref-type="bibr" rid="CR29">29</xref>–<xref ref-type="bibr" rid="CR33">33</xref></sup>. To evaluate this, we examined our data for mutations in other genes of the CTNNB1-mediated (canonical) WNT signaling pathway (Online Methods; Supplementary table <xref rid="MOESM1" ref-type="media">7</xref>). This analysis revealed relapse-acquired mutations in additional genes regulating canonical WNT signaling such as <italic>CSNK1A1</italic>, <italic>HECW1</italic>, <italic>KMT2D</italic>, <italic>TLE2</italic>, <italic>TLE3</italic>, <italic>WNT1</italic>, and <italic>YWHAZ</italic> (Supplementary fig. <xref rid="MOESM1" ref-type="media">3</xref>). Overall, relapse SCLC samples from 24 of 30 patients (80%) contained non-synonymous mutations in genes belonging to canonical WNT signaling that were unaltered in treatment-naive samples, with 6 of 12 (50%) paired samples exhibiting at least one relapse-acquired non-synonymous mutation in this pathway. We also observed highly recurrent LoH in the WNT signaling genes <italic>APC</italic> (<italic>N</italic> = 19; 63% of cohort), <italic>CSNK1A1</italic> (<italic>N</italic> = 20; 67%), and <italic>PSMD6</italic> (<italic>N</italic> = 25; 83%). Based upon these observations, we hypothesized that the level of canonical WNT pathway activation would be significantly higher among relapsed SCLC samples when compared to treatment-naive samples. We found that WNT pathway activation (as defined by gene expression signatures from two independent studies<sup><xref ref-type="bibr" rid="CR34">34</xref>,<xref ref-type="bibr" rid="CR35">35</xref></sup>) showed significantly higher ssGSEA enrichment scores for canonical WNT pathway activity in relapse SCLC samples compared to primary, treatment-naive samples (<italic>p</italic> &lt; 0.0001 for each signature, unpaired <italic>t-</italic> test; Fig. <xref rid="Fig2" ref-type="fig">2c, d</xref>).</p>
+        <p id="Par14">We then performed in vitro analyses to test the hypothesis that WNT activation drives chemotherapy resistance in SCLC by using APC knockdown as a model for WNT activation. Stable APC knockdown through lentiviral delivery of short hairpin RNAs (shRNAs) in the NCI-H1694 cell line (chemotherapy sensitive with wildtype <italic>APC</italic>), led to the activation of canonical WNT signaling and made these cells highly resistant to etoposide (Fig. <xref rid="Fig4" ref-type="fig">4a–c</xref>) and—to a lesser degree—cisplatin (Supplementary fig. <xref rid="MOESM1" ref-type="media">4a, b</xref>). Additionally, these cells could be re-sensitized to chemotherapy following overexpression of a wildtype APC construct lacking untranslated regions (UTRs), in cells stably transfected with a knockdown shRNA construct targeting the 3′ UTR (construct shAPC#2; Fig. <xref rid="Fig4" ref-type="fig">4c</xref> and Supplementary fig. <xref rid="MOESM1" ref-type="media">4c</xref>). We were also able to induce etoposide resistance and activation of WNT signaling through CRISPR–Cas9-guided deletion of <italic>APC</italic> in a different SCLC cell line, H82 (NCI-H82) (Fig. <xref rid="Fig4" ref-type="fig">4d–f</xref>). The extent to which these cells became etoposide resistant was modest in comparison to H1694 cells with APC knockdown, with a 4.3-fold increase in IC50 (Fig. <xref rid="Fig4" ref-type="fig">4f</xref>). Next, to determine the role of <italic>APC</italic> and WNT signaling in the setting of acquired chemotherapy resistance in vitro, we measured WNT activity in human SCLC cell lines DMS53 and NCI-H1048 and their chemotherapy resistant variants derived in culture. Chemotherapy resistant variants of both cell lines showed evidence of increased WNT activity when compared to their chemotherapy sensitive counterparts based on increased levels of CTNNB1 and TCF/LEF (TOPFlash) WNT reporter activity (Supplementary fig. <xref rid="MOESM1" ref-type="media">5</xref>). Furthermore, ingenuity pathway analysis (IPA) of global transcriptomic changes in these matched chemotherapy-sensitive and resistant pairs identified CTNNB1 as a top predicted upstream regulator in resistant samples (<italic>p</italic> = 2.35e−23 and 2.45e−18 for DMS53 and NCI-H1048, respectively, right-tailed Fisher’s exact test).<fig id="Fig4"><label>Fig. 4</label><caption><p>Loss of APC induces chemotherapy resistance in human SCLC cell lines. <bold>a</bold> Left: knockdown of <italic>APC</italic> in H1694 cells with two different shAPC constructs (shAPC#1 and shAPC#2); right: activation of WNT signaling as measured by <italic>AXIN2</italic> upregulation and TOPFlash reporter activity (signal fold changes) in these cells. Control cells expressed shRNA with scrambled target sequence (shScr). APC and AXIN2 mRNA levels were measured by quantitative PCR (qPCR). Fold change is reported with respect to control cells, and values were compared using unpaired <italic>t</italic> tests. Each experiment was performed in biological triplicate (TOPFlash assay results for shAPC#2 are shown from <italic>n</italic> = 5 experiments). <bold>b</bold> Percentage of H1694 cells surviving etoposide following 72-h treatment. <bold>c</bold> Left: fold change in etoposide IC50 following APC knockdown in H1694 cells compared to control cells, and right: fold change in etoposide IC50 in APC knockdown (shAPC#2) cells following overexpression of APC or GFP (control). IC50 values were compared using ratio-paired <italic>t</italic> tests. <bold>d</bold> Results from Surveyor assay demonstrating genomic alterations in <italic>APC</italic> (cleavage products indicated by black bar) following CRISPR–Cas9-guided deletion in H82 <italic>sgAPC</italic> cells and in-frame deletions in <italic>APC</italic> that were identified through targeted sequencing of the APC sgRNA site. <bold>e</bold> WNT activation in H82 <italic>sgAPC</italic> cells as measured by <italic>AXIN2</italic> mRNA levels by qPCR (<italic>p</italic> &lt; 0.01, unpaired <italic>t</italic> test; <italic>n</italic> = 3 biological samples in technical triplicate) and CTNNB1 protein levels by immunoblot (representative of <italic>n</italic> = 2 independent experiments). Actin serves as loading control for CTNNB1. <bold>f</bold> Percentage of H82 cells surviving treatment with etoposide following CRISPR-guided deletion of APC (sgAPC) or control sequence (sgControl) (<italic>n</italic> = 2 experiments). Experiments were performed in biological triplicate, unless specified otherwise. IC50 inhibitory concentration 50, GFP green fluorescent protein, *<italic>p</italic> &lt; 0.05, **<italic>p</italic> &lt; 0.01, ****<italic>p</italic> &lt; 0.0001, NS not significant. Bp base pair, Del deletion, AA amino acid, H1694 NCI-H1694, H82 NCI-H82. Error bars on box plots and dose-response curves are mean ± standard error</p></caption><graphic xlink:href="41467_2018_6162_Fig4_HTML" id="d29e1270"/></fig></p>
+      </sec>
+    </sec>
+    <sec id="Sec6" sec-type="discussion">
+      <title>Discussion</title>
+      <p id="Par15">Results from our study suggest that activation of canonical WNT signaling leads to chemotherapy resistance in SCLC—a finding that has not been previously reported to the best of our knowledge. WNT activation is likely to drive treatment resistance through its effects on apoptosis, DNA repair, expression of drug efflux pumps, cell differentiation, and/or by facilitating immune evasion<sup><xref ref-type="bibr" rid="CR30">30</xref>,<xref ref-type="bibr" rid="CR31">31</xref>,<xref ref-type="bibr" rid="CR36">36</xref>,<xref ref-type="bibr" rid="CR37">37</xref></sup>. We noted alterations in multiple genes that participate in WNT signaling among relapsed tumors, independent of the presence of <italic>APC</italic> or <italic>CHD8</italic> alterations. Similar findings were reported for colorectal cancer by The Cancer Genome Atlas, where tumors harboring <italic>APC</italic> mutations were also found to harbor other WNT pathway alterations<sup><xref ref-type="bibr" rid="CR38">38</xref></sup>. While the biological significance of cancer cells acquiring multiple alterations in the same pathway is unclear and may seem counterintuitive, it is possible that tumor cells select for these alterations to achieve an optimal level of WNT signaling<sup><xref ref-type="bibr" rid="CR39">39</xref></sup>. On the other hand, these alterations could be confined to different subclones within the tumor and represent various mechanisms through which cancer cells activate WNT signaling. We also observed LoH in negative regulators of canonical WNT signaling such as <italic>APC</italic> and <italic>CSNK1A1</italic> in nearly two-thirds of relapse SCLC samples. In conjunction with the high ssGSEA scores for WNT activation among relapse samples, this observation demonstrates that WNT signaling genes are likely to be altered through mechanisms other than non-synonymous mutations, which WES alone is unable to detect. Furthermore, components of the WNT signaling pathway are promiscuous in their interactions and demonstrate a great degree of overlap with other pathways. Therefore, molecular studies of how alterations in WNT signaling affect the net activation of different pathways and a comprehensive analysis of the clonal architecture of tumors employing ultra-deep or single-cell sequencing techniques is likely to shed more light on the precise mechanisms of drug resistance in SCLC.</p>
+      <p id="Par16">A recent study reported by Gardner et al. utilizing human SCLC patient-derived xenografts (PDXs) failed to observe mutational differences between treatment-naive and relapsed SCLCs<sup><xref ref-type="bibr" rid="CR40">40</xref></sup>. EZH2-mediated epigenetic reprogramming that led to the silencing of <italic>SLFN11</italic> was identified as the mechanism driving induced chemotherapy resistance in this study—a finding which we were unable to reproduce, possibly due to a lack of paired primary-relapse gene expression data. Interestingly, another recent analysis by Drapkin et al., reported an association between increased expression of a <italic>MYC</italic> gene signature and chemotherapy resistance in SCLC PDXs derived from biopsy samples and circulating tumor cells, but failed to observe a correlation between <italic>SLFN11</italic> expression and chemotherapy sensitivity<sup><xref ref-type="bibr" rid="CR41">41</xref></sup>. Heterogeneity in mechanisms that drive chemotherapy resistance in SCLC, sample characteristics, and differences in experimental design are likely factors contributing to the observed discrepancies between studies. For instance, since chemotherapy is known to affect immunogenic cell death in cancer cells and WNT signaling plays an important role in shaping tumor-host immune interactions, the utilization of immunodeficient mice for generating PDXs could have influenced the selection pressures acting on grafted tumors following exposure to chemotherapy in these studies<sup><xref ref-type="bibr" rid="CR31">31</xref>,<xref ref-type="bibr" rid="CR42">42</xref></sup>.</p>
+      <p id="Par17">To the best of our knowledge, this is the first study to perform comprehensive molecular characterization of paired human SCLC samples obtained at diagnosis and relapse. We acknowledge the limitations of our study, particularly with regard to small sample size, limited number of matched treatment-naive samples, and lack of RNA-sequencing data from treatment-naive samples. While these factors limit our ability to perform a number of additional informative analyses (e.g., tumor/relapse paired CTNNB1 immunohistochemistry), it is extremely important to consider that patients with relapsed SCLC rarely undergo biopsies that yield enough tissue for high throughput sequencing. Our ability to demonstrate WNT pathway mutations and activation in relapse SCLC samples, and to validate their role in mediating chemotherapy resistance in vitro provide a rationale for studying WNT signaling inhibitors to overcome treatment resistance in SCLC.</p>
+    </sec>
+    <sec id="Sec7">
+      <title>Methods</title>
+      <sec id="Sec8">
+        <title>Primary cohort sample acquisition and processing</title>
+        <p id="Par18">Tumor specimens for whole exome and transcriptome sequencing were obtained from patients diagnosed with SCLC who were treated at the Alvin J Siteman Cancer Center at Washington University School of Medicine. The Human Research Protection Office (HRPO) at the Washington University School of Medicine approved the study. All patients provided informed consent for participation and underwent a biopsy at the time of relapse and pre-treatment biopsy specimens were obtained for the twelve patients for whom a corresponding primary was available. Pathological diagnosis was confirmed by independent review by two pathologists (authors CJO and JHR; images available as <xref rid="MOESM1" ref-type="media">Supplementary Data</xref>). Tumor specimens from multiple metastatic sites at relapse were available for two patients. For these patients, we also identified a single representative sample based upon observed VAFs for called mutations among all specimens from that patient. These representative samples were used in cohort-level analyses to maintain biological independence among tested samples in the cohort. Peripheral blood was used for germline analysis for all patients. Tissues were assigned a code and banked. Patient consenting, sample and data collection and storage were all conducted in compliance with institutional ethical regulations.</p>
+        <p id="Par19">DNA and RNA extractions were performed using Qiagen kits. The DNeasy Blood and Tissue kit was used for DNA isolation from flash frozen (FF) materials. The QIAamp DNA FFPE Tissue or QIAamp DNA Mini kit was used for DNA isolation from FFPE materials. The RNeasy Mini kit was used for RNA isolation from FF materials.</p>
+        <p id="Par20">Specimens were prepared in several batches (work orders) over the course of the study. Reference <xref rid="MOESM1" ref-type="media">Supplementary Tables</xref> Sample Work Orders (Supplementary table <xref rid="MOESM1" ref-type="media">8</xref>) and Work Order Details (Supplementary table <xref rid="MOESM1" ref-type="media">9</xref>) for kits used for library construction and capture methods applied to each sample. Specimens were pooled together pre-capture, 400 ng/sample for a 1.6 μg input for capture. Each pool was sequenced over two lanes of an Illumina HiSeq sequencing instrument.</p>
+      </sec>
+      <sec id="Sec9">
+        <title>Genome alignment and variant calling</title>
+        <p id="Par21">All genomic analyses were managed with the Genome Modeling System (GMS)<sup><xref ref-type="bibr" rid="CR43">43</xref></sup>. Exome sequencing data were aligned to the human reference genome build GRCh37 using bwamem version 0.7.10 with default parameters<sup><xref ref-type="bibr" rid="CR44">44</xref></sup>. Exome alignment models were processed by the GMS Somatic variation pipeline to identify single-nucleotide variants (SNVs), insertions and deletions (indels), and copy number alterations (CNAs)<sup><xref ref-type="bibr" rid="CR43">43</xref></sup>. The union of snv/indel variant calls for each sample were manually reviewed using IGV<sup><xref ref-type="bibr" rid="CR45">45</xref></sup> (Supplementary table <xref rid="MOESM1" ref-type="media">10</xref>). Somatic SNV detection was performed in this pipeline using a combination of SomaticSniper (version 1.0.2)<sup><xref ref-type="bibr" rid="CR46">46</xref></sup>, VarScan (version 2.3.6)<sup><xref ref-type="bibr" rid="CR47">47</xref></sup>, and Strelka (1.0.11)<sup><xref ref-type="bibr" rid="CR48">48</xref></sup>. Somatic small indels were detected by a combination of GATK Somatic Indel Detector (version 5336)<sup><xref ref-type="bibr" rid="CR49">49</xref></sup>, Pindel (version 0.5)<sup><xref ref-type="bibr" rid="CR50">50</xref></sup>, VarScan, and Strelka. Annotation of variants was performed using the GMS transcript variant annotator against a GMS “annotation” build based on Ensembl v74_37 transcripts. SNVs and INDELs were further filtered by removing artifacts found in a panel of 905 normal exomes<sup><xref ref-type="bibr" rid="CR51">51</xref></sup>, removing sites that exceeded 0.1% frequency in the ExAC cohort release v0.2<sup><xref ref-type="bibr" rid="CR52">52</xref></sup>, and then using a bayesian classifier (<ext-link ext-link-type="uri" xlink:href="https://github.com/genome/genome/blob/master/lib/perl/Genome/Model/Tools/Validation/IdentifyOutliers.pm">https://github.com/genome/genome/blob/master/lib/perl/Genome/Model/Tools/Validation/IdentifyOutliers.pm</ext-link>) and retaining variants classified as somatic with a binomial log-likelihood of at least 10 (params: -llr-cutoff 10). Finally, these filtered mutations then underwent manual review with IGV.</p>
+      </sec>
+      <sec id="Sec10">
+        <title>Tumor heterogeneity</title>
+        <p id="Par22">Variant allele frequencies were analyzed using SciClone 1.0.7 to visualize clonality<sup><xref ref-type="bibr" rid="CR53">53</xref></sup>. Variants were visualized and compared with an <italic>ad hoc</italic> R script, available on the paper methods repository for this manuscript (<ext-link ext-link-type="uri" xlink:href="https://github.com/ahwagner/sclc">https://github.com/ahwagner/sclc</ext-link>).</p>
+      </sec>
+      <sec id="Sec11">
+        <title>Mutation signatures</title>
+        <p id="Par23">Mutation signatures were calculated using the deconstructSigs R package<sup><xref ref-type="bibr" rid="CR10">10</xref></sup>. The signatures evaluated were the 30 COSMIC signatures for mutational processes in human cancers (<ext-link ext-link-type="uri" xlink:href="http://cancer.sanger.ac.uk/cosmic/signatures">http://cancer.sanger.ac.uk/cosmic/signatures</ext-link>). A difference of indel counts between limited and extensive stage samples (Supplementary table <xref rid="MOESM1" ref-type="media">1</xref>) was tested by unpaired <italic>t-</italic> test.</p>
+      </sec>
+      <sec id="Sec12">
+        <title>Significantly mutated genes</title>
+        <p id="Par24">SMGs in relapsed samples were identified using MuSiC v0.4<sup><xref ref-type="bibr" rid="CR13">13</xref></sup>. The region of interest file was created using regions annotated as CDS or RNA in Ensembl v74 with 2 bp flank added to contiguous exons in order to retain splice sites. Only relapse and normal samples were used for analysis. For individuals with multiple relapse samples, variants from all relapse samples for that individual were merged, deduplicated and used for analysis. A representative BAM file was also used for coverage calculations for these individuals. The “-merge-concurrent-muts” option was applied, allowing a single individual to only contribute, at most, a single mutation to the total mutation burden of any one gene. All other default parameters were used. The FDR cutoff was based on the convolution test (CT) method.</p>
+      </sec>
+      <sec id="Sec13">
+        <title>Copy number alterations</title>
+        <p id="Par25">Segmentation files and marker files were generated for each sample using existing loss-of-heterozygosity data from genotyping arrays and the correct format was verified by comparison to the example data provided by the documentation. Using these files as input, GISTIC 2.0<sup><xref ref-type="bibr" rid="CR16">16</xref></sup> was run using the GenePattern web module to call copy number alterations and evaluate cohort recurrence for significantly altered regions (<ext-link ext-link-type="uri" xlink:href="https://genepattern.broadinstitute.org/gp">https://genepattern.broadinstitute.org/gp</ext-link>). The supplied hg19 build of the reference genome was used. A germline CNA file was not provided. Default parameters were used for all sections under Additional Parameters and Advanced Parameters. Output file significant calls were verified by manual review using original BAM files in IGV.</p>
+      </sec>
+      <sec id="Sec14">
+        <title>Loss of heterozygosity</title>
+        <p id="Par26">Heterozygous germline variant calls were selected from each patient sample where the normal VAF was within the range of 40–60. Absolute difference between the tumor VAF and 50 was calculated to produce a zygosity score. Segments were generated using the DNAcopy<sup><xref ref-type="bibr" rid="CR54">54</xref></sup> circular binary segmentation algorithm, and average zygosity score of constituent variants attributed to the segments. Biomart<sup><xref ref-type="bibr" rid="CR55">55</xref></sup> was used to obtain genomic coordinates for each gene and overlap with the segment coordinates, to generate a zygosity score for each gene in each sample. A zygosity score above 30 (representing an average tumor VAF &lt; 20 or &gt;80) was used to call a gene as loss-of-heterozygosity (LoH) (Supplementary table <xref rid="MOESM1" ref-type="media">11</xref>). In cases where there was insufficient data to make a segment, the zygosity score was omitted, and no LoH call was made.</p>
+      </sec>
+      <sec id="Sec15">
+        <title>Gene sets</title>
+        <p id="Par27">Cancer relevant genes were collected from Supplementary table <xref rid="MOESM1" ref-type="media">2</xref> of Lawrence et al., and filtered for a pan-cancer <italic>q</italic> value &lt; = 0.1, as discussed in the main text of that paper (list of genes available in Supplementary table <xref rid="MOESM1" ref-type="media">6</xref>). A list of genes participating in canonical WNT signaling was curated from Reactome (Supplementary table <xref rid="MOESM1" ref-type="media">7</xref>) after analyzing WNT gene lists R-HSA195721 (Signaling by WNT) and R-HSA-3858494 (β-catenin independent WNT signaling).</p>
+      </sec>
+      <sec id="Sec16">
+        <title>Transcriptome alignment and expression estimation</title>
+        <p id="Par28">Fasta files were trimmed using Flexbar<sup><xref ref-type="bibr" rid="CR56">56</xref></sup> with settings: -adapter-min-overlap 7 -min-read-length 20 to improve read alignments. Reads were aligned by hisat2.0.5<sup><xref ref-type="bibr" rid="CR57">57</xref></sup> using Ensembl version 74 transcripts. Reads were sorted and indexed by SAMtools 1.3.1<sup><xref ref-type="bibr" rid="CR58">58</xref></sup> and then used for expression estimation by Stringtie 1.3.3<sup><xref ref-type="bibr" rid="CR59">59</xref></sup>.</p>
+      </sec>
+      <sec id="Sec17">
+        <title>Expression batch correction and sample clustering</title>
+        <p id="Par29">Stringtie expression estimates were loaded by Ballgown<sup><xref ref-type="bibr" rid="CR60">60</xref></sup>, expression filtered, log transformed, normalized by ComBat<sup><xref ref-type="bibr" rid="CR61">61</xref></sup>, and clustered with pheatmap (<ext-link ext-link-type="uri" xlink:href="https://github.com/raivokolde/pheatmap">https://github.com/raivokolde/pheatmap</ext-link>) in an ad hoc script available on the methods repository for this manuscript (<ext-link ext-link-type="uri" xlink:href="https://github.com/ahwagner/sclc">https://github.com/ahwagner/sclc</ext-link>).</p>
+      </sec>
+      <sec id="Sec18">
+        <title>ssGSEA</title>
+        <p id="Par30">Expression estimates were combined with human primary tumor expression data from George et al.<sup><xref ref-type="bibr" rid="CR3">3</xref></sup>. Data were then manually transformed into a GCT file:</p>
+        <p id="Par31">(<ext-link ext-link-type="uri" xlink:href="http://software.broadinstitute.org/cancer/software/genepattern/file-formats-guide#_Creating_Input_Files_Tab">http://software.broadinstitute.org/cancer/software/genepattern/file-formats-guide#_Creating_Input_Files_Tab</ext-link>) and run through ssGSEA v9.0.6 in GenePattern (<ext-link ext-link-type="uri" xlink:href="https://genepattern.broadinstitute.org">https://genepattern.broadinstitute.org</ext-link>). Relevant gene sets were selected from MutSigDB (<ext-link ext-link-type="uri" xlink:href="http://software.broadinstitute.org/gsea/msigdb/genesets.jsp">http://software.broadinstitute.org/gsea/msigdb/genesets.jsp</ext-link>) and downloaded as GMT files. The input and result files (Supplementary table <xref rid="MOESM1" ref-type="media">12</xref>) of this analysis are available on the methods repository for this manuscript (<ext-link ext-link-type="uri" xlink:href="https://github.com/ahwagner/sclc">https://github.com/ahwagner/sclc</ext-link>).</p>
+        <p id="Par32">ssGSEA was validated by calculating ssGSEA enrichment scores using an ASCL1 expression signature (as defined by Borromeo et al.)<sup><xref ref-type="bibr" rid="CR5">5</xref></sup>, and exploring the correlation between ASCL1 enrichment and tumor subtype (ASCL1-high [A], NEUROD1-high [N], and Dual negative [D]). Subtype information for George et al. treatment-naive samples was obtained from the publication by Mollaoglu et al.<sup><xref ref-type="bibr" rid="CR6">6</xref></sup> Finally, independently categorized samples were grouped together by subtype for this analysis, to test the ability of ssGSEA to detect true biological differences independent of batch effect. As expected, ASCL1 high tumors from both studies were most enriched for the ASCL1 signature, while dual negatives were the least enriched (one-way ANOVA analysis; <italic>p</italic> &lt; 0.0001). Similarly, analyses by Mollaoglu et al. and Polley et al. demonstrated high MYC activity in ASCL1-low SCLC samples and cell lines<sup><xref ref-type="bibr" rid="CR6">6</xref>,<xref ref-type="bibr" rid="CR62">62</xref></sup>. Using the ssGSEA method, we calculated enrichment scores for MYC activation (using the MYC activation signature defined by Bild et al.) and ASCL1 driven gene expression (defined by Borromeo et al.) and examined their correlation<sup><xref ref-type="bibr" rid="CR5">5</xref>,<xref ref-type="bibr" rid="CR62">62</xref></sup>. Once again, independently subtyped SCLC samples were grouped together for this analysis. As expected, MYC activation was inversely correlated with high ASCL1 enrichment scores (linear regression; <italic>p</italic> = 0.003).</p>
+      </sec>
+      <sec id="Sec018">
+        <title>Primers</title>
+        <p id="Par032">
+<table-wrap id="Taba"><table frame="hsides" rules="groups"><thead><tr><th>Primer</th><th>Sequence</th></tr></thead><tbody><tr><td colspan="2">H82, DMS53, and H1048 cell line experiments</td></tr><tr><td> sgControl Fwd</td><td>CACCGGCGAGGTATTCGGCTCCGCG</td></tr><tr><td> sgControl Rev</td><td>AAACCGCGGAGCCGAATACCTCGCC</td></tr><tr><td> Human sgAPC Fwd</td><td>CACCGGTTTGAGCTGTTTGAGGAGG</td></tr><tr><td> Human sgAPC Rev</td><td>AAACCCTCCTCAAACAGCTCAAACC</td></tr><tr><td> Actin Fwd</td><td>TATTGGCAACGAGCGGTTCC</td></tr><tr><td> Actin Rev</td><td>GGCATAGAGGTCTTTACGGATGTC</td></tr><tr><td> AXIN2 Fwd</td><td>GCCAAGTGTCTCTACCTCATT</td></tr><tr><td> AXIN2 Rev</td><td>TTTCCAGCCTCGAGATCA</td></tr><tr><td> APC Fwd</td><td>CAGATTCTGCTAATACCCTGCAA</td></tr><tr><td> APC Rev</td><td>CCATCTGGAGTACTTTCCGTG</td></tr><tr><td colspan="2"> H1694 cell line experiments</td></tr><tr><td> AXIN2 Fwd-2</td><td>CGGACAGCAGTGTAGATGGA</td></tr><tr><td> AXIN2 Rev-2</td><td>CTTCACACTGCGATGCATTT</td></tr></tbody></table></table-wrap>
+</p>
+      </sec>
+      <sec id="Sec20">
+        <title>H82, H1048, and DMS53 cell culture and viral preparation</title>
+        <p id="Par35">NCI-H1048 and DMS53 cells (kindly provided by David MacPherson) were maintained in RPMI. H82 cells were obtained from ATCC and maintained in RPMI. All medias contained 10% FBS, 1% Pen/Strep and 1% <sc>l</sc>-glutamine. Cell lines were validated by STR profiling at the University of Utah DNA Sequencing Core Facility using the GenePrint 24 kit from Promega (Madison, WI, USA) in June and December 2017. Chemotherapy resistant clones of these cell lines were derived from parental lines through repeated in vitro cisplatin and etoposide treatment followed by serial passaging. Targeted Sanger sequencing of <italic>APC</italic> was performed on these lines.</p>
+        <p id="Par36">For generating viral supernatants, 293T cells were transfected using Mirus LT-1 transfection reagent with gene plasmids as indicated along with Gag/pol and Env plasmids. Supernatants were harvested after 48–72 h and cell lines were infected twice with viral supernatant at 1:1 (media/supernatant) with 1000× polybrene (8 μg/ml). Cells were then selected for 2–3 days in puromycin.</p>
+        <p id="Par37">Validated human APC sgRNA<sup><xref ref-type="bibr" rid="CR63">63</xref></sup> and sgControl primers were subcloned into Lenti-CRISPR-V2<sup><xref ref-type="bibr" rid="CR64">64</xref></sup> (Addgene plasmid #52961). H82 cells were infected with Lenti-V2-sgAPC or sgControl lentivirus and stable polyclonal pools were selected with puromycin.</p>
+      </sec>
+      <sec id="Sec21">
+        <title>H82, H1048, and DMS53 quantitative real-time PCR</title>
+        <p id="Par38">For gene expression analysis by real-time PCR, RNA was isolated by TRIzol from Invitrogen (Carlsbad, CA, USA) or RNeasy kit from Qiagen (Hilden, Germany) and 1 μg of total RNA was converted to cDNA using iScript cDNA synthesis kit from Bio-Rad (Hercules, CA, USA). Quantitative real-time PCR was performed using gene-specific primers and Sybr Green Supermix (Bio-Rad) in a 20 μl reaction in triplicate on a Bio-Rad CFX96 Real-Time PCR machine. Analysis was performed using Bio-Rad CFX Manager software and expression values were based on 10-fold serial dilutions of standards and normalized to Actin levels. Actin Fwd and Rev, and AXIN2 Fwd and Rev primers were used for real-time PCR.</p>
+      </sec>
+      <sec id="Sec22">
+        <title>H82, H1048, and DMS53 cell viability assays</title>
+        <p id="Par39">Cells were seeded in triplicate (5000/well) in opaque 96-well plates. The next day, cells were treated with increasing doses of cisplatin (0–100 μM), or etoposide (0–100 μM) obtained from Sigma (St. Louis, MO, USA). After 48–96 h of treatment, cell viability was measured using CellTiter Glo from Promega (Madison, WI, USA) on a luminometer. Normalized, transformed dose response curves were generated and analyzed using GraphPad Prism (GraphPad Software Inc.; LaJolla, CA, USA) to determine IC50.</p>
+      </sec>
+      <sec id="Sec23">
+        <title>H82, H1048, and DMS53 immunoblotting</title>
+        <p id="Par40">Total protein lysates or nuclear and cytoplasmic fractions were separated via SDS-PAGE and transferred to a PVDF membrane. Membranes were blocked for 1 h, followed by overnight incubation with primary antibodies from Cell Signaling Technologies (Danvers, MA, USA): B-Catenin (9587S, Carboxy terminal antigen) or PARP (46D11) at 1:1000 dilution, B-Tubulin (Developmental Studies Hybridoma Bank, 1:200) or Beta-Actin (#A2066, 1:10,000) from Sigma-Aldrich (St. Louis, MO, USA) at 4 °C. Membranes were washed at room temperature in TBS-T. Mouse or rabbit HRP-conjugated secondary antibodies from Jackson ImmunoResearch (West Grove, PA, USA) at 1:10,000 dilution were incubated for 1 h at room temperature. For detection, membranes were exposed to WesternBright HRP Quantum substrate from Advansta (Menlo Park, CA, USA) and detected on Hyblot CL film from Denville Scientific Inc. (Holliston, MA, USA). Uncropped blots are available in <xref rid="MOESM1" ref-type="media">Supplementary Information</xref> (Supplementary fig. <xref rid="MOESM1" ref-type="media">6</xref>).</p>
+      </sec>
+      <sec id="Sec24">
+        <title>H82 surveyor assay and sequencing</title>
+        <p id="Par41">Genomic DNA was isolated from snap-frozen cell pellets with the DNeasy kit from Qiagen. Human APC PCR products were amplified with APC Fwd and APC Rev primers. sgRNA-induced alterations were detected with the IDT Surveyor Mutation Detection Kit (Integrated DNA Technologies, Coralville, IA, USA; #706030) following the manufacturer’s specifications. Amplified APC PCR products were subcloned into TOPO vectors from Life Technologies (Carlsbad, CA, USA) and individual colonies were sequenced to identify APC alterations.</p>
+      </sec>
+      <sec id="Sec25">
+        <title>H1048 and DMS53 RNA sequencing</title>
+        <p id="Par42">RNA was extracted from cells using RNeasy Kit from Qiagen. The RNA-seq libraries were generated using Illumina TruSeq Stranded mRNA sample preparation kit with oligo dT selection. Sequencing libraries (25 pM) were chemically denatured and applied to an Illumina HiSeq v4 paired end flow cell using an Illumina cBot. Hybridized molecules were clonally amplified and annealed to sequencing primers with reagents from an Illumina HiSeq PE Cluster Kit v4-cBot. Following transfer of the flowcell to an Illumina HiSeq instrument at the University of Utah High-Throughput Genomics Core, a 125 cycle paired-end sequence run was performed using HiSeq SBS Kit v4 sequencing reagents with six samples multiplexed in each Illumina lane. The average number of reads per sample ranged from 38 to 58 million reads.</p>
+      </sec>
+      <sec id="Sec26">
+        <title>H1048 and DMS53 gene expression analyses</title>
+        <p id="Par43">Gene expression was determined using the RSEM utility “rsem-calculate-expression” using the stranded and paired-end options. Differential expression was determined using EBSeq (v1.4.0) using “MedianNorm” function to calculate size factors and setting “maxround” to 10 (ref. <sup><xref ref-type="bibr" rid="CR55">55</xref></sup>). For hierarchical clustering based on sample distances, counts were loaded into the edgeR (v3.8.5) DGEList object. Genes with counts-per-million (cpm) greater than 2 in at least two samples were kept. Counts were normalized using the edgeR calcNormFactors method with default settings. A matrix of log2 cpm values was generated using the edgeR function predFC setting prior.count to 2. The Euclidean distances calculated using the transposed log2cpm matrix were run through heatmap.2 using default settings. Differentially expressed genes (FC &gt; 1.5 or 2, FDR &lt; 0.05) were analyzed for enrichment of pathways, tissue expression and biological processes using QIAGEN’s Ingenuity Pathway Analysis (IPA, QIAGEN).</p>
+      </sec>
+      <sec id="Sec27">
+        <title>H1694 cell culture and virus production</title>
+        <p id="Par44">Small cell lung cancer cell line NCI-H1694 was a gift from the Oliver lab (author TO). STR testing was performed in the Oliver lab to verify cell line identity. Cell lines were maintained in RPMI 1640 media supplemented with 10% FBS. Cells were maintained at 37 °C in 5% CO<sub>2</sub>. For lentiviral production, 5 × 10<sup>6</sup> 293T cells were co-transfected with pCMV-VSV-G, pCMVΔR8.2, and pLKO.1-puro constructs using Lipofectamine 2000 from ThermoFisher (Waltham, MA, USA). Forty-eight hours post transfection, viral supernatants were collected and pooled. NCI-H1694 cells were incubated with viral supernatant for 24 h, in the presence of polybrene (10≥μg/mL). Cells were then selected with puromycin for 48 h.</p>
+      </sec>
+      <sec id="Sec28">
+        <title>APC knockdown and overexpression in H1694 cells</title>
+        <p id="Par45">APC (NM_000038.2) knockdown was performed using pLKO.1-shRNA constructs obtained from the McDonnell Genome Institute at Washington University. At least two shRNAs targeting APC at different locations were utilized in each knockdown experiment. shRNA construct #1 (seed sequence: CCCAGTTTGTTTCTCAAGAAA) targeted positions 6136–6156 in exon 16 (NM_000038.5), while #2 (seed sequence: TAATGAACACTACAGATAGAA) targeted nucleotides 8921–8941 in the 3′ UTR (mRNA transcript number NM_000038.5 in both instances). Stable knockdown of APC in H1694 cells was achieved through lentiviral transduction of shRNA expressing virus, followed by puromycin selection. The pLKO.1-scramble shRNA (Addgene, plasmid #1864) was used as a knockdown control for these experiments.</p>
+        <p id="Par46">To study the effects of restored APC expression on cell viability in the presence of cisplatin or etoposide, the pcDNA3.1-APC construct (lacking UTRs) was transfected into H1694 cells stably expressing shAPC#2 (sequence targets region 8921–8941, which lies in 3′ UTR). Plasmid with APC open reading frame (NM_001127510.2 ORF) in a pcDNA3.1 backbone was obtained from Genscript (Piscataway, NJ, USA; catalog number OHu16786) for APC overexpression experiments. GFP (eGFP-C1 vector, GenBank accession# U55763) was overexpressed in these cells to serve as a control for APC overexpression in these experiments. shAPC#2 cells were plated with chemotherapy for viability assessment 48 h after transduction with Lipofectamine 2000 from ThermoFisher (Waltham, MA, USA).</p>
+      </sec>
+      <sec id="Sec29">
+        <title>Quantitative real-time PCR assays in H1694 cells</title>
+        <p id="Par47">Total RNA was isolated from transduced cells using the NucleoSpin RNA kit from Machery-Nagel (Bethlehem, PA, USA) according to the manufacturer’s instructions. Three micrograms of total RNA was used to make cDNA using the SuperScript II 1st Strand Synthesis Kit from Life Technologies (Carlsbad, CA, USA) with oligo dT primer according to the manufacturer’s instructions. Real-time PCR was performed on a CFX96 Real-Time PCR machine manufactured by Bio-Rad (Hercules, CA, USA) using iTaq Universal SYBR Mix. Predesigned qPCR assays for APC (Hs.PT.56a.3539689) and β-Tubulin (TUBB)(Hs.PT.58.15482507) were purchased from Integrated DNA Technologies (Coralville, IA, USA). Custom primers for AXIN2 (AXIN2 Fwd-2 and Rev-2 primers) were used for measuring WNT activation and were also purchased from IDT<sup><xref ref-type="bibr" rid="CR65">65</xref></sup>. TUBB was used as a normalization reference gene for all assays.</p>
+      </sec>
+      <sec id="Sec30">
+        <title>H1694 cell viability assays</title>
+        <p id="Par48">NCI-H1694 with APC knockdown (shAPC#1, shAPC#2) and shAPC#2 cells overexpressing APC, and their appropriate controls (shScr for knockdown and GFP for overexpression experiments) were plated in 96 well plates in RPMI medium containing 10% FBS, with cisplatin obtained from Selleck chemicals (Houston, TX, USA), diluted in DMF, for 48 h and etoposide, diluted in DMSO (Selleck chemicals), for 72 h. Cell viability at the end of each incubation period was measured using alamarBlue (catalog number DAL1025) obtained from ThermoFisher (Waltham, MA, USA) according to manufacturer’s instructions. Briefly, cells were incubated with alamarBlue for 24 h, after which alamarBlue reduction was measured by fluorescence on a Spectramax M5 plate reader manufactured by Molecular Devices (Sunnyvale, CA, USA).</p>
+      </sec>
+      <sec id="Sec31">
+        <title>H1694 TOPFlash assay</title>
+        <p id="Par49">WNT activation was assessed by TOPFlash assay<sup><xref ref-type="bibr" rid="CR66">66</xref></sup>, after optimizing the experimental conditions for NCI-H1694 cells. WNT-responsive firefly luciferase reporter plasmid with 7 TCF/LEF binding sites (M50 Topflash; plasmid #12456), renilla luciferase (pMULE-Renilla-CMV; plasmid #62186), and mutant TOP-Flash (M51-FOPFlash; Plasmid #12457) plasmids were obtained from Addgene (Cambridge, MA, USA). Briefly, 1 × 10<sup>6</sup> cells lentivirally transduced with shAPC and shScr were plated in six-well plates with media containing 10% FBS, following puromycin selection. Cells were then co-transduced with TOPFlash DNA and Renilla luciferase (10:1 ratio) using Lipofectamine 2000 from ThermoFisher (Waltham, MA, USA). Co-transduction of FOPFlash (which contains mutant TCF binding sites) and Renilla luciferase in a similar 10:1 ratio was performed as a control for this experiment. Media was exchanged after 24 h. Luciferase assay readings were obtained using the Dual Glo Luciferase assay kit from Promega on a TD-20/20 Luminometer manufactured by Turner Designs (Sunnyvale, CA, USA), according to manufacturer’s instructions at 48 h post transfection. Ratio of FOPFlash/Renilla luciferase values was subtracted from the ratio of TOPFlash/Renilla luciferase values.</p>
+      </sec>
+      <sec id="Sec32">
+        <title>H1694 statistics</title>
+        <p id="Par50">All experiments were performed at least in triplicate and GraphPad Prism 7 (GraphPad Software Inc., LaJolla, CA, USA) was used for performing statistical analyses. IC50 values for chemotherapy agents was obtained from cell survival assays using the variable slope model with least squares fit. qPCR expression fold changes for <italic>APC</italic>, <italic>AXIN2</italic>, and TOPFlash WNT reporter values (Fig. <xref rid="Fig4" ref-type="fig">4a</xref>) were compared using Student’s <italic>t</italic> test. IC50 fold change values in different experiments were compared using ratio-paired <italic>t</italic> tests (Fig. <xref rid="Fig4" ref-type="fig">4c</xref>, Supplementary figs. <xref rid="MOESM1" ref-type="media">4b, c</xref>).</p>
+      </sec>
+      <sec id="Sec33">
+        <title>ASCL1 immunohistochemistry in human SCLC validation cohort</title>
+        <p id="Par51">We obtained an independent set of 12 pre-treatment and 10 post-treatment human SCLC samples from patients who received standard platinum chemotherapy. Excess deidentified formalin-fixed paraffin embedded tissue was obtained from the Intermountain BioRepository and Pathology Departments of Intermountain Healthcare under protocol approved by the institutional review board (#1040177). Longitudinal clinical patient data were extracted from the Intermountain electronic data warehouse. Samples and data were de-identified by the Intermountain BioRepository data manager. Institutional guidelines regarding specimen and data use were followed.</p>
+        <p id="Par52">Paraffin-embedded lung lobes were sectioned at 4 μm and stained with H&amp;E for tumor pathology. Sections were dewaxed, rehydrated and subjected to high temperature antigen retrieval, 20 min boiling in a pressure cooker in 0.01 M citrate buffer, pH 6.0. Slides were blocked in 3% H<sub>2</sub>O<sub>2</sub> for 15 min, in 5% goat serum in PBS/0.1% Tween-20 for 1 h, and stained overnight in 5% goat serum in PBS/0.1% Tween-20 with primary antibodies. HRP-conjugated secondary antibody was used at 1:200 dilution in 5% goat serum in PBS/0.1% Tween-20, incubated for 45 min at RT, followed by treating tissues with ABC reagent for 30 min and DAB staining (Vector Laboratories). All staining was performed with Sequenza coverplate technology. ASCL1 antibody (clone 24B72D11, 1:200 dilution) was obtained from Fisher Scientific (Waltham, MA, USA).</p>
+      </sec>
+      <sec id="Sec34">
+        <title>Code availability</title>
+        <p id="Par53">Custom code and intermediate results for these analyses are available at GitHub (<ext-link ext-link-type="uri" xlink:href="https://github.com/ahwagner/sclc">https://github.com/ahwagner/sclc</ext-link>) under the MIT license (no restrictions on reuse).</p>
+      </sec>
+    </sec>
+    <sec sec-type="supplementary-material">
+      <title>Electronic supplementary material</title>
+      <sec id="Sec36">
+        <p>
+<supplementary-material content-type="local-data" id="MOESM1"><media xlink:href="41467_2018_6162_MOESM1_ESM.pdf"><caption><p>Supplementary Information</p></caption></media></supplementary-material>
+<supplementary-material content-type="local-data" id="MOESM2"><media xlink:href="41467_2018_6162_MOESM2_ESM.pdf"><caption><p>Peer Review File</p></caption></media></supplementary-material>
+<supplementary-material content-type="local-data" id="MOESM3"><media xlink:href="41467_2018_6162_MOESM3_ESM.pdf"><caption><p>Description of Additional Supplementary Files</p></caption></media></supplementary-material>
+<supplementary-material content-type="local-data" id="MOESM4"><media xlink:href="41467_2018_6162_MOESM4_ESM.xlsx"><caption><p>Supplementary Data 1</p></caption></media></supplementary-material>
+<supplementary-material content-type="local-data" id="MOESM5"><media xlink:href="41467_2018_6162_MOESM5_ESM.xlsx"><caption><p>Supplementary Data 2</p></caption></media></supplementary-material>
+<supplementary-material content-type="local-data" id="MOESM6"><media xlink:href="41467_2018_6162_MOESM6_ESM.xlsx"><caption><p>Supplementary Data 3</p></caption></media></supplementary-material>
+<supplementary-material content-type="local-data" id="MOESM7"><media xlink:href="41467_2018_6162_MOESM7_ESM.xlsx"><caption><p>Supplementary Data 4</p></caption></media></supplementary-material>
+<supplementary-material content-type="local-data" id="MOESM8"><media xlink:href="41467_2018_6162_MOESM8_ESM.xlsx"><caption><p>Supplementary Data 5</p></caption></media></supplementary-material>
+<supplementary-material content-type="local-data" id="MOESM9"><media xlink:href="41467_2018_6162_MOESM9_ESM.xlsx"><caption><p>Supplementary Data 6</p></caption></media></supplementary-material>
+<supplementary-material content-type="local-data" id="MOESM10"><media xlink:href="41467_2018_6162_MOESM10_ESM.xlsx"><caption><p>Supplementary Data 7</p></caption></media></supplementary-material>
+<supplementary-material content-type="local-data" id="MOESM11"><media xlink:href="41467_2018_6162_MOESM11_ESM.xlsx"><caption><p>Supplementary Data 8</p></caption></media></supplementary-material>
+<supplementary-material content-type="local-data" id="MOESM12"><media xlink:href="41467_2018_6162_MOESM12_ESM.xlsx"><caption><p>Supplementary Data 9</p></caption></media></supplementary-material>
+<supplementary-material content-type="local-data" id="MOESM13"><media xlink:href="41467_2018_6162_MOESM13_ESM.xlsx"><caption><p>Supplementary Data 10</p></caption></media></supplementary-material>
+<supplementary-material content-type="local-data" id="MOESM14"><media xlink:href="41467_2018_6162_MOESM14_ESM.xlsx"><caption><p>Supplementary Data 11</p></caption></media></supplementary-material>
+<supplementary-material content-type="local-data" id="MOESM15"><media xlink:href="41467_2018_6162_MOESM15_ESM.xlsx"><caption><p>Supplementary Data 12</p></caption></media></supplementary-material>
+</p>
+      </sec>
+    </sec>
+  </body>
+  <back>
+    <fn-group>
+      <fn>
+        <p><bold>Publisher's note:</bold> Springer Nature remains neutral with regard to jurisdictional claims in published maps and institutional affiliations.</p>
+      </fn>
+      <fn>
+        <p>These authors contributed equally: Alex H. Wagner, Siddhartha Devarakonda.</p>
+      </fn>
+    </fn-group>
+    <sec>
+      <title>Electronic supplementary material</title>
+      <p><bold>Supplementary Information</bold> accompanies this paper at 10.1038/s41467-018-06162-9.</p>
+    </sec>
+    <ack>
+      <title>Acknowledgements</title>
+      <p>The authors would like to thank Erica Barnell, Irena Lanc, and Lynzey Kujan for their assistance with manual review of variants. A.H.W. was supported by a fellowship (F32CA206247) and traineeship (T32CA113275) from the NCI. S.D. was supported by a fellowship award from the International Association for Study of Lung Cancer (IASLC). T.G.O. was supported by the Huntsman Cancer Foundation (P30CA042014) and in part by the NIH (R01CA187487, R21CA216504) and the American Lung Association (LCD-506758). M.G. was supported by the NHGRI under award R00HG007940. O.L.G. was supported by the NCI under award numbers K22CA188163 and U01CA209936. R.G. was supported by a grant from the Lung Cancer Connection foundation.</p>
+    </ack>
+    <notes notes-type="author-contribution">
+      <title>Author contributions</title>
+      <p>A.H.W., Z.L.S. and A.R. performed GMS analyses. D.M., S.N.W. and R.G. clinically evaluated patients, contributed clinical data, and tumor samples. R.S.F. was responsible for sequencing strategy design. J.W. and J.P. performed library prep and sequencing. SMG analysis was performed by K.K. Z.L.S. performed mutation signature analysis. S.D., L.B.M., J.D.W. and T.G.O. designed lab experiments. S.D., R.R.O., H.C., A.M., M.H.C. and I.C. performed lab experiments. L.B.M. and T.G.O. supervised lab experiments. A.H.W. S.D., R.R.O. and Z.L.S. generated figures for manuscript. Manual review of variants was done by AHW, A.M., J.K., L.T. Copy number analysis was performed by J.K. and N.C.S., A.H.W. and S.D. performed RNAseq analyses and interpretation. Loss of heterozygosity analysis was performed by J.K., A.H.W., C.J.O. and J.H.R. reviewed histopathology images for cohort. E.R.M., R.K.W., M.A.W., M.G., O.L.G., T.G.O. and R.G. designed the project. O.L.G., T.G.O. and R.G. supervised the project. S.D., A.H.W., K.K., D.M., S.N.W., L.B.M., R.R.O., E.R.M., T.G.O., O.L.G. and R.G. edited the manuscript. All authors approved the manuscript.</p>
+    </notes>
+    <notes notes-type="data-availability">
+      <title>Data availability</title>
+      <p>Data has been deposited in dbGAP with accession #PHS001049 (<ext-link ext-link-type="uri" xlink:href="https://www.ncbi.nlm.nih.gov/gap/?term=PHS001049">https://www.ncbi.nlm.nih.gov/gap/?term=PHS001049</ext-link>), and SRA with project accession PRJNA306801 (<ext-link ext-link-type="uri" xlink:href="https://www.ncbi.nlm.nih.gov/bioproject/?term=PRJNA306801)">https://www.ncbi.nlm.nih.gov/bioproject/?term=PRJNA306801)</ext-link>.</p>
+    </notes>
+    <notes notes-type="COI-statement">
+      <sec id="FPar1">
+        <title>Competing interests</title>
+        <p>The authors declare no competing interests.</p>
+      </sec>
+    </notes>
+    <ref-list id="Bib1">
+      <title>References</title>
+      <ref id="CR1">
+        <label>1.</label>
+        <element-citation publication-type="journal">
+          <person-group person-group-type="author">
+            <name>
+              <surname>Govindan</surname>
+              <given-names>R</given-names>
+            </name>
+            <etal/>
+          </person-group>
+          <article-title>Changing epidemiology of small-cell lung cancer in the United States over the last 30 years: analysis of the surveillance, epidemiologic, and end results database</article-title>
+          <source>J. Clin. Oncol.</source>
+          <year>2006</year>
+          <volume>24</volume>
+          <fpage>4539</fpage>
+          <lpage>4544</lpage>
+          <pub-id pub-id-type="doi">10.1200/JCO.2005.04.4859</pub-id>
+          <pub-id pub-id-type="pmid">17008692</pub-id>
+        </element-citation>
+      </ref>
+      <ref id="CR2">
+        <label>2.</label>
+        <element-citation publication-type="journal">
+          <person-group person-group-type="author">
+            <name>
+              <surname>Wang</surname>
+              <given-names>S</given-names>
+            </name>
+            <etal/>
+          </person-group>
+          <article-title>Survival changes in patients with small cell lung cancer and disparities between different sexes, socioeconomic statuses and ages</article-title>
+          <source>Sci. Rep.</source>
+          <year>2017</year>
+          <volume>7</volume>
+          <fpage>1339</fpage>
+          <pub-id pub-id-type="doi">10.1038/s41598-017-01571-0</pub-id>
+          <pub-id pub-id-type="pmid">28465554</pub-id>
+        </element-citation>
+      </ref>
+      <ref id="CR3">
+        <label>3.</label>
+        <element-citation publication-type="journal">
+          <person-group person-group-type="author">
+            <name>
+              <surname>George</surname>
+              <given-names>J</given-names>
+            </name>
+            <etal/>
+          </person-group>
+          <article-title>Comprehensive genomic profiles of small cell lung cancer</article-title>
+          <source>Nature</source>
+          <year>2015</year>
+          <volume>524</volume>
+          <fpage>47</fpage>
+          <lpage>53</lpage>
+          <pub-id pub-id-type="doi">10.1038/nature14664</pub-id>
+          <pub-id pub-id-type="pmid">26168399</pub-id>
+        </element-citation>
+      </ref>
+      <ref id="CR4">
+        <label>4.</label>
+        <element-citation publication-type="journal">
+          <person-group person-group-type="author">
+            <name>
+              <surname>Pleasance</surname>
+              <given-names>ED</given-names>
+            </name>
+            <etal/>
+          </person-group>
+          <article-title>A small-cell lung cancer genome with complex signatures of tobacco exposure</article-title>
+          <source>Nature</source>
+          <year>2010</year>
+          <volume>463</volume>
+          <fpage>184</fpage>
+          <lpage>190</lpage>
+          <pub-id pub-id-type="doi">10.1038/nature08629</pub-id>
+          <pub-id pub-id-type="pmid">20016488</pub-id>
+        </element-citation>
+      </ref>
+      <ref id="CR5">
+        <label>5.</label>
+        <element-citation publication-type="journal">
+          <person-group person-group-type="author">
+            <name>
+              <surname>Borromeo</surname>
+              <given-names>MD</given-names>
+            </name>
+            <etal/>
+          </person-group>
+          <article-title>ASCL1 and NEUROD1 reveal heterogeneity in pulmonary neuroendocrine tumors and regulate distinct genetic programs</article-title>
+          <source>Cell Rep.</source>
+          <year>2016</year>
+          <volume>16</volume>
+          <fpage>1259</fpage>
+          <lpage>1272</lpage>
+          <pub-id pub-id-type="doi">10.1016/j.celrep.2016.06.081</pub-id>
+          <pub-id pub-id-type="pmid">27452466</pub-id>
+        </element-citation>
+      </ref>
+      <ref id="CR6">
+        <label>6.</label>
+        <element-citation publication-type="journal">
+          <person-group person-group-type="author">
+            <name>
+              <surname>Mollaoglu</surname>
+              <given-names>G</given-names>
+            </name>
+            <etal/>
+          </person-group>
+          <article-title>MYC drives progression of small cell lung cancer to a variant neuroendocrine subtype with vulnerability to aurora kinase inhibition</article-title>
+          <source>Cancer Cell</source>
+          <year>2017</year>
+          <volume>31</volume>
+          <fpage>270</fpage>
+          <lpage>285</lpage>
+          <pub-id pub-id-type="doi">10.1016/j.ccell.2016.12.005</pub-id>
+          <pub-id pub-id-type="pmid">28089889</pub-id>
+        </element-citation>
+      </ref>
+      <ref id="CR7">
+        <label>7.</label>
+        <element-citation publication-type="journal">
+          <person-group person-group-type="author">
+            <name>
+              <surname>Peifer</surname>
+              <given-names>M</given-names>
+            </name>
+            <etal/>
+          </person-group>
+          <article-title>Integrative genome analyses identify key somatic driver mutations of small-cell lung cancer</article-title>
+          <source>Nat. Genet.</source>
+          <year>2012</year>
+          <volume>44</volume>
+          <fpage>1104</fpage>
+          <lpage>1110</lpage>
+          <pub-id pub-id-type="doi">10.1038/ng.2396</pub-id>
+          <pub-id pub-id-type="pmid">22941188</pub-id>
+        </element-citation>
+      </ref>
+      <ref id="CR8">
+        <label>8.</label>
+        <element-citation publication-type="journal">
+          <person-group person-group-type="author">
+            <name>
+              <surname>Rudin</surname>
+              <given-names>CM</given-names>
+            </name>
+            <etal/>
+          </person-group>
+          <article-title>Comprehensive genomic analysis identifies SOX2 as a frequently amplified gene in small-cell lung cancer</article-title>
+          <source>Nat. Genet.</source>
+          <year>2012</year>
+          <volume>44</volume>
+          <fpage>1111</fpage>
+          <lpage>1116</lpage>
+          <pub-id pub-id-type="doi">10.1038/ng.2405</pub-id>
+          <pub-id pub-id-type="pmid">22941189</pub-id>
+        </element-citation>
+      </ref>
+      <ref id="CR9">
+        <label>9.</label>
+        <element-citation publication-type="journal">
+          <person-group person-group-type="author">
+            <name>
+              <surname>Iwakawa</surname>
+              <given-names>R</given-names>
+            </name>
+            <etal/>
+          </person-group>
+          <article-title>Expression and clinical significance of genes frequently mutated in small cell lung cancers defined by whole exome/RNA sequencing</article-title>
+          <source>Carcinogenesis</source>
+          <year>2015</year>
+          <volume>36</volume>
+          <fpage>616</fpage>
+          <lpage>621</lpage>
+          <pub-id pub-id-type="doi">10.1093/carcin/bgv026</pub-id>
+          <pub-id pub-id-type="pmid">25863124</pub-id>
+        </element-citation>
+      </ref>
+      <ref id="CR10">
+        <label>10.</label>
+        <element-citation publication-type="journal">
+          <person-group person-group-type="author">
+            <name>
+              <surname>Rosenthal</surname>
+              <given-names>R</given-names>
+            </name>
+            <name>
+              <surname>McGranahan</surname>
+              <given-names>N</given-names>
+            </name>
+            <name>
+              <surname>Herrero</surname>
+              <given-names>J</given-names>
+            </name>
+            <name>
+              <surname>Taylor</surname>
+              <given-names>BS</given-names>
+            </name>
+            <name>
+              <surname>Swanton</surname>
+              <given-names>C</given-names>
+            </name>
+          </person-group>
+          <article-title>DeconstructSigs: delineating mutational processes in single tumors distinguishes DNA repair deficiencies and patterns of carcinoma evolution</article-title>
+          <source>Genome Biol.</source>
+          <year>2016</year>
+          <volume>17</volume>
+          <fpage>31</fpage>
+          <pub-id pub-id-type="doi">10.1186/s13059-016-0893-4</pub-id>
+          <pub-id pub-id-type="pmid">26899170</pub-id>
+        </element-citation>
+      </ref>
+      <ref id="CR11">
+        <label>11.</label>
+        <element-citation publication-type="journal">
+          <person-group person-group-type="author">
+            <name>
+              <surname>Meier</surname>
+              <given-names>B</given-names>
+            </name>
+            <etal/>
+          </person-group>
+          <article-title>C. elegans whole-genome sequencing reveals mutational signatures related to carcinogens and DNA repair deficiency</article-title>
+          <source>Genome Res.</source>
+          <year>2014</year>
+          <volume>24</volume>
+          <fpage>1624</fpage>
+          <lpage>1636</lpage>
+          <pub-id pub-id-type="doi">10.1101/gr.175547.114</pub-id>
+          <pub-id pub-id-type="pmid">25030888</pub-id>
+        </element-citation>
+      </ref>
+      <ref id="CR12">
+        <label>12.</label>
+        <element-citation publication-type="journal">
+          <person-group person-group-type="author">
+            <name>
+              <surname>Behjati</surname>
+              <given-names>S</given-names>
+            </name>
+            <etal/>
+          </person-group>
+          <article-title>Mutational signatures of ionizing radiation in second malignancies</article-title>
+          <source>Nat. Commun.</source>
+          <year>2016</year>
+          <volume>7</volume>
+          <fpage>12605</fpage>
+          <pub-id pub-id-type="doi">10.1038/ncomms12605</pub-id>
+          <pub-id pub-id-type="pmid">27615322</pub-id>
+        </element-citation>
+      </ref>
+      <ref id="CR13">
+        <label>13.</label>
+        <element-citation publication-type="journal">
+          <person-group person-group-type="author">
+            <name>
+              <surname>Dees</surname>
+              <given-names>ND</given-names>
+            </name>
+            <etal/>
+          </person-group>
+          <article-title>MuSiC: identifying mutational significance in cancer genomes</article-title>
+          <source>Genome Res.</source>
+          <year>2012</year>
+          <volume>22</volume>
+          <fpage>1589</fpage>
+          <lpage>1598</lpage>
+          <pub-id pub-id-type="doi">10.1101/gr.134635.111</pub-id>
+          <pub-id pub-id-type="pmid">22759861</pub-id>
+        </element-citation>
+      </ref>
+      <ref id="CR14">
+        <label>14.</label>
+        <element-citation publication-type="journal">
+          <person-group person-group-type="author">
+            <name>
+              <surname>Skidmore</surname>
+              <given-names>ZL</given-names>
+            </name>
+            <etal/>
+          </person-group>
+          <article-title>GenVisR: genomic visualizations in R</article-title>
+          <source>Bioinformatics</source>
+          <year>2016</year>
+          <volume>32</volume>
+          <fpage>3012</fpage>
+          <lpage>3014</lpage>
+          <pub-id pub-id-type="doi">10.1093/bioinformatics/btw325</pub-id>
+          <pub-id pub-id-type="pmid">27288499</pub-id>
+        </element-citation>
+      </ref>
+      <ref id="CR15">
+        <label>15.</label>
+        <element-citation publication-type="journal">
+          <person-group person-group-type="author">
+            <name>
+              <surname>Wu</surname>
+              <given-names>YH</given-names>
+            </name>
+            <name>
+              <surname>Chang</surname>
+              <given-names>TH</given-names>
+            </name>
+            <name>
+              <surname>Huang</surname>
+              <given-names>YF</given-names>
+            </name>
+            <name>
+              <surname>Chen</surname>
+              <given-names>CC</given-names>
+            </name>
+            <name>
+              <surname>Chou</surname>
+              <given-names>CY</given-names>
+            </name>
+          </person-group>
+          <article-title>COL11A1 confers chemoresistance on ovarian cancer cells through the activation of Akt/c/EBPβ pathway and PDK1 stabilization</article-title>
+          <source>Oncotarget</source>
+          <year>2015</year>
+          <volume>6</volume>
+          <fpage>23748</fpage>
+          <lpage>23763</lpage>
+          <pub-id pub-id-type="pmid">26087191</pub-id>
+        </element-citation>
+      </ref>
+      <ref id="CR16">
+        <label>16.</label>
+        <element-citation publication-type="journal">
+          <person-group person-group-type="author">
+            <name>
+              <surname>Mermel</surname>
+              <given-names>CH</given-names>
+            </name>
+            <etal/>
+          </person-group>
+          <article-title>GISTIC2.0 facilitates sensitive and confident localization of the targets of focal somatic copy-number alteration in human cancers</article-title>
+          <source>Genome Biol.</source>
+          <year>2011</year>
+          <volume>12</volume>
+          <fpage>R41</fpage>
+          <pub-id pub-id-type="doi">10.1186/gb-2011-12-4-r41</pub-id>
+          <pub-id pub-id-type="pmid">21527027</pub-id>
+        </element-citation>
+      </ref>
+      <ref id="CR17">
+        <label>17.</label>
+        <element-citation publication-type="journal">
+          <person-group person-group-type="author">
+            <name>
+              <surname>Leslie</surname>
+              <given-names>EM</given-names>
+            </name>
+            <name>
+              <surname>Deeley</surname>
+              <given-names>RG</given-names>
+            </name>
+            <name>
+              <surname>Cole</surname>
+              <given-names>SP</given-names>
+            </name>
+          </person-group>
+          <article-title>Toxicological relevance of the multidrug resistance protein 1, MRP1 (ABCC1) and related transporters</article-title>
+          <source>Toxicology</source>
+          <year>2001</year>
+          <volume>167</volume>
+          <fpage>3</fpage>
+          <lpage>23</lpage>
+          <pub-id pub-id-type="doi">10.1016/S0300-483X(01)00454-1</pub-id>
+          <pub-id pub-id-type="pmid">11557126</pub-id>
+        </element-citation>
+      </ref>
+      <ref id="CR18">
+        <label>18.</label>
+        <element-citation publication-type="journal">
+          <person-group person-group-type="author">
+            <name>
+              <surname>Cole</surname>
+              <given-names>SP</given-names>
+            </name>
+            <etal/>
+          </person-group>
+          <article-title>Overexpression of a transporter gene in a multidrug-resistant human lung cancer cell line</article-title>
+          <source>Science</source>
+          <year>1992</year>
+          <volume>258</volume>
+          <fpage>1650</fpage>
+          <lpage>1654</lpage>
+          <pub-id pub-id-type="doi">10.1126/science.1360704</pub-id>
+          <pub-id pub-id-type="pmid">1360704</pub-id>
+        </element-citation>
+      </ref>
+      <ref id="CR19">
+        <label>19.</label>
+        <element-citation publication-type="journal">
+          <person-group person-group-type="author">
+            <name>
+              <surname>Siddik</surname>
+              <given-names>ZH</given-names>
+            </name>
+          </person-group>
+          <article-title>Cisplatin: mode of cytotoxic action and molecular basis of resistance</article-title>
+          <source>Oncogene</source>
+          <year>2003</year>
+          <volume>22</volume>
+          <fpage>7265</fpage>
+          <lpage>7279</lpage>
+          <pub-id pub-id-type="doi">10.1038/sj.onc.1206933</pub-id>
+          <pub-id pub-id-type="pmid">14576837</pub-id>
+        </element-citation>
+      </ref>
+      <ref id="CR20">
+        <label>20.</label>
+        <element-citation publication-type="journal">
+          <person-group person-group-type="author">
+            <name>
+              <surname>Lawrence</surname>
+              <given-names>MS</given-names>
+            </name>
+            <etal/>
+          </person-group>
+          <article-title>Discovery and saturation analysis of cancer genes across 21 tumour types</article-title>
+          <source>Nature</source>
+          <year>2014</year>
+          <volume>505</volume>
+          <fpage>495</fpage>
+          <lpage>501</lpage>
+          <pub-id pub-id-type="doi">10.1038/nature12912</pub-id>
+          <pub-id pub-id-type="pmid">24390350</pub-id>
+        </element-citation>
+      </ref>
+      <ref id="CR21">
+        <label>21.</label>
+        <element-citation publication-type="journal">
+          <person-group person-group-type="author">
+            <name>
+              <surname>Barbie</surname>
+              <given-names>DA</given-names>
+            </name>
+            <etal/>
+          </person-group>
+          <article-title>Systematic RNA interference reveals that oncogenic KRAS-driven cancers require TBK1</article-title>
+          <source>Nature</source>
+          <year>2009</year>
+          <volume>462</volume>
+          <fpage>108</fpage>
+          <lpage>112</lpage>
+          <pub-id pub-id-type="doi">10.1038/nature08460</pub-id>
+          <pub-id pub-id-type="pmid">19847166</pub-id>
+        </element-citation>
+      </ref>
+      <ref id="CR22">
+        <label>22.</label>
+        <element-citation publication-type="journal">
+          <person-group person-group-type="author">
+            <name>
+              <surname>Lim</surname>
+              <given-names>JS</given-names>
+            </name>
+            <etal/>
+          </person-group>
+          <article-title>Intratumoural heterogeneity generated by Notch signalling promotes small-cell lung cancer</article-title>
+          <source>Nature</source>
+          <year>2017</year>
+          <volume>545</volume>
+          <fpage>360</fpage>
+          <lpage>364</lpage>
+          <pub-id pub-id-type="doi">10.1038/nature22323</pub-id>
+          <pub-id pub-id-type="pmid">28489825</pub-id>
+        </element-citation>
+      </ref>
+      <ref id="CR23">
+        <label>23.</label>
+        <element-citation publication-type="journal">
+          <person-group person-group-type="author">
+            <name>
+              <surname>Krohn</surname>
+              <given-names>A</given-names>
+            </name>
+            <etal/>
+          </person-group>
+          <article-title>Tumor cell heterogeneity in Small Cell Lung Cancer (SCLC): phenotypical and functional differences associated with Epithelial-Mesenchymal Transition (EMT) and DNA methylation changes</article-title>
+          <source>PLoS ONE</source>
+          <year>2014</year>
+          <volume>9</volume>
+          <fpage>e100249</fpage>
+          <pub-id pub-id-type="doi">10.1371/journal.pone.0100249</pub-id>
+          <pub-id pub-id-type="pmid">24959847</pub-id>
+        </element-citation>
+      </ref>
+      <ref id="CR24">
+        <label>24.</label>
+        <element-citation publication-type="journal">
+          <person-group person-group-type="author">
+            <name>
+              <surname>Fearnhead</surname>
+              <given-names>NS</given-names>
+            </name>
+            <name>
+              <surname>Britton</surname>
+              <given-names>MP</given-names>
+            </name>
+            <name>
+              <surname>Bodmer</surname>
+              <given-names>WF</given-names>
+            </name>
+          </person-group>
+          <article-title>The ABC of APC</article-title>
+          <source>Hum. Mol. Genet.</source>
+          <year>2001</year>
+          <volume>10</volume>
+          <fpage>721</fpage>
+          <lpage>733</lpage>
+          <pub-id pub-id-type="doi">10.1093/hmg/10.7.721</pub-id>
+          <pub-id pub-id-type="pmid">11257105</pub-id>
+        </element-citation>
+      </ref>
+      <ref id="CR25">
+        <label>25.</label>
+        <element-citation publication-type="journal">
+          <person-group person-group-type="author">
+            <name>
+              <surname>Damaschke</surname>
+              <given-names>NA</given-names>
+            </name>
+            <etal/>
+          </person-group>
+          <article-title>Frequent disruption of chromodomain helicase DNA-binding protein 8 (CHD8) and functionally associated chromatin regulators in prostate cancer</article-title>
+          <source>Neoplasia</source>
+          <year>2014</year>
+          <volume>16</volume>
+          <fpage>1018</fpage>
+          <lpage>1027</lpage>
+          <pub-id pub-id-type="doi">10.1016/j.neo.2014.10.003</pub-id>
+          <pub-id pub-id-type="pmid">25499215</pub-id>
+        </element-citation>
+      </ref>
+      <ref id="CR26">
+        <label>26.</label>
+        <element-citation publication-type="journal">
+          <person-group person-group-type="author">
+            <name>
+              <surname>Sawada</surname>
+              <given-names>G</given-names>
+            </name>
+            <etal/>
+          </person-group>
+          <article-title>CHD8 is an independent prognostic indicator that regulates Wnt/β-catenin signaling and the cell cycle in gastric cancer</article-title>
+          <source>Oncol. Rep.</source>
+          <year>2013</year>
+          <volume>30</volume>
+          <fpage>1137</fpage>
+          <lpage>1142</lpage>
+          <pub-id pub-id-type="doi">10.3892/or.2013.2597</pub-id>
+          <pub-id pub-id-type="pmid">23835524</pub-id>
+        </element-citation>
+      </ref>
+      <ref id="CR27">
+        <label>27.</label>
+        <element-citation publication-type="journal">
+          <person-group person-group-type="author">
+            <name>
+              <surname>Nishiyama</surname>
+              <given-names>M</given-names>
+            </name>
+            <name>
+              <surname>Skoultchi</surname>
+              <given-names>AI</given-names>
+            </name>
+            <name>
+              <surname>Nakayama</surname>
+              <given-names>KI</given-names>
+            </name>
+          </person-group>
+          <article-title>Histone H1 recruitment by CHD8 is essential for suppression of the Wnt-β-catenin signaling pathway</article-title>
+          <source>Mol. Cell. Biol.</source>
+          <year>2012</year>
+          <volume>32</volume>
+          <fpage>501</fpage>
+          <lpage>512</lpage>
+          <pub-id pub-id-type="doi">10.1128/MCB.06409-11</pub-id>
+          <pub-id pub-id-type="pmid">22083958</pub-id>
+        </element-citation>
+      </ref>
+      <ref id="CR28">
+        <label>28.</label>
+        <element-citation publication-type="journal">
+          <person-group person-group-type="author">
+            <name>
+              <surname>Thompson</surname>
+              <given-names>BA</given-names>
+            </name>
+            <name>
+              <surname>Tremblay</surname>
+              <given-names>V</given-names>
+            </name>
+            <name>
+              <surname>Lin</surname>
+              <given-names>G</given-names>
+            </name>
+            <name>
+              <surname>Bochar</surname>
+              <given-names>DA</given-names>
+            </name>
+          </person-group>
+          <article-title>CHD8 is an ATP-dependent chromatin remodeling factor that regulates beta-catenin target genes</article-title>
+          <source>Mol. Cell. Biol.</source>
+          <year>2008</year>
+          <volume>28</volume>
+          <fpage>3894</fpage>
+          <lpage>3904</lpage>
+          <pub-id pub-id-type="doi">10.1128/MCB.00322-08</pub-id>
+          <pub-id pub-id-type="pmid">18378692</pub-id>
+        </element-citation>
+      </ref>
+      <ref id="CR29">
+        <label>29.</label>
+        <element-citation publication-type="journal">
+          <person-group person-group-type="author">
+            <name>
+              <surname>Hoffmeyer</surname>
+              <given-names>K</given-names>
+            </name>
+            <name>
+              <surname>Junghans</surname>
+              <given-names>D</given-names>
+            </name>
+            <name>
+              <surname>Kanzler</surname>
+              <given-names>B</given-names>
+            </name>
+            <name>
+              <surname>Kemler</surname>
+              <given-names>R</given-names>
+            </name>
+          </person-group>
+          <article-title>Trimethylation and acetylation of β-catenin at lysine 49 represent key elements in ESC pluripotency</article-title>
+          <source>Cell Rep.</source>
+          <year>2017</year>
+          <volume>18</volume>
+          <fpage>2815</fpage>
+          <lpage>2824</lpage>
+          <pub-id pub-id-type="doi">10.1016/j.celrep.2017.02.076</pub-id>
+          <pub-id pub-id-type="pmid">28329675</pub-id>
+        </element-citation>
+      </ref>
+      <ref id="CR30">
+        <label>30.</label>
+        <element-citation publication-type="journal">
+          <person-group person-group-type="author">
+            <name>
+              <surname>VanKlompenberg</surname>
+              <given-names>MK</given-names>
+            </name>
+            <name>
+              <surname>Bedalov</surname>
+              <given-names>CO</given-names>
+            </name>
+            <name>
+              <surname>Soto</surname>
+              <given-names>KF</given-names>
+            </name>
+            <name>
+              <surname>Prosperi</surname>
+              <given-names>JR</given-names>
+            </name>
+          </person-group>
+          <article-title>APC selectively mediates response to chemotherapeutic agents in breast cancer</article-title>
+          <source>BMC Cancer</source>
+          <year>2015</year>
+          <volume>15</volume>
+          <fpage>457</fpage>
+          <pub-id pub-id-type="doi">10.1186/s12885-015-1456-x</pub-id>
+          <pub-id pub-id-type="pmid">26049416</pub-id>
+        </element-citation>
+      </ref>
+      <ref id="CR31">
+        <label>31.</label>
+        <mixed-citation publication-type="other">Spranger, S., Bao, R. &amp; Gajewski, T. F. Melanoma-intrinsic β-catenin signalling prevents anti-tumour immunity. <italic>Nature</italic><bold>523</bold>, 231–235 (2015).</mixed-citation>
+      </ref>
+      <ref id="CR32">
+        <label>32.</label>
+        <element-citation publication-type="journal">
+          <person-group person-group-type="author">
+            <name>
+              <surname>Nagaraj</surname>
+              <given-names>AB</given-names>
+            </name>
+            <etal/>
+          </person-group>
+          <article-title>Critical role of Wnt/β-catenin signaling in driving epithelial ovarian cancer platinum resistance</article-title>
+          <source>Oncotarget</source>
+          <year>2015</year>
+          <volume>6</volume>
+          <fpage>23720</fpage>
+          <lpage>23734</lpage>
+          <pub-id pub-id-type="doi">10.18632/oncotarget.4690</pub-id>
+          <pub-id pub-id-type="pmid">26125441</pub-id>
+        </element-citation>
+      </ref>
+      <ref id="CR33">
+        <label>33.</label>
+        <element-citation publication-type="journal">
+          <person-group person-group-type="author">
+            <name>
+              <surname>Robinson</surname>
+              <given-names>D</given-names>
+            </name>
+            <etal/>
+          </person-group>
+          <article-title>Integrative clinical genomics of advanced prostate cancer</article-title>
+          <source>Cell</source>
+          <year>2015</year>
+          <volume>161</volume>
+          <fpage>1215</fpage>
+          <lpage>1228</lpage>
+          <pub-id pub-id-type="doi">10.1016/j.cell.2015.05.001</pub-id>
+          <pub-id pub-id-type="pmid">26000489</pub-id>
+        </element-citation>
+      </ref>
+      <ref id="CR34">
+        <label>34.</label>
+        <element-citation publication-type="journal">
+          <person-group person-group-type="author">
+            <name>
+              <surname>Lin</surname>
+              <given-names>YM</given-names>
+            </name>
+            <etal/>
+          </person-group>
+          <article-title>Identification of AF17 as a downstream gene of the beta-catenin/T-cell factor pathway and its involvement in colorectal carcinogenesis</article-title>
+          <source>Cancer Res.</source>
+          <year>2001</year>
+          <volume>61</volume>
+          <fpage>6345</fpage>
+          <lpage>6349</lpage>
+          <pub-id pub-id-type="pmid">11522623</pub-id>
+        </element-citation>
+      </ref>
+      <ref id="CR35">
+        <label>35.</label>
+        <element-citation publication-type="journal">
+          <person-group person-group-type="author">
+            <name>
+              <surname>Bild</surname>
+              <given-names>AH</given-names>
+            </name>
+            <etal/>
+          </person-group>
+          <article-title>Oncogenic pathway signatures in human cancers as a guide to targeted therapies</article-title>
+          <source>Nature</source>
+          <year>2006</year>
+          <volume>439</volume>
+          <fpage>353</fpage>
+          <lpage>357</lpage>
+          <pub-id pub-id-type="doi">10.1038/nature04296</pub-id>
+          <pub-id pub-id-type="pmid">16273092</pub-id>
+        </element-citation>
+      </ref>
+      <ref id="CR36">
+        <label>36.</label>
+        <element-citation publication-type="journal">
+          <person-group person-group-type="author">
+            <name>
+              <surname>Perchiniak</surname>
+              <given-names>EM</given-names>
+            </name>
+            <name>
+              <surname>Groden</surname>
+              <given-names>J</given-names>
+            </name>
+          </person-group>
+          <article-title>Mechanisms regulating microtubule binding, DNA replication, and apoptosis are controlled by the intestinal tumor suppressor APC</article-title>
+          <source>Curr. Colorectal Cancer Rep.</source>
+          <year>2011</year>
+          <volume>7</volume>
+          <fpage>145</fpage>
+          <lpage>151</lpage>
+          <pub-id pub-id-type="doi">10.1007/s11888-011-0088-z</pub-id>
+          <pub-id pub-id-type="pmid">23308069</pub-id>
+        </element-citation>
+      </ref>
+      <ref id="CR37">
+        <label>37.</label>
+        <element-citation publication-type="journal">
+          <person-group person-group-type="author">
+            <name>
+              <surname>Jaiswal</surname>
+              <given-names>AS</given-names>
+            </name>
+            <name>
+              <surname>Narayan</surname>
+              <given-names>S</given-names>
+            </name>
+          </person-group>
+          <article-title>Assembly of the base excision repair complex on abasic DNA and role of adenomatous polyposis coli on its functional activity</article-title>
+          <source>Biochemistry</source>
+          <year>2011</year>
+          <volume>50</volume>
+          <fpage>1901</fpage>
+          <lpage>1909</lpage>
+          <pub-id pub-id-type="doi">10.1021/bi102000q</pub-id>
+          <pub-id pub-id-type="pmid">21261287</pub-id>
+        </element-citation>
+      </ref>
+      <ref id="CR38">
+        <label>38.</label>
+        <element-citation publication-type="journal">
+          <person-group person-group-type="author">
+            <name>
+              <surname>Network</surname>
+              <given-names>CGA</given-names>
+            </name>
+          </person-group>
+          <article-title>Comprehensive molecular characterization of human colon and rectal cancer</article-title>
+          <source>Nature</source>
+          <year>2012</year>
+          <volume>487</volume>
+          <fpage>330</fpage>
+          <lpage>337</lpage>
+          <pub-id pub-id-type="doi">10.1038/nature11252</pub-id>
+          <pub-id pub-id-type="pmid">22810696</pub-id>
+        </element-citation>
+      </ref>
+      <ref id="CR39">
+        <label>39.</label>
+        <element-citation publication-type="journal">
+          <person-group person-group-type="author">
+            <name>
+              <surname>Segditsas</surname>
+              <given-names>S</given-names>
+            </name>
+            <etal/>
+          </person-group>
+          <article-title>APC and the three-hit hypothesis</article-title>
+          <source>Oncogene</source>
+          <year>2009</year>
+          <volume>28</volume>
+          <fpage>146</fpage>
+          <lpage>155</lpage>
+          <pub-id pub-id-type="doi">10.1038/onc.2008.361</pub-id>
+          <pub-id pub-id-type="pmid">18836487</pub-id>
+        </element-citation>
+      </ref>
+      <ref id="CR40">
+        <label>40.</label>
+        <element-citation publication-type="journal">
+          <person-group person-group-type="author">
+            <name>
+              <surname>Gardner</surname>
+              <given-names>EE</given-names>
+            </name>
+            <etal/>
+          </person-group>
+          <article-title>Chemosensitive relapse in small cell lung cancer proceeds through an EZH2-SLFN11 axis</article-title>
+          <source>Cancer Cell</source>
+          <year>2017</year>
+          <volume>31</volume>
+          <fpage>286</fpage>
+          <lpage>299</lpage>
+          <pub-id pub-id-type="doi">10.1016/j.ccell.2017.01.006</pub-id>
+          <pub-id pub-id-type="pmid">28196596</pub-id>
+        </element-citation>
+      </ref>
+      <ref id="CR41">
+        <label>41.</label>
+        <element-citation publication-type="journal">
+          <person-group person-group-type="author">
+            <name>
+              <surname>Drapkin</surname>
+              <given-names>BJ</given-names>
+            </name>
+            <etal/>
+          </person-group>
+          <article-title>Genomic and functional fidelity of small cell lung cancer patient-derived xenografts</article-title>
+          <source>Cancer Discov.</source>
+          <year>2018</year>
+          <volume>8</volume>
+          <fpage>600</fpage>
+          <lpage>615</lpage>
+          <pub-id pub-id-type="doi">10.1158/2159-8290.CD-17-0935</pub-id>
+          <pub-id pub-id-type="pmid">29483136</pub-id>
+        </element-citation>
+      </ref>
+      <ref id="CR42">
+        <label>42.</label>
+        <element-citation publication-type="journal">
+          <person-group person-group-type="author">
+            <name>
+              <surname>Zitvogel</surname>
+              <given-names>L</given-names>
+            </name>
+            <name>
+              <surname>Apetoh</surname>
+              <given-names>L</given-names>
+            </name>
+            <name>
+              <surname>Ghiringhelli</surname>
+              <given-names>F</given-names>
+            </name>
+            <name>
+              <surname>Kroemer</surname>
+              <given-names>G</given-names>
+            </name>
+          </person-group>
+          <article-title>Immunological aspects of cancer chemotherapy</article-title>
+          <source>Nat. Rev. Immunol.</source>
+          <year>2008</year>
+          <volume>8</volume>
+          <fpage>59</fpage>
+          <lpage>73</lpage>
+          <pub-id pub-id-type="doi">10.1038/nri2216</pub-id>
+          <pub-id pub-id-type="pmid">18097448</pub-id>
+        </element-citation>
+      </ref>
+      <ref id="CR43">
+        <label>43.</label>
+        <element-citation publication-type="journal">
+          <person-group person-group-type="author">
+            <name>
+              <surname>Griffith</surname>
+              <given-names>M</given-names>
+            </name>
+            <etal/>
+          </person-group>
+          <article-title>Genome modeling system: a knowledge management platform for genomics</article-title>
+          <source>PLoS Comput. Biol.</source>
+          <year>2015</year>
+          <volume>11</volume>
+          <fpage>e1004274</fpage>
+          <pub-id pub-id-type="doi">10.1371/journal.pcbi.1004274</pub-id>
+          <pub-id pub-id-type="pmid">26158448</pub-id>
+        </element-citation>
+      </ref>
+      <ref id="CR44">
+        <label>44.</label>
+        <mixed-citation publication-type="other">Li, H. Aligning sequence reads, clone sequences and assembly contigs with BWA-MEM. Preprint at arXiv:1303.3997 (2013).</mixed-citation>
+      </ref>
+      <ref id="CR45">
+        <label>45.</label>
+        <element-citation publication-type="journal">
+          <person-group person-group-type="author">
+            <name>
+              <surname>Thorvaldsdóttir</surname>
+              <given-names>H</given-names>
+            </name>
+            <name>
+              <surname>Robinson</surname>
+              <given-names>JT</given-names>
+            </name>
+            <name>
+              <surname>Mesirov</surname>
+              <given-names>JP</given-names>
+            </name>
+          </person-group>
+          <article-title>Integrative Genomics Viewer (IGV): high-performance genomics data visualization and exploration</article-title>
+          <source>Brief Bioinform.</source>
+          <year>2013</year>
+          <volume>14</volume>
+          <fpage>178</fpage>
+          <lpage>192</lpage>
+          <pub-id pub-id-type="doi">10.1093/bib/bbs017</pub-id>
+          <pub-id pub-id-type="pmid">22517427</pub-id>
+        </element-citation>
+      </ref>
+      <ref id="CR46">
+        <label>46.</label>
+        <element-citation publication-type="journal">
+          <person-group person-group-type="author">
+            <name>
+              <surname>Larson</surname>
+              <given-names>DE</given-names>
+            </name>
+            <etal/>
+          </person-group>
+          <article-title>SomaticSniper: identification of somatic point mutations in whole genome sequencing data</article-title>
+          <source>Bioinformatics</source>
+          <year>2012</year>
+          <volume>28</volume>
+          <fpage>311</fpage>
+          <lpage>317</lpage>
+          <pub-id pub-id-type="doi">10.1093/bioinformatics/btr665</pub-id>
+          <pub-id pub-id-type="pmid">22155872</pub-id>
+        </element-citation>
+      </ref>
+      <ref id="CR47">
+        <label>47.</label>
+        <element-citation publication-type="journal">
+          <person-group person-group-type="author">
+            <name>
+              <surname>Koboldt</surname>
+              <given-names>DC</given-names>
+            </name>
+            <etal/>
+          </person-group>
+          <article-title>VarScan 2: somatic mutation and copy number alteration discovery in cancer by exome sequencing</article-title>
+          <source>Genome Res.</source>
+          <year>2012</year>
+          <volume>22</volume>
+          <fpage>568</fpage>
+          <lpage>576</lpage>
+          <pub-id pub-id-type="doi">10.1101/gr.129684.111</pub-id>
+          <pub-id pub-id-type="pmid">22300766</pub-id>
+        </element-citation>
+      </ref>
+      <ref id="CR48">
+        <label>48.</label>
+        <element-citation publication-type="journal">
+          <person-group person-group-type="author">
+            <name>
+              <surname>Saunders</surname>
+              <given-names>CT</given-names>
+            </name>
+            <etal/>
+          </person-group>
+          <article-title>Strelka: accurate somatic small-variant calling from sequenced tumor-normal sample pairs</article-title>
+          <source>Bioinformatics</source>
+          <year>2012</year>
+          <volume>28</volume>
+          <fpage>1811</fpage>
+          <lpage>1817</lpage>
+          <pub-id pub-id-type="doi">10.1093/bioinformatics/bts271</pub-id>
+          <pub-id pub-id-type="pmid">22581179</pub-id>
+        </element-citation>
+      </ref>
+      <ref id="CR49">
+        <label>49.</label>
+        <element-citation publication-type="journal">
+          <person-group person-group-type="author">
+            <name>
+              <surname>McKenna</surname>
+              <given-names>A</given-names>
+            </name>
+            <etal/>
+          </person-group>
+          <article-title>The Genome Analysis Toolkit: a MapReduce framework for analyzing next-generation DNA sequencing data</article-title>
+          <source>Genome Res.</source>
+          <year>2010</year>
+          <volume>20</volume>
+          <fpage>1297</fpage>
+          <lpage>1303</lpage>
+          <pub-id pub-id-type="doi">10.1101/gr.107524.110</pub-id>
+          <pub-id pub-id-type="pmid">20644199</pub-id>
+        </element-citation>
+      </ref>
+      <ref id="CR50">
+        <label>50.</label>
+        <element-citation publication-type="journal">
+          <person-group person-group-type="author">
+            <name>
+              <surname>Ye</surname>
+              <given-names>K</given-names>
+            </name>
+            <name>
+              <surname>Schulz</surname>
+              <given-names>MH</given-names>
+            </name>
+            <name>
+              <surname>Long</surname>
+              <given-names>Q</given-names>
+            </name>
+            <name>
+              <surname>Apweiler</surname>
+              <given-names>R</given-names>
+            </name>
+            <name>
+              <surname>Ning</surname>
+              <given-names>Z</given-names>
+            </name>
+          </person-group>
+          <article-title>Pindel: a pattern growth approach to detect break points of large deletions and medium sized insertions from paired-end short reads</article-title>
+          <source>Bioinformatics</source>
+          <year>2009</year>
+          <volume>25</volume>
+          <fpage>2865</fpage>
+          <lpage>2871</lpage>
+          <pub-id pub-id-type="doi">10.1093/bioinformatics/btp394</pub-id>
+          <pub-id pub-id-type="pmid">19561018</pub-id>
+        </element-citation>
+      </ref>
+      <ref id="CR51">
+        <label>51.</label>
+        <mixed-citation publication-type="other">Network, C. G. A. Comprehensive molecular portraits of human breast tumours <italic>Nature</italic><bold>490</bold>, 61–70 (2012).</mixed-citation>
+      </ref>
+      <ref id="CR52">
+        <label>52.</label>
+        <mixed-citation publication-type="other">Lek, M. et al. Analysis of protein-coding genetic variation in 60,706 humans. <italic>Nature</italic><bold>536</bold>, 285–291 (2016).</mixed-citation>
+      </ref>
+      <ref id="CR53">
+        <label>53.</label>
+        <element-citation publication-type="journal">
+          <person-group person-group-type="author">
+            <name>
+              <surname>Miller</surname>
+              <given-names>CA</given-names>
+            </name>
+            <etal/>
+          </person-group>
+          <article-title>SciClone: inferring clonal architecture and tracking the spatial and temporal patterns of tumor evolution</article-title>
+          <source>PLoS Comput. Biol.</source>
+          <year>2014</year>
+          <volume>10</volume>
+          <fpage>e1003665</fpage>
+          <pub-id pub-id-type="doi">10.1371/journal.pcbi.1003665</pub-id>
+          <pub-id pub-id-type="pmid">25102416</pub-id>
+        </element-citation>
+      </ref>
+      <ref id="CR54">
+        <label>54.</label>
+        <element-citation publication-type="journal">
+          <person-group person-group-type="author">
+            <name>
+              <surname>Venkatraman</surname>
+              <given-names>ES</given-names>
+            </name>
+            <name>
+              <surname>Olshen</surname>
+              <given-names>AB</given-names>
+            </name>
+          </person-group>
+          <article-title>A faster circular binary segmentation algorithm for the analysis of array CGH data</article-title>
+          <source>Bioinformatics</source>
+          <year>2007</year>
+          <volume>23</volume>
+          <fpage>657</fpage>
+          <lpage>663</lpage>
+          <pub-id pub-id-type="doi">10.1093/bioinformatics/btl646</pub-id>
+          <pub-id pub-id-type="pmid">17234643</pub-id>
+        </element-citation>
+      </ref>
+      <ref id="CR55">
+        <label>55.</label>
+        <element-citation publication-type="journal">
+          <person-group person-group-type="author">
+            <name>
+              <surname>Smedley</surname>
+              <given-names>D</given-names>
+            </name>
+            <etal/>
+          </person-group>
+          <article-title>The BioMart community portal: an innovative alternative to large, centralized data repositories</article-title>
+          <source>Nucleic Acids Res.</source>
+          <year>2015</year>
+          <volume>43</volume>
+          <fpage>W589</fpage>
+          <lpage>598</lpage>
+          <pub-id pub-id-type="doi">10.1093/nar/gkv350</pub-id>
+          <pub-id pub-id-type="pmid">25897122</pub-id>
+        </element-citation>
+      </ref>
+      <ref id="CR56">
+        <label>56.</label>
+        <mixed-citation publication-type="other">Dodt, M, Roehr, J. T, Ahmed, R., &amp; Dieterich, C. FLEXBAR-flexible barcode and adapter processing for next-generation sequencing. <italic>Biology (Basel)</italic><bold>1</bold>, 895–905 (2012).</mixed-citation>
+      </ref>
+      <ref id="CR57">
+        <label>57.</label>
+        <element-citation publication-type="journal">
+          <person-group person-group-type="author">
+            <name>
+              <surname>Kim</surname>
+              <given-names>D</given-names>
+            </name>
+            <name>
+              <surname>Langmead</surname>
+              <given-names>B</given-names>
+            </name>
+            <name>
+              <surname>Salzberg</surname>
+              <given-names>SL</given-names>
+            </name>
+          </person-group>
+          <article-title>HISAT: a fast spliced aligner with low memory requirements</article-title>
+          <source>Nat. Methods</source>
+          <year>2015</year>
+          <volume>12</volume>
+          <fpage>357</fpage>
+          <lpage>360</lpage>
+          <pub-id pub-id-type="doi">10.1038/nmeth.3317</pub-id>
+          <pub-id pub-id-type="pmid">25751142</pub-id>
+        </element-citation>
+      </ref>
+      <ref id="CR58">
+        <label>58.</label>
+        <element-citation publication-type="journal">
+          <person-group person-group-type="author">
+            <name>
+              <surname>Li</surname>
+              <given-names>H</given-names>
+            </name>
+            <etal/>
+          </person-group>
+          <article-title>The sequence alignment/map format and SAMtools</article-title>
+          <source>Bioinformatics</source>
+          <year>2009</year>
+          <volume>25</volume>
+          <fpage>2078</fpage>
+          <lpage>2079</lpage>
+          <pub-id pub-id-type="doi">10.1093/bioinformatics/btp352</pub-id>
+          <pub-id pub-id-type="pmid">19505943</pub-id>
+        </element-citation>
+      </ref>
+      <ref id="CR59">
+        <label>59.</label>
+        <element-citation publication-type="journal">
+          <person-group person-group-type="author">
+            <name>
+              <surname>Pertea</surname>
+              <given-names>M</given-names>
+            </name>
+            <etal/>
+          </person-group>
+          <article-title>StringTie enables improved reconstruction of a transcriptome from RNA-seq reads</article-title>
+          <source>Nat. Biotechnol.</source>
+          <year>2015</year>
+          <volume>33</volume>
+          <fpage>290</fpage>
+          <lpage>295</lpage>
+          <pub-id pub-id-type="doi">10.1038/nbt.3122</pub-id>
+          <pub-id pub-id-type="pmid">25690850</pub-id>
+        </element-citation>
+      </ref>
+      <ref id="CR60">
+        <label>60.</label>
+        <element-citation publication-type="journal">
+          <person-group person-group-type="author">
+            <name>
+              <surname>Frazee</surname>
+              <given-names>AC</given-names>
+            </name>
+            <etal/>
+          </person-group>
+          <article-title>Ballgown bridges the gap between transcriptome assembly and expression analysis</article-title>
+          <source>Nat. Biotechnol.</source>
+          <year>2015</year>
+          <volume>33</volume>
+          <fpage>243</fpage>
+          <lpage>246</lpage>
+          <pub-id pub-id-type="doi">10.1038/nbt.3172</pub-id>
+          <pub-id pub-id-type="pmid">25748911</pub-id>
+        </element-citation>
+      </ref>
+      <ref id="CR61">
+        <label>61.</label>
+        <element-citation publication-type="journal">
+          <person-group person-group-type="author">
+            <name>
+              <surname>Leek</surname>
+              <given-names>JT</given-names>
+            </name>
+            <name>
+              <surname>Johnson</surname>
+              <given-names>WE</given-names>
+            </name>
+            <name>
+              <surname>Parker</surname>
+              <given-names>HS</given-names>
+            </name>
+            <name>
+              <surname>Jaffe</surname>
+              <given-names>AE</given-names>
+            </name>
+            <name>
+              <surname>Storey</surname>
+              <given-names>JD</given-names>
+            </name>
+          </person-group>
+          <article-title>The sva package for removing batch effects and other unwanted variation in high-throughput experiments</article-title>
+          <source>Bioinformatics</source>
+          <year>2012</year>
+          <volume>28</volume>
+          <fpage>882</fpage>
+          <lpage>883</lpage>
+          <pub-id pub-id-type="doi">10.1093/bioinformatics/bts034</pub-id>
+          <pub-id pub-id-type="pmid">22257669</pub-id>
+        </element-citation>
+      </ref>
+      <ref id="CR62">
+        <label>62.</label>
+        <mixed-citation publication-type="other">Polley, E. et al. Small cell lung cancer screen of oncology drugs, investigational agents, and gene and microRNA expression. <italic>J. Natl Cancer Inst</italic>. <bold>108</bold>10.1093/jnci/djw122 (2016).</mixed-citation>
+      </ref>
+      <ref id="CR63">
+        <label>63.</label>
+        <element-citation publication-type="journal">
+          <person-group person-group-type="author">
+            <name>
+              <surname>Schwank</surname>
+              <given-names>G</given-names>
+            </name>
+            <etal/>
+          </person-group>
+          <article-title>Functional repair of CFTR by CRISPR/Cas9 in intestinal stem cell organoids of cystic fibrosis patients</article-title>
+          <source>Cell Stem Cell</source>
+          <year>2013</year>
+          <volume>13</volume>
+          <fpage>653</fpage>
+          <lpage>658</lpage>
+          <pub-id pub-id-type="doi">10.1016/j.stem.2013.11.002</pub-id>
+          <pub-id pub-id-type="pmid">24315439</pub-id>
+        </element-citation>
+      </ref>
+      <ref id="CR64">
+        <label>64.</label>
+        <element-citation publication-type="journal">
+          <person-group person-group-type="author">
+            <name>
+              <surname>Sánchez-Rivera</surname>
+              <given-names>FJ</given-names>
+            </name>
+            <etal/>
+          </person-group>
+          <article-title>Rapid modelling of cooperating genetic events in cancer through somatic genome editing</article-title>
+          <source>Nature</source>
+          <year>2014</year>
+          <volume>516</volume>
+          <fpage>428</fpage>
+          <lpage>431</lpage>
+          <pub-id pub-id-type="doi">10.1038/nature13906</pub-id>
+          <pub-id pub-id-type="pmid">25337879</pub-id>
+        </element-citation>
+      </ref>
+      <ref id="CR65">
+        <label>65.</label>
+        <element-citation publication-type="journal">
+          <person-group person-group-type="author">
+            <name>
+              <surname>Fong</surname>
+              <given-names>CY</given-names>
+            </name>
+            <etal/>
+          </person-group>
+          <article-title>BET inhibitor resistance emerges from leukaemia stem cells</article-title>
+          <source>Nature</source>
+          <year>2015</year>
+          <volume>525</volume>
+          <fpage>538</fpage>
+          <lpage>542</lpage>
+          <pub-id pub-id-type="doi">10.1038/nature14888</pub-id>
+          <pub-id pub-id-type="pmid">26367796</pub-id>
+        </element-citation>
+      </ref>
+      <ref id="CR66">
+        <label>66.</label>
+        <element-citation publication-type="journal">
+          <person-group person-group-type="author">
+            <name>
+              <surname>Kim</surname>
+              <given-names>J</given-names>
+            </name>
+            <name>
+              <surname>Lee</surname>
+              <given-names>JJ</given-names>
+            </name>
+            <name>
+              <surname>Gardner</surname>
+              <given-names>D</given-names>
+            </name>
+            <name>
+              <surname>Beachy</surname>
+              <given-names>PA</given-names>
+            </name>
+          </person-group>
+          <article-title>Arsenic antagonizes the Hedgehog pathway by preventing ciliary accumulation and reducing stability of the Gli2 transcriptional effector</article-title>
+          <source>Proc. Natl Acad. Sci. USA</source>
+          <year>2010</year>
+          <volume>107</volume>
+          <fpage>13432</fpage>
+          <lpage>13437</lpage>
+          <pub-id pub-id-type="doi">10.1073/pnas.1006822107</pub-id>
+          <pub-id pub-id-type="pmid">20624968</pub-id>
+        </element-citation>
+      </ref>
+    </ref-list>
+  </back>
+</article>
+</pmc-articleset>
