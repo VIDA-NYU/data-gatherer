@@ -1,0 +1,361 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE pmc-articleset PUBLIC "-//NLM//DTD ARTICLE SET 2.0//EN" "https://dtd.nlm.nih.gov/ncbi/pmc/articleset/nlm-articleset-2.0.dtd">
+<pmc-articleset><article xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:mml="http://www.w3.org/1998/Math/MathML" article-type="research-article">
+  <!--The publisher of this article does not allow downloading of the full text in XML form.-->
+  <?properties manuscript?>
+  <front>
+    <journal-meta>
+      <journal-id journal-id-type="nlm-journal-id">9216904</journal-id>
+      <journal-id journal-id-type="pubmed-jr-id">2419</journal-id>
+      <journal-id journal-id-type="nlm-ta">Nat Genet</journal-id>
+      <journal-id journal-id-type="iso-abbrev">Nat. Genet.</journal-id>
+      <journal-title-group>
+        <journal-title>Nature genetics</journal-title>
+      </journal-title-group>
+      <issn pub-type="ppub">1061-4036</issn>
+      <issn pub-type="epub">1546-1718</issn>
+    </journal-meta>
+    <article-meta>
+      <article-id pub-id-type="pmid">22941189</article-id>
+      <article-id pub-id-type="pmc">3557461</article-id>
+      <article-id pub-id-type="doi">10.1038/ng.2405</article-id>
+      <article-id pub-id-type="manuscript">NIHMS426385</article-id>
+      <article-categories>
+        <subj-group subj-group-type="heading">
+          <subject>Article</subject>
+        </subj-group>
+      </article-categories>
+      <title-group>
+        <article-title>Comprehensive genomic analysis identifies <italic>SOX2</italic> as a frequently amplified gene in small-cell lung cancer</article-title>
+      </title-group>
+      <contrib-group>
+        <contrib contrib-type="author">
+          <name>
+            <surname>Rudin</surname>
+            <given-names>Charles M</given-names>
+          </name>
+          <xref ref-type="aff" rid="A1">1</xref>
+          <xref ref-type="author-notes" rid="FN1">8</xref>
+        </contrib>
+        <contrib contrib-type="author">
+          <name>
+            <surname>Durinck</surname>
+            <given-names>Steffen</given-names>
+          </name>
+          <xref ref-type="aff" rid="A2">2</xref>
+          <xref ref-type="aff" rid="A3">3</xref>
+          <xref ref-type="author-notes" rid="FN1">8</xref>
+        </contrib>
+        <contrib contrib-type="author">
+          <name>
+            <surname>Stawiski</surname>
+            <given-names>Eric W</given-names>
+          </name>
+          <xref ref-type="aff" rid="A2">2</xref>
+          <xref ref-type="aff" rid="A3">3</xref>
+          <xref ref-type="author-notes" rid="FN1">8</xref>
+        </contrib>
+        <contrib contrib-type="author">
+          <name>
+            <surname>Poirier</surname>
+            <given-names>John T</given-names>
+          </name>
+          <xref ref-type="aff" rid="A1">1</xref>
+          <xref ref-type="author-notes" rid="FN1">8</xref>
+        </contrib>
+        <contrib contrib-type="author">
+          <name>
+            <surname>Modrusan</surname>
+            <given-names>Zora</given-names>
+          </name>
+          <xref ref-type="aff" rid="A2">2</xref>
+          <xref ref-type="author-notes" rid="FN1">8</xref>
+        </contrib>
+        <contrib contrib-type="author">
+          <name>
+            <surname>Shames</surname>
+            <given-names>David S</given-names>
+          </name>
+          <xref ref-type="aff" rid="A4">4</xref>
+          <xref ref-type="author-notes" rid="FN1">8</xref>
+        </contrib>
+        <contrib contrib-type="author">
+          <name>
+            <surname>Bergbower</surname>
+            <given-names>Emily A</given-names>
+          </name>
+          <xref ref-type="aff" rid="A1">1</xref>
+        </contrib>
+        <contrib contrib-type="author">
+          <name>
+            <surname>Guan</surname>
+            <given-names>Yinghui</given-names>
+          </name>
+          <xref ref-type="aff" rid="A2">2</xref>
+        </contrib>
+        <contrib contrib-type="author">
+          <name>
+            <surname>Shin</surname>
+            <given-names>James</given-names>
+          </name>
+          <xref ref-type="aff" rid="A1">1</xref>
+        </contrib>
+        <contrib contrib-type="author">
+          <name>
+            <surname>Guillory</surname>
+            <given-names>Joseph</given-names>
+          </name>
+          <xref ref-type="aff" rid="A2">2</xref>
+        </contrib>
+        <contrib contrib-type="author">
+          <name>
+            <surname>Rivers</surname>
+            <given-names>Celina Sanchez</given-names>
+          </name>
+          <xref ref-type="aff" rid="A2">2</xref>
+        </contrib>
+        <contrib contrib-type="author">
+          <name>
+            <surname>Foo</surname>
+            <given-names>Catherine K</given-names>
+          </name>
+          <xref ref-type="aff" rid="A2">2</xref>
+        </contrib>
+        <contrib contrib-type="author">
+          <name>
+            <surname>Bhatt</surname>
+            <given-names>Deepali</given-names>
+          </name>
+          <xref ref-type="aff" rid="A2">2</xref>
+        </contrib>
+        <contrib contrib-type="author">
+          <name>
+            <surname>Stinson</surname>
+            <given-names>Jeremy</given-names>
+          </name>
+          <xref ref-type="aff" rid="A2">2</xref>
+        </contrib>
+        <contrib contrib-type="author">
+          <name>
+            <surname>Gnad</surname>
+            <given-names>Florian</given-names>
+          </name>
+          <xref ref-type="aff" rid="A3">3</xref>
+        </contrib>
+        <contrib contrib-type="author">
+          <name>
+            <surname>Haverty</surname>
+            <given-names>Peter M</given-names>
+          </name>
+          <xref ref-type="aff" rid="A3">3</xref>
+        </contrib>
+        <contrib contrib-type="author">
+          <name>
+            <surname>Gentleman</surname>
+            <given-names>Robert</given-names>
+          </name>
+          <xref ref-type="aff" rid="A3">3</xref>
+        </contrib>
+        <contrib contrib-type="author">
+          <name>
+            <surname>Chaudhuri</surname>
+            <given-names>Subhra</given-names>
+          </name>
+          <xref ref-type="aff" rid="A2">2</xref>
+        </contrib>
+        <contrib contrib-type="author">
+          <name>
+            <surname>Janakiraman</surname>
+            <given-names>Vasantharajan</given-names>
+          </name>
+          <xref ref-type="aff" rid="A2">2</xref>
+        </contrib>
+        <contrib contrib-type="author">
+          <name>
+            <surname>Jaiswal</surname>
+            <given-names>Bijay S</given-names>
+          </name>
+          <xref ref-type="aff" rid="A2">2</xref>
+        </contrib>
+        <contrib contrib-type="author">
+          <name>
+            <surname>Parikh</surname>
+            <given-names>Chaitali</given-names>
+          </name>
+          <xref ref-type="aff" rid="A2">2</xref>
+        </contrib>
+        <contrib contrib-type="author">
+          <name>
+            <surname>Yuan</surname>
+            <given-names>Wenlin</given-names>
+          </name>
+          <xref ref-type="aff" rid="A2">2</xref>
+        </contrib>
+        <contrib contrib-type="author">
+          <name>
+            <surname>Zhang</surname>
+            <given-names>Zemin</given-names>
+          </name>
+          <xref ref-type="aff" rid="A3">3</xref>
+        </contrib>
+        <contrib contrib-type="author">
+          <name>
+            <surname>Koeppen</surname>
+            <given-names>Hartmut</given-names>
+          </name>
+          <xref ref-type="aff" rid="A5">5</xref>
+        </contrib>
+        <contrib contrib-type="author">
+          <name>
+            <surname>Wu</surname>
+            <given-names>Thomas D</given-names>
+          </name>
+          <xref ref-type="aff" rid="A3">3</xref>
+        </contrib>
+        <contrib contrib-type="author">
+          <name>
+            <surname>Stern</surname>
+            <given-names>Howard M</given-names>
+          </name>
+          <xref ref-type="aff" rid="A5">5</xref>
+        </contrib>
+        <contrib contrib-type="author">
+          <name>
+            <surname>Yauch</surname>
+            <given-names>Robert L</given-names>
+          </name>
+          <xref ref-type="aff" rid="A4">4</xref>
+        </contrib>
+        <contrib contrib-type="author">
+          <name>
+            <surname>Huffman</surname>
+            <given-names>Kenneth E</given-names>
+          </name>
+          <xref ref-type="aff" rid="A6">6</xref>
+        </contrib>
+        <contrib contrib-type="author">
+          <name>
+            <surname>Paskulin</surname>
+            <given-names>Diego D</given-names>
+          </name>
+          <xref ref-type="aff" rid="A7">7</xref>
+        </contrib>
+        <contrib contrib-type="author">
+          <name>
+            <surname>Illei</surname>
+            <given-names>Peter B</given-names>
+          </name>
+          <xref ref-type="aff" rid="A1">1</xref>
+        </contrib>
+        <contrib contrib-type="author">
+          <name>
+            <surname>Varella-Garcia</surname>
+            <given-names>Marileila</given-names>
+          </name>
+          <xref ref-type="aff" rid="A7">7</xref>
+        </contrib>
+        <contrib contrib-type="author">
+          <name>
+            <surname>Gazdar</surname>
+            <given-names>Adi F</given-names>
+          </name>
+          <xref ref-type="aff" rid="A6">6</xref>
+        </contrib>
+        <contrib contrib-type="author">
+          <name>
+            <surname>de Sauvage</surname>
+            <given-names>Frederic J</given-names>
+          </name>
+          <xref ref-type="aff" rid="A2">2</xref>
+        </contrib>
+        <contrib contrib-type="author">
+          <name>
+            <surname>Bourgon</surname>
+            <given-names>Richard</given-names>
+          </name>
+          <xref ref-type="aff" rid="A3">3</xref>
+        </contrib>
+        <contrib contrib-type="author">
+          <name>
+            <surname>Minna</surname>
+            <given-names>John D</given-names>
+          </name>
+          <xref ref-type="aff" rid="A6">6</xref>
+        </contrib>
+        <contrib contrib-type="author">
+          <name>
+            <surname>Brock</surname>
+            <given-names>Malcolm V</given-names>
+          </name>
+          <xref ref-type="aff" rid="A1">1</xref>
+        </contrib>
+        <contrib contrib-type="author">
+          <name>
+            <surname>Seshagiri</surname>
+            <given-names>Somasekar</given-names>
+          </name>
+          <xref ref-type="aff" rid="A2">2</xref>
+        </contrib>
+      </contrib-group>
+      <aff id="A1"><label>1</label>The Sidney Kimmel Comprehensive Cancer Center, Johns Hopkins University, Baltimore, Maryland, USA</aff>
+      <aff id="A2"><label>2</label>Department of Molecular Biology, Genentech, South San Francisco, California, USA</aff>
+      <aff id="A3"><label>3</label>Department of Bioinformatics and Computational Biology, Genentech, South San Francisco, California, USA</aff>
+      <aff id="A4"><label>4</label>Department of Oncology Biomarker Development, Genentech, South San Francisco, California, USA</aff>
+      <aff id="A5"><label>5</label>Department of Pathology, Genentech, South San Francisco, California, USA</aff>
+      <aff id="A6"><label>6</label>Hamon Center for Therapeutic Oncology Research, University of Texas Southwestern Medical Center, Dallas, Texas, USA</aff>
+      <aff id="A7"><label>7</label>Division of Medical Oncology, University of Colorado Cancer Center, Aurora, Colorado, USA</aff>
+      <author-notes>
+        <corresp id="cor1">Correspondence should be addressed to C.M.R. (<email>rudin@jhmi.edu</email>) or S.S. (<email>sekar@gene.com</email>)</corresp>
+        <fn id="FN1" fn-type="equal">
+          <label>8</label>
+          <p id="P1">These authors contributed equally to this work.</p>
+        </fn>
+      </author-notes>
+      <pub-date pub-type="nihms-submitted">
+        <day>15</day>
+        <month>1</month>
+        <year>2013</year>
+      </pub-date>
+      <pub-date pub-type="epub">
+        <day>02</day>
+        <month>9</month>
+        <year>2012</year>
+      </pub-date>
+      <pub-date pub-type="ppub">
+        <month>10</month>
+        <year>2012</year>
+      </pub-date>
+      <pub-date pub-type="pmc-release">
+        <day>29</day>
+        <month>1</month>
+        <year>2013</year>
+      </pub-date>
+      <volume>44</volume>
+      <issue>10</issue>
+      <fpage>1111</fpage>
+      <lpage>1116</lpage>
+      <permissions>
+        <copyright-statement>© 2012 Nature America, Inc. All rights reserved.</copyright-statement>
+        <copyright-year>2012</copyright-year>
+      </permissions>
+      <abstract>
+        <p id="P2">Small-cell lung cancer (SCLC) is an exceptionally aggressive disease with poor prognosis. Here, we obtained exome, transcriptome and copy-number alteration data from approximately 53 samples consisting of 36 primary human SCLC and normal tissue pairs and 17 matched SCLC and lymphoblastoid cell lines. We also obtained data for 4 primary tumors and 23 SCLC cell lines. We identified 22 significantly mutated genes in SCLC, including genes encoding kinases, G protein–coupled receptors and chromatin-modifying proteins. We found that several members of the SOX family of genes were mutated in SCLC. We also found <italic>SOX2</italic> amplification in ~27% of the samples. Suppression of <italic>SOX2</italic> using shRNAs blocked proliferation of <italic>SOX2</italic>-amplified SCLC lines. RNA sequencing identified multiple fusion transcripts and a recurrent <italic>RLF-MYCL1</italic> fusion. Silencing of <italic>MYCL1</italic> in SCLC cell lines that had the <italic>RLF-MYCL1</italic> fusion decreased cell proliferation. These data provide an in-depth view of the spectrum of genomic alterations in SCLC and identify several potential targets for therapeutic intervention.</p>
+      </abstract>
+      <funding-group>
+        <award-group>
+          <funding-source country="United States">National Cancer Institute : NCI</funding-source>
+          <award-id>P50 CA070907 || CA</award-id>
+        </award-group>
+        <award-group>
+          <funding-source country="United States">National Cancer Institute : NCI</funding-source>
+          <award-id>P50 CA058187 || CA</award-id>
+        </award-group>
+        <award-group>
+          <funding-source country="United States">National Cancer Institute : NCI</funding-source>
+          <award-id>P50 CA058184 || CA</award-id>
+        </award-group>
+      </funding-group>
+    </article-meta>
+  </front>
+</article>
+</pmc-articleset>

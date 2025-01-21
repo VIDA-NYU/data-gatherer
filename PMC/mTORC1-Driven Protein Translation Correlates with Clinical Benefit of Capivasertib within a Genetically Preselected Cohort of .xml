@@ -1,0 +1,1058 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE pmc-articleset PUBLIC "-//NLM//DTD ARTICLE SET 2.0//EN" "https://dtd.nlm.nih.gov/ncbi/pmc/articleset/nlm-articleset-2.0.dtd">
+<pmc-articleset><article xmlns:mml="http://www.w3.org/1998/Math/MathML" xmlns:xlink="http://www.w3.org/1999/xlink" dtd-version="1.3" xml:lang="en" article-type="research-article">
+  <?properties open_access?>
+  <processing-meta base-tagset="archiving" mathml-version="3.0" table-model="xhtml" tagset-family="jats">
+    <restricted-by>pmc</restricted-by>
+  </processing-meta>
+  <front><journal-meta><journal-id journal-id-type="nlm-ta">Cancer Res Commun</journal-id><journal-id journal-id-type="iso-abbrev">Cancer Res Commun</journal-id><journal-title-group><journal-title>Cancer Research Communications</journal-title></journal-title-group><issn pub-type="epub">2767-9764</issn><publisher><publisher-name>American Association for Cancer Research</publisher-name></publisher></journal-meta>
+<article-meta><article-id pub-id-type="pmid">38954770</article-id><article-id pub-id-type="pmc">11320025</article-id>
+<article-id pub-id-type="publisher-id">CRC-24-0113</article-id><article-id pub-id-type="doi">10.1158/2767-9764.CRC-24-0113</article-id><article-version article-version-type="VoR" id="ver1">Version of Record</article-version><article-categories><subj-group subj-group-type="heading"><subject>Research Article</subject></subj-group></article-categories><title-group><article-title>mTORC1-Driven Protein Translation Correlates with Clinical Benefit of Capivasertib within a Genetically Preselected Cohort of <italic toggle="yes">PIK3CA</italic>-Altered Tumors</article-title><alt-title alt-title-type="short">Proteomic Stratification of Genetically Preselected Tumors</alt-title></title-group><contrib-group><contrib contrib-type="author"><contrib-id contrib-id-type="orcid" authenticated="false">https://orcid.org/0009-0007-9822-8087</contrib-id><name><surname>Sobsey</surname><given-names>Constance A.</given-names></name><xref rid="aff1" ref-type="aff">1</xref><xref rid="aff2" ref-type="aff">2</xref></contrib><contrib contrib-type="author"><contrib-id contrib-id-type="orcid" authenticated="false">https://orcid.org/0009-0006-5757-2394</contrib-id><name><surname>Froehlich</surname><given-names>Bjoern C.</given-names></name><xref rid="aff3" ref-type="aff">3</xref><xref rid="aff4" ref-type="aff">4</xref></contrib><contrib contrib-type="author"><contrib-id contrib-id-type="orcid" authenticated="false">https://orcid.org/0009-0002-8453-6664</contrib-id><name><surname>Mitsa</surname><given-names>Georgia</given-names></name><xref rid="aff1" ref-type="aff">1</xref><xref rid="aff2" ref-type="aff">2</xref></contrib><contrib contrib-type="author"><contrib-id contrib-id-type="orcid" authenticated="false">https://orcid.org/0009-0008-6206-6853</contrib-id><name><surname>Ibrahim</surname><given-names>Sahar</given-names></name><xref rid="aff1" ref-type="aff">1</xref><xref rid="aff2" ref-type="aff">2</xref></contrib><contrib contrib-type="author"><contrib-id contrib-id-type="orcid" authenticated="false">https://orcid.org/0000-0002-3639-2443</contrib-id><name><surname>Popp</surname><given-names>Robert</given-names></name><xref rid="aff5" ref-type="aff">5</xref></contrib><contrib contrib-type="author"><contrib-id contrib-id-type="orcid" authenticated="false">https://orcid.org/0000-0002-4960-5460</contrib-id><name><surname>Zahedi</surname><given-names>Rene P.</given-names></name><xref rid="aff1" ref-type="aff">1</xref><xref rid="aff6" ref-type="aff">6</xref><xref rid="aff7" ref-type="aff">7</xref><xref rid="aff8" ref-type="aff">8</xref><xref rid="aff9" ref-type="aff">9</xref></contrib><contrib contrib-type="author"><contrib-id contrib-id-type="orcid" authenticated="false">https://orcid.org/0000-0002-8996-8354</contrib-id><name><surname>de Bruin</surname><given-names>Elza C.</given-names></name><xref rid="aff10" ref-type="aff">10</xref></contrib><contrib contrib-type="author"><contrib-id contrib-id-type="orcid" authenticated="false">https://orcid.org/0000-0003-2394-6512</contrib-id><name><surname>Borchers</surname><given-names>Christoph H.</given-names></name><xref rid="aff1" ref-type="aff">1</xref><xref rid="aff2" ref-type="aff">2</xref><xref rid="aff11" ref-type="aff">11</xref><xref rid="aff12" ref-type="aff">12</xref></contrib><contrib contrib-type="author" corresp="yes"><contrib-id contrib-id-type="orcid" authenticated="false">https://orcid.org/0000-0001-5430-3750</contrib-id><name><surname>Batist</surname><given-names>Gerald</given-names></name><xref rid="aff13" ref-type="aff">13</xref><xref rid="aff14" ref-type="aff">14</xref><xref rid="cor1" ref-type="corresp">*</xref></contrib></contrib-group><aff id="aff1">
+<label>1</label>
+<institution>Segal Cancer Proteomics Centre, Lady Davis Institute, Jewish General Hospital, McGill University, Montreal, QC, Canada.</institution>
+</aff><aff id="aff2">
+<label>2</label>
+<institution>Division of Experimental Medicine, McGill University, Montreal, QC, Canada.</institution>
+</aff><aff id="aff3">
+<label>3</label>
+<institution>University of Victoria-Genome British Columbia Proteomics Centre, University of Victoria, Victoria, BC, Canada.</institution>
+</aff><aff id="aff4">
+<label>4</label>
+<institution>Department of Biochemistry and Microbiology, University of Victoria, Victoria, BC, Canada.</institution>
+</aff><aff id="aff5">
+<label>5</label>
+<institution>MRM Proteomics Inc., Montreal, QC, Canada.</institution>
+</aff><aff id="aff6">
+<label>6</label>
+<institution>Department of Internal Medicine, University of Manitoba, Winnipeg, MB, Canada.</institution>
+</aff><aff id="aff7">
+<label>7</label>
+<institution>Manitoba Centre for Proteomics and Systems Biology, Winnipeg, MB, Canada.</institution>
+</aff><aff id="aff8">
+<label>8</label>
+<institution>Department of Biochemistry and Medical Genetics, University of Manitoba, Winnipeg, MB, Canada.</institution>
+</aff><aff id="aff9">
+<label>9</label>
+<institution>CancerCare Manitoba Research Institute, Winnipeg, MB, Canada.</institution>
+</aff><aff id="aff10">
+<label>10</label>
+<institution>Oncology R&amp;D, AstraZeneca, Cambridge, United Kingdom.</institution>
+</aff><aff id="aff11">
+<label>11</label>
+<institution>Gerald Bronfman Department of Oncology, Lady Davis Institute, Jewish General Hospital, McGill University, Montreal, QC, Canada.</institution>
+</aff><aff id="aff12">
+<label>12</label>
+<institution>Department of Pathology, McGill University, Montreal, QC, Canada.</institution>
+</aff><aff id="aff13">
+<label>13</label>
+<institution>Segal Cancer Centre, Jewish General Hospital, McGill University, Montreal, QC, Canada.</institution>
+</aff><aff id="aff14">
+<label>14</label>
+<institution>McGill Centre for Translational Research in Cancer, Lady Davis Institute, Montreal, QC, Canada.</institution>
+</aff><author-notes><corresp id="cor1">
+<label>*</label>
+<bold>Corresponding Author:</bold> Gerald Batist, Jewish General Hospital, 3755 Cote St Catherine Road, Montreal, QC H3T 1E2, Canada. E-mail: <email>Gerald.batist@mcgill.ca</email></corresp></author-notes><pub-date iso-8601-date="2024-08-01" pub-type="collection"><month>8</month><year>2024</year></pub-date><pub-date iso-8601-date="2024-08-13" pub-type="epub"><day>13</day><month>8</month><year>2024</year></pub-date><volume>4</volume><issue>8</issue><fpage>2058</fpage><lpage>2074</lpage><history><date date-type="received" iso-8601-date="2024-03-28"><day>28</day><month>3</month><year>2024</year></date><date date-type="rev-recd" iso-8601-date="2024-05-12"><day>12</day><month>5</month><year>2024</year></date><date date-type="accepted" iso-8601-date="2024-06-28"><day>28</day><month>6</month><year>2024</year></date></history><permissions><copyright-statement>©2024 The Authors; Published by the American Association for Cancer Research</copyright-statement><copyright-year>2024</copyright-year><copyright-holder>American Association for Cancer Research</copyright-holder><license><ali:license_ref xmlns:ali="http://www.niso.org/schemas/ali/1.0/" specific-use="textmining" content-type="ccbylicense">https://creativecommons.org/licenses/by/4.0/</ali:license_ref><license-p>This open access article is distributed under the Creative Commons Attribution 4.0 International (CC BY 4.0) license.</license-p></license></permissions><self-uri xlink:href="crc-24-0113.pdf"/><abstract><title>Abstract</title><p>Capivasertib is a potent selective inhibitor of AKT. It was recently FDA approved in combination with fulvestrant to treat HR<sup>+</sup>, HER2-negative breast cancers with certain genetic alteration(s) activating the PI3K pathway. In phase I trials, heavily pretreated patients with tumors selected for activating PI3K pathway mutations treated with capivasertib monotherapy demonstrated objective response rates of &lt;30%. We investigated the proteomic profile associated with capivasertib response in genetically preselected patients and cancer cell lines. We analyzed samples from 16 <italic toggle="yes">PIK3CA</italic>-mutated patient tumors collected prior to capivasertib monotherapy in the phase I trial. PI3K pathway proteins were precisely quantified with immuno-Matrix-Assisted Laser Desorption/Ionization-mass spectrometry (iMALDI-MS). Global proteomic profiles were also obtained. Patients were classified according to response to capivasertib monotherapy: “clinical benefit (CB)” (≥12 weeks without progression, <italic toggle="yes">n</italic> = 7) or “no clinical benefit (NCB)” (progression in &lt;12 weeks, <italic toggle="yes">n</italic> = 9). Proteins that differed between the patient groups were subsequently quantified in <italic toggle="yes">AKT1- or PIK3CA</italic>-altered breast cancer cell lines with varying capivasertib sensitivity. The measured concentrations of AKT1 and AKT2 varied among the <italic toggle="yes">PIK3CA</italic>-mutated tumors but did not differ between the CB and NCB groups. However, analysis of the global proteome data showed that translational activity was higher in tumors of the NCB vs. CB group. When reproducibly quantified by validated LC-MRM-MS assays, the same proteins of interest similarly distinguished between capivasertib-sensitive versus -resistant cell lines. The results provide further evidence that increased mTORC1-driven translation functions as a mechanism of resistance to capivasertib monotherapy. Protein concentrations may offer additional insights for patient selection for capivasertib, even among genetically preselected patients.</p><sec><title>Significance:</title><p>Capivasertib’s first-in-class FDA approval demonstrates its promise, yet there remains an opportunity to optimize its use. Our results provide new evidence that proteomics can stratify genetically preselected patients on clinical benefit. Characterization of the same profile in cell lines furnishes additional validation. Among <italic toggle="yes">PIK3CA</italic>-altered tumors, increased mTORC1-driven translation appears to confer intrinsic resistance. Assessing mTORC1 activation could therefore prove a useful complement to the existing genetic selection strategy for capivasertib.</p></sec></abstract><counts><page-count count="17"/></counts><custom-meta-group><custom-meta><meta-name>crossmark</meta-name><meta-value>true</meta-value></custom-meta></custom-meta-group></article-meta></front>
+  <body>
+    <sec sec-type="introduction" id="s1">
+      <title>Introduction</title>
+      <p>The PI3K/AKT/mTOR signaling pathway has an established role in tumor cell proliferation, is mutated in more than 50% of breast cancers (<xref rid="bib1" ref-type="bibr">1</xref>), and is the target of many new therapeutic agents (<xref rid="bib2" ref-type="bibr">2</xref>). Although direct mutations of AKT are comparatively rare, overexpression and overactivation of AKT are key factors in cancer progression. In response to PI3K pathway activation, phospho-AKT promotes downstream oncogenic functions including cell growth, cell survival, and metabolic changes (<xref rid="bib3" ref-type="bibr">3</xref>). Capivasertib (AZD5363, Truqap) competitively interacts with the ATP binding site of all three AKT isoforms (AKT1/2/3) and inhibits AKT’s catalytic activity with high potency and higher selectivity than previously developed compounds, resulting in the arrest of tumor cell growth (<xref rid="bib4" ref-type="bibr">4</xref>).</p>
+      <p>Capivasertib in combination with fulvestrant was FDA approved in November 2023 for the treatment of hormone receptor (HR)-positive, HER2-negative advanced or metastatic breast cancer, with one or more confirmed genetic alterations associated with PI3K pathway activation (<xref rid="bib5" ref-type="bibr">5</xref>)<italic toggle="yes">.</italic> FoundationOne was approved as a companion diagnostic assay for the associated genetic markers, which include mutations, copy-number variation, and other alterations, in <italic toggle="yes">PIK3CA</italic>, <italic toggle="yes">AKT1</italic>, or <italic toggle="yes">PTEN</italic> (<xref rid="bib5" ref-type="bibr">5</xref>). The eligible cohort is currently limited to adults who progressed on endocrine-based therapy in the metastatic setting or who had recurrence during or within 12 months of completing adjuvant therapy. The approval of capivasertib plus fulvestrant therapy is based on results of the CAPItello-291 phase III trial, which demonstrated a dramatically reduced hazard ratio (HR) of 0.51 on the primary endpoint of progression-free survival (PFS) for combination therapy versus fulvestrant alone in patients with PI3K-altered tumors (<xref rid="bib5" ref-type="bibr">5</xref>). However, an exploratory analysis of patients whose tumors did not harbor identifiable PI3K pathway alterations found a possible benefit for the addition of capivasertib in this cohort as well, as indicated by a HR of 0.61 to 1.02 [95% confidence interval (CI)] after excluding patients with unknown next-generation sequencing results.</p>
+      <p>Previous clinical trials have delivered varying results with respect to the power and necessity of genetic biomarkers for capivasertib. In phase I trials, heavily pretreated patients, patients selected for their tumors' activating <italic toggle="yes">PIK3CA</italic> and <italic toggle="yes">AKT1</italic> mutations had objective response rates (ORR) of 4% to 29% to capivasertib monotherapy (<xref rid="bib6" ref-type="bibr">6</xref>–<xref rid="bib8" ref-type="bibr">8</xref>). This represents a clinically meaningful response rate in a population of patients with advanced solid tumors who had previously progressed on standard therapies. However, higher clinical activity might be expected in a population carefully selected for a targeted agent. The FAKTION phase II trial (<italic toggle="yes">n</italic> = 140), which evaluated capivasertib plus fulvestrant in aromatase inhibitor-resistant estrogen receptor (ER)-positive breast cancer, initially found no effect of mutations on the response rate to combination therapy (<xref rid="bib9" ref-type="bibr">9</xref>), whereas a subsequent updated analysis (<italic toggle="yes">n</italic> = 185) found that the benefit was greater in patients with activating mutations (<xref rid="bib10" ref-type="bibr">10</xref>). In CAPItello-291, the clinical benefit (CB) rate for combination therapy of 56% among the subset of patients with PI3K-altered tumors (<italic toggle="yes">n</italic> = 289) was similar to the rate of 51% across the overall population (<italic toggle="yes">n</italic> = 708) enrolled in the study (<xref rid="bib5" ref-type="bibr">5</xref>).</p>
+      <p>While the recent FDA approval doubtlessly weighed the results of all of these studies in the decision to guide patient selection with gene-based assays, we believe that this data—together with the fact that capivasertib is first-in-class—means that, like many new drugs, further investigation is merited into biomarkers to help optimize the effective use of capivasertib in clinical practice. Direct measurement of the proteome has shown unique potential for identifying and verifying active cancer-driving alterations that closely correspond to a tumors’ treatment sensitivity or resistance (<xref rid="bib11" ref-type="bibr">11</xref>, <xref rid="bib12" ref-type="bibr">12</xref>). To evaluate the utility of proteomics for predicting treatment response to capivasertib, we utilized modern mass spectrometry–based methods to directly analyze the protein content of formalin-fixed, paraffin-embedded (FFPE) tumor tissues from patients enrolled in a phase I study of capivasertib’s antitumor activity. To further verify an association between the observed proteomic profile and capivasertib response, we applied corresponding targeted assays, validated in accordance with the NCI’s Clinical Proteomics Tumor Analysis Consortium (CPTAC) guidelines, to precisely quantify proteins of interest in analogous <italic toggle="yes">PIK3CA</italic>-altered breast cancer cell lines with varying sensitivities to capivasertib.</p>
+    </sec>
+    <sec sec-type="materials|methods" id="s2">
+      <title>Materials and Methods</title>
+      <p>Full descriptions of all methods are provided in the Supplemental Materials.</p>
+      <sec id="s2-1">
+        <title>Patient tumor samples</title>
+        <p>The study was conducted in accordance with the Declaration of Helsinki and approved by the Research Ethics Committee of the Jewish General Hospital (Project #2018-663 17-004, approved March 03, 2017) in Montreal, Quebec, Canada. Anonymized patient data and samples were obtained under site-specific Research Ethics Board approval as part of AstraZeneca’s registered international multicenter clinical trial of AZD5363 (NCT01226316, posted October 22, 2010; ref. <xref rid="bib6" ref-type="bibr">6</xref>). Written informed consent was obtained from all participants. De-identified samples and clinical data were provided for analysis under the conditions of a legal agreement between AstraZeneca, McGill University, University of Victoria, and the funders, in accordance with the patient consent form.</p>
+        <p>The sample set was drawn from patients with breast cancer whose tumor pathology was either ER positive (ER<sup>+</sup>) or HER2-positive (HER2<sup>+</sup>), or patients with gynecological (ovarian, cervical, or endometrial) cancers for whom no standard therapy was effective. For this cohort, eligibility was restricted to patients whose tumors contained known activating <italic toggle="yes">PIK3CA</italic> mutation(s) detected during screening. Tumor samples obtained at the time of screening were stored at ambient temperature as slide-mounted 4-µm-thick FFPE tumor tissue slices.</p>
+        <p>The enrolled patients received capivasertib 480 mg twice daily for 4 days followed by 3 days off, repeated in 21-day cycles. Tumor volume was measured according to RECIST v1.1 criteria within 28 days of the start of treatment and at specified timepoints after the start of treatment (i.e., weeks 6, 12, 18, 24, etc.). Target lesion response was categorized into complete response (CR), partial response (PR, ≥30% decrease), stable disease (SD, volume ± &lt;30%), or progressive disease (PD, ≥30% increase; ref. <xref rid="bib6" ref-type="bibr">6</xref>). Treatment was continued as tolerated, until evidence of disease progression. Standardized, anonymized response data were used to classify patient drug response based on PFS. CB was defined as PFS observed for a minimum of 12 weeks after starting capivasertib. “No CB” (NCB) was defined as less than 12 weeks of observed PFS while receiving capivasertib.</p>
+      </sec>
+      <sec id="s2-2">
+        <title>Cell line samples</title>
+        <p>Well-characterized hormone-receptor positive, <italic toggle="yes">AKT1</italic>- or <italic toggle="yes">PIK3CA</italic>-altered breast cancer cell lines were selected for analysis. HCC-1428 (RRID:CVCL_1252) was purchased from ATCC (CRL-2327, via Cedarlane, Feb 2022). EFM-19 (RRID:CVCL_0253) was purchased DSMZ (ACC 231, July 2022). ZR-75-30 (RRID:CVCL_1661) and MCF-7 (RRID:CVCL_0031) were gifts from the laboratory of Dr. Mark Basik at the Segal Cancer Centre (received May 2022). Cell lines underwent short tandem repeat DNA profiling and mycoplasma detection/elimination prior to the beginning of the experiments, which were conducted June to November 2022. All cell lines were cultured in RPMI-1640 with 10% or 15% FBS, according to manufacturer directions, with 1% P/S, for fewer than 8 passages. Samples of each cell line were collected prior to capivasertib exposure, washed with PBS, and stored at −80°C until analysis. Each cell line was tested for sensitivity to capivasertib using a standard alamarBlue cytotoxicity assay, based on at least three independent replicates.</p>
+      </sec>
+      <sec id="s2-3">
+        <title>Protein extraction, digestion, and immuno-Matrix-Assisted Laser Desorption/Ionization mass spectrometry (iMALDI-MS)</title>
+        <p>Tumor samples were processed and analyzed using a multistep workflow (Supplementary Methods S1), beginning with xylene deparaffinization and ethanol rehydration. Samples were then extracted by high-temperature incubation and sonication. The concentration of total protein in each sample was quantified by Pierce bicinchoninic acid protein assay kit with a ThermoFisher MultiSkan Go spectrophotometer.</p>
+        <p>Quantitation of AKT by immuno-matrix-assisted laser desorption/ionization (iMALDI)-MS was performed as previously described (<xref rid="bib13" ref-type="bibr">13</xref>). Diluted sample aliquots containing 10 µg of total protein were prepared in an automated fashion on an Agilent Bravo Liquid Handling Robot. The calibration curve was prepared by spiking known quantities (0–20 fmol) of unlabeled standard peptide into 10 µg of bovine serum albumin. Each tumor or calibration sample was denatured with sodium deoxycholate (DOC), reduced with tris(2-carboxyethyl)phosphine (TCEP), alkylated with iodoacetamide (IAA), and quenched with dithiothreitol (DTT). Digestion was performed with tosyl phenylalanyl chloromethyl ketone (TCPK)-treated trypsin (substrate-to-enzyme ratio of 2:1, 1 hour, 37°C), prior to quenching with tosyllysine chloromethylketone (TLCK). A phosphatase-based phosphopeptide quantitation (PPQ) method, as described in Domanski and colleagues (<xref rid="bib14" ref-type="bibr">14</xref>), was performed by incubating aliquots with or without alkaline phosphatase (1U/µg total protein, 2 hours, 37°C). Stable isotope-labeled internal standard peptides were added to each digested sample.</p>
+        <p>Immunoenrichment was achieved by tumbling samples overnight at 4°C with antipeptide antibodies (Signatope GmbH) coupled to magnetic beads. The AKT-depleted supernatant from this step was retained; a portion was reserved for global proteome analysis by nano-LC-Orbitrap MS. The remainder was sequentially enriched using antipeptide antibodies for PTEN and PI3K p110α to enable quantitation via our previously validated iMALDI method (<xref rid="bib15" ref-type="bibr">15</xref>). Beads were washed prior to spotting on a MALDI target. α-Cyano-4-hydroxycinnamic acid (HCCA) MALDI matrix was applied to the dried spots, which were stored at room temperature until analysis.</p>
+        <p>Mass spectra were acquired on a Bruker Microflex LRF benchtop MALDI-TOF-MS (RRID:SCR_018696). Data analysis was performed in FlexAnalysis 3.4 with Savitsky-Golay smoothing, baseline subtraction, and automated peak picking. Calibration curves were generated using a linear regression with a 1/x<sup>2</sup> weighting. Assay performance was confirmed with quality control samples (QC samples; Supplementary Validation Data S1).</p>
+      </sec>
+      <sec id="s2-4">
+        <title>Nano-LC-Orbitrap MS analysis, protein identification and quantification</title>
+        <p>A 2-µL aliquot of the AKT-depleted supernatant from each sample’s immunoenrichment, corresponding to 117.5 ng of total protein digest, was reserved for label-free quantitation of the global proteome. Samples were prepared using custom StageTips for desalting before drying under vacuum and resuspension in 0.1% formic acid for injection.</p>
+        <p>Online liquid chromatography was performed on an Easy-nLC 1200 equipped with a precolumn (particle size, 3 µm; 2 cm × 75 µm inner diameter) and a nanoscale main analytical column (particle size, 2 µm; 25 cm × 75 µm inner diameter), both AcclaimPepMap100 C18 (ThermoFisher Scientific). Elution was performed over a 50-minute gradient (flow rate, 300 nL/minutes; 20°C; mobile phase A: 0.1% formic acid; mobile phase B: 84% acetonitrile, 0.1% formic acid).</p>
+        <p>Mass spectra were acquired on a Q-Exactive Plus MS with a Nanospray Flex ion source (RRID:SCR_020556, ThermoFisher Scientific). Using a data-dependent acquisition (DDA) method, the 15 most abundant precursor ions (charge states: 2+ to 4+) were selected for MS/MS fragmentation (dynamic exclusion, 40 seconds). Full scan MS were acquired for the mass range from m/z 350 to m/z 1,500 (resolution, 70,000; AGC target, 1 × 10<sup>6</sup>; max injection time, 50 ms). MS2 spectra were acquired following HCD fragmentation (normalized CE, 28), with an isolation width of 1.2 Da (resolution, 17,500; AGC target, 2 × 10<sup>4</sup>; max injection time, 64 ms).</p>
+        <p>MS raw global proteome data were processed using Proteome Discoverer 2.4 (RRID:SCR_014477, Thermo Scientific). Database searches were performed using SequestHT (RRID:SCR_000286) and a human Swiss-Prot database (RRID:SCR_021164, January 2019; 20,414 target entries), assuming a maximum of 1 missed tryptic cleavage. Mass tolerances were 10 ppm for precursor ions and 0.02 Da for product ions. Scaled, normalized, abundances were exported to Microsoft Excel (RRID:SCR_016137), and filtered for protein IDs with ≥2 unique peptides.</p>
+      </sec>
+      <sec id="s2-5">
+        <title>LC-MRM-MS assays</title>
+        <p>Targeted multiplexed UPLC-MRM-MS assays were developed and optimized for 54 proteins of interest using synthetic proteotypic peptides for calibration and corresponding stable isotope-labeled (SIS) peptides as internal standards for quantitation (Sobsey and colleagues, submitted). Assays were characterized in accordance with the CPTAC guidelines (<xref rid="bib16" ref-type="bibr">16</xref>).</p>
+        <p>Cell line samples underwent extraction and total protein quantitation using methods similar to those used on the deparaffinized patient tumor samples. Aliquots of 80 µg of total protein were manually prepared for in-solution digestion by denaturation with DOC, reduction with TCEP, alkylation with IAA, and quenching with DTT. Tryptic digestion was performed at a substrate-to-enzyme ratio of 20:1 (Worthington, TCPK-treated, 17 hours, 37°C), prior to quenching on ice, and spiking with SIS peptides. Solid Phase Extraction (Oasis SPE HLB 1 cc cartridges, 10 mg sorbent) was performed according to manufacturer directions on a vacuum manifold. Eluates were dried under vacuum and reconstituted in H<sub>2</sub>O, 0.1% formic acid for injection. The calibration curve was prepared by adding known equimolar quantities (0–100 fmol on-column) of 54 unlabeled synthetic peptides into digested BSA spiked with SIS peptide mix. A previously quantified pooled cell lysate sample was repeatedly analyzed as a quality control.</p>
+        <p>Samples and calibration standards were analyzed via 10 μL injections (20 µg total protein digest on-column) on an Agilent 1290 Infinity liquid chromatography system (RRID:SCR_019375) with a Zorbax Eclipse plus C18 column (RRHD; particle size, 1.8 µm; internal diameter, 2.1 × 15 mm; 50°C; flow rate, 0.35 mL/minutes) coupled to a 6495B triple quadrupole mass spectrometer (Agilent Technologies, Santa Clara, CA). Elution was performed over a 46-minute gradient (B: 2%–80%; mobile phase A: H<sub>2</sub>O, 0.1% formic acid, mobile phase B: acetonitrile, 0.1% formic acid). Mass spectra were acquired in positive ion mode using a scheduled MRM-MS method targeting ≥3 transition pairs per peptide. Data were processed in Skyline (RRID:SCR_014080) for peak integration and quantitation.</p>
+      </sec>
+      <sec id="s2-6">
+        <title>Data analysis and bioinformatics</title>
+        <p>Descriptive statistics and protein concentration data were analyzed in Microsoft Excel (RRID:SCR_016137). Group differences were assessed using the common <italic toggle="yes">t</italic> test and nonparametric tests to address the possibility of non-normal distributions in the protein concentration data. Multivariate statistical analysis was performed using MetaboAnalyst (RRID:SCR_015539; ref. <xref rid="bib17" ref-type="bibr">17</xref>). Volcano plots, Principal Component Analysis, Partial Least Squares Discriminant Analysis, Variable Importance in the Projection (VIP) scores, heatmaps, and hierarchical clustering were generated based on normalized data. StringDB was used for network analysis, to identify clusters of related proteins, and to identify related publications (<xref rid="bib18" ref-type="bibr">18</xref>). Cytoscape (RRID:SCR_003032) was used to visualize the regulation of proteins within the network (<xref rid="bib19" ref-type="bibr">19</xref>). QIAGEN Ingenuity Pathway Analysis (IPA; RRID:SCR_008653) software was used to map the label-free quantification data to canonical pathways. QC analyses confirmed the integrity of the data following batch integration, normalization, and scaling of features (Supplementary Validation Data S2).</p>
+      </sec>
+      <sec sec-type="data-availability" id="s2-7">
+        <title>Data availability</title>
+        <p>Individual participant data associated with the clinical trials sponsored by AstraZeneca can be requested by qualified researchers via the request portal, with request evaluated according to the AstraZeneca disclosure commitment (<ext-link xlink:href="https://astrazenecagroup-dt.pharmacm.com/DT/Home" ext-link-type="uri">https://astrazenecagroup-dt.pharmacm.com/DT/Home</ext-link>) and Responsible Data Sharing Principles. Global proteomics spectra and associated were deposited to the ProteomeXchange Consortium (<ext-link xlink:href="https://www.proteomexchange.org/" ext-link-type="uri">https://www.proteomexchange.org/</ext-link>) via the PRIDE partner repository with the dataset identifier PXD052949. Samples of the polyclonal antibodies for AKT1 and AKT2 can be requested through the Segal Cancer Proteomics Centre (Montreal, QC, Canada). LC-MRM-MS assay information and validation data are publicly available in the CPTAC Assay Portal (<ext-link xlink:href="https://assays.cancer.gov/available_assays" ext-link-type="uri">https://assays.cancer.gov/available_assays</ext-link>, IDs: 6077-6129; see Supplementary Methods S1 for links to each assay). MRM-MS assay kits including the required peptide standards and instrument files are now commercially available from MRM Proteomics Inc. (Montreal, QC, Canada).</p>
+      </sec>
+    </sec>
+    <sec sec-type="results" id="s3">
+      <title>Results</title>
+      <p>Slide-mounted FFPE tumor samples were obtained from patients with activating <italic toggle="yes">PIK3CA</italic> mutations in their ER<sup>+</sup> or HER<sup>+</sup> breast or gynecological cancers, respectively, prior to treatment in a multicenter phase I clinical trial of capivasertib (NCT01226316). Twenty-three 4-μm slides, representing 16 patient tumors, yielded sufficient material (≥25 μg total protein/slide) for the analyses. Patients were coded as “CB” (≥12 weeks of PFS after treatment initiation; <italic toggle="yes">n</italic> = 7) or “NCB” (&lt;12 weeks PFS; <italic toggle="yes">n</italic> = 9) as described in the “Methods” section. As shown in <xref rid="tbl1" ref-type="table">Table 1</xref>, the two groups had similar overall clinical characteristics, but the CB group had a greater proportion of samples derived from metastatic sites compared to the NCB group.</p>
+      <table-wrap position="float" id="tbl1">
+        <label>Table 1</label>
+        <caption>
+          <p>Descriptive statistics for the patient samples analyzed</p>
+        </caption>
+        <table frame="hsides" rules="groups">
+          <thead>
+            <tr>
+              <th align="left" rowspan="2" colspan="1"/>
+              <th align="left" rowspan="1" colspan="1">Clinical Benefit (CB)</th>
+              <th align="left" rowspan="1" colspan="1">No Clinical Benefit (NCB)</th>
+            </tr>
+            <tr>
+              <th align="left" rowspan="1" colspan="1">Group (<italic toggle="yes">n</italic> = 7)</th>
+              <th align="left" rowspan="1" colspan="1">Group (<italic toggle="yes">n</italic> = 9)</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td align="left" colspan="3" rowspan="1">Clinical Information</td>
+            </tr>
+            <tr>
+              <td align="left" rowspan="1" colspan="1">  Breast (<italic toggle="yes">n</italic> =__)</td>
+              <td align="left" rowspan="1" colspan="1">3</td>
+              <td align="left" rowspan="1" colspan="1">4</td>
+            </tr>
+            <tr>
+              <td align="left" rowspan="1" colspan="1">  Gynecological (<italic toggle="yes">n</italic> =__)</td>
+              <td align="left" rowspan="1" colspan="1">4</td>
+              <td align="left" rowspan="1" colspan="1">5</td>
+            </tr>
+            <tr>
+              <td align="left" rowspan="1" colspan="1">Patient weight (kg)</td>
+              <td align="left" rowspan="1" colspan="1">69.9 ± 18.8</td>
+              <td align="left" rowspan="1" colspan="1">58.9 ± 10.2</td>
+            </tr>
+            <tr>
+              <td align="left" rowspan="1" colspan="1">Patient age (years)</td>
+              <td align="left" rowspan="1" colspan="1">63.0 ± 10.9</td>
+              <td align="left" rowspan="1" colspan="1">56.7 ± 9.4</td>
+            </tr>
+            <tr>
+              <td align="left" colspan="3" rowspan="1">WHO Performance Status</td>
+            </tr>
+            <tr>
+              <td align="left" rowspan="1" colspan="1">  PS 0 (<italic toggle="yes">n</italic> =__)</td>
+              <td align="left" rowspan="1" colspan="1">3</td>
+              <td align="left" rowspan="1" colspan="1">5</td>
+            </tr>
+            <tr>
+              <td align="left" rowspan="1" colspan="1">  PS 1 (<italic toggle="yes">n</italic> =__)</td>
+              <td align="left" rowspan="1" colspan="1">4</td>
+              <td align="left" rowspan="1" colspan="1">4</td>
+            </tr>
+            <tr>
+              <td align="left" rowspan="1" colspan="1">Metastatic sites at enrollment</td>
+              <td align="left" rowspan="1" colspan="1">2.7 ± 1.0</td>
+              <td align="left" rowspan="1" colspan="1">3.4 ± 1.6</td>
+            </tr>
+            <tr>
+              <td align="left" colspan="3" rowspan="1">Previous lines of treatment</td>
+            </tr>
+            <tr>
+              <td align="left" rowspan="1" colspan="1">  ≤2</td>
+              <td align="left" rowspan="1" colspan="1">1</td>
+              <td align="left" rowspan="1" colspan="1">3</td>
+            </tr>
+            <tr>
+              <td align="left" rowspan="1" colspan="1">  ≥3</td>
+              <td align="left" rowspan="1" colspan="1">4</td>
+              <td align="left" rowspan="1" colspan="1">5</td>
+            </tr>
+            <tr>
+              <td align="left" rowspan="1" colspan="1">  Not specified</td>
+              <td align="left" rowspan="1" colspan="1">2</td>
+              <td align="left" rowspan="1" colspan="1">1</td>
+            </tr>
+            <tr>
+              <td align="left" colspan="3" rowspan="1">Capivasertib Response</td>
+            </tr>
+            <tr>
+              <td align="left" rowspan="1" colspan="1">Adjusted progression-free survival (weeks)*</td>
+              <td align="left" rowspan="1" colspan="1">median: 21.1</td>
+              <td align="left" rowspan="1" colspan="1">5.6</td>
+            </tr>
+            <tr>
+              <td align="left" rowspan="1" colspan="1">survival (weeks)*</td>
+              <td align="left" rowspan="1" colspan="1">(95% CI: 13.0 to 32.3)</td>
+              <td align="left" rowspan="1" colspan="1">(95% CI: 5.3 to 6.1)</td>
+            </tr>
+            <tr>
+              <td align="left" rowspan="1" colspan="1">Best change in tumour volume from</td>
+              <td align="left" rowspan="1" colspan="1">median: −11.9</td>
+              <td align="left" rowspan="1" colspan="1">median: 28.6</td>
+            </tr>
+            <tr>
+              <td align="left" rowspan="1" colspan="1">baseline (RECIST %)**</td>
+              <td align="left" rowspan="1" colspan="1">(95% CI: −52.2 to −8.1)</td>
+              <td align="left" rowspan="1" colspan="1">(95% CI: 2.3 to 35.9)</td>
+            </tr>
+            <tr>
+              <td align="left" colspan="3" rowspan="1">Sample Characteristics</td>
+            </tr>
+            <tr>
+              <td align="left" rowspan="1" colspan="1">Sample site*</td>
+              <td align="left" rowspan="1" colspan="1">4</td>
+              <td align="left" rowspan="1" colspan="1">4</td>
+            </tr>
+            <tr>
+              <td align="left" rowspan="1" colspan="1">  Metastatic (<italic toggle="yes">n</italic> =__)</td>
+              <td align="left" rowspan="1" colspan="1">5</td>
+              <td align="left" rowspan="1" colspan="1">1</td>
+            </tr>
+            <tr>
+              <td align="left" rowspan="1" colspan="1">  Primary (<italic toggle="yes">n</italic> =__)</td>
+              <td align="left" rowspan="1" colspan="1">2</td>
+              <td align="left" rowspan="1" colspan="1">8</td>
+            </tr>
+            <tr>
+              <td align="left" rowspan="1" colspan="1">Storage time (years)</td>
+              <td align="left" rowspan="1" colspan="1">7.3 ± 0.7</td>
+              <td align="left" rowspan="1" colspan="1">7.6 ± 1.4</td>
+            </tr>
+            <tr>
+              <td align="left" rowspan="1" colspan="1">Tissue area (mm2)</td>
+              <td align="left" rowspan="1" colspan="1">330.7 ± 116.8</td>
+              <td align="left" rowspan="1" colspan="1">339.5 ± 151.3</td>
+            </tr>
+            <tr>
+              <td align="left" colspan="3" rowspan="1">Cellularity</td>
+            </tr>
+            <tr>
+              <td align="left" rowspan="1" colspan="1">Tumour cells (%)</td>
+              <td align="left" rowspan="1" colspan="1">62.9 ± 11.6</td>
+              <td align="left" rowspan="1" colspan="1">65.9 ± 22.4</td>
+            </tr>
+            <tr>
+              <td align="left" rowspan="1" colspan="1">Necrosis (%)</td>
+              <td align="left" rowspan="1" colspan="1">3.9 ± 3.2</td>
+              <td align="left" rowspan="1" colspan="1">5.0 ± 2.7</td>
+            </tr>
+          </tbody>
+        </table>
+        <table-wrap-foot>
+          <fn>
+            <p>Values are given as mean ± standard deviation unless otherwise specified. All patients were female.</p>
+          </fn>
+          <fn>
+            <p>*Denotes statistical significance at <italic toggle="yes">P</italic> &lt; 0.05 (<italic toggle="yes">t</italic> test unequal variance, two-tailed), **<italic toggle="yes">P</italic> &lt; 0.01.</p>
+          </fn>
+        </table-wrap-foot>
+      </table-wrap>
+      <sec id="s3-1">
+        <title>Tumor AKT protein concentrations do not differ between CB and NCB groups</title>
+        <p>Twenty-two slides representing 16 patient tumors were analyzed by iMALDI-MS. The lower limits of quantitation (LLOQ) for AKT1 and AKT2 were 0.3 and 0.6 fmol on-spot, respectively. Among the <italic toggle="yes">PIK3CA</italic> mutation-positive tumor samples with AKT data (CB <italic toggle="yes">n</italic> = 7, NCB <italic toggle="yes">n</italic> = 5), the amount of AKT present per 10 µg total protein ranged from 0.6 to 4.5 fmol for AKT1 and 0.6 to 2.0 fmol for AKT2. For tumors from which multiple slides were analyzed, the AKT concentrations showed good agreement across biological replicates, even among non-adjacent slices (<italic toggle="yes">R</italic><sup>2</sup> &gt; 0.95). Most samples did not show sufficient phosphorylation (&gt;30%) of AKT1-Ser473 or AKT2-Ser474 to be quantified by the PPQ assay, with measurable phosphorylation observed in only three tumors (Supplementary Fig. S1). Using the AKT-depleted digest from the AKT iMALDI assay, PTEN and PI3K p110α were quantified in 14 patient tumors (CB <italic toggle="yes">n</italic> = 7, NCB <italic toggle="yes">n</italic> = 7). Within the patient sample set, the PTEN concentration values quantified by iMALDI correlated well with the PTEN histochemical scoring assessment (H-score) previously determined by immunohistochemistry (<italic toggle="yes">R</italic><sup>2</sup> = 0.86; Supplementary Fig. S2).</p>
+        <p>Using our quantitative iMALDI-MS assay, we observed significant inter-tumor variability in the amount of AKT1 and AKT2 protein, with as much as a 4-fold difference among PIK3CA-mutated tumors. However, total AKT1, AKT2, and PTEN protein concentrations did not differ significantly between the CB and NCB groups (Wilcoxon rank test, <italic toggle="yes">P</italic> &gt; 0.05; <xref rid="fig1" ref-type="fig">Fig. 1A</xref>). We separately quantified pAKT1-Ser473 and pAKT2-Ser474 proteins using a mass spectrometry assay with high isoform specificity. However, only three samples showed pAKT stoichiometry sufficient to be precisely quantified by the assay.</p>
+        <fig position="float" id="fig1">
+          <label>Figure 1</label>
+          <caption>
+            <p>Statistical analysis of targeted and global proteome comparing protein expression in analyzed FFPE tumor tissues from the CB (green) and NCB (red) groups. <bold>A,</bold> Schematic of experimental design for phase I of the study. <bold>B,</bold> Results of targeted quantitation by iMALDI-MS. Boxplots of protein concentrations in the CB (green) vs. NCB (red) groups. Each point represents one patient tumor, averaged for multiple slides. <italic toggle="yes">P</italic>-values are given for a two-tailed <italic toggle="yes">t</italic> test. <bold>C,</bold> Heatmap of 50 selected proteins with highest differential expression between groups showing their normalized LFQ abundances across both analyzed batches. <italic toggle="yes">n</italic> = 23. Arbitrary identifiers are included for the purpose of identifying replicates from the same tumor. <bold>D,</bold> Volcano plot showing the fold change (log<sub>2</sub>FC) of all protein expression features vs. <italic toggle="yes">P</italic>-value (−log<sub>10</sub><italic toggle="yes">P</italic>). <bold>E,</bold> PCA. Proximity of sample replicates originating from the same patients is indicated with a (dashed yellow line). <bold>F,</bold> Features ranked by VIP based on their contribution to the discrimination between the CB and NCB groups in the PLS-DA. The arrows on the right of the VIP Feature list show relative expression of that protein in the NCB group vs. the CB group.</p>
+          </caption>
+          <graphic xlink:href="crc-24-0113_f1" position="float"/>
+        </fig>
+        <p>We also quantified PTEN protein since it is the dominant regulator suppressing AKT phosphorylation in <italic toggle="yes">PIK3CA</italic>-mutated cells. All three samples with &gt;30% pAKT1 or pAKT2 had low PTEN values (&lt;0.36 fmol PTEN/10 μg total protein, in Q1 of the measured values), as did one other sample with 22% pAKT1, which appeared elevated but fell below the assay’s LLOQ. Nonetheless, PTEN expression levels did not differ significantly between the treatment response groups. For PI3K p110α, the large number of samples with concentrations below the lower limit of quantitation of the assay prevented a meaningful comparison between the groups. AKT2 was slightly higher in the metastatic tumors as compared to primary tumors, but the difference did not reach statistical significance (<italic toggle="yes">p</italic> = 0.09; Supplementary Fig. S3).</p>
+      </sec>
+      <sec id="s3-2">
+        <title>Proteins associated with oncogenic functions of AKT are differentially expressed between the CB versus NCB groups</title>
+        <p>Using a new serialized workflow, we acquired global proteomic data using nano-LC-MS-MS for 23 distinct tumor slides from 15 patient tumors (CB <italic toggle="yes">n</italic> = 6, NCB <italic toggle="yes">n</italic> = 9). The workflow permitted further analysis of previously analyzed samples from small aliquots of AKT-depleted supernatant, each containing approximately 107 ng of digested protein. We were able to achieve label-free quantification (LFQ) of up to 1,455 proteins at a false discovery rate of &lt;1%, with a minimum of two unique peptides per protein. A total of 578 proteins were quantified across all samples for further statistical analysis. In light of the higher proportion of samples from metastatic sites in the CB group, the proteomic profiles of metastatic versus primary tumors were compared (Supplementary Fig. S3). The differences in metastatic versus primary tumors identified by PLS-DA were attributable to known markers of metastasis, indicating that biological relationships were preserved following batch integration and data normalization.</p>
+        <p>As shown in <xref rid="fig1" ref-type="fig">Fig. 1</xref>, unsupervised statistical analysis of the global proteome data by hierarchical clustering and by principal component analysis (PCA) confirmed the high similarity of replicates from the same tumor. Supervised statistical analysis with Partial Least Squares–Discriminant Analysis (PLS-DA) resulted in a clear separation of the CB and NCB groups, with little overlap. A total of 53 proteins had abundances that differed between the CB and the NCB group with fold-changes of ≥1.5 and Wilcoxon rank test <italic toggle="yes">P</italic>-values of ≤0.05 (Supplementary Table S1).</p>
+        <p>Of these 53 proteins, the five proteins that were upregulated in the CB group included four immunoglobulins and serum albumin. The five proteins whose expression was higher in the CB group were serum albumin (ALB), polymeric immunoglobulin receptor (PIGR), and some immunoglobulin subunits (IGHG2, IGKC, IGKV4-1). This is aligned with previous evidence linking systemic hypoalbuminuria with reduced PFS and overall survival in patients treated with TKIs (<xref rid="bib20" ref-type="bibr">20</xref>, <xref rid="bib21" ref-type="bibr">21</xref>). High levels of serum albumin are also associated with reduced TNFα and pro-inflammatory cytokine signaling, diminished gluconeogenesis, and increased activation of AKT to promote cell survival (<xref rid="bib22" ref-type="bibr">22</xref>). This is consistent with the observation that the CB group had reduced levels of CPNE-1 (suggesting lower TNFα signaling) and inflammatory proteins (ILF-2, ILF-3). There is mixed evidence about the role of PIGR in cancer, but some evidence suggests that PIGR promotes oncogenic AKT activity with downstream effects on GSK3B/β-catenin that are reversed by AKT inhibition (<xref rid="bib23" ref-type="bibr">23</xref>).</p>
+        <p>The 48 proteins that were downregulated in the CB group versus the NCB group cluster to three main nodes. The largest group includes 13 structural subunits of ribosomes. A related, strongly interconnected, node relates to regulation and processing of mRNA and DNA. The final node consists of 11 differentially expressed mitochondrial proteins. Taken as a whole, the nodes suggest strongly increased translational activity in the NCB group together with the associated energetic demands. GTP-binding protein SAR1a was the only one of the 53 differentially expressed proteins that overlapped with the proteins differentiating metastatic from primary tumors.</p>
+        <p>Protein network analysis of the 48 downregulated proteins plus AKT1, using the String-DB, found 138 high-confidence interactions between proteins within this group (<xref rid="fig2" ref-type="fig">Fig. 2A</xref>). The observed protein–protein interaction enrichment <italic toggle="yes">P</italic>-value of &lt;1.0e<sup>−16</sup> provides strong evidence for a meaningful biological relationship between the proteins of interest in this dataset. Network analysis shows an enrichment of ribosomal proteins, mitochondrial proteins, and proteins involved in mRNA processing.</p>
+        <fig position="float" id="fig2">
+          <label>Figure 2</label>
+          <caption>
+            <p>Mapping of global proteomics results from CB vs. NCB groups to protein networks and pathways. <bold>A,</bold> Network analysis via String-DB plot of high-confidence protein–protein interactions among proteins that are significantly different between CB and NCB group. Edges represent lines of evidence of protein–protein interactions. Line colors indicate different evidence types: known interactions from curated databases (teal) or published experiments (pink), predicted interactions based on gene location (green), fusion (red), or co-occurrence (blue), or observed co-expression (black), protein homology (purple), or textmining relationships (lime). Major clusters are labeled according to shared features within the cluster. Nodes are overlaid from the Cytoscape visualization, with fold-change shown by color. Node size increases as the <italic toggle="yes">P</italic>-value decreases. <bold>B,</bold> Top 20 canonical pathways that are significantly differentially activated between clinical benefit (CB) and no clinical benefit (NCB) groups, based on assessment with Fisher’s exact test in Qiagen IPA. The height of the bar corresponds to the confidence of an association, with a threshold of <italic toggle="yes">P</italic> &lt; 0.01. IPA’s <italic toggle="yes">Z</italic>-score indicates the direction of regulation and extreme <italic toggle="yes">z</italic>-scores are depicted with increased color intensity. Orange bars represent increased activation in the NCB group whereas blue bars represent upregulated activity in the CB group. White bars indicate pathways with fewer than four mapped proteins or <italic toggle="yes">z</italic>-scores close to zero, indicating that the direction of regulation of individual pathway members does not strongly match a prespecified pattern. Gray bars indicate pathways for which no prediction can be made due to available evidence in the database.</p>
+          </caption>
+          <graphic xlink:href="crc-24-0113_f2" position="float"/>
+        </fig>
+      </sec>
+      <sec id="s3-3">
+        <title>Proteins differentially expressed between the CB versus NCB groups map to translational control pathways</title>
+        <p>To better understand the pathways responsible for the group differences observed, QIAGEN’s IPA software was used to systematically map the differentially expressed proteins, fold-changes, and <italic toggle="yes">P</italic>-values to canonical pathways and to statistically assess the observed patterns of regulation. Pathway enrichment analysis (<xref rid="fig2" ref-type="fig">Fig. 2B</xref>) identified a systematic enrichment of proteins in pathways associated with translational activity (e.g., EIF2 signaling, eIF4/p70S6K, mTOR pathway), inflammation (acute phase response signaling, LXR/RXR activation), cancer cell motility/invasion (actin cytoskeleton signaling), and altered glucose metabolism (gluconeogenesis, glycolysis). LXR/RXR was activated in the CB group. LXRs regulate glycolysis, lipid hemostasis, and possibly immune functions by enhancing the activity of GSK3β, which activates AKT and phosphorylates pathway proteins upstream (<italic toggle="yes">RICTOR</italic>, <italic toggle="yes">PTEN</italic>) and downstream (<italic toggle="yes">TSC</italic>) from AKT (<xref rid="bib24" ref-type="bibr">24</xref>). Proteins belonging to translational control pathways directly downstream from AKT—–eIF4/p70S6K and mTOR signaling—were enriched among the proteins of interest. Expression is upregulated for the associated proteins in the NCB group, though IPA could not statistically confirm the direction of regulation.</p>
+        <p>The EIF2 signaling pathway is of particular interest in this context. eIF2α (EIF2S1) is a master regulator of translation dysregulation in cancer. By modifying the efficiency of translation initiation, PERK-phosphorylated eIF2α can selectively decrease or enhance translation, resulting in the uncoupling of mRNA abundance from protein expression for up to 90% of transcripts (<xref rid="bib25" ref-type="bibr">25</xref>). Since eIF2α works hand-in-hand with AKT to control cell fate decisions, sending compensatory prosurvival signals under conditions of cell stress, eIF2α signaling has been previously identified as a possible mechanism of resistance to AKT inhibitors (<xref rid="bib25" ref-type="bibr">25</xref>–<xref rid="bib27" ref-type="bibr">27</xref>). Furthermore, the elevated expression of ribosomal and translational proteins observed in the NCB group could help sustain eIF2α phosphorylation by limiting ER stress that could trigger the unfolded protein response and sensitize the cells to AKT inhibition (<xref rid="bib28" ref-type="bibr">28</xref>).</p>
+        <p>However, closer examination of the data shows that IPA defined its EIF2 pathway to include ribosomal proteins (RPL10A, RPL14, RPL18, RPLP0) that their EIF4 pathway does not. This led to statistical prioritization of EIF2 signaling in IPA but the authors could not find published evidence of a specific association of EIF2 signaling with these RPLs; in fact, the relationship appears to be mediated by EIF4.</p>
+      </sec>
+      <sec id="s3-4">
+        <title>Targeted analysis in breast cancer cell lines reproduces the proteomic profile seen in patient samples</title>
+        <p>To further investigate the possible association of the identified proteins and pathways with capivasertib response, we implemented a specially developed multiplexed MRM-MS assay to directly quantify many of the proteins of interest (<italic toggle="yes">n</italic> = 29) and related targets (<italic toggle="yes">n</italic> = 16) with increased precision and reproducibility. The panel was applied to samples from HR<sup>+</sup> breast cancer cell lines with known activating PIK3CA or AKT1 alterations published in COSMIC (RRID:SCR_002260). Using a standard cytotoxicity assay, MCF-7 was confirmed to be capivasertib-sensitive (IC<sub>50</sub> &lt; 2 µmol/L), while HCC1428, ZR-75-30, and EFM-19 were found to be capivasertib-resistant (IC<sub>50</sub> &gt; 10 µmol/L; <xref rid="fig3" ref-type="fig">Fig. 3A</xref>). Our CPTAC-validated assays were generally found to be fit-for-purpose in that 42 of the 54 proteins of interest were successfully quantified in most cell line samples. Hierarchical clustering separated sensitive (MCF-7, <italic toggle="yes">n</italic> = 4) from resistant (HCC1428, <italic toggle="yes">n</italic> = 3; ZR-75-30, <italic toggle="yes">n</italic> = 3; EFM-19, <italic toggle="yes">n</italic> = 3) cell lines on the basis of their expression of the proteins of interest (<xref rid="fig3" ref-type="fig">Fig. 3B</xref>). When an FDR-adjusted <italic toggle="yes">t</italic> test was applied, assuming unequal variance, three proteins (CBR1, HSP90AB1, HSPB1) were found to be significantly downregulated in the resistant cell lines and 14 were upregulated (FC &gt; 1.5; <italic toggle="yes">P</italic> &lt; 0.05). The proteomic profile observed in the capivasertib-resistant cell lines closely matched the profile observed in the tumors of patients in the NCB group. Of the 22 protein concentrations that best discriminated between sensitive versus resistant cell lines, 17 (77%) showed the same trend detected in the patient study (<xref rid="fig3" ref-type="fig">Fig. 3E</xref>; Supplementary Table S2).</p>
+        <fig position="float" id="fig3">
+          <label>Figure 3</label>
+          <caption>
+            <p>Statistical analysis of targeted protein quantitation in capivasertib-sensitive (green) and capivasertib-resistant (red) HR<sup>+</sup><italic toggle="yes">PIK3CA</italic>-altered breast cancer cell lines. <bold>A,</bold> Schematic of experimental design for phase II of the study. <bold>B,</bold> Heatmap of protein concentrations quantified by MRM-MS with hierarchical clustering. <bold>C,</bold> Cell line sensitivity to capivasertib, expressed as IC<sub>50</sub> (<bold>D</bold>) Protein concentrations in capivasertib-sensitive vs. capivasertib-resistant cells (<bold>E</bold>) PCA (left) and PLS-DA plot (right). <bold>F,</bold> Top 22 features ranked by VIP scores, presented with the direction of change in capivasertib-resistant vs. capivasertib cell lines as compared to NCB vs. CB patient tumors.</p>
+          </caption>
+          <graphic xlink:href="crc-24-0113_f3" position="float"/>
+        </fig>
+        <p>When quantified directly, expression of ATF4—a protein whose increased expression directly transduces EIF2-driven translation—is nearly identical between resistant and sensitive cell line samples. This result was further supported by the finding that combination treatment with capivasertib and an eIF2α inhibitor (ISRIB, SelleckChem, S7400) did not yield synergistic effects in the capivasertib-resistant HCC-1428 cell line (Supplementary Fig. S4). While the relationships between the analyzed proteins are complex, the sum of the evidence is consistent with increased downstream mTORC1-driven translation in capivasertib-resistance (<xref rid="fig4" ref-type="fig">Fig. 4</xref>). Increased upstream GSKβ/mTORC2-activation might also be associated with capivasertib sensitivity. Given that EIF2 signaling is known to manage the balance between mTORC1 and mTORC2, a role for it cannot be ruled out. Prohibitins (PHB1/2) may be important determinants, as they are known to complex with RAF1 to activate the MEK-ERK pathway (<xref rid="bib29" ref-type="bibr">29</xref>), which is a known mechanism of resistance to AKT inhibition (<xref rid="bib30" ref-type="bibr">30</xref>), to increase AKT activity through positive feedback (<xref rid="bib31" ref-type="bibr">31</xref>), and to support ribosome biogenesis (<xref rid="bib32" ref-type="bibr">32</xref>).</p>
+        <fig position="float" id="fig4">
+          <label>Figure 4</label>
+          <caption>
+            <p>Schematic depicting proteins and pathways differently regulated in capivasertib-resistant cancers, as observed in patient tumors and breast cancer cell lines. Proteins with expression changes confirmed (FC &gt; 1.3; <italic toggle="yes">P</italic> &lt; 0.1) by MRM-MS data in cell lines are shown in red (increased), dark gray (no change), and green (decreased). Proteins with expression data from LFQ in patient tumor samples are shown in dark orange (increased) and dark blue (decreased). Light orange (activated) and light blue (inhibited) indicate proteins with predicted activity changes based on pathway analysis of the LFQ data. Proteins with no expression data are shown in light gray. (Figure Created with <ext-link xlink:href="http://BioRender.com" ext-link-type="uri">BioRender.com</ext-link>.)</p>
+          </caption>
+          <graphic xlink:href="crc-24-0113_f4" position="float"/>
+        </fig>
+      </sec>
+    </sec>
+    <sec sec-type="discussion" id="s4">
+      <title>Discussion</title>
+      <p>
+<italic toggle="yes">AKT</italic> transcript overexpression is frequently observed, and is associated with tumor grade and aggressiveness, irrespective of AKT phosphorylation, in both <italic toggle="yes">PIK3CA</italic>-mutated and <italic toggle="yes">PIK3CA</italic>-wild-type tumors (<xref rid="bib33" ref-type="bibr">33</xref>, <xref rid="bib34" ref-type="bibr">34</xref>). We initially hypothesized that PI3K-altered tumors’ AKT protein concentrations might better correlate with response to the AKT inhibitor capivasertib than genome-only based profiling, but this was not the case within our studied cohort. In addition, despite our expectation of high phospho-AKT concentrations reflecting PI3K pathway activation, few samples showed high phosphorylation levels. Experimental evidence suggests that maximal activation can occur when as little as 5% of the AKT pool is phosphorylated (<xref rid="bib35" ref-type="bibr">35</xref>), so it is possible that available analytical approaches simply do not quantify such low-abundance modifications with the required precision. However, recent studies have also identified the potential for an uncoupling of AKT activity from <italic toggle="yes">PIK3CA</italic> mutations in some cancers (<xref rid="bib36" ref-type="bibr">36</xref>, <xref rid="bib37" ref-type="bibr">37</xref>). This includes the observation that protein levels of typical markers of pathway activity (e.g., pAKT, pS6, p4EBP1) may be unelevated or even markedly reduced in <italic toggle="yes">PIK3CA</italic>-mutated tumors (<xref rid="bib36" ref-type="bibr">36</xref>, <xref rid="bib38" ref-type="bibr">38</xref>, <xref rid="bib39" ref-type="bibr">39</xref>). Understanding the reasons for this disconnect, is an ongoing effort in PI3K-targeted inhibitor development and requires investigation at the proteomic level.</p>
+      <p>AKT1 and AKT2 protein levels did not differ significantly between the groups. Capivasertib also inhibits AKT3, which has been specifically associated with aggressive hard-to-treat disease and merits further attention in subsequent studies (<xref rid="bib40" ref-type="bibr">40</xref>). Nonetheless, label-free quantitation data revealed a series of proteins that were differentially expressed between the CB and NCB groups. The profile observed in the CB group could be associated with greater upstream activation of AKT. Alternatively, higher levels of serum albumin and immune-related proteins could also reflect generally better prognosis, better immune infiltration, and greater perfusion of the tumors in the CB group that facilitates treatment. On the other hand, many of the proteins identified as higher in the NCB group have been previously linked to cancer progression, prognosis, and treatment response. For instance, specific subsets of ribosomal proteins have been identified as regulatory factors in various cancers (<xref rid="bib41" ref-type="bibr">41</xref>, <xref rid="bib42" ref-type="bibr">42</xref>). However, the clustering of differential proteins to a handful of interrelated functions, and functional linkages of the proteins to AKT activity, increase the confidence of the findings and support a specific association with response to capivasertib (vs. general prognostic value).</p>
+      <p>Qiagen IPA analysis pointed to significant activation of EIF2 signaling, EIF4E/S6K and mTOR translational pathways in the NCB group and predicted that Rictor, a key component of mTORC2, may regulate the observed differences through higher activity in the CB group (Supplementary Table S3). As a means of further verifying this profile, we applied a newly validated proteomics panel to reproducibly quantify the proteins of interest from well-characterized cancer cell lines. Remarkably, the observed pattern of differences in protein expression was highly conserved between the patient tumor samples and the cell line model (<xref rid="fig4" ref-type="fig">Fig. 4</xref>). The reproducibility of the profile associated with capivasertib resistance across two orthogonal proteomics approaches and two fully independent models lends significant credibility to the proteins’ ability to detect capivasertib sensitivity. Moreover, the targeted assay panel provided key evidence against attributing the observed increase in translational activity specifically to EIF2 signaling, and instead highlighted the importance of downstream mTOR signaling.</p>
+      <p>Given that no difference in AKT expression or phosphorylation were detected between the CB and NCB groups (both PI3K altered), this study suggests that variability in response to capivasertib monotherapy is likely due to differences in underlying mechanisms of resistance—specifically the downstream mTORC1 activation and increased translation that is evident in the capivasertib-resistant groups. mTORC1-driven resistance to PI3K pathway inhibitors is now well-characterized (<xref rid="bib43" ref-type="bibr">43</xref>, <xref rid="bib44" ref-type="bibr">44</xref>). Previous research points to TSC1/2 or mTOR mutations as a mechanism for mTORC1-driven resistance; mTOR mutation has even been detected and effectively targeted in at least one patient (<xref rid="bib45" ref-type="bibr">45</xref>). However, additional genetic mechanisms likely exist. Our results provide additional evidence for this pathway of resistance from the tumors of a small cohort of patients in a phase II clinical trial. Moreover, we present some of the first evidence that there is a significant proportion of patients in the genetically preselected intent-to-treat cohort whose tumors demonstrate increased mTORC1 activation years before drug exposure. These patients whose tumors show increased activation downstream from mTORC1 are predictably less likely to benefit from capivasertib monotherapy. The profile can be readily identified with a functional protein quantitation assay from tumor samples collected prior to capivasertib exposure.</p>
+    </sec>
+    <sec sec-type="conclusion" id="s5">
+      <title>Conclusion</title>
+      <p>The past almost two decades have seen the rapid emergence of precision medicine, which at first produced evidence that specific genomic variants found in subsets of patient tumors conferred remarkable clinical sensitivity to particular targeted treatments. When the limits of this approach became evident, studies like the WINTHER trial and others demonstrated the added value of transcriptomic data (<xref rid="bib46" ref-type="bibr">46</xref>). Preclinical and clinical data have since demonstrated that protein levels can diverge from transcriptomic (mRNA) data and can assist in guiding choice of therapy (<xref rid="bib11" ref-type="bibr">11</xref>, <xref rid="bib12" ref-type="bibr">12</xref>). Our workflow in this study uniquely combined targeted and global proteomics technologies, making optimal use of volume-limited clinical samples and demonstrating the ability to obtain useful proteomic data from slide-mounted FFPE collected &gt;7 years prior. We further employed an innovative study model, employing preexisting cell lines to verify findings from clinical samples.</p>
+      <p>Our data show the value of deeper molecular profiling at the protein level. We found that even in the context of an activating genetic mutation, downstream pathway activity varies sufficiently to alter treatment response. While many cancer cells exploit the PI3K pathway (even in the absence of detectable mutations), some are also primed to subvert AKT inhibition. That the mTORC1-driven profile can be readily observed at the protein level using the developed assay represents a significant opportunity for translation. The panel implemented here may facilitate detection of shifts in mTORC1 activity by downstream proteomic effects, even in the case of unknown or uncharacterized genetic changes, allowing for the correct stratification of patients with tumors whose mutations are not yet well characterize. Similar approaches may also prove valuable to characterize the proteomic profiles associated with sensitivity among tumors that are negative for <italic toggle="yes">known</italic> PI3K pathway alterations—such as was seen in preclinical studies where capivasertib inhibited the growth of cancer cell lines without identifiable PI3K pathway alterations (<xref rid="bib47" ref-type="bibr">47</xref>). Moreover, the example of EIF2 signaling activation—where molecular changes are rapidly induced without concomitant genetic changes, resulting in uncoupling of the transcriptome and translatome—is another reason to continue prioritizing a proteomics approach.</p>
+      <p>Although the biological relationships observed in our data are compelling, the certainty of our findings is inherently limited by the limited number of samples analyzed and the heterogeneity of a heavily treated clinical population. CB may not accurately reflect treatment efficacy, especially in the absence of a comparator group (e.g., alternative or placebo treatment) to signal the natural history of disease in this small cohort. The imbalance between primary and metastatic origin for the patient samples also presents an important caveat, though this is partially addressed in our statistical analysis. The validated multiplexed proteomics assay will be a useful tool for future validation efforts, as precise quantitation with internal standards will enable reproducible measurement in larger cohorts and development of reference ranges. Long-term, large-scale randomized prospective studies are required to firmly establish the putative markers’ utility for predicting treatment response in a specified setting. Additional mechanistic studies may also be of value, particularly for pinpointing additional co-targeting strategies (e.g., EIF4 inhibitors).</p>
+      <p>Further studies will be needed to determine whether the observed profile can be extended to other cancer types, mutational contexts, or combination treatments. Capivasertib is currently being evaluated in phase III trials for activity as part of combination therapies in oncology settings such as prostate cancer, triple-negative breast cancer, and HR<sup>+</sup> breast cancer (<xref rid="bib9" ref-type="bibr">9</xref>, <xref rid="bib48" ref-type="bibr">48</xref>, <xref rid="bib49" ref-type="bibr">49</xref>). Recent results of the CAPItello-291 phase III trial (NCT04305496) demonstrate that treatment with capivasertib + fulvestrant extends PFS in patients with HR<sup>+</sup>/HER2<sup>−</sup> breast cancers with inadequate response to endocrine therapy. Evidence of treatment benefit was found in the overall population, including patients with and without identifiable AKT pathway alterations (<xref rid="bib50" ref-type="bibr">50</xref>). As capivasertib moves into earlier stages of treatment and is prescribed to a broader group of patients, we will attempt to validate our findings in contemporaneous tissues, using an approach similar to our other biopsy-driven trials (<xref rid="bib51" ref-type="bibr">51</xref>).</p>
+    </sec>
+    <sec sec-type="supplementary-material">
+      <title>Supplementary Material</title>
+      <supplementary-material position="float" content-type="local-data">
+        <label>Supplementary Methods S1</label>
+        <caption>
+          <p>Supplemental Materials and Methods concerning patient samples, cell lines, tissue culture, iMALDI-MS, Nano-LC-Orbitrap-MS, LC-MRM-MS</p>
+        </caption>
+        <media xlink:href="crc-24-0113_supplementary_methods_s1_suppsm1.pdf"/>
+      </supplementary-material>
+      <supplementary-material position="float" content-type="local-data">
+        <label>Supplementary Validation Data S1</label>
+        <caption>
+          <p>Supplementary Validation Data demonstrating the performance of the iMALDI-MS assay</p>
+        </caption>
+        <media xlink:href="crc-24-0113_supplementary_validation_data_s1_suppsd1.pdf"/>
+      </supplementary-material>
+      <supplementary-material position="float" content-type="local-data">
+        <label>Supplementary Validation Data S2</label>
+        <caption>
+          <p>Quality Assessment of the Global Proteomics Data</p>
+        </caption>
+        <media xlink:href="crc-24-0113_supplementary_validation_data_s2_suppsd2.pdf"/>
+      </supplementary-material>
+      <supplementary-material position="float" content-type="local-data">
+        <label>Supplementary Figure S1</label>
+        <caption>
+          <p>Individual protein concentrations measured by iMALDI-MS for each sample, comparison of measured PTEN concentration to IHC H-score</p>
+        </caption>
+        <media xlink:href="crc-24-0113_supplementary_figure_s1_suppsf1.pdf"/>
+      </supplementary-material>
+      <supplementary-material position="float" content-type="local-data">
+        <label>Supplementary Figure S2</label>
+        <caption>
+          <p>Individual protein concentrations measured by iMALDI-MS for PTEN vs. IHC H-score</p>
+        </caption>
+        <media xlink:href="crc-24-0113_supplementary_figure_s2_suppsf2.pdf"/>
+      </supplementary-material>
+      <supplementary-material position="float" content-type="local-data">
+        <label>Supplementary Figure S3</label>
+        <caption>
+          <p>Comparison of iMALDI and Global Proteomics results for primary vs metastatic samples</p>
+        </caption>
+        <media xlink:href="crc-24-0113_supplementary_figure_s3_suppsf3.pdf"/>
+      </supplementary-material>
+      <supplementary-material position="float" content-type="local-data">
+        <label>Supplementary Figure S4</label>
+        <caption>
+          <p>Combination treatment of cell lines with capivasertib and an eIF2α inhibitor</p>
+        </caption>
+        <media xlink:href="crc-24-0113_supplementary_figure_s4_suppsf4.pdf"/>
+      </supplementary-material>
+      <supplementary-material position="float" content-type="local-data">
+        <label>Supplementary Table S1</label>
+        <caption>
+          <p>Detailed results of the label-free quantitation</p>
+        </caption>
+        <media xlink:href="crc-24-0113_supplementary_table_s1_suppst1.pdf"/>
+      </supplementary-material>
+      <supplementary-material position="float" content-type="local-data">
+        <label>Supplementary Table S2</label>
+        <caption>
+          <p>Proteins expression differences between capivasertib-resistant vs. capivasertib-sensitive cells quantified by validated MRM-MS assays as compared to the profile observed in patient samples</p>
+        </caption>
+        <media xlink:href="crc-24-0113_supplementary_table_s2_suppst2.pdf"/>
+      </supplementary-material>
+      <supplementary-material position="float" content-type="local-data">
+        <label>Supplementary Table S3</label>
+        <caption>
+          <p>Detailed results of pathway mapping by Qiagen IPA</p>
+        </caption>
+        <media xlink:href="crc-24-0113_supplementary_table_s3_suppst3.pdf"/>
+      </supplementary-material>
+    </sec>
+  </body>
+  <back>
+    <ack>
+      <title>Acknowledgments</title>
+      <p>This research was funded by Genome Canada under the Genomics Technology Platform program (#264PRO) and the Genomics Applied Partnership Program (#183AKT and PD-L1), with co-funding from Genome British Columbia (#264PRO, #183AKT). Graduate research funding for C.A. Sobsey was provided by the Fonds De Recherche Du Québec - Santé (FRQS #254160) and the Faculty of Medicine, McGill University (Max Binz Fellowship, Charles James Patton, M.D., and Elizabeth Ross Patton Memorial Prize). We would like to thank AstraZeneca for their partnership in this project. Capivasertib was discovered by AstraZeneca, subsequent to a collaboration with Astex Therapeutics (and its collaboration with the Institute of Cancer Research and Cancer Research Technology Limited). Special thanks to Dr. Gaia Schiavon for her work in establishing this partnership and bringing the project to fruition. Thank you to the laboratory of Dr. Mark Basik at the Segal Cancer Centre for providing samples of breast cancer cell lines for this project. Special thanks also to Drs. Adriana Aguilar-Mahecha and Tahar Aboulkassim for their support for the cell line experiments. C.H. Borchers is grateful for support from the Segal McGill Chair in Molecular Oncology at McGill University, and for support from the Warren Y. Soper Charitable Trust for the Warren Y. Soper Clinical Proteomics Centre at the Jewish General Hospital (Montréal, Quebec, Canada). C.H. Borchers is also grateful for support from the Terry Fox Research Institute and the Alvin Segal Family Foundation for the Segal Cancer Proteomics Centre at the Jewish General Hospital (Montréal, Quebec, Canada). The authors are also grateful for support from the Quebec Cancer Consortium. We offer special thanks to patients who participate in clinical trials, without whom this research would not have been possible. This work was done under the auspices of a Memorandum of Understanding between McGill and the U.S. National Cancer Institute’s International Cancer Proteogenome Consortium (ICPC). ICPC encourages international cooperation among institutions and nations in proteogenomic cancer research in which proteogenomic datasets are made available to the public. This work was also done in collaboration with the U.S. National Cancer Institute’s Clinical Proteomic Tumor Analysis Consortium (CPTAC).</p>
+    </ack>
+    <fn-group>
+      <fn fn-type="supplementary-material">
+        <p>
+<bold>Note:</bold> Supplementary data for this article are available at Cancer Research Communications Online (<ext-link xlink:href="https://aacrjournals.org/cancerrescommun/" ext-link-type="uri">https://aacrjournals.org/cancerrescommun/</ext-link>).</p>
+      </fn>
+    </fn-group>
+    <sec sec-type="COI-statement" id="s6">
+      <title>Authors’ Disclosures</title>
+      <p>R.P. Zahedi reports personal fees from MRM Proteomics Inc. outside the submitted work. E.C. de Bruin reports AstraZeneca employee and holds AstraZeneca shares. C.H. Borchers reports grants from Genome Canada and Genome Quebec, and other support from AstraZeneca during the conduct of the study; C.H. Borchers is the C.S.O. of MRM Proteomics, Inc. and the V.P. of Proteomics at Molecular You outside the submitted work. No other disclosures were reported.</p>
+    </sec>
+    <sec sec-type="author-contributions" id="s7">
+      <title>Authors’ Contributions</title>
+      <p>
+<bold>C.A. Sobsey</bold>: Conceptualization, data curation, formal analysis, funding acquisition, validation, investigation, visualization, methodology, writing-original draft, project administration, writing-review and editing. <bold>B.C. Froehlich</bold>: Software, investigation, visualization. <bold>G. Mitsa</bold>: Investigation, methodology. <bold>S. Ibrahim</bold>: Investigation, methodology. <bold>R. Popp</bold>: Investigation, methodology. <bold>R.P. Zahedi</bold>: Formal analysis, supervision, methodology, project administration, writing-review and editing. <bold>E.C. de Bruin</bold>: Resources, data curation, methodology, writing-review and editing. <bold>C.H. Borchers</bold>: Conceptualization, resources, data curation, formal analysis, supervision, funding acquisition, methodology, project administration, writing-review and editing. <bold>G. Batist</bold>: Conceptualization, resources, data curation, supervision, funding acquisition, methodology, project administration, writing-review and editing.</p>
+    </sec>
+    <ref-list>
+      <title>References</title>
+      <ref id="bib1">
+        <label>1.</label>
+        <mixed-citation publication-type="journal">
+<person-group person-group-type="author">
+<string-name>
+<surname>Millis</surname>
+<given-names>SZ</given-names>
+</string-name>, <string-name><surname>Ikeda</surname><given-names>S</given-names></string-name>, <string-name><surname>Reddy</surname><given-names>S</given-names></string-name>, <string-name><surname>Gatalica</surname><given-names>Z</given-names></string-name>, <string-name><surname>Kurzrock</surname><given-names>R</given-names></string-name></person-group>. <article-title>Landscape of phosphatidylinositol-3-kinase pathway alterations across 19 784 diverse solid tumors</article-title>. <source>JAMA Oncol</source><year>2016</year>;<volume>2</volume>:<fpage>1565</fpage>–<lpage>73</lpage>.<pub-id pub-id-type="pmid">27388585</pub-id>
+</mixed-citation>
+      </ref>
+      <ref id="bib2">
+        <label>2.</label>
+        <mixed-citation publication-type="journal">
+<person-group person-group-type="author">
+<string-name>
+<surname>Engelman</surname>
+<given-names>JA</given-names>
+</string-name>
+</person-group>. <article-title>Targeting PI3K signalling in cancer: opportunities, challenges and limitations</article-title>. <source>Nat Rev Cancer</source><year>2009</year>;<volume>9</volume>:<fpage>550</fpage>–<lpage>62</lpage>.<pub-id pub-id-type="pmid">19629070</pub-id>
+</mixed-citation>
+      </ref>
+      <ref id="bib3">
+        <label>3.</label>
+        <mixed-citation publication-type="journal">
+<person-group person-group-type="author">
+<string-name>
+<surname>De Luca</surname>
+<given-names>A</given-names>
+</string-name>, <string-name><surname>Maiello</surname><given-names>MR</given-names></string-name>, <string-name><surname>D’Alessio</surname><given-names>A</given-names></string-name>, <string-name><surname>Pergameno</surname><given-names>M</given-names></string-name>, <string-name><surname>Normanno</surname><given-names>N</given-names></string-name></person-group>. <article-title>The RAS/RAF/MEK/ERK and the PI3K/AKT signalling pathways: role in cancer pathogenesis and implications for therapeutic approaches</article-title>. <source>Expert Opin Ther Targets</source><year>2012</year>;<volume>16</volume>(<issue>Suppl 2</issue>):<fpage>S17</fpage>–<lpage>27</lpage>.</mixed-citation>
+      </ref>
+      <ref id="bib4">
+        <label>4.</label>
+        <mixed-citation publication-type="journal">
+<person-group person-group-type="author">
+<string-name>
+<surname>Nitulescu</surname>
+<given-names>GM</given-names>
+</string-name>, <string-name><surname>Margina</surname><given-names>D</given-names></string-name>, <string-name><surname>Juzenas</surname><given-names>P</given-names></string-name>, <string-name><surname>Peng</surname><given-names>Q</given-names></string-name>, <string-name><surname>Olaru</surname><given-names>OT</given-names></string-name>, <string-name><surname>Saloustros</surname><given-names>E</given-names></string-name>, <etal/></person-group>. <article-title>Akt inhibitors in cancer treatment: the long journey from drug discovery to clinical use (Review)</article-title>. <source>Int J Oncol</source><year>2016</year>;<volume>48</volume>:<fpage>869</fpage>–<lpage>85</lpage>.<pub-id pub-id-type="pmid">26698230</pub-id>
+</mixed-citation>
+      </ref>
+      <ref id="bib5">
+        <label>5.</label>
+        <mixed-citation publication-type="journal">
+<person-group person-group-type="author">
+<string-name>
+<surname>Turner</surname>
+<given-names>NC</given-names>
+</string-name>, <string-name><surname>Oliveira</surname><given-names>M</given-names></string-name>, <string-name><surname>Howell</surname><given-names>SJ</given-names></string-name>, <string-name><surname>Dalenc</surname><given-names>F</given-names></string-name>, <string-name><surname>Cortes</surname><given-names>J</given-names></string-name>, <string-name><surname>Gomez Moreno</surname><given-names>HL</given-names></string-name>, <etal/></person-group>. <article-title>Capivasertib in hormone receptor–positive advanced breast cancer</article-title>. <source>N Engl J Med</source><year>2023</year>;<volume>388</volume>:<fpage>2058</fpage>–<lpage>70</lpage>.<pub-id pub-id-type="pmid">37256976</pub-id>
+</mixed-citation>
+      </ref>
+      <ref id="bib6">
+        <label>6.</label>
+        <mixed-citation publication-type="journal">
+<person-group person-group-type="author">
+<string-name>
+<surname>Banerji</surname>
+<given-names>U</given-names>
+</string-name>, <string-name><surname>Dean</surname><given-names>EJ</given-names></string-name>, <string-name><surname>Pérez-Fidalgo</surname><given-names>JA</given-names></string-name>, <string-name><surname>Batist</surname><given-names>G</given-names></string-name>, <string-name><surname>Bedard</surname><given-names>PL</given-names></string-name>, <string-name><surname>You</surname><given-names>B</given-names></string-name>, <etal/></person-group>. <article-title>A phase I open-label study to identify a dosing regimen of the pan-AKT inhibitor AZD5363 for evaluation in solid tumors and in <italic toggle="yes">PIK3CA</italic>-mutated breast and gynecologic cancers</article-title>. <source>Clin Cancer Res</source><year>2018</year>;<volume>24</volume>:<fpage>2050</fpage>–<lpage>9</lpage>.<pub-id pub-id-type="pmid">29066505</pub-id>
+</mixed-citation>
+      </ref>
+      <ref id="bib7">
+        <label>7.</label>
+        <mixed-citation publication-type="journal">
+<person-group person-group-type="author">
+<string-name>
+<surname>Smyth</surname>
+<given-names>LM</given-names>
+</string-name>, <string-name><surname>Tamura</surname><given-names>K</given-names></string-name>, <string-name><surname>Oliveira</surname><given-names>M</given-names></string-name>, <string-name><surname>Ciruelos</surname><given-names>EM</given-names></string-name>, <string-name><surname>Mayer</surname><given-names>IA</given-names></string-name>, <string-name><surname>Sablin</surname><given-names>MP</given-names></string-name>, <etal/></person-group>. <article-title>Capivasertib, an AKT kinase inhibitor, as monotherapy or in combination with fulvestrant in patients with <italic toggle="yes">AKT1</italic><sup>E17K</sup>-mutant, ER-positive metastatic breast cancer</article-title>. <source>Clin Cancer Res</source><year>2020</year>;<volume>26</volume>:<fpage>3947</fpage>–<lpage>57</lpage>.<pub-id pub-id-type="pmid">32312891</pub-id>
+</mixed-citation>
+      </ref>
+      <ref id="bib8">
+        <label>8.</label>
+        <mixed-citation publication-type="journal">
+<person-group person-group-type="author">
+<string-name>
+<surname>Kalinsky</surname>
+<given-names>K</given-names>
+</string-name>, <string-name><surname>Hong</surname><given-names>F</given-names></string-name>, <string-name><surname>McCourt</surname><given-names>CK</given-names></string-name>, <string-name><surname>Sachdev</surname><given-names>JC</given-names></string-name>, <string-name><surname>Mitchell</surname><given-names>EP</given-names></string-name>, <string-name><surname>Zwiebel</surname><given-names>JA</given-names></string-name>, <etal/></person-group>. <article-title>Effect of capivasertib in patients with an AKT1 E17K-mutated tumor: NCI-MATCH subprotocol EAY131-Y nonrandomized trial</article-title>. <source>JAMA Oncol</source><year>2021</year>;<volume>7</volume>:<fpage>271</fpage>–<lpage>8</lpage>.<pub-id pub-id-type="pmid">33377972</pub-id>
+</mixed-citation>
+      </ref>
+      <ref id="bib9">
+        <label>9.</label>
+        <mixed-citation publication-type="journal">
+<person-group person-group-type="author">
+<string-name>
+<surname>Jones</surname>
+<given-names>RH</given-names>
+</string-name>, <string-name><surname>Casbard</surname><given-names>A</given-names></string-name>, <string-name><surname>Carucci</surname><given-names>M</given-names></string-name>, <string-name><surname>Cox</surname><given-names>C</given-names></string-name>, <string-name><surname>Butler</surname><given-names>R</given-names></string-name>, <string-name><surname>Alchami</surname><given-names>F</given-names></string-name>, <etal/></person-group>. <article-title>Fulvestrant plus capivasertib versus placebo after relapse or progression on an aromatase inhibitor in metastatic, oestrogen receptor-positive breast cancer (FAKTION): a multicentre, randomised, controlled, phase 2 trial</article-title>. <source>Lancet Oncol</source><year>2020</year>;<volume>21</volume>:<fpage>345</fpage>–<lpage>57</lpage>.<pub-id pub-id-type="pmid">32035020</pub-id>
+</mixed-citation>
+      </ref>
+      <ref id="bib10">
+        <label>10.</label>
+        <mixed-citation publication-type="journal">
+<person-group person-group-type="author">
+<string-name>
+<surname>Howell</surname>
+<given-names>SJ</given-names>
+</string-name>, <string-name><surname>Casbard</surname><given-names>A</given-names></string-name>, <string-name><surname>Carucci</surname><given-names>M</given-names></string-name>, <string-name><surname>Ingarfield</surname><given-names>K</given-names></string-name>, <string-name><surname>Butler</surname><given-names>R</given-names></string-name>, <string-name><surname>Morgan</surname><given-names>S</given-names></string-name>, <etal/></person-group>. <article-title>Fulvestrant plus capivasertib versus placebo after relapse or progression on an aromatase inhibitor in metastatic, oestrogen receptor-positive, HER2-negative breast cancer (FAKTION): overall survival, updated progression-free survival, and expanded biomarker analysis from a randomised, phase 2 trial</article-title>. <source>Lancet Oncol</source><year>2022</year>;<volume>23</volume>:<fpage>851</fpage>–<lpage>64</lpage>.<pub-id pub-id-type="pmid">35671774</pub-id>
+</mixed-citation>
+      </ref>
+      <ref id="bib11">
+        <label>11.</label>
+        <mixed-citation publication-type="journal">
+<person-group person-group-type="author">
+<string-name>
+<surname>Li</surname>
+<given-names>L</given-names>
+</string-name>, <string-name><surname>Wei</surname><given-names>Y</given-names></string-name>, <string-name><surname>To</surname><given-names>C</given-names></string-name>, <string-name><surname>Zhu</surname><given-names>CQ</given-names></string-name>, <string-name><surname>Tong</surname><given-names>J</given-names></string-name>, <string-name><surname>Pham</surname><given-names>NA</given-names></string-name>, <etal/></person-group>. <article-title>Integrated omic analysis of lung cancer reveals metabolism proteome signatures with prognostic impact</article-title>. <source>Nat Commun</source><year>2014</year>;<volume>5</volume>:<fpage>5469</fpage>.<pub-id pub-id-type="pmid">25429762</pub-id>
+</mixed-citation>
+      </ref>
+      <ref id="bib12">
+        <label>12.</label>
+        <mixed-citation publication-type="journal">
+<person-group person-group-type="author">
+<string-name>
+<surname>Roumeliotis</surname>
+<given-names>TI</given-names>
+</string-name>, <string-name><surname>Williams</surname><given-names>SP</given-names></string-name>, <string-name><surname>Goncalves</surname><given-names>E</given-names></string-name>, <string-name><surname>Alsinet</surname><given-names>C</given-names></string-name>, <string-name><surname>Del Castillo Velasco-Herrera</surname><given-names>M</given-names></string-name>, <string-name><surname>Aben</surname><given-names>N</given-names></string-name>, <etal/></person-group>. <article-title>Genomic determinants of protein abundance variation in colorectal cancer cells</article-title>. <source>Cell Rep</source><year>2017</year>;<volume>20</volume>:<fpage>2201</fpage>–<lpage>14</lpage>.<pub-id pub-id-type="pmid">28854368</pub-id>
+</mixed-citation>
+      </ref>
+      <ref id="bib13">
+        <label>13.</label>
+        <mixed-citation publication-type="journal">
+<person-group person-group-type="author">
+<string-name>
+<surname>Popp</surname>
+<given-names>R</given-names>
+</string-name>, <string-name><surname>Li</surname><given-names>H</given-names></string-name>, <string-name><surname>LeBlanc</surname><given-names>A</given-names></string-name>, <string-name><surname>Mohammed</surname><given-names>Y</given-names></string-name>, <string-name><surname>Aguilar-Mahecha</surname><given-names>A</given-names></string-name>, <string-name><surname>Chambers</surname><given-names>AG</given-names></string-name>, <etal/></person-group>. <article-title>Immuno-matrix-assisted laser desorption/ionization assays for quantifying AKT1 and AKT2 in breast and colorectal cancer cell lines and tumors</article-title>. <source>Anal Chem</source><year>2017</year>;<volume>89</volume>:<fpage>10592</fpage>–<lpage>600</lpage>.<pub-id pub-id-type="pmid">28853539</pub-id>
+</mixed-citation>
+      </ref>
+      <ref id="bib14">
+        <label>14.</label>
+        <mixed-citation publication-type="journal">
+<person-group person-group-type="author">
+<string-name>
+<surname>Domanski</surname>
+<given-names>D</given-names>
+</string-name>, <string-name><surname>Murphy</surname><given-names>LC</given-names></string-name>, <string-name><surname>Borchers</surname><given-names>CH</given-names></string-name></person-group>. <article-title>Assay development for the determination of phosphorylation stoichiometry using multiple reaction monitoring methods with and without phosphatase treatment: application to breast cancer signaling pathways</article-title>. <source>Anal Chem</source><year>2010</year>;<volume>82</volume>:<fpage>5610</fpage>–<lpage>20</lpage>.<pub-id pub-id-type="pmid">20524616</pub-id>
+</mixed-citation>
+      </ref>
+      <ref id="bib15">
+        <label>15.</label>
+        <mixed-citation publication-type="journal">
+<person-group person-group-type="author">
+<string-name>
+<surname>Froehlich</surname>
+<given-names>BC</given-names>
+</string-name>, <string-name><surname>Popp</surname><given-names>R</given-names></string-name>, <string-name><surname>Sobsey</surname><given-names>CA</given-names></string-name>, <string-name><surname>Ibrahim</surname><given-names>S</given-names></string-name>, <string-name><surname>LeBlanc</surname><given-names>A</given-names></string-name>, <string-name><surname>Mohammed</surname><given-names>Y</given-names></string-name>, <etal/></person-group>. <article-title>A multiplexed, automated immuno-matrix assisted laser desorption/ionization mass spectrometry assay for simultaneous and precise quantitation of PTEN and p110α in cell lines and tumor tissues</article-title>. <source>Analyst</source><year>2021</year>;<volume>146</volume>:<fpage>6566</fpage>–<lpage>75</lpage>.<pub-id pub-id-type="pmid">34585690</pub-id>
+</mixed-citation>
+      </ref>
+      <ref id="bib16">
+        <label>16.</label>
+        <mixed-citation publication-type="journal">
+<person-group person-group-type="author">
+<string-name>
+<surname>Whiteaker</surname>
+<given-names>JR</given-names>
+</string-name>, <string-name><surname>Halusa</surname><given-names>GN</given-names></string-name>, <string-name><surname>Hoofnagle</surname><given-names>AN</given-names></string-name>, <string-name><surname>Sharma</surname><given-names>V</given-names></string-name>, <string-name><surname>MacLean</surname><given-names>B</given-names></string-name>, <string-name><surname>Yan</surname><given-names>P</given-names></string-name>, <etal/></person-group>. <article-title>CPTAC assay portal: a repository of targeted proteomic assays</article-title>. <source>Nat Methods</source><year>2014</year>;<volume>11</volume>:<fpage>703</fpage>–<lpage>4</lpage>.<pub-id pub-id-type="pmid">24972168</pub-id>
+</mixed-citation>
+      </ref>
+      <ref id="bib17">
+        <label>17.</label>
+        <mixed-citation publication-type="journal">
+<person-group person-group-type="author">
+<string-name>
+<surname>Pang</surname>
+<given-names>Z</given-names>
+</string-name>, <string-name><surname>Chong</surname><given-names>J</given-names></string-name>, <string-name><surname>Zhou</surname><given-names>G</given-names></string-name>, <string-name><surname>de Lima Morais</surname><given-names>DA</given-names></string-name>, <string-name><surname>Chang</surname><given-names>L</given-names></string-name>, <string-name><surname>Barrette</surname><given-names>M</given-names></string-name>, <etal/></person-group>. <article-title>MetaboAnalyst 5.0: narrowing the gap between raw spectra and functional insights</article-title>. <source>Nucleic Acids Res</source><year>2021</year>;<volume>49</volume>:<fpage>W388</fpage>–<lpage>96</lpage>.<pub-id pub-id-type="pmid">34019663</pub-id>
+</mixed-citation>
+      </ref>
+      <ref id="bib18">
+        <label>18.</label>
+        <mixed-citation publication-type="journal">
+<person-group person-group-type="author">
+<string-name>
+<surname>Szklarczyk</surname>
+<given-names>D</given-names>
+</string-name>, <string-name><surname>Gable</surname><given-names>AL</given-names></string-name>, <string-name><surname>Nastou</surname><given-names>KC</given-names></string-name>, <string-name><surname>Lyon</surname><given-names>D</given-names></string-name>, <string-name><surname>Kirsch</surname><given-names>R</given-names></string-name>, <string-name><surname>Pyysalo</surname><given-names>S</given-names></string-name>, <etal/></person-group>. <article-title>The STRING database in 2021: customizable protein–protein networks, and functional characterization of user-uploaded gene/measurement sets</article-title>. <source>Nucleic Acids Res</source><year>2021</year>;<volume>49</volume>:<fpage>D605</fpage>–<lpage>12</lpage>.<pub-id pub-id-type="pmid">33237311</pub-id>
+</mixed-citation>
+      </ref>
+      <ref id="bib19">
+        <label>19.</label>
+        <mixed-citation publication-type="journal">
+<person-group person-group-type="author">
+<string-name>
+<surname>Doncheva</surname>
+<given-names>NT</given-names>
+</string-name>, <string-name><surname>Morris</surname><given-names>JH</given-names></string-name>, <string-name><surname>Gorodkin</surname><given-names>J</given-names></string-name>, <string-name><surname>Jensen</surname><given-names>LJ</given-names></string-name></person-group>. <article-title>Cytoscape StringApp: network analysis and visualization of proteomics data</article-title>. <source>J Proteome Res</source><year>2019</year>;<volume>18</volume>:<fpage>623</fpage>–<lpage>32</lpage>.<pub-id pub-id-type="pmid">30450911</pub-id>
+</mixed-citation>
+      </ref>
+      <ref id="bib20">
+        <label>20.</label>
+        <mixed-citation publication-type="journal">
+<person-group person-group-type="author">
+<string-name>
+<surname>Fiala</surname>
+<given-names>O</given-names>
+</string-name>, <string-name><surname>Pesek</surname><given-names>M</given-names></string-name>, <string-name><surname>Finek</surname><given-names>J</given-names></string-name>, <string-name><surname>Racek</surname><given-names>J</given-names></string-name>, <string-name><surname>Minarik</surname><given-names>M</given-names></string-name>, <string-name><surname>Benesova</surname><given-names>L</given-names></string-name>, <etal/></person-group>. <article-title>Serum albumin is a strong predictor of survival in patients with advanced-stage non-small cell lung cancer treated with erlotinib</article-title>. <source>Neoplasma</source><year>2016</year>;<volume>63</volume>:<fpage>471</fpage>–<lpage>6</lpage>.<pub-id pub-id-type="pmid">26952513</pub-id>
+</mixed-citation>
+      </ref>
+      <ref id="bib21">
+        <label>21.</label>
+        <mixed-citation publication-type="journal">
+<person-group person-group-type="author">
+<string-name>
+<surname>Dalmiglio</surname>
+<given-names>C</given-names>
+</string-name>, <string-name><surname>Brilli</surname><given-names>L</given-names></string-name>, <string-name><surname>Campanile</surname><given-names>M</given-names></string-name>, <string-name><surname>Ciuoli</surname><given-names>C</given-names></string-name>, <string-name><surname>Cartocci</surname><given-names>A</given-names></string-name>, <string-name><surname>Castagna</surname><given-names>MG</given-names></string-name></person-group>. <article-title>CONUT score: a new tool for predicting prognosis in patients with advanced thyroid cancer treated with TKI</article-title>. <source>Cancers (Basel)</source><year>2022</year>;<volume>14</volume>:<fpage>724</fpage>.<pub-id pub-id-type="pmid">35158991</pub-id>
+</mixed-citation>
+      </ref>
+      <ref id="bib22">
+        <label>22.</label>
+        <mixed-citation publication-type="journal">
+<person-group person-group-type="author">
+<string-name>
+<surname>Jones</surname>
+<given-names>DT</given-names>
+</string-name>, <string-name><surname>Ganeshaguru</surname><given-names>K</given-names></string-name>, <string-name><surname>Anderson</surname><given-names>RJ</given-names></string-name>, <string-name><surname>Jackson</surname><given-names>TR</given-names></string-name>, <string-name><surname>Bruckdorfer</surname><given-names>KR</given-names></string-name>, <string-name><surname>Low</surname><given-names>SY</given-names></string-name>, <etal/></person-group>. <article-title>Albumin activates the AKT signaling pathway and protects B-chronic lymphocytic leukemia cells from chlorambucil- and radiation-induced apoptosis</article-title>. <source>Blood</source><year>2003</year>;<volume>101</volume>:<fpage>3174</fpage>–<lpage>80</lpage>.<pub-id pub-id-type="pmid">12480711</pub-id>
+</mixed-citation>
+      </ref>
+      <ref id="bib23">
+        <label>23.</label>
+        <mixed-citation publication-type="journal">
+<person-group person-group-type="author">
+<string-name>
+<surname>Tey</surname>
+<given-names>SK</given-names>
+</string-name>, <string-name><surname>Wong</surname><given-names>SWK</given-names></string-name>, <string-name><surname>Chan</surname><given-names>JYT</given-names></string-name>, <string-name><surname>Mao</surname><given-names>X</given-names></string-name>, <string-name><surname>Ng</surname><given-names>TH</given-names></string-name>, <string-name><surname>Yeung</surname><given-names>CLS</given-names></string-name>, <etal/></person-group>. <article-title>Patient pIgR-enriched extracellular vesicles drive cancer stemness, tumorigenesis and metastasis in hepatocellular carcinoma</article-title>. <source>J Hepatol</source><year>2022</year>;<volume>76</volume>:<fpage>883</fpage>–<lpage>95</lpage>.<pub-id pub-id-type="pmid">34922977</pub-id>
+</mixed-citation>
+      </ref>
+      <ref id="bib24">
+        <label>24.</label>
+        <mixed-citation publication-type="journal">
+<person-group person-group-type="author">
+<string-name>
+<surname>Dianat-Moghadam</surname>
+<given-names>H</given-names>
+</string-name>, <string-name><surname>Khalili</surname><given-names>M</given-names></string-name>, <string-name><surname>Keshavarz</surname><given-names>M</given-names></string-name>, <string-name><surname>Azizi</surname><given-names>M</given-names></string-name>, <string-name><surname>Hamishehkar</surname><given-names>H</given-names></string-name>, <string-name><surname>Rahbarghazi</surname><given-names>R</given-names></string-name>, <etal/></person-group>. <article-title>Modulation of LXR signaling altered the dynamic activity of human colon adenocarcinoma cancer stem cells <italic toggle="yes">in vitro</italic></article-title>. <source>Cancer Cell Int</source><year>2021</year>;<volume>21</volume>:<fpage>100</fpage>.<pub-id pub-id-type="pmid">33568147</pub-id>
+</mixed-citation>
+      </ref>
+      <ref id="bib25">
+        <label>25.</label>
+        <mixed-citation publication-type="journal">
+<person-group person-group-type="author">
+<string-name>
+<surname>Holcik</surname>
+<given-names>M</given-names>
+</string-name>
+</person-group>. <article-title>Could the eIF2alpha-independent translation be the achilles heel of cancer?</article-title><source>Front Oncol</source><year>2015</year>;<volume>5</volume>:<fpage>264</fpage>.<pub-id pub-id-type="pmid">26636041</pub-id>
+</mixed-citation>
+      </ref>
+      <ref id="bib26">
+        <label>26.</label>
+        <mixed-citation publication-type="journal">
+<person-group person-group-type="author">
+<string-name>
+<surname>Rajesh</surname>
+<given-names>K</given-names>
+</string-name>, <string-name><surname>Krishnamoorthy</surname><given-names>J</given-names></string-name>, <string-name><surname>Kazimierczak</surname><given-names>U</given-names></string-name>, <string-name><surname>Tenkerian</surname><given-names>C</given-names></string-name>, <string-name><surname>Papadakis</surname><given-names>AI</given-names></string-name>, <string-name><surname>Wang</surname><given-names>S</given-names></string-name>, <etal/></person-group>. <article-title>Phosphorylation of the translation initiation factor eIF2α at serine 51 determines the cell fate decisions of Akt in response to oxidative stress</article-title>. <source>Cell Death Dis</source><year>2015</year>;<volume>6</volume>:<fpage>e1591</fpage>.<pub-id pub-id-type="pmid">25590801</pub-id>
+</mixed-citation>
+      </ref>
+      <ref id="bib27">
+        <label>27.</label>
+        <mixed-citation publication-type="journal">
+<person-group person-group-type="author">
+<string-name>
+<surname>Ribas</surname>
+<given-names>R</given-names>
+</string-name>, <string-name><surname>Pancholi</surname><given-names>S</given-names></string-name>, <string-name><surname>Guest</surname><given-names>SK</given-names></string-name>, <string-name><surname>Marangoni</surname><given-names>E</given-names></string-name>, <string-name><surname>Gao</surname><given-names>Q</given-names></string-name>, <string-name><surname>Thuleau</surname><given-names>A</given-names></string-name>, <etal/></person-group>. <article-title>AKT antagonist AZD5363 influences estrogen receptor function in endocrine-resistant breast cancer and synergizes with fulvestrant (ICI182780) <italic toggle="yes">in vivo</italic></article-title>. <source>Mol Cancer Ther</source><year>2015</year>;<volume>14</volume>:<fpage>2035</fpage>–<lpage>48</lpage>.<pub-id pub-id-type="pmid">26116361</pub-id>
+</mixed-citation>
+      </ref>
+      <ref id="bib28">
+        <label>28.</label>
+        <mixed-citation publication-type="journal">
+<person-group person-group-type="author">
+<string-name>
+<surname>Chen</surname>
+<given-names>X</given-names>
+</string-name>, <string-name><surname>Dai</surname><given-names>X</given-names></string-name>, <string-name><surname>Zou</surname><given-names>P</given-names></string-name>, <string-name><surname>Chen</surname><given-names>W</given-names></string-name>, <string-name><surname>Rajamanickam</surname><given-names>V</given-names></string-name>, <string-name><surname>Feng</surname><given-names>C</given-names></string-name>, <etal/></person-group>. <article-title>Curcuminoid EF24 enhances the anti-tumour activity of Akt inhibitor MK-2206 through ROS-mediated endoplasmic reticulum stress and mitochondrial dysfunction in gastric cancer</article-title>. <source>Br J Pharmacol</source><year>2017</year>;<volume>174</volume>:<fpage>1131</fpage>–<lpage>46</lpage>.<pub-id pub-id-type="pmid">28255993</pub-id>
+</mixed-citation>
+      </ref>
+      <ref id="bib29">
+        <label>29.</label>
+        <mixed-citation publication-type="journal">
+<person-group person-group-type="author">
+<string-name>
+<surname>Bavelloni</surname>
+<given-names>A</given-names>
+</string-name>, <string-name><surname>Piazzi</surname><given-names>M</given-names></string-name>, <string-name><surname>Faenza</surname><given-names>I</given-names></string-name>, <string-name><surname>Raffini</surname><given-names>M</given-names></string-name>, <string-name><surname>D’Angelo</surname><given-names>A</given-names></string-name>, <string-name><surname>Cattini</surname><given-names>L</given-names></string-name>, <etal/></person-group>. <article-title>Prohibitin 2 represents a novel nuclear AKT substrate during all-trans retinoic acid-induced differentiation of acute promyelocytic leukemia cells</article-title>. <source>FASEB J</source><year>2014</year>;<volume>28</volume>:<fpage>2009</fpage>–<lpage>19</lpage>.<pub-id pub-id-type="pmid">24522204</pub-id>
+</mixed-citation>
+      </ref>
+      <ref id="bib30">
+        <label>30.</label>
+        <mixed-citation publication-type="journal">
+<person-group person-group-type="author">
+<string-name>
+<surname>McCubrey</surname>
+<given-names>JA</given-names>
+</string-name>, <string-name><surname>Steelman</surname><given-names>LS</given-names></string-name>, <string-name><surname>Chappell</surname><given-names>WH</given-names></string-name>, <string-name><surname>Abrams</surname><given-names>SL</given-names></string-name>, <string-name><surname>Franklin</surname><given-names>RA</given-names></string-name>, <string-name><surname>Montalto</surname><given-names>G</given-names></string-name>, <etal/></person-group>. <article-title>Ras/Raf/MEK/ERK and PI3K/PTEN/Akt/mTOR cascade inhibitors: how mutations can result in therapy resistance and how to overcome resistance</article-title>. <source>Oncotarget</source><year>2012</year>;<volume>3</volume>:<fpage>1068</fpage>–<lpage>111</lpage>.<pub-id pub-id-type="pmid">23085539</pub-id>
+</mixed-citation>
+      </ref>
+      <ref id="bib31">
+        <label>31.</label>
+        <mixed-citation publication-type="journal">
+<person-group person-group-type="author">
+<string-name>
+<surname>Bao</surname>
+<given-names>F</given-names>
+</string-name>, <string-name><surname>Hao</surname><given-names>P</given-names></string-name>, <string-name><surname>An</surname><given-names>S</given-names></string-name>, <string-name><surname>Yang</surname><given-names>Y</given-names></string-name>, <string-name><surname>Liu</surname><given-names>Y</given-names></string-name>, <string-name><surname>Hao</surname><given-names>Q</given-names></string-name>, <etal/></person-group>. <article-title>Akt scaffold proteins: the key to controlling specificity of Akt signaling</article-title>. <source>Am J Physiol Cell Physiol</source><year>2021</year>;<volume>321</volume>:<fpage>C429</fpage>–<lpage>2</lpage>.<pub-id pub-id-type="pmid">34161152</pub-id>
+</mixed-citation>
+      </ref>
+      <ref id="bib32">
+        <label>32.</label>
+        <mixed-citation publication-type="journal">
+<person-group person-group-type="author">
+<string-name>
+<surname>Zhou</surname>
+<given-names>Z</given-names>
+</string-name>, <string-name><surname>Ai</surname><given-names>H</given-names></string-name>, <string-name><surname>Li</surname><given-names>K</given-names></string-name>, <string-name><surname>Yao</surname><given-names>X</given-names></string-name>, <string-name><surname>Zhu</surname><given-names>W</given-names></string-name>, <string-name><surname>Liu</surname><given-names>L</given-names></string-name>, <etal/></person-group>. <article-title>Prohibitin 2 localizes in nucleolus to regulate ribosomal RNA transcription and facilitate cell proliferation in RD cells</article-title>. <source>Sci Rep</source><year>2018</year>;<volume>8</volume>:<fpage>1479</fpage>.<pub-id pub-id-type="pmid">29367618</pub-id>
+</mixed-citation>
+      </ref>
+      <ref id="bib33">
+        <label>33.</label>
+        <mixed-citation publication-type="journal">
+<person-group person-group-type="author">
+<string-name>
+<surname>Cizkova</surname>
+<given-names>M</given-names>
+</string-name>, <string-name><surname>Vacher</surname><given-names>S</given-names></string-name>, <string-name><surname>Meseure</surname><given-names>D</given-names></string-name>, <string-name><surname>Trassard</surname><given-names>M</given-names></string-name>, <string-name><surname>Susini</surname><given-names>A</given-names></string-name>, <string-name><surname>Mlcuchova</surname><given-names>D</given-names></string-name>, <etal/></person-group>. <article-title>PIK3R1 underexpression is an independent prognostic marker in breast cancer</article-title>. <source>BMC Cancer</source><year>2013</year>;<volume>13</volume>:<fpage>545</fpage>.<pub-id pub-id-type="pmid">24229379</pub-id>
+</mixed-citation>
+      </ref>
+      <ref id="bib34">
+        <label>34.</label>
+        <mixed-citation publication-type="journal">
+<person-group person-group-type="author">
+<string-name>
+<surname>Kim</surname>
+<given-names>SH</given-names>
+</string-name>, <string-name><surname>Seung</surname><given-names>BJ</given-names></string-name>, <string-name><surname>Cho</surname><given-names>SH</given-names></string-name>, <string-name><surname>Lim</surname><given-names>HY</given-names></string-name>, <string-name><surname>Bae</surname><given-names>MK</given-names></string-name>, <string-name><surname>Sur</surname><given-names>JH</given-names></string-name></person-group>. <article-title>Dysregulation of PI3K/Akt/PTEN pathway in canine mammary tumor</article-title>. <source>Animals (Basel)</source><year>2021</year>;<volume>11</volume>:<fpage>2079</fpage>.<pub-id pub-id-type="pmid">34359206</pub-id>
+</mixed-citation>
+      </ref>
+      <ref id="bib35">
+        <label>35.</label>
+        <mixed-citation publication-type="journal">
+<person-group person-group-type="author">
+<string-name>
+<surname>Hoehn</surname>
+<given-names>KL</given-names>
+</string-name>, <string-name><surname>Hohnen-Behrens</surname><given-names>C</given-names></string-name>, <string-name><surname>Cederberg</surname><given-names>A</given-names></string-name>, <string-name><surname>Wu</surname><given-names>LE</given-names></string-name>, <string-name><surname>Turner</surname><given-names>N</given-names></string-name>, <string-name><surname>Yuasa</surname><given-names>T</given-names></string-name>, <etal/></person-group>. <article-title>IRS1-independent defects define major nodes of insulin resistance</article-title>. <source>Cell Metab</source><year>2008</year>;<volume>7</volume>:<fpage>421</fpage>–<lpage>33</lpage>.<pub-id pub-id-type="pmid">18460333</pub-id>
+</mixed-citation>
+      </ref>
+      <ref id="bib36">
+        <label>36.</label>
+        <mixed-citation publication-type="journal">
+<person-group person-group-type="author">
+<string-name>
+<surname>Vasudevan</surname>
+<given-names>KM</given-names>
+</string-name>, <string-name><surname>Barbie</surname><given-names>DA</given-names></string-name>, <string-name><surname>Davies</surname><given-names>MA</given-names></string-name>, <string-name><surname>Rabinovsky</surname><given-names>R</given-names></string-name>, <string-name><surname>McNear</surname><given-names>CJ</given-names></string-name>, <string-name><surname>Kim</surname><given-names>JJ</given-names></string-name>, <etal/></person-group>. <article-title>AKT-independent signaling downstream of oncogenic PIK3CA mutations in human cancer</article-title>. <source>Cancer Cell</source><year>2009</year>;<volume>16</volume>:<fpage>21</fpage>–<lpage>32</lpage>.<pub-id pub-id-type="pmid">19573809</pub-id>
+</mixed-citation>
+      </ref>
+      <ref id="bib37">
+        <label>37.</label>
+        <mixed-citation publication-type="journal">
+<person-group person-group-type="author">
+<string-name>
+<surname>Faes</surname>
+<given-names>S</given-names>
+</string-name>, <string-name><surname>Dormond</surname><given-names>O</given-names></string-name></person-group>. <article-title>PI3K and AKT: unfaithful partners in cancer</article-title>. <source>Int J Mol Sci</source><year>2015</year>;<volume>16</volume>:<fpage>21138</fpage>–<lpage>52</lpage>.<pub-id pub-id-type="pmid">26404259</pub-id>
+</mixed-citation>
+      </ref>
+      <ref id="bib38">
+        <label>38.</label>
+        <mixed-citation publication-type="journal">
+<person-group person-group-type="author">
+<string-name>
+<surname>Stemke-Hale</surname>
+<given-names>K</given-names>
+</string-name>, <string-name><surname>Gonzalez-Angulo</surname><given-names>AM</given-names></string-name>, <string-name><surname>Lluch</surname><given-names>A</given-names></string-name>, <string-name><surname>Neve</surname><given-names>RM</given-names></string-name>, <string-name><surname>Kuo</surname><given-names>WL</given-names></string-name>, <string-name><surname>Davies</surname><given-names>M</given-names></string-name>, <etal/></person-group>. <article-title>An integrative genomic and proteomic analysis of PIK3CA, PTEN, and AKT mutations in breast cancer</article-title>. <source>Cancer Res</source><year>2008</year>;<volume>68</volume>:<fpage>6084</fpage>–<lpage>91</lpage>.<pub-id pub-id-type="pmid">18676830</pub-id>
+</mixed-citation>
+      </ref>
+      <ref id="bib39">
+        <label>39.</label>
+        <mixed-citation publication-type="journal">
+<person-group person-group-type="author">
+<collab>Cancer Genome Atlas Network</collab>
+</person-group>. <article-title>Comprehensive molecular portraits of human breast tumours</article-title>. <source>Nature</source><year>2012</year>;<volume>490</volume>:<fpage>61</fpage>–<lpage>70</lpage>.<pub-id pub-id-type="pmid">23000897</pub-id>
+</mixed-citation>
+      </ref>
+      <ref id="bib40">
+        <label>40.</label>
+        <mixed-citation publication-type="journal">
+<person-group person-group-type="author">
+<string-name>
+<surname>O’Hurley</surname>
+<given-names>G</given-names>
+</string-name>, <string-name><surname>Daly</surname><given-names>E</given-names></string-name>, <string-name><surname>O’Grady</surname><given-names>A</given-names></string-name>, <string-name><surname>Cummins</surname><given-names>R</given-names></string-name>, <string-name><surname>Quinn</surname><given-names>C</given-names></string-name>, <string-name><surname>Flanagan</surname><given-names>L</given-names></string-name>, <etal/></person-group>. <article-title>Investigation of molecular alterations of AKT-3 in triple-negative breast cancer</article-title>. <source>Histopathology</source><year>2014</year>;<volume>64</volume>:<fpage>660</fpage>–<lpage>70</lpage>.<pub-id pub-id-type="pmid">24138071</pub-id>
+</mixed-citation>
+      </ref>
+      <ref id="bib41">
+        <label>41.</label>
+        <mixed-citation publication-type="journal">
+<person-group person-group-type="author">
+<string-name>
+<surname>Lin</surname>
+<given-names>Z</given-names>
+</string-name>, <string-name><surname>Peng</surname><given-names>R</given-names></string-name>, <string-name><surname>Sun</surname><given-names>Y</given-names></string-name>, <string-name><surname>Zhang</surname><given-names>L</given-names></string-name>, <string-name><surname>Zhang</surname><given-names>Z</given-names></string-name></person-group>. <article-title>Identification of ribosomal protein family in triple-negative breast cancer by bioinformatics analysis</article-title>. <source>Biosci Rep</source><year>2021</year>;<volume>41</volume>:<fpage>BSR20200869</fpage>.<pub-id pub-id-type="pmid">33305312</pub-id>
+</mixed-citation>
+      </ref>
+      <ref id="bib42">
+        <label>42.</label>
+        <mixed-citation publication-type="journal">
+<person-group person-group-type="author">
+<string-name>
+<surname>Fang</surname>
+<given-names>E</given-names>
+</string-name>, <string-name><surname>Zhang</surname><given-names>X</given-names></string-name></person-group>. <article-title>Identification of breast cancer hub genes and analysis of prognostic values using integrated bioinformatics analysis</article-title>. <source>Cancer Biomark</source><year>2017</year>;<volume>21</volume>:<fpage>373</fpage>–<lpage>81</lpage>.<pub-id pub-id-type="pmid">29081411</pub-id>
+</mixed-citation>
+      </ref>
+      <ref id="bib43">
+        <label>43.</label>
+        <mixed-citation publication-type="journal">
+<person-group person-group-type="author">
+<string-name>
+<surname>Andrikopoulou</surname>
+<given-names>A</given-names>
+</string-name>, <string-name><surname>Chatzinikolaou</surname><given-names>S</given-names></string-name>, <string-name><surname>Panourgias</surname><given-names>E</given-names></string-name>, <string-name><surname>Kaparelou</surname><given-names>M</given-names></string-name>, <string-name><surname>Liontos</surname><given-names>M</given-names></string-name>, <string-name><surname>Dimopoulos</surname><given-names>MA</given-names></string-name>, <etal/></person-group>. <article-title>The emerging role of capivasertib in breast cancer</article-title>. <source>Breast</source><year>2022</year>;<volume>63</volume>:<fpage>157</fpage>–<lpage>67</lpage>.<pub-id pub-id-type="pmid">35398754</pub-id>
+</mixed-citation>
+      </ref>
+      <ref id="bib44">
+        <label>44.</label>
+        <mixed-citation publication-type="journal">
+<person-group person-group-type="author">
+<string-name>
+<surname>Dunn</surname>
+<given-names>S</given-names>
+</string-name>, <string-name><surname>Eberlein</surname><given-names>C</given-names></string-name>, <string-name><surname>Yu</surname><given-names>J</given-names></string-name>, <string-name><surname>Gris-Oliver</surname><given-names>A</given-names></string-name>, <string-name><surname>Ong</surname><given-names>SH</given-names></string-name>, <string-name><surname>Yelland</surname><given-names>U</given-names></string-name>, <etal/></person-group>. <article-title>AKT-mTORC1 reactivation is the dominant resistance driver for PI3Kβ/AKT inhibitors in PTEN-null breast cancer and can be overcome by combining with Mcl-1 inhibitors</article-title>. <source>Oncogene</source><year>2022</year>;<volume>41</volume>:<fpage>5046</fpage>–<lpage>60</lpage>.<pub-id pub-id-type="pmid">36241868</pub-id>
+</mixed-citation>
+      </ref>
+      <ref id="bib45">
+        <label>45.</label>
+        <mixed-citation publication-type="journal">
+<person-group person-group-type="author">
+<string-name>
+<surname>Coleman</surname>
+<given-names>N</given-names>
+</string-name>, <string-name><surname>Subbiah</surname><given-names>V</given-names></string-name>, <string-name><surname>Pant</surname><given-names>S</given-names></string-name>, <string-name><surname>Patel</surname><given-names>K</given-names></string-name>, <string-name><surname>Roy-Chowdhuri</surname><given-names>S</given-names></string-name>, <string-name><surname>Yedururi</surname><given-names>S</given-names></string-name>, <etal/></person-group>. <article-title>Emergence of mTOR mutation as an acquired resistance mechanism to AKT inhibition, and subsequent response to mTORC1/2 inhibition</article-title>. <source>NPJ Precis Oncol</source><year>2021</year>;<volume>5</volume>:<fpage>99</fpage>.<pub-id pub-id-type="pmid">34853384</pub-id>
+</mixed-citation>
+      </ref>
+      <ref id="bib46">
+        <label>46.</label>
+        <mixed-citation publication-type="journal">
+<person-group person-group-type="author">
+<string-name>
+<surname>Rodon</surname>
+<given-names>J</given-names>
+</string-name>, <string-name><surname>Soria</surname><given-names>JC</given-names></string-name>, <string-name><surname>Berger</surname><given-names>R</given-names></string-name>, <string-name><surname>Miller</surname><given-names>WH</given-names></string-name>, <string-name><surname>Rubin</surname><given-names>E</given-names></string-name>, <string-name><surname>Kugel</surname><given-names>A</given-names></string-name>, <etal/></person-group>. <article-title>Genomic and transcriptomic profiling expands precision cancer medicine: the WINTHER trial</article-title>. <source>Nat Med</source><year>2019</year>;<volume>25</volume>:<fpage>751</fpage>–<lpage>8</lpage>.<pub-id pub-id-type="pmid">31011205</pub-id>
+</mixed-citation>
+      </ref>
+      <ref id="bib47">
+        <label>47.</label>
+        <mixed-citation publication-type="journal">
+<person-group person-group-type="author">
+<string-name>
+<surname>Davies</surname>
+<given-names>BR</given-names>
+</string-name>, <string-name><surname>Greenwood</surname><given-names>H</given-names></string-name>, <string-name><surname>Dudley</surname><given-names>P</given-names></string-name>, <string-name><surname>Crafter</surname><given-names>C</given-names></string-name>, <string-name><surname>Yu</surname><given-names>D-H</given-names></string-name>, <string-name><surname>Zhang</surname><given-names>J</given-names></string-name>, <etal/></person-group>. <article-title>Preclinical pharmacology of AZD5363, an inhibitor of AKT: pharmacodynamics, antitumor activity, and correlation of monotherapy activity with genetic background</article-title>. <source>Mol Cancer Ther</source><year>2012</year>;<volume>11</volume>:<fpage>873</fpage>–<lpage>87</lpage>.<pub-id pub-id-type="pmid">22294718</pub-id>
+</mixed-citation>
+      </ref>
+      <ref id="bib48">
+        <label>48.</label>
+        <mixed-citation publication-type="journal">
+<person-group person-group-type="author">
+<string-name>
+<surname>Schmid</surname>
+<given-names>P</given-names>
+</string-name>, <string-name><surname>Abraham</surname><given-names>J</given-names></string-name>, <string-name><surname>Chan</surname><given-names>S</given-names></string-name>, <string-name><surname>Wheatley</surname><given-names>D</given-names></string-name>, <string-name><surname>Brunt</surname><given-names>AM</given-names></string-name>, <string-name><surname>Nemsadze</surname><given-names>G</given-names></string-name>, <etal/></person-group>. <article-title>Capivasertib plus paclitaxel versus placebo plus paclitaxel as first-line therapy for metastatic triple-negative breast cancer: the PAKT trial</article-title>. <source>J Clin Oncol</source><year>2020</year>;<volume>38</volume>:<fpage>423</fpage>–<lpage>33</lpage>.<pub-id pub-id-type="pmid">31841354</pub-id>
+</mixed-citation>
+      </ref>
+      <ref id="bib49">
+        <label>49.</label>
+        <mixed-citation publication-type="journal">
+<person-group person-group-type="author">
+<string-name>
+<surname>Smyth</surname>
+<given-names>LM</given-names>
+</string-name>, <string-name><surname>Batist</surname><given-names>G</given-names></string-name>, <string-name><surname>Meric-Bernstam</surname><given-names>F</given-names></string-name>, <string-name><surname>Kabos</surname><given-names>P</given-names></string-name>, <string-name><surname>Spanggaard</surname><given-names>I</given-names></string-name>, <string-name><surname>Lluch</surname><given-names>A</given-names></string-name>, <etal/></person-group>. <article-title>Selective AKT kinase inhibitor capivasertib in combination with fulvestrant in PTEN-mutant ER-positive metastatic breast cancer</article-title>. <source>NPJ Breast Cancer</source><year>2021</year>;<volume>7</volume>:<fpage>44</fpage>.<pub-id pub-id-type="pmid">33863913</pub-id>
+</mixed-citation>
+      </ref>
+      <ref id="bib50">
+        <label>50.</label>
+        <mixed-citation publication-type="journal">
+<person-group person-group-type="author">
+<string-name>
+<surname>Turner</surname>
+<given-names>N</given-names>
+</string-name>, <string-name><surname>Oliveira</surname><given-names>M</given-names></string-name>, <string-name><surname>Howell</surname><given-names>SJ</given-names></string-name>, <string-name><surname>Dalenc</surname><given-names>F</given-names></string-name>, <string-name><surname>Cortés</surname><given-names>J</given-names></string-name>, <string-name><surname>Gomez</surname><given-names>H</given-names></string-name>, <etal/></person-group>. <article-title>Abstract GS3-04: GS3-04 capivasertib and fulvestrant for patients with aromatase inhibitor-resistant hormone receptor-positive/human epidermal growth factor receptor 2-negative advanced breast cancer: results from the phase III CAPItello-291 trial</article-title>. <source>Cancer Res</source><year>2023</year>;<volume>83</volume>(<issue>5_Suppl</issue>):<fpage>GS3</fpage>–<lpage>04</lpage>.</mixed-citation>
+      </ref>
+      <ref id="bib51">
+        <label>51.</label>
+        <mixed-citation publication-type="journal">
+<person-group person-group-type="author">
+<string-name>
+<surname>Gambaro</surname>
+<given-names>K</given-names>
+</string-name>, <string-name><surname>Marques</surname><given-names>M</given-names></string-name>, <string-name><surname>McNamara</surname><given-names>S</given-names></string-name>, <string-name><surname>Couetoux du Tertre</surname><given-names>M</given-names></string-name>, <string-name><surname>Diaz</surname><given-names>Z</given-names></string-name>, <string-name><surname>Hoffert</surname><given-names>C</given-names></string-name>, <etal/></person-group>. <article-title>Copy number and transcriptome alterations associated with metastatic lesion response to treatment in colorectal cancer</article-title>. <source>Clin Transl Med</source><year>2021</year>;<volume>11</volume>:<fpage>e401</fpage>.<pub-id pub-id-type="pmid">33931971</pub-id>
+</mixed-citation>
+      </ref>
+    </ref-list>
+    <app-group>
+      <app id="app1">
+        <title>
+Appendix Gene and protein names.
+</title>
+        <p>
+<table-wrap position="anchor" id="audtbl1"><table frame="hsides" rules="groups"><thead><tr><th align="left" rowspan="1" colspan="1">Gene</th><th align="left" rowspan="1" colspan="1">Abbreviation</th><th align="left" rowspan="1" colspan="1">Uniprot</th><th align="left" rowspan="1" colspan="1">Protein name</th></tr></thead><tbody><tr><td align="left" rowspan="1" colspan="1">
+<italic toggle="yes">EIF4EBP1</italic>
+</td><td align="left" rowspan="1" colspan="1">(p) 4E-BP1</td><td align="left" rowspan="1" colspan="1">Q13541</td><td align="left" rowspan="1" colspan="1">Eukaryotic translation initiation factor 4E-binding protein 1</td></tr><tr><td align="left" rowspan="1" colspan="1">
+<italic toggle="yes">AHCY</italic>
+</td><td align="left" rowspan="1" colspan="1">AdoHcyase</td><td align="left" rowspan="1" colspan="1">P23526</td><td align="left" rowspan="1" colspan="1">Adenosylhomocysteinase</td></tr><tr><td align="left" rowspan="1" colspan="1">
+<italic toggle="yes">AKT1</italic>
+</td><td align="left" rowspan="1" colspan="1">(p)AKT1</td><td align="left" rowspan="1" colspan="1">P31749</td><td align="left" rowspan="1" colspan="1">RAC-alpha serine/threonine-protein kinase</td></tr><tr><td align="left" rowspan="1" colspan="1">
+<italic toggle="yes">AKT2</italic>
+</td><td align="left" rowspan="1" colspan="1">(p)AKT2</td><td align="left" rowspan="1" colspan="1">P31751</td><td align="left" rowspan="1" colspan="1">RAC-beta serine/threonine-protein kinase</td></tr><tr><td align="left" rowspan="1" colspan="1">
+<italic toggle="yes">ALB</italic>
+</td><td align="left" rowspan="1" colspan="1">Albumin</td><td align="left" rowspan="1" colspan="1">P02768</td><td align="left" rowspan="1" colspan="1">Albumin</td></tr><tr><td align="left" rowspan="1" colspan="1">
+<italic toggle="yes">AMPK</italic>
+</td><td align="left" rowspan="1" colspan="1">AMPK α-2</td><td align="left" rowspan="1" colspan="1">P54646</td><td align="left" rowspan="1" colspan="1">5′-AMP-activated protein kinase catalytic subunit alpha-2</td></tr><tr><td align="left" rowspan="1" colspan="1">
+<italic toggle="yes">APRT</italic>
+</td><td align="left" rowspan="1" colspan="1">APRT</td><td align="left" rowspan="1" colspan="1">P07741</td><td align="left" rowspan="1" colspan="1">Adenine phosphoribosyltransferase</td></tr><tr><td align="left" rowspan="1" colspan="1">
+<italic toggle="yes">ARHGAP1</italic>
+</td><td align="left" rowspan="1" colspan="1">p50-RhoGAP</td><td align="left" rowspan="1" colspan="1">Q07960</td><td align="left" rowspan="1" colspan="1">Rho GTPase-activating protein 1</td></tr><tr><td align="left" rowspan="1" colspan="1">
+<italic toggle="yes">ARPC4</italic>
+</td><td align="left" rowspan="1" colspan="1">ARPC4</td><td align="left" rowspan="1" colspan="1">P59998</td><td align="left" rowspan="1" colspan="1">Actin-related protein 2/3 complex subunit 4</td></tr><tr><td align="left" rowspan="1" colspan="1">
+<italic toggle="yes">ATF4</italic>
+</td><td align="left" rowspan="1" colspan="1">ATF4</td><td align="left" rowspan="1" colspan="1">P18848</td><td align="left" rowspan="1" colspan="1">Cyclic AMP-dependent transcription factor ATF-4</td></tr><tr><td align="left" rowspan="1" colspan="1">
+<italic toggle="yes">CCT3</italic>
+</td><td align="left" rowspan="1" colspan="1">TCP-1-gamma</td><td align="left" rowspan="1" colspan="1">P49368</td><td align="left" rowspan="1" colspan="1">T-complex protein 1 subunit gamma</td></tr><tr><td align="left" rowspan="1" colspan="1">
+<italic toggle="yes">CCT8</italic>
+</td><td align="left" rowspan="1" colspan="1">TCP-1-theta</td><td align="left" rowspan="1" colspan="1">P50990</td><td align="left" rowspan="1" colspan="1">T-complex protein 1 subunit theta</td></tr><tr><td align="left" rowspan="1" colspan="1">
+<italic toggle="yes">CPNE1</italic>
+</td><td align="left" rowspan="1" colspan="1">Copine I</td><td align="left" rowspan="1" colspan="1">Q99829</td><td align="left" rowspan="1" colspan="1">Copine-1</td></tr><tr><td align="left" rowspan="1" colspan="1">
+<italic toggle="yes">DCXR</italic>
+</td><td align="left" rowspan="1" colspan="1">XR</td><td align="left" rowspan="1" colspan="1">Q7Z4W1</td><td align="left" rowspan="1" colspan="1">L-xylulose reductase</td></tr><tr><td align="left" rowspan="1" colspan="1">
+<italic toggle="yes">DECR1</italic>
+</td><td align="left" rowspan="1" colspan="1">DECR</td><td align="left" rowspan="1" colspan="1">Q16698</td><td align="left" rowspan="1" colspan="1">2,4-dienoyl-CoA reductase [(3E)-enoyl-CoA-producing], mitochondrial</td></tr><tr><td align="left" rowspan="1" colspan="1">
+<italic toggle="yes">EIF2A</italic>
+</td><td align="left" rowspan="1" colspan="1">eIF-2A</td><td align="left" rowspan="1" colspan="1">Q9BY44</td><td align="left" rowspan="1" colspan="1">Eukaryotic translation initiation factor 2A</td></tr><tr><td align="left" rowspan="1" colspan="1">
+<italic toggle="yes">EIF2AK3</italic>
+</td><td align="left" rowspan="1" colspan="1">PEK, PERK</td><td align="left" rowspan="1" colspan="1">Q9NZJ5</td><td align="left" rowspan="1" colspan="1">Eukaryotic translation initiation factor 2-alpha kinase 3</td></tr><tr><td align="left" rowspan="1" colspan="1">
+<italic toggle="yes">EIF2S1</italic>
+</td><td align="left" rowspan="1" colspan="1">eIF2α</td><td align="left" rowspan="1" colspan="1">P05198</td><td align="left" rowspan="1" colspan="1">Eukaryotic translation initiation factor 2 subunit 1</td></tr><tr><td align="left" rowspan="1" colspan="1">
+<italic toggle="yes">EIF3E</italic>
+</td><td align="left" rowspan="1" colspan="1">eIF3e</td><td align="left" rowspan="1" colspan="1">P60228</td><td align="left" rowspan="1" colspan="1">Eukaryotic translation initiation factor 3 subunit E</td></tr><tr><td align="left" rowspan="1" colspan="1">
+<italic toggle="yes">EIF4A1</italic>
+</td><td align="left" rowspan="1" colspan="1">eIF4A-I</td><td align="left" rowspan="1" colspan="1">P60842</td><td align="left" rowspan="1" colspan="1">Eukaryotic initiation factor 4A-I</td></tr><tr><td align="left" rowspan="1" colspan="1">
+<italic toggle="yes">EIF4E</italic>
+</td><td align="left" rowspan="1" colspan="1">eIF4E</td><td align="left" rowspan="1" colspan="1">P06730</td><td align="left" rowspan="1" colspan="1">Eukaryotic translation initiation factor 4E</td></tr><tr><td align="left" rowspan="1" colspan="1">
+<italic toggle="yes">EIF5</italic>
+</td><td align="left" rowspan="1" colspan="1">eIF-5</td><td align="left" rowspan="1" colspan="1">P55010</td><td align="left" rowspan="1" colspan="1">Eukaryotic translation initiation factor 5</td></tr><tr><td align="left" rowspan="1" colspan="1">
+<italic toggle="yes">ETFB</italic>
+</td><td align="left" rowspan="1" colspan="1">Beta-ETF</td><td align="left" rowspan="1" colspan="1">P38117</td><td align="left" rowspan="1" colspan="1">Electron transfer flavoprotein subunit beta</td></tr><tr><td align="left" rowspan="1" colspan="1">
+<italic toggle="yes">GSK3B</italic>
+</td><td align="left" rowspan="1" colspan="1">GSK-3Beta</td><td align="left" rowspan="1" colspan="1">P49841</td><td align="left" rowspan="1" colspan="1">Glycogen synthase kinase-3 beta</td></tr><tr><td align="left" rowspan="1" colspan="1">
+<italic toggle="yes">HADHB</italic>
+</td><td align="left" rowspan="1" colspan="1">TP-Beta</td><td align="left" rowspan="1" colspan="1">P55084</td><td align="left" rowspan="1" colspan="1">Trifunctional enzyme subunit beta, mitochondrial</td></tr><tr><td align="left" rowspan="1" colspan="1">
+<italic toggle="yes">HK1</italic>
+</td><td align="left" rowspan="1" colspan="1">HK I</td><td align="left" rowspan="1" colspan="1">P19367</td><td align="left" rowspan="1" colspan="1">Hexokinase-1</td></tr><tr><td align="left" rowspan="1" colspan="1">
+<italic toggle="yes">HNRNP-F</italic>
+</td><td align="left" rowspan="1" colspan="1">hnRNP F</td><td align="left" rowspan="1" colspan="1">P52597</td><td align="left" rowspan="1" colspan="1">Heterogeneous nuclear ribonucleoprotein F</td></tr><tr><td align="left" rowspan="1" colspan="1">
+<italic toggle="yes">HNRNP-L</italic>
+</td><td align="left" rowspan="1" colspan="1">hnRNP L</td><td align="left" rowspan="1" colspan="1">P14866</td><td align="left" rowspan="1" colspan="1">Heterogeneous nuclear ribonucleoprotein L</td></tr><tr><td align="left" rowspan="1" colspan="1">
+<italic toggle="yes">IGKC</italic>
+</td><td align="left" rowspan="1" colspan="1">IGKC</td><td align="left" rowspan="1" colspan="1">P01834</td><td align="left" rowspan="1" colspan="1">Immunoglobulin kappa constant</td></tr><tr><td align="left" rowspan="1" colspan="1">
+<italic toggle="yes">IGKV4</italic>
+</td><td align="left" rowspan="1" colspan="1">IGKV4-1</td><td align="left" rowspan="1" colspan="1">P06312</td><td align="left" rowspan="1" colspan="1">Immunoglobulin kappa variable 4–1</td></tr><tr><td align="left" rowspan="1" colspan="1">
+<italic toggle="yes">ILF2</italic>
+</td><td align="left" rowspan="1" colspan="1">ILF2</td><td align="left" rowspan="1" colspan="1">Q12905</td><td align="left" rowspan="1" colspan="1">Interleukin enhancer-binding factor 2</td></tr><tr><td align="left" rowspan="1" colspan="1">
+<italic toggle="yes">ILF3</italic>
+</td><td align="left" rowspan="1" colspan="1">ILF3</td><td align="left" rowspan="1" colspan="1">Q12906</td><td align="left" rowspan="1" colspan="1">Interleukin enhancer-binding factor 3</td></tr><tr><td align="left" rowspan="1" colspan="1">
+<italic toggle="yes">KRAS</italic>
+</td><td align="left" rowspan="1" colspan="1">K-Ras 2</td><td align="left" rowspan="1" colspan="1">P01116</td><td align="left" rowspan="1" colspan="1">GTPase KRas</td></tr><tr><td align="left" rowspan="1" colspan="1">
+<italic toggle="yes">MAPK1</italic>
+</td><td align="left" rowspan="1" colspan="1">MAP kinase 1, ERK2</td><td align="left" rowspan="1" colspan="1">P28482</td><td align="left" rowspan="1" colspan="1">Mitogen-activated protein kinase 1</td></tr><tr><td align="left" rowspan="1" colspan="1">
+<italic toggle="yes">MDH2</italic>
+</td><td align="left" rowspan="1" colspan="1">MDH2</td><td align="left" rowspan="1" colspan="1">P40926</td><td align="left" rowspan="1" colspan="1">Malate dehydrogenase, mitochondrial</td></tr><tr><td align="left" rowspan="1" colspan="1">
+<italic toggle="yes">MTOR</italic>
+</td><td align="left" rowspan="1" colspan="1">mTOR</td><td align="left" rowspan="1" colspan="1">P42345</td><td align="left" rowspan="1" colspan="1">Serine/threonine-protein kinase mTOR</td></tr><tr><td align="left" rowspan="1" colspan="1">
+<italic toggle="yes">MYC</italic>
+</td><td align="left" rowspan="1" colspan="1">c-Myc</td><td align="left" rowspan="1" colspan="1">P01106</td><td align="left" rowspan="1" colspan="1">Myc proto-oncogene protein</td></tr><tr><td align="left" rowspan="1" colspan="1">
+<italic toggle="yes">PCBP1</italic>
+</td><td align="left" rowspan="1" colspan="1">hnRNP E1</td><td align="left" rowspan="1" colspan="1">Q15365</td><td align="left" rowspan="1" colspan="1">Poly (rC)-binding protein 1</td></tr><tr><td align="left" rowspan="1" colspan="1">
+<italic toggle="yes">PCBP2</italic>
+</td><td align="left" rowspan="1" colspan="1">hnRNP E2</td><td align="left" rowspan="1" colspan="1">Q15366</td><td align="left" rowspan="1" colspan="1">Poly (rC)-binding protein 2</td></tr><tr><td align="left" rowspan="1" colspan="1">PDIA6</td><td align="left" rowspan="1" colspan="1">ERp5</td><td align="left" rowspan="1" colspan="1">Q15084</td><td align="left" rowspan="1" colspan="1">Protein disulfide-isomerase A6/Endoplasmic reticulum protein 5</td></tr><tr><td align="left" rowspan="1" colspan="1">
+<italic toggle="yes">PHB1</italic>
+</td><td align="left" rowspan="1" colspan="1">PHB1</td><td align="left" rowspan="1" colspan="1">P35232</td><td align="left" rowspan="1" colspan="1">Prohibitin 1</td></tr><tr><td align="left" rowspan="1" colspan="1">
+<italic toggle="yes">PHB2</italic>
+</td><td align="left" rowspan="1" colspan="1">PHB2</td><td align="left" rowspan="1" colspan="1">Q99623</td><td align="left" rowspan="1" colspan="1">Prohibitin-2</td></tr><tr><td align="left" rowspan="1" colspan="1">
+<italic toggle="yes">PIGR</italic>
+</td><td align="left" rowspan="1" colspan="1">PIgR</td><td align="left" rowspan="1" colspan="1">P01833</td><td align="left" rowspan="1" colspan="1">Polymeric immunoglobulin receptor</td></tr><tr><td align="left" rowspan="1" colspan="1">
+<italic toggle="yes">PIK3CA</italic>
+</td><td align="left" rowspan="1" colspan="1">PIK3CA, p110α</td><td align="left" rowspan="1" colspan="1">P42336</td><td align="left" rowspan="1" colspan="1">Phosphatidylinositol 4,5-bisphosphate 3-kinase catalytic subunit alpha isoform</td></tr><tr><td align="left" rowspan="1" colspan="1">
+<italic toggle="yes">PIK3CB</italic>
+</td><td align="left" rowspan="1" colspan="1">PIK3C-Beta</td><td align="left" rowspan="1" colspan="1">P42338</td><td align="left" rowspan="1" colspan="1">Phosphatidylinositol 4,5-bisphosphate 3-kinase catalytic subunit beta isoform</td></tr><tr><td align="left" rowspan="1" colspan="1">
+<italic toggle="yes">PSMA6</italic>
+</td><td align="left" rowspan="1" colspan="1">PSMA6</td><td align="left" rowspan="1" colspan="1">P60900</td><td align="left" rowspan="1" colspan="1">Proteasome subunit alpha type-6</td></tr><tr><td align="left" rowspan="1" colspan="1">
+<italic toggle="yes">PTEN</italic>
+</td><td align="left" rowspan="1" colspan="1">PTEN</td><td align="left" rowspan="1" colspan="1">P60484</td><td align="left" rowspan="1" colspan="1">Phosphatidylinositol 3,4,5-trisphosphate 3-phosphatase and dual-specificity protein phosphatase PTEN</td></tr><tr><td align="left" rowspan="1" colspan="1">
+<italic toggle="yes">RICTOR</italic>
+</td><td align="left" rowspan="1" colspan="1">Rictor</td><td align="left" rowspan="1" colspan="1">Q6R327</td><td align="left" rowspan="1" colspan="1">Rapamycin-insensitive companion of mTOR</td></tr><tr><td align="left" rowspan="1" colspan="1">RPS6KB1</td><td align="left" rowspan="1" colspan="1">(p)S6K1</td><td align="left" rowspan="1" colspan="1">P23443</td><td align="left" rowspan="1" colspan="1">Ribosomal protein S6 kinase beta-1</td></tr><tr><td align="left" rowspan="1" colspan="1">
+<italic toggle="yes">SDHA</italic>
+</td><td align="left" rowspan="1" colspan="1">SDHA</td><td align="left" rowspan="1" colspan="1">P31040</td><td align="left" rowspan="1" colspan="1">Succinate dehydrogenase [ubiquinone] flavoprotein subunit, mitochondrial</td></tr><tr><td align="left" rowspan="1" colspan="1">
+<italic toggle="yes">SEPTIN2</italic>
+</td><td align="left" rowspan="1" colspan="1">Septin-2</td><td align="left" rowspan="1" colspan="1">Q15019</td><td align="left" rowspan="1" colspan="1">Septin-2</td></tr><tr><td align="left" rowspan="1" colspan="1">
+<italic toggle="yes">SLC25A3</italic>
+</td><td align="left" rowspan="1" colspan="1">PTP</td><td align="left" rowspan="1" colspan="1">Q00325</td><td align="left" rowspan="1" colspan="1">Phosphate carrier protein, mitochondrial</td></tr><tr><td align="left" rowspan="1" colspan="1">
+<italic toggle="yes">TNF</italic>
+</td><td align="left" rowspan="1" colspan="1">TNFα</td><td align="left" rowspan="1" colspan="1">P01375</td><td align="left" rowspan="1" colspan="1">Tumor necrosis factor alpha</td></tr><tr><td align="left" rowspan="1" colspan="1">
+<italic toggle="yes">TSC1</italic>
+</td><td align="left" rowspan="1" colspan="1">Hamartin</td><td align="left" rowspan="1" colspan="1">Q92574</td><td align="left" rowspan="1" colspan="1">Tuberous sclerosis 1 protein</td></tr><tr><td align="left" rowspan="1" colspan="1">
+<italic toggle="yes">TSC2</italic>
+</td><td align="left" rowspan="1" colspan="1">Tuberin</td><td align="left" rowspan="1" colspan="1">P49815</td><td align="left" rowspan="1" colspan="1">Tuberous sclerosis 2 protein</td></tr><tr><td align="left" rowspan="1" colspan="1">
+<italic toggle="yes">TSTA3</italic>
+</td><td align="left" rowspan="1" colspan="1">TSTA3</td><td align="left" rowspan="1" colspan="1">Q13630</td><td align="left" rowspan="1" colspan="1">GDP-L-fucose synthase</td></tr><tr><td align="left" rowspan="1" colspan="1">
+<italic toggle="yes">TUFM</italic>
+</td><td align="left" rowspan="1" colspan="1">EF-Tu, P43</td><td align="left" rowspan="1" colspan="1">P49411</td><td align="left" rowspan="1" colspan="1">Elongation factor Tu, mitochondrial</td></tr><tr><td align="left" rowspan="1" colspan="1">
+<italic toggle="yes">XRCC5</italic>
+</td><td align="left" rowspan="1" colspan="1">XRCC5</td><td align="left" rowspan="1" colspan="1">P13010</td><td align="left" rowspan="1" colspan="1">X-ray repair cross-complementing protein 5</td></tr></tbody></table></table-wrap>
+</p>
+      </app>
+    </app-group>
+  </back>
+</article>
+</pmc-articleset>
