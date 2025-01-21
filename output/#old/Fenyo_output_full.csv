@@ -1,0 +1,659 @@
+link,source_section,source_url,surrounding_text,file_extension,content_type,dataset_identifier,data_repository,dataset_webpage,download_link,title,id,description
+https://pmc.ncbi.nlm.nih.gov/articles/instance/4861069/bin/NIHMS782739-supplement-Tables.xlsx,supplementary_data,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4861069,,xlsx,,,,,,,,
+https://ega-archive.org/studies/EGAS50000000169,data availability,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC10972747,,,data_link,EGAS50000000169,https://ega-archive.org/studies/EGAS50000000169,na,,,,
+http://www.uni-koeln.de/med-fak/peiflyne/peiflyne.tgz,data availability,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC10972747,,,data_link,peiflyne.tgz,http://www.uni-koeln.de/med-fak/peiflyne/,na,,,,
+https://www.ncbi.nlm.nih.gov/pmc/articles/PMC10972747#Sec9,data availability,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC10972747,,,data_link,peiflyne,http://www.uni-koeln.de/med-fak/peiflyne/peiflyne.tgz,na,,,,
+41586_2024_7177_MOESM4_ESM.xlsx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC10972747,Supplementary Tables Supplementary Tables 1–12.,xlsx,local-data,,,,https://pmc.ncbi.nlm.nih.gov/articles/instance/10972747/bin/41586_2024_7177_MOESM4_ESM.xlsx,No Title,MOESM4,Supplementary Tables 1–12.
+41586_2024_7177_MOESM4_ESM.xlsx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC10972747,Supplementary Tables Supplementary Tables 1–12.,xlsx,local-data,,,,https://pmc.ncbi.nlm.nih.gov/articles/instance/10972747/bin/41586_2024_7177_MOESM4_ESM.xlsx,No Title,MOESM4,Supplementary Tables 1–12.
+https://github.com/MD-Anderson-Bioinformatics/SCLC_Subtyping,data availability,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC10982990,,,data_link,https://github.com/MD-Anderson-Bioinformatics/SCLC_Subtyping,https://github.com/MD-Anderson-Bioinformatics/SCLC_Subtyping,na,,,,
+https://www.ncbi.nlm.nih.gov/gap/,data availability,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC10982990,,,data_link,phs003416.v1.p1,https://www.ncbi.nlm.nih.gov/gap/,na,,,,
+https://www.ncbi.nlm.nih.gov/geo/,data availability,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC10982990,,,data_link,phs003416.v1.p1,https://www.ncbi.nlm.nih.gov/geo/,na,,,,
+https://www.ncbi.nlm.nih.gov/geo/,data availability,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC10982990,,,data_link,"https://www.ncbi.nlm.nih.gov/gap/  
+GSE241673",https://www.ncbi.nlm.nih.gov/geo/,na,,,,
+https://www.ncbi.nlm.nih.gov/pmc/articles/PMC10982990#SD1,data availability,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC10982990,,,data_link,phs003416.v1.p1,https://www.ncbi.nlm.nih.gov/gap/,na,,,,
+https://www.ncbi.nlm.nih.gov/pmc/articles/PMC10982990#SD2,data availability,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC10982990,,,data_link,phs003416.v1.p1,https://www.ncbi.nlm.nih.gov/gap/,na,,,,
+https://pmc.ncbi.nlm.nih.gov/articles/instance/11178430/bin/EMS195999-supplement-Data_S1.csv,supplementary_data,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC10982990,,,,,,,,,,
+https://pmc.ncbi.nlm.nih.gov/articles/instance/11178430/bin/EMS195999-supplement-Data_S2.csv,supplementary_data,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC10982990,,,,,,,,,,
+https://pmc.ncbi.nlm.nih.gov/articles/instance/11178430/bin/EMS195999-supplement-Figure_S1.pdf,supplementary_data,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC10982990,,,,,,,,,,
+https://pmc.ncbi.nlm.nih.gov/articles/instance/11178430/bin/EMS195999-supplement-Table_S1.xlsx,supplementary_data,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC10982990,,,,,,,,,,
+https://pmc.ncbi.nlm.nih.gov/articles/instance/11178430/bin/EMS195999-supplement-Table_S2.xlsx,supplementary_data,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC10982990,,,,,,,,,,
+https://pmc.ncbi.nlm.nih.gov/articles/instance/11178430/bin/EMS195999-supplement-Table_S3.xlsx,supplementary_data,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC10982990,,,,,,,,,,
+EMS195999-supplement-Data_S1.csv,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC10982990,"Data S1 
+         
+           RNA-seq data of cohort 1, related to Figure 1.",csv,local-data,,,,https://pmc.ncbi.nlm.nih.gov/articles/instance/10982990/bin/EMS195999-supplement-Data_S1.csv,"RNA-seq data of cohort 1, related to Figure 1.",SD1,No description
+EMS195999-supplement-Data_S2.csv,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC10982990,"Data S2 
+         
+           RNA-seq data of cohort 2, related to Figure 2.",csv,local-data,,,,https://pmc.ncbi.nlm.nih.gov/articles/instance/10982990/bin/EMS195999-supplement-Data_S2.csv,"RNA-seq data of cohort 2, related to Figure 2.",SD2,No description
+EMS195999-supplement-Table_S1.xlsx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC10982990,Table S1,xlsx,local-data,,,,https://pmc.ncbi.nlm.nih.gov/articles/instance/10982990/bin/EMS195999-supplement-Table_S1.xlsx,No Title,SD4,No description
+EMS195999-supplement-Table_S2.xlsx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC10982990,Table S2,xlsx,local-data,,,,https://pmc.ncbi.nlm.nih.gov/articles/instance/10982990/bin/EMS195999-supplement-Table_S2.xlsx,No Title,SD5,No description
+EMS195999-supplement-Table_S3.xlsx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC10982990,Table S3,xlsx,local-data,,,,https://pmc.ncbi.nlm.nih.gov/articles/instance/10982990/bin/EMS195999-supplement-Table_S3.xlsx,No Title,SD6,No description
+EMS195999-supplement-Data_S1.csv,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC10982990,"Data S1 
+         
+           RNA-seq data of cohort 1, related to Figure 1.",csv,local-data,,,,https://pmc.ncbi.nlm.nih.gov/articles/instance/10982990/bin/EMS195999-supplement-Data_S1.csv,"RNA-seq data of cohort 1, related to Figure 1.",SD1,No description
+EMS195999-supplement-Data_S2.csv,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC10982990,"Data S2 
+         
+           RNA-seq data of cohort 2, related to Figure 2.",csv,local-data,,,,https://pmc.ncbi.nlm.nih.gov/articles/instance/10982990/bin/EMS195999-supplement-Data_S2.csv,"RNA-seq data of cohort 2, related to Figure 2.",SD2,No description
+EMS195999-supplement-Table_S1.xlsx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC10982990,Table S1,xlsx,local-data,,,,https://pmc.ncbi.nlm.nih.gov/articles/instance/10982990/bin/EMS195999-supplement-Table_S1.xlsx,No Title,SD4,No description
+EMS195999-supplement-Table_S2.xlsx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC10982990,Table S2,xlsx,local-data,,,,https://pmc.ncbi.nlm.nih.gov/articles/instance/10982990/bin/EMS195999-supplement-Table_S2.xlsx,No Title,SD5,No description
+EMS195999-supplement-Table_S3.xlsx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC10982990,Table S3,xlsx,local-data,,,,https://pmc.ncbi.nlm.nih.gov/articles/instance/10982990/bin/EMS195999-supplement-Table_S3.xlsx,No Title,SD6,No description
+https://pmc.ncbi.nlm.nih.gov/articles/instance/8628860/bin/NIHMS1754019-supplement-2.xlsx,supplementary_data,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8628860,,xlsx,,,,,,,,
+https://pmc.ncbi.nlm.nih.gov/articles/instance/8628860/bin/NIHMS1754019-supplement-3.xlsx,supplementary_data,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8628860,,xlsx,,,,,,,,
+https://pmc.ncbi.nlm.nih.gov/articles/instance/8628860/bin/NIHMS1754019-supplement-4.xlsx,supplementary_data,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8628860,,xlsx,,,,,,,,
+https://pmc.ncbi.nlm.nih.gov/articles/instance/8628860/bin/NIHMS1754019-supplement-5.xlsx,supplementary_data,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8628860,,xlsx,,,,,,,,
+https://pmc.ncbi.nlm.nih.gov/articles/instance/8628860/bin/NIHMS1754019-supplement-6.xlsx,supplementary_data,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8628860,,xlsx,,,,,,,,
+https://pmc.ncbi.nlm.nih.gov/articles/instance/8628860/bin/NIHMS1754019-supplement-7.xlsx,supplementary_data,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8628860,,xlsx,,,,,,,,
+https://pmc.ncbi.nlm.nih.gov/articles/instance/8628860/bin/NIHMS1754019-supplement-8.xlsx,supplementary_data,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8628860,,xlsx,,,,,,,,
+https://pmc.ncbi.nlm.nih.gov/articles/instance/8628860/bin/NIHMS1754019-supplement-9.xlsx,supplementary_data,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8628860,,xlsx,,,,,,,,
+https://pmc.ncbi.nlm.nih.gov/articles/instance/8628860/bin/NIHMS1754019-supplement-10.xlsx,supplementary_data,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8628860,,xlsx,,,,,,,,
+https://pmc.ncbi.nlm.nih.gov/articles/instance/8628860/bin/NIHMS1754019-supplement-11.xlsx,supplementary_data,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8628860,,xlsx,,,,,,,,
+https://pmc.ncbi.nlm.nih.gov/articles/instance/8628860/bin/NIHMS1754019-supplement-12.xlsx,supplementary_data,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8628860,,xlsx,,,,,,,,
+https://pmc.ncbi.nlm.nih.gov/articles/instance/8628860/bin/NIHMS1754019-supplement-13.xlsx,supplementary_data,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8628860,,xlsx,,,,,,,,
+https://pmc.ncbi.nlm.nih.gov/articles/instance/8628860/bin/NIHMS1754019-supplement-14.xlsx,supplementary_data,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8628860,,xlsx,,,,,,,,
+https://pmc.ncbi.nlm.nih.gov/articles/instance/8628860/bin/NIHMS1754019-supplement-15.xlsx,supplementary_data,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8628860,,xlsx,,,,,,,,
+https://pmc.ncbi.nlm.nih.gov/articles/instance/8628860/bin/NIHMS1754019-supplement-16.xlsx,supplementary_data,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8628860,,xlsx,,,,,,,,
+https://pmc.ncbi.nlm.nih.gov/articles/instance/8628860/bin/NIHMS1754019-supplement-17.xlsx,supplementary_data,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8628860,,xlsx,,,,,,,,
+https://pmc.ncbi.nlm.nih.gov/articles/instance/8628860/bin/NIHMS1754019-supplement-18.xlsx,supplementary_data,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8628860,,xlsx,,,,,,,,
+https://pmc.ncbi.nlm.nih.gov/articles/instance/8628860/bin/NIHMS1754019-supplement-19.xlsx,supplementary_data,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8628860,,xlsx,,,,,,,,
+https://pmc.ncbi.nlm.nih.gov/articles/instance/8628860/bin/NIHMS1754019-supplement-20.xlsx,supplementary_data,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8628860,,xlsx,,,,,,,,
+https://pmc.ncbi.nlm.nih.gov/articles/instance/8628860/bin/NIHMS1754019-supplement-21.xlsx,supplementary_data,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8628860,,xlsx,,,,,,,,
+https://pmc.ncbi.nlm.nih.gov/articles/instance/8628860/bin/NIHMS1754019-supplement-22.xlsx,supplementary_data,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8628860,,xlsx,,,,,,,,
+https://pmc.ncbi.nlm.nih.gov/articles/instance/8628860/bin/NIHMS1754019-supplement-23.xlsx,supplementary_data,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8628860,,xlsx,,,,,,,,
+https://pmc.ncbi.nlm.nih.gov/articles/instance/8628860/bin/NIHMS1754019-supplement-24.xlsx,supplementary_data,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8628860,,xlsx,,,,,,,,
+https://pmc.ncbi.nlm.nih.gov/articles/instance/8628860/bin/NIHMS1754019-supplement-25.xlsx,supplementary_data,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8628860,,xlsx,,,,,,,,
+https://pmc.ncbi.nlm.nih.gov/articles/instance/8628860/bin/NIHMS1754019-supplement-26.gmt,supplementary_data,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8628860,,gmt,,,,,,,,
+https://pmc.ncbi.nlm.nih.gov/articles/instance/8628860/bin/NIHMS1754019-supplement-27.gmt,supplementary_data,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8628860,,gmt,,,,,,,,
+https://pmc.ncbi.nlm.nih.gov/articles/instance/3557461/bin/NIHMS426385-supplement-Suppl_Tables.xls,supplementary_data,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3557461,,xls,,,,,,,,
+https://pmc.ncbi.nlm.nih.gov/articles/instance/5313262/bin/NIHMS845798-supplement-2.xlsx,supplementary_data,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5313262,,xlsx,,,,,,,,
+http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE60052,data_availability,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4836692,,,,,,,,,,
+http://www.ncbi.nlm.nih.gov/projects/gap/cgi-bin/study.cgi?study_id=phs001083.v1.p1,data_availability,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4836692,,,,,,,,,,
+http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE60052,data_availability,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4836692,,,,,,,,,,
+http://www.ncbi.nlm.nih.gov/projects/gap/cgi-bin/study.cgi?study_id=phs001083.v1.p1,data_availability,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4836692,,,,,,,,,,
+pgen.1005895.s001.docx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4836692,"S1 Fig 
+         
+           Genomic alterations in Chinese SCLC patients. 
+           Tumor samples (n = 99) are ordered from left to right based on SRSF1 copy number gains. Mutations and DNA copy number alterations of key SCLC oncogenic genes are indicated for each sample according to the color legend below the figure. The genomic alteration frequencies for each candidate gene are displayed on the left. 
+           (DOCX) 
+         
+         
+           
+             Click here for additional data file.",docx,local-data,,,,https://pmc.ncbi.nlm.nih.gov/articles/instance/4836692/bin/pgen.1005895.s001.docx,Genomic alterations in Chinese SCLC patients.,pgen.1005895.s001,Tumor samples (n = 99) are ordered from left to right based on SRSF1 copy number gains. Mutations and DNA copy number alterations of key SCLC oncogenic genes are indicated for each sample according to the color legend below the figure. The genomic alteration frequencies for each candidate gene are displayed on the left.
+pgen.1005895.s002.docx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4836692,"S2 Fig 
+         
+           SRSF1 gene copy number detection by FISH. 
+           Representative images show a) SRSF1 normal and b) SRSF1 copy number gain. Red signals represent SRSF1 gene and green signals represent of CEP17; c) SRSF1 CNV SCLC patient prevalence as well as other CNV segments across chromosome 17. Red lines indicate CN gains and green lines indicate CN losses. 
+           (DOCX) 
+         
+         
+           
+             Click here for additional data file.",docx,local-data,,,,https://pmc.ncbi.nlm.nih.gov/articles/instance/4836692/bin/pgen.1005895.s002.docx,SRSF1 gene copy number detection by FISH.,pgen.1005895.s002,Representative images show a) SRSF1 normal and b) SRSF1 copy number gain. Red signals represent SRSF1 gene and green signals represent of CEP17; c) SRSF1 CNV SCLC patient prevalence as well as other CNV segments across chromosome 17. Red lines indicate CN gains and green lines indicate CN losses.
+pgen.1005895.s003.docx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4836692,"S3 Fig 
+         
+           KM curves from indications in TCGA where at least 3 patients harbored a CN gain of SRSF1. 
+           Plots were generated in OncoLand (OmicSoft Corp; Cary, NC). 
+           (DOCX) 
+         
+         
+           
+             Click here for additional data file.",docx,local-data,,,,https://pmc.ncbi.nlm.nih.gov/articles/instance/4836692/bin/pgen.1005895.s003.docx,KM curves from indications in TCGA where at least 3 patients harbored a CN gain of SRSF1.,pgen.1005895.s003,"Plots were generated in OncoLand (OmicSoft Corp; Cary, NC)."
+pgen.1005895.s004.docx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4836692,"S4 Fig 
+         
+           (a): TaqMan assays of SRSF1 DNA CNs in 13 SCLC cell lines. (b): Western blots of SRSF1 show protein expression levels in SCLC cell lines. (c):NCI-H82, SHP-77 and NCI-H1048 were transfected with non-targeting control or SRSF1-directed siRNAs for 48 hrs, then treated with cisplatin (2.5ug/ml) or topotecan (2.5ug/ml) for 24 hrs. Cell growth and Caspase-3/7 activities were assessed and normalized against ctrl siRNA-transfected cells as 100% control. 
+           (DOCX) 
+         
+         
+           
+             Click here for additional data file.",docx,local-data,,,,https://pmc.ncbi.nlm.nih.gov/articles/instance/4836692/bin/pgen.1005895.s004.docx,No Title,pgen.1005895.s004,"(a): TaqMan assays of SRSF1 DNA CNs in 13 SCLC cell lines. (b): Western blots of SRSF1 show protein expression levels in SCLC cell lines. (c):NCI-H82, SHP-77 and NCI-H1048 were transfected with non-targeting control or SRSF1-directed siRNAs for 48 hrs, then treated with cisplatin (2.5ug/ml) or topotecan (2.5ug/ml) for 24 hrs. Cell growth and Caspase-3/7 activities were assessed and normalized against ctrl siRNA-transfected cells as 100% control."
+pgen.1005895.s005.docx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4836692,"S5 Fig 
+         
+           The association of SRSF1 gene expression with BIM gene expression in Chinese SCLC patients (N = 49). 
+           The correlation between SRSF1 and BIM gene expression is significant, which likely confirms SRSF1 over expression promotes alternative splicing of BIM. 
+           (DOCX) 
+         
+         
+           
+             Click here for additional data file.",docx,local-data,,,,https://pmc.ncbi.nlm.nih.gov/articles/instance/4836692/bin/pgen.1005895.s005.docx,The association of SRSF1 gene expression with BIM gene expression in Chinese SCLC patients (N = 49).,pgen.1005895.s005,"The correlation between SRSF1 and BIM gene expression is significant, which likely confirms SRSF1 over expression promotes alternative splicing of BIM."
+pgen.1005895.s006.docx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4836692,"S6 Fig 
+         
+           NCI-82, SHP-77 and NIH-H1048 cells were transfected with non-targeting and SRSF1 siRNAs respectively for 48 hrs and then seeded in sphere forming media and allowed to grow for 4 days. 
+           (a): Phase-contrast images of the sphere formation under each condition were captured. (b): viable cell mass quantitated by CTG assay. (c): Reconstitution of SRSF1 expression using a siRNA-resistant Flag-tagged SRSF1 expression construct was carried out in SRSF1 siRNA transfected NCI-H82 cells. Impact on sphere growth rate was assessed by CTG assay, and successful SRSF1 protein re-expression was confirmed by WB using either anti-SRSF1 antibody or anti-Flag antibody. (d): Clonogenic assays of DMS-114, NCI-82, SHP-77 and NIH-H1049. Cells were transfected with siRNAs for 48 hrs and then seeded in the methylcellulose medium for 7~14 days, colonies with more than 40 cells per colony were counted. 
+           (DOCX) 
+         
+         
+           
+             Click here for additional data file.",docx,local-data,,,,https://pmc.ncbi.nlm.nih.gov/articles/instance/4836692/bin/pgen.1005895.s006.docx,"NCI-82, SHP-77 and NIH-H1048 cells were transfected with non-targeting and SRSF1 siRNAs respectively for 48 hrs and then seeded in sphere forming media and allowed to grow for 4 days.",pgen.1005895.s006,"(a): Phase-contrast images of the sphere formation under each condition were captured. (b): viable cell mass quantitated by CTG assay. (c): Reconstitution of SRSF1 expression using a siRNA-resistant Flag-tagged SRSF1 expression construct was carried out in SRSF1 siRNA transfected NCI-H82 cells. Impact on sphere growth rate was assessed by CTG assay, and successful SRSF1 protein re-expression was confirmed by WB using either anti-SRSF1 antibody or anti-Flag antibody. (d): Clonogenic assays of DMS-114, NCI-82, SHP-77 and NIH-H1049. Cells were transfected with siRNAs for 48 hrs and then seeded in the methylcellulose medium for 7~14 days, colonies with more than 40 cells per colony were counted."
+pgen.1005895.s007.docx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4836692,"S7 Fig 
+         
+           (a)SHP-77 cells transfected with non-targeting control siRNA or SRSF1 siRNA were implanted into immunocompromised mice and tumor formation rates were monitored and measured. (b): SHP-77 cells were transfected with control or SRSF1 siRNA and then treated with topotecan or Cisplatin for the indicated times. SRSF1, phosphor-H2AX and phosphor-Chk2 were probed with their corresponding antibodies. 
+           (DOCX) 
+         
+         
+           
+             Click here for additional data file.",docx,local-data,,,,https://pmc.ncbi.nlm.nih.gov/articles/instance/4836692/bin/pgen.1005895.s007.docx,No Title,pgen.1005895.s007,"(a)SHP-77 cells transfected with non-targeting control siRNA or SRSF1 siRNA were implanted into immunocompromised mice and tumor formation rates were monitored and measured. (b): SHP-77 cells were transfected with control or SRSF1 siRNA and then treated with topotecan or Cisplatin for the indicated times. SRSF1, phosphor-H2AX and phosphor-Chk2 were probed with their corresponding antibodies."
+pgen.1005895.s008.docx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4836692,"S8 Fig 
+         
+           The association of SRSF1 gene expression with early stage and late stage (ES) SCLC patients in both our Chinese SCLC study (left figure) and George et al, study (right figure). 
+           P-value is calculated using Welch’s modified t-test. 
+           (DOCX) 
+         
+         
+           
+             Click here for additional data file.",docx,local-data,,,,https://pmc.ncbi.nlm.nih.gov/articles/instance/4836692/bin/pgen.1005895.s008.docx,"The association of SRSF1 gene expression with early stage and late stage (ES) SCLC patients in both our Chinese SCLC study (left figure) and George et al, study (right figure).",pgen.1005895.s008,P-value is calculated using Welch’s modified t-test.
+pgen.1005895.s009.docx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4836692,"S9 Fig 
+         
+           The association of SRSF1 gene expression with MYC CNV status. 
+           SCLC cell lines (left figure, N = 11) and our Chinese SCLC study (right figure, N = 49 patients with matched expression and CNV samples). P-value is estimated using standard t-test. 
+           (DOCX) 
+         
+         
+           
+             Click here for additional data file.",docx,local-data,,,,https://pmc.ncbi.nlm.nih.gov/articles/instance/4836692/bin/pgen.1005895.s009.docx,The association of SRSF1 gene expression with MYC CNV status.,pgen.1005895.s009,"SCLC cell lines (left figure, N = 11) and our Chinese SCLC study (right figure, N = 49 patients with matched expression and CNV samples). P-value is estimated using standard t-test."
+pgen.1005895.s010.docx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4836692,"S10 Fig 
+         
+           Identity check between matched SCLC tumor and normal specimens. 
+           Pearson correlation heatmap is used to compare 300 germline SNP profiles between each of the 25 tumors and matched normals. Gradient of colors: green = no correlation; yellow = low correlation; white = high correlation. 
+           (DOCX) 
+         
+         
+           
+             Click here for additional data file.",docx,local-data,,,,https://pmc.ncbi.nlm.nih.gov/articles/instance/4836692/bin/pgen.1005895.s010.docx,Identity check between matched SCLC tumor and normal specimens.,pgen.1005895.s010,Pearson correlation heatmap is used to compare 300 germline SNP profiles between each of the 25 tumors and matched normals. Gradient of colors: green = no correlation; yellow = low correlation; white = high correlation.
+pgen.1005895.s011.docx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4836692,"S11 Fig 
+         
+           Tumor growth curves for DMS114 and SHP77 parental cell lines. 
+           A total of 5–10 millioins cells were injected to establish xenograft tumors. 
+           (DOCX) 
+         
+         
+           
+             Click here for additional data file.",docx,local-data,,,,https://pmc.ncbi.nlm.nih.gov/articles/instance/4836692/bin/pgen.1005895.s011.docx,Tumor growth curves for DMS114 and SHP77 parental cell lines.,pgen.1005895.s011,A total of 5–10 millioins cells were injected to establish xenograft tumors.
+pgen.1005895.s012.xlsx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4836692,"S1 Table 
+         
+           Chinese patient clinical summary (n = 99). 
+           (XLSX) 
+         
+         
+           
+             Click here for additional data file.",xlsx,local-data,,,,https://pmc.ncbi.nlm.nih.gov/articles/instance/4836692/bin/pgen.1005895.s012.xlsx,Chinese patient clinical summary (n = 99).,pgen.1005895.s012,(XLSX)
+pgen.1005895.s013.xlsx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4836692,"S2 Table 
+         
+           Recurrent somatic mutated genes from 99 Chinese SCLC patients; additional recurrent rates from 51 SCLC Japanese patients in an independent study [ 5 ]. 
+           (XLSX) 
+         
+         
+           
+             Click here for additional data file.",xlsx,local-data,,,,https://pmc.ncbi.nlm.nih.gov/articles/instance/4836692/bin/pgen.1005895.s013.xlsx,Recurrent somatic mutated genes from 99 Chinese SCLC patients; additional recurrent rates from 51 SCLC Japanese patients in an independent study [,pgen.1005895.s013,(XLSX)
+pgen.1005895.s014.xlsx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4836692,"S3 Table 
+         
+           Cancer driver gene intersection by two methods and two public data sets in 99 Chinese SCLC. 
+           (XLSX) 
+         
+         
+           
+             Click here for additional data file.",xlsx,local-data,,,,https://pmc.ncbi.nlm.nih.gov/articles/instance/4836692/bin/pgen.1005895.s014.xlsx,Cancer driver gene intersection by two methods and two public data sets in 99 Chinese SCLC.,pgen.1005895.s014,(XLSX)
+pgen.1005895.s015.xlsx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4836692,"S4 Table 
+         
+           SNVs within DNA repair mechanisms in Chinese SCLC patients (n = 99) using nonsilent somatic SNVs and indels. 
+           (XLSX) 
+         
+         
+           
+             Click here for additional data file.",xlsx,local-data,,,,https://pmc.ncbi.nlm.nih.gov/articles/instance/4836692/bin/pgen.1005895.s015.xlsx,SNVs within DNA repair mechanisms in Chinese SCLC patients (n = 99) using nonsilent somatic SNVs and indels.,pgen.1005895.s015,(XLSX)
+pgen.1005895.s016.xlsx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4836692,"S5 Table 
+         
+           Patient counts harboring recurrent (prevalence>20%) gene-level somatic CNVs in discovery and validation cohorts (n = 96). 
+           (XLSX) 
+         
+         
+           
+             Click here for additional data file.",xlsx,local-data,,,,https://pmc.ncbi.nlm.nih.gov/articles/instance/4836692/bin/pgen.1005895.s016.xlsx,Patient counts harboring recurrent (prevalence>20%) gene-level somatic CNVs in discovery and validation cohorts (n = 96).,pgen.1005895.s016,(XLSX)
+pgen.1005895.s017.xlsx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4836692,"S6 Table 
+         
+           FISH assay confirmation of WES CN calls for SRSF1. 
+           (XLSX) 
+         
+         
+           
+             Click here for additional data file.",xlsx,local-data,,,,https://pmc.ncbi.nlm.nih.gov/articles/instance/4836692/bin/pgen.1005895.s017.xlsx,FISH assay confirmation of WES CN calls for SRSF1.,pgen.1005895.s017,(XLSX)
+pgen.1005895.s018.xlsx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4836692,"S7 Table 
+         
+           A. Kaplan-Meier analysis summary for SRSF1 DNA amplification and mRNA expression; B. Cox proportion hazard regression analysis summary for SRSF1 DNA amplification and mRNA over-expression. 
+           (XLSX) 
+         
+         
+           
+             Click here for additional data file.",xlsx,local-data,,,,https://pmc.ncbi.nlm.nih.gov/articles/instance/4836692/bin/pgen.1005895.s018.xlsx,No Title,pgen.1005895.s018,A. Kaplan-Meier analysis summary for SRSF1 DNA amplification and mRNA expression; B. Cox proportion hazard regression analysis summary for SRSF1 DNA amplification and mRNA over-expression.
+pgen.1005895.s019.xlsx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4836692,"S8 Table 
+         
+           Patient-specific somatic nonsilent SNVs/indels from 99 Chinese SCLC patients. 
+           (XLSX) 
+         
+         
+           
+             Click here for additional data file.",xlsx,local-data,,,,https://pmc.ncbi.nlm.nih.gov/articles/instance/4836692/bin/pgen.1005895.s019.xlsx,Patient-specific somatic nonsilent SNVs/indels from 99 Chinese SCLC patients.,pgen.1005895.s019,(XLSX)
+pgen.1005895.s020.xlsx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4836692,"S9 Table 
+         
+           Gene expression (RNASeq) of top up/down regulated genes between 48 tumor and 6 normal samples. 
+           (XLSX) 
+         
+         
+           
+             Click here for additional data file.",xlsx,local-data,,,,https://pmc.ncbi.nlm.nih.gov/articles/instance/4836692/bin/pgen.1005895.s020.xlsx,Gene expression (RNASeq) of top up/down regulated genes between 48 tumor and 6 normal samples.,pgen.1005895.s020,(XLSX)
+pgen.1005895.s021.xlsx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4836692,"S10 Table 
+         
+           WES coverage and depth statistics for 99 tumor specimens. 
+           (XLSX) 
+         
+         
+           
+             Click here for additional data file.",xlsx,local-data,,,,https://pmc.ncbi.nlm.nih.gov/articles/instance/4836692/bin/pgen.1005895.s021.xlsx,WES coverage and depth statistics for 99 tumor specimens.,pgen.1005895.s021,(XLSX)
+pgen.1005895.s022.xlsx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4836692,"S11 Table 
+         
+           Commercial Caucasian patient information. 
+           (XLSX) 
+         
+         
+           
+             Click here for additional data file.",xlsx,local-data,,,,https://pmc.ncbi.nlm.nih.gov/articles/instance/4836692/bin/pgen.1005895.s022.xlsx,Commercial Caucasian patient information.,pgen.1005895.s022,(XLSX)
+pgen.1005895.s023.xlsx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4836692,"S12 Table 
+         
+           Mater Regulator Analysis (Ingenuity Pathway Analysis) for differential expression genes between SRSF1 CN Gain / Amp and SRSF1 CN Neutral. 
+           (XLSX) 
+         
+         
+           
+             Click here for additional data file.",xlsx,local-data,,,,https://pmc.ncbi.nlm.nih.gov/articles/instance/4836692/bin/pgen.1005895.s023.xlsx,Mater Regulator Analysis (Ingenuity Pathway Analysis) for differential expression genes between SRSF1 CN Gain / Amp and SRSF1 CN Neutral.,pgen.1005895.s023,(XLSX)
+pgen.1005895.s001.docx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4836692,"S1 Fig 
+         
+           Genomic alterations in Chinese SCLC patients. 
+           Tumor samples (n = 99) are ordered from left to right based on SRSF1 copy number gains. Mutations and DNA copy number alterations of key SCLC oncogenic genes are indicated for each sample according to the color legend below the figure. The genomic alteration frequencies for each candidate gene are displayed on the left. 
+           (DOCX) 
+         
+         
+           
+             Click here for additional data file.",docx,local-data,,,,https://pmc.ncbi.nlm.nih.gov/articles/instance/4836692/bin/pgen.1005895.s001.docx,Genomic alterations in Chinese SCLC patients.,pgen.1005895.s001,Tumor samples (n = 99) are ordered from left to right based on SRSF1 copy number gains. Mutations and DNA copy number alterations of key SCLC oncogenic genes are indicated for each sample according to the color legend below the figure. The genomic alteration frequencies for each candidate gene are displayed on the left.
+pgen.1005895.s002.docx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4836692,"S2 Fig 
+         
+           SRSF1 gene copy number detection by FISH. 
+           Representative images show a) SRSF1 normal and b) SRSF1 copy number gain. Red signals represent SRSF1 gene and green signals represent of CEP17; c) SRSF1 CNV SCLC patient prevalence as well as other CNV segments across chromosome 17. Red lines indicate CN gains and green lines indicate CN losses. 
+           (DOCX) 
+         
+         
+           
+             Click here for additional data file.",docx,local-data,,,,https://pmc.ncbi.nlm.nih.gov/articles/instance/4836692/bin/pgen.1005895.s002.docx,SRSF1 gene copy number detection by FISH.,pgen.1005895.s002,Representative images show a) SRSF1 normal and b) SRSF1 copy number gain. Red signals represent SRSF1 gene and green signals represent of CEP17; c) SRSF1 CNV SCLC patient prevalence as well as other CNV segments across chromosome 17. Red lines indicate CN gains and green lines indicate CN losses.
+pgen.1005895.s003.docx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4836692,"S3 Fig 
+         
+           KM curves from indications in TCGA where at least 3 patients harbored a CN gain of SRSF1. 
+           Plots were generated in OncoLand (OmicSoft Corp; Cary, NC). 
+           (DOCX) 
+         
+         
+           
+             Click here for additional data file.",docx,local-data,,,,https://pmc.ncbi.nlm.nih.gov/articles/instance/4836692/bin/pgen.1005895.s003.docx,KM curves from indications in TCGA where at least 3 patients harbored a CN gain of SRSF1.,pgen.1005895.s003,"Plots were generated in OncoLand (OmicSoft Corp; Cary, NC)."
+pgen.1005895.s004.docx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4836692,"S4 Fig 
+         
+           (a): TaqMan assays of SRSF1 DNA CNs in 13 SCLC cell lines. (b): Western blots of SRSF1 show protein expression levels in SCLC cell lines. (c):NCI-H82, SHP-77 and NCI-H1048 were transfected with non-targeting control or SRSF1-directed siRNAs for 48 hrs, then treated with cisplatin (2.5ug/ml) or topotecan (2.5ug/ml) for 24 hrs. Cell growth and Caspase-3/7 activities were assessed and normalized against ctrl siRNA-transfected cells as 100% control. 
+           (DOCX) 
+         
+         
+           
+             Click here for additional data file.",docx,local-data,,,,https://pmc.ncbi.nlm.nih.gov/articles/instance/4836692/bin/pgen.1005895.s004.docx,No Title,pgen.1005895.s004,"(a): TaqMan assays of SRSF1 DNA CNs in 13 SCLC cell lines. (b): Western blots of SRSF1 show protein expression levels in SCLC cell lines. (c):NCI-H82, SHP-77 and NCI-H1048 were transfected with non-targeting control or SRSF1-directed siRNAs for 48 hrs, then treated with cisplatin (2.5ug/ml) or topotecan (2.5ug/ml) for 24 hrs. Cell growth and Caspase-3/7 activities were assessed and normalized against ctrl siRNA-transfected cells as 100% control."
+pgen.1005895.s005.docx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4836692,"S5 Fig 
+         
+           The association of SRSF1 gene expression with BIM gene expression in Chinese SCLC patients (N = 49). 
+           The correlation between SRSF1 and BIM gene expression is significant, which likely confirms SRSF1 over expression promotes alternative splicing of BIM. 
+           (DOCX) 
+         
+         
+           
+             Click here for additional data file.",docx,local-data,,,,https://pmc.ncbi.nlm.nih.gov/articles/instance/4836692/bin/pgen.1005895.s005.docx,The association of SRSF1 gene expression with BIM gene expression in Chinese SCLC patients (N = 49).,pgen.1005895.s005,"The correlation between SRSF1 and BIM gene expression is significant, which likely confirms SRSF1 over expression promotes alternative splicing of BIM."
+pgen.1005895.s006.docx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4836692,"S6 Fig 
+         
+           NCI-82, SHP-77 and NIH-H1048 cells were transfected with non-targeting and SRSF1 siRNAs respectively for 48 hrs and then seeded in sphere forming media and allowed to grow for 4 days. 
+           (a): Phase-contrast images of the sphere formation under each condition were captured. (b): viable cell mass quantitated by CTG assay. (c): Reconstitution of SRSF1 expression using a siRNA-resistant Flag-tagged SRSF1 expression construct was carried out in SRSF1 siRNA transfected NCI-H82 cells. Impact on sphere growth rate was assessed by CTG assay, and successful SRSF1 protein re-expression was confirmed by WB using either anti-SRSF1 antibody or anti-Flag antibody. (d): Clonogenic assays of DMS-114, NCI-82, SHP-77 and NIH-H1049. Cells were transfected with siRNAs for 48 hrs and then seeded in the methylcellulose medium for 7~14 days, colonies with more than 40 cells per colony were counted. 
+           (DOCX) 
+         
+         
+           
+             Click here for additional data file.",docx,local-data,,,,https://pmc.ncbi.nlm.nih.gov/articles/instance/4836692/bin/pgen.1005895.s006.docx,"NCI-82, SHP-77 and NIH-H1048 cells were transfected with non-targeting and SRSF1 siRNAs respectively for 48 hrs and then seeded in sphere forming media and allowed to grow for 4 days.",pgen.1005895.s006,"(a): Phase-contrast images of the sphere formation under each condition were captured. (b): viable cell mass quantitated by CTG assay. (c): Reconstitution of SRSF1 expression using a siRNA-resistant Flag-tagged SRSF1 expression construct was carried out in SRSF1 siRNA transfected NCI-H82 cells. Impact on sphere growth rate was assessed by CTG assay, and successful SRSF1 protein re-expression was confirmed by WB using either anti-SRSF1 antibody or anti-Flag antibody. (d): Clonogenic assays of DMS-114, NCI-82, SHP-77 and NIH-H1049. Cells were transfected with siRNAs for 48 hrs and then seeded in the methylcellulose medium for 7~14 days, colonies with more than 40 cells per colony were counted."
+pgen.1005895.s007.docx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4836692,"S7 Fig 
+         
+           (a)SHP-77 cells transfected with non-targeting control siRNA or SRSF1 siRNA were implanted into immunocompromised mice and tumor formation rates were monitored and measured. (b): SHP-77 cells were transfected with control or SRSF1 siRNA and then treated with topotecan or Cisplatin for the indicated times. SRSF1, phosphor-H2AX and phosphor-Chk2 were probed with their corresponding antibodies. 
+           (DOCX) 
+         
+         
+           
+             Click here for additional data file.",docx,local-data,,,,https://pmc.ncbi.nlm.nih.gov/articles/instance/4836692/bin/pgen.1005895.s007.docx,No Title,pgen.1005895.s007,"(a)SHP-77 cells transfected with non-targeting control siRNA or SRSF1 siRNA were implanted into immunocompromised mice and tumor formation rates were monitored and measured. (b): SHP-77 cells were transfected with control or SRSF1 siRNA and then treated with topotecan or Cisplatin for the indicated times. SRSF1, phosphor-H2AX and phosphor-Chk2 were probed with their corresponding antibodies."
+pgen.1005895.s008.docx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4836692,"S8 Fig 
+         
+           The association of SRSF1 gene expression with early stage and late stage (ES) SCLC patients in both our Chinese SCLC study (left figure) and George et al, study (right figure). 
+           P-value is calculated using Welch’s modified t-test. 
+           (DOCX) 
+         
+         
+           
+             Click here for additional data file.",docx,local-data,,,,https://pmc.ncbi.nlm.nih.gov/articles/instance/4836692/bin/pgen.1005895.s008.docx,"The association of SRSF1 gene expression with early stage and late stage (ES) SCLC patients in both our Chinese SCLC study (left figure) and George et al, study (right figure).",pgen.1005895.s008,P-value is calculated using Welch’s modified t-test.
+pgen.1005895.s009.docx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4836692,"S9 Fig 
+         
+           The association of SRSF1 gene expression with MYC CNV status. 
+           SCLC cell lines (left figure, N = 11) and our Chinese SCLC study (right figure, N = 49 patients with matched expression and CNV samples). P-value is estimated using standard t-test. 
+           (DOCX) 
+         
+         
+           
+             Click here for additional data file.",docx,local-data,,,,https://pmc.ncbi.nlm.nih.gov/articles/instance/4836692/bin/pgen.1005895.s009.docx,The association of SRSF1 gene expression with MYC CNV status.,pgen.1005895.s009,"SCLC cell lines (left figure, N = 11) and our Chinese SCLC study (right figure, N = 49 patients with matched expression and CNV samples). P-value is estimated using standard t-test."
+pgen.1005895.s010.docx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4836692,"S10 Fig 
+         
+           Identity check between matched SCLC tumor and normal specimens. 
+           Pearson correlation heatmap is used to compare 300 germline SNP profiles between each of the 25 tumors and matched normals. Gradient of colors: green = no correlation; yellow = low correlation; white = high correlation. 
+           (DOCX) 
+         
+         
+           
+             Click here for additional data file.",docx,local-data,,,,https://pmc.ncbi.nlm.nih.gov/articles/instance/4836692/bin/pgen.1005895.s010.docx,Identity check between matched SCLC tumor and normal specimens.,pgen.1005895.s010,Pearson correlation heatmap is used to compare 300 germline SNP profiles between each of the 25 tumors and matched normals. Gradient of colors: green = no correlation; yellow = low correlation; white = high correlation.
+pgen.1005895.s011.docx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4836692,"S11 Fig 
+         
+           Tumor growth curves for DMS114 and SHP77 parental cell lines. 
+           A total of 5–10 millioins cells were injected to establish xenograft tumors. 
+           (DOCX) 
+         
+         
+           
+             Click here for additional data file.",docx,local-data,,,,https://pmc.ncbi.nlm.nih.gov/articles/instance/4836692/bin/pgen.1005895.s011.docx,Tumor growth curves for DMS114 and SHP77 parental cell lines.,pgen.1005895.s011,A total of 5–10 millioins cells were injected to establish xenograft tumors.
+pgen.1005895.s012.xlsx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4836692,"S1 Table 
+         
+           Chinese patient clinical summary (n = 99). 
+           (XLSX) 
+         
+         
+           
+             Click here for additional data file.",xlsx,local-data,,,,https://pmc.ncbi.nlm.nih.gov/articles/instance/4836692/bin/pgen.1005895.s012.xlsx,Chinese patient clinical summary (n = 99).,pgen.1005895.s012,(XLSX)
+pgen.1005895.s013.xlsx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4836692,"S2 Table 
+         
+           Recurrent somatic mutated genes from 99 Chinese SCLC patients; additional recurrent rates from 51 SCLC Japanese patients in an independent study [ 5 ]. 
+           (XLSX) 
+         
+         
+           
+             Click here for additional data file.",xlsx,local-data,,,,https://pmc.ncbi.nlm.nih.gov/articles/instance/4836692/bin/pgen.1005895.s013.xlsx,Recurrent somatic mutated genes from 99 Chinese SCLC patients; additional recurrent rates from 51 SCLC Japanese patients in an independent study [,pgen.1005895.s013,(XLSX)
+pgen.1005895.s014.xlsx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4836692,"S3 Table 
+         
+           Cancer driver gene intersection by two methods and two public data sets in 99 Chinese SCLC. 
+           (XLSX) 
+         
+         
+           
+             Click here for additional data file.",xlsx,local-data,,,,https://pmc.ncbi.nlm.nih.gov/articles/instance/4836692/bin/pgen.1005895.s014.xlsx,Cancer driver gene intersection by two methods and two public data sets in 99 Chinese SCLC.,pgen.1005895.s014,(XLSX)
+pgen.1005895.s015.xlsx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4836692,"S4 Table 
+         
+           SNVs within DNA repair mechanisms in Chinese SCLC patients (n = 99) using nonsilent somatic SNVs and indels. 
+           (XLSX) 
+         
+         
+           
+             Click here for additional data file.",xlsx,local-data,,,,https://pmc.ncbi.nlm.nih.gov/articles/instance/4836692/bin/pgen.1005895.s015.xlsx,SNVs within DNA repair mechanisms in Chinese SCLC patients (n = 99) using nonsilent somatic SNVs and indels.,pgen.1005895.s015,(XLSX)
+pgen.1005895.s016.xlsx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4836692,"S5 Table 
+         
+           Patient counts harboring recurrent (prevalence>20%) gene-level somatic CNVs in discovery and validation cohorts (n = 96). 
+           (XLSX) 
+         
+         
+           
+             Click here for additional data file.",xlsx,local-data,,,,https://pmc.ncbi.nlm.nih.gov/articles/instance/4836692/bin/pgen.1005895.s016.xlsx,Patient counts harboring recurrent (prevalence>20%) gene-level somatic CNVs in discovery and validation cohorts (n = 96).,pgen.1005895.s016,(XLSX)
+pgen.1005895.s017.xlsx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4836692,"S6 Table 
+         
+           FISH assay confirmation of WES CN calls for SRSF1. 
+           (XLSX) 
+         
+         
+           
+             Click here for additional data file.",xlsx,local-data,,,,https://pmc.ncbi.nlm.nih.gov/articles/instance/4836692/bin/pgen.1005895.s017.xlsx,FISH assay confirmation of WES CN calls for SRSF1.,pgen.1005895.s017,(XLSX)
+pgen.1005895.s018.xlsx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4836692,"S7 Table 
+         
+           A. Kaplan-Meier analysis summary for SRSF1 DNA amplification and mRNA expression; B. Cox proportion hazard regression analysis summary for SRSF1 DNA amplification and mRNA over-expression. 
+           (XLSX) 
+         
+         
+           
+             Click here for additional data file.",xlsx,local-data,,,,https://pmc.ncbi.nlm.nih.gov/articles/instance/4836692/bin/pgen.1005895.s018.xlsx,No Title,pgen.1005895.s018,A. Kaplan-Meier analysis summary for SRSF1 DNA amplification and mRNA expression; B. Cox proportion hazard regression analysis summary for SRSF1 DNA amplification and mRNA over-expression.
+pgen.1005895.s019.xlsx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4836692,"S8 Table 
+         
+           Patient-specific somatic nonsilent SNVs/indels from 99 Chinese SCLC patients. 
+           (XLSX) 
+         
+         
+           
+             Click here for additional data file.",xlsx,local-data,,,,https://pmc.ncbi.nlm.nih.gov/articles/instance/4836692/bin/pgen.1005895.s019.xlsx,Patient-specific somatic nonsilent SNVs/indels from 99 Chinese SCLC patients.,pgen.1005895.s019,(XLSX)
+pgen.1005895.s020.xlsx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4836692,"S9 Table 
+         
+           Gene expression (RNASeq) of top up/down regulated genes between 48 tumor and 6 normal samples. 
+           (XLSX) 
+         
+         
+           
+             Click here for additional data file.",xlsx,local-data,,,,https://pmc.ncbi.nlm.nih.gov/articles/instance/4836692/bin/pgen.1005895.s020.xlsx,Gene expression (RNASeq) of top up/down regulated genes between 48 tumor and 6 normal samples.,pgen.1005895.s020,(XLSX)
+pgen.1005895.s021.xlsx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4836692,"S10 Table 
+         
+           WES coverage and depth statistics for 99 tumor specimens. 
+           (XLSX) 
+         
+         
+           
+             Click here for additional data file.",xlsx,local-data,,,,https://pmc.ncbi.nlm.nih.gov/articles/instance/4836692/bin/pgen.1005895.s021.xlsx,WES coverage and depth statistics for 99 tumor specimens.,pgen.1005895.s021,(XLSX)
+pgen.1005895.s022.xlsx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4836692,"S11 Table 
+         
+           Commercial Caucasian patient information. 
+           (XLSX) 
+         
+         
+           
+             Click here for additional data file.",xlsx,local-data,,,,https://pmc.ncbi.nlm.nih.gov/articles/instance/4836692/bin/pgen.1005895.s022.xlsx,Commercial Caucasian patient information.,pgen.1005895.s022,(XLSX)
+pgen.1005895.s023.xlsx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4836692,"S12 Table 
+         
+           Mater Regulator Analysis (Ingenuity Pathway Analysis) for differential expression genes between SRSF1 CN Gain / Amp and SRSF1 CN Neutral. 
+           (XLSX) 
+         
+         
+           
+             Click here for additional data file.",xlsx,local-data,,,,https://pmc.ncbi.nlm.nih.gov/articles/instance/4836692/bin/pgen.1005895.s023.xlsx,Mater Regulator Analysis (Ingenuity Pathway Analysis) for differential expression genes between SRSF1 CN Gain / Amp and SRSF1 CN Neutral.,pgen.1005895.s023,(XLSX)
+https://www.ncbi.nlm.nih.gov/gap/?term=PHS001049,data availability,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6141466,,,data_link,PHS001049,https://www.ncbi.nlm.nih.gov/gap/?term=PHS001049,na,,,,
+https://www.ncbi.nlm.nih.gov/bioproject/?term=PRJNA306801),data availability,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6141466,,,data_link,PHS001049,https://www.ncbi.nlm.nih.gov/gap/?term=PHS001049,na,,,,
+41467_2018_6162_MOESM4_ESM.xlsx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6141466,Supplementary Data 1,xlsx,local-data,,,,https://pmc.ncbi.nlm.nih.gov/articles/instance/6141466/bin/41467_2018_6162_MOESM4_ESM.xlsx,No Title,MOESM4,Supplementary Data 1
+41467_2018_6162_MOESM5_ESM.xlsx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6141466,Supplementary Data 2,xlsx,local-data,,,,https://pmc.ncbi.nlm.nih.gov/articles/instance/6141466/bin/41467_2018_6162_MOESM5_ESM.xlsx,No Title,MOESM5,Supplementary Data 2
+41467_2018_6162_MOESM6_ESM.xlsx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6141466,Supplementary Data 3,xlsx,local-data,,,,https://pmc.ncbi.nlm.nih.gov/articles/instance/6141466/bin/41467_2018_6162_MOESM6_ESM.xlsx,No Title,MOESM6,Supplementary Data 3
+41467_2018_6162_MOESM7_ESM.xlsx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6141466,Supplementary Data 4,xlsx,local-data,,,,https://pmc.ncbi.nlm.nih.gov/articles/instance/6141466/bin/41467_2018_6162_MOESM7_ESM.xlsx,No Title,MOESM7,Supplementary Data 4
+41467_2018_6162_MOESM8_ESM.xlsx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6141466,Supplementary Data 5,xlsx,local-data,,,,https://pmc.ncbi.nlm.nih.gov/articles/instance/6141466/bin/41467_2018_6162_MOESM8_ESM.xlsx,No Title,MOESM8,Supplementary Data 5
+41467_2018_6162_MOESM9_ESM.xlsx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6141466,Supplementary Data 6,xlsx,local-data,,,,https://pmc.ncbi.nlm.nih.gov/articles/instance/6141466/bin/41467_2018_6162_MOESM9_ESM.xlsx,No Title,MOESM9,Supplementary Data 6
+41467_2018_6162_MOESM10_ESM.xlsx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6141466,Supplementary Data 7,xlsx,local-data,,,,https://pmc.ncbi.nlm.nih.gov/articles/instance/6141466/bin/41467_2018_6162_MOESM10_ESM.xlsx,No Title,MOESM10,Supplementary Data 7
+41467_2018_6162_MOESM11_ESM.xlsx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6141466,Supplementary Data 8,xlsx,local-data,,,,https://pmc.ncbi.nlm.nih.gov/articles/instance/6141466/bin/41467_2018_6162_MOESM11_ESM.xlsx,No Title,MOESM11,Supplementary Data 8
+41467_2018_6162_MOESM12_ESM.xlsx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6141466,Supplementary Data 9,xlsx,local-data,,,,https://pmc.ncbi.nlm.nih.gov/articles/instance/6141466/bin/41467_2018_6162_MOESM12_ESM.xlsx,No Title,MOESM12,Supplementary Data 9
+41467_2018_6162_MOESM13_ESM.xlsx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6141466,Supplementary Data 10,xlsx,local-data,,,,https://pmc.ncbi.nlm.nih.gov/articles/instance/6141466/bin/41467_2018_6162_MOESM13_ESM.xlsx,No Title,MOESM13,Supplementary Data 10
+41467_2018_6162_MOESM14_ESM.xlsx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6141466,Supplementary Data 11,xlsx,local-data,,,,https://pmc.ncbi.nlm.nih.gov/articles/instance/6141466/bin/41467_2018_6162_MOESM14_ESM.xlsx,No Title,MOESM14,Supplementary Data 11
+41467_2018_6162_MOESM15_ESM.xlsx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6141466,Supplementary Data 12,xlsx,local-data,,,,https://pmc.ncbi.nlm.nih.gov/articles/instance/6141466/bin/41467_2018_6162_MOESM15_ESM.xlsx,No Title,MOESM15,Supplementary Data 12
+41467_2018_6162_MOESM4_ESM.xlsx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6141466,Supplementary Data 1,xlsx,local-data,,,,https://pmc.ncbi.nlm.nih.gov/articles/instance/6141466/bin/41467_2018_6162_MOESM4_ESM.xlsx,No Title,MOESM4,Supplementary Data 1
+41467_2018_6162_MOESM5_ESM.xlsx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6141466,Supplementary Data 2,xlsx,local-data,,,,https://pmc.ncbi.nlm.nih.gov/articles/instance/6141466/bin/41467_2018_6162_MOESM5_ESM.xlsx,No Title,MOESM5,Supplementary Data 2
+41467_2018_6162_MOESM6_ESM.xlsx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6141466,Supplementary Data 3,xlsx,local-data,,,,https://pmc.ncbi.nlm.nih.gov/articles/instance/6141466/bin/41467_2018_6162_MOESM6_ESM.xlsx,No Title,MOESM6,Supplementary Data 3
+41467_2018_6162_MOESM7_ESM.xlsx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6141466,Supplementary Data 4,xlsx,local-data,,,,https://pmc.ncbi.nlm.nih.gov/articles/instance/6141466/bin/41467_2018_6162_MOESM7_ESM.xlsx,No Title,MOESM7,Supplementary Data 4
+41467_2018_6162_MOESM8_ESM.xlsx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6141466,Supplementary Data 5,xlsx,local-data,,,,https://pmc.ncbi.nlm.nih.gov/articles/instance/6141466/bin/41467_2018_6162_MOESM8_ESM.xlsx,No Title,MOESM8,Supplementary Data 5
+41467_2018_6162_MOESM9_ESM.xlsx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6141466,Supplementary Data 6,xlsx,local-data,,,,https://pmc.ncbi.nlm.nih.gov/articles/instance/6141466/bin/41467_2018_6162_MOESM9_ESM.xlsx,No Title,MOESM9,Supplementary Data 6
+41467_2018_6162_MOESM10_ESM.xlsx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6141466,Supplementary Data 7,xlsx,local-data,,,,https://pmc.ncbi.nlm.nih.gov/articles/instance/6141466/bin/41467_2018_6162_MOESM10_ESM.xlsx,No Title,MOESM10,Supplementary Data 7
+41467_2018_6162_MOESM11_ESM.xlsx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6141466,Supplementary Data 8,xlsx,local-data,,,,https://pmc.ncbi.nlm.nih.gov/articles/instance/6141466/bin/41467_2018_6162_MOESM11_ESM.xlsx,No Title,MOESM11,Supplementary Data 8
+41467_2018_6162_MOESM12_ESM.xlsx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6141466,Supplementary Data 9,xlsx,local-data,,,,https://pmc.ncbi.nlm.nih.gov/articles/instance/6141466/bin/41467_2018_6162_MOESM12_ESM.xlsx,No Title,MOESM12,Supplementary Data 9
+41467_2018_6162_MOESM13_ESM.xlsx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6141466,Supplementary Data 10,xlsx,local-data,,,,https://pmc.ncbi.nlm.nih.gov/articles/instance/6141466/bin/41467_2018_6162_MOESM13_ESM.xlsx,No Title,MOESM13,Supplementary Data 10
+41467_2018_6162_MOESM14_ESM.xlsx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6141466,Supplementary Data 11,xlsx,local-data,,,,https://pmc.ncbi.nlm.nih.gov/articles/instance/6141466/bin/41467_2018_6162_MOESM14_ESM.xlsx,No Title,MOESM14,Supplementary Data 11
+41467_2018_6162_MOESM15_ESM.xlsx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6141466,Supplementary Data 12,xlsx,local-data,,,,https://pmc.ncbi.nlm.nih.gov/articles/instance/6141466/bin/41467_2018_6162_MOESM15_ESM.xlsx,No Title,MOESM15,Supplementary Data 12
+https://www.ncbi.nlm.nih.gov/projects/gap/cgi-bin/study.cgi?study_id=phs001366.v1.p1,data_availability,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5460863,,,,,,,,,,
+https://www.ncbi.nlm.nih.gov/projects/gap/cgi-bin/study.cgi?study_id=phs001366.v1.p1,data_availability,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5460863,,,,,,,,,,
+pone.0179170.s001.xlsx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5460863,"S1 Table 
+         
+           Summary of potentially actionable genomic alterations. 
+           Detailed information on potentially therapeutically actionable alterations identified in 12 SCLC tumors. 
+           (XLSX) 
+         
+         
+           
+             Click here for additional data file.",xlsx,local-data,,,,https://pmc.ncbi.nlm.nih.gov/articles/instance/5460863/bin/pone.0179170.s001.xlsx,Summary of potentially actionable genomic alterations.,pone.0179170.s001,Detailed information on potentially therapeutically actionable alterations identified in 12 SCLC tumors.
+pone.0179170.s001.xlsx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5460863,"S1 Table 
+         
+           Summary of potentially actionable genomic alterations. 
+           Detailed information on potentially therapeutically actionable alterations identified in 12 SCLC tumors. 
+           (XLSX) 
+         
+         
+           
+             Click here for additional data file.",xlsx,local-data,,,,https://pmc.ncbi.nlm.nih.gov/articles/instance/5460863/bin/pone.0179170.s001.xlsx,Summary of potentially actionable genomic alterations.,pone.0179170.s001,Detailed information on potentially therapeutically actionable alterations identified in 12 SCLC tumors.
+https://pmc.ncbi.nlm.nih.gov/articles/instance/4915822/bin/NIHMS793416-supplement-Supplemental_Tables.xls,supplementary_data,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4915822,,xls,,,,,,,,
+https://www.ncbi.nlm.nih.gov/sra?term=SRP052896,data availability,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11061608,,,data_link,SRP052896,https://www.ncbi.nlm.nih.gov/sra?term=SRP052896,na,,,,
+https://www.ncbi.nlm.nih.gov/projects/gap/cgi-bin/study.cgi?study_id=phs001823.v1.p1,data availability,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11061608,,,data_link,phs001823.v1.p1,https://www.ncbi.nlm.nih.gov/projects/gap/cgi-bin/study.cgi?study_id=phs001823.v1.p1,na,,,,
+https://depmap.org/portal/download/all/?releasename=DepMap+Public+19Q1,data availability,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11061608,,,data_link,19Q1,https://depmap.org/portal/download/all/?releasename=DepMap+Public+19Q1,na,,,,
+https://depmap.org/portal/download/all/?releasename=DepMap+Public+18Q3,data availability,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11061608,,,data_link,DepMap+Public+18Q3,https://depmap.org/portal/download/all/?releasename=DepMap+Public+18Q3,na,,,,
+https://depmap.org/portal/download/all/?releasename=CCLE+2019,data availability,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11061608,,,data_link,CCLE+2019,https://depmap.org/portal/download/all/?releasename=CCLE+2019,na,,,,
+https://data.broadinstitute.org/ccle_legacy_data/mRNA_expression/,data availability,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11061608,,,data_link,CCLE Legacy Data,https://data.broadinstitute.org/ccle_legacy_data/mRNA_expression/,na,,,,
+https://pmc.ncbi.nlm.nih.gov/articles/instance/11061608/bin/ccr-23-2360_supplementary_figure_s1_suppsf1.pdf,supplementary_data,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11061608,,,,,,,,,,
+https://pmc.ncbi.nlm.nih.gov/articles/instance/11061608/bin/ccr-23-2360_supplementary_figure_s2_suppsf2.pdf,supplementary_data,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11061608,,,,,,,,,,
+https://pmc.ncbi.nlm.nih.gov/articles/instance/11061608/bin/ccr-23-2360_supplementary_figure_s3_suppsf3.pdf,supplementary_data,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11061608,,,,,,,,,,
+https://pmc.ncbi.nlm.nih.gov/articles/instance/11061608/bin/ccr-23-2360_supplementary_figure_s4_suppsf4.pdf,supplementary_data,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11061608,,,,,,,,,,
+https://pmc.ncbi.nlm.nih.gov/articles/instance/11061608/bin/ccr-23-2360_supplementary_figure_s5_suppsf5.pdf,supplementary_data,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11061608,,,,,,,,,,
+https://pmc.ncbi.nlm.nih.gov/articles/instance/11061608/bin/ccr-23-2360_supplementary_figure_s6_suppsf6.pdf,supplementary_data,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11061608,,,,,,,,,,
+https://pmc.ncbi.nlm.nih.gov/articles/instance/11061608/bin/ccr-23-2360_supplementary_table_s1_suppst1.xlsx,supplementary_data,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11061608,,,,,,,,,,
+https://pmc.ncbi.nlm.nih.gov/articles/instance/11061608/bin/ccr-23-2360_supplementary_table_s2_suppst2.xlsx,supplementary_data,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11061608,,,,,,,,,,
+https://pmc.ncbi.nlm.nih.gov/articles/instance/11061608/bin/ccr-23-2360_supplementary_table_s3_suppst3.xlsx,supplementary_data,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11061608,,,,,,,,,,
+https://pmc.ncbi.nlm.nih.gov/articles/instance/11061608/bin/ccr-23-2360_supplementary_table_s4_suppst4.xlsx,supplementary_data,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11061608,,,,,,,,,,
+https://pmc.ncbi.nlm.nih.gov/articles/instance/11061608/bin/ccr-23-2360_supplementary_table_s5_suppst5.xlsx,supplementary_data,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11061608,,,,,,,,,,
+https://pmc.ncbi.nlm.nih.gov/articles/instance/11061608/bin/ccr-23-2360_supplementary_table_s6_suppst6.xlsx,supplementary_data,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11061608,,,,,,,,,,
+https://pmc.ncbi.nlm.nih.gov/articles/instance/11061608/bin/ccr-23-2360_supplementary_table_s7_suppst7.xlsx,supplementary_data,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11061608,,,,,,,,,,
+https://pmc.ncbi.nlm.nih.gov/articles/instance/11061608/bin/ccr-23-2360_supplementary_table_s8_suppst8.xlsx,supplementary_data,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11061608,,,,,,,,,,
+https://pmc.ncbi.nlm.nih.gov/articles/instance/11061608/bin/ccr-23-2360_supplementary_table_s9_suppst9.xlsx,supplementary_data,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11061608,,,,,,,,,,
+ccr-23-2360_supplementary_table_s1_suppst1.xlsx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11061608,"Supplementary Table S1 
+         
+           Immunohistochemistry antibodies, protocols and evaluation criteria.",xlsx,local-data,,,,https://pmc.ncbi.nlm.nih.gov/articles/instance/11061608/bin/ccr-23-2360_supplementary_table_s1_suppst1.xlsx,No Title,No ID,"Immunohistochemistry antibodies, protocols and evaluation criteria."
+ccr-23-2360_supplementary_table_s2_suppst2.xlsx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11061608,"Supplementary Table S2 
+         
+           Immunohistochemistry scoring table.",xlsx,local-data,,,,https://pmc.ncbi.nlm.nih.gov/articles/instance/11061608/bin/ccr-23-2360_supplementary_table_s2_suppst2.xlsx,No Title,No ID,Immunohistochemistry scoring table.
+ccr-23-2360_supplementary_table_s3_suppst3.xlsx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11061608,"Supplementary Table S3 
+         
+           Clinical profiles and immunohistochemistry of SMARCA4-UT patients.",xlsx,local-data,,,,https://pmc.ncbi.nlm.nih.gov/articles/instance/11061608/bin/ccr-23-2360_supplementary_table_s3_suppst3.xlsx,No Title,No ID,Clinical profiles and immunohistochemistry of SMARCA4-UT patients.
+ccr-23-2360_supplementary_table_s4_suppst4.xlsx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11061608,"Supplementary Table S4 
+         
+           Comparison of sequencing data between CCLE and UTSW.",xlsx,local-data,,,,https://pmc.ncbi.nlm.nih.gov/articles/instance/11061608/bin/ccr-23-2360_supplementary_table_s4_suppst4.xlsx,No Title,No ID,Comparison of sequencing data between CCLE and UTSW.
+ccr-23-2360_supplementary_table_s5_suppst5.xlsx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11061608,"Supplementary Table S5 
+         
+           CCLE cell lines used in Figure 4 and Supplementary Figure S6A.",xlsx,local-data,,,,https://pmc.ncbi.nlm.nih.gov/articles/instance/11061608/bin/ccr-23-2360_supplementary_table_s5_suppst5.xlsx,No Title,No ID,CCLE cell lines used in Figure 4 and Supplementary Figure S6A.
+ccr-23-2360_supplementary_table_s6_suppst6.xlsx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11061608,"Supplementary Table S6 
+         
+           List of cell lines from Figure 1D and their NE-score.",xlsx,local-data,,,,https://pmc.ncbi.nlm.nih.gov/articles/instance/11061608/bin/ccr-23-2360_supplementary_table_s6_suppst6.xlsx,No Title,No ID,List of cell lines from Figure 1D and their NE-score.
+ccr-23-2360_supplementary_table_s7_suppst7.xlsx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11061608,"Supplementary Table S7 
+         
+           26 mutated genes unique to SCLC-Y cell lines.",xlsx,local-data,,,,https://pmc.ncbi.nlm.nih.gov/articles/instance/11061608/bin/ccr-23-2360_supplementary_table_s7_suppst7.xlsx,No Title,No ID,26 mutated genes unique to SCLC-Y cell lines.
+ccr-23-2360_supplementary_table_s8_suppst8.xlsx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11061608,"Supplementary Table S8 
+         
+           Other mutations and copy number alterations associated with SCLC-Y.",xlsx,local-data,,,,https://pmc.ncbi.nlm.nih.gov/articles/instance/11061608/bin/ccr-23-2360_supplementary_table_s8_suppst8.xlsx,No Title,No ID,Other mutations and copy number alterations associated with SCLC-Y.
+ccr-23-2360_supplementary_table_s9_suppst9.xlsx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11061608,"Supplementary Table S9 
+         
+           SMARCA4-UT cell lines and patient samples based on unsupervised hierarchical clustering using YAP1 signature genes.",xlsx,local-data,,,,https://pmc.ncbi.nlm.nih.gov/articles/instance/11061608/bin/ccr-23-2360_supplementary_table_s9_suppst9.xlsx,No Title,No ID,SMARCA4-UT cell lines and patient samples based on unsupervised hierarchical clustering using YAP1 signature genes.
+ccr-23-2360_supplementary_table_s1_suppst1.xlsx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11061608,"Supplementary Table S1 
+         
+           Immunohistochemistry antibodies, protocols and evaluation criteria.",xlsx,local-data,,,,https://pmc.ncbi.nlm.nih.gov/articles/instance/11061608/bin/ccr-23-2360_supplementary_table_s1_suppst1.xlsx,No Title,No ID,"Immunohistochemistry antibodies, protocols and evaluation criteria."
+ccr-23-2360_supplementary_table_s2_suppst2.xlsx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11061608,"Supplementary Table S2 
+         
+           Immunohistochemistry scoring table.",xlsx,local-data,,,,https://pmc.ncbi.nlm.nih.gov/articles/instance/11061608/bin/ccr-23-2360_supplementary_table_s2_suppst2.xlsx,No Title,No ID,Immunohistochemistry scoring table.
+ccr-23-2360_supplementary_table_s3_suppst3.xlsx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11061608,"Supplementary Table S3 
+         
+           Clinical profiles and immunohistochemistry of SMARCA4-UT patients.",xlsx,local-data,,,,https://pmc.ncbi.nlm.nih.gov/articles/instance/11061608/bin/ccr-23-2360_supplementary_table_s3_suppst3.xlsx,No Title,No ID,Clinical profiles and immunohistochemistry of SMARCA4-UT patients.
+ccr-23-2360_supplementary_table_s4_suppst4.xlsx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11061608,"Supplementary Table S4 
+         
+           Comparison of sequencing data between CCLE and UTSW.",xlsx,local-data,,,,https://pmc.ncbi.nlm.nih.gov/articles/instance/11061608/bin/ccr-23-2360_supplementary_table_s4_suppst4.xlsx,No Title,No ID,Comparison of sequencing data between CCLE and UTSW.
+ccr-23-2360_supplementary_table_s5_suppst5.xlsx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11061608,"Supplementary Table S5 
+         
+           CCLE cell lines used in Figure 4 and Supplementary Figure S6A.",xlsx,local-data,,,,https://pmc.ncbi.nlm.nih.gov/articles/instance/11061608/bin/ccr-23-2360_supplementary_table_s5_suppst5.xlsx,No Title,No ID,CCLE cell lines used in Figure 4 and Supplementary Figure S6A.
+ccr-23-2360_supplementary_table_s6_suppst6.xlsx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11061608,"Supplementary Table S6 
+         
+           List of cell lines from Figure 1D and their NE-score.",xlsx,local-data,,,,https://pmc.ncbi.nlm.nih.gov/articles/instance/11061608/bin/ccr-23-2360_supplementary_table_s6_suppst6.xlsx,No Title,No ID,List of cell lines from Figure 1D and their NE-score.
+ccr-23-2360_supplementary_table_s7_suppst7.xlsx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11061608,"Supplementary Table S7 
+         
+           26 mutated genes unique to SCLC-Y cell lines.",xlsx,local-data,,,,https://pmc.ncbi.nlm.nih.gov/articles/instance/11061608/bin/ccr-23-2360_supplementary_table_s7_suppst7.xlsx,No Title,No ID,26 mutated genes unique to SCLC-Y cell lines.
+ccr-23-2360_supplementary_table_s8_suppst8.xlsx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11061608,"Supplementary Table S8 
+         
+           Other mutations and copy number alterations associated with SCLC-Y.",xlsx,local-data,,,,https://pmc.ncbi.nlm.nih.gov/articles/instance/11061608/bin/ccr-23-2360_supplementary_table_s8_suppst8.xlsx,No Title,No ID,Other mutations and copy number alterations associated with SCLC-Y.
+ccr-23-2360_supplementary_table_s9_suppst9.xlsx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11061608,"Supplementary Table S9 
+         
+           SMARCA4-UT cell lines and patient samples based on unsupervised hierarchical clustering using YAP1 signature genes.",xlsx,local-data,,,,https://pmc.ncbi.nlm.nih.gov/articles/instance/11061608/bin/ccr-23-2360_supplementary_table_s9_suppst9.xlsx,No Title,No ID,SMARCA4-UT cell lines and patient samples based on unsupervised hierarchical clustering using YAP1 signature genes.
+https://github.com/bszeitz/SCLC_proteomics,data availability,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC9506422,,,data_link,PXD029805,https://www.ebi.ac.uk/pride/archive/,https://www.ebi.ac.uk/pride/archive/projects/PXD029805,,,,
+https://github.com/bszeitz/SCLC_proteomics,data availability,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC9506422,,,data_link,PXD029821,https://www.ebi.ac.uk/pride/archive/,https://www.ebi.ac.uk/pride/archive/projects/PXD029821,,,,
+CTM2-12-e1060-s002.docx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC9506422,"Supporting Information 
+         
+         
+           
+             Click here for additional data file.",docx,local-data,,,,https://pmc.ncbi.nlm.nih.gov/articles/instance/9506422/bin/CTM2-12-e1060-s002.docx,No Title,ctm21060-supitem-0001,Supporting Information
+CTM2-12-e1060-s003.xlsx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC9506422,"Supporting Information 
+         
+         
+           
+             Click here for additional data file.",xlsx,local-data,,,,https://pmc.ncbi.nlm.nih.gov/articles/instance/9506422/bin/CTM2-12-e1060-s003.xlsx,No Title,ctm21060-supitem-0002,Supporting Information
+CTM2-12-e1060-s004.xlsx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC9506422,"Supporting Information 
+         
+         
+           
+             Click here for additional data file.",xlsx,local-data,,,,https://pmc.ncbi.nlm.nih.gov/articles/instance/9506422/bin/CTM2-12-e1060-s004.xlsx,No Title,ctm21060-supitem-0003,Supporting Information
+CTM2-12-e1060-s001.xlsx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC9506422,"Supporting Information 
+         
+         
+           
+             Click here for additional data file.",xlsx,local-data,,,,https://pmc.ncbi.nlm.nih.gov/articles/instance/9506422/bin/CTM2-12-e1060-s001.xlsx,No Title,ctm21060-supitem-0004,Supporting Information
+CTM2-12-e1060-s005.xlsx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC9506422,"Supporting Information 
+         
+         
+           
+             Click here for additional data file.",xlsx,local-data,,,,https://pmc.ncbi.nlm.nih.gov/articles/instance/9506422/bin/CTM2-12-e1060-s005.xlsx,No Title,ctm21060-supitem-0005,Supporting Information
+CTM2-12-e1060-s002.docx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC9506422,"Supporting Information 
+         
+         
+           
+             Click here for additional data file.",docx,local-data,,,,https://pmc.ncbi.nlm.nih.gov/articles/instance/9506422/bin/CTM2-12-e1060-s002.docx,No Title,ctm21060-supitem-0001,Supporting Information
+CTM2-12-e1060-s003.xlsx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC9506422,"Supporting Information 
+         
+         
+           
+             Click here for additional data file.",xlsx,local-data,,,,https://pmc.ncbi.nlm.nih.gov/articles/instance/9506422/bin/CTM2-12-e1060-s003.xlsx,No Title,ctm21060-supitem-0002,Supporting Information
+CTM2-12-e1060-s004.xlsx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC9506422,"Supporting Information 
+         
+         
+           
+             Click here for additional data file.",xlsx,local-data,,,,https://pmc.ncbi.nlm.nih.gov/articles/instance/9506422/bin/CTM2-12-e1060-s004.xlsx,No Title,ctm21060-supitem-0003,Supporting Information
+CTM2-12-e1060-s001.xlsx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC9506422,"Supporting Information 
+         
+         
+           
+             Click here for additional data file.",xlsx,local-data,,,,https://pmc.ncbi.nlm.nih.gov/articles/instance/9506422/bin/CTM2-12-e1060-s001.xlsx,No Title,ctm21060-supitem-0004,Supporting Information
+CTM2-12-e1060-s005.xlsx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC9506422,"Supporting Information 
+         
+         
+           
+             Click here for additional data file.",xlsx,local-data,,,,https://pmc.ncbi.nlm.nih.gov/articles/instance/9506422/bin/CTM2-12-e1060-s005.xlsx,No Title,ctm21060-supitem-0005,Supporting Information
+pride:PXD030304,data availability,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC9387775,,,data_link,PXD030304,ProteomeXchangeConsortiumviathePRIDEpartnerrepository,na,,,,
+https://www.cancerrxgene.org/,data availability,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC9387775,,,data_link,PXD030304,ProteomeXchangeConsortiumviathePRIDEpartnerrepository,na,,,,
+https://doi.org/10.6084/m9.figshare.19345397,data availability,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC9387775,,,data_link,PXD030304,https://doi.org/10.6084/m9.figshare.19345397,na,,,,
+10.5281/zenodo.6563157,data availability,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC9387775,,,data_link,10.5281/zenodo.6563157,https://doi.org/10.5281/zenodo.6563157,na,,,,
+https://www.ncbi.nlm.nih.gov/pmc/articles/PMC9387775#sec4.1,data availability,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC9387775,,,data_link,PXD030304,ProteomeXchangeConsortiumviathePRIDEpartnerrepository,na,,,,
+https://www.ncbi.nlm.nih.gov/pmc/articles/PMC9387775#mmc3,data availability,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC9387775,,,data_link,PXD030304,figsharehttps://doi.org/10.6084/m9.figshare.19345397,na,,,,
+https://www.ncbi.nlm.nih.gov/pmc/articles/PMC9387775#mmc3,data availability,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC9387775,,,data_link,ProteomeXchange Consortium via the PRIDE ( Perez-Riverol et al.,figsharehttps://doi.org/10.6084/m9.figshare.19345397,na,,,,
+https://www.ncbi.nlm.nih.gov/pmc/articles/PMC9387775#mmc3,data availability,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC9387775,,,data_link,2019 ) partner repository.  https://www.cancerrxgene.org/,figsharehttps://doi.org/10.6084/m9.figshare.19345397,na,,,,
+https://www.ncbi.nlm.nih.gov/pmc/articles/PMC9387775#sec4.1,data availability,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC9387775,,,data_link,PXD030304,ProteomeXchangeConsortiumviathePRIDEpartnerrepository,na,,,,
+https://www.ncbi.nlm.nih.gov/pmc/articles/PMC9387775#sec4.1,data availability,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC9387775,,,data_link,10.5281/zenodo.6563157,https://doi.org/10.5281/zenodo.6563157,na,,,,
+mmc2.xlsx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC9387775,"Table S1. Sample and data processing information, related to Figure 1",xlsx,local-data,,,,https://pmc.ncbi.nlm.nih.gov/articles/instance/9387775/bin/mmc2.xlsx,"Table S1. Sample and data processing information, related to Figure 1",mmc2,No description
+mmc3.xlsx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC9387775,"Table S2. Protein matrix, related to Figure 1",xlsx,local-data,,,,https://pmc.ncbi.nlm.nih.gov/articles/instance/9387775/bin/mmc3.xlsx,"Table S2. Protein matrix, related to Figure 1",mmc3,No description
+mmc4.xlsx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC9387775,"Table S3. Cell type-enriched proteins and the tissue type in which it was quantified, related to Figure 2",xlsx,local-data,,,,https://pmc.ncbi.nlm.nih.gov/articles/instance/9387775/bin/mmc4.xlsx,"Table S3. Cell type-enriched proteins and the tissue type in which it was quantified, related to Figure 2",mmc4,No description
+mmc5.xlsx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC9387775,"Table S4. Multi-omic analyses, related to Figure 3",xlsx,local-data,,,,https://pmc.ncbi.nlm.nih.gov/articles/instance/9387775/bin/mmc5.xlsx,"Table S4. Multi-omic analyses, related to Figure 3",mmc5,No description
+mmc6.xlsx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC9387775,"Table S5. Drug-protein and CRISPR-protein association analysis, related to Figures 4 and 5",xlsx,local-data,,,,https://pmc.ncbi.nlm.nih.gov/articles/instance/9387775/bin/mmc6.xlsx,"Table S5. Drug-protein and CRISPR-protein association analysis, related to Figures 4 and 5",mmc6,No description
+mmc2.xlsx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC9387775,"Table S1. Sample and data processing information, related to Figure 1",xlsx,local-data,,,,https://pmc.ncbi.nlm.nih.gov/articles/instance/9387775/bin/mmc2.xlsx,"Table S1. Sample and data processing information, related to Figure 1",mmc2,No description
+mmc3.xlsx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC9387775,"Table S2. Protein matrix, related to Figure 1",xlsx,local-data,,,,https://pmc.ncbi.nlm.nih.gov/articles/instance/9387775/bin/mmc3.xlsx,"Table S2. Protein matrix, related to Figure 1",mmc3,No description
+mmc4.xlsx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC9387775,"Table S3. Cell type-enriched proteins and the tissue type in which it was quantified, related to Figure 2",xlsx,local-data,,,,https://pmc.ncbi.nlm.nih.gov/articles/instance/9387775/bin/mmc4.xlsx,"Table S3. Cell type-enriched proteins and the tissue type in which it was quantified, related to Figure 2",mmc4,No description
+mmc5.xlsx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC9387775,"Table S4. Multi-omic analyses, related to Figure 3",xlsx,local-data,,,,https://pmc.ncbi.nlm.nih.gov/articles/instance/9387775/bin/mmc5.xlsx,"Table S4. Multi-omic analyses, related to Figure 3",mmc5,No description
+mmc6.xlsx,supplementary material,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC9387775,"Table S5. Drug-protein and CRISPR-protein association analysis, related to Figures 4 and 5",xlsx,local-data,,,,https://pmc.ncbi.nlm.nih.gov/articles/instance/9387775/bin/mmc6.xlsx,"Table S5. Drug-protein and CRISPR-protein association analysis, related to Figures 4 and 5",mmc6,No description
+https://pmc.ncbi.nlm.nih.gov/articles/instance/3665955/bin/srep01911-s1.pdf,supplementary_data,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3665955,,,,,,,,,,
+https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE138474,data_availability,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC7842382,,cgi?acc=GSE138474,,,,,,,,
+https://pmc.ncbi.nlm.nih.gov/articles/instance/7339254/bin/NIHMS1569324-supplement-TS1.xlsx,supplementary_data,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC7339254,,xlsx,,,,,,,,
+https://pmc.ncbi.nlm.nih.gov/articles/instance/7339254/bin/NIHMS1569324-supplement-TS2.xlsx,supplementary_data,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC7339254,,xlsx,,,,,,,,
+https://pmc.ncbi.nlm.nih.gov/articles/instance/7339254/bin/NIHMS1569324-supplement-TS3.xlsx,supplementary_data,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC7339254,,xlsx,,,,,,,,
+https://pmc.ncbi.nlm.nih.gov/articles/instance/7339254/bin/NIHMS1569324-supplement-TS4.xlsx,supplementary_data,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC7339254,,xlsx,,,,,,,,
+https://pmc.ncbi.nlm.nih.gov/articles/instance/7339254/bin/NIHMS1569324-supplement-TS5.xlsx,supplementary_data,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC7339254,,xlsx,,,,,,,,
+https://pmc.ncbi.nlm.nih.gov/articles/instance/7339254/bin/NIHMS1569324-supplement-TS6.xlsx,supplementary_data,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC7339254,,xlsx,,,,,,,,
+https://pmc.ncbi.nlm.nih.gov/articles/instance/7339254/bin/NIHMS1569324-supplement-TS7.xlsx,supplementary_data,https://www.ncbi.nlm.nih.gov/pmc/articles/PMC7339254,,xlsx,,,,,,,,
