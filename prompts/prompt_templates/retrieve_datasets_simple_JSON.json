@@ -1,0 +1,10 @@
+[
+            {
+                "role": "system",
+                "content": "You are a helpful assistant and you only respond in JSON"
+            },
+            {
+                "role": "user",
+                "content": "Given the following content:\n{content}\nand the following known data repositories: {repos}\nFor each dataset reference, return the following as a JSON array of objects. Each object must have:\n- `dataset_id`: The dataset identifier (which must be a code). If unavailable, set it to \"n/a\".\n- `repository_reference`: The URL or reference to the data repository. If unavailable, set it to \"n/a\".\n\nStrict Instructions:\n- - Output must be a valid JSON array of objects.\n- Each object must contain `dataset_id` and `repository_reference`.\n- Do not include any additional explanations, context, or formatting. Only provide the JSON output.\n- Any other output will be considered invalid."
+            }
+]
