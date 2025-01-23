@@ -4,8 +4,11 @@ import re
 import logging
 import pandas as pd
 from lxml import etree
+from lxml import html
 from ollama import Client
 from openai import OpenAI
+import google.generativeai as genai
+import typing_extensions as typing
 import os
 import json
 import torch
@@ -25,6 +28,9 @@ class Parser(ABC):
     def parse_data(self, raw_data, publisher, current_url_address):
         pass
 
+class Dataset(typing.TypedDict):
+    dataset_id: str
+    repository_reference: str
 
 # Implementation for parsing HTML (from web scraping)
 class HTMLParser(Parser):
@@ -34,7 +40,7 @@ class HTMLParser(Parser):
         self.logger.info("HTMLParser initialized.")
 
 
-    def parse_data(self, source_html, publisher, current_url_address):
+    def parse_data(self, source_html, publisher, current_url_address, raw_data_format = 'HTML'):
         # initialize output
         links_on_webpage = []
         self.logger.info("Function call: extract_links_data_from_source(source_html)")
@@ -117,20 +123,29 @@ class XMLParser(Parser):
         elif self.config['llm_model'] == 'gpt-4o-mini':
             self.client = OpenAI(api_key=os.environ['GPT_API_KEY'])
 
-    def parse_data(self, api_data, publisher, current_url_address, additional_data=None):
+        elif self.config['llm_model'] == 'gemini-1.5-flash':
+            genai.configure(api_key=os.environ['GEMINI_KEY'])
+            self.client = genai.GenerativeModel('gemini-1.5-flash')
+
+    def parse_data(self, api_data, publisher, current_url_address, additional_data=None, raw_data_format='XML'):
+        out_df = None
         # Check if api_data is a string, and convert to XML if needed
-        if isinstance(api_data, str):
+        self.logger.info(f"Function call: parse_data(api_data({type(api_data)}), publisher, current_url_address, "
+                         f"additional_data, {raw_data_format})")
+        if isinstance(api_data, str) and raw_data_format != 'full_HTML':
             try:
                 api_data = etree.fromstring(api_data)  # Convert string to lxml Element
+                self.logger.info(f"api_data converted to lxml element")
             except Exception as e:
                 self.logger.error(f"Error parsing API data: {e}")
                 return None
 
-        # Extract title (adjust XPath to match the structure)
-        title_element = api_data.find('.//title-group/article-title')  # XPath for article title
-        title = title_element.text if title_element is not None else "No Title Found"
-        self.logger.info(f"Extracted title:'{title}'")
-        self.title = title
+        if raw_data_format != 'full_HTML':
+            # Extract title (adjust XPath to match the structure)
+            title_element = api_data.find('.//title-group/article-title')  # XPath for article title
+            title = title_element.text if title_element is not None else "No Title Found"
+            self.logger.info(f"Extracted title:'{title}'")
+            self.title = title
 
         # Save XML content for debugging purposes
         if self.config['save_xml_output']:
@@ -140,70 +155,106 @@ class XMLParser(Parser):
             if not os.path.exists(os.path.dirname(dir)):
                 os.makedirs(os.path.dirname(dir))
             etree.ElementTree(api_data).write(dir, pretty_print=True, xml_declaration=True, encoding='UTF-8')
+            # Save XML content for debugging purposes
+            if self.config['save_xml_output']:
+                dir = self.config['html_xml_dir'] + publisher + '/' + title + '.xml'
+                # if directory does not exist, create it
+                self.logger.info(f"Saving XML content to: {dir}")
+                if not os.path.exists(os.path.dirname(dir)):
+                    os.makedirs(os.path.dirname(dir))
+                etree.ElementTree(api_data).write(dir, pretty_print=True, xml_declaration=True, encoding='UTF-8')
 
-        # supplementary_material_links
-        supplementary_material_links = self.extract_href_from_supplementary_material(api_data,current_url_address)
-        self.logger.debug(f"supplementary_material_links: {supplementary_material_links}")
+            # supplementary_material_links
+            supplementary_material_links = self.extract_href_from_supplementary_material(api_data,current_url_address)
+            self.logger.debug(f"supplementary_material_links: {supplementary_material_links}")
 
-        if self.config['process_DAS_links_separately']:
-            # Extract dataset links
-            dataset_links = self.extract_href_from_data_availability(api_data)
-            dataset_links.extend(self.extract_xrefs_from_data_availability(api_data,current_url_address))
-            self.logger.info(f"dataset_links: {dataset_links}")
-            if len(dataset_links) == 0:
-                self.logger.info(f"No dataset links in data-availability section from XML. Scraping {current_url_address}.")
-                #dataset_links = self.get_data_availability_section_from_webpage(current_url_address)
-            # Process dataset links to get more context
-            augmented_dataset_links = self.process_data_availability_links(dataset_links)
-            self.logger.info(f"Len of augmented_dataset_links: {len(augmented_dataset_links)}")
+            if self.config['process_DAS_links_separately']:
+                # Extract dataset links
+                dataset_links = self.extract_href_from_data_availability(api_data)
+                dataset_links.extend(self.extract_xrefs_from_data_availability(api_data,current_url_address))
+                self.logger.info(f"dataset_links: {dataset_links}")
+                if len(dataset_links) == 0:
+                    self.logger.info(f"No dataset links in data-availability section from XML. Scraping {current_url_address}.")
+                    #dataset_links = self.get_data_availability_section_from_webpage(current_url_address)
+                # Process dataset links to get more context
+                augmented_dataset_links = self.process_data_availability_links(dataset_links)
+                self.logger.info(f"Len of augmented_dataset_links: {len(augmented_dataset_links)}")
 
-            self.logger.debug(f"Additional data: {(additional_data)}")
-            if additional_data is not None and len(additional_data) > 0:
-                self.logger.info(f"Additional data ({type(additional_data),len(additional_data)} items) "
-                                 f"and Parsed data ({type(augmented_dataset_links),len(augmented_dataset_links)} items).")
-                # extend the dataset links with additional data
-                augmented_dataset_links = augmented_dataset_links + self.process_additional_data(additional_data)
-                self.logger.debug(f"Type: {type(augmented_dataset_links)}")
-                self.logger.debug(f"Len of augmented_dataset_links: {len(augmented_dataset_links)}")
+                self.logger.debug(f"Additional data: {(additional_data)}")
+                if additional_data is not None and len(additional_data) > 0:
+                    self.logger.info(f"Additional data ({type(additional_data),len(additional_data)} items) "
+                                     f"and Parsed data ({type(augmented_dataset_links),len(augmented_dataset_links)} items).")
+                    # extend the dataset links with additional data
+                    augmented_dataset_links = augmented_dataset_links + self.process_additional_data(additional_data)
+                    self.logger.debug(f"Type: {type(augmented_dataset_links)}")
+                    self.logger.debug(f"Len of augmented_dataset_links: {len(augmented_dataset_links)}")
 
-            self.logger.debug(f"Content of augmented_dataset_links: {augmented_dataset_links}")
+                self.logger.debug(f"Content of augmented_dataset_links: {augmented_dataset_links}")
+
+            else:
+                data_availability_cont = self.get_data_availability_text(api_data)
+
+                augmented_dataset_links = self.process_data_availability_text(data_availability_cont)
+
+                if additional_data is not None and len(additional_data) > 0:
+                    self.logger.info(f"Additional data ({type(additional_data),len(additional_data)} items) "
+                                     f"and Parsed data ({type(augmented_dataset_links),len(augmented_dataset_links)} items).")
+                    # extend the dataset links with additional data
+                    augmented_dataset_links = augmented_dataset_links + self.process_additional_data(additional_data)
+                    self.logger.debug(f"Type: {type(augmented_dataset_links)}")
+                    self.logger.debug(f"Len of augmented_dataset_links: {len(augmented_dataset_links)}")
+
+                self.logger.debug(f"Content of augmented_dataset_links: {augmented_dataset_links}")
+
+            dataset_links_w_target_pages = self.get_dataset_webpage(augmented_dataset_links)
+
+            # Create a DataFrame from the dataset links union supplementary material links
+            out_df = pd.concat([pd.DataFrame(dataset_links_w_target_pages),
+                                pd.DataFrame(supplementary_material_links)])  # check index error here
+            self.logger.info(f"Dataset Links type: {type(out_df)} of len {len(out_df)}, with cols: {out_df.columns}")
+
+            # Extract file extensions from download links if possible, and add to the dataframe out_df as column
+            if 'download_link' in out_df.columns:
+                out_df['file_extension'] = out_df['download_link'].apply(lambda x: self.extract_file_extension(x))
+            elif 'link' in out_df.columns:
+                out_df['file_extension'] = out_df['link'].apply(lambda x: self.extract_file_extension(x))
+
+            # drop duplicates but keep nulls
+            if 'dataset_identifier' in out_df.columns:
+                out_df = out_df.drop_duplicates(subset=['download_link', 'dataset_identifier'], keep='first')
+            elif 'download_link' in out_df.columns:
+                out_df = out_df.drop_duplicates(subset=['download_link'], keep='first')
+
+            return out_df
 
         else:
-            data_availability_cont = self.get_data_availability_text(api_data)
+            # Extract links from entire webpage
+            if self.config['llm_model'] in self.config['entire_document_models']:
+                # Extract dataset links from the entire text
+                augmented_dataset_links = self.retrieve_datasets_from_content(api_data, self.config['repos'],
+                                                                              self.config['llm_model'])
+                self.logger.info(f"Augmented dataset links: {augmented_dataset_links}")
 
-            augmented_dataset_links = self.process_data_availability_text(data_availability_cont)
+                dataset_links_w_target_pages = self.get_dataset_webpage(augmented_dataset_links)
 
-            if additional_data is not None and len(additional_data) > 0:
-                self.logger.info(f"Additional data ({type(additional_data),len(additional_data)} items) "
-                                 f"and Parsed data ({type(augmented_dataset_links),len(augmented_dataset_links)} items).")
-                # extend the dataset links with additional data
-                augmented_dataset_links = augmented_dataset_links + self.process_additional_data(additional_data)
-                self.logger.debug(f"Type: {type(augmented_dataset_links)}")
-                self.logger.debug(f"Len of augmented_dataset_links: {len(augmented_dataset_links)}")
+                # Create a DataFrame from the dataset links union supplementary material links
+                out_df = pd.concat([pd.DataFrame(dataset_links_w_target_pages)]) # check index error here
 
-            self.logger.debug(f"Content of augmented_dataset_links: {augmented_dataset_links}")
+            self.logger.info(f"Dataset Links type: {type(out_df)} of len {len(out_df)}, with cols: {out_df.columns}")
 
-        dataset_links_w_target_pages = self.get_dataset_webpage(augmented_dataset_links)
+            # Extract file extensions from download links if possible, and add to the dataframe out_df as column
+            if 'download_link' in out_df.columns:
+                out_df['file_extension'] = out_df['download_link'].apply(lambda x: self.extract_file_extension(x))
+            elif 'link' in out_df.columns:
+                out_df['file_extension'] = out_df['link'].apply(lambda x: self.extract_file_extension(x))
 
-        # Create a DataFrame from the dataset links union supplementary material links
-        out_df = pd.concat([pd.DataFrame(dataset_links_w_target_pages), pd.DataFrame(supplementary_material_links)]) # check index error here
+            # drop duplicates but keep nulls
+            if 'dataset_identifier' in out_df.columns:
+                out_df = out_df.drop_duplicates(subset=['download_link','dataset_identifier'], keep='first')
+            elif 'download_link' in out_df.columns:
+                out_df = out_df.drop_duplicates(subset=['download_link'], keep='first')
 
-        self.logger.info(f"Dataset Links type: {type(out_df)} of len {len(out_df)}, with cols: {out_df.columns}")
-
-        # Extract file extensions from download links if possible, and add to the dataframe out_df as column
-        if 'download_link' in out_df.columns:
-            out_df['file_extension'] = out_df['download_link'].apply(lambda x: self.extract_file_extension(x))
-        elif 'link' in out_df.columns:
-            out_df['file_extension'] = out_df['link'].apply(lambda x: self.extract_file_extension(x))
-
-        # drop duplicates but keep nulls
-        if 'dataset_identifier' in out_df.columns:
-            out_df = out_df.drop_duplicates(subset=['download_link','dataset_identifier'], keep='first')
-        else:
-            out_df = out_df.drop_duplicates(subset=['download_link'], keep='first')
-
-
-        return out_df
+            return out_df
 
     def extract_file_extension(self, download_link):
         """
@@ -552,11 +603,12 @@ class XMLParser(Parser):
         Uses a static prompt template and dynamically injects the required variables.
         """
         # Load static prompt template
-        static_prompt = self.prompt_manager.load_prompt("retrieve_datasets_simple")
+        static_prompt = self.prompt_manager.load_prompt("GEMINI_retrieve_datasets_from_full_input") #retrieve_datasets_simple
 
         # Render the prompt with dynamic content
         messages = self.prompt_manager.render_prompt(
             static_prompt,
+            entire_doc=self.config['llm_model'] in self.config['entire_document_models'],
             content=content,
             repos=', '.join(repos)
         )
@@ -578,7 +630,7 @@ class XMLParser(Parser):
         else:
             # Make the request to the model
             self.logger.info(
-                f"Requesting datasets from content using model: {model}, temperature: {temperature}, messages: {messages}")
+                f"Requesting datasets from content using model: {model}, temperature: {temperature}, messages: messages")
             resps = []
 
             if self.config['llm_model'] == 'gemma2:9b':
@@ -597,6 +649,30 @@ class XMLParser(Parser):
                 # Save the response
                 self.prompt_manager.save_response(prompt_id, response.choices[0].message.content)
                 self.logger.info(f"Response saved to cache")
+
+
+            elif self.config['llm_model'] == 'gemini-1.5-flash':
+                response = self.client.generate_content(messages,generation_config=genai.GenerationConfig(
+                    response_mime_type="application/json",
+                    response_schema=list[Dataset]
+                ))
+                self.logger.info(f"Gemini response: {response}")
+
+                try:
+                    candidates = response.candidates  # Get the list of candidates
+                    if candidates:
+                        self.logger.info(f"Found {len(candidates)} candidates in the response.")
+                        response_text = candidates[0].content.parts[0].text  # Access the first part's text
+                        self.logger.info(f"Gemini response text: {response_text}")
+                        parsed_response = json.loads(response_text)  # Parse the JSON response
+                        self.prompt_manager.save_response(prompt_id, parsed_response)
+                        self.logger.info(f"Response saved to cache")
+                        return parsed_response
+                    else:
+                        self.logger.error("No candidates found in the response.")
+                except Exception as e:
+                    self.logger.error(f"Error processing Gemini response: {e}")
+                    return None
 
         # Process the response content
         result = []
@@ -761,7 +837,9 @@ class XMLParser(Parser):
                 "surrounding_text": link['surrounding_text']
             }
             static_prompt = self.prompt_manager.load_prompt("retrieve_datasets_fromDAS")
-            messages = self.prompt_manager.render_prompt(static_prompt, **dynamic_content)
+            messages = self.prompt_manager.render_prompt(static_prompt,
+                                                         self.config['llm_model'] in self.config['entire_document_models'],
+                                                         **dynamic_content)
 
             # Generate a unique checksum for the prompt
             prompt_id = f"{model}-{temperature}-{self.prompt_manager._calculate_checksum(str(messages))}"

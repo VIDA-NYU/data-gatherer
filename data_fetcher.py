@@ -41,7 +41,7 @@ class DataFetcher(ABC):
         else:
             return 'Unknown Publisher'
 
-    def update_DataFetcher_settings(self, url, logger):
+    def update_DataFetcher_settings(self, url, entire_doc_model, logger):
         """Sets up either a web scraper or API client based on the URL domain."""
         self.logger.debug(f"update_DataFetcher_settings for current URL")
 
@@ -55,16 +55,16 @@ class DataFetcher(ABC):
                 self.logger.debug(f"URL detected as {src}.")
                 API = f"{src}_API"
 
-        if API is not None:
+        if API is not None and not(entire_doc_model):
         # Initialize the corresponding API client, from API_supported_url_patterns
             self.logger.debug(f"Initializing APIClient({'requests', API, 'self.config'})")
             return APIClient(requests, API, self.config, logger)
 
         else:
-            self.logger.info("Non-API URL detected. Webscraper update")
+            self.logger.info("Non-API URL detected, or API unsupported. Webscraper update")
             self.fetch_source = 'WebScraper'
             driver = create_driver(self.config['DRIVER_PATH'], self.config['BROWSER'], self.config['HEADLESS'])
-            return WebScraper(driver, self.config)
+            return WebScraper(driver, self.config, logger)
 
         self.logger.info("Data fetcher setup completed.")
 

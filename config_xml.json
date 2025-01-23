@@ -1,5 +1,6 @@
 {
-  "llm_model": "gemma2:9b",
+  "llm_model": "gemini-1.5-flash",
+  "entire_document_models": ["gemini-1.5-flash"],
   "prompt_dir": "prompts/prompt_templates",
   "prompt_save_dir": "prompts/prompt_evals",
   "response_file": "LLMs_responses.json",

@@ -42,7 +42,9 @@ class Orchestrator:
         self.current_url = url
         self.publisher = self.data_fetcher.url_to_publisher_domain(url)
 
-        self.data_fetcher = self.data_fetcher.update_DataFetcher_settings(url, self.logger)
+        entire_doc_model = self.XML_config['llm_model'] in self.XML_config['entire_document_models']
+
+        self.data_fetcher = self.data_fetcher.update_DataFetcher_settings(url, entire_doc_model, self.logger)
 
         try:
             self.logger.debug("Fetching Raw content...")
@@ -54,31 +56,39 @@ class Orchestrator:
             # Step 1: Use DataFetcher (WebScraper or APIClient) to fetch raw data
             self.logger.debug(f"data_fetcher.fetch_source = {self.data_fetcher.fetch_source}")
 
-            if "API" in self.data_fetcher.fetch_source:
-                self.logger.debug(f"Using {self.data_fetcher.fetch_source} to fetch data.")
-                self.raw_data_format = "XML"
-                self.config['search_method'] = 'api'
+            # if model processes the entire document, fetch the entire document and go to the parsing step
+            if self.XML_config['llm_model'] in self.XML_config['entire_document_models']:
+                self.raw_data_format = "full_HTML"
+                raw_data = self.data_fetcher.fetch_data(url)
+
+            # if model processes chunks of the document, fetch the relevant sections and go to the parsing step
             else:
-                self.logger.debug("Using WebScraper to fetch data.")
-                self.raw_data_format = "HTML"
 
-            raw_data = self.data_fetcher.fetch_data(url)
-            self.logger.info(f"Raw data fetched as: {raw_data}")
+                if "API" in self.data_fetcher.fetch_source:
+                    self.logger.debug(f"Using {self.data_fetcher.fetch_source} to fetch data.")
+                    self.raw_data_format = "XML"
+                    self.config['search_method'] = 'api'
+                else:
+                    self.logger.debug("Using WebScraper to fetch data.")
+                    self.raw_data_format = "HTML"
 
-            self.logger.info(f"Fetcher source: {self.data_fetcher.fetch_source}")
-            if "API" not in self.data_fetcher.fetch_source:
-                raw_data = self.data_fetcher.scraper_tool.page_source
+                raw_data = self.data_fetcher.fetch_data(url)
+                self.logger.info(f"Raw data fetched as: {raw_data}")
+
+                self.logger.info(f"Fetcher source: {self.data_fetcher.fetch_source}")
+                if "API" not in self.data_fetcher.fetch_source:
+                    raw_data = self.data_fetcher.scraper_tool.page_source
 
             else:
                 additional_data = self.data_checker.ensure_data_sections(raw_data, url)
                 self.logger.debug(f"Additional data fetched as: {additional_data}")
 
-            if self.config['write_htmls_xmls']:
-                directory = self.config['html_xml_dir'] + self.publisher + '/'
-                if self.raw_data_format == "HTML":
-                    self.data_fetcher.download_html(directory)
-                    self.logger.info(f"HTML saved to: {directory}")
-                # for XML files, debug print done by parser
+                if self.config['write_htmls_xmls']:
+                    directory = self.config['html_xml_dir'] + self.publisher + '/'
+                    if self.raw_data_format == "HTML":
+                        self.data_fetcher.download_html(directory)
+                        self.logger.info(f"HTML saved to: {directory}")
+                    # for XML files, debug print done by parser
 
             self.logger.info("Successfully fetched Raw content.")
 
@@ -112,10 +122,19 @@ class Orchestrator:
                     self.logger.info(f"Processing additional data: {len(additional_data)}")
                     parsed_data = self.parser.parse_data(raw_data, self.publisher, self.current_url,
                                                          additional_data=additional_data)
+                    self.logger.info(type(parsed_data))
                 else:
-                    self.logger.info("Processing raw data.")
+                    self.logger.info(f"Parser. {self.parser}")
                     parsed_data = self.parser.parse_data(raw_data, self.publisher, self.current_url)
 
+                parsed_data['source_url'] = url
+                self.logger.info(f"Parsed data extraction completed. Elements collected: {len(parsed_data)}")
+                parsed_data.to_csv('staging_table/parsed_data_from_XML.csv', index=False)  # save parsed data to a file
+
+            elif self.raw_data_format == "full_HTML":
+                self.logger.info("Using XMLParser to parse data.")
+                self.parser = XMLParser(self.XML_config, self.logger)
+                parsed_data = self.parser.parse_data(raw_data, self.publisher, self.current_url, raw_data_format="full_HTML")
                 parsed_data['source_url'] = url
                 self.logger.info(f"Parsed data extraction completed. Elements collected: {len(parsed_data)}")
                 parsed_data.to_csv('staging_table/parsed_data_from_XML.csv', index=False)  # save parsed data to a file
@@ -136,6 +155,9 @@ class Orchestrator:
                 elif self.raw_data_format == "XML":
                     self.logger.info("XML element classification not needed. Using parsed_data.")
                     classified_links = parsed_data
+                elif self.raw_data_format == "full_HTML":
+                    classified_links = parsed_data
+                    self.logger.info("Full HTML element classification not supported. Using parsed_data.")
             else:
                 raise ValueError("Parsed data is None. Cannot classify links.")
 
