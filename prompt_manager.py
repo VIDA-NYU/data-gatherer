@@ -29,12 +29,31 @@ class PromptManager:
         with open(prompt_file, 'r') as f:
             return json.load(f)
 
-    def render_prompt(self, static_prompt, **dynamic_parts):
+    def render_prompt(self, static_prompt, entire_doc, **dynamic_parts):
         """Render a dynamic prompt by replacing placeholders."""
-        return [
-            {**item, "content": item["content"].format(**dynamic_parts)}
-            for item in static_prompt
-        ]
+        if entire_doc:
+            # Handle the "parts" elements in the prompt
+            for item in static_prompt:
+                if "parts" in item:
+                    item["parts"] = [
+                        {
+                            "text": part["text"].format(**dynamic_parts)
+                            if "{" in part["text"] and "}" in part["text"]
+                            else part["text"]
+                        }
+                        for part in item["parts"]
+                    ]
+                elif "content" in item:
+                    if "{" in item["content"] and "}" in item["content"]:
+                        item["content"] = item["content"].format(**dynamic_parts)
+                    else:
+                        item["content"]
+            return static_prompt
+        else:
+            return [
+                {**item, "content": item["content"].format(**dynamic_parts)}
+                for item in static_prompt
+            ]
 
     def save_response(self, prompt_id, response):
         """Save the response with prompt_id as the key. skip if prompt_id is already responded."""
@@ -52,6 +71,8 @@ class PromptManager:
             return None
         with open(self.response_file, 'r') as f:
             responses = json.load(f)
+            if prompt_id not in responses:
+                return None
             return responses.get(prompt_id)
 
     def _calculate_checksum(self, content):
