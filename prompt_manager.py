@@ -4,10 +4,11 @@ import os
 
 
 class PromptManager:
-    def __init__(self, prompt_dir, response_file="LLMs_responses.json", save_dir="prompts/prompt_evals"):
+    def __init__(self, prompt_dir, logger, response_file="LLMs_responses.json", save_dir="prompts/prompt_evals"):
         self.prompt_dir = prompt_dir
         self.prompt_save_dir = save_dir
         self.response_file = response_file
+        self.logger = logger
         os.makedirs(self.prompt_dir, exist_ok=True)
         if not os.path.exists(self.response_file):
             with open(self.response_file, 'w') as f:
@@ -77,4 +78,5 @@ class PromptManager:
 
     def _calculate_checksum(self, content):
         """Calculate checksum for a given content."""
+        self.logger.info(f"Calculating checksum for content: {content}")
         return hashlib.sha256(content.encode()).hexdigest()
