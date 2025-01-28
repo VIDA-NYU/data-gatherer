@@ -79,9 +79,9 @@ class Orchestrator:
                 if "API" not in self.data_fetcher.fetch_source:
                     raw_data = self.data_fetcher.scraper_tool.page_source
 
-            else:
-                additional_data = self.data_checker.ensure_data_sections(raw_data, url)
-                self.logger.debug(f"Additional data fetched as: {additional_data}")
+                else:
+                    additional_data = self.data_checker.ensure_data_sections(raw_data, url)
+                    self.logger.debug(f"Additional data fetched as: {additional_data}")
 
                 if self.config['write_htmls_xmls']:
                     directory = self.config['html_xml_dir'] + self.publisher + '/'
