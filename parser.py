@@ -998,8 +998,12 @@ class XMLParser(Parser):
             for k, v in self.config["repos"].items():
                 self.logger.debug(f"Checking if {repo} == {k}")
                 if k == repo and 'url_concat_string' in v.keys():
+                    if 'repo_mapping' in v.keys():
+                        repo_name = self.config['repos'][repo]['repo_mapping']
+                    else:
+                        repo_name = repo.copy()
                     self.logger.info(f"Found config options for {k}")
-                    dataset_webpage = ('https://' + repo + re.sub('__ID__', item['dataset_identifier'],
+                    dataset_webpage = ('https://' + repo_name + re.sub('__ID__', item['dataset_identifier'],
                                                                self.config['repos'][repo]['url_concat_string']))
                     datasets[i]['dataset_webpage'] = dataset_webpage
                     self.logger.info(f"Dataset page: {dataset_webpage}")
