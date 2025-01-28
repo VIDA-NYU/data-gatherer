@@ -95,7 +95,7 @@ class Orchestrator:
             # Step 2: Use HTMLParser to parse and extract HTML elements and rule-based matches
             if self.raw_data_format == "HTML":
                 self.logger.info("Using HTML_Parser to parse data.")
-                self.parser = HTMLParser(self.config)
+                self.parser = HTMLParser(self.config, self.logger)
                 parsed_data = self.parser.parse_data(raw_data, self.publisher, self.current_url)
 
                 parsed_data['rule_based_classification'] = 'n/a'
