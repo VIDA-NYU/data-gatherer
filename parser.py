@@ -115,7 +115,7 @@ class XMLParser(Parser):
     def __init__(self, config, logger):
         super().__init__(config, logger)
         self.title = None
-        self.prompt_manager = PromptManager(self.config['prompt_dir'], self.config['response_file'])
+        self.prompt_manager = PromptManager(self.config['prompt_dir'], self.logger, self.config['response_file'])
 
         if self.config['llm_model'] == 'gemma2:9b':
             self.client = Client(host=os.environ['NYU_LLM_API']) # env variable
@@ -612,7 +612,7 @@ class XMLParser(Parser):
             content=content,
             repos=', '.join(repos)
         )
-        self.logger.info(f"Prompt messages: {messages}")
+        self.logger.debug(f"Prompt messages: {messages}")
 
         # Generate the checksum for the prompt content
         # Save the prompt and calculate checksum

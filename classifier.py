@@ -12,7 +12,7 @@ class LLMClassifier:
         self.logger = logger
         self.client = Client(host=os.environ['NYU_LLM_API']) # env variable
         self.show_classify_stats = True
-        self.prompt_manager = PromptManager("prompts/prompt_templates")
+        self.prompt_manager = PromptManager("prompts/prompt_templates", self.logger)
 
     def classify_element(self, element):
         """
