@@ -161,5 +161,11 @@
   "gpt-4o-mini-0.3-3baa25c82cf988d11be187a367de0d87abb61fa2b32e41b4dc22c0ae3a16eb61": "MSV000092248, http://proteomecentral.proteomexchange.org",
   "gpt-4o-mini-0.3-b562520ee0508d800860c2bf8fc3106bdae6ef3cba09c215c3a4d1dff0436db8": "MSV000092248, http://proteomecentral.proteomexchange.org",
   "gpt-4o-mini-0.3-c879e5d170043ebb8929d45d95681ea7b0e69917b4a07454868c795fdd4a2406": "MSV000092248, http://proteomecentral.proteomexchange.org",
-  "gemma2:9b-0.3-16ebb6cc6e6e9dad71674889240086ab4bce355d9c2590c825fe26e73bdfad09": "PXD027488,http://www.ebi.ac.uk/pride/archive/projects/PXD027488 \nPXD032161,http://www.ebi.ac.uk/pride/archive/projects/PXD032161  \n\n\n\n"
+  "gemma2:9b-0.3-16ebb6cc6e6e9dad71674889240086ab4bce355d9c2590c825fe26e73bdfad09": "PXD027488,http://www.ebi.ac.uk/pride/archive/projects/PXD027488 \nPXD032161,http://www.ebi.ac.uk/pride/archive/projects/PXD032161  \n\n\n\n",
+  "gemini-1.5-flash-0.3-5fe8424f944dce45c2e3be11649d44e0c1383cfa5cc9efcf73da8e539c8cbaf9": [
+    {
+      "dataset_id": "PXD039210",
+      "repository_reference": "https://www.ebi.ac.uk/pride/archive/projects/PXD039210"
+    }
+  ]
 }
