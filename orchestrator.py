@@ -16,6 +16,7 @@ class Orchestrator:
         self.parser = None
         self.raw_data_format = None
         self.data_checker = DataCompletenessChecker(self.config, self.logger)
+        self.full_DOM = self.XML_config['llm_model'] in self.XML_config['entire_document_models']
         self.logger.info("Data_Gatherer Orchestrator initialized.")
 
     def setup_data_fetcher(self):
@@ -42,9 +43,7 @@ class Orchestrator:
         self.current_url = url
         self.publisher = self.data_fetcher.url_to_publisher_domain(url)
 
-        entire_doc_model = self.XML_config['llm_model'] in self.XML_config['entire_document_models']
-
-        self.data_fetcher = self.data_fetcher.update_DataFetcher_settings(url, entire_doc_model, self.logger)
+        self.data_fetcher = self.data_fetcher.update_DataFetcher_settings(url, self.full_DOM, self.logger)
 
         try:
             self.logger.debug("Fetching Raw content...")

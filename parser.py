@@ -22,6 +22,7 @@ class Parser(ABC):
         self.config = config
         self.logger = logger
         self.logger.info("Parser initialized.")
+        self.full_DOM = self.config['llm_model'] in self.config['entire_document_models']
 
 
     @abstractmethod
@@ -221,9 +222,14 @@ class XMLParser(Parser):
 
         else:
             # Extract links from entire webpage
-            if self.config['llm_model'] in self.config['entire_document_models']:
+            if self.full_DOM:
+                # preprocess the content to get only elements that do not change over different sessions
+                preprocessed_data = self.normalize_full_DOM(api_data)
+
+                #self.logger.info(f"Preprocessed data: {preprocessed_data}")
+
                 # Extract dataset links from the entire text
-                augmented_dataset_links = self.retrieve_datasets_from_content(api_data, self.config['repos'],
+                augmented_dataset_links = self.retrieve_datasets_from_content(preprocessed_data, self.config['repos'],
                                                                               self.config['llm_model'])
                 self.logger.info(f"Augmented dataset links: {augmented_dataset_links}")
 
@@ -247,6 +253,61 @@ class XMLParser(Parser):
                 out_df = out_df.drop_duplicates(subset=['download_link'], keep='first')
 
             return out_df
+
+    def normalize_full_DOM(self, api_data: str) -> str:
+        """
+        Normalize the full HTML DOM by removing dynamic elements and attributes
+        that frequently change, such as random IDs, inline styles, analytics tags,
+        and CSRF tokens.
+
+        Parameters:
+        - api_data (str): The raw HTML content of the webpage.
+
+        Returns:
+        - str: The normalized HTML content.
+        """
+        try:
+            # Parse the HTML content
+            soup = BeautifulSoup(api_data, "html.parser")
+
+            # 1. Remove script, style, and meta tags
+            for tag in ["script", "style", "meta"]:
+                for element in soup.find_all(tag):
+                    element.decompose()
+
+            # 2. Remove dynamic attributes
+            for tag in soup.find_all(True):  # True matches all tags
+                # Remove dynamic `id` attributes that match certain patterns (e.g., `tooltip-*`)
+                if "id" in tag.attrs and re.match(r"tooltip-\d+", tag.attrs["id"]):
+                    del tag.attrs["id"]
+
+                # Remove dynamic `aria-describedby` attributes
+                if "aria-describedby" in tag.attrs and re.match(r"tooltip-\d+", tag.attrs["aria-describedby"]):
+                    del tag.attrs["aria-describedby"]
+
+                # Remove inline styles
+                if "style" in tag.attrs:
+                    del tag.attrs["style"]
+
+                # Remove all `data-*` attributes
+                tag.attrs = {key: val for key, val in tag.attrs.items() if not key.startswith("data-")}
+
+                # Remove `csrfmiddlewaretoken` inputs
+                if tag.name == "input" and tag.get("name") == "csrfmiddlewaretoken":
+                    tag.decompose()
+
+            # 3. Remove comments
+            for comment in soup.find_all(string=lambda text: isinstance(text, Comment)):
+                comment.extract()
+
+            # 4. Normalize whitespace
+            normalized_html = re.sub(r"\s+", " ", soup.prettify())
+
+            return normalized_html.strip()
+
+        except Exception as e:
+            self.logger.error(f"Error normalizing DOM: {e}")
+            return ""
 
     def extract_file_extension(self, download_link):
         """
@@ -592,7 +653,7 @@ class XMLParser(Parser):
     def retrieve_datasets_from_content(self, content: str, repos: list, model: str, temperature: float = 0.3) -> list:
         """
         Retrieve datasets from the given content using a specified LLM model.
-        Uses a static prompt template and dynamically injects the required variables.
+        Uses a static prompt template and dynamically injects the required content.
         """
         # Load static prompt template
         static_prompt = self.prompt_manager.load_prompt("GEMINI_retrieve_datasets_from_full_input") #retrieve_datasets_simple
@@ -600,7 +661,7 @@ class XMLParser(Parser):
         # Render the prompt with dynamic content
         messages = self.prompt_manager.render_prompt(
             static_prompt,
-            entire_doc=self.config['llm_model'] in self.config['entire_document_models'],
+            entire_doc=self.full_DOM,
             content=content,
             repos=', '.join(repos)
         )
@@ -829,9 +890,7 @@ class XMLParser(Parser):
                 "surrounding_text": link['surrounding_text']
             }
             static_prompt = self.prompt_manager.load_prompt("retrieve_datasets_fromDAS")
-            messages = self.prompt_manager.render_prompt(static_prompt,
-                                                         self.config['llm_model'] in self.config['entire_document_models'],
-                                                         **dynamic_content)
+            messages = self.prompt_manager.render_prompt(static_prompt, self.full_DOM, **dynamic_content)
 
             # Generate a unique checksum for the prompt
             prompt_id = f"{model}-{temperature}-{self.prompt_manager._calculate_checksum(str(messages))}"
