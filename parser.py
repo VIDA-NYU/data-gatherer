@@ -679,7 +679,10 @@ class XMLParser(Parser):
         cached_response = self.prompt_manager.retrieve_response(prompt_id)
         if cached_response:
             self.logger.info("Using cached response.")
-            resps = cached_response.split("\n")
+            if type(cached_response) == str:
+                resps = cached_response.split("\n")
+            elif type(cached_response) == list:
+                resps = cached_response
         else:
             # Make the request to the model
             self.logger.info(
