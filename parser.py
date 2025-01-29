@@ -247,7 +247,7 @@ class XMLParser(Parser):
                 out_df['file_extension'] = out_df['link'].apply(lambda x: self.extract_file_extension(x))
 
             # drop duplicates but keep nulls
-            if 'dataset_identifier' in out_df.columns:
+            if 'download_link' in out_df.columns and 'dataset_identifier' in out_df.columns:
                 out_df = out_df.drop_duplicates(subset=['download_link','dataset_identifier'], keep='first')
             elif 'download_link' in out_df.columns:
                 out_df = out_df.drop_duplicates(subset=['download_link'], keep='first')
@@ -1055,7 +1055,7 @@ class XMLParser(Parser):
                     if 'repo_mapping' in v.keys():
                         repo_name = self.config['repos'][repo]['repo_mapping']
                     else:
-                        repo_name = repo.copy()
+                        repo_name = repo
                     self.logger.info(f"Found config options for {k}")
                     dataset_webpage = ('https://' + repo_name + re.sub('__ID__', item['dataset_identifier'],
                                                                self.config['repos'][repo]['url_concat_string']))
