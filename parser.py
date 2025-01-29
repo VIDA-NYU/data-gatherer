@@ -147,14 +147,6 @@ class XMLParser(Parser):
             self.logger.info(f"Extracted title:'{title}'")
             self.title = title
 
-        # Save XML content for debugging purposes
-        if self.config['save_xml_output']:
-            dir = self.config['html_xml_dir'] + publisher + '/' + title + '.xml'
-            # if directory does not exist, create it
-            self.logger.info(f"Saving XML content to: {dir}")
-            if not os.path.exists(os.path.dirname(dir)):
-                os.makedirs(os.path.dirname(dir))
-            etree.ElementTree(api_data).write(dir, pretty_print=True, xml_declaration=True, encoding='UTF-8')
             # Save XML content for debugging purposes
             if self.config['save_xml_output']:
                 dir = self.config['html_xml_dir'] + publisher + '/' + title + '.xml'
