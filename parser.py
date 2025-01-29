@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from bs4 import BeautifulSoup, NavigableString, CData
+from bs4 import BeautifulSoup, NavigableString, CData, Comment
 import re
 import logging
 import pandas as pd
