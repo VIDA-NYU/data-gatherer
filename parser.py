@@ -734,15 +734,21 @@ class XMLParser(Parser):
         result = []
         for dataset in resps:
             self.logger.info(f"Processing dataset: {dataset}")
-            # Skip short or invalid responses
-            if len(dataset) < 3 or dataset.split(",")[0].strip() == 'n/a' and dataset.split(",")[1].strip() == 'n/a':
-                continue
-            if len(dataset.split(",")) < 2:
-                continue
-            if re.match(r'\*\s+\*\*[\s\w]+:\*\*',dataset):
-                dataset = re.sub(r'\*\s+\*\*[\s\w]+:\*\*', '', dataset)
+            if type(dataset) == str:
+                # Skip short or invalid responses
+                if len(dataset) < 3 or dataset.split(",")[0].strip() == 'n/a' and dataset.split(",")[1].strip() == 'n/a':
+                    continue
+                if len(dataset.split(",")) < 2:
+                    continue
+                if re.match(r'\*\s+\*\*[\s\w]+:\*\*',dataset):
+                    dataset = re.sub(r'\*\s+\*\*[\s\w]+:\*\*', '', dataset)
 
-            dataset_id, data_repository = [x.strip() for x in dataset.split(",")[:2]]
+                dataset_id, data_repository = [x.strip() for x in dataset.split(",")[:2]]
+
+            elif type(dataset) == dict:
+                dataset_id = dataset['dataset_id']
+                data_repository = dataset['repository_reference']
+
             result.append({
                 "dataset_identifier": dataset_id,
                 "data_repository": data_repository
