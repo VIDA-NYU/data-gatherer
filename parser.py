@@ -128,6 +128,10 @@ class XMLParser(Parser):
             genai.configure(api_key=os.environ['GEMINI_KEY'])
             self.client = genai.GenerativeModel('gemini-1.5-flash')
 
+        elif self.config['llm_model'] == 'gemini-2.0-flash-exp':
+            genai.configure(api_key=os.environ['GEMINI_KEY'])
+            self.client = genai.GenerativeModel('gemini-2.0-flash-exp')
+
     def parse_data(self, api_data, publisher, current_url_address, additional_data=None, raw_data_format='XML'):
         out_df = None
         # Check if api_data is a string, and convert to XML if needed
@@ -223,6 +227,7 @@ class XMLParser(Parser):
         else:
             # Extract links from entire webpage
             if self.full_DOM:
+                self.logger.info(f"Extracting links from full HTML content.")
                 # preprocess the content to get only elements that do not change over different sessions
                 preprocessed_data = self.normalize_full_DOM(api_data)
 
@@ -707,7 +712,7 @@ class XMLParser(Parser):
                 self.logger.info(f"Response saved to cache")
 
 
-            elif self.config['llm_model'] == 'gemini-1.5-flash':
+            elif self.config['llm_model'] == 'gemini-1.5-flash' or self.config['llm_model'] == 'gemini-2.0-flash-exp':
                 response = self.client.generate_content(messages,generation_config=genai.GenerationConfig(
                     response_mime_type="application/json",
                     response_schema=list[Dataset]
