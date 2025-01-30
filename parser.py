@@ -24,14 +24,15 @@ class Parser(ABC):
         self.logger.info("Parser initialized.")
         self.full_DOM = self.config['llm_model'] in self.config['entire_document_models']
 
-
     @abstractmethod
     def parse_data(self, raw_data, publisher, current_url_address):
         pass
 
+
 class Dataset(typing.TypedDict):
     dataset_id: str
     repository_reference: str
+
 
 # Implementation for parsing HTML (from web scraping)
 class HTMLParser(Parser):
@@ -40,8 +41,7 @@ class HTMLParser(Parser):
         super().__init__(config, logger)
         self.logger.info("HTMLParser initialized.")
 
-
-    def parse_data(self, source_html, publisher, current_url_address, raw_data_format = 'HTML'):
+    def parse_data(self, source_html, publisher, current_url_address, raw_data_format='HTML'):
         # initialize output
         links_on_webpage = []
         self.logger.info("Function call: extract_links_data_from_source(source_html)")
@@ -53,12 +53,13 @@ class HTMLParser(Parser):
 
             if link is not None and "/" in link and len(link) > 1:
 
-                reconstructed_link =  self.reconstruct_link(link, publisher)
+                reconstructed_link = self.reconstruct_link(link, publisher)
 
                 # match link and extract text around the link in the displayed page as description for future processing
                 if link in compressed_HTML:
                     # extract raw link description
-                    raw_link_description = compressed_HTML[compressed_HTML.index(link)-200:compressed_HTML.index(link)+200]
+                    raw_link_description = compressed_HTML[
+                                           compressed_HTML.index(link) - 200:compressed_HTML.index(link) + 200]
                     self.logger.debug(f"raw description: {raw_link_description}")
                 else:
                     raw_link_description = 'raw description not available'
@@ -111,6 +112,7 @@ class HTMLParser(Parser):
         self.logger.debug(f"compress HTML. Final len: {len(text)}")
         return text
 
+
 class XMLParser(Parser):
 
     def __init__(self, config, logger):
@@ -119,7 +121,7 @@ class XMLParser(Parser):
         self.prompt_manager = PromptManager(self.config['prompt_dir'], self.logger, self.config['response_file'])
 
         if self.config['llm_model'] == 'gemma2:9b':
-            self.client = Client(host=os.environ['NYU_LLM_API']) # env variable
+            self.client = Client(host=os.environ['NYU_LLM_API'])  # env variable
 
         elif self.config['llm_model'] == 'gpt-4o-mini':
             self.client = OpenAI(api_key=os.environ['GPT_API_KEY'])
@@ -162,16 +164,17 @@ class XMLParser(Parser):
                 etree.ElementTree(api_data).write(dir, pretty_print=True, xml_declaration=True, encoding='UTF-8')
 
             # supplementary_material_links
-            supplementary_material_links = self.extract_href_from_supplementary_material(api_data,current_url_address)
+            supplementary_material_links = self.extract_href_from_supplementary_material(api_data, current_url_address)
             self.logger.debug(f"supplementary_material_links: {supplementary_material_links}")
 
             if self.config['process_DAS_links_separately']:
                 # Extract dataset links
                 dataset_links = self.extract_href_from_data_availability(api_data)
-                dataset_links.extend(self.extract_xrefs_from_data_availability(api_data,current_url_address))
+                dataset_links.extend(self.extract_xrefs_from_data_availability(api_data, current_url_address))
                 self.logger.info(f"dataset_links: {dataset_links}")
                 if len(dataset_links) == 0:
-                    self.logger.info(f"No dataset links in data-availability section from XML. Scraping {current_url_address}.")
+                    self.logger.info(
+                        f"No dataset links in data-availability section from XML. Scraping {current_url_address}.")
                     #dataset_links = self.get_data_availability_section_from_webpage(current_url_address)
                 # Process dataset links to get more context
                 augmented_dataset_links = self.process_data_availability_links(dataset_links)
@@ -179,8 +182,8 @@ class XMLParser(Parser):
 
                 self.logger.debug(f"Additional data: {(additional_data)}")
                 if additional_data is not None and len(additional_data) > 0:
-                    self.logger.info(f"Additional data ({type(additional_data),len(additional_data)} items) "
-                                     f"and Parsed data ({type(augmented_dataset_links),len(augmented_dataset_links)} items).")
+                    self.logger.info(f"Additional data ({type(additional_data), len(additional_data)} items) "
+                                     f"and Parsed data ({type(augmented_dataset_links), len(augmented_dataset_links)} items).")
                     # extend the dataset links with additional data
                     augmented_dataset_links = augmented_dataset_links + self.process_additional_data(additional_data)
                     self.logger.debug(f"Type: {type(augmented_dataset_links)}")
@@ -194,8 +197,8 @@ class XMLParser(Parser):
                 augmented_dataset_links = self.process_data_availability_text(data_availability_cont)
 
                 if additional_data is not None and len(additional_data) > 0:
-                    self.logger.info(f"Additional data ({type(additional_data),len(additional_data)} items) "
-                                     f"and Parsed data ({type(augmented_dataset_links),len(augmented_dataset_links)} items).")
+                    self.logger.info(f"Additional data ({type(additional_data), len(additional_data)} items) "
+                                     f"and Parsed data ({type(augmented_dataset_links), len(augmented_dataset_links)} items).")
                     # extend the dataset links with additional data
                     augmented_dataset_links = augmented_dataset_links + self.process_additional_data(additional_data)
                     self.logger.debug(f"Type: {type(augmented_dataset_links)}")
@@ -241,7 +244,7 @@ class XMLParser(Parser):
                 dataset_links_w_target_pages = self.get_dataset_webpage(augmented_dataset_links)
 
                 # Create a DataFrame from the dataset links union supplementary material links
-                out_df = pd.concat([pd.DataFrame(dataset_links_w_target_pages)]) # check index error here
+                out_df = pd.concat([pd.DataFrame(dataset_links_w_target_pages)])  # check index error here
 
             self.logger.info(f"Dataset Links type: {type(out_df)} of len {len(out_df)}, with cols: {out_df.columns}")
 
@@ -253,7 +256,7 @@ class XMLParser(Parser):
 
             # drop duplicates but keep nulls
             if 'download_link' in out_df.columns and 'dataset_identifier' in out_df.columns:
-                out_df = out_df.drop_duplicates(subset=['download_link','dataset_identifier'], keep='first')
+                out_df = out_df.drop_duplicates(subset=['download_link', 'dataset_identifier'], keep='first')
             elif 'download_link' in out_df.columns:
                 out_df = out_df.drop_duplicates(subset=['download_link'], keep='first')
 
@@ -323,7 +326,7 @@ class XMLParser(Parser):
         extension = None
         if type(download_link) == str:
             extension = download_link.split('.')[-1]
-        if type(extension) == str and ("/" in extension): # or "?" in extension
+        if type(extension) == str and ("/" in extension):  # or "?" in extension
             return ""
         return extension
 
@@ -513,11 +516,11 @@ class XMLParser(Parser):
         #repo = self.url_to_repo_domain(current_url_address)
         # match the digits of the PMC ID (after PMC) in the URL
         PMCID = re.search(r'PMC(\d+)', current_url_address).group(1)
-        self.logger.debug(f"Inputs to reconstruct_download_link: {href}, {content_type}, {current_url_address}, {PMCID}")
+        self.logger.debug(
+            f"Inputs to reconstruct_download_link: {href}, {content_type}, {current_url_address}, {PMCID}")
         if content_type == 'local-data':
             download_link = "https://pmc.ncbi.nlm.nih.gov/articles/instance/" + PMCID + '/bin/' + href
         return download_link
-
 
     def get_sibling_text(self, media_element):
         """
@@ -661,7 +664,7 @@ class XMLParser(Parser):
         Uses a static prompt template and dynamically injects the required content.
         """
         # Load static prompt template
-        static_prompt = self.prompt_manager.load_prompt("GEMINI_from_full_input_Examples_2") #retrieve_datasets_simple
+        static_prompt = self.prompt_manager.load_prompt("GEMINI_from_full_input_Examples_2")  #retrieve_datasets_simple
 
         # Render the prompt with dynamic content
         messages = self.prompt_manager.render_prompt(
@@ -742,11 +745,12 @@ class XMLParser(Parser):
             self.logger.info(f"Processing dataset: {dataset}")
             if type(dataset) == str:
                 # Skip short or invalid responses
-                if len(dataset) < 3 or dataset.split(",")[0].strip() == 'n/a' and dataset.split(",")[1].strip() == 'n/a':
+                if len(dataset) < 3 or dataset.split(",")[0].strip() == 'n/a' and dataset.split(",")[
+                    1].strip() == 'n/a':
                     continue
                 if len(dataset.split(",")) < 2:
                     continue
-                if re.match(r'\*\s+\*\*[\s\w]+:\*\*',dataset):
+                if re.match(r'\*\s+\*\*[\s\w]+:\*\*', dataset):
                     dataset = re.sub(r'\*\s+\*\*[\s\w]+:\*\*', '', dataset)
 
                 dataset_id, data_repository = [x.strip() for x in dataset.split(",")[:2]]
@@ -808,7 +812,7 @@ class XMLParser(Parser):
 
         for sect in supplementary_data_sections:
             # check if section contains data availability statement
-            if sect.text is None: # key resources table
+            if sect.text is None:  # key resources table
                 self.logger.info(f"Section with no text: {sect}")
             elif 'data availability' in sect.text:
                 data_availability_cont.append(sect.text)
@@ -1001,8 +1005,6 @@ class XMLParser(Parser):
 
         return None
 
-
-
         return
 
     def normalize_LLM_output(self, response):
@@ -1046,18 +1048,18 @@ class XMLParser(Parser):
 
         self.logger.info(f"Fetching metadata for {len(datasets)} datasets")
 
-        for i,item in enumerate(datasets):
+        for i, item in enumerate(datasets):
 
             if 'data_repository' not in item.keys():
-                self.logger.debug(f"Skipping dataset {1+i}: no data_repository for item")
+                self.logger.debug(f"Skipping dataset {1 + i}: no data_repository for item")
                 continue
 
             if ('dataset_webpage' in item.keys()):
-                self.logger.debug(f"Skipping dataset {1+i}: already has dataset_webpage")
+                self.logger.debug(f"Skipping dataset {1 + i}: already has dataset_webpage")
                 continue
 
             if 'link' in item.keys():
-                self.logger.info(f"Processing dataset {1+i}: {item['link']}")
+                self.logger.info(f"Processing dataset {1 + i}: {item['link']}")
 
             repo = self.url_to_repo_domain(item['data_repository'])
             updated_dt = False
@@ -1070,7 +1072,7 @@ class XMLParser(Parser):
                         repo_name = repo
                     self.logger.info(f"Found config options for {k}")
                     dataset_webpage = ('https://' + repo_name + re.sub('__ID__', item['dataset_identifier'],
-                                                               self.config['repos'][repo]['url_concat_string']))
+                                                                       self.config['repos'][repo]['url_concat_string']))
                     datasets[i]['dataset_webpage'] = dataset_webpage
                     self.logger.info(f"Dataset page: {dataset_webpage}")
                     updated_dt = True
@@ -1093,7 +1095,8 @@ class XMLParser(Parser):
 
         return template
 
-    def predict_NuExtract(self, model, tokenizer, texts, template, batch_size=1, max_length=10_000, max_new_tokens=4_000):
+    def predict_NuExtract(self, model, tokenizer, texts, template, batch_size=1, max_length=10_000,
+                          max_new_tokens=4_000):
         template = json.dumps(json.loads(template), indent=4)
         prompts = [f"""<|input|>\n### Template:\n{template}\n### Text:\n{text}\n\n<|output|>""" for text in texts]
 
@@ -1109,6 +1112,7 @@ class XMLParser(Parser):
 
         return [output.split("<|output|>")[1] for output in outputs]
 
+
 class MyBeautifulSoup(BeautifulSoup):
     # this function will extract text from the HTML, by also keeping the links where they appear in the HTML
     def _all_strings(self, strip=False, types=(NavigableString, CData)):
@@ -1123,7 +1127,7 @@ class MyBeautifulSoup(BeautifulSoup):
                 logging.info(f"Tag attributes: {element.attrs}")
                 print(f"Tag attributes: {element.attrs}")
             # element is Tag, we want to keep the anchor elements hrefs and the text in every Tag
-            if element.name == 'a': # or do the check of href in element.attrs
+            if element.name == 'a':  # or do the check of href in element.attrs
                 logging.info("anchor element")
                 newstring = re.sub("\s+", " ", element.getText())
                 strings.append(newstring)
@@ -1135,6 +1139,7 @@ class MyBeautifulSoup(BeautifulSoup):
                 strings.append(re.sub("\s+", " ", element.getText()))
         #logging.info(f"strings: {strings}")
         return strings
+
     def get_text(self, separator="", strip=False,
                  types=(NavigableString, CData)):
         """Get all child strings of this PageElement, concatenated using the
@@ -1155,6 +1160,7 @@ class MyBeautifulSoup(BeautifulSoup):
         :return: A string.
         """
         return separator.join([s for s in self._all_strings(
-                    strip, types=types)])
+            strip, types=types)])
+
     getText = get_text
     text = property(get_text)
