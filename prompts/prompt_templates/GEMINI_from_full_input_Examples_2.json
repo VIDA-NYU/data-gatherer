@@ -1,0 +1,26 @@
+[
+    {
+        "role": "model",
+        "parts": [
+            {
+                "text": "You are a specialized assistant, and given a publication you can identify which are the mentioned datasets the study is based on. You will retrieve this information and create a summary of the publication datasets for non-specialists. You must output a JSON array of objects, where each object has the following keys: 'dataset_identifier', 'repository_reference'."
+            }
+        ]
+    },
+     {
+        "role": "model",
+        "parts": [
+            {
+                "text": "Dataset Identifiers are any alphanumeric strings (they can also contain punctuation marks) that uniquely identify and/or provide access to a dataset\n.Here are some examples for reference:\n\n[\n'dataset_identifier'=> 'EGAS00001000925', 'repository_reference'=> 'https://ega-archive.org/datasets/EGAS00001000925',\n 'dataset_identifier'=> 'GSE69091', 'repository_reference'=> 'https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE69091',\n  'dataset_identifier'=> 'PRJNA306801', 'repository_reference'=> 'https://www.ncbi.nlm.nih.gov/bioproject/?term=PRJNA306801',\n  'dataset_identifier'=> 'phs003416.v1.p1', 'repository_reference'=> 'dbGaP',\n  'dataset_identifier'=> 'PXD049309', 'repository_reference'=> 'https://www.ebi.ac.uk/pride/archive/projects/PXD049309',\n  'dataset_identifier'=> 'IPX0004230000', 'repository_reference'=> 'http://www.iprox.org',\n  'dataset_identifier'=> 'MSV000092944', 'repository_reference'=> 'https://massive.ucsd.edu/',\n  'dataset_identifier'=> 'n/a', 'repository_reference'=> 'https://data.broadinstitute.org/ccle_legacy_data/mRNA_expression/'\n]"
+            }
+        ]
+    },
+    {
+        "role": "user",
+        "parts": [
+            {
+                "text": "Given the following webpage HTML:\n{content}\n\nand the following known data repositories: {repos}\n\nFor each dataset reference, return the following as a JSON array of objects. Each object must have:\n- `dataset_identifier`: The dataset identifier (which must be a code). If unavailable, set it to \"n/a\".\n- `repository_reference`: The URL or reference to the data repository. If unavailable, set it to \"n/a\".\n\nStrict Instructions:\n- Output must be a valid JSON array of objects.\n- Each object must contain `dataset_id` and `repository_reference`.\n- Any other output will be considered invalid."
+            }
+        ]
+    }
+]
