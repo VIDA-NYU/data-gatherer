@@ -728,6 +728,7 @@ class XMLParser(Parser):
                         parsed_response = json.loads(response_text)  # Parse the JSON response
                         self.prompt_manager.save_response(prompt_id, parsed_response)
                         self.logger.info(f"Response saved to cache")
+                        resps = parsed_response
                         return parsed_response
                     else:
                         self.logger.error("No candidates found in the response.")
