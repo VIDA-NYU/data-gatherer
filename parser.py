@@ -656,7 +656,7 @@ class XMLParser(Parser):
         Uses a static prompt template and dynamically injects the required content.
         """
         # Load static prompt template
-        static_prompt = self.prompt_manager.load_prompt("GEMINI_retrieve_datasets_from_full_input") #retrieve_datasets_simple
+        static_prompt = self.prompt_manager.load_prompt("GEMINI_from_full_input_Examples_2") #retrieve_datasets_simple
 
         # Render the prompt with dynamic content
         messages = self.prompt_manager.render_prompt(
