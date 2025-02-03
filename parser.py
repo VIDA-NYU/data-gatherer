@@ -681,7 +681,7 @@ class XMLParser(Parser):
 
         # Generate the checksum for the prompt content
         # Save the prompt and calculate checksum
-        prompt_id = f"{model}-{temperature}-{self.prompt_manager._calculate_checksum(str(content))}"
+        prompt_id = f"{model}-{temperature}-{self.prompt_manager._calculate_checksum(str(messages))}"
         self.logger.info(f"Prompt ID: {prompt_id}")
         # Save the prompt using the PromptManager
         if self.config['save_dynamic_prompts']:

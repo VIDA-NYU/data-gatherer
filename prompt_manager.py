@@ -76,7 +76,7 @@ class PromptManager:
                 return None
             return responses.get(prompt_id)
 
-    def _calculate_checksum(self, content):
+    def _calculate_checksum(self, prompt):
         """Calculate checksum for a given content."""
-        self.logger.debug(f"Calculating checksum for content: {content}")
-        return hashlib.sha256(content.encode()).hexdigest()
+        self.logger.debug(f"Calculating checksum for content: {prompt}")
+        return hashlib.sha256(prompt.encode()).hexdigest()
