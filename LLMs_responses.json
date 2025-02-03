@@ -1189,5 +1189,1007 @@
       "dataset_id": "EGAS00001004888",
       "repository_reference": "www.ebi.ac.uk"
     }
+  ],
+  "gemini-1.5-pro-0.3-348d8b08d51ac6db620ba097e74997b68b7d5904b485454e13b0c7d8a4879593": [
+    {
+      "dataset_id": "EGAS00001000925",
+      "repository_reference": "https://ega-archive.org/datasets/EGAS00001000925"
+    },
+    {
+      "dataset_id": "GSE69091",
+      "repository_reference": "https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE69091"
+    }
+  ],
+  "gemini-1.5-pro-0.3-abda7a83152215c2cbcb107964c3771a2c4f2c24bc1f9d841e43083952c16441": [
+    {
+      "dataset_id": "n/a",
+      "repository_reference": "n/a"
+    }
+  ],
+  "gemini-1.5-pro-0.3-fedf148315f0d0c8500053af7a8856eb3b7e191e333a372f958902a091ac0e16": [
+    {
+      "dataset_id": "phs003416.v1.p1",
+      "repository_reference": "dbGaP"
+    },
+    {
+      "dataset_id": "GSE241673",
+      "repository_reference": "https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE241673"
+    },
+    {
+      "dataset_id": "EGAS00001000925",
+      "repository_reference": "n/a"
+    },
+    {
+      "dataset_id": "EGAS00001004888",
+      "repository_reference": "n/a"
+    }
+  ],
+  "gemini-2.0-flash-exp-0.3-cdeea02f5c0a8e206bccdfb9e73ef18fe08af700aaa9db3125eeaa96b552a783": [
+    {
+      "dataset_id": "GSE138474",
+      "repository_reference": "https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE138474"
+    }
+  ],
+  "gemini-1.5-pro-0.3-16ea9c6ef6f234cec0aff8a629671bdedcffcb3ce6ea080ed0a8cbfde0674572": [
+    {
+      "dataset_id": "n/a",
+      "repository_reference": "n/a"
+    }
+  ],
+  "gemini-1.5-pro-0.3-19129ac9e652bbfe8ec57c861dd0601f866e4c182656d108c29001125a298618": [
+    {
+      "dataset_id": "EGAS00001000334",
+      "repository_reference": "https://www.ebi.ac.uk/ega/datasets/EGAS00001000334"
+    }
+  ],
+  "gemini-1.5-pro-0.3-e142ca408535b55bad6aa471a012be0ffcbb8b30b6a0e18cf3f4590e28ebbc7f": [
+    {
+      "dataset_id": "GSE60052",
+      "repository_reference": "https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE60052"
+    },
+    {
+      "dataset_id": "phs001083.v1.p1",
+      "repository_reference": "http://www.ncbi.nlm.nih.gov/projects/gap/cgi-bin/study.cgi?study_id=phs001083.v1.p1"
+    }
+  ],
+  "gemini-1.5-pro-0.3-74f758d57211821b102e548929992ffaa9887b6b0a520255c983de8d2e01db53": [
+    {
+      "dataset_id": "phs001049",
+      "repository_reference": "https://www.ncbi.nlm.nih.gov/gap/?term=PHS001049"
+    },
+    {
+      "dataset_id": "PRJNA306801",
+      "repository_reference": "https://www.ncbi.nlm.nih.gov/bioproject/?term=PRJNA306801)"
+    }
+  ],
+  "gemini-1.5-pro-0.3-b6e1db4a8cbb2b3b734aa269fcb6f9a14e1d05f536ccbf303a472090db079187": [
+    {
+      "dataset_id": "phs001366.v1.p1",
+      "repository_reference": "dbGaP"
+    }
+  ],
+  "gemini-1.5-pro-0.3-7c954a3aeb43cc335dfa5077b1b8441842a938ddde098712655cdf4f52ae7505": [
+    {
+      "dataset_id": "n/a",
+      "repository_reference": "EGAS00001000299"
+    }
+  ],
+  "gemini-1.5-pro-0.3-7ef9a3123a8c00ecc55b67d8bf8af8526743d24504c79d66b8684fd1950fce6a": [
+    {
+      "dataset_id": "PXD029805",
+      "repository_reference": "https://proteomecentral.proteomexchange.org/cgi/GetDataset?ID=PXD029805"
+    },
+    {
+      "dataset_id": "10.6019/PXD029805",
+      "repository_reference": "https://proteomecentral.proteomexchange.org/cgi/GetDataset?ID=PXD029805"
+    },
+    {
+      "dataset_id": "PXD029821",
+      "repository_reference": "https://proteomecentral.proteomexchange.org/cgi/GetDataset?ID=PXD029821"
+    },
+    {
+      "dataset_id": "10.6019/PXD029821",
+      "repository_reference": "https://proteomecentral.proteomexchange.org/cgi/GetDataset?ID=PXD029821"
+    }
+  ],
+  "gemini-1.5-pro-0.3-8f27959e7c9d37cc5c6b3987fe42639c501110e89a900b9dac70e84227cd7e30": [
+    {
+      "dataset_id": "n/a",
+      "repository_reference": "https://cellmodelpassports.sanger.ac.uk"
+    },
+    {
+      "dataset_id": "PXD030304",
+      "repository_reference": "pride"
+    },
+    {
+      "dataset_id": "n/a",
+      "repository_reference": "cancerrxgene.org"
+    }
+  ],
+  "gemini-1.5-pro-0.3-ddcc7824bfb4d607876ffda2cfd7f01358f6c3b5404e3a883f98f728d41fc8a0": [
+    {
+      "dataset_id": "GSE138474",
+      "repository_reference": "https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE138474"
+    }
+  ],
+  "gemini-1.5-pro-0.3-edcab94e09d96f21b5030f47e1e17a2511fa7ccedca07801602e8d2496aa26bb": [
+    {
+      "dataset_id": "n/a",
+      "repository_reference": "https://gygi.med.harvard.edu/publications/ccle"
+    },
+    {
+      "dataset_id": "n/a",
+      "repository_reference": "https://depmap.org/portal/"
+    }
+  ],
+  "gemini-1.5-pro-0.3-2422adfdacd18a20637db5defc8bd8ed4a430704b2e6a5c655deefac794ad2bd": [
+    {
+      "dataset_id": "PXD053567",
+      "repository_reference": "http://www.ebi.ac.uk/pride/archive/"
+    }
+  ],
+  "gemini-1.5-pro-0.3-748370adfb323020a1282e2ac42aabc8d79741670f4b39c9a56e0dcfe5af8601": [
+    {
+      "dataset_id": "MSV000092944",
+      "repository_reference": "https://massive.ucsd.edu/"
+    }
+  ],
+  "gemini-1.5-pro-0.3-a3153335fef0da53c292544d0ad9ee0037d8ee21dbc027d4a84f56206d8e20e7": [
+    {
+      "dataset_id": "PXD052949",
+      "repository_reference": "https://www.ebi.ac.uk/pride/archive/projects/PXD052949"
+    },
+    {
+      "dataset_id": "6077-6129",
+      "repository_reference": "https://assays.cancer.gov/available_assays"
+    },
+    {
+      "dataset_id": "NCT01226316",
+      "repository_reference": "https://clinicaltrials.gov/ct2/show/NCT01226316"
+    },
+    {
+      "dataset_id": "n/a",
+      "repository_reference": "https://astrazenecagroup-dt.pharmacm.com/DT/Home"
+    }
+  ],
+  "gemini-1.5-pro-0.3-02f3d86a0adaa8a04c545d4b2c167da8ab42324d50187fdbf613f126bbc30bc2": [
+    {
+      "dataset_id": "GSE10327",
+      "repository_reference": "https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE10327"
+    },
+    {
+      "dataset_id": "GSE122077",
+      "repository_reference": "https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE122077"
+    },
+    {
+      "dataset_id": "GSE70678",
+      "repository_reference": "https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE70678"
+    },
+    {
+      "dataset_id": "GSE73038",
+      "repository_reference": "https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE73038"
+    },
+    {
+      "dataset_id": "PDC000180",
+      "repository_reference": "https://pdc.cancer.gov"
+    },
+    {
+      "dataset_id": "PXD045268",
+      "repository_reference": "www.proteomexchange.org"
+    }
+  ],
+  "gemini-1.5-pro-0.3-776650cebf2ce29bf31eb84727b8e8fadfe43da6b197b2b7757f5e5238e309a1": [
+    {
+      "dataset_id": "JPST002506",
+      "repository_reference": "proteomecentral.proteomexchange.org"
+    },
+    {
+      "dataset_id": "PXD049309",
+      "repository_reference": "https://proteomecentral.proteomexchange.org/cgi/GetDataset?ID=PXD049309"
+    }
+  ],
+  "gemini-1.5-pro-0.3-44b0d8bc6652b786123e97a175962d3b7c5c7ad03ee1c8a05b998081a6c38d3b": [
+    {
+      "dataset_id": "PXD047284",
+      "repository_reference": "https://www.proteomexchange.org"
+    },
+    {
+      "dataset_id": "10.6019/PXD047284",
+      "repository_reference": "https://www.proteomexchange.org"
+    }
+  ],
+  "gemini-1.5-pro-0.3-e4c1260a0d36cb714cb55cb2a704377bf62e4ba9fd26a71023414163a62ae18f": [
+    {
+      "dataset_id": "PXD042233",
+      "repository_reference": "http://proteomecentral.proteomexchange.org/cgi/GetDataset?ID=PXD042233"
+    }
+  ],
+  "gemini-1.5-pro-0.3-b2aff73bb74b93d9e37e34ba83ec6d6cd00d729187e35abb802ece116846e59d": [
+    {
+      "dataset_id": "PDC000234",
+      "repository_reference": "pdc.cancer.gov"
+    },
+    {
+      "dataset_id": "PDC000127",
+      "repository_reference": "pdc.cancer.gov"
+    },
+    {
+      "dataset_id": "PDC000204",
+      "repository_reference": "pdc.cancer.gov"
+    },
+    {
+      "dataset_id": "PDC000221",
+      "repository_reference": "pdc.cancer.gov"
+    },
+    {
+      "dataset_id": "PDC000198",
+      "repository_reference": "pdc.cancer.gov"
+    },
+    {
+      "dataset_id": "PDC000110",
+      "repository_reference": "pdc.cancer.gov"
+    },
+    {
+      "dataset_id": "PDC000270",
+      "repository_reference": "pdc.cancer.gov"
+    },
+    {
+      "dataset_id": "PDC000125",
+      "repository_reference": "pdc.cancer.gov"
+    },
+    {
+      "dataset_id": "PDC000153",
+      "repository_reference": "pdc.cancer.gov"
+    },
+    {
+      "dataset_id": "PXD043612",
+      "repository_reference": "proteomecentral.proteomexchange.org"
+    }
+  ],
+  "gemini-1.5-pro-0.3-f013aceeee5c2c3b78fec1ee234be883ef75cfe60febc82d26c108f33efda1c2": [
+    {
+      "dataset_id": "IPX0004230000",
+      "repository_reference": "http://www.iprox.org"
+    }
+  ],
+  "gemini-1.5-pro-0.3-b4c25350ca469a9adc90f846fb39637d8d77b6b2e07d7f1a62e41eeccb689172": [
+    {
+      "dataset_id": "MSV000092248",
+      "repository_reference": "https://massive.ucsd.edu/ProteoSAFe/QueryMSV?id=MSV000092248"
+    },
+    {
+      "dataset_id": "n/a",
+      "repository_reference": "http://www.proteomicsdb.org"
+    },
+    {
+      "dataset_id": "7ZWE",
+      "repository_reference": "https://doi.org/10.2210/pdb7ZWE/pdb"
+    },
+    {
+      "dataset_id": "7A4Q",
+      "repository_reference": "https://doi.org/10.2210/pdb7A4Q/pdb"
+    },
+    {
+      "dataset_id": "7ZWG",
+      "repository_reference": "https://doi.org/10.2210/pdb7ZWG/pdb"
+    }
+  ],
+  "gemini-1.5-pro-0.3-ff36c1ef428429fa5d9242b6082864afc8804bd9f183a96f109f13c9279f046a": [
+    {
+      "dataset_id": "phs001249.v1.p1",
+      "repository_reference": "dbGaP"
+    }
+  ],
+  "gemini-1.5-pro-0.3-71533df8a4aef540d5f521f3de854291225f8a0f7a37a58621228fa8b00b5078": [
+    {
+      "dataset_id": "phs001823.v1.p1",
+      "repository_reference": "dbGaP"
+    },
+    {
+      "dataset_id": "n/a",
+      "repository_reference": "https://data.broadinstitute.org/ccle_legacy_data/mRNA_expression/"
+    }
+  ],
+  "gemini-1.5-pro-0.3-c0c829a739668fef2607c5db67f89ad0d902c91c1e841d9d5681c60bc218c279": [
+    {
+      "dataset_id": "n/a",
+      "repository_reference": "https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE43346"
+    }
+  ],
+  "gemini-1.5-pro-0.3-09e7e0bcbc452f6d24827dbeec6cf77c782b6936513052221b03730ade05f534": [
+    {
+      "dataset_id": "PXD042991",
+      "repository_reference": "https://www.ebi.ac.uk/pride/archive/projects/PXD042991"
+    }
+  ],
+  "gemini-1.5-pro-0.3-2c75b7ed2eb701163eff644b4aa75bc8d0927e3fa03672b5647d9abefb1952d8": [
+    {
+      "dataset_id": "PXD039210",
+      "repository_reference": "http://proteomecentral.proteomexchange.org/cgi/GetDataset?ID=PXD039210"
+    },
+    {
+      "dataset_id": "n/a",
+      "repository_reference": "n/a"
+    }
+  ],
+  "gemini-1.5-pro-0.3-842aae8fd57a908c0eba36aa9022e5bfb9f9df3c75671d7f9a85143155750a19": [
+    {
+      "dataset_id": "EGAS00001000925",
+      "repository_reference": "https://ega-archive.org/datasets/EGAS00001000925"
+    },
+    {
+      "dataset_id": "GSE69091",
+      "repository_reference": "https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE69091"
+    }
+  ],
+  "gemini-1.5-pro-0.3-52dafc9bd36bd4a665a99dbf3da83fce0df31b9056b5cdf59e9fe0f49c988f62": [
+    {
+      "dataset_id": "EGAS50000000169",
+      "repository_reference": "https://ega-archive.org/studies/EGAS50000000169"
+    }
+  ],
+  "gemini-1.5-pro-0.3-9715c407266ac2fac72d8c938e0e71ec8cb2185c53bb9e6fea0c074419531230": [
+    {
+      "dataset_id": "phs003416.v1.p1",
+      "repository_reference": "dbGaP"
+    },
+    {
+      "dataset_id": "GSE241673",
+      "repository_reference": "https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE241673"
+    },
+    {
+      "dataset_id": "EGAS00001000925",
+      "repository_reference": "https://ega-archive.org/datasets/EGAS00001000925"
+    },
+    {
+      "dataset_id": "EGAS00001004888",
+      "repository_reference": "https://ega-archive.org/datasets/EGAS00001004888"
+    }
+  ],
+  "gemini-1.5-pro-0.3-3ade401657d1ab3917d14cb4b604eaca9dac748eacf608c2e4cf3ba862a31b9b": [
+    {
+      "dataset_id": "n/a",
+      "repository_reference": "n/a"
+    }
+  ],
+  "gemini-1.5-pro-0.3-c213fb8ea3e4a17e9ea153a46c84c23c53c519405ca7da39281d334c652c3e43": [
+    {
+      "dataset_id": "EGAS00001000334",
+      "repository_reference": "https://www.ebi.ac.uk/ega/datasets/EGAS00001000334"
+    }
+  ],
+  "gemini-1.5-pro-0.3-00e57a98e06360b069dbb2cfc34f02da708f9600b7233311e920bc0c3c462ff9": [
+    {
+      "dataset_id": "phs001249.v1.p1",
+      "repository_reference": "dbGaP"
+    }
+  ],
+  "gemini-1.5-pro-0.3-4f2e4a200b4f88c4de2e20157006f60d7729770cdcaf4691a95528c9cc42693f": [
+    {
+      "dataset_id": "GSE60052",
+      "repository_reference": "https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE60052"
+    },
+    {
+      "dataset_id": "phs001083.v1.p1",
+      "repository_reference": "http://www.ncbi.nlm.nih.gov/projects/gap/cgi-bin/study.cgi?study_id=phs001083.v1.p1"
+    }
+  ],
+  "gemini-1.5-pro-0.3-d5509cad761efcdf2af2807c16f52501f5999b9e913da9b61a486cd9cc0f9dd5": [
+    {
+      "dataset_id": "phs001049",
+      "repository_reference": "https://www.ncbi.nlm.nih.gov/gap/?term=PHS001049"
+    },
+    {
+      "dataset_id": "PRJNA306801",
+      "repository_reference": "https://www.ncbi.nlm.nih.gov/bioproject/?term=PRJNA306801)"
+    }
+  ],
+  "gemini-1.5-pro-0.3-7b65abe238555bbe1a967328938e735249770c770e35c78d7da64a3d2867f939": [
+    {
+      "dataset_id": "phs001366.v1.p1",
+      "repository_reference": "dbGaP"
+    }
+  ],
+  "gemini-1.5-pro-0.3-fabc14f48f1d961ff0e4cefe08fd6bdd639792a62f7de4af74e505e02fc720f8": [
+    {
+      "dataset_id": "EGAS00001000299",
+      "repository_reference": "https://ega-archive.org"
+    },
+    {
+      "dataset_id": "n/a",
+      "repository_reference": "https://www.ncbi.nlm.nih.gov"
+    }
+  ],
+  "gemini-1.5-pro-0.3-71e89cfefc16c706891c96ca54b627169761ab7dc3aeeb42453167568b147034": [
+    {
+      "dataset_id": "phs001823.v1.p1",
+      "repository_reference": "dbGaP"
+    },
+    {
+      "dataset_id": "n/a",
+      "repository_reference": "https://data.broadinstitute.org/ccle_legacy_data/mRNA_expression/"
+    },
+    {
+      "dataset_id": "SRP052896",
+      "repository_reference": "https://www.ncbi.nlm.nih.gov/sra?term=SRP052896"
+    }
+  ],
+  "gemini-1.5-pro-0.3-5b5fec0f2ee57f2db6b3f6742ca9afda92070cf131f1f397b2fab25bcf1ea5ef": [
+    {
+      "dataset_id": "PXD029805",
+      "repository_reference": "http://proteomecentral.proteomexchange.org/cgi/GetDataset?ID=PXD029805"
+    },
+    {
+      "dataset_id": "10.6019/PXD029805",
+      "repository_reference": "www.proteomexchange.org"
+    },
+    {
+      "dataset_id": "PXD029821",
+      "repository_reference": "http://proteomecentral.proteomexchange.org/cgi/GetDataset?ID=PXD029821"
+    },
+    {
+      "dataset_id": "10.6019/PXD029821",
+      "repository_reference": "www.proteomexchange.org"
+    }
+  ],
+  "gemini-1.5-pro-0.3-76cb3f9570eb12bfc749ba70ff79f5d25bf9cbd600bf50ac169b6d803da24dca": [
+    {
+      "dataset_id": "PXD030304",
+      "repository_reference": "http://pride:PXD030304"
+    },
+    {
+      "dataset_id": "n/a",
+      "repository_reference": "www.cancerrxgene.org"
+    },
+    {
+      "dataset_id": "n/a",
+      "repository_reference": "cellmodelpassports.sanger.ac.uk"
+    },
+    {
+      "dataset_id": "n/a",
+      "repository_reference": "cellmodelpassports.sanger.ac.uk"
+    },
+    {
+      "dataset_id": "n/a",
+      "repository_reference": "depmap.org"
+    },
+    {
+      "dataset_id": "n/a",
+      "repository_reference": "score.depmap.sanger.ac.uk"
+    },
+    {
+      "dataset_id": "n/a",
+      "repository_reference": "cellmodelpassports.sanger.ac.uk"
+    },
+    {
+      "dataset_id": "n/a",
+      "repository_reference": "ocg.cancer.gov/programs/ctd2/data-portal"
+    },
+    {
+      "dataset_id": "n/a",
+      "repository_reference": "depmap.org"
+    }
+  ],
+  "gemini-1.5-pro-0.3-a5f5690352335034aab0568b5b967c4ddfe8339403dba63c3d90614d1c0866e4": [
+    {
+      "dataset_id": "GSE43346",
+      "repository_reference": "https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE43346"
+    },
+    {
+      "dataset_id": "GSE2199",
+      "repository_reference": "https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE2199"
+    }
+  ],
+  "gemini-1.5-pro-0.3-cb3b22452289296b85ae83190e33abbc6f1a7656186f3535f3b43b34126ec6d0": [
+    {
+      "dataset_id": "GSE138474",
+      "repository_reference": "https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE138474"
+    }
+  ],
+  "gemini-1.5-pro-0.3-5642e5e3e41e4f6643053232de5598b9260a18ca56505c499198d45916df9e72": [
+    {
+      "dataset_id": "n/a",
+      "repository_reference": "https://gygi.med.harvard.edu/publications/ccle"
+    },
+    {
+      "dataset_id": "n/a",
+      "repository_reference": "https://depmap.org/"
+    }
+  ],
+  "gemini-1.5-pro-0.3-35501d6401de69542eeb9f31ef4d1690e1d6fb0e1f60bb26865c91b05fba0b14": [
+    {
+      "dataset_id": "PXD053567",
+      "repository_reference": "http://www.ebi.ac.uk/pride/archive/"
+    }
+  ],
+  "gemini-1.5-pro-0.3-b681ed6db6b50176da0406b10a8acfd351285665f2355b3339638c9c29120773": [
+    {
+      "dataset_id": "MSV000092944",
+      "repository_reference": "https://massive.ucsd.edu/"
+    }
+  ],
+  "gemini-1.5-pro-0.3-90d0177eb9e971aab56f2d2b2044ed95063aa9ed4fbff49d39b26c55d9e29b3d": [
+    {
+      "dataset_id": "NCT01226316",
+      "repository_reference": "https://clinicaltrials.gov/ct2/show/NCT01226316"
+    },
+    {
+      "dataset_id": "PXD052949",
+      "repository_reference": "https://www.proteomexchange.org/"
+    },
+    {
+      "dataset_id": "6077-6129",
+      "repository_reference": "https://assays.cancer.gov/available_assays"
+    }
+  ],
+  "gemini-1.5-pro-0.3-3f3506f33ce43eac48d289c99429a79bc461ad5c8fa58dddd307cea6ccfb693b": [
+    {
+      "dataset_id": "GSE10327",
+      "repository_reference": "https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE10327"
+    },
+    {
+      "dataset_id": "GSE122077",
+      "repository_reference": "https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE122077"
+    },
+    {
+      "dataset_id": "GSE70678",
+      "repository_reference": "https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE70678"
+    },
+    {
+      "dataset_id": "GSE73038",
+      "repository_reference": "https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE73038"
+    },
+    {
+      "dataset_id": "PDC000180",
+      "repository_reference": "https://pdc.cancer.gov"
+    },
+    {
+      "dataset_id": "PXD045268",
+      "repository_reference": "www.proteomexchange.org"
+    }
+  ],
+  "gemini-1.5-pro-0.3-4cab7f1e71093899979dd4471f89c7885778bf4142c2a995d2b5a59a2a05b724": [
+    {
+      "dataset_id": "PXD049309",
+      "repository_reference": "https://proteomecentral.proteomexchange.org/cgi/GetDataset?ID=PXD049309"
+    },
+    {
+      "dataset_id": "JPST002506",
+      "repository_reference": "jPOST"
+    }
+  ],
+  "gemini-1.5-pro-0.3-a663e1343f30d06360cc68e3129e05e2f5a93bb1f0ae1e52b0757640bdc3a748": [
+    {
+      "dataset_id": "PXD047284",
+      "repository_reference": "https://www.proteomexchange.org"
+    }
+  ],
+  "gemini-1.5-pro-0.3-03b537150e53c26f7f57be7d67575207548cce5db27a17787a7ac9e6fb4292ba": [
+    {
+      "dataset_id": "PXD042233",
+      "repository_reference": "http://proteomecentral.proteomexchange.org/cgi/GetDataset?ID=PXD042233"
+    },
+    {
+      "dataset_id": "OP_040",
+      "repository_reference": "Odense Patient Data Exploratory Network (open@rsyd.dk)"
+    }
+  ],
+  "gemini-1.5-pro-0.3-7f4d71c02f7b7d649a57a2bb20c512e4377c044f03dbcbcce970361e03893372": [
+    {
+      "dataset_id": "PDC000234",
+      "repository_reference": "https://proteomic.datacommons.cancer.gov/pdc/"
+    },
+    {
+      "dataset_id": "PDC000127",
+      "repository_reference": "https://proteomic.datacommons.cancer.gov/pdc/"
+    },
+    {
+      "dataset_id": "PDC000204",
+      "repository_reference": "https://proteomic.datacommons.cancer.gov/pdc/"
+    },
+    {
+      "dataset_id": "PDC000221",
+      "repository_reference": "https://proteomic.datacommons.cancer.gov/pdc/"
+    },
+    {
+      "dataset_id": "PDC000198",
+      "repository_reference": "https://proteomic.datacommons.cancer.gov/pdc/"
+    },
+    {
+      "dataset_id": "PDC000110",
+      "repository_reference": "https://proteomic.datacommons.cancer.gov/pdc/"
+    },
+    {
+      "dataset_id": "PDC000270",
+      "repository_reference": "https://proteomic.datacommons.cancer.gov/pdc/"
+    },
+    {
+      "dataset_id": "PDC000125",
+      "repository_reference": "https://proteomic.datacommons.cancer.gov/pdc/"
+    },
+    {
+      "dataset_id": "PDC000153",
+      "repository_reference": "https://proteomic.datacommons.cancer.gov/pdc/"
+    },
+    {
+      "dataset_id": "PXD043612",
+      "repository_reference": "https://www.ebi.ac.uk/pride/archive/projects/PXD043612"
+    }
+  ],
+  "gemini-1.5-pro-0.3-b3386d4f8783ccf7fc5caf28302c5b7a0decc49c6dfbdbf49384bea5a25d2b18": [
+    {
+      "dataset_id": "PXD042991",
+      "repository_reference": "https://www.ebi.ac.uk/pride/archive/projects/PXD042991"
+    }
+  ],
+  "gemini-1.5-pro-0.3-830507ceaa2ab3ea60f0a1a14bc3a19d59850ba1aa56ba49cd49468ca19e1581": [
+    {
+      "dataset_id": "MSV000092248",
+      "repository_reference": "https://massive.ucsd.edu/ProteoSAFe/QueryMSV?id=MSV000092248"
+    },
+    {
+      "dataset_id": "n/a",
+      "repository_reference": "http://www.proteomicsdb.org"
+    },
+    {
+      "dataset_id": "7ZWE",
+      "repository_reference": "https://doi.org/10.2210/pdb7ZWE/pdb"
+    },
+    {
+      "dataset_id": "7A4Q",
+      "repository_reference": "https://doi.org/10.2210/pdb7A4Q/pdb"
+    },
+    {
+      "dataset_id": "7ZWG",
+      "repository_reference": "https://doi.org/10.2210/pdb7ZWG/pdb"
+    }
+  ],
+  "gemini-1.5-pro-0.3-13895cedceb2d015df894e3ff14f83516004f3abe5d43069cfafa423175d5946": [
+    {
+      "dataset_id": "PXD042233",
+      "repository_reference": "http://proteomecentral.proteomexchange.org/cgi/GetDataset?ID=PXD042233"
+    },
+    {
+      "dataset_id": "OP_040",
+      "repository_reference": "Odense Patient Data Exploratory Network (open@rsyd.dk)"
+    }
+  ],
+  "gemini-1.5-pro-0.3-67af8487e311fc9cf83b4a61e0787711d69899466d7998447fb34677c064f258": [
+    {
+      "dataset_id": "IPX0004230000",
+      "repository_reference": "http://www.iprox.org"
+    }
+  ],
+  "gemini-1.5-pro-0.3-a271a5e4fdc75b6a4409500f7ecd8702570746fd31a6384446bb26003b9d6968": [
+    {
+      "dataset_id": "phs003416.v1.p1",
+      "repository_reference": "dbGaP"
+    },
+    {
+      "dataset_id": "GSE241673",
+      "repository_reference": "https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE241673"
+    },
+    {
+      "dataset_id": "EGAS00001000925",
+      "repository_reference": "https://ega-archive.org/datasets/EGAS00001000925"
+    },
+    {
+      "dataset_id": "EGAS00001004888",
+      "repository_reference": "n/a"
+    }
+  ],
+  "gemini-2.0-flash-exp-0.3-842aae8fd57a908c0eba36aa9022e5bfb9f9df3c75671d7f9a85143155750a19": [
+    {
+      "dataset_id": "EGAS00001000925",
+      "repository_reference": "https://ega-archive.org/datasets/EGAS00001000925"
+    },
+    {
+      "dataset_id": "GSE69091",
+      "repository_reference": "https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE69091"
+    }
+  ],
+  "gemini-2.0-flash-exp-0.3-52dafc9bd36bd4a665a99dbf3da83fce0df31b9056b5cdf59e9fe0f49c988f62": [
+    {
+      "dataset_id": "EGAS50000000169",
+      "repository_reference": "https://ega-archive.org/studies/EGAS50000000169"
+    }
+  ],
+  "gemini-2.0-flash-exp-0.3-9715c407266ac2fac72d8c938e0e71ec8cb2185c53bb9e6fea0c074419531230": [
+    {
+      "dataset_id": "phs003416.v1.p1",
+      "repository_reference": "dbGaP"
+    },
+    {
+      "dataset_id": "GSE241673",
+      "repository_reference": "https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE241673"
+    },
+    {
+      "dataset_id": "EGAS00001000925",
+      "repository_reference": "https://ega-archive.org/datasets/EGAS00001000925"
+    },
+    {
+      "dataset_id": "EGAS00001004888",
+      "repository_reference": "https://ega-archive.org/datasets/EGAS00001004888"
+    }
+  ],
+  "gemini-2.0-flash-exp-0.3-3ade401657d1ab3917d14cb4b604eaca9dac748eacf608c2e4cf3ba862a31b9b": [
+    {
+      "dataset_id": "n/a",
+      "repository_reference": "www.ncbi.nlm.nih.gov"
+    }
+  ],
+  "gemini-2.0-flash-exp-0.3-c213fb8ea3e4a17e9ea153a46c84c23c53c519405ca7da39281d334c652c3e43": [
+    {
+      "dataset_id": "EGAS00001000334",
+      "repository_reference": "https://ega-archive.org/"
+    }
+  ],
+  "gemini-2.0-flash-exp-0.3-00e57a98e06360b069dbb2cfc34f02da708f9600b7233311e920bc0c3c462ff9": [
+    {
+      "dataset_id": "phs001249.v1.p1",
+      "repository_reference": "dbGaP"
+    }
+  ],
+  "gemini-2.0-flash-exp-0.3-4f2e4a200b4f88c4de2e20157006f60d7729770cdcaf4691a95528c9cc42693f": [
+    {
+      "dataset_id": "GSE60052",
+      "repository_reference": "https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE60052"
+    },
+    {
+      "dataset_id": "phs001083.v1.p1",
+      "repository_reference": "http://www.ncbi.nlm.nih.gov/projects/gap/cgi-bin/study.cgi?study_id=phs001083.v1.p1"
+    }
+  ],
+  "gemini-2.0-flash-exp-0.3-d5509cad761efcdf2af2807c16f52501f5999b9e913da9b61a486cd9cc0f9dd5": [
+    {
+      "dataset_id": "PHS001049",
+      "repository_reference": "https://www.ncbi.nlm.nih.gov/gap/?term=PHS001049"
+    },
+    {
+      "dataset_id": "PRJNA306801",
+      "repository_reference": "https://www.ncbi.nlm.nih.gov/bioproject/?term=PRJNA306801"
+    }
+  ],
+  "gemini-2.0-flash-exp-0.3-7b65abe238555bbe1a967328938e735249770c770e35c78d7da64a3d2867f939": [
+    {
+      "dataset_id": "phs001366.v1.p1",
+      "repository_reference": "https://www.ncbi.nlm.nih.gov/projects/gap/cgi-bin/study.cgi?study_id=phs001366.v1.p1"
+    }
+  ],
+  "gemini-2.0-flash-exp-0.3-fabc14f48f1d961ff0e4cefe08fd6bdd639792a62f7de4af74e505e02fc720f8": [
+    {
+      "dataset_id": "EGAS00001000299",
+      "repository_reference": "https://ega-archive.org/datasets/EGAS00001000299"
+    }
+  ],
+  "gemini-2.0-flash-exp-0.3-71e89cfefc16c706891c96ca54b627169761ab7dc3aeeb42453167568b147034": [
+    {
+      "dataset_id": "phs001823.v1.p1",
+      "repository_reference": "https://www.ncbi.nlm.nih.gov/projects/gap/cgi-bin/study.cgi?study_id=phs001823.v1.p1"
+    },
+    {
+      "dataset_id": "SRP052896",
+      "repository_reference": "https://www.ncbi.nlm.nih.gov/sra?term=SRP052896"
+    },
+    {
+      "dataset_id": "n/a",
+      "repository_reference": "https://data.broadinstitute.org/ccle_legacy_data/mRNA_expression/"
+    }
+  ],
+  "gemini-2.0-flash-exp-0.3-5b5fec0f2ee57f2db6b3f6742ca9afda92070cf131f1f397b2fab25bcf1ea5ef": [
+    {
+      "dataset_id": "PXD029805",
+      "repository_reference": "proteomecentral.proteomexchange.org"
+    },
+    {
+      "dataset_id": "10.6019/PXD029805",
+      "repository_reference": "proteomecentral.proteomexchange.org"
+    },
+    {
+      "dataset_id": "PXD029821",
+      "repository_reference": "proteomecentral.proteomexchange.org"
+    },
+    {
+      "dataset_id": "10.6019/PXD029821",
+      "repository_reference": "proteomecentral.proteomexchange.org"
+    }
+  ],
+  "gemini-2.0-flash-exp-0.3-76cb3f9570eb12bfc749ba70ff79f5d25bf9cbd600bf50ac169b6d803da24dca": [
+    {
+      "dataset_id": "PXD030304",
+      "repository_reference": "proteomecentral.proteomexchange.org"
+    },
+    {
+      "dataset_id": "n/a",
+      "repository_reference": "https://cellmodelpassports.sanger.ac.uk"
+    },
+    {
+      "dataset_id": "n/a",
+      "repository_reference": "cancerrxgene.org"
+    },
+    {
+      "dataset_id": "n/a",
+      "repository_reference": "depmap.org"
+    },
+    {
+      "dataset_id": "n/a",
+      "repository_reference": "score.depmap.sanger.ac.uk"
+    },
+    {
+      "dataset_id": "n/a",
+      "repository_reference": "ocg.cancer.gov/programs/ctd2/data-portal"
+    }
+  ],
+  "gemini-2.0-flash-exp-0.3-a5f5690352335034aab0568b5b967c4ddfe8339403dba63c3d90614d1c0866e4": [
+    {
+      "dataset_id": "GSE43346",
+      "repository_reference": "https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE43346"
+    }
+  ],
+  "gemini-2.0-flash-exp-0.3-cb3b22452289296b85ae83190e33abbc6f1a7656186f3535f3b43b34126ec6d0": [
+    {
+      "dataset_id": "GSE138474",
+      "repository_reference": "https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE138474"
+    }
+  ],
+  "gemini-2.0-flash-exp-0.3-5642e5e3e41e4f6643053232de5598b9260a18ca56505c499198d45916df9e72": [
+    {
+      "dataset_id": "n/a",
+      "repository_reference": "https://gygi.med.harvard.edu/publications/ccle"
+    },
+    {
+      "dataset_id": "n/a",
+      "repository_reference": "https://depmap.org"
+    }
+  ],
+  "gemini-2.0-flash-exp-0.3-35501d6401de69542eeb9f31ef4d1690e1d6fb0e1f60bb26865c91b05fba0b14": [
+    {
+      "dataset_id": "PXD053567",
+      "repository_reference": "http://www.ebi.ac.uk/pride/archive/"
+    }
+  ],
+  "gemini-2.0-flash-exp-0.3-b681ed6db6b50176da0406b10a8acfd351285665f2355b3339638c9c29120773": [
+    {
+      "dataset_id": "MSV000092944",
+      "repository_reference": "https://massive.ucsd.edu/"
+    }
+  ],
+  "gemini-2.0-flash-exp-0.3-90d0177eb9e971aab56f2d2b2044ed95063aa9ed4fbff49d39b26c55d9e29b3d": [
+    {
+      "dataset_id": "PXD052949",
+      "repository_reference": "https://www.proteomexchange.org/"
+    },
+    {
+      "dataset_id": "6077-6129",
+      "repository_reference": "https://assays.cancer.gov/available_assays"
+    },
+    {
+      "dataset_id": "n/a",
+      "repository_reference": "https://clinicaltrials.gov/ct2/show/NCT01226316"
+    }
+  ],
+  "gemini-2.0-flash-exp-0.3-3f3506f33ce43eac48d289c99429a79bc461ad5c8fa58dddd307cea6ccfb693b": [
+    {
+      "dataset_id": "PXD045268",
+      "repository_reference": "https://www.ebi.ac.uk/pride/archive/projects/PXD045268"
+    },
+    {
+      "dataset_id": "GSE10327",
+      "repository_reference": "https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE10327"
+    },
+    {
+      "dataset_id": "GSE122077",
+      "repository_reference": "https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE122077"
+    },
+    {
+      "dataset_id": "GSE70678",
+      "repository_reference": "https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE70678"
+    },
+    {
+      "dataset_id": "GSE73038",
+      "repository_reference": "https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE73038"
+    },
+    {
+      "dataset_id": "PDC000180",
+      "repository_reference": "https://pdc.cancer.gov"
+    }
+  ],
+  "gemini-2.0-flash-exp-0.3-4cab7f1e71093899979dd4471f89c7885778bf4142c2a995d2b5a59a2a05b724": [
+    {
+      "dataset_id": "JPST002506",
+      "repository_reference": "proteomecentral.proteomexchange.org"
+    },
+    {
+      "dataset_id": "PXD049309",
+      "repository_reference": "https://proteomecentral.proteomexchange.org/cgi/GetDataset?ID=PXD049309"
+    }
+  ],
+  "gemini-2.0-flash-exp-0.3-a663e1343f30d06360cc68e3129e05e2f5a93bb1f0ae1e52b0757640bdc3a748": [
+    {
+      "dataset_id": "PXD047284",
+      "repository_reference": "https://www.proteomexchange.org"
+    }
+  ],
+  "gemini-2.0-flash-exp-0.3-03b537150e53c26f7f57be7d67575207548cce5db27a17787a7ac9e6fb4292ba": [
+    {
+      "dataset_id": "PXD042233",
+      "repository_reference": "http://proteomecentral.proteomexchange.org/cgi/GetDataset?ID=PXD042233"
+    },
+    {
+      "dataset_id": "n/a",
+      "repository_reference": "https://github.com/RasmussenLab/pimms"
+    }
+  ],
+  "gemini-2.0-flash-exp-0.3-7f4d71c02f7b7d649a57a2bb20c512e4377c044f03dbcbcce970361e03893372": [
+    {
+      "dataset_id": "PDC000234",
+      "repository_reference": "pdc.cancer.gov"
+    },
+    {
+      "dataset_id": "PDC000127",
+      "repository_reference": "pdc.cancer.gov"
+    },
+    {
+      "dataset_id": "PDC000204",
+      "repository_reference": "pdc.cancer.gov"
+    },
+    {
+      "dataset_id": "PDC000221",
+      "repository_reference": "pdc.cancer.gov"
+    },
+    {
+      "dataset_id": "PDC000198",
+      "repository_reference": "pdc.cancer.gov"
+    },
+    {
+      "dataset_id": "PDC000110",
+      "repository_reference": "pdc.cancer.gov"
+    },
+    {
+      "dataset_id": "PDC000270",
+      "repository_reference": "pdc.cancer.gov"
+    },
+    {
+      "dataset_id": "PDC000125",
+      "repository_reference": "pdc.cancer.gov"
+    },
+    {
+      "dataset_id": "PDC000153",
+      "repository_reference": "pdc.cancer.gov"
+    },
+    {
+      "dataset_id": "PXD043612",
+      "repository_reference": "www.ebi.ac.uk"
+    }
+  ],
+  "gemini-2.0-flash-exp-0.3-67af8487e311fc9cf83b4a61e0787711d69899466d7998447fb34677c064f258": [
+    {
+      "dataset_id": "IPX0004230000",
+      "repository_reference": "http://www.iprox.org"
+    }
+  ],
+  "gemini-2.0-flash-exp-0.3-b3386d4f8783ccf7fc5caf28302c5b7a0decc49c6dfbdbf49384bea5a25d2b18": [
+    {
+      "dataset_id": "PXD042991",
+      "repository_reference": "https://www.ebi.ac.uk/pride/archive/projects/PXD042991"
+    }
+  ],
+  "gemini-2.0-flash-exp-0.3-830507ceaa2ab3ea60f0a1a14bc3a19d59850ba1aa56ba49cd49468ca19e1581": [
+    {
+      "dataset_id": "MSV000092248",
+      "repository_reference": "https://massive.ucsd.edu/ProteoSAFe/QueryMSV?id=MSV000092248"
+    },
+    {
+      "dataset_id": "7ZWE",
+      "repository_reference": "https://doi.org/10.2210/pdb7ZWE/pdb"
+    },
+    {
+      "dataset_id": "7A4Q",
+      "repository_reference": "https://doi.org/10.2210/pdb7A4Q/pdb"
+    },
+    {
+      "dataset_id": "7ZWG",
+      "repository_reference": "https://doi.org/10.2210/pdb7ZWG/pdb"
+    }
   ]
 }

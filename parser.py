@@ -134,6 +134,10 @@ class XMLParser(Parser):
             genai.configure(api_key=os.environ['GEMINI_KEY'])
             self.client = genai.GenerativeModel('gemini-2.0-flash-exp')
 
+        elif self.config['llm_model'] == 'gemini-1.5-pro':
+            genai.configure(api_key=os.environ['GEMINI_KEY'])
+            self.client = genai.GenerativeModel('gemini-1.5-pro')
+
     def parse_data(self, api_data, publisher, current_url_address, additional_data=None, raw_data_format='XML'):
         out_df = None
         # Check if api_data is a string, and convert to XML if needed
@@ -664,7 +668,7 @@ class XMLParser(Parser):
         Uses a static prompt template and dynamically injects the required content.
         """
         # Load static prompt template
-        static_prompt = self.prompt_manager.load_prompt("GEMINI_from_full_input_Examples_2")  #retrieve_datasets_simple
+        static_prompt = self.prompt_manager.load_prompt("GEMINI_from_full_input_Examples_3")  #retrieve_datasets_simple
 
         # Render the prompt with dynamic content
         messages = self.prompt_manager.render_prompt(
@@ -714,13 +718,27 @@ class XMLParser(Parser):
                 self.prompt_manager.save_response(prompt_id, response.choices[0].message.content)
                 self.logger.info(f"Response saved to cache")
 
+            elif 'gemini' in self.config['llm_model']:
+                if self.config['llm_model'] == 'gemini-1.5-flash' or self.config['llm_model'] == 'gemini-2.0-flash-exp':
+                    response = self.client.generate_content(
+                        messages,
+                        generation_config=genai.GenerationConfig(
+                            response_mime_type="application/json",
+                            response_schema=list[Dataset]
+                        )
+                    )
+                    self.logger.info(f"Gemini response: {response}")
 
-            elif self.config['llm_model'] == 'gemini-1.5-flash' or self.config['llm_model'] == 'gemini-2.0-flash-exp':
-                response = self.client.generate_content(messages,generation_config=genai.GenerationConfig(
-                    response_mime_type="application/json",
-                    response_schema=list[Dataset]
-                ))
-                self.logger.info(f"Gemini response: {response}")
+                elif self.config['llm_model'] == 'gemini-1.5-pro':
+                    response = self.client.generate_content(
+                        messages,
+                        request_options={"timeout": 1200},
+                        generation_config=genai.GenerationConfig(
+                            response_mime_type="application/json",
+                            response_schema=list[Dataset]
+                        )
+                    )
+                    self.logger.info(f"Gemini Pro response: {response}")
 
                 try:
                     candidates = response.candidates  # Get the list of candidates
@@ -1050,18 +1068,26 @@ class XMLParser(Parser):
 
         for i, item in enumerate(datasets):
 
-            if 'data_repository' not in item.keys():
-                self.logger.debug(f"Skipping dataset {1 + i}: no data_repository for item")
+            self.logger.info(f"Processing dataset {1 + i} with keys: {item.keys()}")
+
+            if 'data_repository' not in item.keys() and 'repository_reference' not in item.keys():
+                self.logger.info(f"Skipping dataset {1 + i}: no data_repository for item")
                 continue
 
             if ('dataset_webpage' in item.keys()):
                 self.logger.debug(f"Skipping dataset {1 + i}: already has dataset_webpage")
                 continue
 
-            if 'link' in item.keys():
-                self.logger.info(f"Processing dataset {1 + i}: {item['link']}")
+            if 'data_repository' in item.keys():
+                repo = self.url_to_repo_domain(item['data_repository'])
+            elif 'repository_reference' in item.keys():
+                repo = self.url_to_repo_domain(item['repository_reference'])
+            else:
+                self.logger.error(f"Error extracting data repository for item: {item}")
+                continue
 
-            repo = self.url_to_repo_domain(item['data_repository'])
+            self.logger.info(f"Processing dataset {1 + i} with repo: {repo}")
+
             updated_dt = False
             for k, v in self.config["repos"].items():
                 self.logger.debug(f"Checking if {repo} == {k}")
