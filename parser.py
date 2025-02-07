@@ -830,6 +830,7 @@ class XMLParser(Parser):
         for dataset in resps:
             self.logger.info(f"Processing dataset: {dataset}")
             if type(dataset) == str:
+                self.logger.info(f"Dataset is a string")
                 # Skip short or invalid responses
                 if len(dataset) < 3 or dataset.split(",")[0].strip() == 'n/a' and dataset.split(",")[
                     1].strip() == 'n/a':
@@ -842,14 +843,23 @@ class XMLParser(Parser):
                 dataset_id, data_repository = [x.strip() for x in dataset.split(",")[:2]]
 
             elif type(dataset) == dict:
-                dataset_id = dataset['dataset_id']
+                self.logger.info(f"Dataset is a dictionary")
+                dataset_id = 'n/a'
+                if 'dataset_id' in dataset:
+                    dataset_id = dataset['dataset_id']
+                elif 'dataset_identifier' in dataset:
+                    dataset_id = dataset['dataset_identifier']
                 data_repository = dataset['repository_reference']
 
             result.append({
                 "dataset_identifier": dataset_id,
                 "data_repository": data_repository
             })
-            self.logger.info(f"Extracted dataset: {dataset_id}, {data_repository}")
+
+            if 'decision_rationale' in dataset:
+                result[-1]['decision_rationale'] = dataset['decision_rationale']
+
+            self.logger.info(f"Extracted dataset: {result[-1]}")
 
         return result
 
