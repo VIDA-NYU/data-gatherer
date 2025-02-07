@@ -716,13 +716,66 @@ class XMLParser(Parser):
                 self.prompt_manager.save_response(prompt_id, response['message']['content'])
                 self.logger.info(f"Response saved to cache")
 
-            elif self.config['llm_model'] == 'gpt-4o-mini':
-                response = self.client.chat.completions.create(model=model, messages=messages, temperature=temperature)
+            elif self.config['llm_model'] == 'gpt-4o-mini' or self.config['llm_model'] == 'gpt-4o':
+                response = None
+                if self.config['process_entire_document']:
+                    response = self.client.chat.completions.create(
+                        model=model,
+                        messages=messages,
+                        temperature=temperature,
+                        response_format={
+                            "type": "json_schema",
+                            "json_schema": {
+                                "name": "GPT_response_schema",
+                                "schema": {
+                                    "type": "object",  # Root must be an object
+                                    "properties": {
+                                        "datasets": {  # Use a property to hold the array
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "dataset_id": {
+                                                        "type": "string",
+                                                        "description": "A unique identifier for the dataset."
+                                                    },
+                                                    "repository_reference": {
+                                                        "type": "string",
+                                                        "description": "A valid URI or string referring to the repository."
+                                                    },
+                                                    "decision_rationale": {
+                                                        "type": "string",
+                                                        "description": "Why did we select this dataset?"
+                                                    }
+                                                },
+                                                "required": ["dataset_id", "repository_reference"]
+                                            },
+                                            "minItems": 1,
+                                            "uniqueItems": True
+                                        }
+                                    },
+                                    "required": ["datasets"]
+                                }
+                            }
+                        }
+                    )
+                else:
+                    response = self.client.chat.completions.create(model=model, messages=messages,
+                                                                   temperature=temperature)
+
                 self.logger.info(f"GPT response: {response.choices[0].message.content}")
-                resps = response.choices[0].message.content.split("\n")
+
+                if self.config['process_entire_document']:
+                    resps = json.loads(response.choices[0].message.content)  # 'datasets' keyError?
+                    resps = resps['datasets']
+                    self.logger.info(f"Response is {type(resps)}: {resps}")
+                    self.prompt_manager.save_response(prompt_id, resps)
+                else:
+                    resps = response.choices[0].message.content.split("\n")
+                    self.prompt_manager.save_response(prompt_id, response.choices[0].message.content)
+
                 # Save the response
-                self.prompt_manager.save_response(prompt_id, response.choices[0].message.content)
-                self.logger.info(f"Response saved to cache")
+                self.logger.info(f"Response {type(resps)} saved to cache")
 
             elif 'gemini' in self.config['llm_model']:
                 if self.config['llm_model'] == 'gemini-1.5-flash' or self.config['llm_model'] == 'gemini-2.0-flash-exp':
