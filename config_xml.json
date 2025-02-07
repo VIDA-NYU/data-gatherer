@@ -1,5 +1,5 @@
 {
-  "llm_model": "gpt-4o-mini",
+  "llm_model": "gemini-2.0-flash-exp",
   "entire_document_models": ["gemini-1.5-flash", "gemini-1.5-pro", "gemini-2.0-flash-exp", "gpt-4o", "gpt-4o-mini"],
   "process_entire_document": true,
   "prompt_dir": "prompts/prompt_templates",
