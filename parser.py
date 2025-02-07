@@ -704,7 +704,9 @@ class XMLParser(Parser):
         # Check if the response exists
         cached_response = self.prompt_manager.retrieve_response(prompt_id)
         if cached_response:
-            self.logger.info("Using cached response.")
+            self.logger.info(f"Using cached response {type(cached_response)} from model: {model}")
+            if type(cached_response) == str and 'gpt-4o' in model:
+                resps = [json.loads(cached_response)]
             if type(cached_response) == str:
                 resps = cached_response.split("\n")
             elif type(cached_response) == list:
