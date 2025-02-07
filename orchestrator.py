@@ -199,7 +199,7 @@ class Orchestrator:
         self.logger.debug(f"Loading URLs from file: {self.config['input_urls_filepath']}")
         with open(self.config['input_urls_filepath'], 'r') as file:
             url_list = [line.strip() for line in file]
-        self.logger.debug(f"Loaded {len(url_list)} URLs from file.")
+        self.logger.info(f"Loaded {len(url_list)} URLs from file.")
         self.url_list = url_list
         return url_list
 
