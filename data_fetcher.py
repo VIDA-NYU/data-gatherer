@@ -93,6 +93,15 @@ class WebScraper(DataFetcher):
         self.simulate_user_scroll()
         return self.scraper_tool.page_source
 
+    def remove_cookie_patterns(self, html: str):
+        pattern = r'<img\s+alt=""\s+src="https://www\.ncbi\.nlm\.nih\.gov/stat\?.*?"\s*>'
+        if re.search(pattern, html):
+            self.logger.info("Removing cookie pattern 1 from HTML")
+            html = re.sub(pattern, 'img_alt_subst', html)
+        else:
+            self.logger.info("No cookie pattern 1 found in HTML")
+        return html
+
     def simulate_user_scroll(self):
         last_height = self.scraper_tool.execute_script("return document.body.scrollHeight")
         while True:

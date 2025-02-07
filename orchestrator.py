@@ -59,6 +59,7 @@ class Orchestrator:
             if self.XML_config['llm_model'] in self.XML_config['entire_document_models']:
                 self.raw_data_format = "full_HTML"
                 raw_data = self.data_fetcher.fetch_data(url)
+                raw_data = self.data_fetcher.remove_cookie_patterns(raw_data)
 
             # if model processes chunks of the document, fetch the relevant sections and go to the parsing step
             else:
