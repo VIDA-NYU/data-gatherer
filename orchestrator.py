@@ -56,7 +56,7 @@ class Orchestrator:
             self.logger.debug(f"data_fetcher.fetch_source = {self.data_fetcher.fetch_source}")
 
             # if model processes the entire document, fetch the entire document and go to the parsing step
-            if self.XML_config['llm_model'] in self.XML_config['entire_document_models']:
+            if (self.XML_config['llm_model'] in self.XML_config['entire_document_models'] and self.XML_config['process_entire_document']):
                 self.raw_data_format = "full_HTML"
                 raw_data = self.data_fetcher.fetch_data(url)
                 raw_data = self.data_fetcher.remove_cookie_patterns(raw_data)
