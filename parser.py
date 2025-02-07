@@ -23,7 +23,7 @@ class Parser(ABC):
         self.config = config
         self.logger = logger
         self.logger.info("Parser initialized.")
-        self.full_DOM = self.config['llm_model'] in self.config['entire_document_models']
+        self.full_DOM = self.config['llm_model'] in self.config['entire_document_models'] and self.config['process_entire_document']
 
     @abstractmethod
     def parse_data(self, raw_data, publisher, current_url_address):
@@ -130,6 +130,9 @@ class XMLParser(Parser):
             self.client = Client(host=os.environ['NYU_LLM_API'])  # env variable
 
         elif self.config['llm_model'] == 'gpt-4o-mini':
+            self.client = OpenAI(api_key=os.environ['GPT_API_KEY'])
+
+        elif self.config['llm_model'] == 'gpt-4o':
             self.client = OpenAI(api_key=os.environ['GPT_API_KEY'])
 
         elif self.config['llm_model'] == 'gemini-1.5-flash':

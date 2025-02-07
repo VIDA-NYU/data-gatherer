@@ -16,7 +16,7 @@ class Orchestrator:
         self.parser = None
         self.raw_data_format = None
         self.data_checker = DataCompletenessChecker(self.config, self.logger)
-        self.full_DOM = self.XML_config['llm_model'] in self.XML_config['entire_document_models']
+        self.full_DOM = (self.XML_config['llm_model'] in self.XML_config['entire_document_models']) and self.XML_config['process_entire_document']
         self.logger.info("Data_Gatherer Orchestrator initialized.")
 
     def setup_data_fetcher(self):
