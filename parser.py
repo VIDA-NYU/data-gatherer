@@ -34,6 +34,11 @@ class Dataset(typing.TypedDict):
     dataset_id: str
     repository_reference: str
 
+class Dataset_w_Description(typing.TypedDict):
+    dataset_id: str
+    repository_reference: str
+    rationale: str
+
 
 # Implementation for parsing HTML (from web scraping)
 class HTMLParser(Parser):
