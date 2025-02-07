@@ -95,6 +95,12 @@ class WebScraper(DataFetcher):
 
     def remove_cookie_patterns(self, html: str):
         pattern = r'<img\s+alt=""\s+src="https://www\.ncbi\.nlm\.nih\.gov/stat\?.*?"\s*>'
+        # the patterns that change every time you visit the page and are not relevant to data-gatherer
+        # ;cookieSize = 93 & amp;
+        # ;jsperf_basePage = 17 & amp;
+        # ;ncbi_phid = 993
+        # CBBA47A4F74F305BBA400333DB8BA.m_1 & amp;
+
         if re.search(pattern, html):
             self.logger.info("Removing cookie pattern 1 from HTML")
             html = re.sub(pattern, 'img_alt_subst', html)
