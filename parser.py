@@ -14,6 +14,7 @@ import json
 import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer
 from prompt_manager import PromptManager
+import tiktoken
 
 
 # Abstract base class for parsing data
@@ -668,7 +669,12 @@ class XMLParser(Parser):
         Uses a static prompt template and dynamically injects the required content.
         """
         # Load static prompt template
-        static_prompt = self.prompt_manager.load_prompt("GEMINI_from_full_input_Examples_3")  #retrieve_datasets_simple
+        static_prompt = self.prompt_manager.load_prompt("GPT_from_full_input_Exmpl_Descr")  #retrieve_datasets_simple
+
+        if 'gpt-4o' in model:
+            while self.tokens_over_limit(content):
+                content = content[:-2000]
+            self.logger.info(f"Content length: {len(content)}")
 
         # Render the prompt with dynamic content
         messages = self.prompt_manager.render_prompt(
