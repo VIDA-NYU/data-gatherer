@@ -677,7 +677,7 @@ class XMLParser(Parser):
         Uses a static prompt template and dynamically injects the required content.
         """
         # Load static prompt template
-        static_prompt = self.prompt_manager.load_prompt("GPT_from_full_input_Exmpl_Descr")  #retrieve_datasets_simple
+        static_prompt = self.prompt_manager.load_prompt("GEMINI_from_full_input_Examples_3")  #retrieve_datasets_simple
 
         if 'gpt-4o' in model:
             while self.tokens_over_limit(content):
@@ -1124,7 +1124,7 @@ class XMLParser(Parser):
             return url
 
         self.logger.info(f"Extracting repo domain from URL: {url}")
-        match = re.match(r'^https?://([\.\w]+)\/', url)
+        match = re.match(r'^https?://([\.\w\-]+)\/', url)
         if match:
             domain = match.group(1)
             self.logger.debug(f"Repo Domain: {domain}")
