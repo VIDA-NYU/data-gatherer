@@ -57,20 +57,32 @@ class PromptManager:
             ]
 
     def save_response(self, prompt_id, response):
-        """Save the response with prompt_id as the key. skip if prompt_id is already responded."""
-        with open(self.response_file, 'r+') as f:
-            responses = json.load(f)
-            if prompt_id in responses:
-                return
-            responses[prompt_id] = response
-            f.seek(0)
+        """Save the response with prompt_id as the key. Skip if prompt_id is already responded."""
+        self.logger.info(f"Saving response for prompt_id: {prompt_id}")
+
+        # Load existing responses safely
+        with open(self.response_file, 'r') as f:
+            responses = json.load(f)  # The file is assumed to be well-formed JSON
+
+        # Skip if the prompt_id already has a response
+        if prompt_id in responses:
+            self.logger.info(f"Prompt already responded: {prompt_id}")
+            return
+
+        # Add new response
+        responses[prompt_id] = response
+
+        # Write back safely, ensuring no leftover data
+        with open(self.response_file, 'w') as f:
             json.dump(responses, f, indent=2)
+            f.truncate()  # Ensure no extra data remains
 
     def retrieve_response(self, prompt_id):
         """Retrieve a saved response based on the prompt_id."""
         if not os.path.exists(self.response_file):
             return None
         with open(self.response_file, 'r') as f:
+            self.logger.debug(f"Retrieving response for prompt_id: {prompt_id}")
             responses = json.load(f)
             if prompt_id not in responses:
                 return None
@@ -78,5 +90,5 @@ class PromptManager:
 
     def _calculate_checksum(self, prompt):
         """Calculate checksum for a given content."""
-        self.logger.debug(f"Calculating checksum for content: {prompt}")
+        self.logger.debug(f"Calculating checksum for content: prompt")
         return hashlib.sha256(prompt.encode()).hexdigest()
