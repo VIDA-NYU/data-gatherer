@@ -855,6 +855,10 @@ class XMLParser(Parser):
                     dataset_id = dataset['dataset_identifier']
                 data_repository = dataset['repository_reference']
 
+                if dataset_id == 'n/a' and data_repository in self.config['repos']:
+                    self.logger.info(f"Dataset ID is 'n/a' and repository name from prompt")
+                    continue
+
             result.append({
                 "dataset_identifier": dataset_id,
                 "data_repository": data_repository
@@ -1154,6 +1158,10 @@ class XMLParser(Parser):
 
             if 'data_repository' not in item.keys() and 'repository_reference' not in item.keys():
                 self.logger.info(f"Skipping dataset {1 + i}: no data_repository for item")
+                continue
+
+            if item['dataset_identifier'] == 'n/a':
+                self.logger.info(f"Skipping dataset {1 + i}: no dataset_identifier for item")
                 continue
 
             if ('dataset_webpage' in item.keys()):
