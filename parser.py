@@ -251,7 +251,8 @@ class XMLParser(Parser):
 
                 # Extract dataset links from the entire text
                 augmented_dataset_links = self.retrieve_datasets_from_content(preprocessed_data, self.config['repos'],
-                                                                              self.config['llm_model'])
+                                                                              self.config['llm_model'],
+                                                                              temperature=0)
                 self.logger.info(f"Augmented dataset links: {augmented_dataset_links}")
 
                 dataset_links_w_target_pages = self.get_dataset_webpage(augmented_dataset_links)
