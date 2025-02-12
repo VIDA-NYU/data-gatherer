@@ -1211,13 +1211,13 @@ class XMLParser(Parser):
 
         return template
 
-    def tokens_over_limit(self, prompt, model="gpt-4", limit=128000):
+    def tokens_over_limit(self, prompt, model="gpt-4", limit=128000, allowance_static_prompt=200):
         # Load the appropriate encoding for the model
         encoding = tiktoken.encoding_for_model(model)
         # Encode the prompt and count tokens
         tokens = encoding.encode(prompt)
         self.logger.info(f"Number of tokens: {len(tokens)}")
-        return len(tokens)>limit
+        return len(tokens)+allowance_static_prompt>limit
 
     def predict_NuExtract(self, model, tokenizer, texts, template, batch_size=1, max_length=10_000,
                           max_new_tokens=4_000):
