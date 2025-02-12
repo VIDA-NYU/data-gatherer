@@ -8,6 +8,8 @@
   "process_DAS_links_separately": false,
   "save_xml_output": false,
   "save_dynamic_prompts": true,
+  "use_cached_responses": false,
+  "save_responses_to_cache": false,
   "html_xml_dir": "html_xml_samples/",
   "repos": {
     "bigd.big.ac.cn": {

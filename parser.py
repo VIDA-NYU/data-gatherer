@@ -701,9 +701,11 @@ class XMLParser(Parser):
         if self.config['save_dynamic_prompts']:
             self.prompt_manager.save_prompt(prompt_id=prompt_id, prompt_content=messages)
 
-        # Check if the response exists
-        cached_response = self.prompt_manager.retrieve_response(prompt_id)
-        if cached_response:
+        if self.config['use_cached_responses']:
+            # Check if the response exists
+            cached_response = self.prompt_manager.retrieve_response(prompt_id)
+
+        if self.config['use_cached_responses'] and cached_response:
             self.logger.info(f"Using cached response {type(cached_response)} from model: {model}")
             if type(cached_response) == str and 'gpt-4o' in model:
                 resps = [json.loads(cached_response)]
@@ -779,13 +781,13 @@ class XMLParser(Parser):
                     resps = json.loads(response.choices[0].message.content)  # 'datasets' keyError?
                     resps = resps['datasets']
                     self.logger.info(f"Response is {type(resps)}: {resps}")
-                    self.prompt_manager.save_response(prompt_id, resps)
+                    self.prompt_manager.save_response(prompt_id, resps) if self.config['save_responses_to_cache'] else None
                 else:
                     resps = response.choices[0].message.content.split("\n")
-                    self.prompt_manager.save_response(prompt_id, response.choices[0].message.content)
+                    self.prompt_manager.save_response(prompt_id, response.choices[0].message.content) if self.config['save_responses_to_cache'] else None
 
                 # Save the response
-                self.logger.info(f"Response {type(resps)} saved to cache")
+                self.logger.info(f"Response {type(resps)} saved to cache") if self.config['save_responses_to_cache'] else None
 
             elif 'gemini' in self.config['llm_model']:
                 if self.config['llm_model'] == 'gemini-1.5-flash' or self.config['llm_model'] == 'gemini-2.0-flash-exp':
@@ -816,8 +818,9 @@ class XMLParser(Parser):
                         response_text = candidates[0].content.parts[0].text  # Access the first part's text
                         self.logger.info(f"Gemini response text: {response_text}")
                         parsed_response = json.loads(response_text)  # Parse the JSON response
-                        self.prompt_manager.save_response(prompt_id, parsed_response)
-                        self.logger.info(f"Response saved to cache")
+                        if self.config['save_responses_to_cache']:
+                            self.prompt_manager.save_response(prompt_id, parsed_response)
+                            self.logger.info(f"Response saved to cache")
                         resps = parsed_response
                     else:
                         self.logger.error("No candidates found in the response.")
