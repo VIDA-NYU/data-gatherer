@@ -10,7 +10,7 @@ class Orchestrator:
     def __init__(self, config_path):
         self.config = json.load(open(config_path))
         self.XML_config = json.load(open(self.config['navigation_config']))
-        self.logger = setup_logging('orchestrator')  # Initialize orchestrator logger
+        self.logger = setup_logging('orchestrator', self.config['log_file'])  # Initialize orchestrator logger
         self.classifier = LLMClassifier(self.config['classification_patterns'], self.logger)
         self.data_fetcher = None
         self.parser = None
@@ -34,7 +34,7 @@ class Orchestrator:
         elif self.config['search_method'] == 'api':
             self.logger.error("API data source not yet implemented.")
 
-        self.logger.debug("Data fetcher setup completed.")
+        self.logger.info("Data fetcher setup completed.")
 
 
     def process_url(self, url):
