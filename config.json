@@ -10,6 +10,8 @@
     "full_output_file": "output/output_full.csv",
     "update_input_urls": false,
 
+    "log_file": "logs/scraper.log",
+
     "search_method": "url_list",
     "input_urls_filepath": "input/pmc_and_fenyo.txt",
     "search_query": "Proteomic Identification",
