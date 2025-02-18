@@ -10,6 +10,7 @@ from lxml import etree as ET
 from selenium_setup import create_driver
 from logger_setup import setup_logging
 import mimetypes
+from bs4 import BeautifulSoup
 
 # Abstract base class for fetching data
 class DataFetcher(ABC):
@@ -190,6 +191,13 @@ class WebScraper(DataFetcher):
         publication_name = re.sub("\n+", "", (publication_name_pointer.get_attribute("text")))
         self.logger.info(f"Paper name: {publication_name}")
         return publication_name
+
+    def quit(self):
+        """Properly quits the underlying WebDriver."""
+        if self.scraper_tool:
+            self.scraper_tool.quit()
+            self.logger.info("WebScraper driver quit.")
+
 
 # Implementation for fetching data from an API
 class APIClient(DataFetcher):
