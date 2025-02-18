@@ -686,10 +686,12 @@ class XMLParser(Parser):
         Uses a static prompt template and dynamically injects the required content.
         """
         # Load static prompt template
-        static_prompt = self.prompt_manager.load_prompt("GEMINI_from_full_input_Examples_3")  #retrieve_datasets_simple
+        prompt_name = "GEMINI_from_full_input_Examples_4"
+        self.logger.info(f"Loading prompt: {prompt_name}")
+        static_prompt = self.prompt_manager.load_prompt(prompt_name)
 
         if 'gpt-4o' in model:
-            while self.tokens_over_limit(content):
+            while self.tokens_over_limit(content, model):
                 content = content[:-2000]
             self.logger.info(f"Content length: {len(content)}")
 
@@ -808,7 +810,7 @@ class XMLParser(Parser):
                             response_schema=list[Dataset]
                         )
                     )
-                    self.logger.info(f"Gemini response: {response}")
+                    self.logger.debug(f"Gemini response: {response}")
 
                 elif self.config['llm_model'] == 'gemini-1.5-pro':
                     response = self.client.generate_content(
@@ -819,7 +821,7 @@ class XMLParser(Parser):
                             response_schema=list[Dataset]
                         )
                     )
-                    self.logger.info(f"Gemini Pro response: {response}")
+                    self.logger.debug(f"Gemini Pro response: {response}")
 
                 try:
                     candidates = response.candidates  # Get the list of candidates
@@ -875,6 +877,9 @@ class XMLParser(Parser):
 
             if 'decision_rationale' in dataset:
                 result[-1]['decision_rationale'] = dataset['decision_rationale']
+
+            if 'dataset-publication_relationship' in dataset:
+                result[-1]['dataset-publication_relationship'] = dataset['dataset-publication_relationship']
 
             self.logger.info(f"Extracted dataset: {result[-1]}")
 
