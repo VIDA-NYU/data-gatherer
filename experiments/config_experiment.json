@@ -5,9 +5,9 @@
 
     "simulate_user_interaction": true,
 
-    "output_file": "output/output.json",
-    "categories_output_filename": "output/output_categories.csv",
-    "full_output_file": "output/output_full.csv",
+    "output_file": "exp_output/output.json",
+    "categories_output_filename": "exp_output/output_categories.csv",
+    "full_output_file": "exp_output/output_full.csv",
     "update_input_urls": false,
 
     "log_file": "/Users/pietro/Desktop/VIDA-NYU/data-gatherer/experiments/log_experiment.log",
