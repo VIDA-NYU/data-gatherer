@@ -23,6 +23,14 @@ class Orchestrator:
         """Sets up either a web scraper or API client based on the config."""
         self.logger.debug("Setting up data fetcher...")
 
+        # Close previous driver if exists
+        if hasattr(self, 'data_fetcher') and hasattr(self.data_fetcher, 'scraper_tool'):
+            try:
+                self.data_fetcher.scraper_tool.quit()
+                self.logger.info("Previous driver quit.")
+            except Exception as e:
+                self.logger.warning(f"Failed to quit previous driver: {e}")
+
         if self.config['search_method'] == 'url_list':
             driver = create_driver(self.config['DRIVER_PATH'], self.config['BROWSER'], self.config['HEADLESS'])
             self.data_fetcher = WebScraper(driver, self.config, self.logger)
@@ -35,6 +43,8 @@ class Orchestrator:
             self.logger.error("API data source not yet implemented.")
 
         self.logger.info("Data fetcher setup completed.")
+
+        return self.data_fetcher.scraper_tool
 
 
     def process_url(self, url):
