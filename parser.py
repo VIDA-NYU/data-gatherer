@@ -288,14 +288,22 @@ class XMLParser(Parser):
         Returns:
         - str: The normalized HTML content.
         """
+
+        self.logger.info(f"Function_call: normalize_full_DOM(api_data). Length of raw api data: {self.count_tokens(api_data,self.config['llm_model'])} tokens")
+
         try:
             # Parse the HTML content
             soup = BeautifulSoup(api_data, "html.parser")
 
             # 1. Remove script, style, and meta tags
-            for tag in ["script", "style", "meta"]:
+            for tag in ["script", "style", 'img', 'iframe', 'noscript', 'svg', 'button', 'form', 'input']:
                 for element in soup.find_all(tag):
                     element.decompose()
+
+            remove_meta_tags = True
+            if remove_meta_tags:
+                for meta in soup.find_all('meta'):
+                    meta.decompose()
 
             # 2. Remove dynamic attributes
             for tag in soup.find_all(True):  # True matches all tags
@@ -692,6 +700,7 @@ class XMLParser(Parser):
             content=content,
             repos=', '.join(repos)
         )
+        self.logger.info(f"Prompt messages total length: {self.count_tokens(messages,model)} tokens")
         self.logger.debug(f"Prompt messages: {messages}")
 
         # Generate the checksum for the prompt content
@@ -1218,6 +1227,21 @@ class XMLParser(Parser):
         tokens = encoding.encode(prompt)
         self.logger.info(f"Number of tokens: {len(tokens)}")
         return len(tokens)+allowance_static_prompt>limit
+
+    def count_tokens(self, prompt, model="gpt-4"):
+        n_tokens = 0
+        # model check
+        if 'gpt' in model:
+            # Load the appropriate encoding for the model
+            encoding = tiktoken.encoding_for_model(model)
+            # Encode the prompt and count tokens
+            n_tokens = len(encoding.encode(prompt))
+        elif 'gemini' in model:
+            n_tokens = str(self.client.count_tokens(prompt))
+            n_tokens = re.sub(r'total_tokens:\s+', '', n_tokens)
+            n_tokens = int(n_tokens)
+
+        return n_tokens
 
     def predict_NuExtract(self, model, tokenizer, texts, template, batch_size=1, max_length=10_000,
                           max_new_tokens=4_000):
