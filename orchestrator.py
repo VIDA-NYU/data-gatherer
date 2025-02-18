@@ -17,7 +17,7 @@ class Orchestrator:
         self.raw_data_format = None
         self.data_checker = DataCompletenessChecker(self.config, self.logger)
         self.full_DOM = (self.XML_config['llm_model'] in self.XML_config['entire_document_models']) and self.XML_config['process_entire_document']
-        self.logger.info("Data_Gatherer Orchestrator initialized.")
+        self.logger.info(f"Data_Gatherer Orchestrator initialized. Extraction step Model: {self.XML_config['llm_model']}")
 
     def setup_data_fetcher(self):
         """Sets up either a web scraper or API client based on the config."""
