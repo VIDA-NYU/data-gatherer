@@ -1,6 +1,6 @@
 from logger_setup import setup_logging
 from data_fetcher import *
-from parser import HTMLParser, XMLParser
+from parser import RuleBasedParser, LLMParser
 from classifier import LLMClassifier
 import json
 from selenium_setup import create_driver
@@ -102,10 +102,10 @@ class Orchestrator:
 
             self.logger.info("Successfully fetched Raw content.")
 
-            # Step 2: Use HTMLParser to parse and extract HTML elements and rule-based matches
+            # Step 2: Use RuleBasedParser to parse and extract HTML elements and rule-based matches
             if self.raw_data_format == "HTML":
-                self.logger.info("Using HTML_Parser to parse data.")
-                self.parser = HTMLParser(self.config, self.logger)
+                self.logger.info("Using RuleBasedParser to parse data.")
+                self.parser = RuleBasedParser(self.config, self.logger)
                 parsed_data = self.parser.parse_data(raw_data, self.publisher, self.current_url)
 
                 parsed_data['rule_based_classification'] = 'n/a'
@@ -125,8 +125,8 @@ class Orchestrator:
                 parsed_data.to_csv('staging_table/parsed_data.csv', index=False)
 
             elif self.raw_data_format == "XML" and raw_data is not None:
-                self.logger.info("Using XMLParser to parse data.")
-                self.parser = XMLParser(self.XML_config, self.logger)
+                self.logger.info("Using LLMParser to parse data.")
+                self.parser = LLMParser(self.XML_config, self.logger)
 
                 if additional_data is not None:
                     self.logger.info(f"Processing additional data: {len(additional_data)}")
@@ -142,8 +142,8 @@ class Orchestrator:
                 parsed_data.to_csv('staging_table/parsed_data_from_XML.csv', index=False)  # save parsed data to a file
 
             elif self.raw_data_format == "full_HTML":
-                self.logger.info("Using XMLParser to parse data.")
-                self.parser = XMLParser(self.XML_config, self.logger)
+                self.logger.info("Using LLMParser to parse data.")
+                self.parser = LLMParser(self.XML_config, self.logger)
                 parsed_data = self.parser.parse_data(raw_data, self.publisher, self.current_url, raw_data_format="full_HTML")
                 parsed_data['source_url'] = url
                 self.logger.info(f"Parsed data extraction completed. Elements collected: {len(parsed_data)}")

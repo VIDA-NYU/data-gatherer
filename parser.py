@@ -40,12 +40,12 @@ class Dataset_w_Description(typing.TypedDict):
     rationale: str
 
 
-# Implementation for parsing HTML (from web scraping)
-class HTMLParser(Parser):
+# Implementation for Rule-Based parsing of HTMLs (from web scraping)
+class RuleBasedParser(Parser):
 
     def __init__(self, config, logger):
         super().__init__(config, logger)
-        self.logger.info("HTMLParser initialized.")
+        self.logger.info("RuleBasedParser initialized.")
 
     def parse_data(self, source_html, publisher, current_url_address, raw_data_format='HTML'):
         # initialize output
@@ -119,7 +119,7 @@ class HTMLParser(Parser):
         return text
 
 
-class XMLParser(Parser):
+class LLMParser(Parser):
 
     def __init__(self, config, logger):
         super().__init__(config, logger)
