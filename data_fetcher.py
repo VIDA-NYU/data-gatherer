@@ -22,9 +22,13 @@ class DataFetcher(ABC):
 
     def url_to_publisher_domain(self, url):
         # Extract the domain name from the URL
+        self.logger.debug(f"URL: {url}")
         if re.match(r'^https?://www\.ncbi\.nlm\.nih\.gov/pmc', url):
             return 'PMC'
-        match = re.match(r'^https?://(?:\w+\.)?([\w\d\-]+)\.\w+\/', url)
+        if re.match(r'^https?://pubmed\.ncbi\.nlm\.nih\.gov/[\d]+', url):
+            self.logger.info("Publisher: pubmed")
+            return 'pubmed'
+        match = re.match(r'^https?://(?:\w+\.)?([\w\d\-]+)\.\w+', url)
         if match:
             domain = match.group(1)
             self.logger.info(f"Publisher: {domain}")
@@ -471,7 +475,7 @@ class DataCompletenessChecker:
         # Extract the domain name from the URL
         if re.match(r'^https?://www\.ncbi\.nlm\.nih\.gov/pmc', url):
             return 'PMC'
-        match = re.match(r'^https?://(?:\w+\.)?([\w\d\-]+)\.\w+\/', url)
+        match = re.match(r'^https?://(?:\w+\.)?([\w\d\-]+)\.\w+', url)
         if match:
             domain = match.group(1)
             self.logger.info(f"Publisher: {domain}")
