@@ -196,6 +196,58 @@ class WebScraper(DataFetcher):
         self.logger.info(f"Paper name: {publication_name}")
         return publication_name
 
+    def get_url_from_pubmed_id(self, pubmed_id):
+        return f"https://pubmed.ncbi.nlm.nih.gov/{pubmed_id}/"
+
+    def get_PMCID_from_pubmed_html(self, html):
+        soup = BeautifulSoup(html, 'html.parser')
+        # Extract PMC ID
+        pmc_tag = soup.find("a", {"data-ga-action": "PMCID"})
+        pmc_id = pmc_tag.text.strip() if pmc_tag else None  # Extract text safely
+        self.logger.info(f"PMCID: {pmc_id}")
+        return pmc_id
+
+    def get_doi_from_pubmed_html(self, html):
+        soup = BeautifulSoup(html, 'html.parser')
+        # Extract DOI
+        doi_tag = soup.find("a", {"data-ga-action": "DOI"})
+        doi = doi_tag.text.strip() if doi_tag else None  # Extract text safely
+        self.logger.info(f"DOI: {doi}")
+        return doi
+
+    def get_opendata_from_pubmed_id(self, pmid):
+        url = self.get_url_from_pubmed_id(pmid)
+        self.logger.info(f"Reconstructed URL: {url}")
+
+        html = self.fetch_data(url)
+        # Parse PMC ID and DOI from the HTML content
+
+        # Extract PMC ID
+        pmc_id = self.get_PMCID_from_pubmed_html(html)
+
+        # Extract DOI
+        doi = self.get_doi_from_pubmed_html(html)
+
+        return pmc_id, doi
+
+    # def get_opendata_from_pubmed_id(self, pmid):
+    #     url = self.get_url_from_pubmed_id(pmid)
+    #     self.logger.info(f"Reconstructed URL: {url}")
+    #
+    #     html = self.fetch_data(url)
+    #     # Parse PMC ID and DOI from the HTML content
+    #     soup = BeautifulSoup(html, 'html.parser')
+    #
+    #     # Extract PMC ID
+    #     pmc_tag = soup.find("a", {"data-ga-action": "PMCID"})
+    #     pmc_id = pmc_tag.text.strip() if pmc_tag else None  # Extract text safely
+    #
+    #     # Extract DOI
+    #     doi_tag = soup.find("a", {"data-ga-action": "DOI"})
+    #     doi = doi_tag.text.strip() if doi_tag else None  # Extract text safely
+    #
+    #     return pmc_id, doi
+
     def quit(self):
         """Properly quits the underlying WebDriver."""
         if self.scraper_tool:
