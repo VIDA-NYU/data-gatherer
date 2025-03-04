@@ -9,6 +9,7 @@ from ollama import Client
 from openai import OpenAI
 import google.generativeai as genai
 import typing_extensions as typing
+from pydantic import BaseModel, HttpUrl
 import os
 import json
 import torch
@@ -30,7 +31,7 @@ class Parser(ABC):
         pass
 
 
-class Dataset(typing.TypedDict):
+class Dataset(BaseModel):
     dataset_id: str
     repository_reference: str
 
