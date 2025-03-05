@@ -248,6 +248,16 @@ class WebScraper(DataFetcher):
     #
     #     return pmc_id, doi
 
+    def convert_url_to_doi(self, url : str):
+        # Extract DOI from the URL
+        match = re.search(r'(10\.\d{4,9}/[-._;()/:A-Z0-9]+)', url, re.IGNORECASE)
+        if match:
+            doi = match.group(1)
+            self.logger.info(f"DOI: {doi}")
+            return doi
+        else:
+            return None
+
     def quit(self):
         """Properly quits the underlying WebDriver."""
         if self.scraper_tool:
