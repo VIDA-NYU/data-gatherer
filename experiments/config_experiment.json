@@ -8,6 +8,7 @@
     "output_file": "exp_output/output.json",
     "categories_output_filename": "exp_output/output_categories.csv",
     "full_output_file": "exp_output/output_full.csv",
+    "false_positives_file": "exp_output/model_FPs.txt",
     "update_input_urls": false,
 
     "log_file": "/Users/pietro/Desktop/VIDA-NYU/data-gatherer/experiments/log_experiment.log",
