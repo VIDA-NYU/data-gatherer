@@ -11,6 +11,7 @@ from selenium_setup import create_driver
 from logger_setup import setup_logging
 import mimetypes
 from bs4 import BeautifulSoup
+from urllib.parse import urlparse
 
 # Abstract base class for fetching data
 class DataFetcher(ABC):
@@ -215,6 +216,13 @@ class WebScraper(DataFetcher):
         self.logger.info(f"DOI: {doi}")
         return doi
 
+    def get_filename_from_url(self,url):
+        parsed_url = urlparse(self,url)
+        return os.path.basename(parsed_url.path)
+
+    def reconstruct_PMC_link(self, PMCID):
+        return f"https://www.ncbi.nlm.nih.gov/pmc/articles/{PMCID}"
+
     def get_opendata_from_pubmed_id(self, pmid):
         url = self.get_url_from_pubmed_id(pmid)
         self.logger.info(f"Reconstructed URL: {url}")
@@ -250,6 +258,7 @@ class WebScraper(DataFetcher):
 
     def convert_url_to_doi(self, url : str):
         # Extract DOI from the URL
+        url = url.lower()
         match = re.search(r'(10\.\d{4,9}/[-._;()/:A-Z0-9]+)', url, re.IGNORECASE)
         if match:
             doi = match.group(1)
@@ -411,7 +420,6 @@ class DataCompletenessChecker:
 
             if self.config['write_htmls_xmls']:
                 self.download_html(self.config['html_xml_dir'] + self.url_to_publisher_domain(url) + '/')
-
 
             # Use appropriate XPath patterns based on the section name
             xpaths = self.xpaths[section_name]
