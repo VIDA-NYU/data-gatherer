@@ -613,7 +613,7 @@ class LLMParser(Parser):
     def process_additional_data(self, additional_data):
         """
         Process the additional data from the webpage. This is the data matched from the HTML with the patterns in
-        classifier_patterns xpaths.
+        retrieval_patterns xpaths.
         """
         self.logger.info(f"Processing additional data: {len(additional_data)} items")
         repos_elements = []

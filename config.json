@@ -32,7 +32,7 @@
     "skip_file_extensions": [],
     "skip_unstructured_files": true,
 
-    "classification_patterns": "classifier_patterns.json",
+    "retrieval_patterns": "retrieval_patterns.json",
 
     "navigation_config": "config_xml.json",
 
