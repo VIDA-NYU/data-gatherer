@@ -87,11 +87,10 @@ class WebScraper(DataFetcher):
     def __init__(self, scraper_tool, config, logger):
         super().__init__(config, logger)
         self.scraper_tool = scraper_tool  # Inject your scraping tool (BeautifulSoup, Selenium, etc.)
-        self.classification_patterns = json.load(open(self.config['classification_patterns']))
-        self.bad_patterns = self.classification_patterns['general']['bad_patterns']
-        self.css_selectors = self.classification_patterns['general']['css_selectors']
-        self.xpaths = self.classification_patterns['general']['xpaths']
-
+        self.retrieval_patterns = json.load(open(self.config['retrieval_patterns']))
+        self.bad_patterns = self.retrieval_patterns['general']['bad_patterns']
+        self.css_selectors = self.retrieval_patterns['general']['css_selectors']
+        self.xpaths = self.retrieval_patterns['general']['xpaths']
 
     def fetch_data(self, url):
         # Use the scraper tool to fetch raw HTML from the URL
@@ -130,7 +129,7 @@ class WebScraper(DataFetcher):
             last_height = new_height
 
     def update_class_patterns(self, publisher):
-        patterns = self.classification_patterns[publisher]
+        patterns = self.retrieval_patterns[publisher]
         self.css_selectors.update(patterns['css_selectors'])
         self.xpaths.update(patterns['xpaths'])
         if 'bad_patterns' in patterns.keys():
@@ -155,7 +154,7 @@ class WebScraper(DataFetcher):
 
     def get_rule_based_matches(self, publisher):
 
-        if publisher in self.classification_patterns:
+        if publisher in self.retrieval_patterns:
             self.update_class_patterns(publisher)
 
         rule_based_matches = {}
@@ -339,9 +338,9 @@ class DataCompletenessChecker:
         self.config = config
         self.logger = logger
         self.safety_driver = create_driver(self.config['DRIVER_PATH'], self.config['BROWSER'], self.config['HEADLESS'])
-        self.classification_patterns = json.load(open(self.config['classification_patterns']))
-        self.css_selectors = self.classification_patterns['PMC']['css_selectors']
-        self.xpaths = self.classification_patterns['PMC']['xpaths']
+        self.retrieval_patterns = json.load(open(self.config['retrieval_patterns']))
+        self.css_selectors = self.retrieval_patterns['PMC']['css_selectors']
+        self.xpaths = self.retrieval_patterns['PMC']['xpaths']
 
     def ensure_data_sections(self, raw_data, url):
         """
