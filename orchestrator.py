@@ -5,13 +5,14 @@ from classifier import LLMClassifier
 import json
 from selenium_setup import create_driver
 import pandas as pd
+import cloudscraper
 
 class Orchestrator:
     def __init__(self, config_path):
         self.config = json.load(open(config_path))
         self.XML_config = json.load(open(self.config['navigation_config']))
         self.logger = setup_logging('orchestrator', self.config['log_file'])  # Initialize orchestrator logger
-        self.classifier = LLMClassifier(self.config['classification_patterns'], self.logger)
+        self.classifier = LLMClassifier(self.config['retrieval_patterns'], self.logger)
         self.data_fetcher = None
         self.parser = None
         self.raw_data_format = None
@@ -33,6 +34,10 @@ class Orchestrator:
 
         if self.config['search_method'] == 'url_list':
             driver = create_driver(self.config['DRIVER_PATH'], self.config['BROWSER'], self.config['HEADLESS'])
+            self.data_fetcher = WebScraper(driver, self.config, self.logger)
+
+        if self.config['search_method'] == 'cloudscraper':
+            driver = cloudscraper.create_scraper()
             self.data_fetcher = WebScraper(driver, self.config, self.logger)
 
         elif self.config['search_method'] == 'google_scholar':
