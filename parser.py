@@ -144,6 +144,10 @@ class LLMParser(Parser):
             genai.configure(api_key=os.environ['GEMINI_KEY'])
             self.client = genai.GenerativeModel('gemini-2.0-flash-exp')
 
+        elif self.config['llm_model'] == 'gemini-2.0-flash':
+            genai.configure(api_key=os.environ['GEMINI_KEY'])
+            self.client = genai.GenerativeModel('gemini-2.0-flash')
+
         elif self.config['llm_model'] == 'gemini-1.5-pro':
             genai.configure(api_key=os.environ['GEMINI_KEY'])
             self.client = genai.GenerativeModel('gemini-1.5-pro')
@@ -803,7 +807,8 @@ class LLMParser(Parser):
                 self.logger.info(f"Response {type(resps)} saved to cache") if self.config['save_responses_to_cache'] else None
 
             elif 'gemini' in self.config['llm_model']:
-                if self.config['llm_model'] == 'gemini-1.5-flash' or self.config['llm_model'] == 'gemini-2.0-flash-exp':
+                if self.config['llm_model'] == 'gemini-1.5-flash' or self.config['llm_model'] == 'gemini-2.0-flash-exp' or self.config[
+                    'llm_model'] == 'gemini-2.0-flash':
                     response = self.client.generate_content(
                         messages,
                         generation_config=genai.GenerationConfig(
