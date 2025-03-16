@@ -16,7 +16,7 @@
     "input_urls_filepath": "input/test_input.txt",
     "search_query": "Proteomic Identification",
     "top_k": 3,
-    "ground_truth": "output/ground_truth.json",
+    "ground_truth": "data-gatherer/output/gold/dataset_citation_records_Table.parquet",
 
     "API_supported_url_patterns": {
         "PMC": "https:\\/\\/www\\.ncbi\\.nlm\\.nih\\.gov\\/pmc\\/articles\\/"
