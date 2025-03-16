@@ -673,11 +673,17 @@ class LLMParser(Parser):
         self.logger.info(f"Repos elements: {repos_elements}")
 
         # Call the generalized function
-        datasets = self.retrieve_datasets_from_content(DAS_content, repos_elements, model=self.config['llm_model'])
+        datasets = []
+        for element in DAS_content:
+            datasets.extend(self.retrieve_datasets_from_content(element, repos_elements,
+                                                                model=self.config['llm_model'],
+                                                                temperature=0))
 
         # Add source_section information and return
         ret = []
+        self.logger.info(f"datasets ({type(datasets)}): {datasets}")
         for dataset in datasets:
+            self.logger.info(f"iter dataset ({type(dataset)}): {dataset}")
             dataset['source_section'] = 'data_availability'
             ret.append(dataset)
 
@@ -691,12 +697,13 @@ class LLMParser(Parser):
         Uses a static prompt template and dynamically injects the required content.
         """
         # Load static prompt template
-        prompt_name = "GEMINI_from_full_input_Examples_4"
+        prompt_name = self.config['prompt_name']
         self.logger.info(f"Loading prompt: {prompt_name}")
         static_prompt = self.prompt_manager.load_prompt(prompt_name)
+        n_tokens_static_prompt = self.count_tokens(static_prompt, model)
 
         if 'gpt-4o' in model:
-            while self.tokens_over_limit(content, model):
+            while self.tokens_over_limit(content, model,allowance_static_prompt=n_tokens_static_prompt):
                 content = content[:-2000]
             self.logger.info(f"Content length: {len(content)}")
 
@@ -795,13 +802,21 @@ class LLMParser(Parser):
                 self.logger.info(f"GPT response: {response.choices[0].message.content}")
 
                 if self.config['process_entire_document']:
-                    resps = json.loads(response.choices[0].message.content)  # 'datasets' keyError?
-                    resps = resps['datasets']
+                    resps = self.safe_parse_json(response.choices[0].message.content)  # 'datasets' keyError?
+                    resps = resps.get("datasets", []) if resps is not None else []
                     self.logger.info(f"Response is {type(resps)}: {resps}")
                     self.prompt_manager.save_response(prompt_id, resps) if self.config['save_responses_to_cache'] else None
                 else:
-                    resps = response.choices[0].message.content.split("\n")
-                    self.prompt_manager.save_response(prompt_id, response.choices[0].message.content) if self.config['save_responses_to_cache'] else None
+                    try:
+                        resps = json.loads(response.choices[0].message.content)  # Ensure it's properly parsed
+                        if not isinstance(resps, list):  # Ensure it's a list
+                            raise ValueError("Expected a list of datasets, but got something else.")
+
+                    except json.JSONDecodeError as e:
+                        self.logger.error(f"JSON decoding error: {e}")
+                        resps = []
+
+                    self.prompt_manager.save_response(prompt_id, resps) if self.config['save_responses_to_cache'] else None
 
                 # Save the response
                 self.logger.info(f"Response {type(resps)} saved to cache") if self.config['save_responses_to_cache'] else None
@@ -845,6 +860,9 @@ class LLMParser(Parser):
                 except Exception as e:
                     self.logger.error(f"Error processing Gemini response: {e}")
                     return None
+
+        if not self.full_DOM:
+            return resps
 
         # Process the response content
         result = []
@@ -890,6 +908,28 @@ class LLMParser(Parser):
             self.logger.info(f"Extracted dataset: {result[-1]}")
 
         return result
+
+    def safe_parse_json(self, response_text):
+        """ Cleans and safely parses JSON from a GPT response, fixing common issues. """
+        try:
+            response_text = response_text.strip()  # Remove extra spaces/newlines
+
+            # Fix common truncation issues by ensuring it ends properly
+            if not response_text.endswith("\"]}"):
+                response_text += "\"]}"
+
+            # Fix invalid JSON artifacts
+            response_text = response_text.replace("=>", ":")  # Convert invalid separators
+            response_text = re.sub(r',\s*}', '}', response_text)  # Remove trailing commas before closing braces
+            response_text = re.sub(r',\s*\]', ']', response_text)  # Remove trailing commas before closing brackets
+
+            # Attempt JSON parsing
+            return json.loads(response_text)
+
+        except json.JSONDecodeError as e:
+            print(f"JSONDecodeError: {e}")
+            print(f"⚠Malformed JSON: {response_text[:500]}")  # Print first 500 chars for debugging
+            return None  # Return None to indicate failure
 
     def get_data_availability_text(self, api_xml):
         """
@@ -1180,7 +1220,9 @@ class LLMParser(Parser):
                 self.logger.info(f"Skipping dataset {1 + i}: no data_repository for item")
                 continue
 
-            if item['dataset_identifier'] == 'n/a':
+            if ('dataset_identifier' in item.keys() and item['dataset_identifier'] == 'n/a') or (
+                    'dataset_id' in item.keys() and item['dataset_id'] == 'n/a'
+            ):
                 self.logger.info(f"Skipping dataset {1 + i}: no dataset_identifier for item")
                 continue
 
@@ -1231,26 +1273,39 @@ class LLMParser(Parser):
 
         return template
 
-    def tokens_over_limit(self, prompt, model="gpt-4", limit=128000, allowance_static_prompt=200):
+    def tokens_over_limit(self, html_cont : str, model="gpt-4", limit=128000, allowance_static_prompt=200):
         # Load the appropriate encoding for the model
         encoding = tiktoken.encoding_for_model(model)
         # Encode the prompt and count tokens
-        tokens = encoding.encode(prompt)
+        tokens = encoding.encode(html_cont)
         self.logger.info(f"Number of tokens: {len(tokens)}")
-        return len(tokens)+allowance_static_prompt>limit
+        return len(tokens)+int(allowance_static_prompt*1.25)>limit
 
-    def count_tokens(self, prompt, model="gpt-4"):
+    def count_tokens(self, prompt, model="gpt-4") -> int:
         n_tokens = 0
-        # model check
+
+        # **Ensure `prompt` is a string**
+        if isinstance(prompt, list):
+            self.logger.warning(f"Expected string but got list. Converting list to string.")
+            prompt = " ".join([msg["content"] for msg in prompt if isinstance(msg, dict) and "content" in msg])
+
+        elif not isinstance(prompt, str):
+            self.logger.error(f"Unexpected type for prompt: {type(prompt)}. Converting to string.")
+            prompt = str(prompt)
+
+        # **Token count based on model**
         if 'gpt' in model:
-            # Load the appropriate encoding for the model
             encoding = tiktoken.encoding_for_model(model)
-            # Encode the prompt and count tokens
             n_tokens = len(encoding.encode(prompt))
+
         elif 'gemini' in model:
-            n_tokens = str(self.client.count_tokens(prompt))
-            n_tokens = re.sub(r'total_tokens:\s+', '', n_tokens)
-            n_tokens = int(n_tokens)
+            try:
+                gemini_prompt = {"role": "user", "parts": [{"text": prompt}]}
+                response = self.client.count_tokens([gemini_prompt])
+                n_tokens = response.total_tokens
+            except Exception as e:
+                self.logger.error(f"Error counting tokens for Gemini: {e}")
+                n_tokens = 0
 
         return n_tokens
 
