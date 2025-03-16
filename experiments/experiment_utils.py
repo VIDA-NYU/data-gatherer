@@ -2,6 +2,7 @@ import re
 import time
 import requests
 import pandas as pd
+from bs4 import BeautifulSoup
 
 def PMID_to_doi(pmid,pmid_doi_mapping):
     if pmid in pmid_doi_mapping:
@@ -348,6 +349,158 @@ def df_summary(dataframe):
 
     print("\nNumeric Column Summary:")
     print(numeric_summary)
+
+def add_example_to_merged_df(row, raw_html):
+    # handle uid also when comma-separated, then split and extract smallest element
+    if 'identifier' in row:
+        uid = row['identifier']
+    elif 'dataset_uid' in row:
+        uid = row['dataset_uid']
+    if ',' in uid:
+        uids = uid.split(',')
+        elements = []
+        for uid in uids:
+            elm_i = extract_all_elements_with_UID(raw_html, uid)
+            if elm_i in elements: # no dupes
+                continue
+            else:
+                elements.append(elm_i)
+        return elements
+    else:
+        return extract_all_elements_with_UID(raw_html, uid)
+
+
+def extract_all_elements_with_UID(source_html, uid):
+    print(f"Extracting elements with UID: {uid}")
+
+    soup = BeautifulSoup(source_html, "html.parser")
+
+    matching_elements = []
+
+    for p in soup.find_all(["table", "p"]):  # Find only <p> elements
+        text = p.get_text(strip=True)
+
+        if re.search(uid, text, re.IGNORECASE):  # Check if UID is in the text
+            matching_elements.append((str(p), len(text)))  # Store element and length
+
+    # If multiple matches, return the **smallest** one
+    if matching_elements:
+        # smallest_p, _ = min(matching_elements, key=lambda x: x[1])  # Find smallest
+        return matching_elements  # Pretty-print the raw HTML for debugging # smallest_p
+
+    return [None]  # No match found
+
+
+def evaluate_performance(predict_df, ground_truth, orchestrator, false_positives_file):
+    """ Evaluates dataset extraction performance using precision, recall, and F1-score. """
+
+    recall_list, false_positives_output = [], []
+    total_precision, total_recall, num_sources = 0, 0, 0
+
+    for source_page in predict_df['source_url'].unique():
+        orchestrator.logger.info(f"\nStarting performance evaluation for source page: {source_page}")
+
+        gt_data = ground_truth[ground_truth['publication'].str.lower() == source_page.lower()]  # extract grpund truth
+
+        gt_datasets = set()
+        for dataset_string in gt_data['dataset_uid'].dropna().str.lower():
+            gt_datasets.update(dataset_string.split(','))  # Convert CSV string into set of IDs
+
+        orchestrator.logger.info(f"Ground truth datasets: {gt_datasets}")
+        orchestrator.logger.info(f"# of elements in gt_data: {len(gt_data)}")
+
+        # Check if any dataset exists in raw HTML
+        present = any(
+            any(re.findall(re.escape(match_id.strip()), row['raw_html'], re.IGNORECASE))
+            for _, row in gt_data.iterrows()
+            for match_id in str(row['dataset_uid']).split(',') if pd.notna(row['dataset_uid'])
+        )
+
+        if not present:
+            orchestrator.logger.info(f"No datasets references in the raw_html for {source_page}")
+            continue
+
+        num_sources += 1
+
+        # Extract evaluation datasets for this source page
+        eval_data = predict_df[predict_df['source_url'] == source_page]
+        eval_datasets = set(eval_data['dataset_identifier'].dropna().str.lower())
+        # Remove invalid entries
+        eval_datasets.discard('n/a')
+        eval_datasets.discard('')
+
+        orchestrator.logger.info(f"Evaluation datasets: {eval_datasets}")
+
+        # Handle cases where both ground truth and evaluation are empty
+        if not gt_datasets and not eval_datasets:
+            orchestrator.logger.info("No datasets in both ground truth and evaluation. Perfect precision and recall.")
+            total_precision += 1
+            total_recall += 1
+            continue
+
+        # Match Extraction Logic
+        matched_gt, matched_eval = set(), set()
+
+        # Exact Matches
+        exact_matches = gt_datasets & eval_datasets  # Intersection of ground truth and extracted datasets
+        matched_gt.update(exact_matches)
+        matched_eval.update(exact_matches)
+
+        # Partial Matches (Aliased Identifiers)
+        for eval_id in eval_datasets - matched_eval:
+            for gt_id in gt_datasets - matched_gt:
+                if eval_id in gt_id or gt_id in eval_id:  # Partial match or alias
+                    orchestrator.logger.info(f"Partial or alias match found: eval_id={eval_id}, gt_id={gt_id}")
+                    matched_gt.add(gt_id)
+                    matched_eval.add(eval_id)
+                    break  # Stop once matched
+
+        # **False Positives (Unmatched extracted datasets)**
+        FP = eval_datasets - matched_eval
+        false_positives_output.extend(FP)
+
+        # **False Negatives (Unmatched ground truth datasets)**
+        FN = gt_datasets - matched_gt
+
+        # **Precision and Recall Calculation**
+        true_positives = len(matched_gt)
+        false_positives = len(FP)
+        false_negatives = len(FN)
+
+        precision = true_positives / (true_positives + false_positives) if (true_positives + false_positives) > 0 else 0
+        recall = true_positives / (true_positives + false_negatives) if (true_positives + false_negatives) > 0 else 0
+
+        orchestrator.logger.info(f"Precision for {source_page}: {precision}")
+        orchestrator.logger.info(f"Recall for {source_page}: {recall}")
+
+        if recall == 0:
+            recall_list.append(source_page)
+
+        # Accumulate totals
+        total_precision += precision
+        total_recall += recall
+
+    # **Compute Overall Metrics**
+    average_precision = total_precision / num_sources if num_sources > 0 else 0
+    average_recall = total_recall / num_sources if num_sources > 0 else 0
+    f1_score = (
+        2 * (average_precision * average_recall) / (average_precision + average_recall)
+        if (average_precision + average_recall) > 0
+        else 0
+    )
+
+    orchestrator.logger.info(f"\nPerformance evaluation completed for {num_sources} source pages.")
+
+    # **Save false positives**
+    with open(false_positives_file, 'w') as f:
+        for item in false_positives_output:
+            f.write("%s\n" % item)
+
+    return {
+        "average_precision": average_precision,
+        "average_recall": average_recall,
+        "f1_score": f1_score
+    }
 
 #
 # filtered_df = filtered_df.explode('citing_publications_links', ignore_index=True)  # Split lists into rows
