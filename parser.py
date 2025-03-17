@@ -928,7 +928,7 @@ class LLMParser(Parser):
 
         except json.JSONDecodeError as e:
             print(f"JSONDecodeError: {e}")
-            print(f"⚠Malformed JSON: {response_text[:500]}")  # Print first 500 chars for debugging
+            print(f"Malformed JSON: {response_text[:500]}")  # Print first 500 chars for debugging
             return None  # Return None to indicate failure
 
     def get_data_availability_text(self, api_xml):
