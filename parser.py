@@ -803,12 +803,14 @@ class LLMParser(Parser):
 
                 if self.config['process_entire_document']:
                     resps = self.safe_parse_json(response.choices[0].message.content)  # 'datasets' keyError?
+                    self.logger.info(f"Response is {type(resps)}: {resps}")
                     resps = resps.get("datasets", []) if resps is not None else []
                     self.logger.info(f"Response is {type(resps)}: {resps}")
                     self.prompt_manager.save_response(prompt_id, resps) if self.config['save_responses_to_cache'] else None
                 else:
                     try:
-                        resps = json.loads(response.choices[0].message.content)  # Ensure it's properly parsed
+                        resps = self.safe_parse_json(response.choices[0].message.content)  # Ensure it's properly parsed
+                        self.logger.info(f"Response is {type(resps)}: {resps}")
                         if not isinstance(resps, list):  # Ensure it's a list
                             raise ValueError("Expected a list of datasets, but got something else.")
 
@@ -888,7 +890,10 @@ class LLMParser(Parser):
                     dataset_id = dataset['dataset_id']
                 elif 'dataset_identifier' in dataset:
                     dataset_id = dataset['dataset_identifier']
-                data_repository = dataset['repository_reference']
+                if 'data_repository' in dataset:
+                    data_repository = dataset['data_repository']
+                elif 'repository_reference' in dataset:
+                    data_repository = dataset['repository_reference']
 
                 if dataset_id == 'n/a' and data_repository in self.config['repos']:
                     self.logger.info(f"Dataset ID is 'n/a' and repository name from prompt")
@@ -915,14 +920,18 @@ class LLMParser(Parser):
             response_text = response_text.strip()  # Remove extra spaces/newlines
 
             # Fix common truncation issues by ensuring it ends properly
-            if not response_text.endswith("\"]}"):
-                response_text += "\"]}"
+            # if not response_text.endswith("\"]}"):
+            #     response_text += "\"]}"
+            #
+            # # Fix invalid JSON artifacts
+            # response_text = response_text.replace("=>", ":")  # Convert invalid separators
+            #response_text = re.sub(r',\s*}', '}', response_text)  # Remove trailing commas before closing braces
+            #response_text = re.sub(r',\s*\]', ']', response_text)  # Remove trailing commas before closing brackets
 
-            # Fix invalid JSON artifacts
-            response_text = response_text.replace("=>", ":")  # Convert invalid separators
-            response_text = re.sub(r',\s*}', '}', response_text)  # Remove trailing commas before closing braces
-            response_text = re.sub(r',\s*\]', ']', response_text)  # Remove trailing commas before closing brackets
-
+            # process dict-like list
+            if "{" not in response_text[1:-1] and "{" not in response_text[1:-1] and "[" in response_text[1:-1]:
+                response_text = (response_text[:1] +
+                                 response_text[1:-1].replace("[", "{").replace("]","}") + response_text[-1:])
             # Attempt JSON parsing
             return json.loads(response_text)
 
