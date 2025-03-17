@@ -243,6 +243,8 @@ class Orchestrator:
 
             combined_df.to_csv(self.config['full_output_file'], index=False)
 
+            self.logger.info(f"Output written to file: {self.config['full_output_file']}")
+
             self.logger.debug("Orchestrator run completed.")
 
             return combined_df
