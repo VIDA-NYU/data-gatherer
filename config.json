@@ -7,7 +7,7 @@
 
     "output_file": "output/output.json",
     "categories_output_filename": "output/output_categories.csv",
-    "full_output_file": "output/DataRef-EXP_RTR_gpt-4o-mini.csv",
+    "full_output_file": "output/DataRef-EXP_FDR_gemini-2.0-flash.csv",
     "update_input_urls": false,
 
     "log_file": "logs/scraper.log",
