@@ -7,13 +7,13 @@
 
     "output_file": "output/output.json",
     "categories_output_filename": "output/output_categories.csv",
-    "full_output_file": "output/output_full.csv",
+    "full_output_file": "output/DataRef-EXP_FDR_gpt-4o-mini.csv",
     "update_input_urls": false,
 
     "log_file": "logs/scraper.log",
 
     "search_method": "url_list",
-    "input_urls_filepath": "input/test_input.txt",
+    "input_urls_filepath": "input/pmc_and_fenyo.txt",
     "search_query": "Proteomic Identification",
     "top_k": 3,
     "ground_truth": "output/ground_truth.json",
