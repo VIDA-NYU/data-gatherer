@@ -6,6 +6,7 @@ import json
 from selenium_setup import create_driver
 import pandas as pd
 import cloudscraper
+import time
 
 class Orchestrator:
     def __init__(self, config_path):
@@ -200,12 +201,27 @@ class Orchestrator:
         self.logger.info(f"Deduplication completed. {len(classified_links)} unique links found.")
         return classified_links
 
-    def process_urls(self, url_list):
+    def process_urls(self, url_list, log_modulo=10):
         """Processes a list of URLs and returns classified data."""
         self.logger.debug("Starting to process URL list...")
+        start_time = time.time()
+        total_iters = len(url_list)
         results = {}
-        for url in url_list:
+
+        for iteration, url in enumerate(url_list):
+
             results[url] = self.process_url(url)
+
+            if iteration % log_modulo == 0:
+                elapsed = time.time() - start_time  # Time elapsed since start
+                avg_time_per_iter = elapsed / (iteration + 1)  # Average time per iteration
+                remaining_iters = total_iters - (iteration + 1)
+                estimated_remaining = avg_time_per_iter * remaining_iters  # Estimated time remaining
+                self.logger.info(
+                    f"\nProgress: {iteration+1}/{total_iters} ({(iteration+1)/total_iters*100:.2f}%) "
+                    f"| Elapsed: {time.strftime('%H:%M:%S', time.gmtime(elapsed))} "
+                    f"| ETA: {time.strftime('%H:%M:%S', time.gmtime(estimated_remaining))}\n"
+                )
         self.logger.debug("Completed processing all URLs.")
         return results
 
