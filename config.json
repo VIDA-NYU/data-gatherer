@@ -7,7 +7,7 @@
 
     "output_file": "output/output.json",
     "categories_output_filename": "output/output_categories.csv",
-    "full_output_file": "output/DataRef-REV_RTR_gemini-2.0-flash.csv",
+    "full_output_file": "output/DataRef-REV_FDR_gpt-4o-mini.csv",
     "update_input_urls": false,
 
     "log_file": "logs/scraper.log",
@@ -17,6 +17,8 @@
     "search_query": "Proteomic Identification",
     "top_k": 3,
     "ground_truth": "output/ground_truth.json",
+    "dataframe_fetch": true,
+    "raw_HTML_data_filepath" : "input/fetched_data.parquet",
 
     "API_supported_url_patterns": {
         "PMC": "https:\\/\\/www\\.ncbi\\.nlm\\.nih\\.gov\\/pmc\\/articles\\/"
