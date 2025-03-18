@@ -3,7 +3,7 @@
   "entire_document_models": ["gemini-1.5-flash", "gemini-1.5-pro", "gemini-2.0-flash-exp", "gemini-2.0-flash", "gpt-4o", "gpt-4o-mini"],
   "process_entire_document": false,
   "prompt_dir": "prompts/prompt_templates",
-  "prompt_name": "retrieve_datasets_simple_JSON_gemini",
+  "prompt_name": "retrieve_datasets_simple_JSON",
   "prompt_save_dir": "prompts/prompt_evals",
   "response_file": "LLMs_responses.json",
   "process_DAS_links_separately": false,
