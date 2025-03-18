@@ -1258,8 +1258,18 @@ class LLMParser(Parser):
                     else:
                         repo_name = repo
                     self.logger.info(f"Found config options for {k}")
-                    dataset_webpage = ('https://' + repo_name + re.sub('__ID__', item['dataset_identifier'],
-                                                                       self.config['repos'][repo]['url_concat_string']))
+
+                    if 'dataset_identifier' in item.keys():
+                        dataset_webpage = ('https://' + repo_name + re.sub('__ID__', item['dataset_identifier'],
+                                                                           self.config['repos'][repo]['url_concat_string']))
+
+                    elif 'dataset_id' in item.keys():
+                        dataset_webpage = ('https://' + repo_name + re.sub('__ID__', item['dataset_id'],
+                                                                           self.config['repos'][repo]['url_concat_string']))
+
+                    else:
+                        dataset_webpage = 'na'
+
                     datasets[i]['dataset_webpage'] = dataset_webpage
                     self.logger.info(f"Dataset page: {dataset_webpage}")
                     updated_dt = True
