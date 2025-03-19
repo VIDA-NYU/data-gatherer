@@ -273,6 +273,57 @@ class WebScraper(DataFetcher):
             self.logger.info("WebScraper driver quit.")
 
 
+class DatabaseFetcher(DataFetcher):
+    def __init__(self, config, logger):
+        super().__init__(config, logger)
+        self.data_file = self.config['raw_HTML_data_filepath']
+        self.dataframe = pd.read_parquet(self.data_file)
+
+    def fetch_data(self, url_key):
+        raw_html = self.dataframe[self.dataframe['publication'] == url_key]['raw_html'].values[0]
+        self.logger.info(f"Fetching data from {self.data_file}")
+        return raw_html
+
+    def remove_cookie_patterns(self, html: str):
+        pattern = r'<img\s+alt=""\s+src="https://www\.ncbi\.nlm\.nih\.gov/stat\?.*?"\s*>'
+
+        if re.search(pattern, html):
+            self.logger.info("Removing cookie pattern 1 from HTML")
+            html = re.sub(pattern, 'img_alt_subst', html)
+        else:
+            self.logger.info("No cookie pattern 1 found in HTML")
+        return html
+
+    def get_rule_based_matches(self, publisher):
+
+        if publisher in self.retrieval_patterns:
+            self.update_class_patterns(publisher)
+
+        rule_based_matches = {}
+
+        # Collect links using CSS selectors
+        for css_selector in self.css_selectors:
+            self.logger.debug(f"Parsing page with selector: {css_selector}")
+            links = self.scraper_tool.find_elements(By.CSS_SELECTOR, css_selector)
+            self.logger.debug(f"Found Links: {links}")
+            for link in links:
+                rule_based_matches[link] = self.css_selectors[css_selector]
+        self.logger.info(f"Rule-based matches from css_selectors: {rule_based_matches}")
+
+        # Collect links using XPath
+        for xpath in self.xpaths:
+            self.logger.info(f"Checking path: {xpath}")
+            try:
+                child_element = self.scraper_tool.find_element(By.XPATH, xpath)
+                section_element = child_element.find_element(By.XPATH, "./ancestor::section")
+                a_elements = section_element.find_elements(By.TAG_NAME, 'a')
+                for a_element in a_elements:
+                    rule_based_matches[a_element] = self.xpaths[xpath]
+            except Exception as e:
+                self.logger.error(f"Invalid xpath: {xpath}")
+
+        return self.normalize_links(rule_based_matches)
+
 # Implementation for fetching data from an API
 class APIClient(DataFetcher):
     def __init__(self, api_client, API, config, logger):

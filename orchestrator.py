@@ -1,3 +1,4 @@
+import logging
 from logger_setup import setup_logging
 from data_fetcher import *
 from parser import RuleBasedParser, LLMParser
@@ -33,11 +34,15 @@ class Orchestrator:
             except Exception as e:
                 self.logger.warning(f"Failed to quit previous driver: {e}")
 
-        if self.config['search_method'] == 'url_list':
+        if self.config['search_method'] == 'url_list' and self.config['dataframe_fetch']:
+            self.data_fetcher = DatabaseFetcher(self.config, self.logger)
+            return
+
+        elif self.config['search_method'] == 'url_list':
             driver = create_driver(self.config['DRIVER_PATH'], self.config['BROWSER'], self.config['HEADLESS'])
             self.data_fetcher = WebScraper(driver, self.config, self.logger)
 
-        if self.config['search_method'] == 'cloudscraper':
+        elif self.config['search_method'] == 'cloudscraper':
             driver = cloudscraper.create_scraper()
             self.data_fetcher = WebScraper(driver, self.config, self.logger)
 
@@ -58,8 +63,12 @@ class Orchestrator:
         self.logger.info(f"Processing URL: {url}")
         self.current_url = url
         self.publisher = self.data_fetcher.url_to_publisher_domain(url)
+        self.local_data = self.config['dataframe_fetch']
 
-        self.data_fetcher = self.data_fetcher.update_DataFetcher_settings(url, self.full_DOM, self.logger)
+        if not self.local_data:
+            self.data_fetcher = self.data_fetcher.update_DataFetcher_settings(url, self.full_DOM, self.logger)
+            # Step 1: Use DataFetcher (WebScraper or APIClient) to fetch raw data
+            self.logger.debug(f"data_fetcher.fetch_source = {self.data_fetcher.fetch_source}")
 
         try:
             self.logger.debug("Fetching Raw content...")
@@ -67,9 +76,6 @@ class Orchestrator:
             parsed_data = None
             additional_data = None
             process_everything_as_additional_data = True #additional data is getting processed without link-based prompts
-
-            # Step 1: Use DataFetcher (WebScraper or APIClient) to fetch raw data
-            self.logger.debug(f"data_fetcher.fetch_source = {self.data_fetcher.fetch_source}")
 
             # if model processes the entire document, fetch the entire document and go to the parsing step
             if (self.XML_config['llm_model'] in self.XML_config['entire_document_models'] and self.XML_config['process_entire_document']):
@@ -153,7 +159,8 @@ class Orchestrator:
                 parsed_data = self.parser.parse_data(raw_data, self.publisher, self.current_url, raw_data_format="full_HTML")
                 parsed_data['source_url'] = url
                 self.logger.info(f"Parsed data extraction completed. Elements collected: {len(parsed_data)}")
-                parsed_data.to_csv('staging_table/parsed_data_from_XML.csv', index=False)  # save parsed data to a file
+                if self.logger.level == logging.DEBUG:
+                    parsed_data.to_csv('staging_table/parsed_data_from_XML.csv', index=False)
 
             self.logger.info("Raw Data parsing completed.")
 
