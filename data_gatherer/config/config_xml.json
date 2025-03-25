@@ -1,0 +1,12 @@
+{
+    "llm_model": "gpt-4o-mini",
+    "process_entire_document": true,
+    "response_mode": "structured_json",
+    "entire_document_models": ["gpt-4o-mini", "gpt-4o", "gemma2:9b"],
+    "endpoint_name": "gpt-4o-mini",
+    "prompt_templates": {
+        "gpt-4o-mini": "prompts/prompt_templates/GPT_from_full_input_Exmpl_Descr.json",
+        "gpt-4o": "prompts/prompt_templates/GPT_from_full_input_Exmpl_Descr.json",
+        "gemma2:9b": "prompts/prompt_templates/GEMINI_from_full_input_Examples_4.json"
+    }
+}

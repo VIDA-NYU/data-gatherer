@@ -1,0 +1,6 @@
+include LICENSE
+include README.md
+include requirements.txt
+
+recursive-include data_gatherer/config *.json
+recursive-include data_gatherer/prompts *.json
