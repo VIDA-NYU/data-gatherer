@@ -1,0 +1,40 @@
+# Python bytecode
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Distribution / packaging
+dist/
+build/
+*.egg-info/
+
+# Virtual environments
+venv/
+env/
+ENV/
+
+# IDE files
+.idea/
+.vscode/
+*.sublime-project
+*.sublime-workspace
+
+# Logs and databases
+*.log
+*.sqlite3
+logs/
+
+# Local data
+staging_table/
+output/
+
+# Cache
+.cache/
+.pytest_cache/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# OS specific files
+.DS_Store
+Thumbs.db
