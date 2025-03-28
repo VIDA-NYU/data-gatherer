@@ -219,8 +219,8 @@ class LLMParser(Parser):
                                      f"and Parsed data ({type(augmented_dataset_links), len(augmented_dataset_links)} items).")
                     # extend the dataset links with additional data
                     augmented_dataset_links = augmented_dataset_links + self.process_additional_data(additional_data)
-                    self.logger.debug(f"Type: {type(augmented_dataset_links)}")
-                    self.logger.debug(f"Len of augmented_dataset_links: {len(augmented_dataset_links)}")
+                    self.logger.debug(f"Type: {type(augmented_dataset_links)}, Len: {len(augmented_dataset_links)}")
+                    self.logger.debug(f"Augmented_dataset_links: {augmented_dataset_links}")
 
                 self.logger.debug(f"Content of augmented_dataset_links: {augmented_dataset_links}")
 
@@ -238,10 +238,8 @@ class LLMParser(Parser):
                 out_df['file_extension'] = out_df['link'].apply(lambda x: self.extract_file_extension(x))
 
             # drop duplicates but keep nulls
-            if 'dataset_identifier' in out_df.columns:
+            if 'dataset_identifier' in out_df.columns and 'download_link' in out_df.columns:
                 out_df = out_df.drop_duplicates(subset=['download_link', 'dataset_identifier'], keep='first')
-            elif 'download_link' in out_df.columns:
-                out_df = out_df.drop_duplicates(subset=['download_link'], keep='first')
 
             return out_df
 
@@ -635,16 +633,17 @@ class LLMParser(Parser):
 
         ret = []
         for element in additional_data:
-            self.logger.info(f"Processing additional data element: {element}")
+            self.logger.info(f"Processing additional data element ({type(element)}): {element}")
             cont = element['surrounding_text']
 
             if 'Supplementary Material' in cont or 'supplementary material' in cont:
                 continue
 
-            if element['source_section'] in ['data availability', 'data_availability'] or 'data_availability' in cont:
+            if (element['source_section'] in ['data availability', 'data_availability', 'data_availability_elements']
+                    or 'data availability' in cont) and len(cont) > 1:
                 self.logger.info(f"Processing data availability text")
                 # Call the generalized function
-                datasets = self.retrieve_datasets_from_content(cont, repos_elements, model=self.config['llm_model'])
+                datasets = self.retrieve_datasets_from_content(cont, repos_elements, model=self.config['llm_model'], temperature=0)
                 ret.extend(datasets)
             else:
                 self.logger.debug(f"Processing supplementary material element")
@@ -972,7 +971,7 @@ class LLMParser(Parser):
                     cont += ' '
                     cont += elem.text
                     cont += ' '
-            data_availability_cont.append(cont)
+            data_availability_cont.append(cont) if cont not in data_availability_cont else None
 
         supplementary_data_sections = []
 
@@ -988,11 +987,11 @@ class LLMParser(Parser):
             if sect.text is None:  # key resources table
                 self.logger.info(f"Section with no text: {sect}")
             elif 'data availability' in sect.text:
-                data_availability_cont.append(sect.text)
+                data_availability_cont.append(sect.text) if sect.text not in data_availability_cont else None
             elif 'Deposited data' in sect.text:
-                data_availability_cont.append(sect.text)
+                data_availability_cont.append(sect.text) if sect.text not in data_availability_cont else None
             elif 'Accession number' in sect.text:
-                data_availability_cont.append(sect.text)
+                data_availability_cont.append(sect.text) if sect.text not in data_availability_cont else None
 
         key_resources_table = []
 
@@ -1208,6 +1207,8 @@ class LLMParser(Parser):
             if domain in self.config['repos'].keys() and 'repo_mapping' in self.config['repos'][domain].keys():
                 return self.config['repos'][domain]['repo_mapping']
             return domain
+        elif '.' not in url:
+            return url
         else:
             self.logger.error(f"Error extracting domain from URL: {url}")
             return 'Unknown_Publisher'
@@ -1277,7 +1278,7 @@ class LLMParser(Parser):
 
                 elif not updated_dt:
                     datasets[i]['dataset_webpage'] = 'na'
-
+        self.logger.info(f"Updated datasets len: {len(datasets)}")
         return datasets
 
     def get_NuExtract_template(self):
