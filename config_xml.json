@@ -48,6 +48,11 @@
       "repo_name": "Proteomic Data Commons",
       "url_concat_string": "/pdc/study/__ID__"
     },
+    "repository.jpostdb.org": {
+      "repo_name": "JPOST",
+      "url_concat_string": "entry/__ID__",
+      "download_root": "https://repository.jpostdb.org/entry/__ID__"
+    },
     "doi.org": {
       "dataset_webpage_url_ptr": "https\\:\\/\\/doi\\.org\\/\\d+\\.\\d+\\/pdb([\\w\\d]+)\\/pdb"
     },
