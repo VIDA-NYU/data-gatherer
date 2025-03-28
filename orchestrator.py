@@ -75,7 +75,6 @@ class Orchestrator:
             raw_data = None
             parsed_data = None
             additional_data = None
-            process_everything_as_additional_data = True #additional data is getting processed without link-based prompts
 
             # if model processes the entire document, fetch the entire document and go to the parsing step
             if (self.XML_config['llm_model'] in self.XML_config['entire_document_models'] and self.XML_config['process_entire_document']):
@@ -140,14 +139,17 @@ class Orchestrator:
                 self.logger.info("Using LLMParser to parse data.")
                 self.parser = LLMParser(self.XML_config, self.logger)
 
-                if additional_data is not None:
-                    self.logger.info(f"Processing additional data: {len(additional_data)}")
-                    parsed_data = self.parser.parse_data(raw_data, self.publisher, self.current_url,
-                                                         additional_data=additional_data)
-                    self.logger.info(type(parsed_data))
-                else:
-                    self.logger.info(f"Parser. {self.parser}")
+                if additional_data is None:
                     parsed_data = self.parser.parse_data(raw_data, self.publisher, self.current_url)
+
+                else:
+                    self.logger.info(f"Processing additional data. # of items: {len(additional_data)}")
+                    # add the additional data to the parsed_data
+                    add_data = self.parser.parse_data(raw_data, self.publisher, self.current_url,
+                                                         additional_data=additional_data)
+                    self.logger.info(type(add_data))
+
+                    parsed_data = pd.concat([parsed_data, add_data], ignore_index=True).drop_duplicates()
 
                 parsed_data['source_url'] = url
                 self.logger.info(f"Parsed data extraction completed. Elements collected: {len(parsed_data)}")
@@ -216,7 +218,7 @@ class Orchestrator:
         results = {}
 
         for iteration, url in enumerate(url_list):
-
+            self.logger.info(f"{iteration}th function call: self.process_url({url})")
             results[url] = self.process_url(url)
 
             if iteration % log_modulo == 0:

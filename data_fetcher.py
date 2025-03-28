@@ -408,7 +408,8 @@ class DataCompletenessChecker:
         for section in required_sections:
             if not self.has_target_section(raw_data, section):
                 self.logger.info(f"{section} section missing for {url}. Fetching from web...")
-                additional_data_ret.extend(self.get_section_from_webpage(url, section))
+                add_cont = self.get_section_from_webpage(url, section)
+                additional_data_ret.extend(add_cont)
             else:
                 self.logger.info(f"{section} section found in raw data.")
 
@@ -473,9 +474,9 @@ class DataCompletenessChecker:
 
             # Use appropriate XPath patterns based on the section name
             xpaths = self.xpaths[section_name]
-            self.logger.info(f"Using XPaths: {xpaths}")
+            self.logger.debug(f"Using XPaths: {xpaths}")
             elements = self.extract_elements_by_xpath(xpaths, section_name)
-            self.logger.info(f"Found {len(elements)} elements in {section_name} section.")
+            self.logger.debug(f"Found {len(elements)} elements in {section_name} section.")
 
             # Format the extracted data
             items = []
@@ -531,19 +532,19 @@ class DataCompletenessChecker:
         rule_based_matches = []
 
         for xpath in xpaths:
-            self.logger.info(f"Checking path: {xpath}")
+            self.logger.debug(f"Checking path: {xpath}")
             try:
                 child_element = self.safety_driver.find_element(By.XPATH, xpath)
                 text = child_element.text
-                if text:
+                if text and text not in rule_based_matches:
                     self.logger.info(f"Found das-like text: {text}")
                     rule_based_matches.append(text)
 
             except Exception as e:
-                self.logger.error(f"Invalid xpath: {xpath}")
+                self.logger.debug(f"Invalid xpath: {xpath}")
 
-        self.logger.info(f"Rule-based matches from xpaths: {len(rule_based_matches)} items.")
-        self.logger.debug(f"Rule-based matches from xpaths: {rule_based_matches}.")
+        self.logger.info(f"Number of sections matching css_selector retrieval patterns: {len(rule_based_matches)}.")
+        self.logger.debug(f"sections matching css selectors retrieval patterns: {rule_based_matches}.")
         return rule_based_matches
 
     def extract_elements_by_xpath(self, xpaths, section):
@@ -555,7 +556,7 @@ class DataCompletenessChecker:
         rule_based_matches = []
 
         for xpath in xpaths:
-            self.logger.info(f"Checking path: {xpath}")
+            self.logger.debug(f"Checking path: {xpath}")
             try:
                 child_element = self.safety_driver.find_element(By.XPATH, xpath)
                 anchor = child_element.find_elements(By.TAG_NAME, 'a')
@@ -567,10 +568,10 @@ class DataCompletenessChecker:
                     self.logger.info(f"Found links: {links}")
 
                     text = child_element.text
-                    rule_based_matches.extend([{"link": link, "surrounding_text": text} for link in links if link])
+                    rule_based_matches.extend([{"link": link, "surrounding_text": text} for link in links if link and link not in rule_based_matches])
 
             except Exception as e:
-                self.logger.error(f"Invalid xpath: {xpath}")
+                self.logger.debug(f"Invalid xpath: {xpath}")
 
         self.logger.info(f"Rule-based matches from xpaths: {len(rule_based_matches)} items.")
         self.logger.debug(f"Rule-based matches from xpaths: {rule_based_matches}")
