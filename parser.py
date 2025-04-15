@@ -17,6 +17,40 @@ from transformers import AutoModelForCausalLM, AutoTokenizer
 from prompt_manager import PromptManager
 import tiktoken
 
+dataset_response_schema_gpt = {
+    "type": "json_schema",
+    "name": "GPT_response_schema",
+    "schema": {
+        "type": "object",  # Root must be an object
+        "properties": {
+            "datasets": {  # Use a property to hold the array
+            "type": "array",
+                "items": {
+                    "type": "object",
+                    "properties": {
+                        "dataset_id": {
+                            "type": "string",
+                            "description": "A unique identifier for the dataset."
+                        },
+                        "repository_reference": {
+                            "type": "string",
+                            "description": "A valid URI or string referring to the repository."
+                        },
+                        "decision_rationale": {
+                            "type": "string",
+                            "description": "Why did we select this dataset?"
+                        }
+                    },
+                    "required": ["dataset_id", "repository_reference"]
+                },
+                "minItems": 1,
+                "uniqueItems": True
+            }
+        },
+        "required": ["datasets"]
+    }
+}
+
 dataset_metadata_response_schema_gpt = {
     "type": "json_schema",
     "json_schema": {
@@ -825,41 +859,7 @@ class LLMParser(Parser):
                         model=model,
                         messages=messages,
                         temperature=temperature,
-                        response_format={
-                            "type": "json_schema",
-                            "json_schema": {
-                                "name": "GPT_response_schema",
-                                "schema": {
-                                    "type": "object",  # Root must be an object
-                                    "properties": {
-                                        "datasets": {  # Use a property to hold the array
-                                            "type": "array",
-                                            "items": {
-                                                "type": "object",
-                                                "properties": {
-                                                    "dataset_id": {
-                                                        "type": "string",
-                                                        "description": "A unique identifier for the dataset."
-                                                    },
-                                                    "repository_reference": {
-                                                        "type": "string",
-                                                        "description": "A valid URI or string referring to the repository."
-                                                    },
-                                                    "decision_rationale": {
-                                                        "type": "string",
-                                                        "description": "Why did we select this dataset?"
-                                                    }
-                                                },
-                                                "required": ["dataset_id", "repository_reference"]
-                                            },
-                                            "minItems": 1,
-                                            "uniqueItems": True
-                                        }
-                                    },
-                                    "required": ["datasets"]
-                                }
-                            }
-                        }
+                        response_format=dataset_response_schema_gpt
                     )
                 else:
                     response = self.client.chat.completions.create(model=model, messages=messages,
