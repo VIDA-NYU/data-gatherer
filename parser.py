@@ -226,6 +226,8 @@ class LLMParser(Parser):
         super().__init__(config, logger)
         self.title = None
         self.prompt_manager = PromptManager(self.config['prompt_dir'], self.logger, self.config['response_file'])
+        self.repo_names = self.get_repo_names()
+        self.repo_domain_to_name_mapping = self.get_repo_domain_to_name_mapping()
 
         if self.config['llm_model'] == 'gemma2:9b':
             self.client = Client(host=os.environ['NYU_LLM_API'])  # env variable
@@ -922,7 +924,8 @@ class LLMParser(Parser):
                         if self.config['save_responses_to_cache']:
                             self.prompt_manager.save_response(prompt_id, parsed_response)
                             self.logger.info(f"Response saved to cache")
-                        resps = parsed_response
+                        parsed_response_dedup = self.deduplicate_response(parsed_response)
+                        resps = parsed_response_dedup
                     else:
                         self.logger.error("No candidates found in the response.")
                 except Exception as e:
@@ -979,6 +982,31 @@ class LLMParser(Parser):
             self.logger.info(f"Extracted dataset: {result[-1]}")
 
         return result
+
+    def deduplicate_response(self, response):
+        """
+        Normalize and deduplicate dataset responses by stripping DOI-style prefixes
+        like '10.x/' from dataset IDs and keeping only one entry per PXD.
+        """
+        seen = set()
+        deduped = []
+
+        for item in response:
+            dataset_id = item.get("dataset_id", item.get("dataset_identifier", ""))
+            if not dataset_id:
+                continue
+
+            # Normalize: remove DOI prefix if it matches '10.x/PXD123456'
+            clean_id = re.sub(r'10\.\d+/(\bPXD\d+\b)', r'\1', dataset_id)
+
+            if clean_id not in seen:
+                # Update the dataset_id to the normalized version
+                item["dataset_id"] = clean_id
+                deduped.append(item)
+                seen.add(clean_id)
+
+        return deduped
+
 
     def safe_parse_json(self, response_text):
         """ Cleans and safely parses JSON from a GPT response, fixing common issues. """
@@ -1279,6 +1307,33 @@ class LLMParser(Parser):
         else:
             self.logger.error(f"Error extracting domain from URL: {url}")
             return 'Unknown_Publisher'
+
+    def get_repo_names(self):
+        """
+        Get the repository names from the config file.
+        """
+        repo_names = []
+        for k, v in self.config['repos'].items():
+            if 'repo_name' in v.keys():
+                repo_names.append(v['repo_name'])
+            else:
+                repo_names.append(k)
+        return repo_names
+
+    def get_repo_domain_to_name_mapping(self):
+        """
+        Get the mapping of repository domains to names from the config file.
+        """
+        repo_mapping = {}
+        for k, v in self.config['repos'].items():
+            if 'repo_name' in v.keys():
+                repo_mapping[k] = v['repo_name']
+            else:
+                repo_mapping[k] = k
+
+        ret = {v:k for k,v in repo_mapping.items()}
+        return ret
+
 
     def get_dataset_webpage(self, datasets):
         """

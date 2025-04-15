@@ -30,6 +30,7 @@
     },
     "www.ebi.ac.uk": {
       "repo_name": "PRIDE",
+      "javascript_load_required": true,
       "url_concat_string": "/pride/archive/projects/__ID__",
       "download_root": "https://ftp.pride.ebi.ac.uk/pride/data/archive/2024/07/__ID__/"
     },

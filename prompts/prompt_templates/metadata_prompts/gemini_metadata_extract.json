@@ -11,7 +11,7 @@
     "role": "user",
     "parts": [
       {
-        "text": "Given the raw html text content below, you will extract the metadata of the datasets that are described in this webpage, including how the dataset can be downloaded by the researcher: FTP, HTTP, Access Request Needed. A brief dataset description should be there, as well as the file format, file size, and number of files. The metadata should be in JSON format. The raw_html text is as follows: {content}"
+        "text": "Given the raw html text content below, you will extract the metadata of the datasets that are described in this webpage, including how the dataset can be downloaded by the researcher: FTP, HTTP, Access Request Needed. A very brief dataset description should be there, as well as the file format, file size, and number of files. The metadata must be in JSON format!!\n The raw_html text is as follows: {content}"
       }
     ]
   }
