@@ -13,12 +13,14 @@
     "log_file": "logs/scraper.log",
 
     "search_method": "url_list",
-    "input_urls_filepath": "input/pmc_and_fenyo.txt",
+    "input_urls_filepath": "input/workshop_data.txt",
     "search_query": "Proteomic Identification",
     "top_k": 3,
     "ground_truth": "output/ground_truth.json",
     "dataframe_fetch": false,
     "raw_HTML_data_filepath" : "input/fetched_data.parquet",
+
+    "user_download_preview": true,
 
     "API_supported_url_patterns": {
         "PMC": "https:\\/\\/www\\.ncbi\\.nlm\\.nih\\.gov\\/pmc\\/articles\\/"
