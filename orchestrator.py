@@ -1,4 +1,5 @@
 import logging
+import requests
 from logger_setup import setup_logging
 from data_fetcher import *
 from parser import RuleBasedParser, LLMParser
@@ -21,6 +22,7 @@ class Orchestrator:
         self.data_checker = DataCompletenessChecker(self.config, self.logger)
         self.full_DOM = (self.XML_config['llm_model'] in self.XML_config['entire_document_models']) and self.XML_config['process_entire_document']
         self.logger.info(f"Data_Gatherer Orchestrator initialized. Extraction step Model: {self.XML_config['llm_model']}")
+        self.downloadables = []
 
     def setup_data_fetcher(self):
         """Sets up either a web scraper or API client based on the config."""
@@ -243,6 +245,51 @@ class Orchestrator:
         self.url_list = url_list
         return url_list
 
+    def get_data_preview(self, combined_df):
+        """Shows user a preview of the data they are about to download."""
+        self.metadata_parser = LLMParser(self.XML_config, self.logger)
+        done_already = []
+        for i, row in combined_df.iterrows():
+            self.logger.debug(f"Processing row {i}: {row}")
+            if row['dataset_webpage'] in done_already or (type(row['dataset_webpage']) != float and len(row['dataset_webpage'])) <= 5:
+                self.logger.debug(f"Row {i} already processed or invalid. Skipping...")
+                continue
+            if type(row['dataset_webpage']) != str or len(row['dataset_webpage']) <= 5:
+                if 'data' not in row['source_section']:
+                    continue
+                else:
+                    self.logger.debug(f"Row {row}")
+                    #here should go the hardscraped files with some data-like content delete continue and write the code
+                    continue
+
+            done_already.append(row['dataset_webpage'])
+            self.logger.info(f"Previewing data for row {i}: {row['dataset_webpage']}")
+            html = requests.get(row['dataset_webpage']).text
+            metadata = self.metadata_parser.parse_metadata(html)
+            metadata['source_url'] = row['dataset_webpage']
+            metadata['paper_with_dataset_citation'] = row['source_url']
+            self.display_data_preview(metadata)
+
+    def display_data_preview(self, metadata):
+        """
+        Display extracted metadata and ask the user whether to proceed with download.
+        """
+
+        if not isinstance(metadata, dict):
+            self.logger.warning("Metadata is not a dictionary. Cannot display properly.")
+            return
+
+        for key, value in metadata.items():
+            print(f"{key}: {value}")
+
+        user_input = input("\nDo you want to proceed with downloading this dataset? [y/N]: \n"
+                           "__________________________________________________________________  ").strip().lower()
+        if user_input not in ["y", "yes"]:
+            self.logger.info("User declined to download the dataset.")
+        else:
+            self.downloadables.append(metadata)
+            self.logger.info("User confirmed download. Proceeding...")
+
     def run(self):
         """Main method to run the Orchestrator."""
         self.logger.debug("Orchestrator run started.")
@@ -266,9 +313,14 @@ class Orchestrator:
                # self.logger.info("Evaluating performance...")
                # self.classifier.evaluate_performance(combined_df, self.config['ground_truth'])
 
+            if self.config['user_download_preview']:
+                self.get_data_preview(combined_df)
+
             combined_df.to_csv(self.config['full_output_file'], index=False)
 
             self.logger.info(f"Output written to file: {self.config['full_output_file']}")
+
+            self.logger.info(f"File Download Schedule: {self.downloadables}")
 
             self.logger.debug("Orchestrator run completed.")
 

@@ -12,6 +12,8 @@ from logger_setup import setup_logging
 import mimetypes
 from bs4 import BeautifulSoup
 from urllib.parse import urlparse
+import pandas as pd
+from playwright.sync_api import sync_playwright
 
 # Abstract base class for fetching data
 class DataFetcher(ABC):
@@ -280,6 +282,8 @@ class DatabaseFetcher(DataFetcher):
         self.dataframe = pd.read_parquet(self.data_file)
 
     def fetch_data(self, url_key):
+        self.logger.info(f"Fetching data for {url_key}")
+        self.logger.info(f"Data file: {self.dataframe[self.dataframe['publication'] == url_key]}")
         raw_html = self.dataframe[self.dataframe['publication'] == url_key]['raw_html'].values[0]
         self.logger.info(f"Fetching data from {self.data_file}")
         return raw_html
