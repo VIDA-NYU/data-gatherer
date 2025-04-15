@@ -18,6 +18,11 @@
       "url_concat_string": "/browse/__ID__",
       "download_root": "https://download.cncb.ac.cn/gsa/__ID__"
     },
+    "ega-archive.org": {
+      "repo_name": "European Genome-Phenome Archive",
+      "url_concat_string": "/studies/__ID__",
+      "download_root": "https://download.cncb.ac.cn/gsa/__ID__"
+    },
     "massive.ucsd.edu": {
       "repo_name": "MassIVE",
       "url_concat_string": "/ProteoSAFe/dataset.jsp?accession=__ID__",
@@ -54,10 +59,11 @@
       "download_root": "https://repository.jpostdb.org/entry/__ID__"
     },
     "doi.org": {
-      "dataset_webpage_url_ptr": "https\\:\\/\\/doi\\.org\\/\\d+\\.\\d+\\/pdb([\\w\\d]+)\\/pdb"
+      "dataset_webpage_url_ptr": "https://doi.org/d+.d+/pdb([wd]+)/pdb"
     },
     "www.ncbi.nlm.nih.gov": {
-      "dataset_webpage_url_ptr": "https\\:\\/www\\.ncbi\\.nlm\\.nih\\.gov\\/geo\\/query\/acc\\.cgi\\?acc=__ID__"
+      "repo_name": "GEO",
+      "dataset_webpage_url_ptr": "https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=__ID__"
     }
   },
   "data_availability_sections": [

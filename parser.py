@@ -17,6 +17,59 @@ from transformers import AutoModelForCausalLM, AutoTokenizer
 from prompt_manager import PromptManager
 import tiktoken
 
+dataset_metadata_response_schema_gpt = {
+    "type": "json_schema",
+    "json_schema": {
+        "name": "Dataset_metadata_response",
+        "schema": {
+            "type": "object",
+            "properties": {
+                "number_of_files": {
+                    "type": "string",
+                    "description": "Total number of files."
+                },
+                "file_size": {
+                    "type": "string",
+                    "description": "Cumulative file size or range."
+                },
+                "file_format": {
+                    "type": "string",
+                    "description": "Format of the file (e.g., CSV, FASTQ)."
+                },
+                "file_type": {
+                    "type": "string",
+                    "description": "Type or category of the file."
+                },
+                "file_description": {
+                    "type": "string",
+                    "description": "Summary of the file contents."
+                },
+                "file_url": {
+                    "type": "string",
+                    "description": "Direct link to the file."
+                },
+                "file_name": {
+                    "type": "string",
+                    "description": "Filename or archive name."
+                },
+                "file_license": {
+                    "type": "string",
+                    "description": "License under which the file is distributed."
+                }
+            },
+            "required": [
+                "number_of_files",
+                "file_size",
+                "file_format",
+                "file_type",
+                "file_description",
+                "file_url",
+                "file_name",
+                "file_license"
+            ]
+        }
+    }
+}
 
 # Abstract base class for parsing data
 class Parser(ABC):
@@ -39,6 +92,19 @@ class Dataset_w_Description(typing.TypedDict):
     dataset_id: str
     repository_reference: str
     rationale: str
+
+class Dataset_metadata(BaseModel):
+    number_of_files: int
+    file_size: str
+    file_format: str
+    file_type: str
+    dataset_description: str
+    file_url: str
+    file_name: str
+    file_license: str
+    request_access_needed: str
+    dataset_id: str
+    download_type: str
 
 
 # Implementation for Rule-Based parsing of HTMLs (from web scraping)
@@ -690,7 +756,7 @@ class LLMParser(Parser):
         self.logger.debug(f"Final ret additional data: {ret}")
         return ret
 
-    def retrieve_datasets_from_content(self, content: str, repos: list, model: str, temperature: float = 0.3) -> list:
+    def retrieve_datasets_from_content(self, content: str, repos: list, model: str, temperature: float = 0.0) -> list:
         """
         Retrieve datasets from the given content using a specified LLM model.
         Uses a static prompt template and dynamically injects the required content.
@@ -748,7 +814,8 @@ class LLMParser(Parser):
                     f"Response received from model: {response.get('message', {}).get('content', 'No content')}")
                 resps = response['message']['content'].split("\n")
                 # Save the response
-                self.prompt_manager.save_response(prompt_id, response['message']['content'])
+                self.prompt_manager.save_response(prompt_id, response['message']['content']) if self.config[
+                    'save_responses_to_cache'] else None
                 self.logger.info(f"Response saved to cache")
 
             elif self.config['llm_model'] == 'gpt-4o-mini' or self.config['llm_model'] == 'gpt-4o':
@@ -1224,6 +1291,10 @@ class LLMParser(Parser):
 
         for i, item in enumerate(datasets):
 
+            if type(item) != dict:
+                self.logger.error(f"can't resolve dataset_webpage for non-dict item {1 + i}: {item}")
+                continue
+
             self.logger.info(f"Processing dataset {1 + i} with keys: {item.keys()}")
 
             if 'data_repository' not in item.keys() and 'repository_reference' not in item.keys():
@@ -1249,10 +1320,12 @@ class LLMParser(Parser):
                 continue
 
             self.logger.info(f"Processing dataset {1 + i} with repo: {repo}")
+            self.logger.info(f"Processing dataset {1 + i} with keys: {item.keys()}")
 
             updated_dt = False
             for k, v in self.config["repos"].items():
-                self.logger.debug(f"Checking if {repo} == {k}")
+                self.logger.info(f"Checking if {repo} == {k}")
+                # match where repo_link has been extracted
                 if k == repo and 'url_concat_string' in v.keys():
                     if 'repo_mapping' in v.keys():
                         repo_name = self.config['repos'][repo]['repo_mapping']
@@ -1276,8 +1349,48 @@ class LLMParser(Parser):
                     updated_dt = True
                     break
 
+                # match when repo name is getting extracted
+                elif 'repo_name' in v.keys() and repo == v['repo_name'] and 'url_concat_string' in v.keys():
+                    self.logger.info(f"Found config options for {k}")
+
+                    if 'dataset_identifier' in item.keys():
+                        dataset_webpage = ('https://' + k + re.sub('__ID__', item['dataset_identifier'],
+                                                                   self.config['repos'][k]['url_concat_string']))
+
+                    elif 'dataset_id' in item.keys():
+                        dataset_webpage = ('https://' + k + re.sub('__ID__', item['dataset_id'],
+                                                                   self.config['repos'][k]['url_concat_string']))
+
+                    else:
+                        dataset_webpage = 'na'
+
+                    datasets[i]['dataset_webpage'] = dataset_webpage
+                    self.logger.info(f"Dataset page: {dataset_webpage}")
+                    updated_dt = True
+                    break
+
+                elif "dataset_webpage_url_ptr" in v.keys() and 'repo_name' in v.keys() and (repo == v['repo_name'] or repo == k):
+
+                    if 'dataset_identifier' in item.keys():
+                        dataset_webpage = re.sub('__ID__', item['dataset_identifier'],
+                                                            self.config['repos'][k]['dataset_webpage_url_ptr'])
+
+                    elif 'dataset_id' in item.keys():
+                        dataset_webpage = re.sub('__ID__', item['dataset_id'],
+                                                            self.config['repos'][k]['dataset_webpage_url_ptr'])
+
+                    else:
+                        dataset_webpage = 'na'
+
+                    datasets[i]['dataset_webpage'] = dataset_webpage
+
                 elif not updated_dt:
                     datasets[i]['dataset_webpage'] = 'na'
+
+                if 'repo_name' not in v.keys() and not updated_dt:
+                    # no support for repo_name
+                    self.logger.info(f"No repo_name mapping for {repo}")
+
         self.logger.info(f"Updated datasets len: {len(datasets)}")
         return datasets
 
@@ -1346,6 +1459,22 @@ class LLMParser(Parser):
 
         return [output.split("<|output|>")[1] for output in outputs]
 
+    def parse_metadata(self, metadata, model = 'gemini-2.0-flash'):
+        metadata = self.normalize_full_DOM(metadata)
+        self.logger.info(f"Parsing metadata: {metadata}")
+        dataset_info = self.extract_dataset_info(metadata)
+        return dataset_info
+
+    def extract_dataset_info(self, metadata):
+        self.logger.info("Extracting dataset information from metadata")
+
+        llm = LLMClient(model=self.config.get('llm_model', 'gemini-2.0-flash'), logger=self.logger)
+        response = llm.api_call(metadata)
+
+        # Post-process response into structured dict
+        dataset_info = self.safe_parse_json(response)
+        return dataset_info
+
 
 class MyBeautifulSoup(BeautifulSoup):
     # this function will extract text from the HTML, by also keeping the links where they appear in the HTML
@@ -1398,3 +1527,60 @@ class MyBeautifulSoup(BeautifulSoup):
 
     getText = get_text
     text = property(get_text)
+
+class LLMClient:
+    def __init__(self, model:str, logger=None):
+        self.model = model
+        self.logger = logger or logging.getLogger(__name__)
+        self.logger.info(f"Initializing LLMClient with model: {self.model}")
+        self._initialize_client(model)
+        self.prompt_manager = PromptManager("prompts/prompt_templates/metadata_prompts", self.logger)
+
+    def _initialize_client(self, model):
+        if model.startswith('gpt'):
+            self.client = OpenAI(api_key=os.environ['GPT_API_KEY'])
+        elif model.startswith('gemini'):
+            genai.configure(api_key=os.environ['GEMINI_KEY'])
+            self.client = genai.GenerativeModel(model)
+        else:
+            raise ValueError(f"Unsupported model: {self.model}")
+        self.logger.info(f"Client initialized: {self.client}")
+
+    def api_call(self, content):
+        self.logger.debug(f"Calling {self.model} with prompt length {len(content)}")
+        if self.model.startswith('gpt'):
+            return self._call_openai(content)
+        elif self.model.startswith('gemini'):
+            return self._call_gemini(content)
+        else:
+            raise ValueError(f"Unsupported model: {self.model}")
+
+    def _call_openai(self, content, temperature=0.0):
+        messages = self.prompt_manager.render_prompt(
+            self.prompt_manager.load_prompt("gpt_metadata_extract"),
+            entire_doc=True,
+            content=content,
+        )
+        response = self.client.chat.completions.create(
+            model=self.model,
+            messages=messages,
+            temperature=temperature,
+            response_format=dataset_metadata_response_schema_gpt
+        )
+        return response['choices'][0]['message']['content']
+
+    def _call_gemini(self, content, temperature=0.0):
+        messages = self.prompt_manager.render_prompt(
+            self.prompt_manager.load_prompt("gemini_metadata_extract"),
+            entire_doc=True,
+            content=content,
+        )
+        response = self.client.generate_content(
+            messages,
+            generation_config=genai.GenerationConfig(
+                response_mime_type="application/json",
+                response_schema=Dataset_metadata,
+                temperature=temperature,
+            )
+        )
+        return response.text
