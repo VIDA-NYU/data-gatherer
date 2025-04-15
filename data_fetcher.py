@@ -13,7 +13,6 @@ import mimetypes
 from bs4 import BeautifulSoup
 from urllib.parse import urlparse
 import pandas as pd
-from playwright.sync_api import sync_playwright
 
 # Abstract base class for fetching data
 class DataFetcher(ABC):

@@ -248,6 +248,8 @@ class Orchestrator:
     def get_data_preview(self, combined_df):
         """Shows user a preview of the data they are about to download."""
         self.metadata_parser = LLMParser(self.XML_config, self.logger)
+        scraper_tool = create_driver(self.config['DRIVER_PATH'], self.config['BROWSER'], self.config['HEADLESS'])
+        self.data_fetcher = WebScraper(scraper_tool, self.config, self.logger)
         done_already = []
         for i, row in combined_df.iterrows():
             self.logger.debug(f"Processing row {i}: {row}")
@@ -263,8 +265,12 @@ class Orchestrator:
                     continue
 
             done_already.append(row['dataset_webpage'])
-            self.logger.info(f"Previewing data for row {i}: {row['dataset_webpage']}")
-            html = requests.get(row['dataset_webpage']).text
+            self.logger.info(f"Previewing data for row {i}: {row['dataset_webpage']}, repo: {row['repository_reference']}")
+            if ('javascript_load_required' in self.XML_config['repos'][self.parser.repo_domain_to_name_mapping[row['repository_reference']]]):
+                self.logger.info(f"JavaScript load required for {row['repository_reference']}. Using WebScraper.")
+                html = self.data_fetcher.fetch_data(row['dataset_webpage'])
+            else:
+                html = requests.get(row['dataset_webpage']).text
             metadata = self.metadata_parser.parse_metadata(html)
             metadata['source_url'] = row['dataset_webpage']
             metadata['paper_with_dataset_citation'] = row['source_url']
