@@ -62,9 +62,19 @@
     "doi.org": {
       "dataset_webpage_url_ptr": "https://doi.org/d+.d+/pdb([wd]+)/pdb"
     },
-    "www.ncbi.nlm.nih.gov": {
+    "geo" : {
       "repo_name": "GEO",
       "dataset_webpage_url_ptr": "https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=__ID__"
+    },
+    "dbgap" : {
+      "repo_name": "dbGaP",
+      "dataset_webpage_url_ptr": "https://www.ncbi.nlm.nih.gov/projects/gap/cgi-bin/study.cgi?study_id=__ID__",
+      "id_pattern": "phs[0-9]+\\.\\w+\\d+\\.\\w+\\d+",
+      "default_id_suffix": ".v1.p1"
+    },
+    "sra": {
+      "repo_name": "sra",
+      "dataset_webpage_url_ptr": "https://www.ncbi.nlm.nih.gov/bioproject/?term=__ID__"
     }
   },
   "data_availability_sections": [
