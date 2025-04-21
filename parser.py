@@ -228,6 +228,7 @@ class LLMParser(Parser):
         self.prompt_manager = PromptManager(self.config['prompt_dir'], self.logger, self.config['response_file'])
         self.repo_names = self.get_repo_names()
         self.repo_domain_to_name_mapping = self.get_repo_domain_to_name_mapping()
+        self.logger.info(f"{self.repo_domain_to_name_mapping}")
 
         if self.config['llm_model'] == 'gemma2:9b':
             self.client = Client(host=os.environ['NYU_LLM_API'])  # env variable
@@ -332,6 +333,7 @@ class LLMParser(Parser):
             out_df = pd.concat([pd.DataFrame(dataset_links_w_target_pages),
                                 pd.DataFrame(supplementary_material_links)])  # check index error here
             self.logger.info(f"Dataset Links type: {type(out_df)} of len {len(out_df)}, with cols: {out_df.columns}")
+            self.logger.debug(f"Datasets: {out_df}")
 
             # Extract file extensions from download links if possible, and add to the dataframe out_df as column
             if 'download_link' in out_df.columns:
@@ -465,38 +467,45 @@ class LLMParser(Parser):
         # Find all sections with "data-availability"
         data_availability_sections = []
         for ptr in self.config['data_availability_sections']:
-            data_availability_sections.extend(api_xml.findall(ptr))
+            cont = api_xml.findall(ptr)
+            if cont is not None:
+                self.logger.info(f"Found {len(cont)} data availability sections. cont: {cont}")
+                data_availability_sections.append({"ptr": ptr, "cont": cont})
 
         hrefs = []
-        for section in data_availability_sections:
+        for das_element in data_availability_sections:
+            sections = das_element['cont']
+            pattern = das_element['ptr']
             # Find all <ext-link> elements in the section
-            ext_links = section.findall(".//ext-link", namespaces)
-            uris = section.findall(".//uris", namespaces)
+            for section in sections:
+                ext_links = section.findall(".//ext-link", namespaces)
+                uris = section.findall(".//uris", namespaces)
 
-            if uris is not None:
-                ext_links.extend(uris)
+                if uris is not None:
+                    ext_links.extend(uris)
 
-            self.logger.info(f"Found {len(ext_links)} ext-links in data availability section.")
+                self.logger.info(f"Retrieved {len(ext_links)} ext-links in data availability section pattern {ptr}.")
 
-            for link in ext_links:
-                # Extract href attribute
-                href = link.get('{http://www.w3.org/1999/xlink}href')  # Use correct namespace
+                for link in ext_links:
+                    # Extract href attribute
+                    href = link.get('{http://www.w3.org/1999/xlink}href')  # Use correct namespace
 
-                # Extract the text within the ext-link tag
-                link_text = link.text.strip() if link.text else "No description"
+                    # Extract the text within the ext-link tag
+                    link_text = link.text.strip() if link.text else "No description"
 
-                # Extract surrounding text (parent and siblings)
-                surrounding_text = self.get_surrounding_text(link)
+                    # Extract surrounding text (parent and siblings)
+                    surrounding_text = self.get_surrounding_text(link)
 
-                if href:
-                    hrefs.append({
-                        'href': href,
-                        'title': self.title,
-                        'link_text': link_text,
-                        'surrounding_text': surrounding_text,
-                        'source_section': 'data availability'
-                    })
-                    self.logger.info(f"Extracted item: {json.dumps(hrefs[-1], indent=4)}")
+                    if href:
+                        hrefs.append({
+                            'href': href,
+                            'title': self.title,
+                            'link_text': link_text,
+                            'surrounding_text': surrounding_text,
+                            'source_section': 'data availability',
+                            'retrieval_pattern': pattern
+                        })
+                        self.logger.info(f"Extracted item: {json.dumps(hrefs[-1], indent=4)}")
 
         return hrefs
 
@@ -510,33 +519,40 @@ class LLMParser(Parser):
         data_availability_sections = []
         for ptr in self.config['data_availability_sections']:
             self.logger.info(f"Searching for data availability sections using XPath: {ptr}")
-            data_availability_sections.extend(api_xml.findall(ptr))
+            cont = api_xml.findall(ptr)
+            if cont is not None:
+                self.logger.info(f"Found {len(cont)} data availability sections. cont: {cont}")
+                data_availability_sections.append({"ptr": ptr, "cont": cont})
 
         xrefs = []
-        for section in data_availability_sections:
-            # Find all <xref> elements in the section
-            xref_elements = section.findall(".//xref")
+        for das_element in data_availability_sections:
+            sections = das_element['cont']
+            pattern = das_element['ptr']
+            for section in sections:
+                # Find all <xref> elements in the section
+                xref_elements = section.findall(".//xref")
 
-            self.logger.info(f"Found {len(xref_elements)} xref elements in data availability section.")
+                self.logger.info(f"Found {len(xref_elements)} xref elements in data availability section.")
 
-            for xref in xref_elements:
-                # Extract cross-reference details
-                xref_text = xref.text.strip() if xref.text else "No xref description"
-                ref_type = xref.get('ref-type')
-                rid = xref.get('rid')
-                if ref_type == "bibr":
-                    continue
+                for xref in xref_elements:
+                    # Extract cross-reference details
+                    xref_text = xref.text.strip() if xref.text else "No xref description"
+                    ref_type = xref.get('ref-type')
+                    rid = xref.get('rid')
+                    if ref_type == "bibr":
+                        continue
 
-                # Extract surrounding text (parent and siblings)
-                surrounding_text = self.get_surrounding_text(xref)
+                    # Extract surrounding text (parent and siblings)
+                    surrounding_text = self.get_surrounding_text(xref)
 
-                xrefs.append({
-                    'href': current_url_address + '#' + rid,
-                    'link_text': xref_text,
-                    'surrounding_text': surrounding_text,
-                    'source_section': 'data availability'
-                })
-                self.logger.info(f"Extracted xref item: {json.dumps(xrefs[-1], indent=4)}")
+                    xrefs.append({
+                        'href': current_url_address + '#' + rid,
+                        'link_text': xref_text,
+                        'surrounding_text': surrounding_text,
+                        'source_section': 'data availability',
+                        'retrieval_pattern': pattern
+                    })
+                    self.logger.info(f"Extracted xref item: {json.dumps(xrefs[-1], indent=4)}")
 
         return xrefs
 
@@ -551,87 +567,96 @@ class LLMParser(Parser):
         supplementary_material_sections = []
         for ptr in self.config['supplementary_material_sections']:
             self.logger.debug(f"Searching for supplementary material sections using XPath: {ptr}")
-            supplementary_material_sections.extend(api_xml.findall(ptr))
+            cont = api_xml.findall(ptr)
+            if cont is not None:
+                self.logger.info(f"Found {len(cont)} supplementary material sections. cont: {cont}")
+                supplementary_material_sections.append({"ptr": ptr, "cont": cont})
 
         self.logger.debug(f"Found {len(supplementary_material_sections)} supplementary-material sections.")
 
         hrefs = []
 
-        for section in supplementary_material_sections:
-            # Find all <media> elements in the section (used to link to supplementary files)
-            media_links = section.findall(".//media", namespaces)
+        for section_element in supplementary_material_sections:
+            self.logger.info(f"Processing section: {section_element}")
+            sections = section_element['cont']
+            pattern = section_element['ptr']
+            for section in sections:
+                # Find all <media> elements in the section (used to link to supplementary files)
+                media_links = section.findall(".//media", namespaces)
 
-            for media in media_links:
-                # Extract href attribute from the <media> tag
-                href = media.get('{http://www.w3.org/1999/xlink}href')  # Use correct namespace
+                for media in media_links:
+                    # Extract href attribute from the <media> tag
+                    href = media.get('{http://www.w3.org/1999/xlink}href')  # Use correct namespace
 
-                # Get the parent <supplementary-material> to extract more info (like content-type, id, etc.)
-                supplementary_material_parent = media.getparent()
+                    # Get the parent <supplementary-material> to extract more info (like content-type, id, etc.)
+                    supplementary_material_parent = media.getparent()
 
-                # Extract attributes from <supplementary-material>
-                content_type = supplementary_material_parent.get('content-type', 'Unknown content type')
+                    # Extract attributes from <supplementary-material>
+                    content_type = supplementary_material_parent.get('content-type', 'Unknown content type')
 
-                download_link = self.reconstruct_download_link(href, content_type, current_url_address)
+                    download_link = self.reconstruct_download_link(href, content_type, current_url_address)
 
-                media_id = supplementary_material_parent.get('id', 'No ID')
+                    media_id = supplementary_material_parent.get('id', 'No ID')
 
-                # Extract the <title> within <caption> for the supplementary material title
-                title_element = supplementary_material_parent.find(".//caption/title")
-                title = title_element.text if title_element is not None else "No Title"
+                    # Extract the <title> within <caption> for the supplementary material title
+                    title_element = supplementary_material_parent.find(".//caption/title")
+                    title = title_element.text if title_element is not None else "No Title"
 
-                # Extract the surrounding text (e.g., description within <p> tag)
-                parent_p = media.getparent()  # Assuming the media element is within a <p> tag
-                if parent_p is not None:
-                    surrounding_text = " ".join(parent_p.itertext()).strip()  # Gets all text within the <p> tag
-                else:
-                    surrounding_text = "No surrounding text found"
+                    # Extract the surrounding text (e.g., description within <p> tag)
+                    parent_p = media.getparent()  # Assuming the media element is within a <p> tag
+                    if parent_p is not None:
+                        surrounding_text = re.sub("[\s\n]+", "  ", " ".join(parent_p.itertext()).strip())  # Gets all text within the <p> tag
+                    else:
+                        surrounding_text = "No surrounding text found"
 
-                # Extract the full description within the <p> tag if available
-                description_element = supplementary_material_parent.find(".//caption/p")
-                description = " ".join(
-                    description_element.itertext()).strip() if description_element is not None else "No description"
+                    # Extract the full description within the <p> tag if available
+                    description_element = supplementary_material_parent.find(".//caption/p")
+                    description = " ".join(
+                        description_element.itertext()).strip() if description_element is not None else "No description"
 
-                # Log media attributes and add to results
-                self.logger.info(f"Extracted media item with href: {href}")
-                self.logger.info(f"Source url: {current_url_address}")
-                self.logger.info(f"Supplementary material title: {title}")
-                self.logger.info(f"Content type: {content_type}, ID: {media_id}")
-                self.logger.info(f"Surrounding text for media: {surrounding_text}")
-                self.logger.info(f"Description: {description}")
-                self.logger.info(f"Download_link: {download_link}")
+                    # Log media attributes and add to results
+                    self.logger.info(f"Extracted media item with href: {href}")
+                    self.logger.info(f"Source url: {current_url_address}")
+                    self.logger.info(f"Supplementary material title: {title}")
+                    self.logger.info(f"Content type: {content_type}, ID: {media_id}")
+                    self.logger.info(f"Surrounding text for media: {surrounding_text}")
+                    self.logger.info(f"Description: {description}")
+                    self.logger.info(f"Download_link: {download_link}")
 
-                if href:
+                    if href:
+                        hrefs.append({
+                            'link': href,
+                            'source_url': current_url_address,
+                            'download_link': download_link,
+                            'title': title,
+                            'content_type': content_type,
+                            'id': media_id,
+                            'surrounding_text': surrounding_text,
+                            'description': description,
+                            'source_section': 'supplementary material',
+                            "retrieval_pattern": pattern,
+                        })
+                        self.logger.debug(f"Extracted item: {json.dumps(hrefs[-1], indent=4)}")
+
+                # Find all <inline-supplementary-material> elements in the section
+                inline_supplementary_materials = section.findall(".//inline-supplementary-material")
+                self.logger.info(f"Found {len(inline_supplementary_materials)} inline-supplementary-material elements.")
+
+                for inline in inline_supplementary_materials:
+                    # repeating steps like in media links above
                     hrefs.append({
-                        'link': href,
-                        'source_url': current_url_address,
-                        'download_link': download_link,
-                        'title': title,
-                        'content_type': content_type,
-                        'id': media_id,
-                        'surrounding_text': surrounding_text,
-                        'description': description,
-                        'source_section': 'supplementary material'
+                        "link": inline.get('{http://www.w3.org/1999/xlink}href'),
+                        "content_type": inline.get('content-type', 'Unknown content type'),
+                        "id": inline.get('id', 'No ID'),
+                        "title": inline.get('title', 'No Title'),
+                        "source_section": 'supplementary material inline',
+                        "retrieval_pattern": ".//inline-supplementary-material",
+                        "download_link": self.reconstruct_download_link(inline.get('{http://www.w3.org/1999/xlink}href'),
+                                                                        inline.get('content-type', 'Unknown content type'),
+                                                                        current_url_address)
                     })
-                    self.logger.debug(f"Extracted item: {json.dumps(hrefs[-1], indent=4)}")
 
-            # Find all <inline-supplementary-material> elements in the section
-            inline_supplementary_materials = section.findall(".//inline-supplementary-material")
-            self.logger.info(f"Found {len(inline_supplementary_materials)} inline-supplementary-material elements.")
-
-            for inline in inline_supplementary_materials:
-                # repeating steps like in media links above
-                hrefs.append({
-                    "link": inline.get('{http://www.w3.org/1999/xlink}href'),
-                    "content_type": inline.get('content-type', 'Unknown content type'),
-                    "id": inline.get('id', 'No ID'),
-                    "title": inline.get('title', 'No Title'),
-                    "source_section": 'supplementary material inline',
-                    "download_link": self.reconstruct_download_link(inline.get('{http://www.w3.org/1999/xlink}href'),
-                                                                    inline.get('content-type', 'Unknown content type'),
-                                                                    current_url_address)
-                })
-
-            self.logger.info(f"Extracted supplementary material links:\n{hrefs}")
+                self.logger.info(f"Extracted supplementary material links:\n{hrefs}")
 
         return hrefs
 
@@ -704,7 +729,7 @@ class LLMParser(Parser):
         # Join the list into a single string for readability
         surrounding_text = " ".join(parent_text)
 
-        return surrounding_text
+        return re.sub("[\s\n]+(\s+)]", "\1", surrounding_text)
 
     def union_additional_data(self, parsed_data, additional_data):
         """
@@ -746,6 +771,11 @@ class LLMParser(Parser):
                 self.logger.info(f"Processing data availability text")
                 # Call the generalized function
                 datasets = self.retrieve_datasets_from_content(cont, repos_elements, model=self.config['llm_model'], temperature=0)
+
+                for dt in datasets:
+                    dt['source_section'] = element['source_section']
+                    dt['retrieval_pattern'] = element['retrieval_pattern']
+
                 ret.extend(datasets)
             else:
                 self.logger.debug(f"Processing supplementary material element")
@@ -786,6 +816,7 @@ class LLMParser(Parser):
         for dataset in datasets:
             self.logger.info(f"iter dataset ({type(dataset)}): {dataset}")
             dataset['source_section'] = 'data_availability'
+            dataset['retrieval_pattern'] = 'data availability'
             ret.append(dataset)
 
         self.logger.info(f"Final ret additional data: {len(ret)} items")
@@ -1228,6 +1259,7 @@ class LLMParser(Parser):
                     append_item['dataset_identifier'] = append_item['dataset_identifier'].strip()
                     append_item['data_repository'] = append_item['data_repository'].strip()
                     append_item['source_section'] = link['source_section']
+                    append_item['retrieval_pattern'] = link['retrieval_pattern'] if 'retrieval_pattern' in link.keys() else None
                     ret.append(append_item)
                     self.logger.info(f"Response appended to df {append_item}")
                     progress += 1
@@ -1240,6 +1272,7 @@ class LLMParser(Parser):
                 ret_element['dataset_identifier'] = ret_element['dataset_identifier'].strip()
                 ret_element['data_repository'] = ret_element['data_repository'].strip()
                 ret_element['source_section'] = link['source_section']
+                ret_element['retrieval_pattern'] = link['retrieval_pattern'] if 'retrieval_pattern' in link.keys() else None
                 ret.append(ret_element)
                 progress += 1
 
@@ -1327,13 +1360,45 @@ class LLMParser(Parser):
         repo_mapping = {}
         for k, v in self.config['repos'].items():
             if 'repo_name' in v.keys():
-                repo_mapping[k] = v['repo_name']
+                repo_mapping[k] = v['repo_name'].lower()
             else:
                 repo_mapping[k] = k
 
         ret = {v:k for k,v in repo_mapping.items()}
+        self.logger.debug(f"Repo mapping: {ret}")
         return ret
 
+    def resolve_accession_id(self, dataset_identifier, data_repository):
+        """
+        This function resolves the accession ID for a given dataset identifier and data repository.
+        """
+        self.logger.info(f"Resolving accession ID for {dataset_identifier} in {data_repository}")
+        if data_repository in self.config['repos']:
+            repo_config = self.config['repos'][data_repository]
+            pattern = repo_config.get('id_pattern')
+            if pattern and not re.match(pattern, dataset_identifier):
+                self.logger.warning(f"Identifier {dataset_identifier} does not match pattern for {data_repository}")
+            if 'default_id_suffix' in repo_config:
+                return dataset_identifier.lower() + repo_config['default_id_suffix']
+        return dataset_identifier
+
+    def resolve_data_repository(self, repo: str) -> str:
+        """
+        Normalize the repository domain from a URL or text reference using config mappings.
+        """
+        for k, v in self.config["repos"].items():
+            self.logger.info(f"Checking if {repo} == {k}")
+            # match where repo_link has been extracted
+            if k == repo:
+                self.logger.info(f"Exact match found for repo: {repo}")
+                break
+
+            elif 'repo_name' in v.keys() and repo == v['repo_name'].lower():
+                self.logger.info(f"Found repo_name match for {repo}")
+                repo = k
+                break
+
+        return repo  # fallback
 
     def get_dataset_webpage(self, datasets):
         """
@@ -1356,95 +1421,52 @@ class LLMParser(Parser):
                 self.logger.info(f"Skipping dataset {1 + i}: no data_repository for item")
                 continue
 
-            if ('dataset_identifier' in item.keys() and item['dataset_identifier'] == 'n/a') or (
-                    'dataset_id' in item.keys() and item['dataset_id'] == 'n/a'
-            ):
+            accession_id = item.get('dataset_identifier', item.get('dataset_id', 'n/a'))
+            if accession_id == 'n/a':
                 self.logger.info(f"Skipping dataset {1 + i}: no dataset_identifier for item")
                 continue
+            else:
+                self.logger.info(f"Raw accession ID: {accession_id}")
 
             if ('dataset_webpage' in item.keys()):
                 self.logger.debug(f"Skipping dataset {1 + i}: already has dataset_webpage")
                 continue
 
             if 'data_repository' in item.keys():
-                repo = self.url_to_repo_domain(item['data_repository'])
+                repo = self.url_to_repo_domain(item['data_repository']).lower()
             elif 'repository_reference' in item.keys():
-                repo = self.url_to_repo_domain(item['repository_reference'])
+                repo = self.url_to_repo_domain(item['repository_reference']).lower()
             else:
                 self.logger.error(f"Error extracting data repository for item: {item}")
                 continue
 
-            self.logger.info(f"Processing dataset {1 + i} with repo: {repo}")
-            self.logger.info(f"Processing dataset {1 + i} with keys: {item.keys()}")
+            repo = self.resolve_data_repository(repo)
+            accession_id = self.resolve_accession_id(accession_id, repo)
+
+            self.logger.info(f"Processing dataset {1 + i} with repo: {repo} and accession_id: {accession_id}")
+            self.logger.debug(f"Processing dataset {1 + i} with keys: {item.keys()}")
 
             updated_dt = False
-            for k, v in self.config["repos"].items():
-                self.logger.info(f"Checking if {repo} == {k}")
-                # match where repo_link has been extracted
-                if k == repo and 'url_concat_string' in v.keys():
-                    if 'repo_mapping' in v.keys():
-                        repo_name = self.config['repos'][repo]['repo_mapping']
-                    else:
-                        repo_name = repo
-                    self.logger.info(f"Found config options for {k}")
 
-                    if 'dataset_identifier' in item.keys():
-                        dataset_webpage = ('https://' + repo_name + re.sub('__ID__', item['dataset_identifier'],
-                                                                           self.config['repos'][repo]['url_concat_string']))
+            if repo in self.config['repos'].keys():
 
-                    elif 'dataset_id' in item.keys():
-                        dataset_webpage = ('https://' + repo_name + re.sub('__ID__', item['dataset_id'],
-                                                                           self.config['repos'][repo]['url_concat_string']))
+                if "dataset_webpage_url_ptr" in self.config['repos'][repo]:
+                    dataset_webpage = re.sub('__ID__', accession_id, self.config['repos'][repo]['dataset_webpage_url_ptr'])
 
-                    else:
-                        dataset_webpage = 'na'
+                elif 'url_concat_string' in self.config['repos'][repo]:
+                    dataset_webpage = ('https://' + repo + re.sub('__ID__', accession_id,
+                                                                   self.config['repos'][repo]['url_concat_string']))
 
-                    datasets[i]['dataset_webpage'] = dataset_webpage
-                    self.logger.info(f"Dataset page: {dataset_webpage}")
-                    updated_dt = True
-                    break
+                else:
+                    self.logger.warning(f"No dataset_webpage_url_ptr or url_concat_string found for {repo}. Maybe lost in refactoring 21 April 2025")
+                    dataset_webpage = 'na'
 
-                # match when repo name is getting extracted
-                elif 'repo_name' in v.keys() and repo == v['repo_name'] and 'url_concat_string' in v.keys():
-                    self.logger.info(f"Found config options for {k}")
+                self.logger.info(f"Dataset page: {dataset_webpage}")
+                datasets[i]['dataset_webpage'] = dataset_webpage
 
-                    if 'dataset_identifier' in item.keys():
-                        dataset_webpage = ('https://' + k + re.sub('__ID__', item['dataset_identifier'],
-                                                                   self.config['repos'][k]['url_concat_string']))
-
-                    elif 'dataset_id' in item.keys():
-                        dataset_webpage = ('https://' + k + re.sub('__ID__', item['dataset_id'],
-                                                                   self.config['repos'][k]['url_concat_string']))
-
-                    else:
-                        dataset_webpage = 'na'
-
-                    datasets[i]['dataset_webpage'] = dataset_webpage
-                    self.logger.info(f"Dataset page: {dataset_webpage}")
-                    updated_dt = True
-                    break
-
-                elif "dataset_webpage_url_ptr" in v.keys() and 'repo_name' in v.keys() and (repo == v['repo_name'] or repo == k):
-
-                    if 'dataset_identifier' in item.keys():
-                        dataset_webpage = re.sub('__ID__', item['dataset_identifier'],
-                                                            self.config['repos'][k]['dataset_webpage_url_ptr'])
-
-                    elif 'dataset_id' in item.keys():
-                        dataset_webpage = re.sub('__ID__', item['dataset_id'],
-                                                            self.config['repos'][k]['dataset_webpage_url_ptr'])
-
-                    else:
-                        dataset_webpage = 'na'
-
-                    datasets[i]['dataset_webpage'] = dataset_webpage
-
-                elif not updated_dt:
-                    datasets[i]['dataset_webpage'] = 'na'
-
-                if 'repo_name' not in v.keys() and not updated_dt:
-                    # no support for repo_name
-                    self.logger.info(f"No repo_name mapping for {repo}")
+            else:
+                self.logger.warning(f"Repository {repo} not supported in config. Skipping dataset {1 + i}.")
+                continue
 
         self.logger.info(f"Updated datasets len: {len(datasets)}")
         return datasets
