@@ -442,6 +442,7 @@ class DataCompletenessChecker:
             sections = raw_data.findall(pattern)
             if sections:
                 for section in sections:
+                    self.logger.debug(f"Found section: {ET.tostring(section, encoding='unicode')}")
                     # Check if the section contains relevant links
                     if self.has_links_in_section(section, namespaces):
                         return True
@@ -487,12 +488,15 @@ class DataCompletenessChecker:
                 if el is None:
                     continue
 
+                self.logger.info(f"Data-like text checkpoint: {el}")
+
                 item = {
                     "link": el["link"],
                     "source_section": section_name + '_elements', # maybe change this to data_availability if text contains? Check later is better
                     "source_url": url,
                     "surrounding_text": el["text"] if "text" in el else "",
-                    "download_link": self.reconstruct_download_link(el["link"], "local-data", url)
+                    "download_link": self.reconstruct_download_link(el["link"], "local-data", url),
+                    "retrieval_pattern": el["xpath"] if "xpath" in el else ""
                 }
                 items.append(item)
 
@@ -504,7 +508,8 @@ class DataCompletenessChecker:
                     "link": "n/a",
                     "source_section": "data_availability",
                     "source_url": url,
-                    "surrounding_text": elm,
+                    "surrounding_text": elm["text"] if "text" in elm else "",
+                    "retrieval_pattern": elm["xpath"] if "xpath" in elm else ""
                 }
                 if item not in items:
                     items.append(item)
@@ -540,8 +545,8 @@ class DataCompletenessChecker:
                 child_element = self.safety_driver.find_element(By.XPATH, xpath)
                 text = child_element.text
                 if text and text not in rule_based_matches:
-                    self.logger.info(f"Found das-like text: {text}")
-                    rule_based_matches.append(text)
+                    self.logger.info(f"Found das-like text: {text} at {xpath}")
+                    rule_based_matches.append({"text": text, "xpath": xpath})
 
             except Exception as e:
                 self.logger.debug(f"Invalid xpath: {xpath}")
@@ -562,16 +567,25 @@ class DataCompletenessChecker:
             self.logger.debug(f"Checking path: {xpath}")
             try:
                 child_element = self.safety_driver.find_element(By.XPATH, xpath)
-                anchor = child_element.find_elements(By.TAG_NAME, 'a')
+                anchors = child_element.find_elements(By.TAG_NAME, 'a')
                 # get href attribute from anchor elements if any links in anchor
-                if anchor:
-                    links = [a.get_attribute('href') for a in anchor]
+                for a in anchors:
+                    link = [a.get_attribute('href', None)]
                     # drop None values from link
-                    links = [link for link in links if link]
-                    self.logger.info(f"Found links: {links}")
+                    self.logger.info(f"Found links: {link}") if link is not None else self.logger.info("No links found")
 
                     text = child_element.text
-                    rule_based_matches.extend([{"link": link, "surrounding_text": text} for link in links if link and link not in rule_based_matches])
+
+                    # extract more attributes of anchor element
+                    class_name = a.get_attribute('class', None)
+                    data_ga_action = a.get_attribute('data-ga-action', None)
+
+                    rule_based_matches.extend([{"link": link,
+                                                "surrounding_text": text,
+                                                "xpath": xpath,
+                                                "source_section": section,
+                                                "class": class_name,
+                                                "data_ga_action": data_ga_action}])
 
             except Exception as e:
                 self.logger.debug(f"Invalid xpath: {xpath}")

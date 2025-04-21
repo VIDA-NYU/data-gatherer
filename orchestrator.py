@@ -1,4 +1,6 @@
 import logging
+
+import numpy as np
 import requests
 from logger_setup import setup_logging
 from data_fetcher import *
@@ -247,34 +249,52 @@ class Orchestrator:
 
     def get_data_preview(self, combined_df):
         """Shows user a preview of the data they are about to download."""
+        self.already_previewed = []
         self.metadata_parser = LLMParser(self.XML_config, self.logger)
         scraper_tool = create_driver(self.config['DRIVER_PATH'], self.config['BROWSER'], self.config['HEADLESS'])
+
+        if isinstance(self.data_fetcher, WebScraper):
+            self.data_fetcher.quit()
+
         self.data_fetcher = WebScraper(scraper_tool, self.config, self.logger)
-        done_already = []
+
         for i, row in combined_df.iterrows():
-            self.logger.debug(f"Processing row {i}: {row}")
-            if row['dataset_webpage'] in done_already or (type(row['dataset_webpage']) != float and len(row['dataset_webpage'])) <= 5:
-                self.logger.debug(f"Row {i} already processed or invalid. Skipping...")
+            self.logger.info(f"Row # {i}")
+
+            # skip if already added
+            if row['dataset_webpage'] in self.already_previewed or ('download_link' in row and row['download_link'
+            ] in self.already_previewed):
+                self.logger.info(f"Duplicate dataset. Skipping...")
                 continue
+
+            # identify those that may be datasets
             if type(row['dataset_webpage']) != str or len(row['dataset_webpage']) <= 5:
-                if 'data' not in row['source_section']:
+                if (row.get('file_extension', None) is not None and 'data' not in row['source_section'] and row['file_extension'] not
+                        in ['xlsx', 'csv', 'json', 'xml', 'zip']):
+                    self.logger.info(f"Skipping row {i} as it does not contain a valid dataset webpage or file extension.")
                     continue
                 else:
-                    self.logger.debug(f"Row {row}")
-                    #here should go the hardscraped files with some data-like content delete continue and write the code
+                    self.logger.info(f"Potentially a valid dataset, displaying hardscraped metadata")
+                    #metadata = self.metadata_parser.parse_metadata(row['source_section'])
+                    hardsraped_metadata = {k:v for k,v in row.items() if v is not None and v not in ['nan', 'None', '']}
+                    self.display_data_preview(hardsraped_metadata)
                     continue
 
-            done_already.append(row['dataset_webpage'])
-            self.logger.info(f"Previewing data for row {i}: {row['dataset_webpage']}, repo: {row['repository_reference']}")
-            if ('javascript_load_required' in self.XML_config['repos'][self.parser.repo_domain_to_name_mapping[row['repository_reference']]]):
-                self.logger.info(f"JavaScript load required for {row['repository_reference']}. Using WebScraper.")
-                html = self.data_fetcher.fetch_data(row['dataset_webpage'])
             else:
-                html = requests.get(row['dataset_webpage']).text
-            metadata = self.metadata_parser.parse_metadata(html)
-            metadata['source_url'] = row['dataset_webpage']
+                self.logger.info(f"LLM scraped metadata")
+                repo_mapping_key = row['repository_reference'].lower()
+                self.logger.info(f"Repository mapping key: {repo_mapping_key} and {self.XML_config['repos']}")
+                if ('javascript_load_required' in self.XML_config['repos'][self.parser.repo_domain_to_name_mapping[repo_mapping_key]]):
+                    self.logger.info(f"JavaScript load required for {row['repository_reference']}. Using WebScraper.")
+                    html = self.data_fetcher.fetch_data(row['dataset_webpage'])
+                else:
+                    html = requests.get(row['dataset_webpage']).text
+                metadata = self.metadata_parser.parse_metadata(html)
+                metadata['source_url_for_metadata'] = row['dataset_webpage']
+
             metadata['paper_with_dataset_citation'] = row['source_url']
             self.display_data_preview(metadata)
+        self.data_fetcher.quit()
 
     def display_data_preview(self, metadata):
         """
@@ -285,8 +305,10 @@ class Orchestrator:
             self.logger.warning("Metadata is not a dictionary. Cannot display properly.")
             return
 
+        self.logger.debug("Iterating over metadata items to show non-null fields:")
         for key, value in metadata.items():
-            print(f"{key}: {value}")
+            if value is not None and value not in ['nan', 'None', '']:
+                print(f"{key}: {value}")
 
         user_input = input("\nDo you want to proceed with downloading this dataset? [y/N]: \n"
                            "__________________________________________________________________  ").strip().lower()
@@ -294,7 +316,20 @@ class Orchestrator:
             self.logger.info("User declined to download the dataset.")
         else:
             self.downloadables.append(metadata)
+            self.already_previewed.append(self.get_internal_id(metadata))
+            self.logger.info(f"Added {self.get_internal_id(metadata)} to self.already_previewed.")
             self.logger.info("User confirmed download. Proceeding...")
+
+    def get_internal_id(self, metadata):
+        self.logger.info(f"Getting internal ID for {metadata}")
+        if 'source_url_for_metadata' in metadata and metadata['source_url_for_metadata'] is not None and metadata[
+            'source_url_for_metadata'] not in ['nan', 'None', '', np.nan]:
+            return metadata['source_url_for_metadata']
+        elif 'download_link' in metadata and metadata['download_link'] is not None:
+            return metadata['download_link']
+        else:
+            self.logger.warning("No valid internal ID found in metadata.")
+            return None
 
     def run(self):
         """Main method to run the Orchestrator."""
