@@ -57,6 +57,9 @@ class Orchestrator:
         elif self.config['search_method'] == 'api':
             self.logger.error("API data source not yet implemented.")
 
+        else:
+            raise ValueError(f"Invalid search method: {self.config['search_method']}")
+
         self.logger.info("Data fetcher setup completed.")
 
         return self.data_fetcher.scraper_tool
@@ -82,6 +85,7 @@ class Orchestrator:
 
             # if model processes the entire document, fetch the entire document and go to the parsing step
             if (self.XML_config['llm_model'] in self.XML_config['entire_document_models'] and self.XML_config['process_entire_document']):
+                self.logger.info("Fetching entire document for processing.")
                 self.raw_data_format = "full_HTML"
                 raw_data = self.data_fetcher.fetch_data(url)
                 raw_data = self.data_fetcher.remove_cookie_patterns(raw_data)
@@ -108,11 +112,12 @@ class Orchestrator:
                     additional_data = self.data_checker.ensure_data_sections(raw_data, url)
                     self.logger.debug(f"Additional data fetched as: {additional_data}")
 
-                if self.config['write_htmls_xmls']:
-                    directory = self.config['html_xml_dir'] + self.publisher + '/'
-                    if self.raw_data_format == "HTML":
-                        self.data_fetcher.download_html(directory)
-                        self.logger.info(f"HTML saved to: {directory}")
+            if self.config['write_htmls_xmls']:
+                directory = self.config['html_xml_dir'] + self.publisher + '/'
+                self.logger.info(f"Raw Data is {self.raw_data_format}.")
+                if self.raw_data_format == "HTML" or self.raw_data_format == "full_HTML":
+                    self.data_fetcher.download_html(directory)
+                    self.logger.info(f"HTML saved to: {directory}")
                     # for XML files, debug print done by parser
 
             self.logger.info("Successfully fetched Raw content.")
@@ -120,7 +125,7 @@ class Orchestrator:
             # Step 2: Use RuleBasedParser to parse and extract HTML elements and rule-based matches
             if self.raw_data_format == "HTML":
                 self.logger.info("Using RuleBasedParser to parse data.")
-                self.parser = RuleBasedParser(self.config, self.logger)
+                self.parser = RuleBasedParser(self.XML_config, self.logger)
                 parsed_data = self.parser.parse_data(raw_data, self.publisher, self.current_url)
 
                 parsed_data['rule_based_classification'] = 'n/a'
@@ -157,7 +162,8 @@ class Orchestrator:
 
                 parsed_data['source_url'] = url
                 self.logger.info(f"Parsed data extraction completed. Elements collected: {len(parsed_data)}")
-                parsed_data.to_csv('staging_table/parsed_data_from_XML.csv', index=False)  # save parsed data to a file
+                if self.logger.level == logging.DEBUG:
+                    parsed_data.to_csv('staging_table/parsed_data_from_XML.csv', index=False)  # save parsed data to a file
 
             elif self.raw_data_format == "full_HTML":
                 self.logger.info("Using LLMParser to parse data.")
@@ -167,6 +173,10 @@ class Orchestrator:
                 self.logger.info(f"Parsed data extraction completed. Elements collected: {len(parsed_data)}")
                 if self.logger.level == logging.DEBUG:
                     parsed_data.to_csv('staging_table/parsed_data_from_XML.csv', index=False)
+
+            else:
+                self.logger.error(f"Unsupported raw data format: {self.raw_data_format}. Cannot parse data.")
+                return None
 
             self.logger.info("Raw Data parsing completed.")
 
@@ -309,6 +319,7 @@ class Orchestrator:
         for key, value in metadata.items():
             if value is not None and value not in ['nan', 'None', '']:
                 print(f"{key}: {value}")
+        time.sleep(0.1)
 
         user_input = input("\nDo you want to proceed with downloading this dataset? [y/N]: \n"
                            "__________________________________________________________________  ").strip().lower()
