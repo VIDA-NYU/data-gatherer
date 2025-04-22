@@ -194,6 +194,7 @@ class WebScraper(DataFetcher):
     def get_publication_name_from_driver(self):
         publication_name_pointer = self.scraper_tool.find_element(By.TAG_NAME, 'title')
         publication_name = re.sub("\n+", "", (publication_name_pointer.get_attribute("text")))
+        publication_name = re.sub("^\s+", "", publication_name)
         self.logger.info(f"Paper name: {publication_name}")
         return publication_name
 
