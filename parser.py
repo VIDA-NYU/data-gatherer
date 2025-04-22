@@ -3,7 +3,7 @@ from bs4 import BeautifulSoup, NavigableString, CData, Comment
 import re
 import logging
 import pandas as pd
-from lxml import etree
+from lxml import etree, html
 from lxml import html
 from ollama import Client
 from openai import OpenAI
@@ -62,6 +62,10 @@ dataset_metadata_response_schema_gpt = {
                     "type": "string",
                     "description": "Total number of files."
                 },
+                "sample_size": {
+                    "type": "string",
+                    "description": "How many samples are recorded in the dataset."
+                },
                 "file_size": {
                     "type": "string",
                     "description": "Cumulative file size or range."
@@ -74,9 +78,9 @@ dataset_metadata_response_schema_gpt = {
                     "type": "string",
                     "description": "Type or category of the file."
                 },
-                "file_description": {
+                "dataset_description": {
                     "type": "string",
-                    "description": "Summary of the file contents."
+                    "description": "Short summary of the dataset contents, plus - if mentioned - the use in the research publication of interes."
                 },
                 "file_url": {
                     "type": "string",
@@ -89,17 +93,32 @@ dataset_metadata_response_schema_gpt = {
                 "file_license": {
                     "type": "string",
                     "description": "License under which the file is distributed."
+                },
+                "request_access_needed": {
+                    "type": "string",
+                    "description": "[Yes or No] Whether access to the file requires a request."
+                },
+                "request_access_form_links": {
+                    "type": "array",
+                    "items": {
+                        "type": "string",
+                        "format": "uri",
+                        "description": "Links to forms or pages where access requests can be made."
+                    },
+                    "description": "Links to forms or pages where access requests can be made."
+                },
+                "dataset_id": {
+                    "type": "string",
+                    "description": "A unique identifier for the dataset."
+                },
+                "download_type": {
+                    "type": "string",
+                    "description": "Type of download (e.g., HTTP, FTP, API, ...)."
                 }
             },
             "required": [
-                "number_of_files",
-                "file_size",
-                "file_format",
-                "file_type",
-                "file_description",
-                "file_url",
-                "file_name",
-                "file_license"
+                "dataset_description",
+                "request_access_needed"
             ]
         }
     }
@@ -151,7 +170,7 @@ class RuleBasedParser(Parser):
     def parse_data(self, source_html, publisher, current_url_address, raw_data_format='HTML'):
         # initialize output
         links_on_webpage = []
-        self.logger.info("Function call: extract_links_data_from_source(source_html)")
+        self.logger.info("Function call: RuleBasedParser.parse_data(source_html)")
         soup = BeautifulSoup(source_html, "html.parser")
         compressed_HTML = self.compress_HTML(source_html)
         count = 0
@@ -228,7 +247,6 @@ class LLMParser(Parser):
         self.prompt_manager = PromptManager(self.config['prompt_dir'], self.logger, self.config['response_file'])
         self.repo_names = self.get_repo_names()
         self.repo_domain_to_name_mapping = self.get_repo_domain_to_name_mapping()
-        self.logger.info(f"{self.repo_domain_to_name_mapping}")
 
         if self.config['llm_model'] == 'gemma2:9b':
             self.client = Client(host=os.environ['NYU_LLM_API'])  # env variable
@@ -258,7 +276,7 @@ class LLMParser(Parser):
     def parse_data(self, api_data, publisher, current_url_address, additional_data=None, raw_data_format='XML'):
         out_df = None
         # Check if api_data is a string, and convert to XML if needed
-        self.logger.info(f"Function call: parse_data(api_data({type(api_data)}), publisher, current_url_address, "
+        self.logger.info(f"Function call: parse_data(api_data({type(api_data)}), {publisher}, {current_url_address}, "
                          f"additional_data, {raw_data_format})")
         if isinstance(api_data, str) and raw_data_format != 'full_HTML':
             try:
@@ -352,6 +370,8 @@ class LLMParser(Parser):
             if self.full_DOM:
                 self.logger.info(f"Extracting links from full HTML content.")
                 # preprocess the content to get only elements that do not change over different sessions
+                supplementary_material_links = self.extract_href_from_html_supplementary_material(api_data, current_url_address)
+
                 preprocessed_data = self.normalize_full_DOM(api_data)
 
                 #self.logger.info(f"Preprocessed data: {preprocessed_data}")
@@ -365,7 +385,7 @@ class LLMParser(Parser):
                 dataset_links_w_target_pages = self.get_dataset_webpage(augmented_dataset_links)
 
                 # Create a DataFrame from the dataset links union supplementary material links
-                out_df = pd.concat([pd.DataFrame(dataset_links_w_target_pages)])  # check index error here
+                out_df = pd.concat([pd.DataFrame(dataset_links_w_target_pages), supplementary_material_links])
 
             self.logger.info(f"Dataset Links type: {type(out_df)} of len {len(out_df)}, with cols: {out_df.columns}")
 
@@ -450,7 +470,7 @@ class LLMParser(Parser):
         """
         Extracts the file extension from a download link.
         """
-        self.logger.debug(f"Function_call: extract_file_extension(download_link)")
+        self.logger.debug(f"Function_call: extract_file_extension({download_link})")
         # Extract the file extension from the download link
         extension = None
         if type(download_link) == str:
@@ -556,6 +576,67 @@ class LLMParser(Parser):
 
         return xrefs
 
+    def extract_href_from_html_supplementary_material(self, raw_html, current_url_address):
+        self.logger.info(f"Function_call: extract_href_from_html_supplementary_material(tree, {current_url_address})")
+
+        tree = html.fromstring(raw_html)
+
+        supplementary_links = []
+
+        anchors = tree.xpath("//a[@data-ga-action='click_feat_suppl']")
+
+        for anchor in anchors:
+            href = anchor.get("href")
+            title = anchor.text_content().strip()
+
+            # Extract ALL attributes from <a>
+            anchor_attributes = anchor.attrib  # This gives you a dictionary of all attributes
+
+            # Get <sup> sibling for file size/type info
+            sup = anchor.getparent().xpath("./sup")
+            file_info = sup[0].text_content().strip() if sup else "n/a"
+
+            # Get <p> description if exists
+            p_desc = anchor.getparent().xpath("./p")
+            description = p_desc[0].text_content().strip() if p_desc else "n/a"
+
+            # Extract attributes from parent <section> for context
+            section = anchor.getparent().getparent()  # Assuming structure stays the same
+            section_id = section.get('id', 'n/a')
+            section_class = section.get('class', 'n/a')
+
+            # Combine all extracted info
+            link_data = {
+                'link': href,
+                'title': title,
+                'file_info': file_info,
+                'description': description,
+                'source_section': section_id,
+                'section_class': section_class,
+            }
+
+            link_data['download_link'] = self.reconstruct_download_link(href, link_data['section_class'], current_url_address)
+            link_data['file_extension'] = self.extract_file_extension(link_data['download_link']) if link_data['download_link'] is not None else None
+
+            # Merge anchor attributes (prefix keys to avoid collision)
+            for attr_key, attr_value in anchor_attributes.items():
+                link_data[f'a_attr_{attr_key}'] = attr_value
+
+            if 'doi.org' in link_data['link'] or 'scholar.google.com' in link_data['link']:
+                continue
+
+            supplementary_links.append(link_data)
+
+        # Convert to DataFrame
+        df_supp = pd.DataFrame(supplementary_links)
+
+        # Drop duplicates based on link
+        df_supp = df_supp.drop_duplicates(subset=['link'])
+        self.logger.info(f"Extracted {len(df_supp)} unique supplementary material links from HTML.")
+
+        return df_supp
+
+
     def extract_href_from_supplementary_material(self, api_xml, current_url_address):
 
         self.logger.info(f"Function_call: extract_href_from_supplementary_material(api_xml, current_url_address)")
@@ -568,8 +649,8 @@ class LLMParser(Parser):
         for ptr in self.config['supplementary_material_sections']:
             self.logger.debug(f"Searching for supplementary material sections using XPath: {ptr}")
             cont = api_xml.findall(ptr)
-            if cont is not None:
-                self.logger.info(f"Found {len(cont)} supplementary material sections. cont: {cont}")
+            if cont is not None and len(cont) != 0:
+                self.logger.info(f"Found {len(cont)} supplementary material sections {ptr}. cont: {cont}")
                 supplementary_material_sections.append({"ptr": ptr, "cont": cont})
 
         self.logger.debug(f"Found {len(supplementary_material_sections)} supplementary-material sections.")
@@ -657,7 +738,6 @@ class LLMParser(Parser):
                     })
 
                 self.logger.info(f"Extracted supplementary material links:\n{hrefs}")
-
         return hrefs
 
     def reconstruct_download_link(self, href, content_type, current_url_address):
@@ -672,6 +752,10 @@ class LLMParser(Parser):
             f"Inputs to reconstruct_download_link: {href}, {content_type}, {current_url_address}, {PMCID}")
         if content_type == 'local-data':
             download_link = "https://pmc.ncbi.nlm.nih.gov/articles/instance/" + PMCID + '/bin/' + href
+        elif content_type == 'media p':
+            file_name = os.path.basename(href)
+            self.logger.debug(f"Extracted file name: {file_name} from href: {href}")
+            download_link = "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC" + PMCID + '/bin/' + file_name
         return download_link
 
     def get_sibling_text(self, media_element):
@@ -1550,6 +1634,7 @@ class LLMParser(Parser):
 
         # Post-process response into structured dict
         dataset_info = self.safe_parse_json(response)
+        self.logger.info(f"Extracted dataset info: {dataset_info}")
         return dataset_info
 
 
