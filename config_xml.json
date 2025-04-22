@@ -1,7 +1,7 @@
 {
   "llm_model": "gemini-2.0-flash",
   "entire_document_models": ["gemini-1.5-flash", "gemini-1.5-pro", "gemini-2.0-flash-exp", "gemini-2.0-flash", "gpt-4o", "gpt-4o-mini"],
-  "process_entire_document": false,
+  "process_entire_document": true,
   "prompt_dir": "prompts/prompt_templates",
   "prompt_name": "retrieve_datasets_simple_JSON_gemini",
   "prompt_save_dir": "prompts/prompt_evals",
@@ -74,7 +74,8 @@
     },
     "sra": {
       "repo_name": "sra",
-      "dataset_webpage_url_ptr": "https://www.ncbi.nlm.nih.gov/bioproject/?term=__ID__"
+      "dataset_webpage_url_ptr": "https://www.ncbi.nlm.nih.gov/bioproject/?term=__ID__",
+      "javascript_load_required": true
     }
   },
   "data_availability_sections": [

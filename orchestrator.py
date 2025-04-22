@@ -270,15 +270,23 @@ class Orchestrator:
 
         for i, row in combined_df.iterrows():
             self.logger.info(f"Row # {i}")
+            self.logger.debug(f"Row keys: {row}")
+
+            dataset_webpage = row.get('dataset_webpage', None)
+            download_link = row.get('download_link', None)
+
+            if dataset_webpage is None and download_link is None:
+                self.logger.info(f"Row {i} does not contain 'dataset_webpage' or 'download_link'. Skipping...")
+                continue
 
             # skip if already added
-            if row['dataset_webpage'] in self.already_previewed or ('download_link' in row and row['download_link'
-            ] in self.already_previewed):
+            if (dataset_webpage is not None and dataset_webpage in self.already_previewed) or (
+                    download_link is not None and download_link in self.already_previewed):
                 self.logger.info(f"Duplicate dataset. Skipping...")
                 continue
 
             # identify those that may be datasets
-            if type(row['dataset_webpage']) != str or len(row['dataset_webpage']) <= 5:
+            if dataset_webpage is None or not isinstance(dataset_webpage, str) or len(dataset_webpage) <= 5:
                 if (row.get('file_extension', None) is not None and 'data' not in row['source_section'] and row['file_extension'] not
                         in ['xlsx', 'csv', 'json', 'xml', 'zip']):
                     self.logger.info(f"Skipping row {i} as it does not contain a valid dataset webpage or file extension.")
@@ -286,16 +294,15 @@ class Orchestrator:
                 else:
                     self.logger.info(f"Potentially a valid dataset, displaying hardscraped metadata")
                     #metadata = self.metadata_parser.parse_metadata(row['source_section'])
-                    hardsraped_metadata = {k:v for k,v in row.items() if v is not None and v not in ['nan', 'None', '']}
+                    hardsraped_metadata = {k:v for k,v in row.items() if v is not None and v not in ['nan', 'None', '', 'n/a', np.nan, 'NaN', 'na']}
                     self.display_data_preview(hardsraped_metadata)
                     continue
 
             else:
                 self.logger.info(f"LLM scraped metadata")
-                repo_mapping_key = row['repository_reference'].lower()
-                self.logger.info(f"Repository mapping key: {repo_mapping_key} and {self.XML_config['repos']}")
+                repo_mapping_key = row['repository_reference'].lower() if 'repository_reference' in row else row['data_repository'].lower()
                 if ('javascript_load_required' in self.XML_config['repos'][self.parser.repo_domain_to_name_mapping[repo_mapping_key]]):
-                    self.logger.info(f"JavaScript load required for {row['repository_reference']}. Using WebScraper.")
+                    self.logger.info(f"JavaScript load required for {repo_mapping_key} dataset webpage. Using WebScraper.")
                     html = self.data_fetcher.fetch_data(row['dataset_webpage'])
                 else:
                     html = requests.get(row['dataset_webpage']).text
@@ -317,7 +324,7 @@ class Orchestrator:
 
         self.logger.debug("Iterating over metadata items to show non-null fields:")
         for key, value in metadata.items():
-            if value is not None and value not in ['nan', 'None', '']:
+            if value is not None and value not in ['nan', 'None', '', np.nan, 'NaN', 'na', 'unavailable']:
                 print(f"{key}: {value}")
         time.sleep(0.1)
 
