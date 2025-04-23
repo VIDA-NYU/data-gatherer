@@ -58,30 +58,35 @@
     },
     "pdc.cancer.gov": {
       "repo_name": "Proteomic Data Commons",
-      "url_concat_string": "/pdc/study/__ID__"
+      "url_concat_string": "/pdc/study/__ID__",
+      "access_mode": "Complex download or Application to access",
     },
     "repository.jpostdb.org": {
       "repo_name": "JPOST",
       "url_concat_string": "entry/__ID__",
-      "download_root": "https://repository.jpostdb.org/entry/__ID__"
+      "download_root": "https://repository.jpostdb.org/entry/__ID__",
+      "access_mode": "Complex download",
     },
     "doi.org": {
       "dataset_webpage_url_ptr": "https://doi.org/d+.d+/pdb([wd]+)/pdb"
     },
     "geo" : {
       "repo_name": "GEO",
-      "dataset_webpage_url_ptr": "https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=__ID__"
+      "dataset_webpage_url_ptr": "https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=__ID__",
+      "access_mode": "Complex download",
     },
     "dbgap" : {
       "repo_name": "dbGaP",
       "dataset_webpage_url_ptr": "https://www.ncbi.nlm.nih.gov/projects/gap/cgi-bin/study.cgi?study_id=__ID__",
       "id_pattern": "phs[0-9]+\\.\\w+\\d+\\.\\w+\\d+",
-      "default_id_suffix": ".v1.p1"
+      "default_id_suffix": ".v1.p1",
+      "access_mode": "Application to access",
     },
     "sra": {
       "repo_name": "sra",
       "dataset_webpage_url_ptr": "https://www.ncbi.nlm.nih.gov/bioproject/?term=__ID__",
-      "javascript_load_required": true
+      "access_mode": "Complex download",
+      "javascript_load_required": true,
     }
   },
   "data_availability_sections": [
