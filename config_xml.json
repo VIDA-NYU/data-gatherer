@@ -21,34 +21,40 @@
     "ega-archive.org": {
       "repo_name": "European Genome-Phenome Archive",
       "url_concat_string": "/studies/__ID__",
-      "download_root": "https://download.cncb.ac.cn/gsa/__ID__"
+      "download_root": "https://download.cncb.ac.cn/gsa/__ID__",
+      "access_mode": "Contact to access",
     },
     "massive.ucsd.edu": {
       "repo_name": "MassIVE",
       "url_concat_string": "/ProteoSAFe/dataset.jsp?accession=__ID__",
-      "download_root": "ftp://massive.ucsd.edu/v06/__ID__/"
+      "download_root": "ftp://massive.ucsd.edu/v06/__ID__/",
+      "access_mode": "Complex download",
     },
     "www.ebi.ac.uk": {
       "repo_name": "PRIDE",
       "javascript_load_required": true,
       "url_concat_string": "/pride/archive/projects/__ID__",
-      "download_root": "https://ftp.pride.ebi.ac.uk/pride/data/archive/2024/07/__ID__/"
+      "download_root": "https://ftp.pride.ebi.ac.uk/pride/data/archive/2024/07/__ID__/",
+      "access_mode": "Complex download",
     },
     "www.iprox.cn": {
       "repo_name": "iProX",
       "url_concat_string": "/page/project.html?id=__ID__",
-      "download_root": ""
+      "download_root": "",
+      "access_mode": "Complex download",
     },
     "proteomecentral.proteomexchange.org": {
       "repo_name": "ProteomeCentral",
       "url_concat_string": "/cgi/GetDataset?ID=__ID__",
-      "download_root": ""
+      "download_root": "",
+      "access_mode": "Complex download",
     },
     "www.proteomexchange.org": {
       "repo_name": "ProteomeXchange",
       "url_concat_string": "/cgi/GetDataset?ID=__ID__",
       "repo_mapping" : "proteomecentral.proteomexchange.org",
-      "download_root": ""
+      "download_root": "", 
+      "access_mode": "Complex download",
     },
     "pdc.cancer.gov": {
       "repo_name": "Proteomic Data Commons",
