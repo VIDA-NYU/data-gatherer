@@ -1470,6 +1470,15 @@ class LLMParser(Parser):
         """
         Normalize the repository domain from a URL or text reference using config mappings.
         """
+        if ',' in repo:
+            self.logger.warning(f"Repository contains a comma: {repo}. Same data may be in multiple repos.")
+            ret = []
+            for r in repo.split(','):
+                r = r.strip()
+                if r in self.config['repos']:
+                    ret.append(self.resolve_data_repository(r))
+            return ret
+
         for k, v in self.config["repos"].items():
             self.logger.info(f"Checking if {repo} == {k}")
             # match where repo_link has been extracted
@@ -1517,9 +1526,9 @@ class LLMParser(Parser):
                 continue
 
             if 'data_repository' in item.keys():
-                repo = self.url_to_repo_domain(item['data_repository']).lower()
+                repo = self.resolve_data_repository(item['data_repository']).lower()
             elif 'repository_reference' in item.keys():
-                repo = self.url_to_repo_domain(item['repository_reference']).lower()
+                repo = self.resolve_data_repository(item['repository_reference']).lower()
             else:
                 self.logger.error(f"Error extracting data repository for item: {item}")
                 continue
@@ -1547,6 +1556,11 @@ class LLMParser(Parser):
 
                 self.logger.info(f"Dataset page: {dataset_webpage}")
                 datasets[i]['dataset_webpage'] = dataset_webpage
+
+                # add access mode
+                if 'access_mode' in self.config['repos'][repo]:
+                    self.logger.info(f"Adding access mode for dataset {1 + i}: {self.config['repos'][repo]['access_mode']}")
+                    datasets[i]['access_mode'] = self.config['repos'][repo]['access_mode']
 
             else:
                 self.logger.warning(f"Repository {repo} not supported in config. Skipping dataset {1 + i}.")

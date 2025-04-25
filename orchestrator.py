@@ -308,6 +308,11 @@ class Orchestrator:
                     html = requests.get(row['dataset_webpage']).text
                 metadata = self.metadata_parser.parse_metadata(html)
                 metadata['source_url_for_metadata'] = row['dataset_webpage']
+                metadata['access_mode'] = row.get('access_mode', None)
+                metadata['source_section'] = row.get('source_section', row.get('section_class', None))
+                metadata['download_link'] = row.get('download_link', None)
+                metadata['accession_id'] = row.get('dataset_id', row.get('dataset_identifier', None))
+                metadata['data_repository'] = repo_mapping_key
 
             metadata['paper_with_dataset_citation'] = row['source_url']
             self.display_data_preview(metadata)
@@ -324,7 +329,7 @@ class Orchestrator:
 
         self.logger.debug("Iterating over metadata items to show non-null fields:")
         for key, value in metadata.items():
-            if value is not None and value not in ['nan', 'None', '', np.nan, 'NaN', 'na', 'unavailable']:
+            if value is not None and value not in ['nan', 'None', '', np.nan, 'NaN', 'na', 'unavailable', 0]:
                 print(f"{key}: {value}")
         time.sleep(0.1)
 
