@@ -20,7 +20,7 @@
     "dataframe_fetch": false,
     "raw_HTML_data_filepath" : "input/fetched_data.parquet",
 
-    "user_download_preview": true,
+    "data_resource_preview": true,
 
     "API_supported_url_patterns": {
         "PMC": "https:\\/\\/www\\.ncbi\\.nlm\\.nih\\.gov\\/pmc\\/articles\\/"

@@ -377,7 +377,7 @@ class Orchestrator:
                # self.logger.info("Evaluating performance...")
                # self.classifier.evaluate_performance(combined_df, self.config['ground_truth'])
 
-            if self.config['user_download_preview']:
+            if self.config['data_resource_preview']:
                 self.get_data_preview(combined_df)
 
             combined_df.to_csv(self.config['full_output_file'], index=False)
