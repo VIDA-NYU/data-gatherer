@@ -1634,8 +1634,8 @@ class LLMParser(Parser):
 
         return [output.split("<|output|>")[1] for output in outputs]
 
-    def parse_metadata(self, metadata, model = 'gemini-2.0-flash'):
-        metadata = self.normalize_full_DOM(metadata)
+    def parse_metadata(self, metadata: str, model = 'gemini-2.0-flash') -> dict:
+        #metadata = self.normalize_full_DOM(metadata)
         self.logger.info(f"Parsing metadata: {metadata}")
         dataset_info = self.extract_dataset_info(metadata)
         return dataset_info
@@ -1755,7 +1755,6 @@ class LLMClient:
             messages,
             generation_config=genai.GenerationConfig(
                 response_mime_type="application/json",
-                response_schema=Dataset_metadata,
                 temperature=temperature,
             )
         )
