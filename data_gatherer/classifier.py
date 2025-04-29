@@ -1,10 +1,10 @@
 import json
-from logger_setup import setup_logging
+from data_gatherer.logger_setup import setup_logging
 import re
 from datetime import datetime
 from ollama import Client
 import os
-from prompt_manager import PromptManager
+from data_gatherer.prompt_manager import PromptManager
 
 class LLMClassifier:
     def __init__(self, config, logger):

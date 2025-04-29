@@ -1,4 +1,4 @@
-from orchestrator import Orchestrator
+from data_gatherer.orchestrator import Orchestrator
 import time
 
 if __name__ == "__main__":

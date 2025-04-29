@@ -7,8 +7,8 @@ import os
 import time
 import requests
 from lxml import etree as ET
-from selenium_setup import create_driver
-from logger_setup import setup_logging
+from data_gatherer.selenium_setup import create_driver
+from data_gatherer.logger_setup import setup_logging
 import mimetypes
 from bs4 import BeautifulSoup
 from urllib.parse import urlparse

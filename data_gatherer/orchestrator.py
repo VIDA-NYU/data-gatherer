@@ -2,12 +2,12 @@ import logging
 
 import numpy as np
 import requests
-from logger_setup import setup_logging
-from data_fetcher import *
-from parser import RuleBasedParser, LLMParser
-from classifier import LLMClassifier
+from data_gatherer.logger_setup import setup_logging
+from data_gatherer.data_fetcher import *
+from data_gatherer.parser import RuleBasedParser, LLMParser
+from data_gatherer.classifier import LLMClassifier
 import json
-from selenium_setup import create_driver
+from data_gatherer.selenium_setup import create_driver
 import pandas as pd
 import cloudscraper
 import time
