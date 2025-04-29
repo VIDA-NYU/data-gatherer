@@ -5,10 +5,11 @@ from datetime import datetime
 from ollama import Client
 import os
 from data_gatherer.prompt_manager import PromptManager
+from data_gatherer.config_loader import load_config
 
 class LLMClassifier:
     def __init__(self, config, logger):
-        self.config = json.load(open(config))
+        self.config = load_config(config)
         self.logger = logger
         self.client = Client(host=os.environ['NYU_LLM_API']) # env variable
         self.show_classify_stats = True

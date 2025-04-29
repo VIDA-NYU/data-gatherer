@@ -3,7 +3,7 @@ import time
 
 if __name__ == "__main__":
     t0 = time.time()
-    config_path = 'data_gatherer/config/config.json'  # Config with input file details
+    config_path = 'config.json'  # Config with input file details
 
     # Initialize driver and orchestrator using confi
     orchestrator = Orchestrator(config_path)
