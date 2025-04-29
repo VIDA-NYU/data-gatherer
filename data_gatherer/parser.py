@@ -1636,7 +1636,7 @@ class LLMParser(Parser):
 
     def parse_metadata(self, metadata: str, model = 'gemini-2.0-flash') -> dict:
         #metadata = self.normalize_full_DOM(metadata)
-        self.logger.info(f"Parsing metadata: {metadata}")
+        self.logger.info(f"Parsing metadata len: {len(metadata)}")
         dataset_info = self.extract_dataset_info(metadata)
         return dataset_info
 
