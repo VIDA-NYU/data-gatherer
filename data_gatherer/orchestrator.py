@@ -13,6 +13,7 @@ import cloudscraper
 import time
 from data_gatherer.resources_loader import load_config
 from tabulate import tabulate
+from IPython.display import display
 
 class Orchestrator:
     def __init__(self, config_path):
@@ -322,47 +323,38 @@ class Orchestrator:
 
     def display_data_preview(self, metadata):
         """
-        Display extracted metadata and ask the user whether to proceed with download.
-        Everything is shown inside the input() prompt (for Jupyter compatibility).
+        Display extracted metadata using a clean pandas DataFrame in Jupyter.
+        Ask the user whether to proceed with the download.
         """
         if not isinstance(metadata, dict):
             self.logger.warning("Metadata is not a dictionary. Cannot display properly.")
             return
 
-        rows = []
+        cleaned_rows = []
         for key, value in metadata.items():
             if value is not None and str(value).strip() not in ['nan', 'None', '', 'NaN', 'na', 'unavailable', '0']:
-                value_str = str(value).replace('\n', ' ')
-                if len(value_str) > 100:
-                    value_str = value_str[:97] + "..."
-                rows.append((key.strip(), value_str.strip()))
+                if isinstance(value, (dict, list)):
+                    val_str = json.dumps(value, indent=2)
+                else:
+                    val_str = str(value)
+                cleaned_rows.append({'Field': key, 'Value': val_str})
 
-        if not rows:
-            preview = "No usable metadata found.\n"
-        else:
-            # Compute column widths
-            max_key_len = max(len(k) for k, _ in rows)
-            max_val_len = max(len(v) for _, v in rows)
-            sep = f"+{'-' * (max_key_len + 2)}+{'-' * (max_val_len + 2)}+"
+        if not cleaned_rows:
+            print("No usable metadata found.")
+            return
 
-            table_lines = [sep]
-            table_lines.append(f"| {'Field'.ljust(max_key_len)} | {'Value'.ljust(max_val_len)} |")
-            table_lines.append(sep)
-            for key, value in rows:
-                table_lines.append(f"| {key.ljust(max_key_len)} | {value.ljust(max_val_len)} |")
-            table_lines.append(sep)
-            preview = "\n".join(table_lines)
+        # Build and display DataFrame
+        df = pd.DataFrame(cleaned_rows)
+        display(df)  # works nicely in Jupyter
 
-        # Jupyter input box will show this string as the question
-        user_input = input(
-            f"\nDataset preview:\n{preview}\n\nDo you want to proceed with downloading this dataset? [y/N]: "
-        ).strip().lower()
+        user_input = input("\nDo you want to proceed with downloading this dataset? [y/N]: ").strip().lower()
 
         if user_input not in ["y", "yes"]:
             self.logger.info("User declined to download the dataset.")
         else:
             self.downloadables.append(metadata)
             self.logger.info("User confirmed download. Proceeding...")
+
         self.already_previewed.append(self.get_internal_id(metadata))
         self.logger.info(f"Added {self.get_internal_id(metadata)} to self.already_previewed.")
 
