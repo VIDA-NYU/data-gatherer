@@ -12,6 +12,7 @@ import pandas as pd
 import cloudscraper
 import time
 from data_gatherer.resources_loader import load_config
+from tabulate import tabulate
 
 class Orchestrator:
     def __init__(self, config_path):
@@ -329,34 +330,28 @@ class Orchestrator:
             return
 
         self.logger.debug("Iterating over metadata items to show non-null fields:")
-        # Step 1: Collect the non-null fields
+
+        # Step 1: Collect the non-null fields into rows
         rows = []
         for key, value in metadata.items():
-            if value is not None and value not in ['nan', 'None', '', np.nan, 'NaN', 'na', 'unavailable', 0]:
-                rows.append((key, str(value)))  # Force value to string for nice printing
+            if value is not None and str(value).strip() not in ['nan', 'None', '', 'NaN', 'na', 'unavailable', '0']:
+                # Optional: truncate very long strings to keep it readable
+                value_str = str(value)
+                if len(value_str) > 150:
+                    value_str = value_str[:147] + "..."
+                rows.append((key, value_str))
 
-        # Step 2: Find max width for each column
-        max_key_len = max(len(k) for k, v in rows)
-        max_val_len = max(len(v) for k, v in rows)
+        if not rows:
+            self.logger.info("No meaningful metadata fields to display.")
+            return
 
-        # Step 3: Build the table
-        line_sep = '+' + '-' * (max_key_len + 2) + '+' + '-' * (max_val_len + 2) + '+'
-        table = [line_sep]
-        table.append(f"| {'Field'.ljust(max_key_len)} | {'Value'.ljust(max_val_len)} |")
-        table.append(line_sep)
+        # Step 2: Print table separately (not inside input!)
+        print("\nData Preview:\n")
+        print(tabulate(rows, headers=["Field", "Value"], tablefmt="github"))
 
-        for key, value in rows:
-            table.append(f"| {key.ljust(max_key_len)} | {value.ljust(max_val_len)} |")
-
-        table.append(line_sep)
-
-        # Step 4: Prepare final message
-        preview_text = "\n".join(table)
-
+        # Step 3: Then prompt the user
         user_input = input(
-            f"\nHere is the dataset preview:\n"
-            f"{preview_text}\n"
-            f"Do you want to proceed with downloading this dataset? [y/N]: "
+            "\nDo you want to proceed with downloading this dataset? [y/N]: "
         ).strip().lower()
 
         if user_input not in ["y", "yes"]:
