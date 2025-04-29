@@ -323,35 +323,39 @@ class Orchestrator:
     def display_data_preview(self, metadata):
         """
         Display extracted metadata and ask the user whether to proceed with download.
+        Everything is shown inside the input() prompt (for Jupyter compatibility).
         """
-
         if not isinstance(metadata, dict):
             self.logger.warning("Metadata is not a dictionary. Cannot display properly.")
             return
 
-        self.logger.debug("Iterating over metadata items to show non-null fields:")
-
-        # Step 1: Collect the non-null fields into rows
         rows = []
         for key, value in metadata.items():
             if value is not None and str(value).strip() not in ['nan', 'None', '', 'NaN', 'na', 'unavailable', '0']:
-                # Optional: truncate very long strings to keep it readable
-                value_str = str(value)
-                if len(value_str) > 150:
-                    value_str = value_str[:147] + "..."
-                rows.append((key, value_str))
+                value_str = str(value).replace('\n', ' ')
+                if len(value_str) > 100:
+                    value_str = value_str[:97] + "..."
+                rows.append((key.strip(), value_str.strip()))
 
         if not rows:
-            self.logger.info("No meaningful metadata fields to display.")
-            return
+            preview = "No usable metadata found.\n"
+        else:
+            # Compute column widths
+            max_key_len = max(len(k) for k, _ in rows)
+            max_val_len = max(len(v) for _, v in rows)
+            sep = f"+{'-' * (max_key_len + 2)}+{'-' * (max_val_len + 2)}+"
 
-        # Step 2: Print table separately (not inside input!)
-        print("\nData Preview:\n")
-        print(tabulate(rows, headers=["Field", "Value"], tablefmt="github"))
+            table_lines = [sep]
+            table_lines.append(f"| {'Field'.ljust(max_key_len)} | {'Value'.ljust(max_val_len)} |")
+            table_lines.append(sep)
+            for key, value in rows:
+                table_lines.append(f"| {key.ljust(max_key_len)} | {value.ljust(max_val_len)} |")
+            table_lines.append(sep)
+            preview = "\n".join(table_lines)
 
-        # Step 3: Then prompt the user
+        # Jupyter input box will show this string as the question
         user_input = input(
-            "\nDo you want to proceed with downloading this dataset? [y/N]: "
+            f"\nDataset preview:\n{preview}\n\nDo you want to proceed with downloading this dataset? [y/N]: "
         ).strip().lower()
 
         if user_input not in ["y", "yes"]:
