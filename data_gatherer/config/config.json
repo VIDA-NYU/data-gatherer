@@ -36,9 +36,9 @@
     "skip_file_extensions": [],
     "skip_unstructured_files": true,
 
-    "retrieval_patterns": "retrieval_patterns.json",
+    "retrieval_patterns": "data_gatherer/config/retrieval_patterns.json",
 
-    "navigation_config": "config_xml.json",
+    "navigation_config": "data_gatherer/config/config_xml.json",
 
     "data_availability_sections": [
         ".//sec[@sec-type='data-availability']",
