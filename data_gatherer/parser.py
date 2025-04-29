@@ -14,7 +14,7 @@ import os
 import json
 import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer
-from prompt_manager import PromptManager
+from data_gatherer.prompt_manager import PromptManager
 import tiktoken
 
 dataset_response_schema_gpt = {
