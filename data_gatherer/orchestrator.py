@@ -11,11 +11,12 @@ from data_gatherer.selenium_setup import create_driver
 import pandas as pd
 import cloudscraper
 import time
+from data_gatherer.config_loader import load_config
 
 class Orchestrator:
     def __init__(self, config_path):
-        self.config = json.load(open(config_path))
-        self.XML_config = json.load(open(self.config['navigation_config']))
+        self.config = load_config(config_path)
+        self.XML_config = load_config(self.config['navigation_config'])
         self.logger = setup_logging('orchestrator', self.config['log_file'])  # Initialize orchestrator logger
         self.classifier = LLMClassifier(self.config['retrieval_patterns'], self.logger)
         self.data_fetcher = None
