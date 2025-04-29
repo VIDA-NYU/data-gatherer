@@ -12,11 +12,8 @@ import pandas as pd
 import cloudscraper
 import time
 from data_gatherer.resources_loader import load_config
-from tabulate import tabulate
 import ipywidgets as widgets
 from IPython.display import display, clear_output
-import sys
-import pyui as ui
 
 class Orchestrator:
     def __init__(self, config_path):
@@ -263,7 +260,7 @@ class Orchestrator:
         self.url_list = url_list
         return url_list
 
-    def get_data_preview(self, combined_df):
+    def get_data_preview(self, combined_df, display_type='console'):
         """Shows user a preview of the data they are about to download."""
         self.already_previewed = []
         self.metadata_parser = LLMParser(self.XML_config, self.logger)
@@ -302,7 +299,7 @@ class Orchestrator:
                     #metadata = self.metadata_parser.parse_metadata(row['source_section'])
                     hardsraped_metadata = {k:v for k,v in row.items() if v is not None and v not in ['nan', 'None', '', 'n/a', np.nan, 'NaN', 'na']}
                     self.already_previewed.append(download_link)
-                    self.display_data_preview_ipynb(hardsraped_metadata)
+                    self.display_data_preview(hardsraped_metadata, display_type=display_type)
                     continue
 
             else:
@@ -323,98 +320,107 @@ class Orchestrator:
                 self.already_previewed.append(row['dataset_webpage'])
 
             metadata['paper_with_dataset_citation'] = row['source_url']
-            self.display_data_preview_ipynb(metadata)
+            self.display_data_preview(metadata, display_type=display_type)
         self.data_fetcher.quit()
 
-    def display_data_preview_console(self, metadata):
+    def display_data_preview(self, metadata, display_type='console'):
         """
         Display extracted metadata as a clean table in both Jupyter and terminal environments.
         """
+        self.logger.info("Displaying metadata preview")
+
         if not isinstance(metadata, dict):
             self.logger.warning("Metadata is not a dictionary. Cannot display properly.")
             return
 
-        # Prepare rows
-        rows = []
-        for key, value in metadata.items():
-            if value is not None and str(value).strip() not in ['nan', 'None', '', 'NaN', 'na', 'unavailable', '0']:
-                # If the value is a dict or list, pretty print as JSON
-                if isinstance(value, (dict, list)):
-                    pretty_val = json.dumps(value, indent=2)
-                else:
-                    pretty_val = str(value).replace('\n', ' ')
-                if len(pretty_val) > 150:
-                    pretty_val = pretty_val[:147] + "..."
+        if display_type == 'console':
+            # Prepare rows
+            rows = []
+            for key, value in metadata.items():
+                if value is not None and str(value).strip() not in ['nan', 'None', '', 'NaN', 'na', 'unavailable', '0']:
+                    # If the value is a dict or list, pretty print as JSON
+                    if isinstance(value, (dict, list)):
+                        pretty_val = json.dumps(value, indent=2)
+                    else:
+                        pretty_val = str(value).replace('\n', ' ')
+                    if len(pretty_val) > 150:
+                        pretty_val = pretty_val[:147] + "..."
 
-                rows.append((key.strip(), pretty_val.strip()))
+                    rows.append((key.strip(), pretty_val.strip()))
 
-        if not rows:
-            preview = "No usable metadata found."
+            if not rows:
+                preview = "No usable metadata found."
+            else:
+                # Compute dynamic widths
+                max_key_len = max(len(k) for k, _ in rows)
+                sep = f"+{'-' * (max_key_len + 2)}+{'-' * 80}+"
+                lines = [sep]
+                lines.append(f"| {'Field'.ljust(max_key_len)} | {'Value'.ljust(80)} |")
+                lines.append(sep)
+                for key, val in rows:
+                    # Split long values over multiple lines
+                    wrapped = val.splitlines()
+                    lines.append(f"| {key.ljust(max_key_len)} | {wrapped[0].ljust(80)} |")
+                    for cont in wrapped[1:]:
+                        lines.append(f"| {' '.ljust(max_key_len)} | {cont.ljust(80)} |")
+                lines.append(sep)
+                preview = "\n".join(lines)
+
+            # Final question to user
+            user_input = input(
+                f"\nDataset preview:\n{preview}\n\nDo you want to proceed with downloading this dataset? [y/N]: "
+            ).strip().lower()
+
+            if user_input not in ["y", "yes"]:
+                self.logger.info("User declined to download the dataset.")
+            else:
+                self.downloadables.append(metadata)
+                self.logger.info("User confirmed download. Proceeding...")
+
+        elif display_type == 'ipynb':
+
+            # Clean and prepare rows
+            rows = []
+            for key, value in metadata.items():
+                if value and str(value).strip() not in ['nan', 'None', '', 'NaN', 'na', 'unavailable', '0']:
+                    val_str = json.dumps(value, indent=2) if isinstance(value, (dict, list)) else str(value)
+                    rows.append({'Field': key, 'Value': val_str})
+
+            if not rows:
+                print("No usable metadata found.")
+                return
+
+            # Display metadata table
+            df = pd.DataFrame(rows)
+            display(df)
+            time.sleep(1)  # Allow UI to render before proceeding
+
+            # Widgets for user confirmation
+            checkbox = widgets.Checkbox(description="✅ Download this dataset?", value=False)
+            confirm_button = widgets.Button(description="Confirm", button_style='success')
+            output = widgets.Output()
+
+            def confirm_handler():
+                with output:
+                    clear_output()
+                    if checkbox.value:
+                        self.downloadables.append(metadata)
+                        self.logger.info("User confirmed download. Dataset queued.")
+                        print("Queued for download.")
+                    else:
+                        self.logger.info("User declined download.")
+                        print("Skipped.")
+
+            confirm_button.on_click(lambda _: confirm_handler())
+
+            # Show the checkbox + button
+            ui_box = widgets.VBox([checkbox, confirm_button, output])
+            display(ui_box)
+            time.sleep(1)
+
         else:
-            # Compute dynamic widths
-            max_key_len = max(len(k) for k, _ in rows)
-            sep = f"+{'-' * (max_key_len + 2)}+{'-' * 80}+"
-            lines = [sep]
-            lines.append(f"| {'Field'.ljust(max_key_len)} | {'Value'.ljust(80)} |")
-            lines.append(sep)
-            for key, val in rows:
-                # Split long values over multiple lines
-                wrapped = val.splitlines()
-                lines.append(f"| {key.ljust(max_key_len)} | {wrapped[0].ljust(80)} |")
-                for cont in wrapped[1:]:
-                    lines.append(f"| {' '.ljust(max_key_len)} | {cont.ljust(80)} |")
-            lines.append(sep)
-            preview = "\n".join(lines)
-
-        # Final question to user
-        user_input = input(
-            f"\nDataset preview:\n{preview}\n\nDo you want to proceed with downloading this dataset? [y/N]: "
-        ).strip().lower()
-
-        if user_input not in ["y", "yes"]:
-            self.logger.info("User declined to download the dataset.")
-        else:
-            self.downloadables.append(metadata)
-            self.logger.info("User confirmed download. Proceeding...")
-
-    def display_data_preview_ipynb(self, metadata):
-        """
-        Display metadata using PyUI and let the user confirm download.
-        """
-        if not isinstance(metadata, dict):
-            self.logger.warning("Metadata is not a dictionary.")
+            self.logger.warning(f"Unsupported display type: {display_type}. Cannot display metadata preview.")
             return
-
-        # Filter + format metadata
-        rows = []
-        for key, value in metadata.items():
-            if value and str(value).strip() not in ['nan', 'None', '', 'NaN', 'na', 'unavailable', '0']:
-                val_str = json.dumps(value, indent=2) if isinstance(value, (dict, list)) else str(value)
-                rows.append((key, val_str[:200] + '...' if len(val_str) > 200 else val_str))
-
-        if not rows:
-            self.logger.warning("No usable metadata found.")
-            return
-
-        # UI definition
-        def app():
-            checkbox = ui.Checkbox(label="Download this dataset?")
-            confirm = ui.Button("Confirm")
-            log = ui.Label("")
-
-            @confirm.on("click")
-            def confirm_clicked(_):
-                if checkbox.value:
-                    self.downloadables.append(metadata)
-                    self.logger.info("User confirmed download. Proceeding...")
-                    log.text = "Dataset added."
-                else:
-                    self.logger.info("User declined to download.")
-                    log.text = "Skipped."
-
-            table = ui.Table(columns=["Field", "Value"], rows=rows)
-
-            return ui.VStack([table, checkbox, confirm, log], spacing=10)
 
     def get_internal_id(self, metadata):
         self.logger.info(f"Getting internal ID for {metadata}")

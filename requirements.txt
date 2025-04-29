@@ -20,5 +20,5 @@ webdriver-manager
 google.generativeai
 tiktoken
 cloudscraper
-tabulate
 pyui
+pysdl2-dll
