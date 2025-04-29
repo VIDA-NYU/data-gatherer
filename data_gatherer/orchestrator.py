@@ -14,6 +14,7 @@ import time
 from data_gatherer.resources_loader import load_config
 from tabulate import tabulate
 from IPython.display import display
+import sys
 
 class Orchestrator:
     def __init__(self, config_path):
@@ -346,6 +347,7 @@ class Orchestrator:
         # Build and display DataFrame
         df = pd.DataFrame(cleaned_rows)
         display(df)  # works nicely in Jupyter
+        sys.stdout.flush()
 
         user_input = input("\nDo you want to proceed with downloading this dataset? [y/N]: ").strip().lower()
 
