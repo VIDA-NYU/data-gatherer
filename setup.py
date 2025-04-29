@@ -7,6 +7,7 @@ setup(
     name='data_gatherer',
     version='0.2.1',
     packages=find_packages(),
+    include_package_data=True,
     install_requires=requirements,
     python_requires='>=3.8',
 )
