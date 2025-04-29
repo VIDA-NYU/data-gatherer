@@ -20,3 +20,4 @@ webdriver-manager
 google.generativeai
 tiktoken
 cloudscraper
+tabulate
