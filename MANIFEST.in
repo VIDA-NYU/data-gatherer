@@ -1,3 +1,3 @@
 include data_gatherer/config/*.json
-include data_gatherer/prompts/*.json
-include data_gatherer/prompts/metadata_prompts*.json
+include data_gatherer/prompts/prompt_templates/*.json
+include data_gatherer/prompts/prompt_templates/metadata_prompts/*.json
