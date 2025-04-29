@@ -736,7 +736,7 @@ class LLMParser(Parser):
                                                                         current_url_address)
                     })
 
-                self.logger.info(f"Extracted supplementary material links:\n{hrefs}")
+                self.logger.debug(f"Extracted supplementary material links:\n{hrefs}")
         return hrefs
 
     def reconstruct_download_link(self, href, content_type, current_url_address):
