@@ -16,6 +16,7 @@ from tabulate import tabulate
 import ipywidgets as widgets
 from IPython.display import display, clear_output
 import sys
+import pyui as ui
 
 class Orchestrator:
     def __init__(self, config_path):
@@ -378,49 +379,51 @@ class Orchestrator:
 
     def display_data_preview_ipynb(self, metadata):
         """
-        Display extracted metadata using a clean pandas DataFrame in Jupyter.
-        Let the user confirm download via checkbox and button.
+        Display metadata using PyUI and let the user confirm download.
         """
         if not isinstance(metadata, dict):
-            self.logger.warning("Metadata is not a dictionary. Cannot display properly.")
+            self.logger.warning("Metadata is not a dictionary.")
             return
 
-        cleaned_rows = []
+        # Filter + format metadata
+        rows = []
         for key, value in metadata.items():
-            if value is not None and str(value).strip() not in ['nan', 'None', '', 'NaN', 'na', 'unavailable', '0']:
+            if value and str(value).strip() not in ['nan', 'None', '', 'NaN', 'na', 'unavailable', '0']:
                 val_str = json.dumps(value, indent=2) if isinstance(value, (dict, list)) else str(value)
-                cleaned_rows.append({'Field': key, 'Value': val_str})
+                rows.append((key, val_str[:200] + '...' if len(val_str) > 200 else val_str))
 
-        if not cleaned_rows:
-            print("No usable metadata found.")
+        if not rows:
+            self.logger.warning("No usable metadata found.")
             return
 
-        # Display table
-        df = pd.DataFrame(cleaned_rows)
-        display(df)
+        # UI definition
+        def app():
+            checkbox = ui.Checkbox(label="Download this dataset?")
+            confirm = ui.Button("Confirm")
+            log = ui.Label("")
 
-        # Interactive UI
-        confirm_checkbox = widgets.Checkbox(description="Download this dataset?", value=False)
-        confirm_button = widgets.Button(description="Confirm")
-        output = widgets.Output()
-
-        def on_button_clicked(b):
-            with output:
-                clear_output()
-                if confirm_checkbox.value:
+            @confirm.on("click")
+            def confirm_clicked(_):
+                if checkbox.value:
                     self.downloadables.append(metadata)
                     self.logger.info("User confirmed download. Proceeding...")
+                    log.text = "Dataset added."
                 else:
-                    self.logger.info("User declined to download the dataset.")
+                    self.logger.info("User declined to download.")
+                    log.text = "Skipped."
 
-        confirm_button.on_click(on_button_clicked)
-        display(widgets.VBox([confirm_checkbox, confirm_button, output]))
+            table = ui.Table(columns=["Field", "Value"], rows=rows)
+
+            return ui.VStack([table, checkbox, confirm, log], spacing=10)
 
     def get_internal_id(self, metadata):
         self.logger.info(f"Getting internal ID for {metadata}")
         if 'source_url_for_metadata' in metadata and metadata['source_url_for_metadata'] is not None and metadata[
             'source_url_for_metadata'] not in ['nan', 'None', '', np.nan]:
             return metadata['source_url_for_metadata']
+        elif 'dataset_webpage' in metadata and metadata['dataset_webpage'] is not None and metadata[
+            'dataset_webpage'] not in ['nan', 'None', '', np.nan]:
+            return metadata['dataset_webpage']
         elif 'download_link' in metadata and metadata['download_link'] is not None:
             return metadata['download_link']
         else:
