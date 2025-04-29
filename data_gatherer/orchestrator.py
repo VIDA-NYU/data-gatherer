@@ -13,7 +13,8 @@ import cloudscraper
 import time
 from data_gatherer.resources_loader import load_config
 from tabulate import tabulate
-from IPython.display import display
+import ipywidgets as widgets
+from IPython.display import display, clear_output
 import sys
 
 class Orchestrator:
@@ -299,7 +300,7 @@ class Orchestrator:
                     self.logger.info(f"Potentially a valid dataset, displaying hardscraped metadata")
                     #metadata = self.metadata_parser.parse_metadata(row['source_section'])
                     hardsraped_metadata = {k:v for k,v in row.items() if v is not None and v not in ['nan', 'None', '', 'n/a', np.nan, 'NaN', 'na']}
-                    self.display_data_preview(hardsraped_metadata)
+                    self.display_data_preview_console(hardsraped_metadata)
                     continue
 
             else:
@@ -319,37 +320,53 @@ class Orchestrator:
                 metadata['data_repository'] = repo_mapping_key
 
             metadata['paper_with_dataset_citation'] = row['source_url']
-            self.display_data_preview(metadata)
+            self.display_data_preview_console(metadata)
         self.data_fetcher.quit()
 
-    def display_data_preview(self, metadata):
+    def display_data_preview_console(self, metadata):
         """
-        Display extracted metadata using a clean pandas DataFrame in Jupyter.
-        Ask the user whether to proceed with the download.
+        Display extracted metadata as a clean table in both Jupyter and terminal environments.
         """
         if not isinstance(metadata, dict):
             self.logger.warning("Metadata is not a dictionary. Cannot display properly.")
             return
 
-        cleaned_rows = []
+        # Prepare rows
+        rows = []
         for key, value in metadata.items():
             if value is not None and str(value).strip() not in ['nan', 'None', '', 'NaN', 'na', 'unavailable', '0']:
+                # If the value is a dict or list, pretty print as JSON
                 if isinstance(value, (dict, list)):
-                    val_str = json.dumps(value, indent=2)
+                    pretty_val = json.dumps(value, indent=2)
                 else:
-                    val_str = str(value)
-                cleaned_rows.append({'Field': key, 'Value': val_str})
+                    pretty_val = str(value).replace('\n', ' ')
+                if len(pretty_val) > 150:
+                    pretty_val = pretty_val[:147] + "..."
 
-        if not cleaned_rows:
-            print("No usable metadata found.")
-            return
+                rows.append((key.strip(), pretty_val.strip()))
 
-        # Build and display DataFrame
-        df = pd.DataFrame(cleaned_rows)
-        display(df)  # works nicely in Jupyter
-        sys.stdout.flush()
+        if not rows:
+            preview = "No usable metadata found."
+        else:
+            # Compute dynamic widths
+            max_key_len = max(len(k) for k, _ in rows)
+            sep = f"+{'-' * (max_key_len + 2)}+{'-' * 80}+"
+            lines = [sep]
+            lines.append(f"| {'Field'.ljust(max_key_len)} | {'Value'.ljust(80)} |")
+            lines.append(sep)
+            for key, val in rows:
+                # Split long values over multiple lines
+                wrapped = val.splitlines()
+                lines.append(f"| {key.ljust(max_key_len)} | {wrapped[0].ljust(80)} |")
+                for cont in wrapped[1:]:
+                    lines.append(f"| {' '.ljust(max_key_len)} | {cont.ljust(80)} |")
+            lines.append(sep)
+            preview = "\n".join(lines)
 
-        user_input = input("\nDo you want to proceed with downloading this dataset? [y/N]: ").strip().lower()
+        # Final question to user
+        user_input = input(
+            f"\n📦 Dataset preview:\n{preview}\n\nDo you want to proceed with downloading this dataset? [y/N]: "
+        ).strip().lower()
 
         if user_input not in ["y", "yes"]:
             self.logger.info("User declined to download the dataset.")
@@ -359,6 +376,48 @@ class Orchestrator:
 
         self.already_previewed.append(self.get_internal_id(metadata))
         self.logger.info(f"Added {self.get_internal_id(metadata)} to self.already_previewed.")
+
+    def display_data_preview_ipynb(self, metadata):
+        """
+        Display extracted metadata using a clean pandas DataFrame in Jupyter.
+        Let the user confirm download via checkbox and button.
+        """
+        if not isinstance(metadata, dict):
+            self.logger.warning("Metadata is not a dictionary. Cannot display properly.")
+            return
+
+        cleaned_rows = []
+        for key, value in metadata.items():
+            if value is not None and str(value).strip() not in ['nan', 'None', '', 'NaN', 'na', 'unavailable', '0']:
+                val_str = json.dumps(value, indent=2) if isinstance(value, (dict, list)) else str(value)
+                cleaned_rows.append({'Field': key, 'Value': val_str})
+
+        if not cleaned_rows:
+            print("No usable metadata found.")
+            return
+
+        # Display table
+        df = pd.DataFrame(cleaned_rows)
+        display(df)
+
+        # Interactive UI
+        confirm_checkbox = widgets.Checkbox(description="Download this dataset?", value=False)
+        confirm_button = widgets.Button(description="Confirm")
+        output = widgets.Output()
+
+        def on_button_clicked(b):
+            with output:
+                clear_output()
+                if confirm_checkbox.value:
+                    self.downloadables.append(metadata)
+                    self.logger.info("User confirmed download. Proceeding...")
+                else:
+                    self.logger.info("User declined to download the dataset.")
+                self.already_previewed.append(self.get_internal_id(metadata))
+                self.logger.info(f"Added {self.get_internal_id(metadata)} to self.already_previewed.")
+
+        confirm_button.on_click(on_button_clicked)
+        display(widgets.VBox([confirm_checkbox, confirm_button, output]))
 
     def get_internal_id(self, metadata):
         self.logger.info(f"Getting internal ID for {metadata}")
