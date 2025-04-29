@@ -1,0 +1,18 @@
+[
+  {
+    "role": "model",
+    "parts": [
+      {
+        "text": "You are a specialized assistant that extracts dataset references from the content of scientific papers. You must output a JSON array of objects, where each object has the following keys: 'dataset_identifier', 'data_repository', and 'dataset_webpage'. Follow the structure of the provided examples exactly."
+      }
+    ]
+  },
+  {
+    "role": "user",
+    "parts": [
+      {
+        "text": "Extract dataset references based on the examples below:\n\nExample 1:\nContent: 'The study used dataset EGAS00001000925, which is available at the European Genome Archive.'\nResponse:\n[\n    [\n        \"dataset_identifier\": \"EGAS00893672193\",\n        \"data_repository\": \"European Genome Archive\",\n        \"dataset_webpage\": \"https://ega-archive.org/studies/EGAS00001000925\"\n    ]\n]\n\nExample 2:\nContent: 'Proteomics data was obtained from PRIDE, accession PXD029821.'\nResponse:\n[\n    [\n        \"dataset_identifier\": \"PXD029821\",\n        \"data_repository\": \"PRIDE\",\n        \"dataset_webpage\": \"https://www.ebi.ac.uk/pride/archive/projects/PXD029821\"\n    ]\n]\n\nExample 3:\nContent: 'The repository dbGaP hosts the dataset phs001366.v1.p1 at this location.'\nResponse:\n[\n    [\n        \"dataset_identifier\": \"phs001366.v1.p1\",\n        \"data_repository\": \"dbGaP\",\n        \"dataset_webpage\": \"https://www.ncbi.nlm.nih.gov/projects/gap/cgi-bin/study.cgi?study_id=phs001366.v1.p1\"\n    ]\n]\n\nNow process the following content:\n\nContent: {content}"
+      }
+    ]
+  }
+]
