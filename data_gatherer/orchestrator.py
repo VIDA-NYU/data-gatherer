@@ -362,9 +362,9 @@ class Orchestrator:
             self.logger.info("User declined to download the dataset.")
         else:
             self.downloadables.append(metadata)
-            self.already_previewed.append(self.get_internal_id(metadata))
-            self.logger.info(f"Added {self.get_internal_id(metadata)} to self.already_previewed.")
             self.logger.info("User confirmed download. Proceeding...")
+        self.already_previewed.append(self.get_internal_id(metadata))
+        self.logger.info(f"Added {self.get_internal_id(metadata)} to self.already_previewed.")
 
     def get_internal_id(self, metadata):
         self.logger.info(f"Getting internal ID for {metadata}")
