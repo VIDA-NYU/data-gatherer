@@ -301,6 +301,7 @@ class Orchestrator:
                     self.logger.info(f"Potentially a valid dataset, displaying hardscraped metadata")
                     #metadata = self.metadata_parser.parse_metadata(row['source_section'])
                     hardsraped_metadata = {k:v for k,v in row.items() if v is not None and v not in ['nan', 'None', '', 'n/a', np.nan, 'NaN', 'na']}
+                    self.already_previewed.append(download_link)
                     self.display_data_preview_ipynb(hardsraped_metadata)
                     continue
 
@@ -319,11 +320,10 @@ class Orchestrator:
                 metadata['download_link'] = row.get('download_link', None)
                 metadata['accession_id'] = row.get('dataset_id', row.get('dataset_identifier', None))
                 metadata['data_repository'] = repo_mapping_key
+                self.already_previewed.append(row['dataset_webpage'])
 
             metadata['paper_with_dataset_citation'] = row['source_url']
             self.display_data_preview_ipynb(metadata)
-            self.already_previewed.append(self.get_internal_id(metadata))
-            self.logger.info(f"Added {self.get_internal_id(metadata)} to self.already_previewed.")
         self.data_fetcher.quit()
 
     def display_data_preview_console(self, metadata):
