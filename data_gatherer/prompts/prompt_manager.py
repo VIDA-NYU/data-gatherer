@@ -4,7 +4,7 @@ import os
 
 
 class PromptManager:
-    def __init__(self, prompt_dir, logger, response_file="LLMs_responses.json", save_dir="prompts/prompt_evals"):
+    def __init__(self, prompt_dir, logger, response_file="LLMs_responses_cache.json", save_dir="prompt_evals"):
         self.prompt_dir = prompt_dir
         self.prompt_save_dir = save_dir
         self.response_file = response_file

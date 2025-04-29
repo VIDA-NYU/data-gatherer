@@ -1,12 +1,12 @@
-# this file is for checking whether the Prompt id from LLMs_responses.json also appears as file name in the prompt_eval folder. If not, response will be deleted from LLMs_responses.json
+# this file is for checking whether the Prompt id from LLMs_responses_cache.json also appears as file name in the prompt_eval folder. If not, response will be deleted from LLMs_responses.json
 import json
 import os
 
 def check_prompt_id_in_prompt_eval_folder():
-    print("Checking if Prompt id in LLMs_responses.json also appears as file name in the prompt_eval folder...")
+    print("Checking if Prompt id in LLMs_responses_cache.json also appears as file name in the prompt_eval folder...")
     # Load the LLMs_responses.json file
     new_llms_responses = {}
-    with open('../LLMs_responses.json', 'r') as f:
+    with open('LLMs_responses_cache.json', 'r') as f:
         llms_responses = json.load(f)
 
     # Get the list of prompt IDs from the prompt_eval folder
@@ -25,7 +25,7 @@ def check_prompt_id_in_prompt_eval_folder():
     print(f"Total responses deleted: {conter}")
 
     # Save the cleaned LLMs_responses.json file
-    with open('../LLMs_responses.json', 'w') as f:
+    with open('LLMs_responses_cache.json', 'w') as f:
         json.dump(new_llms_responses, f, indent=4)
 
 check_prompt_id_in_prompt_eval_folder()
