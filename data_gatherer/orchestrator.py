@@ -300,7 +300,7 @@ class Orchestrator:
                     self.logger.info(f"Potentially a valid dataset, displaying hardscraped metadata")
                     #metadata = self.metadata_parser.parse_metadata(row['source_section'])
                     hardsraped_metadata = {k:v for k,v in row.items() if v is not None and v not in ['nan', 'None', '', 'n/a', np.nan, 'NaN', 'na']}
-                    self.display_data_preview_console(hardsraped_metadata)
+                    self.display_data_preview_ipynb(hardsraped_metadata)
                     continue
 
             else:
@@ -320,7 +320,7 @@ class Orchestrator:
                 metadata['data_repository'] = repo_mapping_key
 
             metadata['paper_with_dataset_citation'] = row['source_url']
-            self.display_data_preview_console(metadata)
+            self.display_data_preview_ipynb(metadata)
         self.data_fetcher.quit()
 
     def display_data_preview_console(self, metadata):
@@ -365,7 +365,7 @@ class Orchestrator:
 
         # Final question to user
         user_input = input(
-            f"\n📦 Dataset preview:\n{preview}\n\nDo you want to proceed with downloading this dataset? [y/N]: "
+            f"\nDataset preview:\n{preview}\n\nDo you want to proceed with downloading this dataset? [y/N]: "
         ).strip().lower()
 
         if user_input not in ["y", "yes"]:
