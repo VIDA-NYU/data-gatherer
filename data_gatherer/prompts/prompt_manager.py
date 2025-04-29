@@ -1,7 +1,7 @@
 import json
 import hashlib
 import os
-
+from data_gatherer.resources_loader import load_prompt
 
 class PromptManager:
     def __init__(self, prompt_dir, logger, response_file="LLMs_responses_cache.json", save_dir="prompt_evals"):
@@ -22,13 +22,10 @@ class PromptManager:
         with open(prompt_file, 'w') as f:
             json.dump(prompt_content, f)
 
-    def load_prompt(self, prompt_id):
+    def load_prompt(self, prompt_name, user_prompt_dir=None, subdir=""):
         """Load a static prompt template."""
-        prompt_file = os.path.join(self.prompt_dir, f"{prompt_id}.json")
-        if not os.path.exists(prompt_file):
-            raise FileNotFoundError(f"Prompt file not found: {prompt_file}")
-        with open(prompt_file, 'r') as f:
-            return json.load(f)
+        self.logger.info(f"Loading prompt: {prompt_name} from user_prompt_dir: {user_prompt_dir}, subdir: {subdir}")
+        return load_prompt(prompt_name, user_prompt_dir=user_prompt_dir, subdir=subdir)
 
     def render_prompt(self, static_prompt, entire_doc, **dynamic_parts):
         """Render a dynamic prompt by replacing placeholders."""

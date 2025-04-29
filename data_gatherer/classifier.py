@@ -2,7 +2,7 @@ import re
 from ollama import Client
 import os
 from data_gatherer.prompts.prompt_manager import PromptManager
-from data_gatherer.config_loader import load_config
+from data_gatherer.resources_loader import load_config
 
 class LLMClassifier:
     def __init__(self, config, logger):

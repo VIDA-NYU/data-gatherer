@@ -1636,14 +1636,14 @@ class LLMParser(Parser):
     def parse_metadata(self, metadata: str, model = 'gemini-2.0-flash') -> dict:
         #metadata = self.normalize_full_DOM(metadata)
         self.logger.info(f"Parsing metadata len: {len(metadata)}")
-        dataset_info = self.extract_dataset_info(metadata)
+        dataset_info = self.extract_dataset_info(metadata, subdir='metadata_prompts')
         return dataset_info
 
-    def extract_dataset_info(self, metadata):
-        self.logger.info("Extracting dataset information from metadata")
+    def extract_dataset_info(self, metadata, subdir = ''):
+        self.logger.info(f"Extracting dataset information from metadata. Prompt from subdir: {subdir}")
 
         llm = LLMClient(model=self.config.get('llm_model', 'gemini-2.0-flash'), logger=self.logger)
-        response = llm.api_call(metadata)
+        response = llm.api_call(metadata, subdir = subdir)
 
         # Post-process response into structured dict
         dataset_info = self.safe_parse_json(response)
@@ -1709,7 +1709,7 @@ class LLMClient:
         self.logger = logger or logging.getLogger(__name__)
         self.logger.info(f"Initializing LLMClient with model: {self.model}")
         self._initialize_client(model)
-        self.prompt_manager = PromptManager("prompts/prompt_templates/metadata_prompts", self.logger)
+        self.prompt_manager = PromptManager("prompt_templates/metadata_prompts", self.logger)
 
     def _initialize_client(self, model):
         if model.startswith('gpt'):
@@ -1721,18 +1721,19 @@ class LLMClient:
             raise ValueError(f"Unsupported model: {self.model}")
         self.logger.info(f"Client initialized: {self.client}")
 
-    def api_call(self, content):
-        self.logger.debug(f"Calling {self.model} with prompt length {len(content)}")
+    def api_call(self, content, subdir=''):
+        self.logger.info(f"Calling {self.model} with prompt length {len(content)}, subdir: {subdir}")
         if self.model.startswith('gpt'):
-            return self._call_openai(content)
+            return self._call_openai(content, subdir=subdir)
         elif self.model.startswith('gemini'):
-            return self._call_gemini(content)
+            return self._call_gemini(content, subdir=subdir)
         else:
             raise ValueError(f"Unsupported model: {self.model}")
 
-    def _call_openai(self, content, temperature=0.0):
+    def _call_openai(self, content, temperature=0.0, subdir=''):
+        self.logger.info(f"Calling OpenAI with content length {len(content)}, subdir: {subdir}")
         messages = self.prompt_manager.render_prompt(
-            self.prompt_manager.load_prompt("gpt_metadata_extract"),
+            self.prompt_manager.load_prompt("gpt_metadata_extract",subdir=subdir),
             entire_doc=True,
             content=content,
         )
@@ -1744,9 +1745,10 @@ class LLMClient:
         )
         return response['choices'][0]['message']['content']
 
-    def _call_gemini(self, content, temperature=0.0):
+    def _call_gemini(self, content, temperature=0.0, subdir=''):
+        self.logger.info(f"Calling Gemini with content length {len(content)}, subdir: {subdir}")
         messages = self.prompt_manager.render_prompt(
-            self.prompt_manager.load_prompt("gemini_metadata_extract"),
+            self.prompt_manager.load_prompt("gemini_metadata_extract",subdir=subdir),
             entire_doc=True,
             content=content,
         )

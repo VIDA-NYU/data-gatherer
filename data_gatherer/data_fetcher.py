@@ -13,7 +13,7 @@ import mimetypes
 from bs4 import BeautifulSoup
 from urllib.parse import urlparse
 import pandas as pd
-from data_gatherer.config_loader import load_config
+from data_gatherer.resources_loader import load_config
 
 # Abstract base class for fetching data
 class DataFetcher(ABC):
@@ -393,7 +393,8 @@ class DataCompletenessChecker:
     def __init__(self, config, logger):
         self.config = config
         self.logger = logger
-        self.safety_driver = create_driver(self.config['DRIVER_PATH'], self.config['BROWSER'], self.config['HEADLESS'])
+        self.safety_driver = create_driver(self.config['DRIVER_PATH'], self.config['BROWSER'], self.config['HEADLESS'],
+                                           logger=logger)
         self.retrieval_patterns = load_config(self.config['retrieval_patterns'])
         self.css_selectors = self.retrieval_patterns['PMC']['css_selectors']
         self.xpaths = self.retrieval_patterns['PMC']['xpaths']

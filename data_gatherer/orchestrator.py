@@ -11,7 +11,7 @@ from data_gatherer.selenium_setup import create_driver
 import pandas as pd
 import cloudscraper
 import time
-from data_gatherer.config_loader import load_config
+from data_gatherer.resources_loader import load_config
 
 class Orchestrator:
     def __init__(self, config_path):

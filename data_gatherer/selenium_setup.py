@@ -8,7 +8,7 @@ from selenium.webdriver.chrome.options import Options as ChromeOptions
 from webdriver_manager.firefox import GeckoDriverManager
 from webdriver_manager.chrome import ChromeDriverManager
 
-def create_driver(driver_path=None, browser="Firefox", headless=True):
+def create_driver(driver_path=None, browser="Firefox", headless=True, logger=None):
     logging.info(f"Creating WebDriver for browser: {browser}")
 
     if browser == 'Firefox':
@@ -28,9 +28,11 @@ def create_driver(driver_path=None, browser="Firefox", headless=True):
         if driver_path:
             os.chmod(driver_path, 0o755)
             service = FirefoxService(executable_path=driver_path)
+            logger.info(f"Using provided Firefox driver path: {driver_path}") if logger else None
         else:
             logging.info("No driver path provided, using GeckoDriverManager to auto-install Firefox driver.")
             service = FirefoxService(executable_path=GeckoDriverManager().install())
+            logger.info(f"Using GeckoDriverManager to auto-install Firefox driver {service}.") if logger else None
 
         driver = webdriver.Firefox(service=service, options=firefox_options)
 
