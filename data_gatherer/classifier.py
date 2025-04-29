@@ -1,10 +1,7 @@
-import json
-from data_gatherer.logger_setup import setup_logging
 import re
-from datetime import datetime
 from ollama import Client
 import os
-from data_gatherer.prompt_manager import PromptManager
+from data_gatherer.prompts.prompt_manager import PromptManager
 from data_gatherer.config_loader import load_config
 
 class LLMClassifier:
@@ -13,7 +10,7 @@ class LLMClassifier:
         self.logger = logger
         self.client = Client(host=os.environ['NYU_LLM_API']) # env variable
         self.show_classify_stats = True
-        self.prompt_manager = PromptManager("prompts/prompt_templates", self.logger)
+        self.prompt_manager = PromptManager("prompt_templates", self.logger)
 
     def classify_element(self, element):
         """

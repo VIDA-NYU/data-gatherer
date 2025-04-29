@@ -3,18 +3,17 @@ from bs4 import BeautifulSoup, NavigableString, CData, Comment
 import re
 import logging
 import pandas as pd
-from lxml import etree, html
+from lxml import etree
 from lxml import html
 from ollama import Client
 from openai import OpenAI
 import google.generativeai as genai
 import typing_extensions as typing
-from pydantic import BaseModel, HttpUrl
+from pydantic import BaseModel
 import os
 import json
 import torch
-from transformers import AutoModelForCausalLM, AutoTokenizer
-from data_gatherer.prompt_manager import PromptManager
+from data_gatherer.prompts.prompt_manager import PromptManager
 import tiktoken
 
 dataset_response_schema_gpt = {
