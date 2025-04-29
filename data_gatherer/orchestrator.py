@@ -321,6 +321,8 @@ class Orchestrator:
 
             metadata['paper_with_dataset_citation'] = row['source_url']
             self.display_data_preview_ipynb(metadata)
+            self.already_previewed.append(self.get_internal_id(metadata))
+            self.logger.info(f"Added {self.get_internal_id(metadata)} to self.already_previewed.")
         self.data_fetcher.quit()
 
     def display_data_preview_console(self, metadata):
@@ -374,9 +376,6 @@ class Orchestrator:
             self.downloadables.append(metadata)
             self.logger.info("User confirmed download. Proceeding...")
 
-        self.already_previewed.append(self.get_internal_id(metadata))
-        self.logger.info(f"Added {self.get_internal_id(metadata)} to self.already_previewed.")
-
     def display_data_preview_ipynb(self, metadata):
         """
         Display extracted metadata using a clean pandas DataFrame in Jupyter.
@@ -413,8 +412,6 @@ class Orchestrator:
                     self.logger.info("User confirmed download. Proceeding...")
                 else:
                     self.logger.info("User declined to download the dataset.")
-                self.already_previewed.append(self.get_internal_id(metadata))
-                self.logger.info(f"Added {self.get_internal_id(metadata)} to self.already_previewed.")
 
         confirm_button.on_click(on_button_clicked)
         display(widgets.VBox([confirm_checkbox, confirm_button, output]))
