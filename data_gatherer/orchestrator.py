@@ -329,13 +329,36 @@ class Orchestrator:
             return
 
         self.logger.debug("Iterating over metadata items to show non-null fields:")
+        # Step 1: Collect the non-null fields
+        rows = []
         for key, value in metadata.items():
             if value is not None and value not in ['nan', 'None', '', np.nan, 'NaN', 'na', 'unavailable', 0]:
-                print(f"{key}: {value}")
-        time.sleep(0.1)
+                rows.append((key, str(value)))  # Force value to string for nice printing
 
-        user_input = input("\nDo you want to proceed with downloading this dataset? [y/N]: \n"
-                           "__________________________________________________________________  ").strip().lower()
+        # Step 2: Find max width for each column
+        max_key_len = max(len(k) for k, v in rows)
+        max_val_len = max(len(v) for k, v in rows)
+
+        # Step 3: Build the table
+        line_sep = '+' + '-' * (max_key_len + 2) + '+' + '-' * (max_val_len + 2) + '+'
+        table = [line_sep]
+        table.append(f"| {'Field'.ljust(max_key_len)} | {'Value'.ljust(max_val_len)} |")
+        table.append(line_sep)
+
+        for key, value in rows:
+            table.append(f"| {key.ljust(max_key_len)} | {value.ljust(max_val_len)} |")
+
+        table.append(line_sep)
+
+        # Step 4: Prepare final message
+        preview_text = "\n".join(table)
+
+        user_input = input(
+            f"\nHere is the dataset preview:\n"
+            f"{preview_text}\n"
+            f"Do you want to proceed with downloading this dataset? [y/N]: "
+        ).strip().lower()
+
         if user_input not in ["y", "yes"]:
             self.logger.info("User declined to download the dataset.")
         else:
