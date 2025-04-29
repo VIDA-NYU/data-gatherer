@@ -1,5 +1,5 @@
 {
-    "DRIVER_PATH": "../Firefox/geckodriver",
+    "DRIVER_PATH": "",
     "BROWSER": "Firefox",
     "HEADLESS": true,
 
