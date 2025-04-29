@@ -21,3 +21,4 @@ google.generativeai
 tiktoken
 cloudscraper
 tabulate
+pyui
