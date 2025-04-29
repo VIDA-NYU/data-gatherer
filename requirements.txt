@@ -1,7 +1,7 @@
 beautifulsoup4==4.12.3
 bs4
 lxml
-numpy
+numpy==1.26
 ollama
 openai
 pandas
@@ -13,7 +13,10 @@ regex
 requests
 selenium==4.28.0
 tokenizers
-torch
+torch==2.2
 transformers
 typing_extensions
 webdriver-manager
+google.generativeai
+tiktoken
+cloudscraper
