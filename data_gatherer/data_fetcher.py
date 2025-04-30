@@ -399,6 +399,17 @@ class DataCompletenessChecker:
         self.css_selectors = self.retrieval_patterns['PMC']['css_selectors']
         self.xpaths = self.retrieval_patterns['PMC']['xpaths']
 
+    def extract_namespaces(self, xml_element):
+        """Extract all namespaces in use, including xlink."""
+        ns_map = {'xlink': 'http://www.w3.org/1999/xlink'}
+        for elem in xml_element.iter():
+            tag = getattr(elem, "tag", None)
+            if isinstance(tag, str) and tag.startswith("{"):
+                uri = tag[1:].split("}")[0]
+                prefix = elem.prefix or 'ns0'
+                ns_map[prefix] = uri
+        return ns_map
+
     def ensure_data_sections(self, raw_data, url):
         """
         Check if the data sections exist in the raw_data (support only for XML for now)
@@ -433,20 +444,15 @@ class DataCompletenessChecker:
             self.logger.info("No raw data to check for sections.")
             return False
 
-        self.logger.debug(f"Checking for {section_name} section in raw data.")
-
-        # Load section patterns from the configuration
+        self.logger.info(f"----Checking for {section_name} section in raw data.")
         section_patterns = self.config[section_name + "_sections"]
+        namespaces = self.extract_namespaces(raw_data)
 
-        namespaces = {'ns0': 'http://www.w3.org/1999/xlink'}
-
-        # Check if any of the patterns match sections in the raw data
         for pattern in section_patterns:
-            sections = raw_data.findall(pattern)
+            sections = raw_data.findall(pattern, namespaces=namespaces)
             if sections:
                 for section in sections:
-                    self.logger.debug(f"Found section: {ET.tostring(section, encoding='unicode')}")
-                    # Check if the section contains relevant links
+                    self.logger.info(f"----Found section: {ET.tostring(section, encoding='unicode')}")
                     if self.has_links_in_section(section, namespaces):
                         return True
 
@@ -461,8 +467,13 @@ class DataCompletenessChecker:
         """
         ext_links = section.findall(".//ext-link", namespaces)
         #uris = section.findall(".//uri", namespaces)
-        self.logger.debug(f"Found {len(ext_links)} ext-links.")
-        return bool(ext_links) #or uris)
+
+        media_links = section.findall(".//media", namespaces)
+        xlink_hrefs = [m.get('{http://www.w3.org/1999/xlink}href') for m in media_links if
+                 m.get('{http://www.w3.org/1999/xlink}href')]
+
+        self.logger.debug(f"Found {len(ext_links)} ext-links and {len(xlink_hrefs)} xlink:hrefs.")
+        return bool(ext_links or xlink_hrefs)  #or uris)
 
     def get_section_from_webpage(self, url: str, section_name: str):
         """
