@@ -25,7 +25,7 @@ class Orchestrator:
         self.parser = None
         self.raw_data_format = None
         self.data_checker = DataCompletenessChecker(self.config, self.logger)
-        self.full_DOM = (self.XML_config['llm_model'] in self.XML_config['entire_document_models']) and self.XML_config['process_entire_document']
+        self.full_DOM = self.XML_config['llm_model'] in self.XML_config['entire_document_models'] and self.XML_config['process_entire_document']
         self.logger.info(f"Data_Gatherer Orchestrator initialized. Extraction step Model: {self.XML_config['llm_model']}")
         self.downloadables = []
 
@@ -87,7 +87,7 @@ class Orchestrator:
             additional_data = None
 
             # if model processes the entire document, fetch the entire document and go to the parsing step
-            if (self.XML_config['llm_model'] in self.XML_config['entire_document_models'] and self.XML_config['process_entire_document']):
+            if self.full_DOM:
                 self.logger.info("Fetching entire document for processing.")
                 self.raw_data_format = "full_HTML"
                 raw_data = self.data_fetcher.fetch_data(url)
@@ -105,9 +105,8 @@ class Orchestrator:
                     self.raw_data_format = "HTML"
 
                 raw_data = self.data_fetcher.fetch_data(url)
-                self.logger.info(f"Raw data fetched as: {raw_data}")
+                self.logger.info(f"Raw data fetched as: {raw_data} from source: {self.data_fetcher.fetch_source}")
 
-                self.logger.info(f"Fetcher source: {self.data_fetcher.fetch_source}")
                 if "API" not in self.data_fetcher.fetch_source:
                     raw_data = self.data_fetcher.scraper_tool.page_source
 
