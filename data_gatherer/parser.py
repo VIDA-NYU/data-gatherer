@@ -15,6 +15,7 @@ import json
 import torch
 from data_gatherer.prompts.prompt_manager import PromptManager
 import tiktoken
+from data_gatherer.resources_loader import load_config
 
 dataset_response_schema_gpt = {
     "type": "json_schema",
@@ -125,8 +126,8 @@ dataset_metadata_response_schema_gpt = {
 
 # Abstract base class for parsing data
 class Parser(ABC):
-    def __init__(self, config, logger):
-        self.config = config
+    def __init__(self, config_path, logger=None, log_file_override=None):
+        self.config = self.config = load_config(config_path)
         self.logger = logger
         self.logger.info("Parser initialized.")
         self.full_DOM = self.config['llm_model'] in self.config['entire_document_models'] and self.config['process_entire_document']
@@ -135,6 +136,78 @@ class Parser(ABC):
     def parse_data(self, raw_data, publisher, current_url_address):
         pass
 
+    def extract_paragraphs_from_xml(self, xml_root) -> list[dict]:
+        """
+        Extract paragraphs and their section context from an XML document.
+
+        Args:
+            xml_root: lxml.etree.Element — parsed XML root.
+
+        Returns:
+            List of dicts with 'paragraph', 'section_title', and 'sec_type'.
+        """
+        paragraphs = []
+
+        # Iterate over all section blocks
+        for sec in xml_root.findall(".//sec"):
+            sec_type = sec.get("sec-type", "unknown")
+            title_elem = sec.find("title")
+            section_title = title_elem.text.strip() if title_elem is not None and title_elem.text else "No Title"
+
+            for p in sec.findall(".//p"):
+                itertext = " ".join(p.itertext()).strip()
+                para_text = etree.tostring(p, encoding="unicode", method="xml").strip()
+                if len(para_text) >= 5:  # avoid tiny/junk paragraphs
+                    paragraphs.append({
+                        "paragraph": para_text,
+                        "section_title": section_title,
+                        "sec_type": sec_type,
+                        "text": itertext
+                    })
+                    # print(f"Extracted paragraph: {paragraphs[-1]}")
+
+        return paragraphs
+
+    def extract_sections_from_xml(self, xml_root) -> list[dict]:
+        """
+        Extract sections from an XML document.
+
+        Args:
+            xml_root: lxml.etree.Element — parsed XML root.
+
+        Returns:
+            List of dicts with 'section_title' and 'sec_type'.
+        """
+        sections = []
+
+        # Iterate over all section blocks
+        for sec in xml_root.findall(".//sec"):
+            sec_type = sec.get("sec-type", "unknown")
+            title_elem = sec.find("title")
+            section_title = title_elem.text.strip() if title_elem is not None and title_elem.text else "No Title"
+
+            section_text_from_paragraphs = f'{section_title}\n'
+            section_rawtxt_from_paragraphs = ''
+
+            for p in sec.findall(".//p"):
+
+                itertext = " ".join(p.itertext()).strip()
+
+                if len(itertext) >= 5:
+                    section_text_from_paragraphs += "\n" + itertext + "\n"
+
+                para_text = etree.tostring(p, encoding="unicode", method="xml").strip()
+
+                if len(para_text) >= 5:  # avoid tiny/junk paragraphs
+                    section_rawtxt_from_paragraphs += "\n" + para_text + "\n"
+
+            sections.append({
+                "raw_sec_txt": section_rawtxt_from_paragraphs,
+                "section_title": section_title,
+                "sec_type": sec_type,
+                "sec_txt": section_text_from_paragraphs
+            })
+        return sections
 
 class Dataset(BaseModel):
     dataset_id: str
@@ -162,7 +235,7 @@ class Dataset_metadata(BaseModel):
 # Implementation for Rule-Based parsing of HTMLs (from web scraping)
 class RuleBasedParser(Parser):
 
-    def __init__(self, config, logger):
+    def __init__(self, config, logger, log_file_override=None):
         super().__init__(config, logger)
         self.logger.info("RuleBasedParser initialized.")
 
@@ -240,8 +313,8 @@ class RuleBasedParser(Parser):
 
 class LLMParser(Parser):
 
-    def __init__(self, config, logger):
-        super().__init__(config, logger)
+    def __init__(self, config, logger, log_file_override=None):
+        super().__init__(config, logger, log_file_override)
         self.title = None
         self.prompt_manager = PromptManager(self.config['prompt_dir'], self.logger, self.config['response_file'])
         self.repo_names = self.get_repo_names()
