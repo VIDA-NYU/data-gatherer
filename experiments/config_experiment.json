@@ -36,7 +36,7 @@
 
     "retrieval_patterns": "../retrieval_patterns.json",
 
-    "navigation_config": "config_xml_experiment.json",
+    "parser_config_path": "config_xml_experiment.json",
 
     "data_availability_sections": [
         ".//sec[@sec-type='data-availability']",
