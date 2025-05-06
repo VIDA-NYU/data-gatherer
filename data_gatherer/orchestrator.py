@@ -16,10 +16,11 @@ import ipywidgets as widgets
 from IPython.display import display, clear_output
 
 class Orchestrator:
-    def __init__(self, config_path):
+    def __init__(self, config_path, log_file_override=None):
         self.config = load_config(config_path)
         self.XML_config = load_config(self.config['navigation_config'])
-        self.logger = setup_logging('orchestrator', self.config['log_file'])  # Initialize orchestrator logger
+        log_file = log_file_override or self.config.get('log_file', 'logs/scraper.log')
+        self.logger = setup_logging('orchestrator', log_file)
         self.classifier = LLMClassifier(self.config['retrieval_patterns'], self.logger)
         self.data_fetcher = None
         self.parser = None
@@ -127,7 +128,7 @@ class Orchestrator:
             # Step 2: Use RuleBasedParser to parse and extract HTML elements and rule-based matches
             if self.raw_data_format == "HTML":
                 self.logger.info("Using RuleBasedParser to parse data.")
-                self.parser = RuleBasedParser(self.XML_config, self.logger)
+                self.parser = RuleBasedParser(self.config['navigation_config'], self.logger)
                 parsed_data = self.parser.parse_data(raw_data, self.publisher, self.current_url)
 
                 parsed_data['rule_based_classification'] = 'n/a'
@@ -148,7 +149,7 @@ class Orchestrator:
 
             elif self.raw_data_format == "XML" and raw_data is not None:
                 self.logger.info("Using LLMParser to parse data.")
-                self.parser = LLMParser(self.XML_config, self.logger)
+                self.parser = LLMParser(self.config['navigation_config'], self.logger)
 
                 if additional_data is None:
                     parsed_data = self.parser.parse_data(raw_data, self.publisher, self.current_url)
@@ -169,7 +170,7 @@ class Orchestrator:
 
             elif self.raw_data_format == "full_HTML":
                 self.logger.info("Using LLMParser to parse data.")
-                self.parser = LLMParser(self.XML_config, self.logger)
+                self.parser = LLMParser(self.config['navigation_config'], self.logger)
                 parsed_data = self.parser.parse_data(raw_data, self.publisher, self.current_url, raw_data_format="full_HTML")
                 parsed_data['source_url'] = url
                 self.logger.info(f"Parsed data extraction completed. Elements collected: {len(parsed_data)}")
@@ -262,7 +263,7 @@ class Orchestrator:
     def get_data_preview(self, combined_df, display_type='console'):
         """Shows user a preview of the data they are about to download."""
         self.already_previewed = []
-        self.metadata_parser = LLMParser(self.XML_config, self.logger)
+        self.metadata_parser = LLMParser(self.config['navigation_config'], self.logger)
         scraper_tool = create_driver(self.config['DRIVER_PATH'], self.config['BROWSER'], self.config['HEADLESS'])
 
         if isinstance(self.data_fetcher, WebScraper):
