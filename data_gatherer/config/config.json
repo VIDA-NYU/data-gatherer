@@ -23,7 +23,8 @@
     "data_resource_preview": true,
 
     "API_supported_url_patterns": {
-        "PMC": "https:\\/\\/www\\.ncbi\\.nlm\\.nih\\.gov\\/pmc\\/articles\\/"
+        "https:\\/\\/www\\.ncbi\\.nlm\\.nih\\.gov\\/pmc\\/articles\\/" : "PMC",
+        "https:\\/\\/pmc\\.ncbi\\.nlm\\.nih\\.gov\\/" : "PMC"
     },
 
     "API_base_url": {

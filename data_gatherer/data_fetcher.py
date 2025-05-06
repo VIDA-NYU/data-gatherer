@@ -26,7 +26,7 @@ class DataFetcher(ABC):
     def url_to_publisher_domain(self, url):
         # Extract the domain name from the URL
         self.logger.debug(f"URL: {url}")
-        if re.match(r'^https?://www\.ncbi\.nlm\.nih\.gov/pmc', url):
+        if re.match(r'^https?://www\.ncbi\.nlm\.nih\.gov/pmc', url) or re.match(r'^https?://pmc\.ncbi\.nlm\.nih\.gov/', url):
             return 'PMC'
         if re.match(r'^https?://pubmed\.ncbi\.nlm\.nih\.gov/[\d]+', url):
             self.logger.info("Publisher: pubmed")
@@ -37,6 +37,7 @@ class DataFetcher(ABC):
             self.logger.info(f"Publisher: {domain}")
             return domain
         else:
+            self.logger.info("Unknown publisher")
             return 'Unknown Publisher'
 
     def url_to_publisher_root(self, url):
@@ -56,12 +57,13 @@ class DataFetcher(ABC):
         API = None
 
         # Check if the URL corresponds to PubMed Central (PMC)
-        for src,ptrn in self.config['API_supported_url_patterns'].items():
-            #self.logger.info(f"Checking {src} with pattern {ptrn}")
-            match = re.match(ptrn, url)
+        for ptr,src in self.config['API_supported_url_patterns'].items():
+            #self.logger.info(f"Checking {src} with pattern {ptr}")
+            match = re.match(ptr, url)
             if match:
                 self.logger.debug(f"URL detected as {src}.")
                 API = f"{src}_API"
+                break
 
         if API is not None and not(entire_doc_model):
         # Initialize the corresponding API client, from API_supported_url_patterns
