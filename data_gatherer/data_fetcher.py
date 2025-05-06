@@ -561,7 +561,7 @@ class DataCompletenessChecker:
                 child_element = self.safety_driver.find_element(By.XPATH, xpath)
                 text = child_element.text
                 if text and text not in rule_based_matches:
-                    self.logger.info(f"Found das-like text: {text} at {xpath}")
+                    self.logger.info(f"Found das-like text at {xpath}")
                     rule_based_matches.append({"text": text, "xpath": xpath})
 
             except Exception as e:
