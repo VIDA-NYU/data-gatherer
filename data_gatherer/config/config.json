@@ -39,7 +39,7 @@
 
     "retrieval_patterns": "retrieval_patterns.json",
 
-    "parser_config_path": "config_xml.json",
+    "parser_config_path": "parser_config.json",
 
     "data_availability_sections": [
         ".//sec[@sec-type='data-availability']",
