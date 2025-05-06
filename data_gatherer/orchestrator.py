@@ -305,7 +305,8 @@ class Orchestrator:
             else:
                 self.logger.info(f"LLM scraped metadata")
                 repo_mapping_key = row['repository_reference'].lower() if 'repository_reference' in row else row['data_repository'].lower()
-                if ('javascript_load_required' in self.parser_config['repos'][self.parser.repo_domain_to_name_mapping[repo_mapping_key]]):
+                resolved_key = self.parser.resolve_data_repository(repo_mapping_key)
+                if ('javascript_load_required' in self.parser_config['repos'][resolved_key]):
                     self.logger.info(f"JavaScript load required for {repo_mapping_key} dataset webpage. Using WebScraper.")
                     html = self.data_fetcher.fetch_data(row['dataset_webpage'])
                 else:

@@ -1559,7 +1559,7 @@ class LLMParser(Parser):
                 self.logger.info(f"Exact match found for repo: {repo}")
                 break
 
-            elif 'repo_name' in v.keys() and repo == v['repo_name'].lower():
+            elif 'repo_name' in v.keys() and repo.lower() == v['repo_name'].lower():
                 self.logger.info(f"Found repo_name match for {repo}")
                 repo = k
                 break
