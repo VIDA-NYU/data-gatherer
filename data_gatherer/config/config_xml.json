@@ -61,6 +61,21 @@
       "url_concat_string": "/pdc/study/__ID__",
       "access_mode": "Complex download or Application to access"
     },
+    "gdc.cancer.gov": {
+      "repo_name": "Genomic Data Commons",
+      "dataset_webpage_url_ptr": "https://www.ncbi.nlm.nih.gov/projects/gap/cgi-bin/study.cgi?study_id=__ID__",
+      "access_mode": "..."
+    },
+    "cancerimagingarchive.net": {
+      "repo_name": "The Cancer Imaging Archive",
+      "dataset_webpage_url_ptr": "https://doi.org/__ID__",
+      "access_mode": "..."
+    },
+    "imaging.datacommons.cancer.gov": {
+      "repo_name": "Imaging Data Commons",
+      "dataset_webpage_url_ptr": "https://doi.org/__ID__",
+      "access_mode": "..."
+    },
     "repository.jpostdb.org": {
       "repo_name": "JPOST",
       "url_concat_string": "entry/__ID__",
