@@ -20,7 +20,8 @@
     "ground_truth": "output/ground_truth.json",
 
     "API_supported_url_patterns": {
-        "PMC": "https:\\/\\/www\\.ncbi\\.nlm\\.nih\\.gov\\/pmc\\/articles\\/"
+        "https:\\/\\/www\\.ncbi\\.nlm\\.nih\\.gov\\/pmc\\/articles\\/" : "PMC",
+        "https:\\/\\/pmc\\.ncbi\\.nlm\\.nih\\.gov\\/" : "PMC"
     },
 
     "API_base_url": {

@@ -105,7 +105,7 @@ class Orchestrator:
                     self.raw_data_format = "HTML"
 
                 raw_data = self.data_fetcher.fetch_data(url)
-                self.logger.info(f"Raw data fetched as: {raw_data} from source: {self.data_fetcher.fetch_source}")
+                self.logger.info(f"Raw data fetched from source: {self.data_fetcher.fetch_source}")
 
                 if "API" not in self.data_fetcher.fetch_source:
                     raw_data = self.data_fetcher.scraper_tool.page_source
