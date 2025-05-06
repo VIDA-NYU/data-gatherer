@@ -1553,6 +1553,7 @@ class LLMParser(Parser):
 
         for k, v in self.config["repos"].items():
             self.logger.info(f"Checking if {repo} == {k}")
+            repo = re.sub("\s+\(\w+\)\s*", "", repo)  # remove any text in parentheses
             # match where repo_link has been extracted
             if k == repo:
                 self.logger.info(f"Exact match found for repo: {repo}")
