@@ -260,7 +260,7 @@ class Orchestrator:
         self.url_list = url_list
         return url_list
 
-    def get_data_preview(self, combined_df, display_type='console'):
+    def get_data_preview(self, combined_df, display_type='console', interactive=True, return_metadata=False):
         """Shows user a preview of the data they are about to download."""
         self.already_previewed = []
         self.metadata_parser = LLMParser(self.config['parser_config_path'], self.logger)
@@ -268,6 +268,9 @@ class Orchestrator:
 
         if isinstance(self.data_fetcher, WebScraper):
             self.data_fetcher.quit()
+
+        if return_metadata:
+            ret_list = []
 
         self.data_fetcher = WebScraper(scraper_tool, self.config, self.logger)
 
@@ -299,7 +302,7 @@ class Orchestrator:
                     #metadata = self.metadata_parser.parse_metadata(row['source_section'])
                     hardsraped_metadata = {k:v for k,v in row.items() if v is not None and v not in ['nan', 'None', '', 'n/a', np.nan, 'NaN', 'na']}
                     self.already_previewed.append(download_link)
-                    self.display_data_preview(hardsraped_metadata, display_type=display_type)
+                    self.display_data_preview(hardsraped_metadata, display_type=display_type, interactive=interactive)
                     continue
 
             else:
@@ -308,7 +311,7 @@ class Orchestrator:
                 resolved_key = self.parser.resolve_data_repository(repo_mapping_key)
                 if ('javascript_load_required' in self.parser_config['repos'][resolved_key]):
                     self.logger.info(f"JavaScript load required for {repo_mapping_key} dataset webpage. Using WebScraper.")
-                    html = self.data_fetcher.fetch_data(row['dataset_webpage'])
+                    html = self.data_fetcher.fetch_data(row['dataset_webpage'], delay=10)
                     html = self.data_fetcher.normalize_HTML(html)
                     if self.config['write_raw_metadata']:
                         self.logger.info(f"Saving raw metadata to: {self.config['html_xml_dir']+ 'raw_metadata/'}")
@@ -325,10 +328,17 @@ class Orchestrator:
                 self.already_previewed.append(row['dataset_webpage'])
 
             metadata['paper_with_dataset_citation'] = row['source_url']
-            self.display_data_preview(metadata, display_type=display_type)
+
+            if return_metadata:
+                ret_list.append(metadata)
+
+            self.display_data_preview(metadata, display_type=display_type, interactive=interactive)
+
         self.data_fetcher.quit()
 
-    def display_data_preview(self, metadata, display_type='console'):
+        return ret_list if return_metadata else None
+
+    def display_data_preview(self, metadata, display_type='console', interactive=True):
         """
         Display extracted metadata as a clean table in both Jupyter and terminal environments.
         """
@@ -336,6 +346,10 @@ class Orchestrator:
 
         if not isinstance(metadata, dict):
             self.logger.warning("Metadata is not a dictionary. Cannot display properly.")
+            return
+
+        if not interactive:
+            self.logger.info("Skipping interactive preview. Change the interactive flag to True to enable.")
             return
 
         if display_type == 'console':
