@@ -1,0 +1,3 @@
+dataset_id,repository_reference,source_section,retrieval_pattern,dataset_webpage,access_mode,source_url
+PDC000125,Proteomic Data Commons,data_availability,"//section[h3[contains(text(), 'Data Availability')]]",https://pdc.cancer.gov/pdc/study/PDC000125,Complex download or Application to access,https://pmc.ncbi.nlm.nih.gov/articles/PMC10631452/
+phs001287,Genomic Data Commons,data_availability,"//section[h3[contains(text(), 'Data Availability')]]",https://www.ncbi.nlm.nih.gov/projects/gap/cgi-bin/study.cgi?study_id=phs001287,...,https://pmc.ncbi.nlm.nih.gov/articles/PMC10631452/
