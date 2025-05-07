@@ -69,7 +69,7 @@ class Orchestrator:
         return self.data_fetcher.scraper_tool
 
 
-    def process_url(self, url):
+    def process_url(self, url, save_staging_table=False):
         """Orchestrates the process for a given source URL (publication)."""
         self.logger.info(f"Processing URL: {url}")
         self.current_url = url
@@ -145,7 +145,7 @@ class Orchestrator:
                     self.logger.debug(f"key: {key}, value: {value}")
                     parsed_data.loc[parsed_data['link'].str.contains(key), 'rule_based_classification'] = value
 
-                parsed_data.to_csv('staging_table/parsed_data.csv', index=False)
+                parsed_data.to_csv('staging_table/parsed_data.csv', index=False) if save_staging_table else None
 
             elif self.raw_data_format == "XML" and raw_data is not None:
                 self.logger.info("Using LLMParser to parse data.")
@@ -166,7 +166,7 @@ class Orchestrator:
                 parsed_data['source_url'] = url
                 self.logger.info(f"Parsed data extraction completed. Elements collected: {len(parsed_data)}")
                 if self.logger.level == logging.DEBUG:
-                    parsed_data.to_csv('staging_table/parsed_data_from_XML.csv', index=False)  # save parsed data to a file
+                    parsed_data.to_csv('staging_table/parsed_data_from_XML.csv', index=False) if save_staging_table else None
 
             elif self.raw_data_format == "full_HTML":
                 self.logger.info("Using LLMParser to parse data.")
@@ -175,7 +175,7 @@ class Orchestrator:
                 parsed_data['source_url'] = url
                 self.logger.info(f"Parsed data extraction completed. Elements collected: {len(parsed_data)}")
                 if self.logger.level == logging.DEBUG:
-                    parsed_data.to_csv('staging_table/parsed_data_from_XML.csv', index=False)
+                    parsed_data.to_csv('staging_table/parsed_data_from_XML.csv', index=False) if save_staging_table else None
 
             else:
                 self.logger.error(f"Unsupported raw data format: {self.raw_data_format}. Cannot parse data.")
