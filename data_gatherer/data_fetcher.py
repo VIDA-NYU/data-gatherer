@@ -83,7 +83,7 @@ class DataFetcher(ABC):
         return True
 
     @abstractmethod
-    def fetch_data(self, source):
+    def fetch_data(self, source, retries=3, delay=2):
         pass
 
 # Implementation for fetching data via web scraping
@@ -96,10 +96,10 @@ class WebScraper(DataFetcher):
         self.css_selectors = self.retrieval_patterns['general']['css_selectors']
         self.xpaths = self.retrieval_patterns['general']['xpaths']
 
-    def fetch_data(self, url):
+    def fetch_data(self, url, retries=3, delay=2):
         # Use the scraper tool to fetch raw HTML from the URL
         self.scraper_tool.get(url)
-        self.simulate_user_scroll()
+        self.simulate_user_scroll(delay)
         return self.scraper_tool.page_source
 
     def remove_cookie_patterns(self, html: str):
@@ -117,14 +117,14 @@ class WebScraper(DataFetcher):
             self.logger.info("No cookie pattern 1 found in HTML")
         return html
 
-    def simulate_user_scroll(self):
+    def simulate_user_scroll(self, delay=2):
         last_height = self.scraper_tool.execute_script("return document.body.scrollHeight")
         while True:
             # Scroll down to bottom
             self.scraper_tool.execute_script("window.scrollTo(0, document.body.scrollHeight);")
 
             # Wait to load page
-            time.sleep(3)
+            time.sleep(delay)
 
             # Calculate new height and compare with last height
             new_height = self.scraper_tool.execute_script("return document.body.scrollHeight")
@@ -333,7 +333,7 @@ class DatabaseFetcher(DataFetcher):
         self.data_file = self.config['raw_HTML_data_filepath']
         self.dataframe = pd.read_parquet(self.data_file)
 
-    def fetch_data(self, url_key):
+    def fetch_data(self, url_key, retries=3, delay=2):
         self.logger.info(f"Fetching data for {url_key}")
         self.logger.info(f"Data file: {self.dataframe[self.dataframe['publication'] == url_key]}")
         raw_html = self.dataframe[self.dataframe['publication'] == url_key]['raw_html'].values[0]
