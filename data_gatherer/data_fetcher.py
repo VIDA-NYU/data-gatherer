@@ -10,7 +10,7 @@ from lxml import etree as ET
 from data_gatherer.selenium_setup import create_driver
 from data_gatherer.logger_setup import setup_logging
 import mimetypes
-from bs4 import BeautifulSoup
+from bs4 import BeautifulSoup, Comment
 from urllib.parse import urlparse
 import pandas as pd
 from data_gatherer.resources_loader import load_config
@@ -185,6 +185,55 @@ class WebScraper(DataFetcher):
                 self.logger.error(f"Invalid xpath: {xpath}")
 
         return self.normalize_links(rule_based_matches)
+
+    def normalize_HTML(self,html):
+        try:
+            # Parse the HTML content
+            soup = BeautifulSoup(html, "html.parser")
+
+            # 1. Remove script, style, and meta tags
+            for tag in ["script", "style", 'img', 'noscript', 'svg', 'button', 'form', 'input']:
+                for element in soup.find_all(tag):
+                    element.decompose()
+
+            remove_meta_tags = True
+            if remove_meta_tags:
+                for meta in soup.find_all('meta'):
+                    meta.decompose()
+
+            # 2. Remove dynamic attributes
+            for tag in soup.find_all(True):  # True matches all tags
+                # Remove dynamic `id` attributes that match certain patterns (e.g., `tooltip-*`)
+                if "id" in tag.attrs and re.match(r"tooltip-\d+", tag.attrs["id"]):
+                    del tag.attrs["id"]
+
+                # Remove dynamic `aria-describedby` attributes
+                if "aria-describedby" in tag.attrs and re.match(r"tooltip-\d+", tag.attrs["aria-describedby"]):
+                    del tag.attrs["aria-describedby"]
+
+                # Remove inline styles
+                if "style" in tag.attrs:
+                    del tag.attrs["style"]
+
+                # Remove all `data-*` attributes
+                tag.attrs = {key: val for key, val in tag.attrs.items() if not key.startswith("data-")}
+
+                # Remove `csrfmiddlewaretoken` inputs
+                if tag.name == "input" and tag.get("name") == "csrfmiddlewaretoken":
+                    tag.decompose()
+
+            # 3. Remove comments
+            for comment in soup.find_all(string=lambda text: isinstance(text, Comment)):
+                comment.extract()
+
+            # 4. Normalize whitespace
+            normalized_html = re.sub(r"\s+", " ", soup.prettify())
+
+            return normalized_html.strip()
+
+        except Exception as e:
+            self.logger.error(f"Error normalizing DOM: {e}")
+            return ""
 
     def download_html(self, dir):
         logging.info(f"Dir {dir} exists") if os.path.exists(dir) else os.mkdir(dir)
@@ -584,6 +633,7 @@ class DataCompletenessChecker:
             try:
                 child_element = self.safety_driver.find_element(By.XPATH, xpath)
                 anchors = child_element.find_elements(By.TAG_NAME, 'a')
+                self.logger.debug(f"Found {len(anchors)} anchor elements.")
                 # get href attribute from anchor elements if any links in anchor
                 for a in anchors:
                     link = [a.get_attribute('href', None)]

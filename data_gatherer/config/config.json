@@ -32,6 +32,7 @@
     },
 
     "write_htmls_xmls": false,
+    "write_raw_metadata": true,
     "html_xml_dir": "html_xml_samples/",
 
     "skip_file_extensions": [],

@@ -309,6 +309,10 @@ class Orchestrator:
                 if ('javascript_load_required' in self.parser_config['repos'][resolved_key]):
                     self.logger.info(f"JavaScript load required for {repo_mapping_key} dataset webpage. Using WebScraper.")
                     html = self.data_fetcher.fetch_data(row['dataset_webpage'])
+                    html = self.data_fetcher.normalize_HTML(html)
+                    if self.config['write_raw_metadata']:
+                        self.logger.info(f"Saving raw metadata to: {self.config['html_xml_dir']+ 'raw_metadata/'}")
+                        self.data_fetcher.download_html(self.config['html_xml_dir'] + 'raw_metadata/')
                 else:
                     html = requests.get(row['dataset_webpage']).text
                 metadata = self.metadata_parser.parse_metadata(html)
