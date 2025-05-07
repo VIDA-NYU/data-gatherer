@@ -59,6 +59,7 @@
     },
     "pdc.cancer.gov": {
       "repo_name": "Proteomic Data Commons",
+      "javascript_load_required": true,
       "url_concat_string": "/pdc/study/__ID__",
       "access_mode": "Complex download or Application to access"
     },
