@@ -50,20 +50,21 @@ class DataFetcher(ABC):
         else:
             return 'Unknown Publisher'
 
-    def update_DataFetcher_settings(self, url, entire_doc_model, logger):
+    def update_DataFetcher_settings(self, url, entire_doc_model, logger, HTML_fallback=False):
         """Sets up either a web scraper or API client based on the URL domain."""
         self.logger.debug(f"update_DataFetcher_settings for current URL")
 
         API = None
 
-        # Check if the URL corresponds to PubMed Central (PMC)
-        for ptr,src in self.config['API_supported_url_patterns'].items():
-            #self.logger.info(f"Checking {src} with pattern {ptr}")
-            match = re.match(ptr, url)
-            if match:
-                self.logger.debug(f"URL detected as {src}.")
-                API = f"{src}_API"
-                break
+        if not HTML_fallback:
+            # Check if the URL corresponds to PubMed Central (PMC)
+            for ptr,src in self.config['API_supported_url_patterns'].items():
+                #self.logger.info(f"Checking {src} with pattern {ptr}")
+                match = re.match(ptr, url)
+                if match:
+                    self.logger.debug(f"URL detected as {src}.")
+                    API = f"{src}_API"
+                    break
 
         if API is not None and not(entire_doc_model):
         # Initialize the corresponding API client, from API_supported_url_patterns
@@ -71,7 +72,10 @@ class DataFetcher(ABC):
             return APIClient(requests, API, self.config, logger)
 
         else:
-            self.logger.info("Non-API URL detected, or API unsupported. Webscraper update")
+            if HTML_fallback:
+                self.logger.info("HTML fallback triggered. Webscraper update")
+            else:
+                self.logger.info("Non-API URL detected, or API unsupported. Webscraper update")
             self.fetch_source = 'WebScraper'
             driver = create_driver(self.config['DRIVER_PATH'], self.config['BROWSER'], self.config['HEADLESS'])
             return WebScraper(driver, self.config, logger)
@@ -391,6 +395,7 @@ class APIClient(DataFetcher):
         try:
             # Extract the PMC ID from the article URL
             PMCID = re.search(r'PMC\d+', article_url).group(0)
+            self.PMCID = PMCID
 
             # Construct the API call using the PMC ID
             api_call = re.sub('__PMCID__', PMCID, self.base)
