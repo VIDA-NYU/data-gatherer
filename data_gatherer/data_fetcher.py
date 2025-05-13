@@ -446,14 +446,17 @@ class APIClient(DataFetcher):
                                           encoding='UTF-8')
 
 class DataCompletenessChecker:
-    def __init__(self, config, logger):
+    """
+    Class to check the completeness of data sections in API responses.
+    """
+    def __init__(self, config, logger, publisher='PMC'):
         self.config = config
         self.logger = logger
         self.safety_driver = create_driver(self.config['DRIVER_PATH'], self.config['BROWSER'], self.config['HEADLESS'],
                                            logger=logger)
         self.retrieval_patterns = load_config(self.config['retrieval_patterns'])
-        self.css_selectors = self.retrieval_patterns['PMC']['css_selectors']
-        self.xpaths = self.retrieval_patterns['PMC']['xpaths']
+        self.css_selectors = self.retrieval_patterns[publisher]['css_selectors']
+        self.xpaths = self.retrieval_patterns[publisher]['xpaths']
 
     def extract_namespaces(self, xml_element):
         """Extract all namespaces in use, including xlink."""
@@ -466,32 +469,26 @@ class DataCompletenessChecker:
                 ns_map[prefix] = uri
         return ns_map
 
-    def ensure_data_sections(self, raw_data, url):
+    def is_xml_data_complete(self, raw_data, url) -> bool:
         """
-        Check if the data sections exist in the raw_data (support only for XML for now)
-        :param raw_data:
-        :param url:
-        :return: additional data scraped from the web (list of dictionaries)
+        Check if required sections are present in the raw_data.
+        Return True if all required sections are present.
         """
-        self.logger.debug(f"Function call ensure_data_sections({raw_data}, {url})")
-
-        additional_data_ret = []
+        self.logger.debug(f"Checking XML completeness for {url}")
         required_sections = ["data_availability", "supplementary_data"]
 
         for section in required_sections:
             if not self.has_target_section(raw_data, section):
-                self.logger.info(f"{section} section missing for {url}. Fetching from web...")
-                add_cont = self.get_section_from_webpage(url, section)
-                additional_data_ret.extend(add_cont)
-            else:
-                self.logger.info(f"{section} section found in raw data.")
+                self.logger.info(f"Missing section in XML: {section}")
+                return False
 
-        return additional_data_ret
+        self.logger.info("XML data contains all required sections.")
+        return True
 
     def has_target_section(self, raw_data, section_name: str) -> bool:
         """
         Check if the target section (data availability or supplementary data) exists in the raw data.
-        :param raw_data: Parsed XML or HTML data.
+        :param raw_data: Raw XML data.
         :param section_name: Name of the section to check.
         :return: True if the section is found with relevant links, False otherwise.
         """
@@ -682,7 +679,7 @@ class DataCompletenessChecker:
 
     def url_to_publisher_domain(self, url):
         # Extract the domain name from the URL
-        if re.match(r'^https?://www\.ncbi\.nlm\.nih\.gov/pmc', url):
+        if re.match(r'^https?://www\.ncbi\.nlm\.nih\.gov/pmc', url) or re.match(r'^https?://pmc\.ncbi\.nlm\.nih\.gov/', url):
             return 'PMC'
         match = re.match(r'^https?://(?:\w+\.)?([\w\d\-]+)\.\w+', url)
         if match:
