@@ -19,7 +19,7 @@ class LLMClassifier:
         """
         skip_patterns = self.config['general']['skip_llm_classification_patterns']
         for pattern,classified in skip_patterns.items():
-            if re.search(pattern, element['reconstructed_link']):
+            if re.search(pattern, element['download_link']):
                 self.logger.info(f"Skipping LLM classification for {element['reconstructed_link']}")
                 return classified
 
