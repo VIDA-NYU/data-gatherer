@@ -459,6 +459,24 @@ class LLMParser(Parser):
                 # Create a DataFrame from the dataset links union supplementary material links
                 out_df = pd.concat([pd.DataFrame(dataset_links_w_target_pages), supplementary_material_links])
 
+            else:
+                self.logger.info(f"Chunking the HTML content for the parsing step.")
+                supplementary_material_links = self.extract_href_from_html_supplementary_material(api_data,
+                                                                                                  current_url_address)
+                preprocessed_data = self.normalize_full_DOM(api_data)
+
+                # Extract dataset links from the entire text
+                data_availability_elements = self.get_data_availability_elements_from_webpage(preprocessed_data)
+
+                data_availability_str = "\n".join([item['html'] + "\n" for item in data_availability_elements])
+
+                augmented_dataset_links = self.retrieve_datasets_from_content(data_availability_str, self.config['repos'],
+                                                                              self.config['llm_model'])
+
+                dataset_links_w_target_pages = self.get_dataset_webpage(augmented_dataset_links)
+
+                out_df = pd.concat([pd.DataFrame(dataset_links_w_target_pages), supplementary_material_links])
+
             self.logger.info(f"Dataset Links type: {type(out_df)} of len {len(out_df)}, with cols: {out_df.columns}")
 
             # Extract file extensions from download links if possible, and add to the dataframe out_df as column
@@ -994,6 +1012,8 @@ class LLMParser(Parser):
                 content = content[:-2000]
             self.logger.info(f"Content length: {len(content)}")
 
+        self.logger.info(f"static_prompt: {static_prompt}")
+
         # Render the prompt with dynamic content
         messages = self.prompt_manager.render_prompt(
             static_prompt,
@@ -1002,7 +1022,7 @@ class LLMParser(Parser):
             repos=', '.join(repos)
         )
         self.logger.info(f"Prompt messages total length: {self.count_tokens(messages,model)} tokens")
-        self.logger.debug(f"Prompt messages: {messages}")
+        self.logger.info(f"Prompt messages: {messages}")
 
         # Generate the checksum for the prompt content
         # Save the prompt and calculate checksum
@@ -1311,20 +1331,63 @@ class LLMParser(Parser):
         # Join rows with a newline to create the final table text
         return "\n".join(rows)
 
-    """   
-    def get_data_availability_section_from_webpage(self, pmc_id):
-        '''
-        Given the pmc_id reconstruct the url
-        :param pmc_id:
-        :return: data availability section from the webpage
-        '''
-        self.logger.info(f"Fetching data availability from webpage for pmc_id: {pmc_id}")
-        surrounding_text = "data availability section from the webpage"
-
-        dataset_nonlink_refs = [{"surrounding_text": surrounding_text, "source_section": "data availability"}]
-
-        return dataset_nonlink_refs
+    def get_data_availability_elements_from_webpage(self, preprocessed_html, publisher='PMC'):
         """
+        Given the preprocessed HTML, extract paragraphs or links under data availability sections.
+        """
+        self.retrieval_patterns = load_config('retrieval_patterns.json')
+        self.logger.info("Extracting data availability elements from HTML")
+
+        # Merge general + publisher-specific selectors
+        self.css_selectors = self.retrieval_patterns.get('general', {}).get('css_selectors', {})
+        publisher_selectors = self.retrieval_patterns.get(publisher, {}).get('css_selectors', {})
+        self.css_selectors.update(publisher_selectors)
+
+        soup = BeautifulSoup(preprocessed_html, "html.parser")
+        data_availability_elements = []
+
+        for selector in self.css_selectors.get('data_availability', []):
+            self.logger.info(f"Using selector: {selector}")
+            matches = soup.select(selector)
+            for match in matches:
+                if match.name in ['h2', 'h3']:  # headings usually don't contain content directly
+                    container = match.find_parent('section') or match.find_next_sibling()
+                    if container:
+                        children = container.find_all(['p', 'li', 'a', 'div'], recursive=True)
+                    else:
+                        children = []
+                else:
+                    children = match.find_all(['p', 'li', 'a', 'div'], recursive=True)
+
+                text_val, html_val = '', ''
+                for child in children:
+                    if not child.get_text(strip=True):
+                        continue
+                    text_val += child.get_text(strip=True) + " \n"
+                    html_val += str(child) + " \n"
+
+                element_info = {
+                    'retrieval_pattern': selector,
+                    'text': text_val,
+                    'html': html_val
+                }
+                data_availability_elements.append(element_info)
+
+                # fallback if nothing found
+                if not children:
+                    data_availability_elements.append({
+                        'retrieval_pattern': selector,
+                        'tag': match.name,
+                        'text': match.get_text(strip=True),
+                        'html': str(match)
+                    })
+                    data_availability_elements.append(element_info)
+
+                self.logger.info(f"Extracted data availability element: {element_info}")
+
+        self.logger.info(f"Found {len(data_availability_elements)} data availability elements from HTML.")
+        return data_availability_elements
+
 
     def process_data_availability_links(self, dataset_links):
         """
