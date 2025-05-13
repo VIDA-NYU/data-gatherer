@@ -132,7 +132,7 @@ class Orchestrator:
             self.logger.info("Successfully fetched Raw content.")
 
             # Step 2: Use RuleBasedParser to parse and extract HTML elements and rule-based matches
-            if self.raw_data_format == "HTML":
+            if self.raw_data_format == "HTML" and self.parser_mode == "RuleBasedParser":
                 self.logger.info("Using RuleBasedParser to parse data.")
                 self.parser = RuleBasedParser(self.config['parser_config_path'], self.logger)
                 parsed_data = self.parser.parse_data(raw_data, self.publisher, self.current_url)
@@ -174,7 +174,7 @@ class Orchestrator:
                 if self.logger.level == logging.DEBUG:
                     parsed_data.to_csv('staging_table/parsed_data_from_XML.csv', index=False) if save_staging_table else None
 
-            elif self.raw_data_format == "full_HTML":
+            elif self.raw_data_format == "full_HTML" or self.parser_mode == "LLMParser":
                 self.logger.info("Using LLMParser to parse data.")
                 self.parser = LLMParser(self.config['parser_config_path'], self.logger)
                 parsed_data = self.parser.parse_data(raw_data, self.publisher, self.current_url, raw_data_format="full_HTML")
@@ -197,7 +197,7 @@ class Orchestrator:
 
             # Step 3: Use Classifier to classify Extracted and Parsed elements
             if parsed_data is not None:
-                if self.raw_data_format == "HTML":
+                if self.raw_data_format == "HTML" and self.parser_mode != "LLMParser":
                     classified_links = self.classifier.classify_anchor_elements_links(parsed_data)
                     self.logger.info("Link classification completed.")
                 elif self.raw_data_format == "XML":
@@ -206,6 +206,12 @@ class Orchestrator:
                 elif self.raw_data_format == "full_HTML":
                     classified_links = parsed_data
                     self.logger.info("Full HTML element classification not supported. Using parsed_data.")
+                elif self.parser_mode == "LLMParser":
+                    classified_links = parsed_data
+                    self.logger.info("Full HTML element classification not supported. Using parsed_data.")
+                else:
+                    self.logger.error(f"Unsupported raw data format and parser mode combination.")
+                    return None
             else:
                 raise ValueError("Parsed data is None. Cannot classify links.")
 
