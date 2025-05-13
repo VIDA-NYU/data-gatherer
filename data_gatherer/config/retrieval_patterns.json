@@ -49,7 +49,14 @@
   },
   "PMC": {
     "css_selectors": {
-      "CHANGE HERE!!": "data availability"
+      "data_availability": {
+        "section.data-availability-statement": "dataset",
+        "section.associated-data": "dataset",
+        "h2.pmc_sec_title:-soup-contains('Data Availability')": "dataset",
+        "h3.pmc_sec_title:-soup-contains('Data Availability')": "dataset",
+        "h2.pmc_sec_title:-soup-contains('Associated Data')": "dataset",
+        "h2.pmc_sec_title:-soup-contains('Footnotes')": "dataset"
+      }
     },
     "xpaths": {
       "data_availability": {
