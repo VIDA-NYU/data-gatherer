@@ -708,7 +708,6 @@ class LLMParser(Parser):
 
         return df_supp
 
-
     def extract_href_from_supplementary_material(self, api_xml, current_url_address):
 
         self.logger.info(f"Function_call: extract_href_from_supplementary_material(api_xml, current_url_address)")
