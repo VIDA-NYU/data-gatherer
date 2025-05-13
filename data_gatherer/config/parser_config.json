@@ -104,6 +104,13 @@
       "dataset_webpage_url_ptr": "https://www.ncbi.nlm.nih.gov/bioproject/?term=__ID__",
       "access_mode": "Complex download",
       "javascript_load_required": true
+    },
+    "ArrayExpress": {
+      "repo_name": "ArrayExpress",
+      "repo_root": "www.ebi.ac.uk",
+      "dataset_webpage_url_ptr": "https://www.ebi.ac.uk/biostudies/ArrayExpress/studies/__ID__/sdrf",
+      "access_mode": "Complex download",
+      "javascript_load_required": true
     }
   },
   "data_availability_sections": [
