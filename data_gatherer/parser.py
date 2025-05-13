@@ -1845,7 +1845,7 @@ class LLMClient:
         self.logger = logger or logging.getLogger(__name__)
         self.logger.info(f"Initializing LLMClient with model: {self.model}")
         self._initialize_client(model)
-        self.prompt_manager = PromptManager("prompt_templates/metadata_prompts", self.logger)
+        self.prompt_manager = PromptManager("data_gatherer/prompts/prompt_templates/metadata_prompts", self.logger)
 
     def _initialize_client(self, model):
         if model.startswith('gpt'):
