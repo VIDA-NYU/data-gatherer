@@ -440,9 +440,11 @@ class APIClient(DataFetcher):
             self.logger.error(f"Error fetching data for {article_url}: {e}")
             return None
 
-    def download_xml(self, dir, api_data):
+    def download_xml(self, directory, api_data):
 
-        ET.ElementTree(api_data).write(dir, pretty_print=True, xml_declaration=True,
+        fn = directory + self.PMCID + '.xml'
+
+        ET.ElementTree(api_data).write(fn, pretty_print=True, xml_declaration=True,
                                           encoding='UTF-8')
 
 class DataCompletenessChecker:
