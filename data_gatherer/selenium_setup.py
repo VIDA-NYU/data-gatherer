@@ -1,4 +1,3 @@
-import logging
 import os
 from selenium import webdriver
 from selenium.webdriver.firefox.service import Service as FirefoxService
