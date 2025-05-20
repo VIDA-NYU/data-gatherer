@@ -47,19 +47,15 @@ class Orchestrator:
             return
 
         elif self.config['search_method'] == 'url_list':
-            driver = create_driver(self.config['DRIVER_PATH'], self.config['BROWSER'], self.config['HEADLESS'])
-            self.data_fetcher = WebScraper(driver, self.config, self.logger)
+            self.data_fetcher = WebScraper(None, self.config, self.logger)
 
         elif self.config['search_method'] == 'cloudscraper':
             driver = cloudscraper.create_scraper()
             self.data_fetcher = WebScraper(driver, self.config, self.logger)
 
         elif self.config['search_method'] == 'google_scholar':
-            driver = create_driver(self.config['DRIVER_PATH'], self.config['BROWSER'], self.config['HEADLESS'])
+            driver = create_driver(self.config['DRIVER_PATH'], self.config['BROWSER'], self.config['HEADLESS'], self.logger)
             self.data_fetcher = WebScraper(driver, self.config, self.logger)
-
-        elif self.config['search_method'] == 'api':
-            self.logger.error("API data source not yet implemented.")
 
         else:
             raise ValueError(f"Invalid search method: {self.config['search_method']}")
@@ -276,15 +272,13 @@ class Orchestrator:
         """Shows user a preview of the data they are about to download."""
         self.already_previewed = []
         self.metadata_parser = LLMParser(self.config['parser_config_path'], self.logger)
-        scraper_tool = create_driver(self.config['DRIVER_PATH'], self.config['BROWSER'], self.config['HEADLESS'])
+        self.data_fetcher = self.data_fetcher.update_DataFetcher_settings('any_url', self.full_DOM, self.logger)
 
         if isinstance(self.data_fetcher, WebScraper):
-            self.data_fetcher.quit()
+            self.logger.info("Found WebScraper to fetch data.")
 
         if return_metadata:
             ret_list = []
-
-        self.data_fetcher = WebScraper(scraper_tool, self.config, self.logger)
 
         for i, row in combined_df.iterrows():
             self.logger.info(f"Row # {i}")
@@ -345,8 +339,6 @@ class Orchestrator:
                 ret_list.append(metadata)
 
             self.display_data_preview(metadata, display_type=display_type, interactive=interactive)
-
-        self.data_fetcher.quit()
 
         return ret_list if return_metadata else None
 

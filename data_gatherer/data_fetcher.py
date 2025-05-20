@@ -51,7 +51,10 @@ class DataFetcher(ABC):
             return 'Unknown Publisher'
 
     def update_DataFetcher_settings(self, url, entire_doc_model, logger, HTML_fallback=False):
-        """Sets up either a web scraper or API client based on the URL domain."""
+        """
+        Sets up either a web scraper or API client based on the URL domain.
+        Also used to avoid re_instantiating another selenium webdriver.
+        """
         self.logger.debug(f"update_DataFetcher_settings for current URL")
 
         API = None
@@ -59,7 +62,7 @@ class DataFetcher(ABC):
         if not HTML_fallback:
             # Check if the URL corresponds to PubMed Central (PMC)
             for ptr,src in self.config['API_supported_url_patterns'].items():
-                #self.logger.info(f"Checking {src} with pattern {ptr}")
+                self.logger.debug(f"Checking {src} with pattern {ptr}")
                 match = re.match(ptr, url)
                 if match:
                     self.logger.debug(f"URL detected as {src}.")
@@ -71,16 +74,18 @@ class DataFetcher(ABC):
             self.logger.debug(f"Initializing APIClient({'requests', API, 'self.config'})")
             return APIClient(requests, API, self.config, logger)
 
-        else:
-            if HTML_fallback:
-                self.logger.info("HTML fallback triggered. Webscraper update")
-            else:
-                self.logger.info("Non-API URL detected, or API unsupported. Webscraper update")
-            self.fetch_source = 'WebScraper'
-            driver = create_driver(self.config['DRIVER_PATH'], self.config['BROWSER'], self.config['HEADLESS'])
-            return WebScraper(driver, self.config, logger)
+        # Reuse existing driver if we already have one
+        if isinstance(self, WebScraper) and hasattr(self, 'scraper_tool'):
+            self.logger.info("Reusing existing WebScraper driver.")
+            return self  # Reuse current instance
 
-        self.logger.info("Data fetcher setup completed.")
+        self.logger.info(f"WebScraper instance: {isinstance(self, WebScraper)}")
+        self.logger.info(f"APIClient instance: {isinstance(self, APIClient)}")
+        self.logger.info(f"scraper_cool attribute: {hasattr(self,'scraper_tool')}")
+
+        self.logger.info("Initializing new selenium driver.")
+        driver = create_driver(self.config['DRIVER_PATH'], self.config['BROWSER'], self.config['HEADLESS'], self.logger)
+        return WebScraper(driver, self.config, logger)
 
     def is_url_API(self, url):
 
@@ -454,8 +459,6 @@ class DataCompletenessChecker:
     def __init__(self, config, logger, publisher='PMC'):
         self.config = config
         self.logger = logger
-        self.safety_driver = create_driver(self.config['DRIVER_PATH'], self.config['BROWSER'], self.config['HEADLESS'],
-                                           logger=logger)
         self.retrieval_patterns = load_config(self.config['retrieval_patterns'])
         self.css_selectors = self.retrieval_patterns[publisher]['css_selectors']
         self.xpaths = self.retrieval_patterns[publisher]['xpaths']
@@ -529,22 +532,6 @@ class DataCompletenessChecker:
 
         self.logger.debug(f"Found {len(ext_links)} ext-links and {len(xlink_hrefs)} xlink:hrefs.")
         return bool(ext_links or xlink_hrefs)  #or uris)
-
-
-    def download_html(self, directory):
-        logging.info(f"Dir {directory} exists") if os.path.exists(directory) else os.mkdir(directory)
-
-        fn = directory + self.get_publication_name_from_driver() + '.html'
-
-        with open(fn, 'w', encoding='utf-8') as f:
-            f.write(self.safety_driver.page_source)
-
-    def get_publication_name_from_driver(self):
-        publication_name_pointer = self.safety_driver.find_element(By.TAG_NAME, 'title')
-        publication_name = re.sub("\n+", "", (publication_name_pointer.get_attribute("text")))
-        publication_name = re.sub("\s+", " ", (publication_name))
-        self.logger.info(f"Paper name: {publication_name}")
-        return publication_name
 
     def url_to_publisher_domain(self, url):
         # Extract the domain name from the URL
