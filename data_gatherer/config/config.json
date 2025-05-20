@@ -21,6 +21,7 @@
     "raw_HTML_data_filepath" : "input/fetched_data.parquet",
 
     "data_resource_preview": true,
+    "download_previewed_data_resources": true,
 
     "API_supported_url_patterns": {
         "https:\\/\\/www\\.ncbi\\.nlm\\.nih\\.gov\\/pmc\\/articles\\/" : "PMC",
