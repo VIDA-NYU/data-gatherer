@@ -95,6 +95,29 @@ class DataFetcher(ABC):
     def fetch_data(self, source, retries=3, delay=2):
         pass
 
+    def download_file_from_url(self, url, output_root="output/suppl_files", paper_id=None):
+        output_dir = os.path.join(output_root, paper_id)
+        os.makedirs(output_dir, exist_ok=True)
+        filename = url.split("/")[-1]
+        path = os.path.join(output_dir, filename)
+
+        headers = {
+            "User-Agent": "Mozilla/5.0",
+            # Add cookies or headers if needed
+        }
+
+        r = requests.get(url, stream=True, headers=headers)
+
+        if "Preparing to download" in r.text[:100]:  # Detect anti-bot response
+            raise ValueError("Page blocked or JS challenge detected.")
+
+        with open(path, "wb") as f:
+            for chunk in r.iter_content(chunk_size=8192):
+                f.write(chunk)
+            self.logger.info(f"Downloaded {filename} to {path}")
+
+        return path
+
 # Implementation for fetching data via web scraping
 class WebScraper(DataFetcher):
     def __init__(self, scraper_tool, config, logger):

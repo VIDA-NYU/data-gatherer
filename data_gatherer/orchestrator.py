@@ -445,6 +445,20 @@ class Orchestrator:
             self.logger.warning(f"Unsupported display type: {display_type}. Cannot display metadata preview.")
             return
 
+    def download_previewed_data_resources(self, output_root="output/suppl_files"):
+        """
+        Function to download all the files
+        """
+        self.logger.info(f"Downloading {len(self.downloadables)} previewed data resources.")
+        for metadata in self.downloadables:
+            download_link = metadata.get('download_link', None)
+            if download_link is not None:
+                split_source_url = metadata.get('source_url').split('/')
+                paper_id = split_source_url[-1] if len(split_source_url) > 0 else split_source_url[-2]
+                self.data_fetcher.download_file_from_url(download_link, output_root=output_root, paper_id=paper_id)
+            else:
+                self.logger.warning(f"No valid download_link found for metadata: {metadata}")
+
     def get_internal_id(self, metadata):
         self.logger.info(f"Getting internal ID for {metadata}")
         if 'source_url_for_metadata' in metadata and metadata['source_url_for_metadata'] is not None and metadata[
@@ -484,6 +498,9 @@ class Orchestrator:
 
             if self.config['data_resource_preview']:
                 self.get_data_preview(combined_df)
+
+                if self.config['download_previewed_data_resources']:
+                    self.download_previewed_data_resources()
 
             combined_df.to_csv(self.config['full_output_file'], index=False)
 
