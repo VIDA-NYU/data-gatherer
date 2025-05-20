@@ -306,9 +306,9 @@ class Orchestrator:
                 else:
                     self.logger.info(f"Potentially a valid dataset, displaying hardscraped metadata")
                     #metadata = self.metadata_parser.parse_metadata(row['source_section'])
-                    hardsraped_metadata = {k:v for k,v in row.items() if v is not None and v not in ['nan', 'None', '', 'n/a', np.nan, 'NaN', 'na']}
+                    hardscraped_metadata = {k:v for k,v in row.items() if v is not None and v not in ['nan', 'None', '', 'n/a', np.nan, 'NaN', 'na']}
                     self.already_previewed.append(download_link)
-                    self.display_data_preview(hardsraped_metadata, display_type=display_type, interactive=interactive)
+                    self.display_data_preview(hardscraped_metadata, display_type=display_type, interactive=interactive)
                     continue
 
             else:
