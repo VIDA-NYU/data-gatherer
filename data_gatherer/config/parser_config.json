@@ -103,7 +103,10 @@
       "repo_name": "sra",
       "dataset_webpage_url_ptr": "https://www.ncbi.nlm.nih.gov/bioproject/?term=__ID__",
       "access_mode": "Complex download",
-      "javascript_load_required": true
+      "javascript_load_required": true,
+      "informative_html_metadata_tags": [
+        "form"
+      ]
     },
     "ArrayExpress": {
       "repo_name": "ArrayExpress",
