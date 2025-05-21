@@ -1778,7 +1778,11 @@ class LLMParser(Parser):
     def extract_dataset_info(self, metadata, subdir = ''):
         self.logger.info(f"Extracting dataset information from metadata. Prompt from subdir: {subdir}")
 
-        llm = LLMClient(model=self.config.get('llm_model', 'gemini-2.0-flash'), logger=self.logger)
+        llm = LLMClient(
+            model=self.config.get('llm_model', 'gemini-2.0-flash'),
+            logger=self.logger,
+            save_prompts=self.config.get('save_dynamic_prompts', False)
+        )
         response = llm.api_call(metadata, subdir = subdir)
 
         # Post-process response into structured dict
@@ -1840,11 +1844,12 @@ class MyBeautifulSoup(BeautifulSoup):
     text = property(get_text)
 
 class LLMClient:
-    def __init__(self, model:str, logger=None):
+    def __init__(self, model:str, logger=None, save_prompts:bool=False):
         self.model = model
         self.logger = logger or logging.getLogger(__name__)
         self.logger.info(f"Initializing LLMClient with model: {self.model}")
         self._initialize_client(model)
+        self.save_prompts = save_prompts
         self.prompt_manager = PromptManager("data_gatherer/prompts/prompt_templates/metadata_prompts", self.logger)
 
     def _initialize_client(self, model):
@@ -1873,6 +1878,10 @@ class LLMClient:
             entire_doc=True,
             content=content,
         )
+        # save prompt_eval
+        if self.save_prompts:
+            self.prompt_manager.save_prompt(prompt_id='abc', prompt_content=messages)
+
         response = self.client.chat.completions.create(
             model=self.model,
             messages=messages,
@@ -1888,6 +1897,11 @@ class LLMClient:
             entire_doc=True,
             content=content,
         )
+
+        # save prompt_eval
+        if self.save_prompts:
+            self.prompt_manager.save_prompt(prompt_id='abc', prompt_content=messages)
+
         response = self.client.generate_content(
             messages,
             generation_config=genai.GenerationConfig(
