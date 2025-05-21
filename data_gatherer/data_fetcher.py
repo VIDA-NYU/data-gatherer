@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 import re
 import logging
+import numpy as np
 from selenium.webdriver.common.by import By
 import json
 import os
@@ -150,13 +151,14 @@ class WebScraper(DataFetcher):
         return html
 
     def simulate_user_scroll(self, delay=2):
+        np.random.random()*delay + 1
         last_height = self.scraper_tool.execute_script("return document.body.scrollHeight")
         while True:
             # Scroll down to bottom
             self.scraper_tool.execute_script("window.scrollTo(0, document.body.scrollHeight);")
 
             # Wait to load page
-            time.sleep(delay)
+            time.sleep(np.random.random()*delay)
 
             # Calculate new height and compare with last height
             new_height = self.scraper_tool.execute_script("return document.body.scrollHeight")
@@ -218,13 +220,16 @@ class WebScraper(DataFetcher):
 
         return self.normalize_links(rule_based_matches)
 
-    def normalize_HTML(self,html):
+    def normalize_HTML(self,html, keep_tags=None):
         try:
             # Parse the HTML content
             soup = BeautifulSoup(html, "html.parser")
 
             # 1. Remove script, style, and meta tags
             for tag in ["script", "style", 'img', 'noscript', 'svg', 'button', 'form', 'input']:
+                if keep_tags and tag in keep_tags:
+                    self.logger.info(f"Keeping tag: {tag}")
+                    continue
                 for element in soup.find_all(tag):
                     element.decompose()
 
