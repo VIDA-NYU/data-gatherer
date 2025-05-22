@@ -13,7 +13,7 @@
     "log_file": "logs/scraper.log",
 
     "search_method": "url_list",
-    "input_urls_filepath": "input/workshop_data.txt",
+    "input_urls_filepath": "input/test_input.txt",
     "search_query": "Proteomic Identification",
     "top_k": 3,
     "ground_truth": "output/ground_truth.json",
