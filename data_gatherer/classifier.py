@@ -8,9 +8,16 @@ class LLMClassifier:
     def __init__(self, config, logger):
         self.config = load_config(config)
         self.logger = logger
-        self.client = Client(host=os.environ['NYU_LLM_API']) # env variable
+        self.setup_client()
         self.show_classify_stats = True
         self.prompt_manager = PromptManager("prompt_templates", self.logger)
+
+    def setup_client(self, llm_model='put your model'):
+        """
+        Initialize the client for LLM classification.
+        """
+        if llm_model == 'gemma2:9b':
+            self.client = Client(host=os.environ['NYU_LLM_API'])  # env variable
 
     def classify_element(self, element):
         """
