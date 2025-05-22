@@ -309,6 +309,11 @@ class Orchestrator:
                     #metadata = self.metadata_parser.parse_metadata(row['source_section'])
                     hardscraped_metadata = {k:v for k,v in row.items() if v is not None and v not in ['nan', 'None', '', 'n/a', np.nan, 'NaN', 'na']}
                     self.already_previewed.append(download_link)
+                    if self.config['download_data_for_description_generation']:
+                        split_source_url = hardscraped_metadata.get('source_url').split('/')
+                        paper_id = split_source_url[-1] if len(split_source_url[-1]) > 0 else split_source_url[-2]
+                        self.data_fetcher.download_file_from_url(download_link, "output/suppl_files", paper_id)
+                        hardscraped_metadata['data_description_generated'] = self.metadata_parser.generate_dataset_description(download_link)
                     self.display_data_preview(hardscraped_metadata, display_type=display_type, interactive=interactive)
                     continue
 
@@ -318,7 +323,7 @@ class Orchestrator:
                 resolved_key = self.parser.resolve_data_repository(repo_mapping_key)
                 if ('javascript_load_required' in self.parser_config['repos'][resolved_key]):
                     self.logger.info(f"JavaScript load required for {repo_mapping_key} dataset webpage. Using WebScraper.")
-                    html = self.data_fetcher.fetch_data(row['dataset_webpage'], delay=10)
+                    html = self.data_fetcher.fetch_data(row['dataset_webpage'], delay=3.5)
                     if "informative_html_metadata_tags" in self.parser_config['repos'][resolved_key]:
                         html = self.data_fetcher.normalize_HTML(html, self.parser_config['repos'][resolved_key]['informative_html_metadata_tags'])
                     if self.config['write_raw_metadata']:

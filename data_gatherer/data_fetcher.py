@@ -357,6 +357,19 @@ class WebScraper(DataFetcher):
         else:
             return None
 
+    def download_file_from_url(self, url, output_root, paper_id):
+
+        # Set download dir in profile beforehand when you create the driver
+        self.logger.info(f"Using Selenium to fetch download: {url}")
+
+        driver = create_driver(self.config['DRIVER_PATH'], self.config['BROWSER'],
+                               self.config['HEADLESS'], self.logger,
+                               download_dir=output_root + "/" + paper_id)
+        driver.get(url)
+        time.sleep(1.5)
+        driver.quit()
+        time.sleep(0.8)
+
     def quit(self):
         """Properly quits the underlying WebDriver."""
         if self.scraper_tool:
