@@ -666,6 +666,12 @@ class LLMParser(Parser):
 
         return xrefs
 
+    def generate_dataset_description(self, data_file):
+        # from data file
+        # excel, csv, json, xml, etc.
+        # autoDDG
+        raise NotImplementedError("DDG not implemented yet")
+
     def extract_href_from_html_supplementary_material(self, raw_html, current_url_address):
         self.logger.info(f"Function_call: extract_href_from_html_supplementary_material(tree, {current_url_address})")
 
