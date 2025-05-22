@@ -17,7 +17,7 @@ from IPython.display import display, clear_output
 import textwrap
 
 class Orchestrator:
-    def __init__(self, config_path, log_file_override=None):
+    def __init__(self, config_path='config.json', log_file_override=None):
         self.config = load_config(config_path)
         self.parser_config = load_config(self.config['parser_config_path'])
         log_file = log_file_override or self.config.get('log_file', 'logs/scraper.log')
