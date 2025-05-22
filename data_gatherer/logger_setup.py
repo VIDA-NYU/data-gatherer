@@ -1,7 +1,7 @@
 import logging
 import os
 
-def setup_logging(logger_name, log_file=None, level=logging.INFO):
+def setup_logging(logger_name, log_file=None, level=logging.INFO, clear_previous_logs=False):
     """
     Creates and returns a logger with the specified name.
     If `log_file` is None, only logs to console (used in testing).
@@ -32,6 +32,11 @@ def setup_logging(logger_name, log_file=None, level=logging.INFO):
 
     # Optionally add file handler
     if log_file:
+        if clear_previous_logs and os.path.exists(log_file):
+            for f in os.listdir(os.path.dirname(log_file)):
+                if f.endswith('.log'):
+                    os.remove(os.path.join(os.path.dirname(log_file), f))
+
         os.makedirs(os.path.dirname(log_file), exist_ok=True)
         file_handler = logging.FileHandler(log_file, mode='a')
         file_handler.setLevel(level)
