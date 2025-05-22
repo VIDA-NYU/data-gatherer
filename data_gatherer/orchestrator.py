@@ -14,6 +14,7 @@ import time
 from data_gatherer.resources_loader import load_config
 import ipywidgets as widgets
 from IPython.display import display, clear_output
+import textwrap
 
 class Orchestrator:
     def __init__(self, config_path, log_file_override=None):
@@ -343,6 +344,21 @@ class Orchestrator:
 
         return ret_list if return_metadata else None
 
+    def flatten_json(self, y, parent_key='', sep='.'):
+        """Flatten nested JSON into dot notation with list index support."""
+        items = []
+        if isinstance(y, dict):
+            for k, v in y.items():
+                new_key = f"{parent_key}{sep}{k}" if parent_key else k
+                items.extend(self.flatten_json(v, new_key, sep=sep))
+        elif isinstance(y, list):
+            for i, v in enumerate(y):
+                new_key = f"{parent_key}[{i}]"
+                items.extend(self.flatten_json(v, new_key, sep=sep))
+        else:
+            items.append((parent_key, y))
+        return items
+
     def display_data_preview(self, metadata, display_type='console', interactive=True):
         """
         Display extracted metadata as a clean table in both Jupyter and terminal environments.
@@ -360,17 +376,18 @@ class Orchestrator:
         if display_type == 'console':
             # Prepare rows
             rows = []
+            flat_metadata = []
             for key, value in metadata.items():
                 if value is not None and str(value).strip() not in ['nan', 'None', '', 'NaN', 'na', 'unavailable', '0']:
-                    # If the value is a dict or list, pretty print as JSON
                     if isinstance(value, (dict, list)):
-                        pretty_val = json.dumps(value, indent=2)
+                        flat_metadata.extend(self.flatten_json(value, parent_key=key))
                     else:
-                        pretty_val = str(value).replace('\n', ' ')
-                    if len(pretty_val) > 150:
-                        pretty_val = pretty_val[:147] + "..."
+                        flat_metadata.append((key, value))
 
-                    rows.append((key.strip(), pretty_val.strip()))
+            for key, value in flat_metadata:
+                pretty_val = str(value)
+                wrapped_lines = textwrap.wrap(pretty_val, width=80) or [""]
+                rows.append((key.strip(), wrapped_lines))
 
             if not rows:
                 preview = "No usable metadata found."
@@ -381,9 +398,7 @@ class Orchestrator:
                 lines = [sep]
                 lines.append(f"| {'Field'.ljust(max_key_len)} | {'Value'.ljust(80)} |")
                 lines.append(sep)
-                for key, val in rows:
-                    # Split long values over multiple lines
-                    wrapped = val.splitlines()
+                for key, wrapped in rows:
                     lines.append(f"| {key.ljust(max_key_len)} | {wrapped[0].ljust(80)} |")
                     for cont in wrapped[1:]:
                         lines.append(f"| {' '.ljust(max_key_len)} | {cont.ljust(80)} |")
