@@ -22,6 +22,7 @@
 
     "data_resource_preview": true,
     "download_previewed_data_resources": true,
+    "download_data_for_description_generation": true,
 
     "API_supported_url_patterns": {
         "https:\\/\\/www\\.ncbi\\.nlm\\.nih\\.gov\\/pmc\\/articles\\/" : "PMC",

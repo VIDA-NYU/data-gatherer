@@ -7,7 +7,7 @@ from selenium.webdriver.chrome.options import Options as ChromeOptions
 from webdriver_manager.firefox import GeckoDriverManager
 from webdriver_manager.chrome import ChromeDriverManager
 
-def create_driver(driver_path=None, browser="Firefox", headless=True, logger=None):
+def create_driver(driver_path=None, browser="Firefox", headless=True, logger=None, download_dir="output/suppl_files"):
     logger.info(f"Creating WebDriver for browser: {browser}")
 
     if browser == 'Firefox':
@@ -16,7 +16,16 @@ def create_driver(driver_path=None, browser="Firefox", headless=True, logger=Non
         if headless:
             firefox_options.add_argument("-headless")
 
-        # Additional stealth settings
+        # Set preferences directly in FirefoxOptions (not using FirefoxProfile)
+        firefox_options.set_preference("browser.download.folderList", 2)
+        firefox_options.set_preference("browser.download.dir", os.path.abspath(download_dir))
+        firefox_options.set_preference("browser.helperApps.neverAsk.saveToDisk",
+            "application/pdf,application/octet-stream,application/zip,"
+            "application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+        firefox_options.set_preference("pdfjs.disabled", True)
+        firefox_options.set_preference("browser.download.manager.showWhenStarting", False)
+
+        # Additional stealth preferences
         firefox_options.set_preference("dom.webdriver.enabled", False)
         firefox_options.set_preference("useAutomationExtension", False)
         firefox_options.set_preference("general.useragent.override",
@@ -26,11 +35,11 @@ def create_driver(driver_path=None, browser="Firefox", headless=True, logger=Non
 
         if driver_path:
             os.chmod(driver_path, 0o755)
-            service = FirefoxService(executable_path=driver_path)
-            logger.info(f"Using provided Firefox driver path: {driver_path}") if logger else None
+            service = FirefoxService(executable_path=driver_path, log_path="logs/geckodriver.log")
+            logger.info(f"Using provided Firefox driver path: {driver_path}")
         else:
             logger.info("No driver path provided, using GeckoDriverManager to auto-install Firefox driver.")
-            service = FirefoxService(executable_path=GeckoDriverManager().install())
+            service = FirefoxService(executable_path=GeckoDriverManager().install(), log_path="logs/geckodriver.log")
             logger.info(f"Using GeckoDriverManager to auto-install Firefox driver {service}.") if logger else None
 
         driver = webdriver.Firefox(service=service, options=firefox_options)
