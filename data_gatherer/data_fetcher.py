@@ -121,6 +121,9 @@ class DataFetcher(ABC):
 
 # Implementation for fetching data via web scraping
 class WebScraper(DataFetcher):
+    """
+    Class for fetching data from web pages using Selenium.
+    """
     def __init__(self, scraper_tool, config, logger):
         super().__init__(config, logger)
         self.scraper_tool = scraper_tool  # Inject your scraping tool (BeautifulSoup, Selenium, etc.)
@@ -130,6 +133,18 @@ class WebScraper(DataFetcher):
         self.xpaths = self.retrieval_patterns['general']['xpaths']
 
     def fetch_data(self, url, retries=3, delay=2):
+        """
+        Fetches data from the given URL, by simulating user scroll, waiting some delay time and doing multiple retries
+        to allow for page load and then get the source html
+
+        :param url: The URL to fetch data from.
+
+        :param retries: Number of retries in case of failure.
+
+        :param delay: Delay time between retries.
+
+        :return: The raw HTML content of the page.
+        """
         # Use the scraper tool to fetch raw HTML from the URL
         self.scraper_tool.get(url)
         self.simulate_user_scroll(delay)
@@ -221,6 +236,16 @@ class WebScraper(DataFetcher):
         return self.normalize_links(rule_based_matches)
 
     def normalize_HTML(self,html, keep_tags=None):
+        """
+        Normalize the HTML content by removing unnecessary tags and attributes.
+
+        :param html: The raw HTML content to be normalized.
+
+        :param keep_tags: List of tags to keep in the HTML content. May be useful for some servers that host target info inside specific tags (e.g., <form> or <script>) that are otherwise removed by the scraper.
+
+        :return: The normalized HTML content.
+
+        """
         try:
             # Parse the HTML content
             soup = BeautifulSoup(html, "html.parser")
@@ -273,6 +298,12 @@ class WebScraper(DataFetcher):
             return ""
 
     def download_html(self, dir):
+        """
+        Downloads the HTML content to a specified directory.
+
+        :param dir: The directory where the HTML file will be saved.
+
+        """
         logging.info(f"Dir {dir} exists") if os.path.exists(dir) else os.mkdir(dir)
 
         fn = dir + self.get_publication_name_from_driver() + '.html'
@@ -281,6 +312,13 @@ class WebScraper(DataFetcher):
             f.write(self.scraper_tool.page_source)
 
     def get_publication_name_from_driver(self):
+        """
+        Extracts the publication name from the WebDriver's current page title. **Remark**: this should be called after
+        scraper_tool.get(url) to ensure the page is loaded.
+
+        :return: The publication name as a string.
+
+        """
         publication_name_pointer = self.scraper_tool.find_element(By.TAG_NAME, 'title')
         publication_name = re.sub("\n+", "", (publication_name_pointer.get_attribute("text")))
         publication_name = re.sub("^\s+", "", publication_name)
@@ -314,6 +352,14 @@ class WebScraper(DataFetcher):
         return f"https://www.ncbi.nlm.nih.gov/pmc/articles/{PMCID}"
 
     def get_opendata_from_pubmed_id(self, pmid):
+        """
+        Given a PubMed ID, fetches the corresponding PMC ID and DOI from PubMed.
+
+        :param pmid: The PubMed ID to fetch data for.
+
+        :return: A tuple containing the PMC ID and DOI.
+
+        """
         url = self.get_url_from_pubmed_id(pmid)
         self.logger.info(f"Reconstructed URL: {url}")
 
@@ -328,24 +374,6 @@ class WebScraper(DataFetcher):
 
         return pmc_id, doi
 
-    # def get_opendata_from_pubmed_id(self, pmid):
-    #     url = self.get_url_from_pubmed_id(pmid)
-    #     self.logger.info(f"Reconstructed URL: {url}")
-    #
-    #     html = self.fetch_data(url)
-    #     # Parse PMC ID and DOI from the HTML content
-    #     soup = BeautifulSoup(html, 'html.parser')
-    #
-    #     # Extract PMC ID
-    #     pmc_tag = soup.find("a", {"data-ga-action": "PMCID"})
-    #     pmc_id = pmc_tag.text.strip() if pmc_tag else None  # Extract text safely
-    #
-    #     # Extract DOI
-    #     doi_tag = soup.find("a", {"data-ga-action": "DOI"})
-    #     doi = doi_tag.text.strip() if doi_tag else None  # Extract text safely
-    #
-    #     return pmc_id, doi
-
     def convert_url_to_doi(self, url : str):
         # Extract DOI from the URL
         url = url.lower()
@@ -358,6 +386,16 @@ class WebScraper(DataFetcher):
             return None
 
     def download_file_from_url(self, url, output_root, paper_id):
+        """
+        Downloads a file from the given URL and saves it to the specified directory.
+
+        :param url: The URL to download the file from.
+
+        :param output_root: The root directory where the file will be saved.
+
+        :param paper_id: The ID of the paper, used to create a subdirectory.
+
+        """
 
         # Set download dir in profile beforehand when you create the driver
         self.logger.info(f"Using Selenium to fetch download: {url}")
@@ -368,22 +406,31 @@ class WebScraper(DataFetcher):
         driver.get(url)
         time.sleep(1.5)
         driver.quit()
-        time.sleep(0.8)
+        time.sleep(0.5)
 
     def quit(self):
-        """Properly quits the underlying WebDriver."""
         if self.scraper_tool:
             self.scraper_tool.quit()
             self.logger.info("WebScraper driver quit.")
 
 
 class DatabaseFetcher(DataFetcher):
+    """
+    Class for fetching data from a database or local file.
+    """
     def __init__(self, config, logger):
         super().__init__(config, logger)
         self.data_file = self.config['raw_HTML_data_filepath']
         self.dataframe = pd.read_parquet(self.data_file)
 
     def fetch_data(self, url_key, retries=3, delay=2):
+        """
+        Fetches data from a local file or database.
+
+        :param url_key: The key to identify the data in the database.
+
+        :returns: The raw HTML content of the page.
+        """
         self.logger.info(f"Fetching data for {url_key}")
         self.logger.info(f"Data file: {self.dataframe[self.dataframe['publication'] == url_key]}")
         raw_html = self.dataframe[self.dataframe['publication'] == url_key]['raw_html'].values[0]
@@ -432,12 +479,33 @@ class DatabaseFetcher(DataFetcher):
 
 # Implementation for fetching data from an API
 class APIClient(DataFetcher):
+    """
+    Class for fetching data from an API using the requests library.
+    """
     def __init__(self, api_client, API, config, logger):
+        """
+        Initializes the APIClient with the specified API client and configuration.
+
+        :param api_client: The API client to use (e.g., requests).
+
+        :param API: The API to use (e.g., PMC).
+
+        :param config: The configuration settings.
+
+        :param logger: The logger instance for logging messages.
+
+        """
         super().__init__(config, logger, src=API)
         self.api_client = api_client.Session()
         self.base = self.config['API_base_url'][API]
 
     def fetch_data(self, article_url, retries=3, delay=2):
+        """
+        Fetches data from the API using the provided article URL.
+
+        :param article_url: The URL of the article to fetch data for.
+
+        """
         try:
             # Extract the PMC ID from the article URL
             PMCID = re.search(r'PMC\d+', article_url).group(0)
@@ -487,6 +555,14 @@ class APIClient(DataFetcher):
             return None
 
     def download_xml(self, directory, api_data):
+        """
+        Downloads the XML data to a specified directory.
+
+        :param directory: The directory where the XML file will be saved.
+
+        :param api_data: The XML data to be saved.
+
+        """
 
         fn = directory + self.PMCID + '.xml'
 
@@ -498,6 +574,16 @@ class DataCompletenessChecker:
     Class to check the completeness of data sections in API responses.
     """
     def __init__(self, config, logger, publisher='PMC'):
+        """
+        Initializes the DataCompletenessChecker with the specified configuration and logger.
+
+        :param config: The configuration settings.
+
+        :param logger: The logger instance for logging messages.
+
+        :param publisher: The publisher to check for (default is 'PMC').
+
+        """
         self.config = config
         self.logger = logger
         self.retrieval_patterns = load_config(self.config['retrieval_patterns'])
@@ -515,13 +601,20 @@ class DataCompletenessChecker:
                 ns_map[prefix] = uri
         return ns_map
 
-    def is_xml_data_complete(self, raw_data, url) -> bool:
+    def is_xml_data_complete(self, raw_data, url, required_sections = ["data_availability", "supplementary_data"]) -> bool:
         """
         Check if required sections are present in the raw_data.
         Return True if all required sections are present.
+
+        :param raw_data: Raw XML data.
+
+        :param url: The URL of the article.
+
+        :param required_sections: List of required sections to check.
+
+        :return: True if all required sections are present, False otherwise.
         """
         self.logger.debug(f"Checking XML completeness for {url}")
-        required_sections = ["data_availability", "supplementary_data"]
 
         for section in required_sections:
             if not self.has_target_section(raw_data, section):
@@ -534,8 +627,11 @@ class DataCompletenessChecker:
     def has_target_section(self, raw_data, section_name: str) -> bool:
         """
         Check if the target section (data availability or supplementary data) exists in the raw data.
+
         :param raw_data: Raw XML data.
+
         :param section_name: Name of the section to check.
+
         :return: True if the section is found with relevant links, False otherwise.
         """
 
@@ -560,8 +656,11 @@ class DataCompletenessChecker:
     def has_links_in_section(self, section, namespaces: dict[str, str]) -> bool:
         """
         Check if the given section contains any external links.
+
         :param section: The section element to search for links.
+
         :param namespaces: Namespaces to use for XML parsing.
+
         :return: True if links are found, False otherwise.
         """
         ext_links = section.findall(".//ext-link", namespaces)
