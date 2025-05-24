@@ -312,8 +312,23 @@ class RuleBasedParser(Parser):
 
 
 class LLMParser(Parser):
+    """
+    This class is responsible for parsing data using LLMs. This will be done either:
 
+    - Full Document Read (LLMs that can read the entire document)
+
+    - Retrieve Then Read (LLMs will only read a target section retrieved from the document)
+    """
     def __init__(self, config, logger, log_file_override=None):
+        """
+        Initialize the LLMParser with configuration, logger, and optional log file override.
+
+        :param config: Configuration dictionary containing settings for the parser (llm_model, prompt_dir, etc.).
+
+        :param logger: Logger instance for logging messages.
+
+        :param log_file_override: Optional log file override.
+        """
         super().__init__(config, logger, log_file_override)
         self.title = None
         self.prompt_manager = PromptManager(self.config['prompt_dir'], self.logger, self.config['response_file'])
@@ -346,6 +361,22 @@ class LLMParser(Parser):
             self.client = genai.GenerativeModel('gemini-1.5-pro')
 
     def parse_data(self, api_data, publisher, current_url_address, additional_data=None, raw_data_format='XML'):
+        """
+        Parse the API data and extract relevant links and metadata.
+
+        :param api_data: The raw API data (XML or HTML) to be parsed.
+
+        :param publisher: The publisher name or identifier.
+
+        :param current_url_address: The current URL address being processed.
+
+        :param additional_data: Additional data to be processed (optional).
+
+        :param raw_data_format: The format of the raw data ('XML' or 'HTML').
+
+        :return: A DataFrame containing the extracted links and links to metadata - if repo is supported. Add support for unsupported repos in the ontology.
+
+        """
         out_df = None
         # Check if api_data is a string, and convert to XML if needed
         self.logger.info(f"Function call: parse_data(api_data({type(api_data)}), {publisher}, {current_url_address}, "
@@ -499,11 +530,10 @@ class LLMParser(Parser):
         that frequently change, such as random IDs, inline styles, analytics tags,
         and CSRF tokens.
 
-        Parameters:
-        - api_data (str): The raw HTML content of the webpage.
+        :param api_data: The raw HTML data to be normalized.
 
-        Returns:
-        - str: The normalized HTML content.
+        :return: Normalized HTML string.
+
         """
 
         self.logger.info(f"Function_call: normalize_full_DOM(api_data). Length of raw api data: {self.count_tokens(api_data,self.config['llm_model'])} tokens")
@@ -557,9 +587,6 @@ class LLMParser(Parser):
             return ""
 
     def extract_file_extension(self, download_link):
-        """
-        Extracts the file extension from a download link.
-        """
         self.logger.debug(f"Function_call: extract_file_extension({download_link})")
         # Extract the file extension from the download link
         extension = None
@@ -570,6 +597,14 @@ class LLMParser(Parser):
         return extension
 
     def extract_href_from_data_availability(self, api_xml):
+        """
+        Extracts href links from data-availability sections of the XML.
+
+        :param api_xml: lxml.etree.Element — parsed XML root.
+
+        :return: List of dictionaries containing href links and their context.
+
+        """
         # Namespace dictionary - adjust 'ns0' to match the XML if necessary
         self.logger.info(f"Function_call: extract_href_from_data_availability(api_xml)")
         namespaces = {'ns0': 'http://www.w3.org/1999/xlink'}
@@ -622,6 +657,13 @@ class LLMParser(Parser):
     def extract_xrefs_from_data_availability(self, api_xml, current_url_address):
         """
         Extracts xrefs (cross-references) from data-availability sections of the XML.
+
+        :param api_xml: lxml.etree.Element — parsed XML root.
+
+        :param current_url_address: The current URL address being processed.
+
+        :return: List of dictionaries containing xrefs and their context.
+
         """
         self.logger.info(f"Function_call: extract_xrefs_from_data_availability(api_xml, current_url_address)")
 
@@ -673,6 +715,16 @@ class LLMParser(Parser):
         raise NotImplementedError("DDG not implemented yet")
 
     def extract_href_from_html_supplementary_material(self, raw_html, current_url_address):
+        """
+        Extracts href links from supplementary material sections of the HTML.
+
+        :param raw_html: str — raw HTML content.
+
+        :param current_url_address: str — the current URL address being processed.
+
+        :return: DataFrame containing extracted links and their context.
+
+        """
         self.logger.info(f"Function_call: extract_href_from_html_supplementary_material(tree, {current_url_address})")
 
         tree = html.fromstring(raw_html)
@@ -733,6 +785,16 @@ class LLMParser(Parser):
         return df_supp
 
     def extract_href_from_supplementary_material(self, api_xml, current_url_address):
+        """
+        Extracts href links from supplementary material sections of the XML.
+
+        :param api_xml: lxml.etree.Element — parsed XML root.
+
+        :param current_url_address: The current URL address being processed.
+
+        :return: List of dictionaries containing href links and their context.
+
+        """
 
         self.logger.info(f"Function_call: extract_href_from_supplementary_material(api_xml, current_url_address)")
 
@@ -854,10 +916,6 @@ class LLMParser(Parser):
         return download_link
 
     def get_sibling_text(self, media_element):
-        """
-        Extracts text surrounding the <media> element including the parent and its siblings.
-        This includes inline text and any <p> tags that may provide context for the media element.
-        """
         sibling_text = []
 
         # Get the parent element's text (if any)
@@ -877,6 +935,11 @@ class LLMParser(Parser):
         """
         Extracts text surrounding the element (including parent and siblings) for more context.
         It ensures that text around inline elements like <xref> and <ext-link> is properly captured.
+
+        :param element: lxml.etree.Element — the element to extract text from.
+
+        :return: str — concatenated text from the parent and siblings of the element.
+
         """
         # Get the parent element
         parent = element.getparent()
@@ -911,9 +974,6 @@ class LLMParser(Parser):
         return re.sub("[\s\n]+(\s+)]", "\1", surrounding_text)
 
     def union_additional_data(self, parsed_data, additional_data):
-        """
-        Merge the parsed data with additional data from the API.
-        """
         self.logger.info(f"Merging additional data ({type(additional_data)}) with parsed data({type(parsed_data)}).")
         self.logger.info(f"Additional data\n{additional_data}")
         return pd.concat([parsed_data, additional_data], ignore_index=True)
@@ -922,6 +982,11 @@ class LLMParser(Parser):
         """
         Process the additional data from the webpage. This is the data matched from the HTML with the patterns in
         retrieval_patterns xpaths.
+
+        :param additional_data: List of dictionaries containing additional data to be processed.
+
+        :return: List of dictionaries containing processed data.
+
         """
         self.logger.info(f"Processing additional data: {len(additional_data)} items")
         repos_elements = []
@@ -967,6 +1032,10 @@ class LLMParser(Parser):
     def process_data_availability_text(self, DAS_content):
         """
         Process the data availability section from the webpage.
+
+        :param DAS_content: list of all text content matching the data availability section patterns.
+
+        :return: List of dictionaries containing processed data.
         """
         self.logger.info(f"Processing DAS_content: {DAS_content}")
         repos_elements = []
@@ -1006,6 +1075,16 @@ class LLMParser(Parser):
         """
         Retrieve datasets from the given content using a specified LLM model.
         Uses a static prompt template and dynamically injects the required content.
+
+        :param content: The content to be processed.
+
+        :param repos: List of repositories to be included in the prompt.
+
+        :param model: The LLM model to be used for processing.
+
+        :param temperature: The temperature setting for the model.
+
+        :return: List of datasets retrieved from the content.
         """
         # Load static prompt template
         prompt_name = self.config['prompt_name']
@@ -1197,8 +1276,14 @@ class LLMParser(Parser):
 
     def deduplicate_response(self, response):
         """
+        This function handles basic **postprocessing** of the LLM output.
         Normalize and deduplicate dataset responses by stripping DOI-style prefixes
         like '10.x/' from dataset IDs and keeping only one entry per PXD.
+
+        :param response: List of dataset responses to be deduplicated (LLM Output).
+
+        :return: List of deduplicated dataset responses.
+
         """
         seen = set()
         deduped = []
@@ -1221,7 +1306,13 @@ class LLMParser(Parser):
 
 
     def safe_parse_json(self, response_text):
-        """ Cleans and safely parses JSON from a GPT response, fixing common issues. """
+        """
+        Cleans and safely parses JSON from an LLM response, fixing common issues.
+
+        :param response_text: str — the JSON string to be parsed.
+
+        :return: dict or None — parsed JSON object or None if parsing fails.
+        """
         try:
             response_text = response_text.strip()  # Remove extra spaces/newlines
 
@@ -1248,7 +1339,13 @@ class LLMParser(Parser):
 
     def get_data_availability_text(self, api_xml):
         """
-        Given the data availability statement, extract the dataset information from the text.
+        This function handles the retrieval step. Given the data availability statement, extract the dataset
+        information from the text.
+
+        :param api_xml: lxml.etree.Element — parsed XML root.
+
+        :return: List of strings from sections that match the data availability section patterns.
+
         """
         # find the data availability section
         data_availability_sections = []
@@ -1318,7 +1415,9 @@ class LLMParser(Parser):
     def table_to_text(self, table_wrap):
         """
         Convert the <table> inside a <table-wrap> element to plain text.
+
         :param table_wrap: The <table-wrap> element containing the table.
+
         :return: String representing the table as plain text.
         """
         table = table_wrap.find(".//table")  # Find the <table> element
@@ -1399,6 +1498,11 @@ class LLMParser(Parser):
         """
         Given the link, the article title, and the text around the link, create a column (identifier),
         and a column for the dataset.
+
+        :param dataset_links: List of dictionaries containing href links and their context.
+
+        :return: List of dictionaries containing processed dataset information.
+
         """
         self.logger.info(f"Analyzing data availability statement with {len(dataset_links)} links")
         self.logger.debug(f"Text from data-availability: {dataset_links}")
@@ -1505,8 +1609,10 @@ class LLMParser(Parser):
     def dataset_webpage_url_check(self, url):
         """
         Check if the URL directly points to a dataset webpage.
-        :param url:
-        :return:
+
+        :param url: str — the URL to be checked.
+
+        :return: dict or None — dictionary with data repository information if one pattern from ontology matches that
         """
         ret = {}
         self.logger.info(f"Checking if link points to dataset webpage: {url}")
@@ -1529,13 +1635,7 @@ class LLMParser(Parser):
 
         return None
 
-        return
-
     def normalize_LLM_output(self, response):
-        """
-        Given a response from the LLM API, normalize it to a list of strings.
-        Also handle case when 1 repo has more than 1 identifier.
-        """
         cont = response['message']['content']
         self.logger.info(f"Normalizing {type(cont)} LLM output: {cont}")
         output = cont.split(",")
@@ -1566,9 +1666,7 @@ class LLMParser(Parser):
             return 'Unknown_Publisher'
 
     def get_repo_names(self):
-        """
-        Get the repository names from the config file.
-        """
+        # Get the all the repository names from the config file. (all the repos in ontology)
         repo_names = []
         for k, v in self.config['repos'].items():
             if 'repo_name' in v.keys():
@@ -1578,9 +1676,7 @@ class LLMParser(Parser):
         return repo_names
 
     def get_repo_domain_to_name_mapping(self):
-        """
-        Get the mapping of repository domains to names from the config file.
-        """
+        # Get the mapping of repository domains to names from ontology
         repo_mapping = {}
         for k, v in self.config['repos'].items():
             if 'repo_name' in v.keys():
@@ -1595,6 +1691,7 @@ class LLMParser(Parser):
     def resolve_accession_id(self, dataset_identifier, data_repository):
         """
         This function resolves the accession ID for a given dataset identifier and data repository.
+        It checks if the dataset identifier matches the expected pattern for the given repository (from ontology)
         """
         self.logger.info(f"Resolving accession ID for {dataset_identifier} in {data_repository}")
         if data_repository in self.config['repos']:
@@ -1608,7 +1705,11 @@ class LLMParser(Parser):
 
     def resolve_data_repository(self, repo: str) -> str:
         """
-        Normalize the repository domain from a URL or text reference using config mappings.
+        Normalize the repository domain from a URL or text reference using config mappings in ontology.
+
+        :param repo: str — the repository name or URL to be normalized.
+
+        :return: str — the normalized repository name.
         """
         if ',' in repo:
             self.logger.warning(f"Repository contains a comma: {repo}. Same data may be in multiple repos.")
@@ -1637,6 +1738,11 @@ class LLMParser(Parser):
     def get_dataset_webpage(self, datasets):
         """
         Given a list of dataset dictionaries, fetch the webpage of the dataset, by using navigation patterns
+        from the ontology. The function will add a new key to the dataset dictionary with the webpage URL.
+
+        :param datasets: list of dictionaries containing dataset information.
+
+        :return: list of dictionaries with updated dataset information including dataset webpage URL.
         """
         if datasets is None:
             return None
@@ -1731,6 +1837,15 @@ class LLMParser(Parser):
         return len(tokens)+int(allowance_static_prompt*1.25)>limit
 
     def count_tokens(self, prompt, model="gpt-4") -> int:
+        """
+        Count the number of tokens in a given prompt for a specific model.
+
+        :param prompt: str — the prompt to be tokenized.
+
+        :param model: str — the model name (default: "gpt-4").
+
+        :return: int — the number of tokens in the prompt.
+        """
         n_tokens = 0
 
         # **Ensure `prompt` is a string**
@@ -1776,12 +1891,31 @@ class LLMParser(Parser):
         return [output.split("<|output|>")[1] for output in outputs]
 
     def parse_metadata(self, metadata: str, model = 'gemini-2.0-flash') -> dict:
+        """
+        Given the metadata, extract the dataset information using the LLM.
+
+        :param metadata: str — the metadata to be parsed.
+
+        :param model: str — the model to be used for parsing (default: 'gemini-2.0-flash').
+
+        :return: dict — the extracted metadata. This is sometimes project metadata, or study metadata, or dataset metadata. Ontology enhancement is needed to distinguish between these.
+        """
         #metadata = self.normalize_full_DOM(metadata)
         self.logger.info(f"Parsing metadata len: {len(metadata)}")
         dataset_info = self.extract_dataset_info(metadata, subdir='metadata_prompts')
         return dataset_info
 
     def extract_dataset_info(self, metadata, subdir = ''):
+        """
+        Given the metadata, extract the dataset information using the LLM.
+
+        :param metadata: str — the metadata to be parsed.
+
+        :param subdir: str — the subdirectory for the prompt template (default: '').
+
+        :return: dict — the extracted metadata. This is sometimes project metadata, or study metadata, or dataset
+         metadata
+        """
         self.logger.info(f"Extracting dataset information from metadata. Prompt from subdir: {subdir}")
 
         llm = LLMClient(

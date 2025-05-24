@@ -3,6 +3,7 @@ from ollama import Client
 import os
 from data_gatherer.prompts.prompt_manager import PromptManager
 from data_gatherer.resources_loader import load_config
+import pandas as pd
 
 class LLMClassifier:
     def __init__(self, config, logger):
@@ -85,6 +86,30 @@ class LLMClassifier:
             self.logger.info(f"Classification Stats: {parsed_data['classification'].value_counts()}")
 
         return parsed_data
+
+    def get_raw_data_files(self, data_resources_dfs):
+        """
+        Get the raw data files from the data resources.
+
+        :param data_resources_dicts: List of data resources dictionaries
+
+        :return: Dataframe of raw data file URLs
+        """
+        self.logger.debug("Input type: " + str(type(data_resources_dfs)))
+        raw_data_files = pd.DataFrame(columns=['source_url','dataset_id', 'repository_reference', 'dataset_webpage'])
+        for src, data_resources in data_resources_dfs.items():
+            self.logger.debug("Resources type: " + str(type(data_resources)))
+            data_resources.dropna(subset=['dataset_id'], inplace=True)
+            raw_data_files = pd.concat([raw_data_files,
+                                        data_resources[['source_url','dataset_id', 'repository_reference', 'dataset_webpage']]],
+                                       ignore_index=True)
+
+        # rename columns to match the expected format
+        raw_data_files.rename(columns={'source_url': 'publication_url',
+                                        'dataset_id': 'dataset_id',
+                                        'repository_reference': 'repository_reference',
+                                        'dataset_webpage': 'dataset_webpage'}, inplace=True)
+        return raw_data_files
 
     @staticmethod
     def get_domain_from_href(href):

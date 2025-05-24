@@ -17,7 +17,16 @@ from IPython.display import display, clear_output
 import textwrap
 
 class Orchestrator:
+    """
+    This class orchestrates the data gathering process by coordinating the data fetcher, parser, and classifier in a
+    single workflow.
+    """
     def __init__(self, config_path='config.json', log_file_override=None):
+        """
+        Initializes the Orchestrator with the given configuration file and sets up logging.
+
+        :param config_path: Path to the configuration file.
+        """
         self.config = load_config(config_path)
         self.parser_config = load_config(self.config['parser_config_path'])
         log_file = log_file_override or self.config.get('log_file', 'logs/scraper.log')
@@ -32,7 +41,9 @@ class Orchestrator:
         self.downloadables = []
 
     def setup_data_fetcher(self):
-        """Sets up either a web scraper or API client based on the config."""
+        """
+        Sets up either a web scraper or API client based on the config.
+        """
         self.logger.debug("Setting up data fetcher...")
 
         # Close previous driver if exists
@@ -67,7 +78,11 @@ class Orchestrator:
 
 
     def process_url(self, url, save_staging_table=False):
-        """Orchestrates the process for a given source URL (publication)."""
+        """
+        Orchestrates the process for a single given source URL (publication).
+        param url: The URL to process.
+        param save_staging_table: Flag to save the staging table.
+        """
         self.logger.info(f"Processing URL: {url}")
         self.current_url = url
         self.publisher = self.data_fetcher.url_to_publisher_domain(url)
@@ -225,6 +240,8 @@ class Orchestrator:
         """
         Deduplicates the classified links based on the link / download_link itself. If two entry share the same link
         or if download link of record A is the same as link of record B, merge rows.
+
+        :param classified_links: DataFrame of classified links.
         """
         self.logger.info(f"Deduplicating {len(classified_links)} classified links.")
         classified_links['link'] = classified_links['link'].str.strip()
@@ -237,7 +254,13 @@ class Orchestrator:
         return classified_links
 
     def process_urls(self, url_list, log_modulo=10):
-        """Processes a list of URLs and returns classified data."""
+        """
+        Processes a list of URLs and returns classified data.
+
+        :param url_list: List of URLs to process.
+
+        :param log_modulo: Frequency of logging progress (useful when url_list is long).
+        """
         self.logger.debug("Starting to process URL list...")
         start_time = time.time()
         total_iters = len(url_list)
@@ -261,7 +284,9 @@ class Orchestrator:
         return results
 
     def load_urls_from_config(self):
-        """Loads URLs from the input file specified in the config."""
+        """
+        Loads URLs from the input file specified in the config.
+        """
         self.logger.debug(f"Loading URLs from file: {self.config['input_urls_filepath']}")
         try:
             with open(self.config['input_urls_filepath'], 'r') as file:
@@ -273,7 +298,10 @@ class Orchestrator:
             raise FileNotFoundError(f"Create file with input links! File not found: {self.config['input_urls_filepath']}\n\n{e}\n")
 
     def get_data_preview(self, combined_df, display_type='console', interactive=True, return_metadata=False):
-        """Shows user a preview of the data they are about to download."""
+        """
+        Shows user a preview of the data they are about to download.
+        -- future release
+        """
         self.already_previewed = []
         self.metadata_parser = LLMParser(self.config['parser_config_path'], self.logger)
         self.data_fetcher = self.data_fetcher.update_DataFetcher_settings('any_url', self.full_DOM, self.logger)
@@ -353,7 +381,9 @@ class Orchestrator:
         return ret_list if return_metadata else None
 
     def flatten_json(self, y, parent_key='', sep='.'):
-        """Flatten nested JSON into dot notation with list index support."""
+        """
+        Flatten nested JSON into dot notation with list index support.
+        """
         items = []
         if isinstance(y, dict):
             for k, v in y.items():
@@ -370,6 +400,7 @@ class Orchestrator:
     def display_data_preview(self, metadata, display_type='console', interactive=True):
         """
         Display extracted metadata as a clean table in both Jupyter and terminal environments.
+        -- future release
         """
         self.logger.info("Displaying metadata preview")
 
@@ -472,6 +503,7 @@ class Orchestrator:
     def download_previewed_data_resources(self, output_root="output/suppl_files"):
         """
         Function to download all the files
+        -- future release
         """
         self.logger.info(f"Downloading {len(self.downloadables)} previewed data resources.")
         for metadata in self.downloadables:
@@ -484,6 +516,9 @@ class Orchestrator:
                 self.logger.warning(f"No valid download_link found for metadata: {metadata}")
 
     def get_internal_id(self, metadata):
+        """
+        Function to get the internal ID of the dataset from metadata (utils).
+        """
         self.logger.info(f"Getting internal ID for {metadata}")
         if 'source_url_for_metadata' in metadata and metadata['source_url_for_metadata'] is not None and metadata[
             'source_url_for_metadata'] not in ['nan', 'None', '', np.nan]:
@@ -498,7 +533,13 @@ class Orchestrator:
             return None
 
     def run(self):
-        """Main method to run the Orchestrator."""
+        """
+        Main method to run the Orchestrator simple workflow:
+        1. Setup data fetcher (web scraper or API client)
+        2. Load URLs from config
+        3. Process each URL and return results as a dictionary like source_url: DataFrame_of_data_links
+        4. Write results to output file specified in configuration file
+        """
         self.logger.debug("Orchestrator run started.")
         try:
             # Setup data fetcher (web scraper or API client)
