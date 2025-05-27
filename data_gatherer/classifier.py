@@ -91,25 +91,33 @@ class LLMClassifier:
         """
         Get the raw data files from the data resources.
 
-        :param data_resources_dicts: List of data resources dictionaries
+        :param data_resources_dfs: Dictionary of data resources dataframes
 
         :return: Dataframe of raw data file URLs
         """
-        self.logger.debug("Input type: " + str(type(data_resources_dfs)))
-        raw_data_files = pd.DataFrame(columns=['source_url','dataset_id', 'repository_reference', 'dataset_webpage'])
-        for src, data_resources in data_resources_dfs.items():
-            self.logger.debug("Resources type: " + str(type(data_resources)))
-            data_resources.dropna(subset=['dataset_id'], inplace=True)
-            raw_data_files = pd.concat([raw_data_files,
-                                        data_resources[['source_url','dataset_id', 'repository_reference', 'dataset_webpage']]],
-                                       ignore_index=True)
+        self.logger.debug(f"Input type: {type(data_resources_dfs)}")
+        resources = []
 
-        # rename columns to match the expected format
-        raw_data_files.rename(columns={'source_url': 'publication_url',
-                                        'dataset_id': 'dataset_id',
-                                        'repository_reference': 'repository_reference',
-                                        'dataset_webpage': 'dataset_webpage'}, inplace=True)
-        return raw_data_files
+        for publication_url, df in data_resources_dfs.items():
+            if not isinstance(df, pd.DataFrame):
+                self.logger.warning(f"Skipping non-DataFrame entry for URL: {publication_url}")
+                continue
+
+            self.logger.info(f"Processing DataFrame for URL: {publication_url}")
+            df['publication_url'] = publication_url  # Assign publication_url to all rows
+            resources.append(df)
+
+        if resources:
+            resources_df = pd.concat(resources, ignore_index=True)
+            self.logger.debug(f"Resources type: {type(resources_df)}")
+            self.logger.debug(f"Resources columns: {resources_df.columns}")
+            resources_df = resources_df.dropna(subset=['dataset_identifier'])
+            resources_df = resources_df[[
+                'publication_url', 'dataset_identifier', 'data_repository', 'dataset_webpage',]]
+            return resources_df
+        else:
+            self.logger.warning("No valid DataFrames found in input.")
+            return pd.DataFrame()  # Return an empty DataFrame if no valid input
 
     @staticmethod
     def get_domain_from_href(href):

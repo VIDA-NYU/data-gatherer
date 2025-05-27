@@ -55,6 +55,16 @@ class DataFetcher(ABC):
         """
         Sets up either a web scraper or API client based on the URL domain.
         Also used to avoid re_instantiating another selenium webdriver.
+
+        :param url: The URL to fetch data from.
+
+        :param entire_doc_model: Flag to indicate if the entire document model is being used.
+
+        :param logger: The logger instance for logging messages.
+
+        :param HTML_fallback: Flag to indicate if HTML fallback is needed.
+
+        :return: An instance of the appropriate data fetcher (WebScraper or APIClient).
         """
         self.logger.debug(f"update_DataFetcher_settings for current URL")
 
@@ -416,7 +426,7 @@ class WebScraper(DataFetcher):
 
 class DatabaseFetcher(DataFetcher):
     """
-    Class for fetching data from a database or local file.
+    Class for fetching data from a DataFrame.
     """
     def __init__(self, config, logger):
         super().__init__(config, logger)
