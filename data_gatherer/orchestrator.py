@@ -80,7 +80,17 @@ class Orchestrator:
     def process_url(self, url, save_staging_table=False):
         """
         Orchestrates the process for a single given source URL (publication).
+
+        1. Fetches raw data using the data fetcher (WebScraper or APIClient).
+
+        2. Parses the raw data using the parser (LLMParser).
+
+        3. Collects Metadata.
+
+        4. Classifies the parsed data using the classifier (LLMClassifier).
+
         param url: The URL to process.
+
         param save_staging_table: Flag to save the staging table.
         """
         self.logger.info(f"Processing URL: {url}")
@@ -106,7 +116,7 @@ class Orchestrator:
                 raw_data = self.data_fetcher.fetch_data(url)
                 raw_data = self.data_fetcher.remove_cookie_patterns(raw_data)
 
-            # if model processes chunks of the document, fetch the relevant sections and go to the parsing step
+            # if model processes selected parts of the document, fetch the relevant sections and go to the parsing step
             else:
 
                 if "API" in self.data_fetcher.fetch_source:
@@ -260,6 +270,8 @@ class Orchestrator:
         :param url_list: List of URLs to process.
 
         :param log_modulo: Frequency of logging progress (useful when url_list is long).
+
+        :return: Dictionary with URLs as keys and DataFrames of classified data as values.
         """
         self.logger.debug("Starting to process URL list...")
         start_time = time.time()
