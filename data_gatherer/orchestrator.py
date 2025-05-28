@@ -177,7 +177,7 @@ class Orchestrator:
 
             elif self.raw_data_format == "XML" and raw_data is not None:
                 self.logger.info("Using LLMParser to parse data.")
-                self.parser = LLMParser(self.config['parser_config_path'], self.logger)
+                self.parser = LLMParser(self.config['parser_config_path'], self.logger, full_document_read=self.full_DOM)
 
                 if additional_data is None:
                     parsed_data = self.parser.parse_data(raw_data, self.publisher, self.current_url)
@@ -198,7 +198,7 @@ class Orchestrator:
 
             elif self.raw_data_format == "full_HTML" or self.parser_mode == "LLMParser":
                 self.logger.info("Using LLMParser to parse data.")
-                self.parser = LLMParser(self.config['parser_config_path'], self.logger)
+                self.parser = LLMParser(self.config['parser_config_path'], self.logger, full_document_read=self.full_DOM)
                 parsed_data = self.parser.parse_data(raw_data, self.publisher, self.current_url, raw_data_format="full_HTML")
                 parsed_data['source_url'] = url
                 self.logger.info(f"Parsed data extraction completed. Elements collected: {len(parsed_data)}")
@@ -315,7 +315,7 @@ class Orchestrator:
         -- future release
         """
         self.already_previewed = []
-        self.metadata_parser = LLMParser(self.config['parser_config_path'], self.logger)
+        self.metadata_parser = LLMParser(self.config['parser_config_path'], self.logger, full_document_read=True)
         self.data_fetcher = self.data_fetcher.update_DataFetcher_settings('any_url', self.full_DOM, self.logger)
 
         if isinstance(self.data_fetcher, WebScraper):

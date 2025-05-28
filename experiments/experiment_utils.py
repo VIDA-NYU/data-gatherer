@@ -3,6 +3,39 @@ import time
 import requests
 import pandas as pd
 from bs4 import BeautifulSoup
+import os
+import re
+
+def load_pmc_files_from_html_xml_dir_to_dataframe_fetch_file():
+    # find all the files in the html_xml_dir directory
+    files_df = []
+    for root, dirs, file_names in os.walk('../' + data_gatherer.config['html_xml_dir']):
+        for file_name in file_names:
+            format = None
+            if file_name.endswith('.xml'):
+                format = 'xml'
+                basename = os.path.basename(file_name)
+                content = open(os.path.join(root, file_name), 'r', encoding='utf-8').read()
+                pmcid_match = re.search('pmc">\d+', content)
+                pmcid = pmcid_match.group(0).replace('">', '') if pmcid_match else None
+            elif file_name.endswith('.html'):
+                format = 'html'
+                basename = os.path.basename(file_name)
+                content = open(os.path.join(root, file_name), 'r', encoding='utf-8').read()
+                pmcid_match = re.search(r'PMC\d+', content)
+                pmcid = pmcid_match.group(0) if pmcid_match else None
+
+            files_df.append({
+                'file_name': basename,
+                'raw_cont': content,
+                'format': format,
+                'length': len(content),
+                'path': os.path.join(root, file_name),
+                'publication': pmcid.lower() if pmcid else None,
+            })
+
+    files_df = pd.DataFrame(files_df)
+    files_df.to_parquet("../" + data_gatherer.config["raw_HTML_data_filepath"], index=False)
 
 def PMID_to_doi(pmid,pmid_doi_mapping):
     if pmid in pmid_doi_mapping:
