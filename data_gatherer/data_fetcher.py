@@ -80,9 +80,13 @@ class DataFetcher(ABC):
                     API = f"{src}_API"
                     break
 
+        if self.config["dataframe_fetch"] and self.url_in_dataframe(url):
+            self.logger.info(f"URL {url} found in DataFrame. Using DatabaseFetcher.")
+            return DatabaseFetcher(self.config, logger)
+
         if API is not None and not(entire_doc_model):
         # Initialize the corresponding API client, from API_supported_url_patterns
-            self.logger.debug(f"Initializing APIClient({'requests', API, 'self.config'})")
+            self.logger.info(f"Initializing APIClient({'requests', API, 'self.config'})")
             return APIClient(requests, API, self.config, logger)
 
         # Reuse existing driver if we already have one
@@ -97,6 +101,22 @@ class DataFetcher(ABC):
         self.logger.info("Initializing new selenium driver.")
         driver = create_driver(self.config['DRIVER_PATH'], self.config['BROWSER'], self.config['HEADLESS'], self.logger)
         return WebScraper(driver, self.config, logger)
+
+    def url_in_dataframe(self, url):
+        """
+        Checks if the given doi / pmcid is present in the DataFrame.
+
+        :param url: The URL to check.
+
+        :return: True if the URL is found, False otherwise.
+        """
+        pmcid = re.search(r'PMC\d+', url, re.IGNORECASE)
+        pmcid = pmcid.group(0) if pmcid else None
+
+        df_fetch = pd.read_parquet(self.config["raw_HTML_data_filepath"])
+
+        return True if pmcid.lower() in df_fetch['publication'].values else False
+
 
     def is_url_API(self, url):
 
@@ -441,9 +461,12 @@ class DatabaseFetcher(DataFetcher):
 
         :returns: The raw HTML content of the page.
         """
-        self.logger.info(f"Fetching data for {url_key}")
-        self.logger.info(f"Data file: {self.dataframe[self.dataframe['publication'] == url_key]}")
-        raw_html = self.dataframe[self.dataframe['publication'] == url_key]['raw_html'].values[0]
+        split_source_url = url_key.split('/')
+        key = (split_source_url[-1] if len(split_source_url[-1]) > 0 else split_source_url[-2]).lower()
+        self.logger.info(f"Fetching data for {key}")
+        self.logger.debug(f"Data file: {self.dataframe.columns}")
+        self.logger.debug(f"Data file: {self.dataframe[self.dataframe['publication'] == key]}")
+        raw_html = self.dataframe[self.dataframe['publication'] == key]['raw_cont'].values[0]
         self.logger.info(f"Fetching data from {self.data_file}")
         return raw_html
 

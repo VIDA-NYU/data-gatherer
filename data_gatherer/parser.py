@@ -126,11 +126,11 @@ dataset_metadata_response_schema_gpt = {
 
 # Abstract base class for parsing data
 class Parser(ABC):
-    def __init__(self, config_path, logger=None, log_file_override=None):
+    def __init__(self, config_path, logger=None, log_file_override=None, full_document_read = True):
         self.config = self.config = load_config(config_path)
         self.logger = logger
         self.logger.info("Parser initialized.")
-        self.full_DOM = self.config['llm_model'] in self.config['entire_document_models'] and self.config['process_entire_document']
+        self.full_DOM = full_document_read and self.config['llm_model'] in self.config['entire_document_models']
 
     @abstractmethod
     def parse_data(self, raw_data, publisher, current_url_address):
@@ -319,7 +319,7 @@ class LLMParser(Parser):
 
     - Retrieve Then Read (LLMs will only read a target section retrieved from the document)
     """
-    def __init__(self, config, logger, log_file_override=None):
+    def __init__(self, config, logger, log_file_override=None, full_document_read=True):
         """
         Initialize the LLMParser with configuration, logger, and optional log file override.
 
@@ -329,7 +329,7 @@ class LLMParser(Parser):
 
         :param log_file_override: Optional log file override.
         """
-        super().__init__(config, logger, log_file_override)
+        super().__init__(config, logger, log_file_override, full_document_read)
         self.title = None
         self.prompt_manager = PromptManager(self.config['prompt_dir'], self.logger, self.config['response_file'])
         self.repo_names = self.get_repo_names()
