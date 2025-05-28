@@ -522,6 +522,8 @@ class LLMParser(Parser):
             elif 'download_link' in out_df.columns:
                 out_df = out_df.drop_duplicates(subset=['download_link'], keep='first')
 
+            out_df['source_url'] = current_url_address
+
             return out_df
 
     def normalize_full_DOM(self, api_data: str) -> str:
@@ -587,7 +589,7 @@ class LLMParser(Parser):
             return ""
 
     def extract_file_extension(self, download_link):
-        self.logger.debug(f"Function_call: extract_file_extension({download_link})")
+        self.logger.info(f"Function_call: extract_file_extension({download_link})")
         # Extract the file extension from the download link
         extension = None
         if type(download_link) == str:
@@ -732,6 +734,7 @@ class LLMParser(Parser):
         supplementary_links = []
 
         anchors = tree.xpath("//a[@data-ga-action='click_feat_suppl']")
+        self.logger.debug(f"Found {len(anchors)} anchors with data-ga-action='click_feat_suppl'.")
 
         for anchor in anchors:
             href = anchor.get("href")
@@ -763,15 +766,19 @@ class LLMParser(Parser):
                 'section_class': section_class,
             }
 
+            if link_data['section_class'] == 'ref-list font-sm':
+                self.logger.debug(f"Skipping link with section_class 'ref-list font-sm', likely to be a reference list.")
+                continue
+
+            #if 'doi.org' in link_data['link'] or 'scholar.google.com' in link_data['link']: ############ Same as above
+            #    continue
+
             link_data['download_link'] = self.reconstruct_download_link(href, link_data['section_class'], current_url_address)
             link_data['file_extension'] = self.extract_file_extension(link_data['download_link']) if link_data['download_link'] is not None else None
 
             # Merge anchor attributes (prefix keys to avoid collision)
             for attr_key, attr_value in anchor_attributes.items():
                 link_data[f'a_attr_{attr_key}'] = attr_value
-
-            if 'doi.org' in link_data['link'] or 'scholar.google.com' in link_data['link']:
-                continue
 
             supplementary_links.append(link_data)
 
@@ -853,13 +860,13 @@ class LLMParser(Parser):
                         description_element.itertext()).strip() if description_element is not None else "No description"
 
                     # Log media attributes and add to results
-                    self.logger.info(f"Extracted media item with href: {href}")
-                    self.logger.info(f"Source url: {current_url_address}")
-                    self.logger.info(f"Supplementary material title: {title}")
-                    self.logger.info(f"Content type: {content_type}, ID: {media_id}")
-                    self.logger.info(f"Surrounding text for media: {surrounding_text}")
-                    self.logger.info(f"Description: {description}")
-                    self.logger.info(f"Download_link: {download_link}")
+                    self.logger.debug(f"Extracted media item with href: {href}")
+                    self.logger.debug(f"Source url: {current_url_address}")
+                    self.logger.debug(f"Supplementary material title: {title}")
+                    self.logger.debug(f"Content type: {content_type}, ID: {media_id}")
+                    self.logger.debug(f"Surrounding text for media: {surrounding_text}")
+                    self.logger.debug(f"Description: {description}")
+                    self.logger.debug(f"Download_link: {download_link}")
 
                     if href:
                         hrefs.append({
@@ -878,7 +885,7 @@ class LLMParser(Parser):
 
                 # Find all <inline-supplementary-material> elements in the section
                 inline_supplementary_materials = section.findall(".//inline-supplementary-material")
-                self.logger.info(f"Found {len(inline_supplementary_materials)} inline-supplementary-material elements.")
+                self.logger.debug(f"Found {len(inline_supplementary_materials)} inline-supplementary-material elements.")
 
                 for inline in inline_supplementary_materials:
                     # repeating steps like in media links above
@@ -904,7 +911,8 @@ class LLMParser(Parser):
         download_link = None
         #repo = self.url_to_repo_domain(current_url_address)
         # match the digits of the PMC ID (after PMC) in the URL
-        PMCID = re.search(r'PMC(\d+)', current_url_address).group(1)
+        self.logger.info(f"Function_call: reconstruct_download_link({href}, {content_type}, {current_url_address})")
+        PMCID = re.search(r'PMC(\d+)', current_url_address, re.IGNORECASE).group(1)
         self.logger.debug(
             f"Inputs to reconstruct_download_link: {href}, {content_type}, {current_url_address}, {PMCID}")
         if content_type == 'local-data':
@@ -1107,7 +1115,7 @@ class LLMParser(Parser):
             repos=', '.join(repos)
         )
         self.logger.info(f"Prompt messages total length: {self.count_tokens(messages,model)} tokens")
-        self.logger.info(f"Prompt messages: {messages}")
+        self.logger.debug(f"Prompt messages: {messages}")
 
         # Generate the checksum for the prompt content
         # Save the prompt and calculate checksum
@@ -1132,7 +1140,8 @@ class LLMParser(Parser):
         else:
             # Make the request to the model
             self.logger.info(
-                f"Requesting datasets from content using model: {model}, temperature: {temperature}, messages: messages")
+                f"Requesting datasets from content using model: {model}, temperature: {temperature}, messages: "
+                f"{self.count_tokens(messages, model)} tokens")
             resps = []
 
             if self.config['llm_model'] == 'gemma2:9b':
@@ -1384,12 +1393,12 @@ class LLMParser(Parser):
             if ptr.startswith('.//'):
                 supplementary_data_sections.extend(api_xml.findall(ptr))
 
-        self.logger.info(f"Found {supplementary_data_sections} supplementary data sections")
+        self.logger.info(f"Found {len(supplementary_data_sections)} supplementary data sections")
 
         for sect in supplementary_data_sections:
             # check if section contains data availability statement
             if sect.text is None:  # key resources table
-                self.logger.info(f"Section with no text: {sect}")
+                self.logger.debug(f"Section with no text: {sect}")
             elif 'data availability' in sect.text:
                 data_availability_cont.append(sect.text) if sect.text not in data_availability_cont else None
             elif 'Deposited data' in sect.text:
@@ -1711,6 +1720,7 @@ class LLMParser(Parser):
 
         :return: str — the normalized repository name.
         """
+        self.logger.info(f"Resolving data repository for: {repo}")
         if ',' in repo:
             self.logger.warning(f"Repository contains a comma: {repo}. Same data may be in multiple repos.")
             ret = []
@@ -1728,10 +1738,16 @@ class LLMParser(Parser):
                 self.logger.info(f"Exact match found for repo: {repo}")
                 break
 
-            elif 'repo_name' in v.keys() and repo.lower() == v['repo_name'].lower():
-                self.logger.info(f"Found repo_name match for {repo}")
-                repo = k
-                break
+            elif 'repo_name' in v.keys():
+                if repo.lower() == v['repo_name'].lower():
+                    self.logger.info(f"Found repo_name match for {repo}")
+                    repo = k
+                    break
+
+                elif v['repo_name'].lower() in repo.lower():
+                    self.logger.info(f"Found partial match for {repo} in {v['repo_name']}")
+                    repo = k
+                    break
 
         return repo  # fallback
 
@@ -1780,7 +1796,6 @@ class LLMParser(Parser):
                 self.logger.error(f"Error extracting data repository for item: {item}")
                 continue
 
-            repo = self.resolve_data_repository(repo)
             accession_id = self.resolve_accession_id(accession_id, repo)
 
             self.logger.info(f"Processing dataset {1 + i} with repo: {repo} and accession_id: {accession_id}")
@@ -1850,7 +1865,7 @@ class LLMParser(Parser):
 
         # **Ensure `prompt` is a string**
         if isinstance(prompt, list):
-            self.logger.warning(f"Expected string but got list. Converting list to string.")
+            self.logger.info(f"Expected string but got list. Converting list to string.")
             prompt = " ".join([msg["content"] for msg in prompt if isinstance(msg, dict) and "content" in msg])
 
         elif not isinstance(prompt, str):

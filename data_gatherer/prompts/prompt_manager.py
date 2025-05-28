@@ -4,15 +4,13 @@ import os
 from data_gatherer.resources_loader import load_prompt
 
 class PromptManager:
-    def __init__(self, prompt_dir, logger, response_file="prompts/LLMs_responses_cache.json", save_dir="prompts/prompt_evals"):
+    def __init__(self, prompt_dir, logger, response_file="data_gatherer/prompts/LLMs_responses_cache.json", save_dir="prompts/prompt_evals"):
         self.prompt_dir = prompt_dir
         self.prompt_save_dir = save_dir
         self.response_file = response_file
         self.logger = logger
         os.makedirs(self.prompt_dir, exist_ok=True)
-        if not os.path.exists(self.response_file):
-            with open(self.response_file, 'w') as f:
-                json.dump({}, f)
+        os.makedirs(self.response_file, exist_ok=True)
 
     def save_prompt(self, prompt_id, prompt_content):
         """Save the static prompt content if it does not already exist."""
