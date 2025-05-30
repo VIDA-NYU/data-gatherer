@@ -6,6 +6,7 @@
   "prompt_dir": "data_gatherer/prompts/prompt_templates",
   "prompt_name": "retrieve_datasets_simple_JSON_gemini",
   "prompt_save_dir": "../data_gatherer/prompts/prompt_evals",
+  "prompt_save_dir": "data_gatherer/prompts/prompt_evals",
   "response_file": "prompts/LLMs_responses_cache.json",
   "process_DAS_links_separately": false,
   "save_xml_output": false,
