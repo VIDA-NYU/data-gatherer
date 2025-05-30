@@ -10,7 +10,9 @@ class PromptManager:
         self.response_file = response_file
         self.logger = logger
         os.makedirs(self.prompt_dir, exist_ok=True)
-        os.makedirs(self.response_file, exist_ok=True)
+        if not os.path.exists(self.response_file):
+            with open(self.response_file, 'w') as f:
+                json.dump({}, f)
 
     def save_prompt(self, prompt_id, prompt_content):
         """Save the static prompt content if it does not already exist."""
