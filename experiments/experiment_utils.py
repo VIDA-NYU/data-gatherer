@@ -6,10 +6,15 @@ from bs4 import BeautifulSoup
 import os
 import re
 
-def load_pmc_files_from_html_xml_dir_to_dataframe_fetch_file():
+def load_pmc_files_from_html_xml_dir_to_dataframe_fetch_file(src_dir,raw_HTML_data_filepath):
+    """
+    Loads all files from the specified HTML/XML directory into a DataFrame and saves it as a parquet file.
+    Args:
+        raw_HTML_data_filepath (str): The path where the DataFrame will be saved as a parquet file.
+    """
     # find all the files in the html_xml_dir directory
     files_df = []
-    for root, dirs, file_names in os.walk('../' + data_gatherer.config['html_xml_dir']):
+    for root, dirs, file_names in os.walk(src_dir):
         for file_name in file_names:
             format = None
             if file_name.endswith('.xml'):
@@ -35,7 +40,7 @@ def load_pmc_files_from_html_xml_dir_to_dataframe_fetch_file():
             })
 
     files_df = pd.DataFrame(files_df)
-    files_df.to_parquet("../" + data_gatherer.config["raw_HTML_data_filepath"], index=False)
+    files_df.to_parquet("../" + raw_HTML_data_filepath, index=False)
 
 def PMID_to_doi(pmid,pmid_doi_mapping):
     if pmid in pmid_doi_mapping:
