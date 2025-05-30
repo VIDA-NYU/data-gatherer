@@ -80,18 +80,18 @@ class DataFetcher(ABC):
                     API = f"{src}_API"
                     break
 
-        if self.config["dataframe_fetch"] and self.url_in_dataframe(url):
-            self.logger.info(f"URL {url} found in DataFrame. Using DatabaseFetcher.")
-            return DatabaseFetcher(self.config, logger)
-
         if API is not None and not(entire_doc_model):
         # Initialize the corresponding API client, from API_supported_url_patterns
             self.logger.info(f"Initializing APIClient({'requests', API, 'self.config'})")
             return APIClient(requests, API, self.config, logger)
 
+        if self.config["dataframe_fetch"] and self.url_in_dataframe(url):
+            self.logger.info(f"URL {url} found in DataFrame. Using DatabaseFetcher.")
+            return DatabaseFetcher(self.config, logger)
+
         # Reuse existing driver if we already have one
-        if isinstance(self, WebScraper) and hasattr(self, 'scraper_tool'):
-            self.logger.info("Reusing existing WebScraper driver.")
+        if isinstance(self, WebScraper) and self.scraper_tool is not None:
+            self.logger.info(f"Reusing existing WebScraper driver: {self.scraper_tool}")
             return self  # Reuse current instance
 
         self.logger.info(f"WebScraper instance: {isinstance(self, WebScraper)}")
@@ -464,11 +464,13 @@ class DatabaseFetcher(DataFetcher):
         split_source_url = url_key.split('/')
         key = (split_source_url[-1] if len(split_source_url[-1]) > 0 else split_source_url[-2]).lower()
         self.logger.info(f"Fetching data for {key}")
-        self.logger.debug(f"Data file: {self.dataframe.columns}")
-        self.logger.debug(f"Data file: {self.dataframe[self.dataframe['publication'] == key]}")
-        raw_html = self.dataframe[self.dataframe['publication'] == key]['raw_cont'].values[0]
+        self.logger.info(f"Data file: {self.dataframe.columns}")
+        self.logger.info(f"Data file: {self.dataframe[self.dataframe['publication'] == key]}")
         self.logger.info(f"Fetching data from {self.data_file}")
-        return raw_html
+        self.fetch_source = 'Local_data'
+        for i, row in self.dataframe[self.dataframe['publication'] == key].iterrows():
+            self.raw_data_format = row['format']
+            return row['raw_cont']
 
     def remove_cookie_patterns(self, html: str):
         pattern = r'<img\s+alt=""\s+src="https://www\.ncbi\.nlm\.nih\.gov/stat\?.*?"\s*>'

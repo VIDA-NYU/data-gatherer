@@ -54,9 +54,9 @@ class Orchestrator:
             except Exception as e:
                 self.logger.warning(f"Failed to quit previous driver: {e}")
 
-        if self.config['search_method'] == 'url_list' and self.config['dataframe_fetch']:
-            self.data_fetcher = DatabaseFetcher(self.config, self.logger)
-            return
+        #if self.config['search_method'] == 'url_list' and self.config['dataframe_fetch']:
+        #    self.data_fetcher = DatabaseFetcher(self.config, self.logger)
+        #    return
 
         elif self.config['search_method'] == 'url_list':
             self.data_fetcher = WebScraper(None, self.config, self.logger)
@@ -96,12 +96,10 @@ class Orchestrator:
         self.logger.info(f"Processing URL: {url}")
         self.current_url = url
         self.publisher = self.data_fetcher.url_to_publisher_domain(url)
-        self.local_data = self.config['dataframe_fetch']
 
-        if not self.local_data:
-            self.data_fetcher = self.data_fetcher.update_DataFetcher_settings(url, self.full_DOM, self.logger)
-            # Step 1: Use DataFetcher (WebScraper or APIClient) to fetch raw data
-            self.logger.debug(f"data_fetcher.fetch_source = {self.data_fetcher.fetch_source}")
+        self.data_fetcher = self.data_fetcher.update_DataFetcher_settings(url, self.full_DOM, self.logger)
+        # Step 1: Use DataFetcher (WebScraper or APIClient) to fetch raw data
+        self.logger.debug(f"data_fetcher.fetch_source = {self.data_fetcher.fetch_source}")
 
         try:
             self.logger.debug("Fetching Raw content...")
@@ -123,6 +121,8 @@ class Orchestrator:
                     self.logger.debug(f"Using {self.data_fetcher.fetch_source} to fetch data.")
                     self.raw_data_format = "XML"
                     self.config['search_method'] = 'api'
+                elif isinstance(self.data_fetcher, DatabaseFetcher):
+                    self.raw_data_format = self.data_fetcher.raw_data_format
                 else:
                     self.logger.debug("Using WebScraper to fetch data.")
                     self.raw_data_format = "HTML"
