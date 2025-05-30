@@ -117,14 +117,26 @@ class DataFetcher(ABC):
 
         return True if pmcid.lower() in df_fetch['publication'].values else False
 
+    def download_html(self, dir):
+        """
+        Downloads the HTML content to a specified directory.
+
+        :param dir: The directory where the HTML file will be saved.
+
+        """
+        logging.info(f"Dir {dir} exists") if os.path.exists(dir) else os.mkdir(dir)
+
+        pub_name = self.get_publication_name_from_driver()
+
+        pub_name = re.sub(r'[\\/:*?"<>|]', '_', pub_name)  # Replace invalid characters in filename
+
+        fn = dir + pub_name + '.html'
+
+        with open(fn, 'w', encoding='utf-8') as f:
+            f.write(self.scraper_tool.page_source)
 
     def is_url_API(self, url):
-
-        return True
-
-    @abstractmethod
-    def fetch_data(self, source, retries=3, delay=2):
-        pass
+        return notImplementedError("This method has not been implemented yet.")
 
     def download_file_from_url(self, url, output_root="output/suppl_files", paper_id=None):
         output_dir = os.path.join(output_root, paper_id)
@@ -326,20 +338,6 @@ class WebScraper(DataFetcher):
         except Exception as e:
             self.logger.error(f"Error normalizing DOM: {e}")
             return ""
-
-    def download_html(self, dir):
-        """
-        Downloads the HTML content to a specified directory.
-
-        :param dir: The directory where the HTML file will be saved.
-
-        """
-        logging.info(f"Dir {dir} exists") if os.path.exists(dir) else os.mkdir(dir)
-
-        fn = dir + self.get_publication_name_from_driver() + '.html'
-
-        with open(fn, 'w', encoding='utf-8') as f:
-            f.write(self.scraper_tool.page_source)
 
     def get_publication_name_from_driver(self):
         """
@@ -596,13 +594,38 @@ class APIClient(DataFetcher):
         :param directory: The directory where the XML file will be saved.
 
         :param api_data: The XML data to be saved.
-
         """
+        # Construct the file path
+        fn = os.path.join(directory, f"{self.extract_article_title()}.xml")
 
-        fn = directory + self.PMCID + '.xml'
+        # Check if the file already exists
+        if os.path.exists(fn):
+            self.logger.info(f"File already exists: {fn}. Skipping download.")
+            return
 
-        ET.ElementTree(api_data).write(fn, pretty_print=True, xml_declaration=True,
-                                          encoding='UTF-8')
+        # Write the XML data to the file
+        ET.ElementTree(api_data).write(fn, pretty_print=True, xml_declaration=True, encoding="UTF-8")
+        self.logger.info(f"Downloaded XML file: {fn}")
+
+    from lxml import etree as ET
+
+    def extract_article_title(self, api_data):
+        """
+        Extracts the article title and the surname of the first author from the XML content.
+
+        :param xml_content: The XML content as a string.
+
+        :return: A tuple containing the article title and the first author's surname.
+        """
+        try:
+            # Extract the article title
+            title = root.find(".//title-group/article-title")
+            article_title = title.text.strip() if title is not None else None
+            return article_title
+
+        except ET.XMLSyntaxError as e:
+            print(f"Error parsing XML: {e}")
+            return None
 
 class DataCompletenessChecker:
     """

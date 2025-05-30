@@ -141,11 +141,11 @@ class Orchestrator:
                     raw_data = self.data_fetcher.fetch_data(url)
                     raw_data = self.data_fetcher.remove_cookie_patterns(raw_data)
 
-            if self.config['write_htmls_xmls']:
+            if self.config['write_htmls_xmls'] and not isinstance(self.data_fetcher, DatabaseFetcher):
                 directory = self.config['html_xml_dir'] + self.publisher + '/'
                 self.logger.info(f"Raw Data is {self.raw_data_format}.")
                 if self.raw_data_format == "HTML" or self.raw_data_format == "full_HTML":
-                    self.data_fetcher.download_html(directory, self.raw_data_format)
+                    self.data_fetcher.download_html(directory)
                     self.logger.info(f"Raw HTML saved to: {directory}")
                 elif self.raw_data_format == "XML":
                     self.data_fetcher.download_xml(directory, raw_data)
