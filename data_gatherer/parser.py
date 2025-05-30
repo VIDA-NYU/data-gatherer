@@ -19,35 +19,37 @@ from data_gatherer.resources_loader import load_config
 
 dataset_response_schema_gpt = {
     "type": "json_schema",
-    "name": "GPT_response_schema",
-    "schema": {
-        "type": "object",  # Root must be an object
-        "properties": {
-            "datasets": {  # Use a property to hold the array
-            "type": "array",
-                "items": {
-                    "type": "object",
-                    "properties": {
-                        "dataset_id": {
-                            "type": "string",
-                            "description": "A unique identifier for the dataset."
+        "json_schema": {
+        "name": "GPT_response_schema",
+        "schema": {
+            "type": "object",  # Root must be an object
+            "properties": {
+                "datasets": {  # Use a property to hold the array
+                "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "dataset_id": {
+                                "type": "string",
+                                "description": "A unique identifier for the dataset."
+                            },
+                            "repository_reference": {
+                                "type": "string",
+                                "description": "A valid URI or string referring to the repository."
+                            },
+                            "decision_rationale": {
+                                "type": "string",
+                                "description": "Why did we select this dataset?"
+                            }
                         },
-                        "repository_reference": {
-                            "type": "string",
-                            "description": "A valid URI or string referring to the repository."
-                        },
-                        "decision_rationale": {
-                            "type": "string",
-                            "description": "Why did we select this dataset?"
-                        }
+                        "required": ["dataset_id", "repository_reference"]
                     },
-                    "required": ["dataset_id", "repository_reference"]
-                },
-                "minItems": 1,
-                "uniqueItems": True
-            }
-        },
-        "required": ["datasets"]
+                    "minItems": 1,
+                    "uniqueItems": True
+                }
+            },
+            "required": ["datasets"]
+        }
     }
 }
 
