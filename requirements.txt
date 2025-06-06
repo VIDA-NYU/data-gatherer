@@ -1,7 +1,7 @@
-beautifulsoup4==4.12.3
+beautifulsoup4>=4.12.3
 bs4
 lxml
-numpy==1.26
+numpy>=1.26
 ollama
 openai
 pandas
@@ -11,9 +11,9 @@ python-dotenv
 PyYAML
 regex
 requests
-selenium==4.28.0
+selenium>=4.28.0
 tokenizers
-torch==2.2
+torch>=2.2
 transformers
 typing_extensions
 webdriver-manager
