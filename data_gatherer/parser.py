@@ -1994,11 +1994,11 @@ class LLMParser(Parser):
 
         elif 'gemini' in model:
             try:
-                gemini_prompt = {"role": "user", "parts": [{"text": prompt}]}
-                response = self.client.count_tokens([gemini_prompt])
-                n_tokens = response.total_tokens
+                gemini_prompt = [{"role": "user", "parts": [{"text": prompt}]}]
+                response = self.client.count_tokens(prompts=gemini_prompt)
+                n_tokens = response["total_tokens"]  # Adjust based on the response structure
             except Exception as e:
-                self.logger.error(f"Error counting tokens for Gemini: {e}")
+                self.logger.error(f"Error counting tokens for Gemini model '{model}': {e}")
                 n_tokens = 0
 
         return n_tokens
