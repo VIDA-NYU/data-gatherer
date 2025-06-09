@@ -134,10 +134,6 @@ class Parser(ABC):
         self.logger.info("Parser initialized.")
         self.full_DOM = full_document_read and self.config['llm_model'] in self.config['entire_document_models']
 
-    @abstractmethod
-    def parse_data(self, raw_data, publisher, current_url_address):
-        pass
-
     def extract_paragraphs_from_xml(self, xml_root) -> list[dict]:
         """
         Extract paragraphs and their section context from an XML document.
@@ -210,6 +206,123 @@ class Parser(ABC):
                 "sec_txt": section_text_from_paragraphs
             })
         return sections
+
+    import bs4
+
+    def extract_paragraphs_from_html(self, html_content: str) -> list[dict]:
+        """
+        Extract paragraphs and their section context from an HTML document.
+
+        Args:
+            html_content: str — raw HTML content.
+
+        Returns:
+            List of dicts with 'paragraph', 'section_title', and 'sec_type'.
+        """
+        soup = BeautifulSoup(html_content, "html.parser")
+        paragraphs = []
+        for section in soup.find_all(['section', 'div']):
+            section_title = section.find(['h1', 'h2', 'h3', 'h4', 'h5', 'h6'])
+            section_title_text = section_title.get_text(strip=True) if section_title else "No Title"
+            sec_type = section.get('class', ['unknown'])[0] if section.has_attr('class') else "unknown"
+            for p in section.find_all('p'):
+                para_text = p.get_text(strip=True)
+                if len(para_text) >= 5:
+                    paragraphs.append({
+                        "paragraph": para_text,
+                        "section_title": section_title_text,
+                        "sec_type": sec_type,
+                        "text": para_text
+                    })
+        return paragraphs
+
+    def extract_sections_from_html(self, html_content: str) -> list[dict]:
+        """
+        Extract sections from an HTML document.
+
+        Args:
+            html_content: str — raw HTML content.
+
+        Returns:
+            List of dicts with 'section_title' and 'sec_type'.
+        """
+        soup = BeautifulSoup(html_content, "html.parser")
+        sections = []
+        for section in soup.find_all(['section']): # 'div'
+            if section.find(['section']): # 'div'
+                continue
+            section_title = section.find(['h1', 'h2', 'h3', 'h4', 'h5', 'h6'])
+            section_title_text = section_title.get_text(strip=True) if section_title else "No Title"
+            sec_type = section.get('class', ['unknown'])[0] if section.has_attr('class') else "unknown"
+            section_text = section.get_text(separator="\n", strip=True)
+            sections.append({
+                "section_title": section_title_text,
+                "sec_type": sec_type,
+                "sec_txt": section_text
+            })
+        return sections
+
+    def normalize_full_DOM(self, api_data: str) -> str:
+        """
+        Normalize the full HTML DOM by removing dynamic elements and attributes
+        that frequently change, such as random IDs, inline styles, analytics tags,
+        and CSRF tokens.
+
+        :param api_data: The raw HTML data to be normalized.
+
+        :return: Normalized HTML string.
+
+        """
+
+        #self.logger.info(f"Function_call: normalize_full_DOM(api_data). Length of raw api data: {self.count_tokens(api_data,self.config['llm_model'])} tokens")
+
+        try:
+            # Parse the HTML content
+            soup = BeautifulSoup(api_data, "html.parser")
+
+            # 1. Remove script, style, and meta tags
+            for tag in ["script", "style", 'img', 'iframe', 'noscript', 'svg', 'button', 'form', 'input']:
+                for element in soup.find_all(tag):
+                    element.decompose()
+
+            remove_meta_tags = True
+            if remove_meta_tags:
+                for meta in soup.find_all('meta'):
+                    meta.decompose()
+
+            # 2. Remove dynamic attributes
+            for tag in soup.find_all(True):  # True matches all tags
+                # Remove dynamic `id` attributes that match certain patterns (e.g., `tooltip-*`)
+                if "id" in tag.attrs and re.match(r"tooltip-\d+", tag.attrs["id"]):
+                    del tag.attrs["id"]
+
+                # Remove dynamic `aria-describedby` attributes
+                if "aria-describedby" in tag.attrs and re.match(r"tooltip-\d+", tag.attrs["aria-describedby"]):
+                    del tag.attrs["aria-describedby"]
+
+                # Remove inline styles
+                if "style" in tag.attrs:
+                    del tag.attrs["style"]
+
+                # Remove all `data-*` attributes
+                tag.attrs = {key: val for key, val in tag.attrs.items() if not key.startswith("data-")}
+
+                # Remove `csrfmiddlewaretoken` inputs
+                if tag.name == "input" and tag.get("name") == "csrfmiddlewaretoken":
+                    tag.decompose()
+
+            # 3. Remove comments
+            for comment in soup.find_all(string=lambda text: isinstance(text, Comment)):
+                comment.extract()
+
+            # 4. Normalize whitespace
+            normalized_html = re.sub(r"\s+", " ", soup.prettify())
+
+            return normalized_html.strip()
+
+        except Exception as e:
+            self.logger.error(f"Error normalizing DOM: {e}")
+            return ""
 
 class Dataset(BaseModel):
     dataset_id: str
@@ -540,7 +653,7 @@ class LLMParser(Parser):
 
         """
 
-        self.logger.info(f"Function_call: normalize_full_DOM(api_data). Length of raw api data: {self.count_tokens(api_data,self.config['llm_model'])} tokens")
+        #self.logger.info(f"Function_call: normalize_full_DOM(api_data). Length of raw api data: {self.count_tokens(api_data,self.config['llm_model'])} tokens")
 
         try:
             # Parse the HTML content
