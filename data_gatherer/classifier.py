@@ -13,11 +13,11 @@ class LLMClassifier:
         self.show_classify_stats = True
         self.prompt_manager = PromptManager("prompts", self.logger)
 
-    def setup_client(self, llm_model='put your model'):
+    def setup_client(self, llm_name='put your model'):
         """
         Initialize the client for LLM classification.
         """
-        if llm_model == 'gemma2:9b':
+        if llm_name == 'gemma2:9b':
             self.client = Client(host=os.environ['NYU_LLM_API'])  # env variable
 
     def classify_element(self, element):

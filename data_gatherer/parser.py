@@ -129,18 +129,18 @@ dataset_metadata_response_schema_gpt = {
 # Abstract base class for parsing data
 class Parser(ABC):
     def __init__(self, open_data_repos_ontology, logger=None, log_file_override=None, full_document_read=True,
-                 llm_model=None):
+                 llm_name=None):
 
         self.open_data_repos_ontology = load_config(open_data_repos_ontology)
 
         self.logger = logger
         self.logger.info("Parser initialized.")
 
-        self.llm_model = llm_model
+        self.llm_name = llm_name
         entire_document_models = ["gemini-1.5-flash", "gemini-1.5-pro", "gemini-2.0-flash-exp", "gemini-2.0-flash",
                                   "gpt-4o", "gpt-4o-mini"]
 
-        self.full_document_read = full_document_read and self.llm_model in entire_document_models
+        self.full_document_read = full_document_read and self.llm_name in entire_document_models
 
     def extract_paragraphs_from_xml(self, xml_root) -> list[dict]:
         """
@@ -282,7 +282,7 @@ class Parser(ABC):
 
         """
 
-        #self.logger.info(f"Function_call: normalize_full_DOM(api_data). Length of raw api data: {self.count_tokens(api_data,self.config['llm_model'])} tokens")
+        #self.logger.info(f"Function_call: normalize_full_DOM(api_data). Length of raw api data: {self.count_tokens(api_data,self.config['llm_name'])} tokens")
 
         try:
             # Parse the HTML content
@@ -444,7 +444,7 @@ class LLMParser(Parser):
     """
     def __init__(self, open_data_repos_ontology, logger, log_file_override=None, full_document_read=True,
                  prompt_dir="data_gatherer/prompts/prompt_templates", response_file="prompts/LLMs_responses_cache.json",
-                 llm_model=None, save_dynamic_prompts=False, save_responses_to_cache=False, use_cached_responses=False):
+                 llm_name=None, save_dynamic_prompts=False, save_responses_to_cache=False, use_cached_responses=False):
         """
         Initialize the LLMParser with configuration, logger, and optional log file override.
 
@@ -465,29 +465,30 @@ class LLMParser(Parser):
         self.use_cached_responses = use_cached_responses
 
         self.full_document_read = full_document_read
+        self.llm_name = llm_name
 
-        if llm_model == 'gemma2:9b':
+        if llm_name == 'gemma2:9b':
             self.client = Client(host=os.environ['NYU_LLM_API'])  # env variable
 
-        elif llm_model == 'gpt-4o-mini':
+        elif llm_name == 'gpt-4o-mini':
             self.client = OpenAI(api_key=os.environ['GPT_API_KEY'])
 
-        elif llm_model == 'gpt-4o':
+        elif llm_name == 'gpt-4o':
             self.client = OpenAI(api_key=os.environ['GPT_API_KEY'])
 
-        elif llm_model == 'gemini-1.5-flash':
+        elif llm_name == 'gemini-1.5-flash':
             genai.configure(api_key=os.environ['GEMINI_KEY'])
             self.client = genai.GenerativeModel('gemini-1.5-flash')
 
-        elif llm_model == 'gemini-2.0-flash-exp':
+        elif llm_name == 'gemini-2.0-flash-exp':
             genai.configure(api_key=os.environ['GEMINI_KEY'])
             self.client = genai.GenerativeModel('gemini-2.0-flash-exp')
 
-        elif llm_model == 'gemini-2.0-flash':
+        elif llm_name == 'gemini-2.0-flash':
             genai.configure(api_key=os.environ['GEMINI_KEY'])
             self.client = genai.GenerativeModel('gemini-2.0-flash')
 
-        elif llm_model == 'gemini-1.5-pro':
+        elif llm_name == 'gemini-1.5-pro':
             genai.configure(api_key=os.environ['GEMINI_KEY'])
             self.client = genai.GenerativeModel('gemini-1.5-pro')
 
@@ -614,7 +615,7 @@ class LLMParser(Parser):
                 # Extract dataset links from the entire text
                 augmented_dataset_links = self.retrieve_datasets_from_content(preprocessed_data,
                                                                               self.open_data_repos_ontology['repos'],
-                                                                              self.llm_model,
+                                                                              self.llm_name,
                                                                               temperature=0)
 
                 self.logger.info(f"Augmented dataset links: {augmented_dataset_links}")
@@ -637,7 +638,7 @@ class LLMParser(Parser):
 
                 augmented_dataset_links = self.retrieve_datasets_from_content(data_availability_str,
                                                                               self.open_data_repos_ontology['repos'],
-                                                                              self.llm_model)
+                                                                              self.llm_name)
 
                 dataset_links_w_target_pages = self.get_dataset_webpage(augmented_dataset_links)
 
@@ -673,7 +674,7 @@ class LLMParser(Parser):
 
         """
 
-        #self.logger.info(f"Function_call: normalize_full_DOM(api_data). Length of raw api data: {self.count_tokens(api_data,self.config['llm_model'])} tokens")
+        #self.logger.info(f"Function_call: normalize_full_DOM(api_data). Length of raw api data: {self.count_tokens(api_data,self.config['llm_name'])} tokens")
 
         try:
             # Parse the HTML content
@@ -1196,7 +1197,7 @@ class LLMParser(Parser):
                     or 'data availability' in cont) and len(cont) > 1:
                 self.logger.info(f"Processing data availability text")
                 # Call the generalized function
-                datasets = self.retrieve_datasets_from_content(cont, repos_elements, model=self.llm_model, temperature=0)
+                datasets = self.retrieve_datasets_from_content(cont, repos_elements, model=self.llm_name, temperature=0)
 
                 for dt in datasets:
                     dt['source_section'] = element['source_section']
@@ -1237,7 +1238,7 @@ class LLMParser(Parser):
         datasets = []
         for element in DAS_content:
             datasets.extend(self.retrieve_datasets_from_content(element, repos_elements,
-                                                                model=self.llm_model,
+                                                                model=self.llm_name,
                                                                 temperature=0))
 
         # Add source_section information and return
@@ -1253,8 +1254,9 @@ class LLMParser(Parser):
         self.logger.debug(f"Final ret additional data: {ret}")
         return ret
 
-    def retrieve_datasets_from_content(self, content: str, repos: list, model: str, temperature: float = 0.0,
-                                       prompt_name: str = 'retrieve_datasets_simple_JSON.json',
+    def retrieve_datasets_from_content(self, content: str, repos: list, model: str = 'gpt-4o-mini',
+                                       temperature: float = 0.0,
+                                       prompt_name: str = 'retrieve_datasets_simple_JSON',
                                        full_document_read=True) -> list:
         """
         Retrieve datasets from the given content using a specified LLM model.
@@ -1689,7 +1691,7 @@ class LLMParser(Parser):
         self.logger.info(f"Analyzing data availability statement with {len(dataset_links)} links")
         self.logger.debug(f"Text from data-availability: {dataset_links}")
 
-        model = self.llm_model
+        model = self.llm_name
         temperature = 0.3
 
         ret = []
@@ -2031,7 +2033,7 @@ class LLMParser(Parser):
         self.logger.info(f"Number of tokens: {len(tokens)}")
         return len(tokens)+int(allowance_static_prompt*1.25)>limit
 
-    def count_tokens(self, prompt, model="gpt-4") -> int:
+    def count_tokens(self, prompt, model="gpt-4o-mini") -> int:
         """
         Count the number of tokens in a given prompt for a specific model.
 
@@ -2114,7 +2116,7 @@ class LLMParser(Parser):
         self.logger.info(f"Extracting dataset information from metadata. Prompt from subdir: {subdir}")
 
         llm = LLMClient(
-            model= model if model else self.llm_model,
+            model= model if model else self.llm_name,
             logger=self.logger,
             save_prompts=self.save_dynamic_prompts
         )

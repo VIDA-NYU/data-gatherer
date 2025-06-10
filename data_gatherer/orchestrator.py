@@ -21,7 +21,7 @@ class Orchestrator:
     This class orchestrates the data gathering process by coordinating the data fetcher, parser, and classifier in a
     single workflow.
     """
-    def __init__(self, llm_model='gpt-4o-mini', process_entire_document=False, log_file_override=None,
+    def __init__(self, llm_name='gpt-4o-mini', process_entire_document=False, log_file_override=None,
                  write_htmls_xmls=False, html_xml_dir='tmp/html_xmls/', skip_unstructured_files=False,
                  download_data_for_description_generation=False, write_raw_metadata=False, data_resource_preview=False,
                  download_previewed_data_resources=False, full_output_file='output/result.csv', log_level=logging.INFO,
@@ -30,7 +30,7 @@ class Orchestrator:
         """
         Initializes the Orchestrator with the given configuration file and sets up logging.
 
-        :param llm_model: The LLM model to use for parsing and classification.
+        :param llm_name: The LLM model to use for parsing and classification.
 
         :param process_entire_document: Flag to indicate if the model processes the entire document.
 
@@ -68,8 +68,9 @@ class Orchestrator:
         self.download_data_for_description_generation = download_data_for_description_generation
 
         entire_document_models = ["gemini-1.5-flash", "gemini-1.5-pro", "gemini-2.0-flash-exp", "gemini-2.0-flash", "gpt-4o", "gpt-4o-mini"]
-        self.full_document_read = llm_model in entire_document_models and process_entire_document
-        self.logger.info(f"Data_Gatherer Orchestrator initialized. Extraction Model: {llm_model}")
+        self.full_document_read = llm_name in entire_document_models and process_entire_document
+        self.logger.info(f"Data_Gatherer Orchestrator initialized. Extraction Model: {llm_name}")
+        self.llm = llm_name
 
         self.search_method = 'url_list' # Default search method
 
