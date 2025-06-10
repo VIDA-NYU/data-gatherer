@@ -116,6 +116,42 @@ class Orchestrator:
 
         return raw_data
 
+    def parse_data(self, raw_data, current_url, parser_mode='LLMParser', publisher='PMC', additional_data=None,
+                   raw_data_format='XML', save_xml_output=False, html_xml_dir='html_xml_samples/',
+                   process_DAS_links_separately=False, full_document_read=False):
+        """
+        Parses the raw data fetched from the source URL using the configured parser (LLMParser or RuleBasedParser).
+
+        :param raw_data: The raw data to parse, typically HTML or XML content.
+
+        :param current_url: The URL of the current data source being processed.
+
+        :param publisher: The publisher domain or identifier for the data source.
+
+        :param additional_data: Optional additional data to include in the parsing process, such as metadata or supplementary information.
+
+        :param raw_data_format: The format of the raw data (e.g., 'HTML', 'XML', 'full_HTML').
+
+        :param save_xml_output: Flag to indicate if the parsed XML output should be saved.
+
+        :param html_xml_dir: Directory to save the parsed HTML/XML files.
+
+        :param process_DAS_links_separately: Flag to indicate if DAS links should be processed separately.
+
+        :return: Parsed data as a DataFrame or dictionary, depending on the parser used.
+        """
+        self.logger.info(f"Parsing data from URL: {current_url} with publisher: {publisher}")
+
+        if parser_mode == "LLMParser":
+            self.parser = LLMParser(self.open_data_repos_ontology, self.logger, full_document_read=full_document_read,
+                                    llm_name=self.llm)
+
+        cont = raw_data.values()
+        cont = list(cont)[0]
+
+        return self.parser.parse_data(cont, publisher, current_url, raw_data_format=raw_data_format,)
+
+
     def setup_data_fetcher(self, search_method=None, driver_path=None, browser=None, headless=True):
         """
         Sets up either an empty web scraper, one with scraper_tool, or an API client based on the config.
