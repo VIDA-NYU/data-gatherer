@@ -106,7 +106,7 @@ class DataFetcher(ABC):
 
         self.logger.info(f"WebScraper instance: {isinstance(self, WebScraper)}")
         self.logger.info(f"APIClient instance: {isinstance(self, APIClient)}")
-        self.logger.info(f"scraper_cool attribute: {hasattr(self,'scraper_tool')}")
+        self.logger.info(f"scraper_tool attribute: {hasattr(self,'scraper_tool')}")
 
         self.logger.info("Initializing new selenium driver.")
         driver = create_driver(self.driver_path, self.browser, self.headless, self.logger)
@@ -146,7 +146,7 @@ class DataFetcher(ABC):
             f.write(self.scraper_tool.page_source)
 
     def is_url_API(self, url):
-        return notImplementedError("This method has not been implemented yet.")
+        raise Exception("This method has not been implemented yet.")
 
     def download_file_from_url(self, url, output_root="output/suppl_files", paper_id=None):
         output_dir = os.path.join(output_root, paper_id)
@@ -636,7 +636,7 @@ class APIClient(DataFetcher):
         """
         try:
             # Extract the article title
-            title = root.find(".//title-group/article-title")
+            title = api_data.find(".//title-group/article-title")
             article_title = title.text.strip() if title is not None else None
             return article_title
 
