@@ -9,6 +9,11 @@ def load_config(filename, user_config_dir=None):
     1. If user_config_dir is provided and file exists there, load that.
     2. Otherwise load from package defaults.
     """
+
+    if isinstance(filename, dict):
+        # If filename is a dictionary, return it directly
+        return filename
+
     # 1. Check user override
     if user_config_dir:
         user_config_path = os.path.join(user_config_dir, filename)
