@@ -132,7 +132,8 @@ class Parser(ABC):
         self.config = self.config = load_config(config_path)
         self.logger = logger
         self.logger.info("Parser initialized.")
-        self.full_DOM = full_document_read and self.config['llm_model'] in self.config['entire_document_models']
+
+        self.llm_model = llm_model
         entire_document_models = ["gemini-1.5-flash", "gemini-1.5-pro", "gemini-2.0-flash-exp", "gemini-2.0-flash",
                                   "gpt-4o", "gpt-4o-mini"]
 
@@ -438,6 +439,8 @@ class LLMParser(Parser):
     - Retrieve Then Read (LLMs will only read a target section retrieved from the document)
     """
     def __init__(self, config, logger, log_file_override=None, full_document_read=True):
+                 prompt_dir="data_gatherer/prompts/prompt_templates", response_file="prompts/LLMs_responses_cache.json",
+                 llm_model=None, save_dynamic_prompts=False, save_responses_to_cache=False, use_cached_responses=False):
         """
         Initialize the LLMParser with configuration, logger, and optional log file override.
 
