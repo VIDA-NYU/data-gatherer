@@ -79,9 +79,41 @@ class Orchestrator:
         self.download_previewed_data_resources = download_previewed_data_resources
         self.downloadables = []
 
-    def setup_data_fetcher(self):
+    def fetch_data(self, urls, search_method='url_list', driver_path=None, browser=None, headless=True,
+                   HTML_fallback=False, commodity_file=None):
+        """
+        Fetches data from the given URL using the configured data fetcher (WebScraper or APIClient).
+
+        :param url: The list of URLs to fetch data from.
+
+        :param search_method: Optional method to override the default search method.
+
+        :param driver_path: Path to the WebDriver executable (if applicable).
+
+        :param browser: Browser type to use for scraping (if applicable).
+
+        :param headless: Whether to run the browser in headless mode (if applicable).
         """
         Sets up either a web scraper or API client based on the config.
+
+        if not isinstance(urls, str) and not isinstance(urls, list):
+            raise ValueError("URL must be a string or a list of strings.")
+
+        if isinstance(urls, str):
+            urls = [urls]
+
+        self.setup_data_fetcher(search_method, driver_path, browser, headless)
+
+        raw_data = {}
+
+        for src_url in urls:
+            self.logger.info(f"Fetching data from URL: {src_url}")
+            self.data_fetcher = self.data_fetcher.update_DataFetcher_settings(src_url, self.FDR, self.logger,
+                                                                               HTML_fallback=HTML_fallback)
+            raw_data[src_url] = self.data_fetcher.fetch_data(src_url)
+
+        return raw_data
+
         """
         Sets up either an empty web scraper, one with scraper_tool, or an API client based on the config.
         """
@@ -594,6 +626,10 @@ class Orchestrator:
             return None
 
     def run(self):
+    def raw_data_contains_required_sections(self, raw_data, url, required_sections):
+        required_sections = [sect + "_sections" for sect in required_sections]
+        return self.data_checker.is_xml_data_complete(raw_data, url, required_sections)
+
         """
         Main method to run the Orchestrator simple workflow:
         1. Setup data fetcher (web scraper or API client)
