@@ -111,8 +111,11 @@ class Orchestrator:
                                                                                HTML_fallback=HTML_fallback)
             raw_data[src_url] = self.data_fetcher.fetch_data(src_url)
 
+        self.data_fetcher.scraper_tool.quit() if hasattr(self.data_fetcher, 'scraper_tool') else None
+
         return raw_data
 
+    def setup_data_fetcher(self, search_method=None, driver_path=None, browser=None, headless=True):
         """
         Sets up either an empty web scraper, one with scraper_tool, or an API client based on the config.
         """
@@ -626,11 +629,11 @@ class Orchestrator:
             self.logger.warning("No valid internal ID found in metadata.")
             return None
 
-    def run(self):
     def raw_data_contains_required_sections(self, raw_data, url, required_sections):
         required_sections = [sect + "_sections" for sect in required_sections]
         return self.data_checker.is_xml_data_complete(raw_data, url, required_sections)
 
+    def run(self,search_by='url_list', input_file='input/test_input.txt'):
         """
         Main method to run the Orchestrator simple workflow:
         1. Setup data fetcher (web scraper or API client)
