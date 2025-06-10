@@ -22,3 +22,4 @@ tiktoken
 cloudscraper
 pyui
 pysdl2-dll
+pyarrow

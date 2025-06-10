@@ -21,30 +21,75 @@ class Orchestrator:
     This class orchestrates the data gathering process by coordinating the data fetcher, parser, and classifier in a
     single workflow.
     """
-    def __init__(self, config_path='config.json', log_file_override=None):
+    def __init__(self, llm_model='gpt-4o-mini', process_entire_document=False, log_file_override=None,
+                 write_htmls_xmls=False, html_xml_dir='tmp/html_xmls/', skip_unstructured_files=False,
+                 download_data_for_description_generation=False, write_raw_metadata=False, data_resource_preview=False,
+                 download_previewed_data_resources=False, full_output_file='output/result.csv', log_level=logging.INFO,
+                 clear_previous_logs=True, retrieval_patterns_file='retrieval_patterns.json'
+                 ):
         """
         Initializes the Orchestrator with the given configuration file and sets up logging.
 
-        :param config_path: Path to the configuration file.
+        :param llm_model: The LLM model to use for parsing and classification.
+
+        :param process_entire_document: Flag to indicate if the model processes the entire document.
+
+        :param log_file_override: Optional log file path to override the default logging configuration.
+
+        :param write_htmls_xmls: Flag to indicate if raw HTML/XML files should be saved.
+
+        :param html_xml_dir: Directory to save the raw HTML/XML files.
+
+        :param skip_unstructured_files: Flag to skip unstructured files based on file extensions.
+
+        :param download_data_for_description_generation: Flag to indicate if data should be downloaded for description generation.
+
         """
-        self.config = load_config(config_path)
-        self.parser_config = load_config(self.config['parser_config_path'])
-        log_file = log_file_override or self.config.get('log_file', 'logs/scraper.log')
-        self.logger = setup_logging('orchestrator', log_file)
-        self.classifier = LLMClassifier(self.config['retrieval_patterns'], self.logger)
+
+        self.public_data_repo_ontology = load_config('parser_config.json')
+        self.skip_unstructured_files = skip_unstructured_files
+        self.skip_file_extensions = []
+
+        log_file = log_file_override or 'logs/data_gatherer.log'
+        self.logger = setup_logging('orchestrator', log_file, level=log_level,
+                                    clear_previous_logs=clear_previous_logs)
+
+        self.classifier = LLMClassifier(self.logger, retrieval_patterns_file)
         self.data_fetcher = None
         self.parser = None
         self.raw_data_format = None
-        self.data_checker = DataCompletenessChecker(self.config, self.logger)
-        self.full_DOM = self.parser_config['llm_model'] in self.parser_config['entire_document_models'] and self.parser_config['process_entire_document']
-        self.logger.info(f"Data_Gatherer Orchestrator initialized. Extraction step Model: {self.parser_config['llm_model']}")
+        self.data_checker = DataCompletenessChecker(self.logger)
+
+        self.write_htmls_xmls = write_htmls_xmls
+        self.html_xml_dir = html_xml_dir
+
+        self.write_raw_metadata = write_raw_metadata
+
+        self.download_data_for_description_generation = download_data_for_description_generation
+
+        entire_document_models = ["gemini-1.5-flash", "gemini-1.5-pro", "gemini-2.0-flash-exp", "gemini-2.0-flash", "gpt-4o", "gpt-4o-mini"]
+        self.FDR = llm_model in entire_document_models and process_entire_document
+        self.logger.info(f"Data_Gatherer Orchestrator initialized. Extraction Model: {llm_model}")
+
+        self.search_method = 'url_list' # Default search method
+
+        self.full_output_file = full_output_file
+
+        self.data_resource_preview = data_resource_preview
+        self.download_previewed_data_resources = download_previewed_data_resources
         self.downloadables = []
 
     def setup_data_fetcher(self):
         """
         Sets up either a web scraper or API client based on the config.
         """
-        self.logger.debug("Setting up data fetcher...")
+        Sets up either an empty web scraper, one with scraper_tool, or an API client based on the config.
+        """
+
+        if search_method is not None:
+            self.search_method = search_method
+
+        self.logger.info("Setting up data fetcher...")
 
         # Close previous driver if exists
         if hasattr(self, 'data_fetcher') and hasattr(self.data_fetcher, 'scraper_tool'):
@@ -58,19 +103,19 @@ class Orchestrator:
         #    self.data_fetcher = DatabaseFetcher(self.config, self.logger)
         #    return
 
-        elif self.config['search_method'] == 'url_list':
-            self.data_fetcher = WebScraper(None, self.config, self.logger)
+        elif self.search_method == 'url_list':
+            self.data_fetcher = WebScraper(None, self.logger)
 
-        elif self.config['search_method'] == 'cloudscraper':
+        elif self.search_method == 'cloudscraper':
             driver = cloudscraper.create_scraper()
-            self.data_fetcher = WebScraper(driver, self.config, self.logger)
+            self.data_fetcher = WebScraper(driver, self.logger)
 
-        elif self.config['search_method'] == 'google_scholar':
-            driver = create_driver(self.config['DRIVER_PATH'], self.config['BROWSER'], self.config['HEADLESS'], self.logger)
-            self.data_fetcher = WebScraper(driver, self.config, self.logger)
+        elif self.search_method == 'google_scholar':
+            driver = create_driver(driver_path, browser, headless, self.logger)
+            self.data_fetcher = WebScraper(driver, self.logger)
 
         else:
-            raise ValueError(f"Invalid search method: {self.config['search_method']}")
+            raise ValueError(f"Invalid search method: {self.search_method}")
 
         self.logger.info("Data fetcher setup completed.")
 
@@ -120,7 +165,7 @@ class Orchestrator:
                 if "API" in self.data_fetcher.fetch_source:
                     self.logger.debug(f"Using {self.data_fetcher.fetch_source} to fetch data.")
                     self.raw_data_format = "XML"
-                    self.config['search_method'] = 'api'
+                    self.search_method = 'api'
                 elif isinstance(self.data_fetcher, DatabaseFetcher):
                     self.raw_data_format = self.data_fetcher.raw_data_format
                 else:
@@ -141,8 +186,8 @@ class Orchestrator:
                     raw_data = self.data_fetcher.fetch_data(url)
                     raw_data = self.data_fetcher.remove_cookie_patterns(raw_data)
 
-            if self.config['write_htmls_xmls'] and not isinstance(self.data_fetcher, DatabaseFetcher):
-                directory = self.config['html_xml_dir'] + self.publisher + '/'
+            if self.write_htmls_xmls and not isinstance(self.data_fetcher, DatabaseFetcher):
+                directory = self.html_xml_dir + self.publisher + '/'
                 self.logger.info(f"Raw Data is {self.raw_data_format}.")
                 if self.raw_data_format == "HTML" or self.raw_data_format == "full_HTML":
                     self.data_fetcher.download_html(directory)
@@ -212,8 +257,8 @@ class Orchestrator:
             self.logger.info("Raw Data parsing completed.")
 
             # skip unstructured files and filter out unstructured files from dataframe
-            if self.config['skip_unstructured_files'] and 'file_extension' in parsed_data.columns:
-                for ext in self.config['skip_file_extensions']:
+            if self.skip_unstructured_files and 'file_extension' in parsed_data.columns:
+                for ext in self.skip_file_extensions:
                     # filter out unstructured files
                     parsed_data = parsed_data[parsed_data['file_extension'] != ext]
 
@@ -295,19 +340,23 @@ class Orchestrator:
         self.logger.debug("Completed processing all URLs.")
         return results
 
-    def load_urls_from_config(self):
+    def load_urls_from_input_file(self, input_file):
         """
-        Loads URLs from the input file specified in the config.
+        Loads URLs from the input file.
+
+        :param input_file: Path to the input file containing URLs.
+
+        :return: List of URLs loaded from the file.
         """
-        self.logger.debug(f"Loading URLs from file: {self.config['input_urls_filepath']}")
+        self.logger.debug(f"Loading URLs from file: {input_file}")
         try:
-            with open(self.config['input_urls_filepath'], 'r') as file:
+            with open(input_file, 'r') as file:
                 url_list = [line.strip() for line in file]
             self.logger.info(f"Loaded {len(url_list)} URLs from file.")
             self.url_list = url_list
             return url_list
         except FileNotFoundError as e:
-            raise FileNotFoundError(f"Create file with input links! File not found: {self.config['input_urls_filepath']}\n\n{e}\n")
+            raise FileNotFoundError(f"Create file with input links! File not found: {input_file}\n\n{e}\n")
 
     def get_data_preview(self, combined_df, display_type='console', interactive=True, return_metadata=False):
         """
@@ -352,7 +401,7 @@ class Orchestrator:
                     #metadata = self.metadata_parser.parse_metadata(row['source_section'])
                     hardscraped_metadata = {k:v for k,v in row.items() if v is not None and v not in ['nan', 'None', '', 'n/a', np.nan, 'NaN', 'na']}
                     self.already_previewed.append(download_link)
-                    if self.config['download_data_for_description_generation']:
+                    if self.download_data_for_description_generation:
                         split_source_url = hardscraped_metadata.get('source_url').split('/')
                         paper_id = split_source_url[-1] if len(split_source_url[-1]) > 0 else split_source_url[-2]
                         self.data_fetcher.download_file_from_url(download_link, "output/suppl_files", paper_id)
@@ -548,17 +597,17 @@ class Orchestrator:
         """
         Main method to run the Orchestrator simple workflow:
         1. Setup data fetcher (web scraper or API client)
-        2. Load URLs from config
+        2. Load URLs from input_file
         3. Process each URL and return results as a dictionary like source_url: DataFrame_of_data_links
         4. Write results to output file specified in configuration file
         """
         self.logger.debug("Orchestrator run started.")
         try:
             # Setup data fetcher (web scraper or API client)
-            self.setup_data_fetcher()
+            self.setup_data_fetcher(search_by)
 
-            # Load URLs from config
-            urls = self.load_urls_from_config()
+            # Load URLs from input file
+            urls = self.load_urls_from_input_file(input_file)
 
             # Process each URL and return results as a dictionary like source_url: DataFrame_of_data_links
             results = self.process_urls(urls)
@@ -573,15 +622,15 @@ class Orchestrator:
                # self.logger.info("Evaluating performance...")
                # self.classifier.evaluate_performance(combined_df, self.config['ground_truth'])
 
-            if self.config['data_resource_preview']:
+            if self.data_resource_preview:
                 self.get_data_preview(combined_df)
 
-                if self.config['download_previewed_data_resources']:
+                if self.download_previewed_data_resources:
                     self.download_previewed_data_resources()
 
-            combined_df.to_csv(self.config['full_output_file'], index=False)
+            combined_df.to_csv(self.full_output_file, index=False)
 
-            self.logger.info(f"Output written to file: {self.config['full_output_file']}")
+            self.logger.info(f"Output written to file: {self.full_output_file}")
 
             self.logger.info(f"File Download Schedule: {self.downloadables}")
 

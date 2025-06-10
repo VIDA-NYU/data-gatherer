@@ -11,7 +11,7 @@ def test_orchestrator_data_preview():
     combined_df = pd.read_csv('test_data/test_combined_data.csv')
     assert not combined_df.empty, "The DataFrame is empty."
     orchestrator = Orchestrator('config.json', log_file_override=None)
-    orchestrator.config['write_raw_metadata'] = False
+    orchestrator.write_raw_metadata = False
     orchestrator.parser = LLMParser('parser_config.json', orchestrator.logger, log_file_override=None)
     metadata_list = orchestrator.get_data_preview(combined_df, interactive=False, return_metadata=True)
     assert isinstance(metadata_list, list), "Metadata list is not a list."

@@ -446,36 +446,43 @@ class LLMParser(Parser):
         """
         super().__init__(config, logger, log_file_override, full_document_read)
         self.title = None
-        self.prompt_manager = PromptManager(self.config['prompt_dir'], self.logger, self.config['response_file'])
+        self.prompt_manager = PromptManager(prompt_dir, self.logger, response_file)
         self.repo_names = self.get_repo_names()
         self.repo_domain_to_name_mapping = self.get_repo_domain_to_name_mapping()
 
-        if self.config['llm_model'] == 'gemma2:9b':
+        self.save_dynamic_prompts = save_dynamic_prompts
+        self.save_responses_to_cache = save_responses_to_cache
+        self.use_cached_responses = use_cached_responses
+
+        self.FDR = full_document_read
+
+        if llm_model == 'gemma2:9b':
             self.client = Client(host=os.environ['NYU_LLM_API'])  # env variable
 
-        elif self.config['llm_model'] == 'gpt-4o-mini':
+        elif llm_model == 'gpt-4o-mini':
             self.client = OpenAI(api_key=os.environ['GPT_API_KEY'])
 
-        elif self.config['llm_model'] == 'gpt-4o':
+        elif llm_model == 'gpt-4o':
             self.client = OpenAI(api_key=os.environ['GPT_API_KEY'])
 
-        elif self.config['llm_model'] == 'gemini-1.5-flash':
+        elif llm_model == 'gemini-1.5-flash':
             genai.configure(api_key=os.environ['GEMINI_KEY'])
             self.client = genai.GenerativeModel('gemini-1.5-flash')
 
-        elif self.config['llm_model'] == 'gemini-2.0-flash-exp':
+        elif llm_model == 'gemini-2.0-flash-exp':
             genai.configure(api_key=os.environ['GEMINI_KEY'])
             self.client = genai.GenerativeModel('gemini-2.0-flash-exp')
 
-        elif self.config['llm_model'] == 'gemini-2.0-flash':
+        elif llm_model == 'gemini-2.0-flash':
             genai.configure(api_key=os.environ['GEMINI_KEY'])
             self.client = genai.GenerativeModel('gemini-2.0-flash')
 
-        elif self.config['llm_model'] == 'gemini-1.5-pro':
+        elif llm_model == 'gemini-1.5-pro':
             genai.configure(api_key=os.environ['GEMINI_KEY'])
             self.client = genai.GenerativeModel('gemini-1.5-pro')
 
-    def parse_data(self, api_data, publisher, current_url_address, additional_data=None, raw_data_format='XML'):
+    def parse_data(self, api_data, publisher, current_url_address, additional_data=None, raw_data_format='XML',
+                   save_xml_output=False, html_xml_dir='html_xml_samples/', process_DAS_links_separately=False):
         """
         Parse the API data and extract relevant links and metadata.
 
@@ -512,8 +519,8 @@ class LLMParser(Parser):
             self.title = title
 
             # Save XML content for debugging purposes
-            if self.config['save_xml_output']:
-                dir = self.config['html_xml_dir'] + publisher + '/' + title + '.xml'
+            if save_xml_output:
+                dir = html_xml_dir + publisher + '/' + title + '.xml'
                 # if directory does not exist, create it
                 self.logger.info(f"Saving XML content to: {dir}")
                 if not os.path.exists(os.path.dirname(dir)):
@@ -524,7 +531,7 @@ class LLMParser(Parser):
             supplementary_material_links = self.extract_href_from_supplementary_material(api_data, current_url_address)
             self.logger.debug(f"supplementary_material_links: {supplementary_material_links}")
 
-            if self.config['process_DAS_links_separately']:
+            if process_DAS_links_separately:
                 # Extract dataset links
                 dataset_links = self.extract_href_from_data_availability(api_data)
                 dataset_links.extend(self.extract_xrefs_from_data_availability(api_data, current_url_address))
@@ -595,9 +602,11 @@ class LLMParser(Parser):
                 #self.logger.info(f"Preprocessed data: {preprocessed_data}")
 
                 # Extract dataset links from the entire text
-                augmented_dataset_links = self.retrieve_datasets_from_content(preprocessed_data, self.config['repos'],
-                                                                              self.config['llm_model'],
+                augmented_dataset_links = self.retrieve_datasets_from_content(preprocessed_data,
+                                                                              self.public_data_repo_ontology['repos'],
+                                                                              self.llm_model,
                                                                               temperature=0)
+
                 self.logger.info(f"Augmented dataset links: {augmented_dataset_links}")
 
                 dataset_links_w_target_pages = self.get_dataset_webpage(augmented_dataset_links)
@@ -616,8 +625,9 @@ class LLMParser(Parser):
 
                 data_availability_str = "\n".join([item['html'] + "\n" for item in data_availability_elements])
 
-                augmented_dataset_links = self.retrieve_datasets_from_content(data_availability_str, self.config['repos'],
-                                                                              self.config['llm_model'])
+                augmented_dataset_links = self.retrieve_datasets_from_content(data_availability_str,
+                                                                              self.public_data_repo_ontology['repos'],
+                                                                              self.llm_model)
 
                 dataset_links_w_target_pages = self.get_dataset_webpage(augmented_dataset_links)
 
@@ -1137,7 +1147,7 @@ class LLMParser(Parser):
                     or 'data availability' in cont) and len(cont) > 1:
                 self.logger.info(f"Processing data availability text")
                 # Call the generalized function
-                datasets = self.retrieve_datasets_from_content(cont, repos_elements, model=self.config['llm_model'], temperature=0)
+                datasets = self.retrieve_datasets_from_content(cont, repos_elements, model=self.llm_model, temperature=0)
 
                 for dt in datasets:
                     dt['source_section'] = element['source_section']
@@ -1178,7 +1188,7 @@ class LLMParser(Parser):
         datasets = []
         for element in DAS_content:
             datasets.extend(self.retrieve_datasets_from_content(element, repos_elements,
-                                                                model=self.config['llm_model'],
+                                                                model=self.llm_model,
                                                                 temperature=0))
 
         # Add source_section information and return
@@ -1194,7 +1204,9 @@ class LLMParser(Parser):
         self.logger.debug(f"Final ret additional data: {ret}")
         return ret
 
-    def retrieve_datasets_from_content(self, content: str, repos: list, model: str, temperature: float = 0.0) -> list:
+    def retrieve_datasets_from_content(self, content: str, repos: list, model: str, temperature: float = 0.0,
+                                       prompt_name: str = 'retrieve_datasets_simple_JSON.json',
+                                       full_document_read=True) -> list:
         """
         Retrieve datasets from the given content using a specified LLM model.
         Uses a static prompt template and dynamically injects the required content.
@@ -1210,7 +1222,6 @@ class LLMParser(Parser):
         :return: List of datasets retrieved from the content.
         """
         # Load static prompt template
-        prompt_name = self.config['prompt_name']
         self.logger.info(f"Loading prompt: {prompt_name}")
         static_prompt = self.prompt_manager.load_prompt(prompt_name)
         n_tokens_static_prompt = self.count_tokens(static_prompt, model)
@@ -1237,14 +1248,14 @@ class LLMParser(Parser):
         prompt_id = f"{model}-{temperature}-{self.prompt_manager._calculate_checksum(str(messages))}"
         self.logger.info(f"Prompt ID: {prompt_id}")
         # Save the prompt using the PromptManager
-        if self.config['save_dynamic_prompts']:
+        if self.save_dynamic_prompts:
             self.prompt_manager.save_prompt(prompt_id=prompt_id, prompt_content=messages)
 
-        if self.config['use_cached_responses']:
+        if self.use_cached_responses:
             # Check if the response exists
             cached_response = self.prompt_manager.retrieve_response(prompt_id)
 
-        if self.config['use_cached_responses'] and cached_response:
+        if self.use_cached_responses and cached_response:
             self.logger.info(f"Using cached response {type(cached_response)} from model: {model}")
             if type(cached_response) == str and 'gpt-4o' in model:
                 resps = [json.loads(cached_response)]
@@ -1259,17 +1270,16 @@ class LLMParser(Parser):
                 f"{self.count_tokens(messages, model)} tokens")
             resps = []
 
-            if self.config['llm_model'] == 'gemma2:9b':
+            if model == 'gemma2:9b':
                 response = self.client.chat(model=model, options={"temperature": temperature}, messages=messages)
                 self.logger.info(
                     f"Response received from model: {response.get('message', {}).get('content', 'No content')}")
                 resps = response['message']['content'].split("\n")
                 # Save the response
-                self.prompt_manager.save_response(prompt_id, response['message']['content']) if self.config[
-                    'save_responses_to_cache'] else None
+                self.prompt_manager.save_response(prompt_id, response['message']['content']) if self.save_responses_to_cache else None
                 self.logger.info(f"Response saved to cache")
 
-            elif self.config['llm_model'] == 'gpt-4o-mini' or self.config['llm_model'] == 'gpt-4o':
+            elif model == 'gpt-4o-mini' or model == 'gpt-4o':
                 response = None
                 if self.config['process_entire_document']:
                     response = self.client.chat.completions.create(
@@ -1289,7 +1299,7 @@ class LLMParser(Parser):
                     self.logger.info(f"Response is {type(resps)}: {resps}")
                     resps = resps.get("datasets", []) if resps is not None else []
                     self.logger.info(f"Response is {type(resps)}: {resps}")
-                    self.prompt_manager.save_response(prompt_id, resps) if self.config['save_responses_to_cache'] else None
+                    self.prompt_manager.save_response(prompt_id, resps) if self.save_responses_to_cache else None
                 else:
                     try:
                         resps = self.safe_parse_json(response.choices[0].message.content)  # Ensure it's properly parsed
@@ -1301,14 +1311,13 @@ class LLMParser(Parser):
                         self.logger.error(f"JSON decoding error: {e}")
                         resps = []
 
-                    self.prompt_manager.save_response(prompt_id, resps) if self.config['save_responses_to_cache'] else None
+                    self.prompt_manager.save_response(prompt_id, resps) if self.save_responses_to_cache else None
 
                 # Save the response
-                self.logger.info(f"Response {type(resps)} saved to cache") if self.config['save_responses_to_cache'] else None
+                self.logger.info(f"Response {type(resps)} saved to cache") if self.save_responses_to_cache else None
 
-            elif 'gemini' in self.config['llm_model']:
-                if self.config['llm_model'] == 'gemini-1.5-flash' or self.config['llm_model'] == 'gemini-2.0-flash-exp' or self.config[
-                    'llm_model'] == 'gemini-2.0-flash':
+            elif 'gemini' in model:
+                if model == 'gemini-1.5-flash' or model == 'gemini-2.0-flash-exp' or model == 'gemini-2.0-flash':
                     response = self.client.generate_content(
                         messages,
                         generation_config=genai.GenerationConfig(
@@ -1318,7 +1327,7 @@ class LLMParser(Parser):
                     )
                     self.logger.debug(f"Gemini response: {response}")
 
-                elif self.config['llm_model'] == 'gemini-1.5-pro':
+                elif model == 'gemini-1.5-pro':
                     response = self.client.generate_content(
                         messages,
                         request_options={"timeout": 1200},
@@ -1336,7 +1345,7 @@ class LLMParser(Parser):
                         response_text = candidates[0].content.parts[0].text  # Access the first part's text
                         self.logger.info(f"Gemini response text: {response_text}")
                         parsed_response = json.loads(response_text)  # Parse the JSON response
-                        if self.config['save_responses_to_cache']:
+                        if self.save_responses_to_cache:
                             self.prompt_manager.save_response(prompt_id, parsed_response)
                             self.logger.info(f"Response saved to cache")
                         parsed_response_dedup = self.deduplicate_response(parsed_response)
@@ -1631,7 +1640,7 @@ class LLMParser(Parser):
         self.logger.info(f"Analyzing data availability statement with {len(dataset_links)} links")
         self.logger.debug(f"Text from data-availability: {dataset_links}")
 
-        model = self.config['llm_model']
+        model = self.llm_model
         temperature = 0.3
 
         ret = []
@@ -2035,7 +2044,7 @@ class LLMParser(Parser):
         dataset_info = self.extract_dataset_info(metadata, subdir='metadata_prompts')
         return dataset_info
 
-    def extract_dataset_info(self, metadata, subdir = ''):
+    def extract_dataset_info(self, metadata, subdir = '', model = None):
         """
         Given the metadata, extract the dataset information using the LLM.
 
@@ -2049,9 +2058,9 @@ class LLMParser(Parser):
         self.logger.info(f"Extracting dataset information from metadata. Prompt from subdir: {subdir}")
 
         llm = LLMClient(
-            model=self.config.get('llm_model', 'gemini-2.0-flash'),
+            model= model if model else self.llm_model,
             logger=self.logger,
-            save_prompts=self.config.get('save_dynamic_prompts', False)
+            save_prompts=self.save_dynamic_prompts
         )
         response = llm.api_call(metadata, subdir = subdir)
 

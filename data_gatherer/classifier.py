@@ -6,8 +6,8 @@ from data_gatherer.resources_loader import load_config
 import pandas as pd
 
 class LLMClassifier:
-    def __init__(self, config, logger):
-        self.config = load_config(config)
+    def __init__(self, logger, retrieval_patterns_file='retrieval_patterns.json'):
+        self.retrieval_patterns = load_config(retrieval_patterns_file)
         self.logger = logger
         self.setup_client()
         self.show_classify_stats = True
@@ -25,7 +25,7 @@ class LLMClassifier:
         Classify a single anchor element based on its content, text, and context.
         The element is a dictionary containing attributes from parsed_data DataFrame.
         """
-        skip_patterns = self.config['general']['skip_llm_classification_patterns']
+        skip_patterns = self.retrieval_patterns['general']['skip_llm_classification_patterns']
         for pattern,classified in skip_patterns.items():
             if re.search(pattern, element['download_link']):
                 self.logger.info(f"Skipping LLM classification for {element['reconstructed_link']}")
