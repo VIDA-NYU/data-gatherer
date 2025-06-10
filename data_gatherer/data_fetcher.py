@@ -177,7 +177,7 @@ class WebScraper(DataFetcher):
     Class for fetching data from web pages using Selenium.
     """
     def __init__(self, scraper_tool, logger, retrieval_patterns_file=None, driver_path=None, browser='firefox', headless=True):
-        super().__init__(logger)
+        super().__init__(logger, src='WebScraper')
         self.scraper_tool = scraper_tool  # Inject your scraping tool (BeautifulSoup, Selenium, etc.)
         self.retrieval_patterns = load_config('retrieval_patterns.json')
         self.bad_patterns = self.retrieval_patterns['general']['bad_patterns']
