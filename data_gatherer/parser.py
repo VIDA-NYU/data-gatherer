@@ -133,6 +133,9 @@ class Parser(ABC):
         self.logger = logger
         self.logger.info("Parser initialized.")
         self.full_DOM = full_document_read and self.config['llm_model'] in self.config['entire_document_models']
+        entire_document_models = ["gemini-1.5-flash", "gemini-1.5-pro", "gemini-2.0-flash-exp", "gemini-2.0-flash",
+                                  "gpt-4o", "gpt-4o-mini"]
+
 
     def extract_paragraphs_from_xml(self, xml_root) -> list[dict]:
         """
@@ -723,6 +726,45 @@ class LLMParser(Parser):
             return ""
         return extension
 
+    def load_patterns_for_tgt_section(self, section_name):
+        """
+        Load the XPath pointer for the target section from the configuration.
+
+        :param section_name: str — name of the section to load.
+
+        :return: str — XPath pointer for the target section.
+        """
+        section_patterns = {
+            "data_availability_sections": [
+                ".//sec[@sec-type='data-availability']",
+                ".//notes[@notes-type='data-availability']",
+                ".//notes[@notes-type='data-availability']"
+            ],
+            "supplementary_material_sections": [
+                ".//sec[@sec-type='supplementary-material']",
+                ".//supplementary-material"
+            ],
+            "supplementary_data_sections": [
+                ".//sec[@sec-type='supplementary-material']",
+                ".//supplementary-material",
+                ".//sec[@sec-type='associated-data']",
+                ".//sec[@sec-type='extended-data']",
+                ".//sec[@sec-type='samples-and-clinical-data']",
+                ".//sec[@sec-type='footnotes']"
+            ],
+            "key_resources_table": [
+                "//sec[.//title[contains(text(), \"Key resources table\")]]//table-wrap"
+            ]
+        }
+
+        if section_name in section_patterns.keys():
+            return section_patterns[section_name]
+
+        else:
+            self.logger.error(f"Section name '{section_name}' not found in section patterns.")
+            return None
+
+
     def extract_href_from_data_availability(self, api_xml):
         """
         Extracts href links from data-availability sections of the XML.
@@ -738,7 +780,7 @@ class LLMParser(Parser):
 
         # Find all sections with "data-availability"
         data_availability_sections = []
-        for ptr in self.config['data_availability_sections']:
+        for ptr in self.load_patterns_for_tgt_section('data_availability_sections'):
             cont = api_xml.findall(ptr)
             if cont is not None:
                 self.logger.info(f"Found {len(cont)} data availability sections. cont: {cont}")
@@ -796,7 +838,7 @@ class LLMParser(Parser):
 
         # Find all sections with "data-availability"
         data_availability_sections = []
-        for ptr in self.config['data_availability_sections']:
+        for ptr in self.load_patterns_for_tgt_section('data_availability_sections'):
             self.logger.info(f"Searching for data availability sections using XPath: {ptr}")
             cont = api_xml.findall(ptr)
             if cont is not None:
@@ -935,7 +977,7 @@ class LLMParser(Parser):
 
         # Find all sections for "supplementary-material"
         supplementary_material_sections = []
-        for ptr in self.config['supplementary_material_sections']:
+        for ptr in self.load_patterns_for_tgt_section('supplementary_material_sections'):
             self.logger.debug(f"Searching for supplementary material sections using XPath: {ptr}")
             cont = api_xml.findall(ptr)
             if cont is not None and len(cont) != 0:
@@ -1482,7 +1524,7 @@ class LLMParser(Parser):
         """
         # find the data availability section
         data_availability_sections = []
-        for ptr in self.config['data_availability_sections']:
+        for ptr in self.load_patterns_for_tgt_section('data_availability_sections'):
             data_availability_sections.extend(api_xml.findall(ptr))
 
         data_availability_cont = []
@@ -1513,7 +1555,7 @@ class LLMParser(Parser):
         supplementary_data_sections = []
 
         # find the data availability statement in other sections
-        for ptr in self.config['supplementary_data_sections']:
+        for ptr in self.load_patterns_for_tgt_section('supplementary_data_sections'):
             if ptr.startswith('.//'):
                 supplementary_data_sections.extend(api_xml.findall(ptr))
 
@@ -1532,7 +1574,7 @@ class LLMParser(Parser):
 
         key_resources_table = []
 
-        for ptr in self.config['key_resources_table']:
+        for ptr in self.load_patterns_for_tgt_section('key_resources_table'):
             key_resources_table.extend(api_xml.xpath(ptr))
 
         for sect in key_resources_table:

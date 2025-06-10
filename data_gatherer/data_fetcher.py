@@ -75,6 +75,11 @@ class DataFetcher(ABC):
 
         API = None
 
+        API_supported_url_patterns = {
+            'https://www.ncbi.nlm.nih.gov/pmc/articles/': 'PMC',
+            'https://pmc.ncbi.nlm.nih.gov/': 'PMC'
+        }
+
         if not HTML_fallback:
             # Check if the URL corresponds to PubMed Central (PMC)
             for ptr,src in API_supported_url_patterns.items():
@@ -537,7 +542,12 @@ class APIClient(DataFetcher):
         """
         super().__init__(logger, src=API)
         self.api_client = api_client.Session()
-        self.base = self.config['API_base_url'][API]
+
+        API_base_url = {
+            'PMC_API': 'https://www.ncbi.nlm.nih.gov/pmc/utils/oa/oa.fcgi?format=xml&article_id=__PMCID__',
+        }
+
+        self.base = API_base_url[API]
 
     def fetch_data(self, article_url, retries=3, delay=2):
         """
@@ -647,7 +657,6 @@ class DataCompletenessChecker:
         :param publisher: The publisher to check for (default is 'PMC').
 
         """
-        self.config = config
         self.logger = logger
         self.retrieval_patterns = load_config(retrieval_patterns_file)
         self.css_selectors = self.retrieval_patterns[publisher]['css_selectors']
@@ -703,7 +712,7 @@ class DataCompletenessChecker:
             return False
 
         self.logger.info(f"----Checking for {section_name} section in raw data.")
-        section_patterns = self.config[section_name + "_sections"]
+        section_patterns = self.load_target_sections_ptrs(section_name)
         namespaces = self.extract_namespaces(raw_data)
 
         for pattern in section_patterns:
@@ -715,6 +724,30 @@ class DataCompletenessChecker:
                         return True
 
         return False
+
+    def load_target_sections_ptrs(self, section_name) -> list:
+
+        target_sections = {
+            "data_availability_sections": [
+                ".//sec[@sec-type='data-availability']",
+                ".//notes[@notes-type='data-availability']",
+                ".//sec[@sec-type='associated-data']"
+            ],
+            "supplementary_data_sections": [
+                ".//sec[@sec-type='supplementary-material']",
+                ".//supplementary-material",
+                ".//sec[@sec-type='associated-data']",
+                ".//sec[@sec-type='extended-data']",
+                ".//sec[@sec-type='samples-and-clinical-data']",
+                ".//sec[@sec-type='footnotes']",
+                ".//sec[@sec-type='STAR★Methods']"
+            ]
+        }
+        if section_name not in target_sections:
+            self.logger.error(f"Invalid section name: {section_name}. Available sections: {list(target_sections.keys())}")
+            raise ValueError(f"Invalid section name: {section_name}")
+
+        return target_sections[section_name]
 
     def has_links_in_section(self, section, namespaces: dict[str, str]) -> bool:
         """
