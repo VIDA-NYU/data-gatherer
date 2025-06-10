@@ -146,7 +146,7 @@ class DataFetcher(ABC):
             f.write(self.scraper_tool.page_source)
 
     def is_url_API(self, url):
-        return notImplementedError("This method has not been implemented yet.")
+        raise Exception("This method has not been implemented yet.")
 
     def download_file_from_url(self, url, output_root="output/suppl_files", paper_id=None):
         output_dir = os.path.join(output_root, paper_id)
