@@ -128,8 +128,11 @@ dataset_metadata_response_schema_gpt = {
 
 # Abstract base class for parsing data
 class Parser(ABC):
-    def __init__(self, config_path, logger=None, log_file_override=None, full_document_read = True):
-        self.config = self.config = load_config(config_path)
+    def __init__(self, open_data_repos_ontology, logger=None, log_file_override=None, full_document_read=True,
+                 llm_model=None):
+
+        self.open_data_repos_ontology = load_config(open_data_repos_ontology)
+
         self.logger = logger
         self.logger.info("Parser initialized.")
 
@@ -137,6 +140,7 @@ class Parser(ABC):
         entire_document_models = ["gemini-1.5-flash", "gemini-1.5-pro", "gemini-2.0-flash-exp", "gemini-2.0-flash",
                                   "gpt-4o", "gpt-4o-mini"]
 
+        self.full_document_read = full_document_read and self.llm_model in entire_document_models
 
     def extract_paragraphs_from_xml(self, xml_root) -> list[dict]:
         """
@@ -354,8 +358,8 @@ class Dataset_metadata(BaseModel):
 # Implementation for Rule-Based parsing of HTMLs (from web scraping)
 class RuleBasedParser(Parser):
 
-    def __init__(self, config, logger, log_file_override=None):
-        super().__init__(config, logger)
+    def __init__(self, open_data_repos_ontology, logger, log_file_override=None):
+        super().__init__(open_data_repos_ontology, logger)
         self.logger.info("RuleBasedParser initialized.")
 
     def parse_data(self, source_html, publisher, current_url_address, raw_data_format='HTML'):
@@ -438,19 +442,19 @@ class LLMParser(Parser):
 
     - Retrieve Then Read (LLMs will only read a target section retrieved from the document)
     """
-    def __init__(self, config, logger, log_file_override=None, full_document_read=True):
+    def __init__(self, open_data_repos_ontology, logger, log_file_override=None, full_document_read=True,
                  prompt_dir="data_gatherer/prompts/prompt_templates", response_file="prompts/LLMs_responses_cache.json",
                  llm_model=None, save_dynamic_prompts=False, save_responses_to_cache=False, use_cached_responses=False):
         """
         Initialize the LLMParser with configuration, logger, and optional log file override.
 
-        :param config: Configuration dictionary containing settings for the parser (llm_model, prompt_dir, etc.).
+        :param open_data_repos_ontology: Configuration dictionary containing repo info
 
         :param logger: Logger instance for logging messages.
 
         :param log_file_override: Optional log file override.
         """
-        super().__init__(config, logger, log_file_override, full_document_read)
+        super().__init__(open_data_repos_ontology, logger, log_file_override, full_document_read)
         self.title = None
         self.prompt_manager = PromptManager(prompt_dir, self.logger, response_file)
         self.repo_names = self.get_repo_names()
@@ -460,7 +464,7 @@ class LLMParser(Parser):
         self.save_responses_to_cache = save_responses_to_cache
         self.use_cached_responses = use_cached_responses
 
-        self.FDR = full_document_read
+        self.full_document_read = full_document_read
 
         if llm_model == 'gemma2:9b':
             self.client = Client(host=os.environ['NYU_LLM_API'])  # env variable
@@ -598,7 +602,7 @@ class LLMParser(Parser):
 
         else:
             # Extract links from entire webpage
-            if self.full_DOM:
+            if self.full_document_read:
                 self.logger.info(f"Extracting links from full HTML content.")
                 # preprocess the content to get only elements that do not change over different sessions
                 supplementary_material_links = self.extract_href_from_html_supplementary_material(api_data, current_url_address)
@@ -609,7 +613,7 @@ class LLMParser(Parser):
 
                 # Extract dataset links from the entire text
                 augmented_dataset_links = self.retrieve_datasets_from_content(preprocessed_data,
-                                                                              self.public_data_repo_ontology['repos'],
+                                                                              self.open_data_repos_ontology['repos'],
                                                                               self.llm_model,
                                                                               temperature=0)
 
@@ -632,7 +636,7 @@ class LLMParser(Parser):
                 data_availability_str = "\n".join([item['html'] + "\n" for item in data_availability_elements])
 
                 augmented_dataset_links = self.retrieve_datasets_from_content(data_availability_str,
-                                                                              self.public_data_repo_ontology['repos'],
+                                                                              self.open_data_repos_ontology['repos'],
                                                                               self.llm_model)
 
                 dataset_links_w_target_pages = self.get_dataset_webpage(augmented_dataset_links)
@@ -1168,7 +1172,7 @@ class LLMParser(Parser):
         """
         self.logger.info(f"Processing additional data: {len(additional_data)} items")
         repos_elements = []
-        for repo, details in self.config['repos'].items():
+        for repo, details in self.open_data_repos_ontology['repos'].items():
             entry = repo
             if 'repo_name' in details:
                 entry += f" ({details['repo_name']})"
@@ -1217,7 +1221,7 @@ class LLMParser(Parser):
         """
         self.logger.info(f"Processing DAS_content: {DAS_content}")
         repos_elements = []
-        for repo, details in self.config['repos'].items():
+        for repo, details in self.open_data_repos_ontology['repos'].items():
             entry = repo
             if 'repo_name' in details:
                 entry += f" ({details['repo_name']})"
@@ -1281,7 +1285,7 @@ class LLMParser(Parser):
         # Render the prompt with dynamic content
         messages = self.prompt_manager.render_prompt(
             static_prompt,
-            entire_doc=self.full_DOM,
+            entire_doc=self.full_document_read,
             content=content,
             repos=', '.join(repos)
         )
@@ -1326,7 +1330,7 @@ class LLMParser(Parser):
 
             elif model == 'gpt-4o-mini' or model == 'gpt-4o':
                 response = None
-                if self.config['process_entire_document']:
+                if self.full_document_read:
                     response = self.client.chat.completions.create(
                         model=model,
                         messages=messages,
@@ -1339,7 +1343,7 @@ class LLMParser(Parser):
 
                 self.logger.info(f"GPT response: {response.choices[0].message.content}")
 
-                if self.config['process_entire_document']:
+                if self.full_document_read:
                     resps = self.safe_parse_json(response.choices[0].message.content)  # 'datasets' keyError?
                     self.logger.info(f"Response is {type(resps)}: {resps}")
                     resps = resps.get("datasets", []) if resps is not None else []
@@ -1401,7 +1405,7 @@ class LLMParser(Parser):
                     self.logger.error(f"Error processing Gemini response: {e}")
                     return None
 
-        if not self.full_DOM:
+        if not self.full_document_read:
             return resps
 
         # Process the response content
@@ -1433,7 +1437,7 @@ class LLMParser(Parser):
                 elif 'repository_reference' in dataset:
                     data_repository = dataset['repository_reference']
 
-                if dataset_id == 'n/a' and data_repository in self.config['repos']:
+                if dataset_id == 'n/a' and data_repository in self.open_data_repos_ontology['repos']:
                     self.logger.info(f"Dataset ID is 'n/a' and repository name from prompt")
                     continue
 
@@ -1713,7 +1717,7 @@ class LLMParser(Parser):
                 "surrounding_text": link['surrounding_text']
             }
             static_prompt = self.prompt_manager.load_prompt("retrieve_datasets_fromDAS")
-            messages = self.prompt_manager.render_prompt(static_prompt, self.full_DOM, **dynamic_content)
+            messages = self.prompt_manager.render_prompt(static_prompt, self.full_document_read, **dynamic_content)
 
             # Generate a unique checksum for the prompt
             prompt_id = f"{model}-{temperature}-{self.prompt_manager._calculate_checksum(str(messages))}"
@@ -1795,9 +1799,10 @@ class LLMParser(Parser):
         ret = {}
         self.logger.info(f"Checking if link points to dataset webpage: {url}")
         domain = self.url_to_repo_domain(url)
-        if domain in self.config['repos'].keys() and 'dataset_webpage_url_ptr' in self.config['repos'][domain].keys():
+        if (domain in self.open_data_repos_ontology['repos'].keys() and
+                'dataset_webpage_url_ptr' in self.open_data_repos_ontology['repos'][domain].keys()):
             self.logger.info(f"Link {url} could point to dataset webpage")
-            pattern = self.config['repos'][domain]['dataset_webpage_url_ptr']
+            pattern = self.open_data_repos_ontology['repos'][domain]['dataset_webpage_url_ptr']
             self.logger.debug(f"Pattern: {pattern}")
             match = re.match(pattern, url)
             # if the link matches the pattern, extract the dataset identifier and the data repository
@@ -1826,7 +1831,7 @@ class LLMParser(Parser):
 
     def url_to_repo_domain(self, url):
         # Extract the domain name from the URL
-        if url in self.config['repos'].keys():
+        if url in self.open_data_repos_ontology['repos'].keys():
             return url
 
         self.logger.info(f"Extracting repo domain from URL: {url}")
@@ -1834,8 +1839,9 @@ class LLMParser(Parser):
         if match:
             domain = match.group(1)
             self.logger.debug(f"Repo Domain: {domain}")
-            if domain in self.config['repos'].keys() and 'repo_mapping' in self.config['repos'][domain].keys():
-                return self.config['repos'][domain]['repo_mapping']
+            if (domain in self.open_data_repos_ontology['repos'].keys() and
+                    'repo_mapping' in self.open_data_repos_ontology['repos'][domain].keys()):
+                return self.open_data_repos_ontology['repos'][domain]['repo_mapping']
             return domain
         elif '.' not in url:
             return url
@@ -1846,7 +1852,7 @@ class LLMParser(Parser):
     def get_repo_names(self):
         # Get the all the repository names from the config file. (all the repos in ontology)
         repo_names = []
-        for k, v in self.config['repos'].items():
+        for k, v in self.open_data_repos_ontology['repos'].items():
             if 'repo_name' in v.keys():
                 repo_names.append(v['repo_name'])
             else:
@@ -1856,7 +1862,7 @@ class LLMParser(Parser):
     def get_repo_domain_to_name_mapping(self):
         # Get the mapping of repository domains to names from ontology
         repo_mapping = {}
-        for k, v in self.config['repos'].items():
+        for k, v in self.open_data_repos_ontology['repos'].items():
             if 'repo_name' in v.keys():
                 repo_mapping[k] = v['repo_name'].lower()
             else:
@@ -1872,8 +1878,8 @@ class LLMParser(Parser):
         It checks if the dataset identifier matches the expected pattern for the given repository (from ontology)
         """
         self.logger.info(f"Resolving accession ID for {dataset_identifier} in {data_repository}")
-        if data_repository in self.config['repos']:
-            repo_config = self.config['repos'][data_repository]
+        if data_repository in self.open_data_repos_ontology['repos']:
+            repo_config = self.open_data_repos_ontology['repos'][data_repository]
             pattern = repo_config.get('id_pattern')
             if pattern and not re.match(pattern, dataset_identifier):
                 self.logger.warning(f"Identifier {dataset_identifier} does not match pattern for {data_repository}")
@@ -1895,11 +1901,11 @@ class LLMParser(Parser):
             ret = []
             for r in repo.split(','):
                 r = r.strip()
-                if r in self.config['repos']:
+                if r in self.open_data_repos_ontology['repos']:
                     ret.append(self.resolve_data_repository(r))
             return ret
 
-        for k, v in self.config["repos"].items():
+        for k, v in self.open_data_repos_ontology['repos'].items():
             self.logger.debug(f"Checking if {repo} == {k}")
             repo = re.sub("\s+\(\w+\)\s*", "", repo)  # remove any text in parentheses
             # match where repo_link has been extracted
@@ -1972,14 +1978,18 @@ class LLMParser(Parser):
 
             updated_dt = False
 
-            if repo in self.config['repos'].keys():
+            if repo in self.open_data_repos_ontology['repos'].keys():
 
-                if "dataset_webpage_url_ptr" in self.config['repos'][repo]:
-                    dataset_webpage = re.sub('__ID__', accession_id, self.config['repos'][repo]['dataset_webpage_url_ptr'])
+                if "dataset_webpage_url_ptr" in self.open_data_repos_ontology['repos'][repo]:
+                    dataset_webpage = re.sub('__ID__', accession_id,
+                                             self.open_data_repos_ontology['repos'][repo]['dataset_webpage_url_ptr'])
 
-                elif 'url_concat_string' in self.config['repos'][repo]:
-                    dataset_webpage = ('https://' + repo + re.sub('__ID__', accession_id,
-                                                                   self.config['repos'][repo]['url_concat_string']))
+                elif 'url_concat_string' in self.open_data_repos_ontology['repos'][repo]:
+                    dataset_webpage = ('https://' + repo + re.sub(
+                        '__ID__',
+                        accession_id,
+                        self.open_data_repos_ontology['repos'][repo]['url_concat_string'])
+                    )
 
                 else:
                     self.logger.warning(f"No dataset_webpage_url_ptr or url_concat_string found for {repo}. Maybe lost in refactoring 21 April 2025")
@@ -1989,12 +1999,13 @@ class LLMParser(Parser):
                 datasets[i]['dataset_webpage'] = dataset_webpage
 
                 # add access mode
-                if 'access_mode' in self.config['repos'][repo]:
-                    self.logger.info(f"Adding access mode for dataset {1 + i}: {self.config['repos'][repo]['access_mode']}")
-                    datasets[i]['access_mode'] = self.config['repos'][repo]['access_mode']
+                if 'access_mode' in self.open_data_repos_ontology['repos'][repo]:
+                    access_mode = self.open_data_repos_ontology['repos'][repo]['access_mode']
+                    datasets[i]['access_mode'] = access_mode
+                    self.logger.info(f"Adding access mode for dataset {1 + i}: {access_mode}")
 
             else:
-                self.logger.warning(f"Repository {repo} not supported in config. Skipping dataset {1 + i}.")
+                self.logger.warning(f"Repository {repo} unknown in Ontology. Skipping dataset {1 + i}.")
                 continue
 
         self.logger.info(f"Updated datasets len: {len(datasets)}")

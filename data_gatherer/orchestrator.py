@@ -46,7 +46,7 @@ class Orchestrator:
 
         """
 
-        self.public_data_repo_ontology = load_config('parser_config.json')
+        self.open_data_repos_ontology = load_config('open_bio_data_repos.json')
         self.skip_unstructured_files = skip_unstructured_files
         self.skip_file_extensions = []
 
@@ -68,7 +68,7 @@ class Orchestrator:
         self.download_data_for_description_generation = download_data_for_description_generation
 
         entire_document_models = ["gemini-1.5-flash", "gemini-1.5-pro", "gemini-2.0-flash-exp", "gemini-2.0-flash", "gpt-4o", "gpt-4o-mini"]
-        self.FDR = llm_model in entire_document_models and process_entire_document
+        self.full_document_read = llm_model in entire_document_models and process_entire_document
         self.logger.info(f"Data_Gatherer Orchestrator initialized. Extraction Model: {llm_model}")
 
         self.search_method = 'url_list' # Default search method
@@ -94,7 +94,6 @@ class Orchestrator:
 
         :param headless: Whether to run the browser in headless mode (if applicable).
         """
-        Sets up either a web scraper or API client based on the config.
 
         if not isinstance(urls, str) and not isinstance(urls, list):
             raise ValueError("URL must be a string or a list of strings.")
@@ -108,7 +107,7 @@ class Orchestrator:
 
         for src_url in urls:
             self.logger.info(f"Fetching data from URL: {src_url}")
-            self.data_fetcher = self.data_fetcher.update_DataFetcher_settings(src_url, self.FDR, self.logger,
+            self.data_fetcher = self.data_fetcher.update_DataFetcher_settings(src_url, self.full_document_read, self.logger,
                                                                                HTML_fallback=HTML_fallback)
             raw_data[src_url] = self.data_fetcher.fetch_data(src_url)
 
@@ -174,7 +173,7 @@ class Orchestrator:
         self.current_url = url
         self.publisher = self.data_fetcher.url_to_publisher_domain(url)
 
-        self.data_fetcher = self.data_fetcher.update_DataFetcher_settings(url, self.full_DOM, self.logger)
+        self.data_fetcher = self.data_fetcher.update_DataFetcher_settings(url, self.full_document_read, self.logger)
         # Step 1: Use DataFetcher (WebScraper or APIClient) to fetch raw data
         self.logger.debug(f"data_fetcher.fetch_source = {self.data_fetcher.fetch_source}")
 
@@ -185,7 +184,7 @@ class Orchestrator:
             additional_data = None
 
             # if model processes the entire document, fetch the entire document and go to the parsing step
-            if self.full_DOM:
+            if self.full_document_read:
                 self.logger.info("Fetching entire document for processing.")
                 self.raw_data_format = "full_HTML"
                 raw_data = self.data_fetcher.fetch_data(url)
@@ -214,7 +213,7 @@ class Orchestrator:
                     self.raw_data_format = "HTML"
                     self.parser_mode = "LLMParser"
                     self.logger.info(f"Fallback to HTML data fetcher for {url}.")
-                    self.data_fetcher = self.data_fetcher.update_DataFetcher_settings(url, self.full_DOM, self.logger, HTML_fallback=True)
+                    self.data_fetcher = self.data_fetcher.update_DataFetcher_settings(url, self.full_document_read, self.logger, HTML_fallback=True)
                     raw_data = self.data_fetcher.fetch_data(url)
                     raw_data = self.data_fetcher.remove_cookie_patterns(raw_data)
 
@@ -233,7 +232,7 @@ class Orchestrator:
             # Step 2: Use RuleBasedParser to parse and extract HTML elements and rule-based matches
             if self.raw_data_format == "HTML" and self.parser_mode == "RuleBasedParser":
                 self.logger.info("Using RuleBasedParser to parse data.")
-                self.parser = RuleBasedParser(self.config['parser_config_path'], self.logger)
+                self.parser = RuleBasedParser(self.open_data_repos_ontology, self.logger)
                 parsed_data = self.parser.parse_data(raw_data, self.publisher, self.current_url)
 
                 parsed_data['rule_based_classification'] = 'n/a'
@@ -254,7 +253,8 @@ class Orchestrator:
 
             elif self.raw_data_format == "XML" and raw_data is not None:
                 self.logger.info("Using LLMParser to parse data.")
-                self.parser = LLMParser(self.config['parser_config_path'], self.logger, full_document_read=self.full_DOM)
+                self.parser = LLMParser(self.open_data_repos_ontology, self.logger,
+                                        full_document_read=self.full_document_read)
 
                 if additional_data is None:
                     parsed_data = self.parser.parse_data(raw_data, self.publisher, self.current_url)
@@ -275,7 +275,8 @@ class Orchestrator:
 
             elif self.raw_data_format == "full_HTML" or self.parser_mode == "LLMParser":
                 self.logger.info("Using LLMParser to parse data.")
-                self.parser = LLMParser(self.config['parser_config_path'], self.logger, full_document_read=self.full_DOM)
+                self.parser = LLMParser(self.open_data_repos_ontology, self.logger,
+                                        full_document_read=self.full_document_read)
                 parsed_data = self.parser.parse_data(raw_data, self.publisher, self.current_url, raw_data_format="full_HTML")
                 parsed_data['source_url'] = url
                 self.logger.info(f"Parsed data extraction completed. Elements collected: {len(parsed_data)}")
@@ -396,8 +397,8 @@ class Orchestrator:
         -- future release
         """
         self.already_previewed = []
-        self.metadata_parser = LLMParser(self.config['parser_config_path'], self.logger, full_document_read=True)
-        self.data_fetcher = self.data_fetcher.update_DataFetcher_settings('any_url', self.full_DOM, self.logger)
+        self.metadata_parser = LLMParser(self.open_data_repos_ontology, self.logger, full_document_read=True)
+        self.data_fetcher = self.data_fetcher.update_DataFetcher_settings('any_url', self.full_document_read, self.logger)
 
         if isinstance(self.data_fetcher, WebScraper):
             self.logger.info("Found WebScraper to fetch data.")
@@ -445,14 +446,14 @@ class Orchestrator:
                 self.logger.info(f"LLM scraped metadata")
                 repo_mapping_key = row['repository_reference'].lower() if 'repository_reference' in row else row['data_repository'].lower()
                 resolved_key = self.parser.resolve_data_repository(repo_mapping_key)
-                if ('javascript_load_required' in self.parser_config['repos'][resolved_key]):
+                if ('javascript_load_required' in self.open_data_repos_ontology['repos'][resolved_key]):
                     self.logger.info(f"JavaScript load required for {repo_mapping_key} dataset webpage. Using WebScraper.")
                     html = self.data_fetcher.fetch_data(row['dataset_webpage'], delay=3.5)
-                    if "informative_html_metadata_tags" in self.parser_config['repos'][resolved_key]:
-                        html = self.data_fetcher.normalize_HTML(html, self.parser_config['repos'][resolved_key]['informative_html_metadata_tags'])
-                    if self.config['write_raw_metadata']:
-                        self.logger.info(f"Saving raw metadata to: {self.config['html_xml_dir']+ 'raw_metadata/'}")
-                        self.data_fetcher.download_html(self.config['html_xml_dir'] + 'raw_metadata/')
+                    if "informative_html_metadata_tags" in self.open_data_repos_ontology['repos'][resolved_key]:
+                        html = self.data_fetcher.normalize_HTML(html, self.open_data_repos_ontology['repos'][resolved_key]['informative_html_metadata_tags'])
+                    if self.write_raw_metadata:
+                        self.logger.info(f"Saving raw metadata to: {self.html_xml_dir+ 'raw_metadata/'}")
+                        self.data_fetcher.download_html(self.html_xml_dir + 'raw_metadata/')
                 else:
                     html = requests.get(row['dataset_webpage']).text
                 metadata = self.metadata_parser.parse_metadata(html)
