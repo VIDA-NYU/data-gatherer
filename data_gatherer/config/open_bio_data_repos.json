@@ -1,15 +1,4 @@
 {
-  "llm_model": "gemini-2.0-flash",
-  "entire_document_models": ["gemini-1.5-flash", "gemini-1.5-pro", "gemini-2.0-flash-exp", "gemini-2.0-flash", "gpt-4o", "gpt-4o-mini"],
-  "process_entire_document": false,
-  "semantic_filter": true,
-  "response_file": "prompts/LLMs_responses_cache.json",
-  "process_DAS_links_separately": false,
-  "save_xml_output": false,
-  "save_dynamic_prompts": false,
-  "use_cached_responses": false,
-  "save_responses_to_cache": false,
-  "html_xml_dir": "html_xml_samples/",
   "repos": {
     "bigd.big.ac.cn": {
       "repo_name": "BIGD",
@@ -112,25 +101,5 @@
       "access_mode": "Complex download",
       "javascript_load_required": true
     }
-  },
-  "data_availability_sections": [
-    ".//sec[@sec-type='data-availability']",
-    ".//notes[@notes-type='data-availability']",
-    ".//notes[@notes-type='data-availability']"
-  ],
-  "supplementary_material_sections": [
-    ".//sec[@sec-type='supplementary-material']",
-    ".//supplementary-material"
-  ],
-  "supplementary_data_sections": [
-    ".//sec[@sec-type='supplementary-material']",
-    ".//supplementary-material",
-    ".//sec[@sec-type='associated-data']",
-    ".//sec[@sec-type='extended-data']",
-    ".//sec[@sec-type='samples-and-clinical-data']",
-    ".//sec[@sec-type='footnotes']"
-  ],
-  "key_resources_table": [
-    "//sec[.//title[contains(text(), \"Key resources table\")]]//table-wrap"
-  ]
+  }
 }
