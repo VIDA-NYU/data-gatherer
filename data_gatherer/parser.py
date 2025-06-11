@@ -456,7 +456,9 @@ class LLMParser(Parser):
         """
         super().__init__(open_data_repos_ontology, logger, log_file_override, full_document_read)
         self.title = None
-        self.prompt_manager = PromptManager(prompt_dir, self.logger, response_file)
+        self.prompt_manager = PromptManager(prompt_dir, self.logger, response_file,
+                                            save_dynamic_prompts=save_dynamic_prompts,
+                                            save_responses_to_cache=save_responses_to_cache)
         self.repo_names = self.get_repo_names()
         self.repo_domain_to_name_mapping = self.get_repo_domain_to_name_mapping()
 
