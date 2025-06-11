@@ -640,7 +640,7 @@ class LLMParser(Parser):
 
                 augmented_dataset_links = self.retrieve_datasets_from_content(data_availability_str,
                                                                               self.open_data_repos_ontology['repos'],
-                                                                              self.llm_name)
+                                                                              model=self.llm_name)
 
                 dataset_links_w_target_pages = self.get_dataset_webpage(augmented_dataset_links)
 
@@ -727,7 +727,7 @@ class LLMParser(Parser):
             return ""
 
     def extract_file_extension(self, download_link):
-        self.logger.info(f"Function_call: extract_file_extension({download_link})")
+        self.logger.debug(f"Function_call: extract_file_extension({download_link})")
         # Extract the file extension from the download link
         extension = None
         if type(download_link) == str:
@@ -1088,7 +1088,7 @@ class LLMParser(Parser):
         download_link = None
         #repo = self.url_to_repo_domain(current_url_address)
         # match the digits of the PMC ID (after PMC) in the URL
-        self.logger.info(f"Function_call: reconstruct_download_link({href}, {content_type}, {current_url_address})")
+        self.logger.debug(f"Function_call: reconstruct_download_link({href}, {content_type}, {current_url_address})")
         PMCID = re.search(r'PMC(\d+)', current_url_address, re.IGNORECASE).group(1)
         self.logger.debug(
             f"Inputs to reconstruct_download_link: {href}, {content_type}, {current_url_address}, {PMCID}")
@@ -1275,7 +1275,7 @@ class LLMParser(Parser):
         :return: List of datasets retrieved from the content.
         """
         # Load static prompt template
-        self.logger.info(f"Loading prompt: {prompt_name}")
+        self.logger.info(f"Loading prompt: {prompt_name} for model {model}")
         static_prompt = self.prompt_manager.load_prompt(prompt_name)
         n_tokens_static_prompt = self.count_tokens(static_prompt, model)
 
@@ -1284,7 +1284,7 @@ class LLMParser(Parser):
                 content = content[:-2000]
             self.logger.info(f"Content length: {len(content)}")
 
-        self.logger.info(f"static_prompt: {static_prompt}")
+        self.logger.debug(f"static_prompt: {static_prompt}")
 
         # Render the prompt with dynamic content
         messages = self.prompt_manager.render_prompt(
@@ -1674,7 +1674,7 @@ class LLMParser(Parser):
                     })
                     data_availability_elements.append(element_info)
 
-                self.logger.info(f"Extracted data availability element: {element_info}")
+                self.logger.debug(f"Extracted data availability element: {element_info}")
 
         self.logger.info(f"Found {len(data_availability_elements)} data availability elements from HTML.")
         return data_availability_elements
@@ -2056,6 +2056,7 @@ class LLMParser(Parser):
             self.logger.error(f"Unexpected type for prompt: {type(prompt)}. Converting to string.")
             prompt = str(prompt)
 
+        self.logger.debug(f"Counting tokens for model: {model}, prompt length: {len(prompt)} char")
         # **Token count based on model**
         if 'gpt' in model:
             encoding = tiktoken.encoding_for_model(model)
