@@ -309,7 +309,7 @@ class Orchestrator:
 
             elif self.raw_data_format == "XML" and raw_data is not None:
                 self.logger.info("Using LLMParser to parse data.")
-                self.parser = LLMParser(self.open_data_repos_ontology, self.logger,
+                self.parser = LLMParser(self.open_data_repos_ontology, self.logger, llm_name=self.llm,
                                         full_document_read=self.full_document_read)
 
                 if additional_data is None:
@@ -331,7 +331,7 @@ class Orchestrator:
 
             elif self.raw_data_format == "full_HTML" or self.parser_mode == "LLMParser":
                 self.logger.info("Using LLMParser to parse data.")
-                self.parser = LLMParser(self.open_data_repos_ontology, self.logger,
+                self.parser = LLMParser(self.open_data_repos_ontology, self.logger, llm_name=self.llm,
                                         full_document_read=self.full_document_read)
                 parsed_data = self.parser.parse_data(raw_data, self.publisher, self.current_url, raw_data_format="full_HTML")
                 parsed_data['source_url'] = url
@@ -453,7 +453,8 @@ class Orchestrator:
         -- future release
         """
         self.already_previewed = []
-        self.metadata_parser = LLMParser(self.open_data_repos_ontology, self.logger, full_document_read=True)
+        self.metadata_parser = LLMParser(self.open_data_repos_ontology, self.logger, full_document_read=True,
+                                         llm_name=self.llm)
         self.data_fetcher = self.data_fetcher.update_DataFetcher_settings('any_url', self.full_document_read, self.logger)
 
         if isinstance(self.data_fetcher, WebScraper):
