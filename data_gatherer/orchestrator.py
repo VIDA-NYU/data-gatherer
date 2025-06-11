@@ -81,7 +81,7 @@ class Orchestrator:
         self.downloadables = []
 
     def fetch_data(self, urls, search_method='url_list', driver_path=None, browser=None, headless=True,
-                   HTML_fallback=False, commodity_file=None):
+                   HTML_fallback=False, local_fetch_file=None, write_htmls_xmls=False, html_xml_dir='tmp/html_xmls/'):
         """
         Fetches data from the given URL using the configured data fetcher (WebScraper or APIClient).
 
@@ -94,6 +94,10 @@ class Orchestrator:
         :param browser: Browser type to use for scraping (if applicable).
 
         :param headless: Whether to run the browser in headless mode (if applicable).
+
+        :param HTML_fallback: Flag to indicate if HTML fallback should be used when fetching data.
+
+        :param local_fetch_file: Optional file containing commodity data to be used in the fetching process.
         """
 
         if not isinstance(urls, str) and not isinstance(urls, list):

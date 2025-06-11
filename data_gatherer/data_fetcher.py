@@ -545,7 +545,7 @@ class APIClient(DataFetcher):
         self.api_client = api_client.Session()
 
         API_base_url = {
-            'PMC_API': 'https://www.ncbi.nlm.nih.gov/pmc/utils/oa/oa.fcgi?format=xml&article_id=__PMCID__',
+            'PMC_API': 'https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pmc&id=__PMCID__&retmode=xml'
         }
 
         self.base = API_base_url[API]
@@ -614,8 +614,10 @@ class APIClient(DataFetcher):
 
         :param api_data: The XML data to be saved.
         """
+
+        os.makedirs(directory, exist_ok=True)  # Ensure directory exists
         # Construct the file path
-        fn = os.path.join(directory, f"{self.extract_article_title()}.xml")
+        fn = os.path.join(directory, f"{self.extract_article_title(api_data)}.xml")
 
         # Check if the file already exists
         if os.path.exists(fn):
@@ -675,7 +677,8 @@ class DataCompletenessChecker:
                 ns_map[prefix] = uri
         return ns_map
 
-    def is_xml_data_complete(self, raw_data, url, required_sections = ["data_availability", "supplementary_data"]) -> bool:
+    def is_xml_data_complete(self, raw_data, url,
+                             required_sections = ["data_availability_sections", "supplementary_data_sections"]) -> bool:
         """
         Check if required sections are present in the raw_data.
         Return True if all required sections are present.
@@ -713,11 +716,16 @@ class DataCompletenessChecker:
             self.logger.info("No raw data to check for sections.")
             return False
 
+        self.logger.debug(f"type of raw_data: {type(raw_data)}, raw_data: {raw_data}")
+
         self.logger.info(f"----Checking for {section_name} section in raw data.")
         section_patterns = self.load_target_sections_ptrs(section_name)
+        self.logger.debug(f"Section patterns: {section_patterns}")
         namespaces = self.extract_namespaces(raw_data)
+        self.logger.debug(f"Namespaces: {namespaces}")
 
         for pattern in section_patterns:
+            self.logger.debug(f"Checking pattern: {pattern}")
             sections = raw_data.findall(pattern, namespaces=namespaces)
             if sections:
                 for section in sections:
