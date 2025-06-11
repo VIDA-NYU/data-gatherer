@@ -201,6 +201,7 @@ class WebScraper(DataFetcher):
         :return: The raw HTML content of the page.
         """
         # Use the scraper tool to fetch raw HTML from the URL
+        self.raw_data_format = 'HTML'  # Default format for web scraping
         self.scraper_tool.get(url)
         self.simulate_user_scroll(delay)
         return self.scraper_tool.page_source
@@ -564,6 +565,7 @@ class APIClient(DataFetcher):
             # Construct the API call using the PMC ID
             api_call = re.sub('__PMCID__', PMCID, self.base)
             self.logger.info(f"Fetching data from request: {api_call}")
+            self.raw_data_format = 'XML'  # Default format for API calls
 
             # Retry logic for API calls
             for attempt in range(retries):
