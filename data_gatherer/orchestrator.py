@@ -23,7 +23,7 @@ class Orchestrator:
     """
     def __init__(self, llm_name='gpt-4o-mini', process_entire_document=False, log_file_override=None,
                  write_htmls_xmls=False, html_xml_dir='tmp/html_xmls/', skip_unstructured_files=False,
-                 download_data_for_description_generation=False, write_raw_metadata=False, data_resource_preview=False,
+                 download_data_for_description_generation=False, data_resource_preview=False,
                  download_previewed_data_resources=False, full_output_file='output/result.csv', log_level=logging.INFO,
                  clear_previous_logs=True, retrieval_patterns_file='retrieval_patterns.json'
                  ):
@@ -63,7 +63,6 @@ class Orchestrator:
         self.write_htmls_xmls = write_htmls_xmls
         self.html_xml_dir = html_xml_dir
 
-        self.write_raw_metadata = write_raw_metadata
 
         self.download_data_for_description_generation = download_data_for_description_generation
 
@@ -133,7 +132,7 @@ class Orchestrator:
         return raw_data
 
     def parse_data(self, raw_data, current_url, parser_mode='LLMParser', publisher='PMC', additional_data=None,
-                   raw_data_format='XML', save_xml_output=False, html_xml_dir='html_xml_samples/',
+                   raw_data_format='XML', save_xml_output=False, html_xml_dir='tmp/html_xml_samples/',
                    process_DAS_links_separately=False, full_document_read=False):
         """
         Parses the raw data fetched from the source URL using the configured parser (LLMParser or RuleBasedParser).
@@ -274,7 +273,7 @@ class Orchestrator:
                     raw_data = self.data_fetcher.remove_cookie_patterns(raw_data)
 
             if self.write_htmls_xmls and not isinstance(self.data_fetcher, DatabaseFetcher):
-                directory = self.html_xml_dir + self.publisher + '/'
+                directory = html_xml_dir + self.publisher + '/'
                 self.logger.info(f"Raw Data is {self.raw_data_format}.")
                 if self.raw_data_format == "HTML" or self.raw_data_format == "full_HTML":
                     self.data_fetcher.download_html(directory)
@@ -447,7 +446,8 @@ class Orchestrator:
         except FileNotFoundError as e:
             raise FileNotFoundError(f"Create file with input links! File not found: {input_file}\n\n{e}\n")
 
-    def get_data_preview(self, combined_df, display_type='console', interactive=True, return_metadata=False):
+    def get_data_preview(self, combined_df, display_type='console', interactive=True, return_metadata=False,
+                         write_raw_metadata=False, html_xml_dir='tmp/html_xmls/'):
         """
         Shows user a preview of the data they are about to download.
         -- future release
@@ -507,10 +507,11 @@ class Orchestrator:
                     self.logger.info(f"JavaScript load required for {repo_mapping_key} dataset webpage. Using WebScraper.")
                     html = self.data_fetcher.fetch_data(row['dataset_webpage'], delay=3.5)
                     if "informative_html_metadata_tags" in self.open_data_repos_ontology['repos'][resolved_key]:
-                        html = self.data_fetcher.normalize_HTML(html, self.open_data_repos_ontology['repos'][resolved_key]['informative_html_metadata_tags'])
-                    if self.write_raw_metadata:
-                        self.logger.info(f"Saving raw metadata to: {self.html_xml_dir+ 'raw_metadata/'}")
-                        self.data_fetcher.download_html(self.html_xml_dir + 'raw_metadata/')
+                        html = self.data_fetcher.normalize_HTML(html, self.open_data_repos_ontology['repos'][
+                            resolved_key]['informative_html_metadata_tags'])
+                    if write_raw_metadata:
+                        self.logger.info(f"Saving raw metadata to: {html_xml_dir+ 'raw_metadata/'}")
+                        self.data_fetcher.download_html(html_xml_dir + 'raw_metadata/')
                 else:
                     html = requests.get(row['dataset_webpage']).text
                 metadata = self.metadata_parser.parse_metadata(html)
