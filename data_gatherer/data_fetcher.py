@@ -56,7 +56,8 @@ class DataFetcher(ABC):
         else:
             return 'Unknown Publisher'
 
-    def update_DataFetcher_settings(self, url, entire_doc_model, logger, HTML_fallback=False):
+    def update_DataFetcher_settings(self, url, entire_doc_model, logger, HTML_fallback=False, driver_path=None,
+                                    browser='firefox', headless=True):
         """
         Sets up either a web scraper or API client based on the URL domain.
         Also used to avoid re_instantiating another selenium webdriver.

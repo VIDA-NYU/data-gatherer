@@ -3,6 +3,10 @@ from data_gatherer.orchestrator import Orchestrator
 from dotenv import load_dotenv
 import pandas as pd
 import altair as alt
+import os
+
+linux = os.path.exists('/.dockerenv')
+
 
 # Load environment variables from .env file
 load_dotenv()
@@ -27,9 +31,14 @@ if st.button("🚀 Run Extraction"):
         try:
             orch = Orchestrator()
 
-            orch.setup_data_fetcher('url_list')
+            if linux:
+                driver_path = '/usr/local/bin/geckodriver'
+            else:
+                driver_path = None
 
-            results = orch.process_articles(pmcids)
+            orch.setup_data_fetcher('url_list', driver_path=driver_path)
+
+            results = orch.process_articles(pmcids, driver_path=driver_path)
 
             st.success("Extraction complete.")
             for pmcid, result in results.items():
@@ -86,6 +95,7 @@ if st.button("🚀 Run Extraction"):
                                 if str(v).strip().lower() not in unwanted and str(v).strip() != ''
                             ]
                             display_item = pd.DataFrame(pairs, columns=["Field", "Value"])
+                            display_item['Value'] = display_item['Value'].astype(str)
                             # Drop rows where Value is empty after filtering
                             display_item = display_item[display_item["Value"].astype(str).str.strip() != ""]
 
