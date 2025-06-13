@@ -84,7 +84,7 @@ if st.button("🚀 Run Extraction"):
                         with st.spinner(
                                 f"Fetching metadata from repo: {data_item['data_repository']}... {data_item['dataset_webpage']}"):
                             item = orch.get_data_preview(data_item, interactive=False, return_metadata=True,
-                                                         write_raw_metadata=True)[0]
+                                                         write_raw_metadata=False)[0]
 
                         st.markdown(f"#### Data Preview for item {j + 1}")
                         display_item = None

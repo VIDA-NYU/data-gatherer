@@ -1,0 +1,13 @@
+# Exclude non-core directories
+data_gatherer.egg-info/
+docs/
+drivers/
+logs/
+prompts/
+scripts/
+tests/
+tmp/
+
+# Exclude specific files
+test_refactor.ipynb
+README.rst
