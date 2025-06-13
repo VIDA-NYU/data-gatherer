@@ -221,15 +221,15 @@ class WebScraper(DataFetcher):
             self.logger.info("No cookie pattern 1 found in HTML")
         return html
 
-    def simulate_user_scroll(self, delay=2):
-        np.random.random()*delay + 1
+    def simulate_user_scroll(self, delay=2, scroll_wait=0.5):
+        time.sleep(delay)
         last_height = self.scraper_tool.execute_script("return document.body.scrollHeight")
         while True:
             # Scroll down to bottom
             self.scraper_tool.execute_script("window.scrollTo(0, document.body.scrollHeight);")
 
             # Wait to load page
-            time.sleep(np.random.random()*delay)
+            time.sleep(scroll_wait + np.random.random())
 
             # Calculate new height and compare with last height
             new_height = self.scraper_tool.execute_script("return document.body.scrollHeight")
