@@ -8,7 +8,7 @@ from webdriver_manager.firefox import GeckoDriverManager
 from webdriver_manager.chrome import ChromeDriverManager
 
 def create_driver(driver_path=None, browser="Firefox", headless=True, logger=None, download_dir="output/suppl_files"):
-    logger.info(f"Creating WebDriver for browser: {browser}")
+    logger.info(f"Creating WebDriver for browser: {browser}, with driver located at driver_path: {driver_path}")
 
     if browser.lower() == 'firefox':
         firefox_options = FirefoxOptions()
