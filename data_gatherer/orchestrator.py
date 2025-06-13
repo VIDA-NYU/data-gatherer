@@ -505,7 +505,7 @@ class Orchestrator:
                 resolved_key = self.parser.resolve_data_repository(repo_mapping_key)
                 if ('javascript_load_required' in self.open_data_repos_ontology['repos'][resolved_key]):
                     self.logger.info(f"JavaScript load required for {repo_mapping_key} dataset webpage. Using WebScraper.")
-                    html = self.data_fetcher.fetch_data(row['dataset_webpage'], delay=3.5)
+                    html = self.data_fetcher.fetch_data(row['dataset_webpage'], delay=5)
                     if "informative_html_metadata_tags" in self.open_data_repos_ontology['repos'][resolved_key]:
                         html = self.data_fetcher.normalize_HTML(html, self.open_data_repos_ontology['repos'][
                             resolved_key]['informative_html_metadata_tags'])

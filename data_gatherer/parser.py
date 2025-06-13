@@ -118,8 +118,7 @@ dataset_metadata_response_schema_gpt = {
                 }
             },
             "required": [
-                "dataset_description",
-                "request_access_needed"
+                "dataset_description"
             ]
         }
     }
@@ -442,7 +441,7 @@ class LLMParser(Parser):
     - Retrieve Then Read (LLMs will only read a target section retrieved from the document)
     """
     def __init__(self, open_data_repos_ontology, logger, log_file_override=None, full_document_read=True,
-                 prompt_dir="data_gatherer/prompts/prompt_templates", response_file="prompts/LLMs_responses_cache.json",
+                 prompt_dir="data_gatherer/prompts/prompt_templates", response_file="data_gatherer/prompts/LLMs_responses_cache.json",
                  llm_name=None, save_dynamic_prompts=False, save_responses_to_cache=False, use_cached_responses=False):
         """
         Initialize the LLMParser with configuration, logger, and optional log file override.
@@ -1962,10 +1961,6 @@ class LLMParser(Parser):
             else:
                 self.logger.info(f"Raw accession ID: {accession_id}")
 
-            if ('dataset_webpage' in item.keys()):
-                self.logger.debug(f"Skipping dataset {1 + i}: already has dataset_webpage")
-                continue
-
             if 'data_repository' in item.keys():
                 repo = self.resolve_data_repository(item['data_repository']).lower()
             elif 'repository_reference' in item.keys():
@@ -1993,6 +1988,10 @@ class LLMParser(Parser):
                         accession_id,
                         self.open_data_repos_ontology['repos'][repo]['url_concat_string'])
                     )
+
+                elif ('dataset_webpage' in item.keys()):
+                    self.logger.debug(f"Skipping dataset {1 + i}: already has dataset_webpage")
+                    continue
 
                 else:
                     self.logger.warning(f"No dataset_webpage_url_ptr or url_concat_string found for {repo}. Maybe lost in refactoring 21 April 2025")
@@ -2087,9 +2086,11 @@ class LLMParser(Parser):
         dataset_info = self.extract_dataset_info(metadata, subdir='metadata_prompts')
         return dataset_info
 
-    def extract_dataset_info(self, metadata, subdir = '', model = None):
+    def extract_dataset_info(self, metadata, subdir='', model=None):
         """
         Given the metadata, extract the dataset information using the LLM.
+
+        :param model: str — the model to be used for parsing (default: self.llm_name).
 
         :param metadata: str — the metadata to be parsed.
 
@@ -2101,11 +2102,11 @@ class LLMParser(Parser):
         self.logger.info(f"Extracting dataset information from metadata. Prompt from subdir: {subdir}")
 
         llm = LLMClient(
-            model= model if model else self.llm_name,
+            model=model if model else self.llm_name,
             logger=self.logger,
             save_prompts=self.save_dynamic_prompts
         )
-        response = llm.api_call(metadata, subdir = subdir)
+        response = llm.api_call(metadata, subdir=subdir)
 
         # Post-process response into structured dict
         dataset_info = self.safe_parse_json(response)
@@ -2208,9 +2209,9 @@ class LLMClient:
             model=self.model,
             messages=messages,
             temperature=temperature,
-            response_format=dataset_metadata_response_schema_gpt
+            response_format={"type": "json_object"}
         )
-        return response['choices'][0]['message']['content']
+        return response.choices[0].message.content
 
     def _call_gemini(self, content, temperature=0.0, subdir=''):
         self.logger.info(f"Calling Gemini with content length {len(content)}, subdir: {subdir}")
