@@ -167,7 +167,7 @@ class Orchestrator:
         return self.parser.parse_data(cont, publisher, current_url, raw_data_format=raw_data_format,)
 
 
-    def setup_data_fetcher(self, search_method=None, driver_path=None, browser=None, headless=True):
+    def setup_data_fetcher(self, search_method='url_list', driver_path='', browser='Firefox', headless=True):
         """
         Sets up either an empty web scraper, one with scraper_tool, or an API client based on the config.
         """
