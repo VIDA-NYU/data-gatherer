@@ -12,7 +12,6 @@ import typing_extensions as typing
 from pydantic import BaseModel
 import os
 import json
-import torch
 from data_gatherer.prompts.prompt_manager import PromptManager
 import tiktoken
 from data_gatherer.resources_loader import load_config
@@ -2072,23 +2071,6 @@ class LLMParser(Parser):
                 n_tokens = 0
 
         return n_tokens
-
-    def predict_NuExtract(self, model, tokenizer, texts, template, batch_size=1, max_length=10_000,
-                          max_new_tokens=4_000):
-        template = json.dumps(json.loads(template), indent=4)
-        prompts = [f"""<|input|>\n### Template:\n{template}\n### Text:\n{text}\n\n<|output|>""" for text in texts]
-
-        outputs = []
-        with torch.no_grad():
-            for i in range(0, len(prompts), batch_size):
-                batch_prompts = prompts[i:i + batch_size]
-                batch_encodings = tokenizer(batch_prompts, return_tensors="pt", truncation=True, padding=True,
-                                            max_length=max_length).to(model.device)
-
-                pred_ids = model.generate(**batch_encodings, max_new_tokens=max_new_tokens)
-                outputs += tokenizer.batch_decode(pred_ids, skip_special_tokens=True)
-
-        return [output.split("<|output|>")[1] for output in outputs]
 
     def parse_metadata(self, metadata: str, model = 'gemini-2.0-flash') -> dict:
         """
