@@ -86,7 +86,7 @@ if st.button("🚀 Run Extraction"):
                             item = orch.get_data_preview(data_item, interactive=False, return_metadata=True,
                                                          write_raw_metadata=False)[0]
 
-                        st.markdown(f"#### Data Preview for item {j + 1}")
+                        st.markdown(f"#### Dataset {data_item['dataset_identifier']} ({data_item['data_repository']}) metadata")
                         display_item = None
                         if isinstance(item, dict):
                             unwanted = {'', 'na', 'n/a', 'nan', 'unavailable', 'none', '0'}

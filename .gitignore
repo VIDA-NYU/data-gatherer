@@ -4,3 +4,18 @@
 /drivers/chromedriver-mac-arm64/LICENSE.chromedriver
 /drivers/Firefox/
 /drivers/Firefox/geckodriver
+/logs/
+/logs/data_gatherer.log
+/logs/firefox_network.log.child-1.moz_log
+/logs/firefox_network.log.child-2.moz_log
+/logs/firefox_network.log.child-3.moz_log
+/logs/firefox_network.log.child-4.moz_log
+/logs/firefox_network.log.child-5.moz_log
+/logs/firefox_network.log.child-6.moz_log
+/logs/firefox_network.log.child-7.moz_log
+/logs/firefox_network.log.child-8.moz_log
+/logs/firefox_network.log.child-9.moz_log
+/logs/firefox_network.log.moz_log
+/tmp/html_xmls/raw_metadata/Homo sapiens (ID 306801)  - BioProject - NCBI.html
+/tmp/html_xmls/PMC/Proteomics Analysis of Interactions between Drug-Resistant and Drug-Sensitive Cancer Cells: Comparative Studies of Monoculture and Coculture Cell Systems.xml
+test_refactor.ipynb
