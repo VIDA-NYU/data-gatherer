@@ -13,7 +13,6 @@ regex
 requests
 selenium>=4.28.0
 tokenizers
-torch>=2.2
 transformers
 typing_extensions
 webdriver-manager
@@ -22,3 +21,4 @@ tiktoken
 cloudscraper
 pyui
 pysdl2-dll
+pyarrow
