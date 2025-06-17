@@ -11,3 +11,9 @@ tmp/
 # Exclude specific files
 test_refactor.ipynb
 README.rst
+
+# Exclude all .env files
+.env
+**/.env
+*.env
+**/*.env

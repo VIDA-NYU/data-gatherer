@@ -24,8 +24,10 @@ def check_prompt_id_in_prompt_eval_folder():
             print(f"Prompt ID {response} not found in prompt_eval folder. Deleting response.")
     print(f"Total responses deleted: {conter}")
 
+    cache_file = 'LLMs_responses_cache.json'
+    if os.path.islink(cache_file):
+        raise Exception(f"Error: {cache_file} is a symbolic link. Please remove it before running this script.")
+
     # Save the cleaned LLMs_responses_cache.json file
     with open('LLMs_responses_cache.json', 'w') as f:
         json.dump(new_llms_responses, f, indent=4)
-
-check_prompt_id_in_prompt_eval_folder()

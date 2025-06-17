@@ -1,0 +1,4 @@
+- Mitigate SSRF in download_file_from_url by validating URLs and restricting to allowed domains/IPs.
+- Prevent path traversal in download_file_from_url, orchestrator.py, and experiment_utils.py by sanitizing and validating file paths.
+- Add SHA-256 checksum verification for webdriver_manager-downloaded browser drivers.
+- Prevent symlink overwrite in clean_LLMs_responses_file.py by checking for symlinks before writing.

@@ -1,4 +1,5 @@
 import logging
+import os
 
 import numpy as np
 import requests
@@ -21,166 +22,30 @@ class Orchestrator:
     This class orchestrates the data gathering process by coordinating the data fetcher, parser, and classifier in a
     single workflow.
     """
-    def __init__(self, llm_name='gpt-4o-mini', process_entire_document=False, log_file_override=None,
-                 write_htmls_xmls=False, html_xml_dir='tmp/html_xmls/', skip_unstructured_files=False,
-                 download_data_for_description_generation=False, data_resource_preview=False,
-                 download_previewed_data_resources=False, full_output_file='output/result.csv', log_level=logging.INFO,
-                 clear_previous_logs=True, retrieval_patterns_file='retrieval_patterns.json'
-                 ):
+    def __init__(self, config_path='config.json', log_file_override=None):
         """
         Initializes the Orchestrator with the given configuration file and sets up logging.
 
-        :param llm_name: The LLM model to use for parsing and classification.
-
-        :param process_entire_document: Flag to indicate if the model processes the entire document.
-
-        :param log_file_override: Optional log file path to override the default logging configuration.
-
-        :param write_htmls_xmls: Flag to indicate if raw HTML/XML files should be saved.
-
-        :param html_xml_dir: Directory to save the raw HTML/XML files.
-
-        :param skip_unstructured_files: Flag to skip unstructured files based on file extensions.
-
-        :param download_data_for_description_generation: Flag to indicate if data should be downloaded for description generation.
-
+        :param config_path: Path to the configuration file.
         """
-
-        self.open_data_repos_ontology = load_config('open_bio_data_repos.json')
-        self.skip_unstructured_files = skip_unstructured_files
-        self.skip_file_extensions = []
-
-        log_file = log_file_override or 'logs/data_gatherer.log'
-        self.logger = setup_logging('orchestrator', log_file, level=log_level,
-                                    clear_previous_logs=clear_previous_logs)
-
-        self.classifier = LLMClassifier(self.logger, retrieval_patterns_file)
+        self.config = load_config(config_path)
+        self.parser_config = load_config(self.config['parser_config_path'])
+        log_file = log_file_override or self.config.get('log_file', 'logs/scraper.log')
+        self.logger = setup_logging('orchestrator', log_file)
+        self.classifier = LLMClassifier(self.config['retrieval_patterns'], self.logger)
         self.data_fetcher = None
         self.parser = None
         self.raw_data_format = None
-        self.data_checker = DataCompletenessChecker(self.logger)
-
-        self.write_htmls_xmls = write_htmls_xmls
-        self.html_xml_dir = html_xml_dir
-
-
-        self.download_data_for_description_generation = download_data_for_description_generation
-
-        entire_document_models = ["gemini-1.5-flash", "gemini-1.5-pro", "gemini-2.0-flash-exp", "gemini-2.0-flash", "gpt-4o", "gpt-4o-mini"]
-        self.full_document_read = llm_name in entire_document_models and process_entire_document
-        self.logger.info(f"Data_Gatherer Orchestrator initialized. Extraction Model: {llm_name}")
-        self.llm = llm_name
-
-        self.search_method = 'url_list' # Default search method
-
-        self.full_output_file = full_output_file
-
-        self.data_resource_preview = data_resource_preview
-        self.download_previewed_data_resources = download_previewed_data_resources
+        self.data_checker = DataCompletenessChecker(self.config, self.logger)
+        self.full_DOM = self.parser_config['llm_model'] in self.parser_config['entire_document_models'] and self.parser_config['process_entire_document']
+        self.logger.info(f"Data_Gatherer Orchestrator initialized. Extraction step Model: {self.parser_config['llm_model']}")
         self.downloadables = []
 
-    def fetch_data(self, urls, search_method='url_list', driver_path=None, browser=None, headless=True,
-                   HTML_fallback=False, local_fetch_file=None, write_htmls_xmls=False, html_xml_dir='tmp/html_xmls/'):
+    def setup_data_fetcher(self):
         """
-        Fetches data from the given URL using the configured data fetcher (WebScraper or APIClient).
-
-        :param url: The list of URLs to fetch data from.
-
-        :param search_method: Optional method to override the default search method.
-
-        :param driver_path: Path to the WebDriver executable (if applicable).
-
-        :param browser: Browser type to use for scraping (if applicable).
-
-        :param headless: Whether to run the browser in headless mode (if applicable).
-
-        :param HTML_fallback: Flag to indicate if HTML fallback should be used when fetching data.
-
-        :param local_fetch_file: Optional file containing commodity data to be used in the fetching process.
+        Sets up either a web scraper or API client based on the config.
         """
-
-        if not isinstance(urls, str) and not isinstance(urls, list):
-            raise ValueError("URL must be a string or a list of strings.")
-
-        if isinstance(urls, str):
-            urls = [urls]
-
-        self.setup_data_fetcher(search_method, driver_path, browser, headless)
-
-        raw_data = {}
-
-        for src_url in urls:
-            self.current_url = src_url
-            self.logger.info(f"Fetching data from URL: {src_url}")
-            self.data_fetcher = self.data_fetcher.update_DataFetcher_settings(src_url,
-                                                                              self.full_document_read,
-                                                                              self.logger,
-                                                                              HTML_fallback=HTML_fallback,
-                                                                              driver_path=driver_path,
-                                                                              browser=browser,
-                                                                              headless=headless)
-            raw_data[src_url] = self.data_fetcher.fetch_data(src_url)
-
-            if write_htmls_xmls and not isinstance(self.data_fetcher, DatabaseFetcher):
-                self.publisher = self.data_fetcher.url_to_publisher_domain(self.current_url)
-                directory = html_xml_dir + self.publisher + '/'
-                self.logger.info(f"Raw Data is {self.data_fetcher.raw_data_format}.")
-                if self.data_fetcher.raw_data_format == "HTML" or self.data_fetcher.raw_data_format == "full_HTML":
-                    self.data_fetcher.download_html(directory)
-                    self.logger.info(f"Raw HTML saved to: {directory}")
-                elif self.data_fetcher.raw_data_format == "XML":
-                    self.data_fetcher.download_xml(directory, raw_data[src_url])
-                    self.logger.info(f"Raw XML saved in {directory} directory")
-
-        self.data_fetcher.scraper_tool.quit() if hasattr(self.data_fetcher, 'scraper_tool') else None
-
-        return raw_data
-
-    def parse_data(self, raw_data, current_url, parser_mode='LLMParser', publisher='PMC', additional_data=None,
-                   raw_data_format='XML', save_xml_output=False, html_xml_dir='tmp/html_xml_samples/',
-                   process_DAS_links_separately=False, full_document_read=False):
-        """
-        Parses the raw data fetched from the source URL using the configured parser (LLMParser or RuleBasedParser).
-
-        :param raw_data: The raw data to parse, typically HTML or XML content.
-
-        :param current_url: The URL of the current data source being processed.
-
-        :param publisher: The publisher domain or identifier for the data source.
-
-        :param additional_data: Optional additional data to include in the parsing process, such as metadata or supplementary information.
-
-        :param raw_data_format: The format of the raw data (e.g., 'HTML', 'XML', 'full_HTML').
-
-        :param save_xml_output: Flag to indicate if the parsed XML output should be saved.
-
-        :param html_xml_dir: Directory to save the parsed HTML/XML files.
-
-        :param process_DAS_links_separately: Flag to indicate if DAS links should be processed separately.
-
-        :return: Parsed data as a DataFrame or dictionary, depending on the parser used.
-        """
-        self.logger.info(f"Parsing data from URL: {current_url} with publisher: {publisher}")
-
-        if parser_mode == "LLMParser":
-            self.parser = LLMParser(self.open_data_repos_ontology, self.logger, full_document_read=full_document_read,
-                                    llm_name=self.llm)
-
-        cont = raw_data.values()
-        cont = list(cont)[0]
-
-        return self.parser.parse_data(cont, publisher, current_url, raw_data_format=raw_data_format,)
-
-
-    def setup_data_fetcher(self, search_method='url_list', driver_path='', browser='Firefox', headless=True):
-        """
-        Sets up either an empty web scraper, one with scraper_tool, or an API client based on the config.
-        """
-
-        if search_method is not None:
-            self.search_method = search_method
-
-        self.logger.info("Setting up data fetcher...")
+        self.logger.debug("Setting up data fetcher...")
 
         # Close previous driver if exists
         if hasattr(self, 'data_fetcher') and hasattr(self.data_fetcher, 'scraper_tool'):
@@ -194,45 +59,26 @@ class Orchestrator:
         #    self.data_fetcher = DatabaseFetcher(self.config, self.logger)
         #    return
 
-        elif self.search_method == 'url_list':
-            self.data_fetcher = WebScraper(None, self.logger, driver_path=driver_path, browser=browser,
-                                           headless=headless)
+        elif self.config['search_method'] == 'url_list':
+            self.data_fetcher = WebScraper(None, self.config, self.logger)
 
-        elif self.search_method == 'cloudscraper':
+        elif self.config['search_method'] == 'cloudscraper':
             driver = cloudscraper.create_scraper()
-            self.data_fetcher = WebScraper(driver, self.logger)
+            self.data_fetcher = WebScraper(driver, self.config, self.logger)
 
-        elif self.search_method == 'google_scholar':
-            driver = create_driver(driver_path, browser, headless, self.logger)
-            self.data_fetcher = WebScraper(driver, self.logger, driver_path=driver_path, browser=browser,
-                                           headless=headless)
+        elif self.config['search_method'] == 'google_scholar':
+            driver = create_driver(self.config['DRIVER_PATH'], self.config['BROWSER'], self.config['HEADLESS'], self.logger)
+            self.data_fetcher = WebScraper(driver, self.config, self.logger)
 
         else:
-            raise ValueError(f"Invalid search method: {self.search_method}")
+            raise ValueError(f"Invalid search method: {self.config['search_method']}")
 
         self.logger.info("Data fetcher setup completed.")
 
         return self.data_fetcher.scraper_tool
 
-    def PMCID_to_URL(self, pmcid):
-        """
-        Converts a PMCID to a URL.
 
-        :param pmcid: The PMCID to convert.
-
-        :return: The corresponding URL.
-        """
-        if not pmcid.startswith("PMC"):
-            raise ValueError("Invalid PMCID format. Must start with 'PMC'.")
-
-        return f"https://www.ncbi.nlm.nih.gov/pmc/articles/{pmcid}/"
-
-    def preprocess_url(self, url):
-        if url.startswith("PMC"):
-            return self.PMCID_to_URL(url)
-
-    def process_url(self, url, save_staging_table=False, html_xml_dir='tmp/html_xmls/', driver_path=None,
-                    browser='Firefox', headless=True):
+    def process_url(self, url, save_staging_table=False):
         """
         Orchestrates the process for a single given source URL (publication).
 
@@ -252,9 +98,7 @@ class Orchestrator:
         self.current_url = url
         self.publisher = self.data_fetcher.url_to_publisher_domain(url)
 
-        self.data_fetcher = self.data_fetcher.update_DataFetcher_settings(url, self.full_document_read, self.logger,
-                                                                          driver_path=driver_path, browser=browser,
-                                                                          headless=headless)
+        self.data_fetcher = self.data_fetcher.update_DataFetcher_settings(url, self.full_DOM, self.logger)
         # Step 1: Use DataFetcher (WebScraper or APIClient) to fetch raw data
         self.logger.debug(f"data_fetcher.fetch_source = {self.data_fetcher.fetch_source}")
 
@@ -265,7 +109,7 @@ class Orchestrator:
             additional_data = None
 
             # if model processes the entire document, fetch the entire document and go to the parsing step
-            if self.full_document_read:
+            if self.full_DOM:
                 self.logger.info("Fetching entire document for processing.")
                 self.raw_data_format = "full_HTML"
                 raw_data = self.data_fetcher.fetch_data(url)
@@ -277,7 +121,7 @@ class Orchestrator:
                 if "API" in self.data_fetcher.fetch_source:
                     self.logger.debug(f"Using {self.data_fetcher.fetch_source} to fetch data.")
                     self.raw_data_format = "XML"
-                    self.search_method = 'api'
+                    self.config['search_method'] = 'api'
                 elif isinstance(self.data_fetcher, DatabaseFetcher):
                     self.raw_data_format = self.data_fetcher.raw_data_format
                 else:
@@ -294,18 +138,19 @@ class Orchestrator:
                     self.raw_data_format = "HTML"
                     self.parser_mode = "LLMParser"
                     self.logger.info(f"Fallback to HTML data fetcher for {url}.")
-                    self.data_fetcher = self.data_fetcher.update_DataFetcher_settings(url,
-                                                                                      self.full_document_read,
-                                                                                      self.logger,
-                                                                                      HTML_fallback=True,
-                                                                                      driver_path=driver_path,
-                                                                                      browser=browser,
-                                                                                      headless=headless)
+                    self.data_fetcher = self.data_fetcher.update_DataFetcher_settings(url, self.full_DOM, self.logger, HTML_fallback=True)
                     raw_data = self.data_fetcher.fetch_data(url)
                     raw_data = self.data_fetcher.remove_cookie_patterns(raw_data)
 
-            if self.write_htmls_xmls and not isinstance(self.data_fetcher, DatabaseFetcher):
-                directory = html_xml_dir + self.publisher + '/'
+            if self.config['write_htmls_xmls'] and not isinstance(self.data_fetcher, DatabaseFetcher):
+                # Secure directory construction
+                base_dir = os.path.abspath(self.config['html_xml_dir'])
+                safe_publisher = os.path.basename(self.publisher)
+                directory = os.path.normpath(os.path.join(base_dir, safe_publisher))
+                # Ensure directory is a subdirectory of base_dir
+                if not directory.startswith(base_dir):
+                    raise ValueError("Unsafe directory path detected (possible path traversal)")
+                os.makedirs(directory, exist_ok=True)
                 self.logger.info(f"Raw Data is {self.raw_data_format}.")
                 if self.raw_data_format == "HTML" or self.raw_data_format == "full_HTML":
                     self.data_fetcher.download_html(directory)
@@ -319,7 +164,7 @@ class Orchestrator:
             # Step 2: Use RuleBasedParser to parse and extract HTML elements and rule-based matches
             if self.raw_data_format == "HTML" and self.parser_mode == "RuleBasedParser":
                 self.logger.info("Using RuleBasedParser to parse data.")
-                self.parser = RuleBasedParser(self.open_data_repos_ontology, self.logger)
+                self.parser = RuleBasedParser(self.config['parser_config_path'], self.logger)
                 parsed_data = self.parser.parse_data(raw_data, self.publisher, self.current_url)
 
                 parsed_data['rule_based_classification'] = 'n/a'
@@ -340,8 +185,7 @@ class Orchestrator:
 
             elif self.raw_data_format == "XML" and raw_data is not None:
                 self.logger.info("Using LLMParser to parse data.")
-                self.parser = LLMParser(self.open_data_repos_ontology, self.logger, llm_name=self.llm,
-                                        full_document_read=self.full_document_read)
+                self.parser = LLMParser(self.config['parser_config_path'], self.logger, full_document_read=self.full_DOM)
 
                 if additional_data is None:
                     parsed_data = self.parser.parse_data(raw_data, self.publisher, self.current_url)
@@ -362,8 +206,7 @@ class Orchestrator:
 
             elif self.raw_data_format == "full_HTML" or self.parser_mode == "LLMParser":
                 self.logger.info("Using LLMParser to parse data.")
-                self.parser = LLMParser(self.open_data_repos_ontology, self.logger, llm_name=self.llm,
-                                        full_document_read=self.full_document_read)
+                self.parser = LLMParser(self.config['parser_config_path'], self.logger, full_document_read=self.full_DOM)
                 parsed_data = self.parser.parse_data(raw_data, self.publisher, self.current_url, raw_data_format="full_HTML")
                 parsed_data['source_url'] = url
                 self.logger.info(f"Parsed data extraction completed. Elements collected: {len(parsed_data)}")
@@ -377,8 +220,8 @@ class Orchestrator:
             self.logger.info("Raw Data parsing completed.")
 
             # skip unstructured files and filter out unstructured files from dataframe
-            if self.skip_unstructured_files and 'file_extension' in parsed_data.columns:
-                for ext in self.skip_file_extensions:
+            if self.config['skip_unstructured_files'] and 'file_extension' in parsed_data.columns:
+                for ext in self.config['skip_file_extensions']:
                     # filter out unstructured files
                     parsed_data = parsed_data[parsed_data['file_extension'] != ext]
 
@@ -428,11 +271,11 @@ class Orchestrator:
         self.logger.info(f"Deduplication completed. {len(classified_links)} unique links found.")
         return classified_links
 
-    def process_articles(self, url_list, log_modulo=10, driver_path=None, browser='Firefox', headless=True):
+    def process_urls(self, url_list, log_modulo=10):
         """
         Processes a list of URLs and returns classified data.
 
-        :param url_list: List of URLs/PMCIDs to process.
+        :param url_list: List of URLs to process.
 
         :param log_modulo: Frequency of logging progress (useful when url_list is long).
 
@@ -444,9 +287,8 @@ class Orchestrator:
         results = {}
 
         for iteration, url in enumerate(url_list):
-            url = self.preprocess_url(url)
             self.logger.info(f"{iteration}th function call: self.process_url({url})")
-            results[url] = self.process_url(url, driver_path=driver_path, browser=browser, headless=headless,)
+            results[url] = self.process_url(url)
 
             if iteration % log_modulo == 0:
                 elapsed = time.time() - start_time  # Time elapsed since start
@@ -461,79 +303,34 @@ class Orchestrator:
         self.logger.debug("Completed processing all URLs.")
         return results
 
-    def summarize_result(self, df):
+    def load_urls_from_config(self):
         """
-        Summarizes the results of 1 processed URL.
-
-        :param df: Dataframe of candidate datasets from source article.
-
-        :return: Summary dict with URL, number of classified links, and additional metadata.
+        Loads URLs from the input file specified in the config.
         """
-        self.logger.info("Summarizing results...")
-        if df is not None and not df.empty:
-            file_ext_counts = df[
-                'file_extension'].dropna().value_counts().to_dict() if 'file_extension' in df.columns else {}
-            repo_counts = df[
-                'data_repository'].dropna().value_counts().to_dict() if 'data_repository' in df.columns else {}
-
-            summary = {
-                'number_of_data_objects_extracted': len(df),
-                'frequency_of_file_extensions': file_ext_counts,
-                'frequency_of_data_repository': repo_counts,
-            }
-
-            return summary
-
-        else:
-            empty_summary = {
-                'number_of_data_objects_extracted': 0,
-                'frequency_of_file_extensions': {},
-                'frequency_of_data_repository': {},
-            }
-            return empty_summary
-
-    def load_urls_from_input_file(self, input_file):
-        """
-        Loads URLs from the input file.
-
-        :param input_file: Path to the input file containing URLs.
-
-        :return: List of URLs loaded from the file.
-        """
-        self.logger.debug(f"Loading URLs from file: {input_file}")
+        self.logger.debug(f"Loading URLs from file: {self.config['input_urls_filepath']}")
         try:
-            with open(input_file, 'r') as file:
+            with open(self.config['input_urls_filepath'], 'r') as file:
                 url_list = [line.strip() for line in file]
             self.logger.info(f"Loaded {len(url_list)} URLs from file.")
             self.url_list = url_list
             return url_list
         except FileNotFoundError as e:
-            raise FileNotFoundError(f"Create file with input links! File not found: {input_file}\n\n{e}\n")
+            raise FileNotFoundError(f"Create file with input links! File not found: {self.config['input_urls_filepath']}\n\n{e}\n")
 
-    def get_data_preview(self, combined_df, display_type='console', interactive=True, return_metadata=False,
-                         write_raw_metadata=False, html_xml_dir='tmp/html_xmls/'):
+    def get_data_preview(self, combined_df, display_type='console', interactive=True, return_metadata=False):
         """
         Shows user a preview of the data they are about to download.
         -- future release
         """
         self.already_previewed = []
-        self.metadata_parser = LLMParser(self.open_data_repos_ontology, self.logger, full_document_read=True,
-                                         llm_name=self.llm)
-        self.data_fetcher = self.data_fetcher.update_DataFetcher_settings('any_url',
-                                                                          self.full_document_read,
-                                                                          self.logger,
-                                                                          driver_path=None,
-                                                                          browser=None,
-                                                                          headless=True)
+        self.metadata_parser = LLMParser(self.config['parser_config_path'], self.logger, full_document_read=True)
+        self.data_fetcher = self.data_fetcher.update_DataFetcher_settings('any_url', self.full_DOM, self.logger)
 
         if isinstance(self.data_fetcher, WebScraper):
             self.logger.info("Found WebScraper to fetch data.")
 
         if return_metadata:
             ret_list = []
-
-        if isinstance(combined_df, pd.Series):
-            combined_df = combined_df.to_frame().T
 
         for i, row in combined_df.iterrows():
             self.logger.info(f"Row # {i}")
@@ -563,7 +360,7 @@ class Orchestrator:
                     #metadata = self.metadata_parser.parse_metadata(row['source_section'])
                     hardscraped_metadata = {k:v for k,v in row.items() if v is not None and v not in ['nan', 'None', '', 'n/a', np.nan, 'NaN', 'na']}
                     self.already_previewed.append(download_link)
-                    if self.download_data_for_description_generation:
+                    if self.config['download_data_for_description_generation']:
                         split_source_url = hardscraped_metadata.get('source_url').split('/')
                         paper_id = split_source_url[-1] if len(split_source_url[-1]) > 0 else split_source_url[-2]
                         self.data_fetcher.download_file_from_url(download_link, "output/suppl_files", paper_id)
@@ -575,15 +372,14 @@ class Orchestrator:
                 self.logger.info(f"LLM scraped metadata")
                 repo_mapping_key = row['repository_reference'].lower() if 'repository_reference' in row else row['data_repository'].lower()
                 resolved_key = self.parser.resolve_data_repository(repo_mapping_key)
-                if ('javascript_load_required' in self.open_data_repos_ontology['repos'][resolved_key]):
+                if ('javascript_load_required' in self.parser_config['repos'][resolved_key]):
                     self.logger.info(f"JavaScript load required for {repo_mapping_key} dataset webpage. Using WebScraper.")
-                    html = self.data_fetcher.fetch_data(row['dataset_webpage'], delay=5)
-                    if "informative_html_metadata_tags" in self.open_data_repos_ontology['repos'][resolved_key]:
-                        html = self.data_fetcher.normalize_HTML(html, self.open_data_repos_ontology['repos'][
-                            resolved_key]['informative_html_metadata_tags'])
-                    if write_raw_metadata:
-                        self.logger.info(f"Saving raw metadata to: {html_xml_dir+ 'raw_metadata/'}")
-                        self.data_fetcher.download_html(html_xml_dir + 'raw_metadata/')
+                    html = self.data_fetcher.fetch_data(row['dataset_webpage'], delay=3.5)
+                    if "informative_html_metadata_tags" in self.parser_config['repos'][resolved_key]:
+                        html = self.data_fetcher.normalize_HTML(html, self.parser_config['repos'][resolved_key]['informative_html_metadata_tags'])
+                    if self.config['write_raw_metadata']:
+                        self.logger.info(f"Saving raw metadata to: {self.config['html_xml_dir']+ 'raw_metadata/'}")
+                        self.data_fetcher.download_html(self.config['html_xml_dir'] + 'raw_metadata/')
                 else:
                     html = requests.get(row['dataset_webpage']).text
                 metadata = self.metadata_parser.parse_metadata(html)
@@ -756,25 +552,21 @@ class Orchestrator:
             self.logger.warning("No valid internal ID found in metadata.")
             return None
 
-    def raw_data_contains_required_sections(self, raw_data, url, required_sections):
-        required_sections = [sect + "_sections" for sect in required_sections]
-        return self.data_checker.is_xml_data_complete(raw_data, url, required_sections)
-
-    def run(self,search_by='url_list', input_file='input/test_input.txt'):
+    def run(self):
         """
         Main method to run the Orchestrator simple workflow:
         1. Setup data fetcher (web scraper or API client)
-        2. Load URLs from input_file
+        2. Load URLs from config
         3. Process each URL and return results as a dictionary like source_url: DataFrame_of_data_links
         4. Write results to output file specified in configuration file
         """
         self.logger.debug("Orchestrator run started.")
         try:
             # Setup data fetcher (web scraper or API client)
-            self.setup_data_fetcher(search_by)
+            self.setup_data_fetcher()
 
-            # Load URLs from input file
-            urls = self.load_urls_from_input_file(input_file)
+            # Load URLs from config
+            urls = self.load_urls_from_config()
 
             # Process each URL and return results as a dictionary like source_url: DataFrame_of_data_links
             results = self.process_urls(urls)
@@ -789,15 +581,15 @@ class Orchestrator:
                # self.logger.info("Evaluating performance...")
                # self.classifier.evaluate_performance(combined_df, self.config['ground_truth'])
 
-            if self.data_resource_preview:
+            if self.config['data_resource_preview']:
                 self.get_data_preview(combined_df)
 
-                if self.download_previewed_data_resources:
+                if self.config['download_previewed_data_resources']:
                     self.download_previewed_data_resources()
 
-            combined_df.to_csv(self.full_output_file, index=False)
+            combined_df.to_csv(self.config['full_output_file'], index=False)
 
-            self.logger.info(f"Output written to file: {self.full_output_file}")
+            self.logger.info(f"Output written to file: {self.config['full_output_file']}")
 
             self.logger.info(f"File Download Schedule: {self.downloadables}")
 
