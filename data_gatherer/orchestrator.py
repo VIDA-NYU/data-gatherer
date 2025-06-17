@@ -112,8 +112,13 @@ class Orchestrator:
         for src_url in urls:
             self.current_url = src_url
             self.logger.info(f"Fetching data from URL: {src_url}")
-            self.data_fetcher = self.data_fetcher.update_DataFetcher_settings(src_url, self.full_document_read,
-                                                                              self.logger, HTML_fallback=HTML_fallback)
+            self.data_fetcher = self.data_fetcher.update_DataFetcher_settings(src_url,
+                                                                              self.full_document_read,
+                                                                              self.logger,
+                                                                              HTML_fallback=HTML_fallback,
+                                                                              driver_path=driver_path,
+                                                                              browser=browser,
+                                                                              headless=headless)
             raw_data[src_url] = self.data_fetcher.fetch_data(src_url)
 
             if write_htmls_xmls and not isinstance(self.data_fetcher, DatabaseFetcher):
@@ -190,7 +195,8 @@ class Orchestrator:
         #    return
 
         elif self.search_method == 'url_list':
-            self.data_fetcher = WebScraper(None, self.logger)
+            self.data_fetcher = WebScraper(None, self.logger, driver_path=driver_path, browser=browser,
+                                           headless=headless)
 
         elif self.search_method == 'cloudscraper':
             driver = cloudscraper.create_scraper()
@@ -198,7 +204,8 @@ class Orchestrator:
 
         elif self.search_method == 'google_scholar':
             driver = create_driver(driver_path, browser, headless, self.logger)
-            self.data_fetcher = WebScraper(driver, self.logger)
+            self.data_fetcher = WebScraper(driver, self.logger, driver_path=driver_path, browser=browser,
+                                           headless=headless)
 
         else:
             raise ValueError(f"Invalid search method: {self.search_method}")
@@ -207,8 +214,25 @@ class Orchestrator:
 
         return self.data_fetcher.scraper_tool
 
+    def PMCID_to_URL(self, pmcid):
+        """
+        Converts a PMCID to a URL.
 
-    def process_url(self, url, save_staging_table=False):
+        :param pmcid: The PMCID to convert.
+
+        :return: The corresponding URL.
+        """
+        if not pmcid.startswith("PMC"):
+            raise ValueError("Invalid PMCID format. Must start with 'PMC'.")
+
+        return f"https://www.ncbi.nlm.nih.gov/pmc/articles/{pmcid}/"
+
+    def preprocess_url(self, url):
+        if url.startswith("PMC"):
+            return self.PMCID_to_URL(url)
+
+    def process_url(self, url, save_staging_table=False, html_xml_dir='tmp/html_xmls/', driver_path=None,
+                    browser='Firefox', headless=True):
         """
         Orchestrates the process for a single given source URL (publication).
 
@@ -228,7 +252,9 @@ class Orchestrator:
         self.current_url = url
         self.publisher = self.data_fetcher.url_to_publisher_domain(url)
 
-        self.data_fetcher = self.data_fetcher.update_DataFetcher_settings(url, self.full_document_read, self.logger)
+        self.data_fetcher = self.data_fetcher.update_DataFetcher_settings(url, self.full_document_read, self.logger,
+                                                                          driver_path=driver_path, browser=browser,
+                                                                          headless=headless)
         # Step 1: Use DataFetcher (WebScraper or APIClient) to fetch raw data
         self.logger.debug(f"data_fetcher.fetch_source = {self.data_fetcher.fetch_source}")
 
@@ -268,7 +294,13 @@ class Orchestrator:
                     self.raw_data_format = "HTML"
                     self.parser_mode = "LLMParser"
                     self.logger.info(f"Fallback to HTML data fetcher for {url}.")
-                    self.data_fetcher = self.data_fetcher.update_DataFetcher_settings(url, self.full_document_read, self.logger, HTML_fallback=True)
+                    self.data_fetcher = self.data_fetcher.update_DataFetcher_settings(url,
+                                                                                      self.full_document_read,
+                                                                                      self.logger,
+                                                                                      HTML_fallback=True,
+                                                                                      driver_path=driver_path,
+                                                                                      browser=browser,
+                                                                                      headless=headless)
                     raw_data = self.data_fetcher.fetch_data(url)
                     raw_data = self.data_fetcher.remove_cookie_patterns(raw_data)
 
@@ -396,11 +428,11 @@ class Orchestrator:
         self.logger.info(f"Deduplication completed. {len(classified_links)} unique links found.")
         return classified_links
 
-    def process_urls(self, url_list, log_modulo=10):
+    def process_articles(self, url_list, log_modulo=10, driver_path=None, browser='Firefox', headless=True):
         """
         Processes a list of URLs and returns classified data.
 
-        :param url_list: List of URLs to process.
+        :param url_list: List of URLs/PMCIDs to process.
 
         :param log_modulo: Frequency of logging progress (useful when url_list is long).
 
@@ -412,8 +444,9 @@ class Orchestrator:
         results = {}
 
         for iteration, url in enumerate(url_list):
+            url = self.preprocess_url(url)
             self.logger.info(f"{iteration}th function call: self.process_url({url})")
-            results[url] = self.process_url(url)
+            results[url] = self.process_url(url, driver_path=driver_path, browser=browser, headless=headless,)
 
             if iteration % log_modulo == 0:
                 elapsed = time.time() - start_time  # Time elapsed since start
@@ -427,6 +460,37 @@ class Orchestrator:
                 )
         self.logger.debug("Completed processing all URLs.")
         return results
+
+    def summarize_result(self, df):
+        """
+        Summarizes the results of 1 processed URL.
+
+        :param df: Dataframe of candidate datasets from source article.
+
+        :return: Summary dict with URL, number of classified links, and additional metadata.
+        """
+        self.logger.info("Summarizing results...")
+        if df is not None and not df.empty:
+            file_ext_counts = df[
+                'file_extension'].dropna().value_counts().to_dict() if 'file_extension' in df.columns else {}
+            repo_counts = df[
+                'data_repository'].dropna().value_counts().to_dict() if 'data_repository' in df.columns else {}
+
+            summary = {
+                'number_of_data_objects_extracted': len(df),
+                'frequency_of_file_extensions': file_ext_counts,
+                'frequency_of_data_repository': repo_counts,
+            }
+
+            return summary
+
+        else:
+            empty_summary = {
+                'number_of_data_objects_extracted': 0,
+                'frequency_of_file_extensions': {},
+                'frequency_of_data_repository': {},
+            }
+            return empty_summary
 
     def load_urls_from_input_file(self, input_file):
         """
@@ -455,13 +519,21 @@ class Orchestrator:
         self.already_previewed = []
         self.metadata_parser = LLMParser(self.open_data_repos_ontology, self.logger, full_document_read=True,
                                          llm_name=self.llm)
-        self.data_fetcher = self.data_fetcher.update_DataFetcher_settings('any_url', self.full_document_read, self.logger)
+        self.data_fetcher = self.data_fetcher.update_DataFetcher_settings('any_url',
+                                                                          self.full_document_read,
+                                                                          self.logger,
+                                                                          driver_path=None,
+                                                                          browser=None,
+                                                                          headless=True)
 
         if isinstance(self.data_fetcher, WebScraper):
             self.logger.info("Found WebScraper to fetch data.")
 
         if return_metadata:
             ret_list = []
+
+        if isinstance(combined_df, pd.Series):
+            combined_df = combined_df.to_frame().T
 
         for i, row in combined_df.iterrows():
             self.logger.info(f"Row # {i}")
