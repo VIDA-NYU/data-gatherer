@@ -16,6 +16,7 @@
 /logs/firefox_network.log.child-8.moz_log
 /logs/firefox_network.log.child-9.moz_log
 /logs/firefox_network.log.moz_log
+*/logs
 /tmp/html_xmls/raw_metadata/Homo sapiens (ID 306801)  - BioProject - NCBI.html
 /tmp/html_xmls/PMC/Proteomics Analysis of Interactions between Drug-Resistant and Drug-Sensitive Cancer Cells: Comparative Studies of Monoculture and Coculture Cell Systems.xml
 test_refactor.ipynb
@@ -44,6 +45,7 @@ __pycache__/
 *.egg-info
 dist
 build
+_build
 eggs
 parts
 bin
@@ -101,3 +103,4 @@ nosetests.xml
 **/.env
 *.env
 **/*.env
+
