@@ -10,7 +10,7 @@ from webdriver_manager.chrome import ChromeDriverManager
 def create_driver(driver_path=None, browser="Firefox", headless=True, logger=None, download_dir="output/suppl_files"):
     logger.info(f"Creating WebDriver for browser: {browser}")
 
-    if browser == 'Firefox':
+    if browser.lower() == 'firefox':
         firefox_options = FirefoxOptions()
 
         if headless:
@@ -44,7 +44,7 @@ def create_driver(driver_path=None, browser="Firefox", headless=True, logger=Non
 
         driver = webdriver.Firefox(service=service, options=firefox_options)
 
-    elif browser == 'Chrome':
+    elif browser.lower() == 'chrome':
         chrome_options = ChromeOptions()
         if headless:
             chrome_options.add_argument("--headless")

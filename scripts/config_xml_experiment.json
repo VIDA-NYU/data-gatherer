@@ -1,0 +1,78 @@
+{
+  "llm_model": "gemini-2.0-flash",
+  "entire_document_models": ["gemini-1.5-flash", "gemini-1.5-pro", "gemini-2.0-flash-exp", "gemini-2.0-flash", "gpt-4o", "gpt-4o-mini"],
+  "process_entire_document": false,
+  "prompt_dir": "data_gatherer/prompts/prompt_templates",
+  "prompt_save_dir": "prompts/prompt_evals",
+  "prompt_name": "retrieve_datasets_simple_JSON_gemini",
+  "response_file": "LLMs_responses.json",
+  "process_DAS_links_separately": false,
+  "save_xml_output": false,
+  "save_dynamic_prompts": false,
+  "use_cached_responses": false,
+  "save_responses_to_cache": false,
+  "html_xml_dir": "html_xml_samples/",
+  "repos": {
+    "bigd.big.ac.cn": {
+      "repo_name": "BIGD",
+      "url_concat_string": "/browse/__ID__",
+      "download_root": "https://download.cncb.ac.cn/gsa/__ID__"
+    },
+    "massive.ucsd.edu": {
+      "repo_name": "MassIVE",
+      "url_concat_string": "/ProteoSAFe/dataset.jsp?accession=__ID__",
+      "download_root": "ftp://massive.ucsd.edu/v06/__ID__/"
+    },
+    "www.ebi.ac.uk": {
+      "repo_name": "PRIDE",
+      "url_concat_string": "/pride/archive/projects/__ID__",
+      "download_root": "https://ftp.pride.ebi.ac.uk/pride/data/archive/2024/07/__ID__/"
+    },
+    "www.iprox.cn": {
+      "repo_name": "iProX",
+      "url_concat_string": "/page/project.html?id=__ID__",
+      "download_root": ""
+    },
+    "proteomecentral.proteomexchange.org": {
+      "repo_name": "ProteomeCentral",
+      "url_concat_string": "/cgi/GetDataset?ID=__ID__",
+      "download_root": ""
+    },
+    "www.proteomexchange.org": {
+      "repo_name": "ProteomeXchange",
+      "url_concat_string": "/cgi/GetDataset?ID=__ID__",
+      "repo_mapping" : "proteomecentral.proteomexchange.org",
+      "download_root": ""
+    },
+    "pdc.cancer.gov": {
+      "repo_name": "Proteomic Data Commons",
+      "url_concat_string": "/pdc/study/__ID__"
+    },
+    "doi.org": {
+      "dataset_webpage_url_ptr": "https\\:\\/\\/doi\\.org\\/\\d+\\.\\d+\\/pdb([\\w\\d]+)\\/pdb"
+    },
+    "www.ncbi.nlm.nih.gov": {
+      "dataset_webpage_url_ptr": "https\\:\\/www\\.ncbi\\.nlm\\.nih\\.gov\\/geo\\/query\/acc\\.cgi\\?acc=__ID__"
+    }
+  },
+  "data_availability_sections": [
+    ".//sec[@sec-type='data-availability']",
+    ".//notes[@notes-type='data-availability']",
+    ".//notes[@notes-type='data-availability']"
+  ],
+  "supplementary_material_sections": [
+    ".//sec[@sec-type='supplementary-material']",
+    ".//supplementary-material"
+  ],
+  "supplementary_data_sections": [
+    ".//sec[@sec-type='supplementary-material']",
+    ".//supplementary-material",
+    ".//sec[@sec-type='associated-data']",
+    ".//sec[@sec-type='extended-data']",
+    ".//sec[@sec-type='samples-and-clinical-data']",
+    ".//sec[@sec-type='footnotes']"
+  ],
+  "key_resources_table": [
+    "//sec[.//title[contains(text(), \"Key resources table\")]]//table-wrap"
+  ]
+}

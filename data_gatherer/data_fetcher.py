@@ -18,11 +18,16 @@ from data_gatherer.resources_loader import load_config
 
 # Abstract base class for fetching data
 class DataFetcher(ABC):
-    def __init__(self, config, logger, src='WebScraper'):
-        self.config = config
+    def __init__(self, logger, src='WebScraper', driver_path=None, browser='firefox', headless=True,
+                 raw_HTML_data_filepath=None):
+        self.dataframe_fetch = True  # Flag to indicate dataframe fetch supported or not
+        self.raw_HTML_data_filepath = raw_HTML_data_filepath
         self.fetch_source = src
         self.logger = logger
         self.logger.debug("DataFetcher initialized.")
+        self.driver_path = driver_path
+        self.browser = browser
+        self.headless = headless
 
     def url_to_publisher_domain(self, url):
         # Extract the domain name from the URL
@@ -70,9 +75,14 @@ class DataFetcher(ABC):
 
         API = None
 
+        API_supported_url_patterns = {
+            'https://www.ncbi.nlm.nih.gov/pmc/articles/': 'PMC',
+            'https://pmc.ncbi.nlm.nih.gov/': 'PMC'
+        }
+
         if not HTML_fallback:
             # Check if the URL corresponds to PubMed Central (PMC)
-            for ptr,src in self.config['API_supported_url_patterns'].items():
+            for ptr,src in API_supported_url_patterns.items():
                 self.logger.debug(f"Checking {src} with pattern {ptr}")
                 match = re.match(ptr, url)
                 if match:
@@ -83,11 +93,11 @@ class DataFetcher(ABC):
         if API is not None and not(entire_doc_model):
         # Initialize the corresponding API client, from API_supported_url_patterns
             self.logger.info(f"Initializing APIClient({'requests', API, 'self.config'})")
-            return APIClient(requests, API, self.config, logger)
+            return APIClient(requests, API, logger)
 
-        if self.config["dataframe_fetch"] and self.url_in_dataframe(url):
+        if self.raw_HTML_data_filepath and self.dataframe_fetch and self.url_in_dataframe(url, self.raw_HTML_data_filepath):
             self.logger.info(f"URL {url} found in DataFrame. Using DatabaseFetcher.")
-            return DatabaseFetcher(self.config, logger)
+            return DatabaseFetcher(logger, self.raw_HTML_data_filepath)
 
         # Reuse existing driver if we already have one
         if isinstance(self, WebScraper) and self.scraper_tool is not None:
@@ -96,13 +106,13 @@ class DataFetcher(ABC):
 
         self.logger.info(f"WebScraper instance: {isinstance(self, WebScraper)}")
         self.logger.info(f"APIClient instance: {isinstance(self, APIClient)}")
-        self.logger.info(f"scraper_cool attribute: {hasattr(self,'scraper_tool')}")
+        self.logger.info(f"scraper_tool attribute: {hasattr(self,'scraper_tool')}")
 
         self.logger.info("Initializing new selenium driver.")
-        driver = create_driver(self.config['DRIVER_PATH'], self.config['BROWSER'], self.config['HEADLESS'], self.logger)
-        return WebScraper(driver, self.config, logger)
+        driver = create_driver(self.driver_path, self.browser, self.headless, self.logger)
+        return WebScraper(driver, logger)
 
-    def url_in_dataframe(self, url):
+    def url_in_dataframe(self, url, raw_HTML_data_filepath):
         """
         Checks if the given doi / pmcid is present in the DataFrame.
 
@@ -113,7 +123,7 @@ class DataFetcher(ABC):
         pmcid = re.search(r'PMC\d+', url, re.IGNORECASE)
         pmcid = pmcid.group(0) if pmcid else None
 
-        df_fetch = pd.read_parquet(self.config["raw_HTML_data_filepath"])
+        df_fetch = pd.read_parquet(raw_HTML_data_filepath)
 
         return True if pmcid.lower() in df_fetch['publication'].values else False
 
@@ -136,7 +146,7 @@ class DataFetcher(ABC):
             f.write(self.scraper_tool.page_source)
 
     def is_url_API(self, url):
-        return notImplementedError("This method has not been implemented yet.")
+        raise Exception("This method has not been implemented yet.")
 
     def download_file_from_url(self, url, output_root="output/suppl_files", paper_id=None):
         output_dir = os.path.join(output_root, paper_id)
@@ -166,13 +176,16 @@ class WebScraper(DataFetcher):
     """
     Class for fetching data from web pages using Selenium.
     """
-    def __init__(self, scraper_tool, config, logger):
-        super().__init__(config, logger)
+    def __init__(self, scraper_tool, logger, retrieval_patterns_file=None, driver_path=None, browser='firefox', headless=True):
+        super().__init__(logger, src='WebScraper')
         self.scraper_tool = scraper_tool  # Inject your scraping tool (BeautifulSoup, Selenium, etc.)
-        self.retrieval_patterns = load_config(self.config['retrieval_patterns'])
+        self.retrieval_patterns = load_config('retrieval_patterns.json')
         self.bad_patterns = self.retrieval_patterns['general']['bad_patterns']
         self.css_selectors = self.retrieval_patterns['general']['css_selectors']
         self.xpaths = self.retrieval_patterns['general']['xpaths']
+        self.driver_path = driver_path
+        self.browser = browser
+        self.headless = headless
 
     def fetch_data(self, url, retries=3, delay=2):
         """
@@ -188,6 +201,7 @@ class WebScraper(DataFetcher):
         :return: The raw HTML content of the page.
         """
         # Use the scraper tool to fetch raw HTML from the URL
+        self.raw_data_format = 'HTML'  # Default format for web scraping
         self.scraper_tool.get(url)
         self.simulate_user_scroll(delay)
         return self.scraper_tool.page_source
@@ -207,15 +221,15 @@ class WebScraper(DataFetcher):
             self.logger.info("No cookie pattern 1 found in HTML")
         return html
 
-    def simulate_user_scroll(self, delay=2):
-        np.random.random()*delay + 1
+    def simulate_user_scroll(self, delay=2, scroll_wait=0.5):
+        time.sleep(delay)
         last_height = self.scraper_tool.execute_script("return document.body.scrollHeight")
         while True:
             # Scroll down to bottom
             self.scraper_tool.execute_script("window.scrollTo(0, document.body.scrollHeight);")
 
             # Wait to load page
-            time.sleep(np.random.random()*delay)
+            time.sleep(scroll_wait + np.random.random())
 
             # Calculate new height and compare with last height
             new_height = self.scraper_tool.execute_script("return document.body.scrollHeight")
@@ -428,8 +442,8 @@ class WebScraper(DataFetcher):
         # Set download dir in profile beforehand when you create the driver
         self.logger.info(f"Using Selenium to fetch download: {url}")
 
-        driver = create_driver(self.config['DRIVER_PATH'], self.config['BROWSER'],
-                               self.config['HEADLESS'], self.logger,
+        driver = create_driver(self.driver_path, self.browser,
+                               self.headless, self.logger,
                                download_dir=output_root + "/" + paper_id)
         driver.get(url)
         time.sleep(1.5)
@@ -446,9 +460,9 @@ class DatabaseFetcher(DataFetcher):
     """
     Class for fetching data from a DataFrame.
     """
-    def __init__(self, config, logger):
-        super().__init__(config, logger)
-        self.data_file = self.config['raw_HTML_data_filepath']
+    def __init__(self, logger, raw_HTML_data_filepath):
+        super().__init__(logger)
+        self.data_file = raw_HTML_data_filepath
         self.dataframe = pd.read_parquet(self.data_file)
 
     def fetch_data(self, url_key, retries=3, delay=2):
@@ -515,22 +529,26 @@ class APIClient(DataFetcher):
     """
     Class for fetching data from an API using the requests library.
     """
-    def __init__(self, api_client, API, config, logger):
+    def __init__(self, api_client, API, logger):
         """
-        Initializes the APIClient with the specified API client and configuration.
+        Initializes the APIClient with the specified API client.
 
         :param api_client: The API client to use (e.g., requests).
 
         :param API: The API to use (e.g., PMC).
 
-        :param config: The configuration settings.
 
         :param logger: The logger instance for logging messages.
 
         """
-        super().__init__(config, logger, src=API)
+        super().__init__(logger, src=API)
         self.api_client = api_client.Session()
-        self.base = self.config['API_base_url'][API]
+
+        API_base_url = {
+            'PMC_API': 'https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pmc&id=__PMCID__&retmode=xml'
+        }
+
+        self.base = API_base_url[API]
 
     def fetch_data(self, article_url, retries=3, delay=2):
         """
@@ -547,6 +565,7 @@ class APIClient(DataFetcher):
             # Construct the API call using the PMC ID
             api_call = re.sub('__PMCID__', PMCID, self.base)
             self.logger.info(f"Fetching data from request: {api_call}")
+            self.raw_data_format = 'XML'  # Default format for API calls
 
             # Retry logic for API calls
             for attempt in range(retries):
@@ -595,8 +614,10 @@ class APIClient(DataFetcher):
 
         :param api_data: The XML data to be saved.
         """
+
+        os.makedirs(directory, exist_ok=True)  # Ensure directory exists
         # Construct the file path
-        fn = os.path.join(directory, f"{self.extract_article_title()}.xml")
+        fn = os.path.join(directory, f"{self.extract_article_title(api_data)}.xml")
 
         # Check if the file already exists
         if os.path.exists(fn):
@@ -619,7 +640,7 @@ class APIClient(DataFetcher):
         """
         try:
             # Extract the article title
-            title = root.find(".//title-group/article-title")
+            title = api_data.find(".//title-group/article-title")
             article_title = title.text.strip() if title is not None else None
             return article_title
 
@@ -631,20 +652,17 @@ class DataCompletenessChecker:
     """
     Class to check the completeness of data sections in API responses.
     """
-    def __init__(self, config, logger, publisher='PMC'):
+    def __init__(self, logger, publisher='PMC', retrieval_patterns_file='retrieval_patterns.json'):
         """
-        Initializes the DataCompletenessChecker with the specified configuration and logger.
-
-        :param config: The configuration settings.
+        Initializes the DataCompletenessChecker with the specified logger.
 
         :param logger: The logger instance for logging messages.
 
         :param publisher: The publisher to check for (default is 'PMC').
 
         """
-        self.config = config
         self.logger = logger
-        self.retrieval_patterns = load_config(self.config['retrieval_patterns'])
+        self.retrieval_patterns = load_config(retrieval_patterns_file)
         self.css_selectors = self.retrieval_patterns[publisher]['css_selectors']
         self.xpaths = self.retrieval_patterns[publisher]['xpaths']
 
@@ -659,7 +677,8 @@ class DataCompletenessChecker:
                 ns_map[prefix] = uri
         return ns_map
 
-    def is_xml_data_complete(self, raw_data, url, required_sections = ["data_availability", "supplementary_data"]) -> bool:
+    def is_xml_data_complete(self, raw_data, url,
+                             required_sections = ["data_availability_sections", "supplementary_data_sections"]) -> bool:
         """
         Check if required sections are present in the raw_data.
         Return True if all required sections are present.
@@ -697,11 +716,16 @@ class DataCompletenessChecker:
             self.logger.info("No raw data to check for sections.")
             return False
 
+        self.logger.debug(f"type of raw_data: {type(raw_data)}, raw_data: {raw_data}")
+
         self.logger.info(f"----Checking for {section_name} section in raw data.")
-        section_patterns = self.config[section_name + "_sections"]
+        section_patterns = self.load_target_sections_ptrs(section_name)
+        self.logger.debug(f"Section patterns: {section_patterns}")
         namespaces = self.extract_namespaces(raw_data)
+        self.logger.debug(f"Namespaces: {namespaces}")
 
         for pattern in section_patterns:
+            self.logger.debug(f"Checking pattern: {pattern}")
             sections = raw_data.findall(pattern, namespaces=namespaces)
             if sections:
                 for section in sections:
@@ -710,6 +734,30 @@ class DataCompletenessChecker:
                         return True
 
         return False
+
+    def load_target_sections_ptrs(self, section_name) -> list:
+
+        target_sections = {
+            "data_availability_sections": [
+                ".//sec[@sec-type='data-availability']",
+                ".//notes[@notes-type='data-availability']",
+                ".//sec[@sec-type='associated-data']"
+            ],
+            "supplementary_data_sections": [
+                ".//sec[@sec-type='supplementary-material']",
+                ".//supplementary-material",
+                ".//sec[@sec-type='associated-data']",
+                ".//sec[@sec-type='extended-data']",
+                ".//sec[@sec-type='samples-and-clinical-data']",
+                ".//sec[@sec-type='footnotes']",
+                ".//sec[@sec-type='STAR★Methods']"
+            ]
+        }
+        if section_name not in target_sections:
+            self.logger.error(f"Invalid section name: {section_name}. Available sections: {list(target_sections.keys())}")
+            raise ValueError(f"Invalid section name: {section_name}")
+
+        return target_sections[section_name]
 
     def has_links_in_section(self, section, namespaces: dict[str, str]) -> bool:
         """
