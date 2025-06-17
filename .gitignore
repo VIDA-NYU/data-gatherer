@@ -19,3 +19,85 @@
 /tmp/html_xmls/raw_metadata/Homo sapiens (ID 306801)  - BioProject - NCBI.html
 /tmp/html_xmls/PMC/Proteomics Analysis of Interactions between Drug-Resistant and Drug-Sensitive Cancer Cells: Comparative Studies of Monoculture and Coculture Cell Systems.xml
 test_refactor.ipynb
+# Ignore virtual environments
+venv/
+.venv/
+
+# Ignore macOS system files
+.DS_Store
+
+# Ignore Python bytecode files
+*.pyc
+*.py[co]
+__pycache__/
+
+# Ignore Jupyter Notebook checkpoints
+.ipynb_checkpoints/
+**/*.ipynb_checkpoints
+
+# Ignore vscode settings
+.vscode/
+**/.vscode
+
+# Packages
+*.egg
+*.egg-info
+dist
+build
+eggs
+parts
+bin
+var
+sdist
+develop-eggs
+.installed.cfg
+lib
+lib64
+
+# Notebook checkpoints
+.ipynb_checkpoints
+
+# Installer logs
+pip-log.txt
+
+# Unit test / coverage reports
+.coverage
+.tox
+nosetests.xml
+
+# Eclipse PyDev
+.project
+.pydevproject
+
+# PyCharm
+.idea
+
+# ViM
+.*.swp
+
+# Emacs
+\#*#
+
+# Archives
+*.tar
+*.tar.gz
+*.tar.bz2
+*.zip
+*.whl
+
+# Vagrant
+.vagrant
+
+# DS_Store
+.DS_Store
+**/.DS_Store
+
+# Model
+*.pt
+**/*.pt
+
+# Env variables
+.env
+**/.env
+*.env
+**/*.env

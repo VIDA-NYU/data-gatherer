@@ -15,6 +15,40 @@ from bs4 import BeautifulSoup, Comment
 from urllib.parse import urlparse
 import pandas as pd
 from data_gatherer.resources_loader import load_config
+import socket
+
+def is_url_safe(url, allowed_domains=None):
+    """
+    Check if the URL is safe to fetch:
+    - Only allow URLs from allowed_domains.
+    - Block private, loopback, and link-local IPs.
+    """
+    if allowed_domains is None:
+        allowed_domains = ["ncbi.nlm.nih.gov", "pubmed.ncbi.nlm.nih.gov", "pmc.ncbi.nlm.nih.gov"]
+    try:
+        parsed = urlparse(url)
+        if parsed.scheme not in ("http", "https"):
+            return False
+        hostname = parsed.hostname
+        if not hostname:
+            return False
+        # Check domain whitelist
+        if not any(hostname == d or hostname.endswith("." + d) for d in allowed_domains):
+            return False
+        # Resolve to IP and check for private/loopback
+        ip = socket.gethostbyname(hostname)
+        ip_parts = [int(x) for x in ip.split(".")]
+        if (
+            ip.startswith("127.") or ip == "0.0.0.0" or ip == "localhost"
+            or ip_parts[0] == 10
+            or (ip_parts[0] == 172 and 16 <= ip_parts[1] <= 31)
+            or ip_parts[0] == 192 and ip_parts[1] == 168
+            or ip_parts[0] == 169 and ip_parts[1] == 254
+        ):
+            return False
+        return True
+    except Exception:
+        return False
 
 # Abstract base class for fetching data
 class DataFetcher(ABC):
@@ -150,10 +184,24 @@ class DataFetcher(ABC):
         raise Exception("This method has not been implemented yet.")
 
     def download_file_from_url(self, url, output_root="output/suppl_files", paper_id=None):
-        output_dir = os.path.join(output_root, paper_id)
+        # SSRF mitigation: validate URL
+        if not is_url_safe(url):
+            raise ValueError(f"Blocked potentially unsafe or disallowed URL: {url}")
+
+        # Sanitize paper_id and filename to prevent path traversal
+        safe_paper_id = os.path.basename(paper_id) if paper_id else ""
+        filename = os.path.basename(url.split("/")[-1])
+        output_dir = os.path.normpath(os.path.join(output_root, safe_paper_id))
+        path = os.path.normpath(os.path.join(output_dir, filename))
+
+        # Ensure output_dir is a subdirectory of output_root
+        abs_output_root = os.path.abspath(output_root)
+        abs_output_dir = os.path.abspath(output_dir)
+        abs_path = os.path.abspath(path)
+        if not abs_output_dir.startswith(abs_output_root) or not abs_path.startswith(abs_output_dir):
+            raise ValueError("Unsafe file path detected (possible path traversal)")
+
         os.makedirs(output_dir, exist_ok=True)
-        filename = url.split("/")[-1]
-        path = os.path.join(output_dir, filename)
 
         headers = {
             "User-Agent": "Mozilla/5.0",

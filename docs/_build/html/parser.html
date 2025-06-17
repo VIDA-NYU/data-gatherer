@@ -1,0 +1,499 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>&lt;no title&gt; &mdash; Data Gatherer 0.3.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=e259d695"></script>
+      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="&lt;no title&gt;" href="data_fetcher.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            Data Gatherer
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="example_notebook.html">Step I: Fetch data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="example_notebook.html#Step-II:-Parse-data">Step II: Parse data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="example_notebook.html#Step-III:-Classify-data">Step III: Classify data</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Library Documentation:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="orchestrator.html"><code class="docutils literal notranslate"><span class="pre">Orchestrator</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="data_fetcher.html"><code class="docutils literal notranslate"><span class="pre">APIClient</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="data_fetcher.html#data_gatherer.data_fetcher.DataCompletenessChecker"><code class="docutils literal notranslate"><span class="pre">DataCompletenessChecker</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="data_fetcher.html#data_gatherer.data_fetcher.DataFetcher"><code class="docutils literal notranslate"><span class="pre">DataFetcher</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="data_fetcher.html#data_gatherer.data_fetcher.DatabaseFetcher"><code class="docutils literal notranslate"><span class="pre">DatabaseFetcher</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="data_fetcher.html#data_gatherer.data_fetcher.WebScraper"><code class="docutils literal notranslate"><span class="pre">WebScraper</span></code></a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#"><code class="docutils literal notranslate"><span class="pre">LLMParser</span></code></a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#data_gatherer.parser.LLMParser.parse_data"><code class="docutils literal notranslate"><span class="pre">LLMParser.parse_data()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#data_gatherer.parser.LLMParser.normalize_full_DOM"><code class="docutils literal notranslate"><span class="pre">LLMParser.normalize_full_DOM()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#data_gatherer.parser.LLMParser.extract_href_from_data_availability"><code class="docutils literal notranslate"><span class="pre">LLMParser.extract_href_from_data_availability()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#data_gatherer.parser.LLMParser.extract_xrefs_from_data_availability"><code class="docutils literal notranslate"><span class="pre">LLMParser.extract_xrefs_from_data_availability()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#data_gatherer.parser.LLMParser.extract_href_from_html_supplementary_material"><code class="docutils literal notranslate"><span class="pre">LLMParser.extract_href_from_html_supplementary_material()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#data_gatherer.parser.LLMParser.extract_href_from_supplementary_material"><code class="docutils literal notranslate"><span class="pre">LLMParser.extract_href_from_supplementary_material()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#data_gatherer.parser.LLMParser.get_surrounding_text"><code class="docutils literal notranslate"><span class="pre">LLMParser.get_surrounding_text()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#data_gatherer.parser.LLMParser.process_additional_data"><code class="docutils literal notranslate"><span class="pre">LLMParser.process_additional_data()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#data_gatherer.parser.LLMParser.process_data_availability_text"><code class="docutils literal notranslate"><span class="pre">LLMParser.process_data_availability_text()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#data_gatherer.parser.LLMParser.retrieve_datasets_from_content"><code class="docutils literal notranslate"><span class="pre">LLMParser.retrieve_datasets_from_content()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#data_gatherer.parser.LLMParser.deduplicate_response"><code class="docutils literal notranslate"><span class="pre">LLMParser.deduplicate_response()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#data_gatherer.parser.LLMParser.safe_parse_json"><code class="docutils literal notranslate"><span class="pre">LLMParser.safe_parse_json()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#data_gatherer.parser.LLMParser.get_data_availability_text"><code class="docutils literal notranslate"><span class="pre">LLMParser.get_data_availability_text()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#data_gatherer.parser.LLMParser.table_to_text"><code class="docutils literal notranslate"><span class="pre">LLMParser.table_to_text()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#data_gatherer.parser.LLMParser.get_data_availability_elements_from_webpage"><code class="docutils literal notranslate"><span class="pre">LLMParser.get_data_availability_elements_from_webpage()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#data_gatherer.parser.LLMParser.process_data_availability_links"><code class="docutils literal notranslate"><span class="pre">LLMParser.process_data_availability_links()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#data_gatherer.parser.LLMParser.dataset_webpage_url_check"><code class="docutils literal notranslate"><span class="pre">LLMParser.dataset_webpage_url_check()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#data_gatherer.parser.LLMParser.resolve_accession_id"><code class="docutils literal notranslate"><span class="pre">LLMParser.resolve_accession_id()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#data_gatherer.parser.LLMParser.resolve_data_repository"><code class="docutils literal notranslate"><span class="pre">LLMParser.resolve_data_repository()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#data_gatherer.parser.LLMParser.get_dataset_webpage"><code class="docutils literal notranslate"><span class="pre">LLMParser.get_dataset_webpage()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#data_gatherer.parser.LLMParser.count_tokens"><code class="docutils literal notranslate"><span class="pre">LLMParser.count_tokens()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#data_gatherer.parser.LLMParser.parse_metadata"><code class="docutils literal notranslate"><span class="pre">LLMParser.parse_metadata()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#data_gatherer.parser.LLMParser.extract_dataset_info"><code class="docutils literal notranslate"><span class="pre">LLMParser.extract_dataset_info()</span></code></a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Data Gatherer</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">&lt;no title&gt;</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/parser.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <dl class="py class" id="module-data_gatherer.parser">
+<dt class="sig sig-object py" id="data_gatherer.parser.LLMParser">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">data_gatherer.parser.</span></span><span class="sig-name descname"><span class="pre">LLMParser</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_file_override</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">full_document_read</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#data_gatherer.parser.LLMParser" title="Link to this definition"></a></dt>
+<dd><p>This class is responsible for parsing data using LLMs. This will be done either:</p>
+<ul class="simple">
+<li><p>Full Document Read (LLMs that can read the entire document)</p></li>
+<li><p>Retrieve Then Read (LLMs will only read a target section retrieved from the document)</p></li>
+</ul>
+<dl class="py method">
+<dt class="sig sig-object py" id="data_gatherer.parser.LLMParser.parse_data">
+<span class="sig-name descname"><span class="pre">parse_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">api_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">publisher</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">current_url_address</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">additional_data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">raw_data_format</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'XML'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#data_gatherer.parser.LLMParser.parse_data" title="Link to this definition"></a></dt>
+<dd><p>Parse the API data and extract relevant links and metadata.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>api_data</strong> – The raw API data (XML or HTML) to be parsed.</p></li>
+<li><p><strong>publisher</strong> – The publisher name or identifier.</p></li>
+<li><p><strong>current_url_address</strong> – The current URL address being processed.</p></li>
+<li><p><strong>additional_data</strong> – Additional data to be processed (optional).</p></li>
+<li><p><strong>raw_data_format</strong> – The format of the raw data (‘XML’ or ‘HTML’).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A DataFrame containing the extracted links and links to metadata - if repo is supported. Add support for unsupported repos in the ontology.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="data_gatherer.parser.LLMParser.normalize_full_DOM">
+<span class="sig-name descname"><span class="pre">normalize_full_DOM</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">api_data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="headerlink" href="#data_gatherer.parser.LLMParser.normalize_full_DOM" title="Link to this definition"></a></dt>
+<dd><p>Normalize the full HTML DOM by removing dynamic elements and attributes
+that frequently change, such as random IDs, inline styles, analytics tags,
+and CSRF tokens.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>api_data</strong> – The raw HTML data to be normalized.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Normalized HTML string.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="data_gatherer.parser.LLMParser.extract_href_from_data_availability">
+<span class="sig-name descname"><span class="pre">extract_href_from_data_availability</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">api_xml</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#data_gatherer.parser.LLMParser.extract_href_from_data_availability" title="Link to this definition"></a></dt>
+<dd><p>Extracts href links from data-availability sections of the XML.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>api_xml</strong> – lxml.etree.Element — parsed XML root.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>List of dictionaries containing href links and their context.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="data_gatherer.parser.LLMParser.extract_xrefs_from_data_availability">
+<span class="sig-name descname"><span class="pre">extract_xrefs_from_data_availability</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">api_xml</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">current_url_address</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#data_gatherer.parser.LLMParser.extract_xrefs_from_data_availability" title="Link to this definition"></a></dt>
+<dd><p>Extracts xrefs (cross-references) from data-availability sections of the XML.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>api_xml</strong> – lxml.etree.Element — parsed XML root.</p></li>
+<li><p><strong>current_url_address</strong> – The current URL address being processed.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>List of dictionaries containing xrefs and their context.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="data_gatherer.parser.LLMParser.extract_href_from_html_supplementary_material">
+<span class="sig-name descname"><span class="pre">extract_href_from_html_supplementary_material</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">raw_html</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">current_url_address</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#data_gatherer.parser.LLMParser.extract_href_from_html_supplementary_material" title="Link to this definition"></a></dt>
+<dd><p>Extracts href links from supplementary material sections of the HTML.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>raw_html</strong> – str — raw HTML content.</p></li>
+<li><p><strong>current_url_address</strong> – str — the current URL address being processed.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>DataFrame containing extracted links and their context.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="data_gatherer.parser.LLMParser.extract_href_from_supplementary_material">
+<span class="sig-name descname"><span class="pre">extract_href_from_supplementary_material</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">api_xml</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">current_url_address</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#data_gatherer.parser.LLMParser.extract_href_from_supplementary_material" title="Link to this definition"></a></dt>
+<dd><p>Extracts href links from supplementary material sections of the XML.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>api_xml</strong> – lxml.etree.Element — parsed XML root.</p></li>
+<li><p><strong>current_url_address</strong> – The current URL address being processed.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>List of dictionaries containing href links and their context.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="data_gatherer.parser.LLMParser.get_surrounding_text">
+<span class="sig-name descname"><span class="pre">get_surrounding_text</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">element</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#data_gatherer.parser.LLMParser.get_surrounding_text" title="Link to this definition"></a></dt>
+<dd><p>Extracts text surrounding the element (including parent and siblings) for more context.
+It ensures that text around inline elements like &lt;xref&gt; and &lt;ext-link&gt; is properly captured.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>element</strong> – lxml.etree.Element — the element to extract text from.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>str — concatenated text from the parent and siblings of the element.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="data_gatherer.parser.LLMParser.process_additional_data">
+<span class="sig-name descname"><span class="pre">process_additional_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">additional_data</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#data_gatherer.parser.LLMParser.process_additional_data" title="Link to this definition"></a></dt>
+<dd><p>Process the additional data from the webpage. This is the data matched from the HTML with the patterns in
+retrieval_patterns xpaths.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>additional_data</strong> – List of dictionaries containing additional data to be processed.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>List of dictionaries containing processed data.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="data_gatherer.parser.LLMParser.process_data_availability_text">
+<span class="sig-name descname"><span class="pre">process_data_availability_text</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">DAS_content</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#data_gatherer.parser.LLMParser.process_data_availability_text" title="Link to this definition"></a></dt>
+<dd><p>Process the data availability section from the webpage.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>DAS_content</strong> – list of all text content matching the data availability section patterns.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>List of dictionaries containing processed data.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="data_gatherer.parser.LLMParser.retrieve_datasets_from_content">
+<span class="sig-name descname"><span class="pre">retrieve_datasets_from_content</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">content</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">repos</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">temperature</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.0</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span></span></span><a class="headerlink" href="#data_gatherer.parser.LLMParser.retrieve_datasets_from_content" title="Link to this definition"></a></dt>
+<dd><p>Retrieve datasets from the given content using a specified LLM model.
+Uses a static prompt template and dynamically injects the required content.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>content</strong> – The content to be processed.</p></li>
+<li><p><strong>repos</strong> – List of repositories to be included in the prompt.</p></li>
+<li><p><strong>model</strong> – The LLM model to be used for processing.</p></li>
+<li><p><strong>temperature</strong> – The temperature setting for the model.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>List of datasets retrieved from the content.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="data_gatherer.parser.LLMParser.deduplicate_response">
+<span class="sig-name descname"><span class="pre">deduplicate_response</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">response</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#data_gatherer.parser.LLMParser.deduplicate_response" title="Link to this definition"></a></dt>
+<dd><p>This function handles basic <strong>postprocessing</strong> of the LLM output.
+Normalize and deduplicate dataset responses by stripping DOI-style prefixes
+like ‘10.x/’ from dataset IDs and keeping only one entry per PXD.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>response</strong> – List of dataset responses to be deduplicated (LLM Output).</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>List of deduplicated dataset responses.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="data_gatherer.parser.LLMParser.safe_parse_json">
+<span class="sig-name descname"><span class="pre">safe_parse_json</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">response_text</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#data_gatherer.parser.LLMParser.safe_parse_json" title="Link to this definition"></a></dt>
+<dd><p>Cleans and safely parses JSON from an LLM response, fixing common issues.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>response_text</strong> – str — the JSON string to be parsed.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>dict or None — parsed JSON object or None if parsing fails.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="data_gatherer.parser.LLMParser.get_data_availability_text">
+<span class="sig-name descname"><span class="pre">get_data_availability_text</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">api_xml</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#data_gatherer.parser.LLMParser.get_data_availability_text" title="Link to this definition"></a></dt>
+<dd><p>This function handles the retrieval step. Given the data availability statement, extract the dataset
+information from the text.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>api_xml</strong> – lxml.etree.Element — parsed XML root.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>List of strings from sections that match the data availability section patterns.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="data_gatherer.parser.LLMParser.table_to_text">
+<span class="sig-name descname"><span class="pre">table_to_text</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">table_wrap</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#data_gatherer.parser.LLMParser.table_to_text" title="Link to this definition"></a></dt>
+<dd><p>Convert the &lt;table&gt; inside a &lt;table-wrap&gt; element to plain text.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>table_wrap</strong> – The &lt;table-wrap&gt; element containing the table.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>String representing the table as plain text.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="data_gatherer.parser.LLMParser.get_data_availability_elements_from_webpage">
+<span class="sig-name descname"><span class="pre">get_data_availability_elements_from_webpage</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">preprocessed_html</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">publisher</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'PMC'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#data_gatherer.parser.LLMParser.get_data_availability_elements_from_webpage" title="Link to this definition"></a></dt>
+<dd><p>Given the preprocessed HTML, extract paragraphs or links under data availability sections.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="data_gatherer.parser.LLMParser.process_data_availability_links">
+<span class="sig-name descname"><span class="pre">process_data_availability_links</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dataset_links</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#data_gatherer.parser.LLMParser.process_data_availability_links" title="Link to this definition"></a></dt>
+<dd><p>Given the link, the article title, and the text around the link, create a column (identifier),
+and a column for the dataset.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>dataset_links</strong> – List of dictionaries containing href links and their context.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>List of dictionaries containing processed dataset information.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="data_gatherer.parser.LLMParser.dataset_webpage_url_check">
+<span class="sig-name descname"><span class="pre">dataset_webpage_url_check</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">url</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#data_gatherer.parser.LLMParser.dataset_webpage_url_check" title="Link to this definition"></a></dt>
+<dd><p>Check if the URL directly points to a dataset webpage.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>url</strong> – str — the URL to be checked.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>dict or None — dictionary with data repository information if one pattern from ontology matches that</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="data_gatherer.parser.LLMParser.resolve_accession_id">
+<span class="sig-name descname"><span class="pre">resolve_accession_id</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dataset_identifier</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_repository</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#data_gatherer.parser.LLMParser.resolve_accession_id" title="Link to this definition"></a></dt>
+<dd><p>This function resolves the accession ID for a given dataset identifier and data repository.
+It checks if the dataset identifier matches the expected pattern for the given repository (from ontology)</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="data_gatherer.parser.LLMParser.resolve_data_repository">
+<span class="sig-name descname"><span class="pre">resolve_data_repository</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">repo</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="headerlink" href="#data_gatherer.parser.LLMParser.resolve_data_repository" title="Link to this definition"></a></dt>
+<dd><p>Normalize the repository domain from a URL or text reference using config mappings in ontology.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>repo</strong> – str — the repository name or URL to be normalized.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>str — the normalized repository name.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="data_gatherer.parser.LLMParser.get_dataset_webpage">
+<span class="sig-name descname"><span class="pre">get_dataset_webpage</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">datasets</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#data_gatherer.parser.LLMParser.get_dataset_webpage" title="Link to this definition"></a></dt>
+<dd><p>Given a list of dataset dictionaries, fetch the webpage of the dataset, by using navigation patterns
+from the ontology. The function will add a new key to the dataset dictionary with the webpage URL.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>datasets</strong> – list of dictionaries containing dataset information.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>list of dictionaries with updated dataset information including dataset webpage URL.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="data_gatherer.parser.LLMParser.count_tokens">
+<span class="sig-name descname"><span class="pre">count_tokens</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">prompt</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'gpt-4'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">int</span></span></span><a class="headerlink" href="#data_gatherer.parser.LLMParser.count_tokens" title="Link to this definition"></a></dt>
+<dd><p>Count the number of tokens in a given prompt for a specific model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>prompt</strong> – str — the prompt to be tokenized.</p></li>
+<li><p><strong>model</strong> – str — the model name (default: “gpt-4”).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>int — the number of tokens in the prompt.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="data_gatherer.parser.LLMParser.parse_metadata">
+<span class="sig-name descname"><span class="pre">parse_metadata</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">metadata</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'gemini-2.0-flash'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span></span></span><a class="headerlink" href="#data_gatherer.parser.LLMParser.parse_metadata" title="Link to this definition"></a></dt>
+<dd><p>Given the metadata, extract the dataset information using the LLM.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>metadata</strong> – str — the metadata to be parsed.</p></li>
+<li><p><strong>model</strong> – str — the model to be used for parsing (default: ‘gemini-2.0-flash’).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>dict — the extracted metadata. This is sometimes project metadata, or study metadata, or dataset metadata. Ontology enhancement is needed to distinguish between these.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="data_gatherer.parser.LLMParser.extract_dataset_info">
+<span class="sig-name descname"><span class="pre">extract_dataset_info</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">metadata</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">subdir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#data_gatherer.parser.LLMParser.extract_dataset_info" title="Link to this definition"></a></dt>
+<dd><p>Given the metadata, extract the dataset information using the LLM.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>metadata</strong> – str — the metadata to be parsed.</p></li>
+<li><p><strong>subdir</strong> – str — the subdirectory for the prompt template (default: ‘’).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>dict — the extracted metadata. This is sometimes project metadata, or study metadata, or dataset
+metadata</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="data_fetcher.html" class="btn btn-neutral float-left" title="&lt;no title&gt;" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Pietro Marini.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

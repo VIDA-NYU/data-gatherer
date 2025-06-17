@@ -1,0 +1,227 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Getting Started &mdash; Data Gatherer 0.3.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=e259d695"></script>
+      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+      <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+      <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Getting Started" href="getting_started.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="#" class="icon icon-home">
+            Data Gatherer
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="example_notebook.html">Step I: Fetch data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="example_notebook.html#Step-II:-Parse-data">Step II: Parse data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="example_notebook.html#Step-III:-Classify-data">Step III: Classify data</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Library Documentation:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="orchestrator.html"><code class="docutils literal notranslate"><span class="pre">Orchestrator</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="data_fetcher.html"><code class="docutils literal notranslate"><span class="pre">APIClient</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="data_fetcher.html#data_gatherer.data_fetcher.DataCompletenessChecker"><code class="docutils literal notranslate"><span class="pre">DataCompletenessChecker</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="data_fetcher.html#data_gatherer.data_fetcher.DataFetcher"><code class="docutils literal notranslate"><span class="pre">DataFetcher</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="data_fetcher.html#data_gatherer.data_fetcher.DatabaseFetcher"><code class="docutils literal notranslate"><span class="pre">DatabaseFetcher</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="data_fetcher.html#data_gatherer.data_fetcher.WebScraper"><code class="docutils literal notranslate"><span class="pre">WebScraper</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="parser.html"><code class="docutils literal notranslate"><span class="pre">LLMParser</span></code></a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="#">Data Gatherer</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="#" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Getting Started</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/index.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="getting-started">
+<h1>Getting Started<a class="headerlink" href="#getting-started" title="Link to this heading"></a></h1>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="example_notebook.html">Step I: Fetch data</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="example_notebook.html#Fetch-from-API">Fetch from API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="example_notebook.html#Fetch-from-Local-Data">Fetch from Local Data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="example_notebook.html#Fetch-Raw-HTML-from-a-web-page">Fetch Raw HTML from a web page</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="example_notebook.html#Step-II:-Parse-data">Step II: Parse data</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="example_notebook.html#Retrieve-Then-Read">Retrieve-Then-Read</a></li>
+<li class="toctree-l2"><a class="reference internal" href="example_notebook.html#Full-Document-Read">Full-Document-Read</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="example_notebook.html#Step-III:-Classify-data">Step III: Classify data</a></li>
+</ul>
+</div>
+</section>
+<section id="data-gatherer-documentation">
+<h1>Data Gatherer documentation<a class="headerlink" href="#data-gatherer-documentation" title="Link to this heading"></a></h1>
+<p>Version 0.3.0</p>
+<p>Add your content using <code class="docutils literal notranslate"><span class="pre">reStructuredText</span></code> syntax. See the
+<a class="reference external" href="https://www.sphinx-doc.org/en/master/usage/restructuredtext/index.html">reStructuredText</a>
+documentation for details.</p>
+<div class="toctree-wrapper compound">
+<p class="caption" role="heading"><span class="caption-text">Library Documentation:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="orchestrator.html"><code class="docutils literal notranslate"><span class="pre">Orchestrator</span></code></a><ul>
+<li class="toctree-l2"><a class="reference internal" href="orchestrator.html#data_gatherer.orchestrator.Orchestrator.deduplicate_links"><code class="docutils literal notranslate"><span class="pre">Orchestrator.deduplicate_links()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="orchestrator.html#data_gatherer.orchestrator.Orchestrator.display_data_preview"><code class="docutils literal notranslate"><span class="pre">Orchestrator.display_data_preview()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="orchestrator.html#data_gatherer.orchestrator.Orchestrator.download_previewed_data_resources"><code class="docutils literal notranslate"><span class="pre">Orchestrator.download_previewed_data_resources()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="orchestrator.html#data_gatherer.orchestrator.Orchestrator.get_data_preview"><code class="docutils literal notranslate"><span class="pre">Orchestrator.get_data_preview()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="orchestrator.html#data_gatherer.orchestrator.Orchestrator.process_url"><code class="docutils literal notranslate"><span class="pre">Orchestrator.process_url()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="orchestrator.html#data_gatherer.orchestrator.Orchestrator.process_urls"><code class="docutils literal notranslate"><span class="pre">Orchestrator.process_urls()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="orchestrator.html#data_gatherer.orchestrator.Orchestrator.run"><code class="docutils literal notranslate"><span class="pre">Orchestrator.run()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="orchestrator.html#data_gatherer.orchestrator.Orchestrator.setup_data_fetcher"><code class="docutils literal notranslate"><span class="pre">Orchestrator.setup_data_fetcher()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="data_fetcher.html"><code class="docutils literal notranslate"><span class="pre">APIClient</span></code></a><ul>
+<li class="toctree-l2"><a class="reference internal" href="data_fetcher.html#data_gatherer.data_fetcher.APIClient.download_xml"><code class="docutils literal notranslate"><span class="pre">APIClient.download_xml()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="data_fetcher.html#data_gatherer.data_fetcher.APIClient.fetch_data"><code class="docutils literal notranslate"><span class="pre">APIClient.fetch_data()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="data_fetcher.html#data_gatherer.data_fetcher.DataCompletenessChecker"><code class="docutils literal notranslate"><span class="pre">DataCompletenessChecker</span></code></a><ul>
+<li class="toctree-l2"><a class="reference internal" href="data_fetcher.html#data_gatherer.data_fetcher.DataCompletenessChecker.extract_namespaces"><code class="docutils literal notranslate"><span class="pre">DataCompletenessChecker.extract_namespaces()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="data_fetcher.html#data_gatherer.data_fetcher.DataCompletenessChecker.has_links_in_section"><code class="docutils literal notranslate"><span class="pre">DataCompletenessChecker.has_links_in_section()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="data_fetcher.html#data_gatherer.data_fetcher.DataCompletenessChecker.has_target_section"><code class="docutils literal notranslate"><span class="pre">DataCompletenessChecker.has_target_section()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="data_fetcher.html#data_gatherer.data_fetcher.DataCompletenessChecker.is_xml_data_complete"><code class="docutils literal notranslate"><span class="pre">DataCompletenessChecker.is_xml_data_complete()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="data_fetcher.html#data_gatherer.data_fetcher.DataFetcher"><code class="docutils literal notranslate"><span class="pre">DataFetcher</span></code></a><ul>
+<li class="toctree-l2"><a class="reference internal" href="data_fetcher.html#data_gatherer.data_fetcher.DataFetcher.update_DataFetcher_settings"><code class="docutils literal notranslate"><span class="pre">DataFetcher.update_DataFetcher_settings()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="data_fetcher.html#data_gatherer.data_fetcher.DataFetcher.url_in_dataframe"><code class="docutils literal notranslate"><span class="pre">DataFetcher.url_in_dataframe()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="data_fetcher.html#data_gatherer.data_fetcher.DatabaseFetcher"><code class="docutils literal notranslate"><span class="pre">DatabaseFetcher</span></code></a><ul>
+<li class="toctree-l2"><a class="reference internal" href="data_fetcher.html#data_gatherer.data_fetcher.DatabaseFetcher.fetch_data"><code class="docutils literal notranslate"><span class="pre">DatabaseFetcher.fetch_data()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="data_fetcher.html#data_gatherer.data_fetcher.WebScraper"><code class="docutils literal notranslate"><span class="pre">WebScraper</span></code></a><ul>
+<li class="toctree-l2"><a class="reference internal" href="data_fetcher.html#data_gatherer.data_fetcher.WebScraper.download_file_from_url"><code class="docutils literal notranslate"><span class="pre">WebScraper.download_file_from_url()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="data_fetcher.html#data_gatherer.data_fetcher.WebScraper.download_html"><code class="docutils literal notranslate"><span class="pre">WebScraper.download_html()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="data_fetcher.html#data_gatherer.data_fetcher.WebScraper.fetch_data"><code class="docutils literal notranslate"><span class="pre">WebScraper.fetch_data()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="data_fetcher.html#data_gatherer.data_fetcher.WebScraper.get_opendata_from_pubmed_id"><code class="docutils literal notranslate"><span class="pre">WebScraper.get_opendata_from_pubmed_id()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="data_fetcher.html#data_gatherer.data_fetcher.WebScraper.get_publication_name_from_driver"><code class="docutils literal notranslate"><span class="pre">WebScraper.get_publication_name_from_driver()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="data_fetcher.html#data_gatherer.data_fetcher.WebScraper.normalize_HTML"><code class="docutils literal notranslate"><span class="pre">WebScraper.normalize_HTML()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="data_fetcher.html#data_gatherer.data_fetcher.WebScraper.normalize_links"><code class="docutils literal notranslate"><span class="pre">WebScraper.normalize_links()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="parser.html"><code class="docutils literal notranslate"><span class="pre">LLMParser</span></code></a><ul>
+<li class="toctree-l2"><a class="reference internal" href="parser.html#data_gatherer.parser.LLMParser.parse_data"><code class="docutils literal notranslate"><span class="pre">LLMParser.parse_data()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="parser.html#data_gatherer.parser.LLMParser.normalize_full_DOM"><code class="docutils literal notranslate"><span class="pre">LLMParser.normalize_full_DOM()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="parser.html#data_gatherer.parser.LLMParser.extract_href_from_data_availability"><code class="docutils literal notranslate"><span class="pre">LLMParser.extract_href_from_data_availability()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="parser.html#data_gatherer.parser.LLMParser.extract_xrefs_from_data_availability"><code class="docutils literal notranslate"><span class="pre">LLMParser.extract_xrefs_from_data_availability()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="parser.html#data_gatherer.parser.LLMParser.extract_href_from_html_supplementary_material"><code class="docutils literal notranslate"><span class="pre">LLMParser.extract_href_from_html_supplementary_material()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="parser.html#data_gatherer.parser.LLMParser.extract_href_from_supplementary_material"><code class="docutils literal notranslate"><span class="pre">LLMParser.extract_href_from_supplementary_material()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="parser.html#data_gatherer.parser.LLMParser.get_surrounding_text"><code class="docutils literal notranslate"><span class="pre">LLMParser.get_surrounding_text()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="parser.html#data_gatherer.parser.LLMParser.process_additional_data"><code class="docutils literal notranslate"><span class="pre">LLMParser.process_additional_data()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="parser.html#data_gatherer.parser.LLMParser.process_data_availability_text"><code class="docutils literal notranslate"><span class="pre">LLMParser.process_data_availability_text()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="parser.html#data_gatherer.parser.LLMParser.retrieve_datasets_from_content"><code class="docutils literal notranslate"><span class="pre">LLMParser.retrieve_datasets_from_content()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="parser.html#data_gatherer.parser.LLMParser.deduplicate_response"><code class="docutils literal notranslate"><span class="pre">LLMParser.deduplicate_response()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="parser.html#data_gatherer.parser.LLMParser.safe_parse_json"><code class="docutils literal notranslate"><span class="pre">LLMParser.safe_parse_json()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="parser.html#data_gatherer.parser.LLMParser.get_data_availability_text"><code class="docutils literal notranslate"><span class="pre">LLMParser.get_data_availability_text()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="parser.html#data_gatherer.parser.LLMParser.table_to_text"><code class="docutils literal notranslate"><span class="pre">LLMParser.table_to_text()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="parser.html#data_gatherer.parser.LLMParser.get_data_availability_elements_from_webpage"><code class="docutils literal notranslate"><span class="pre">LLMParser.get_data_availability_elements_from_webpage()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="parser.html#data_gatherer.parser.LLMParser.process_data_availability_links"><code class="docutils literal notranslate"><span class="pre">LLMParser.process_data_availability_links()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="parser.html#data_gatherer.parser.LLMParser.dataset_webpage_url_check"><code class="docutils literal notranslate"><span class="pre">LLMParser.dataset_webpage_url_check()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="parser.html#data_gatherer.parser.LLMParser.resolve_accession_id"><code class="docutils literal notranslate"><span class="pre">LLMParser.resolve_accession_id()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="parser.html#data_gatherer.parser.LLMParser.resolve_data_repository"><code class="docutils literal notranslate"><span class="pre">LLMParser.resolve_data_repository()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="parser.html#data_gatherer.parser.LLMParser.get_dataset_webpage"><code class="docutils literal notranslate"><span class="pre">LLMParser.get_dataset_webpage()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="parser.html#data_gatherer.parser.LLMParser.count_tokens"><code class="docutils literal notranslate"><span class="pre">LLMParser.count_tokens()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="parser.html#data_gatherer.parser.LLMParser.parse_metadata"><code class="docutils literal notranslate"><span class="pre">LLMParser.parse_metadata()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="parser.html#data_gatherer.parser.LLMParser.extract_dataset_info"><code class="docutils literal notranslate"><span class="pre">LLMParser.extract_dataset_info()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</div>
+</section>
+<section id="indices-and-tables">
+<h1>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Link to this heading"></a></h1>
+<ul class="simple">
+<li><p><a class="reference internal" href="genindex.html"><span class="std std-ref">Index</span></a></p></li>
+<li><p><a class="reference internal" href="py-modindex.html"><span class="std std-ref">Module Index</span></a></p></li>
+<li><p><a class="reference internal" href="search.html"><span class="std std-ref">Search Page</span></a></p></li>
+</ul>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="getting_started.html" class="btn btn-neutral float-right" title="Getting Started" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Pietro Marini.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

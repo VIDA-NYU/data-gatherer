@@ -1,0 +1,546 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Step I: Fetch data &mdash; Data Gatherer 0.3.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="_static/nbsphinx-code-cells.css?v=2aa19091" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=e259d695"></script>
+      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+      <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+      <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="&lt;no title&gt;" href="orchestrator.html" />
+    <link rel="prev" title="Getting Started" href="getting_started.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            Data Gatherer
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting Started</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Step I: Fetch data</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#Fetch-from-API">Fetch from API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#Fetch-from-Local-Data">Fetch from Local Data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#Fetch-Raw-HTML-from-a-web-page">Fetch Raw HTML from a web page</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="#Step-II:-Parse-data">Step II: Parse data</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#Retrieve-Then-Read">Retrieve-Then-Read</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#Full-Document-Read">Full-Document-Read</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="#Step-III:-Classify-data">Step III: Classify data</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Library Documentation:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="orchestrator.html"><code class="docutils literal notranslate"><span class="pre">Orchestrator</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="data_fetcher.html"><code class="docutils literal notranslate"><span class="pre">APIClient</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="data_fetcher.html#data_gatherer.data_fetcher.DataCompletenessChecker"><code class="docutils literal notranslate"><span class="pre">DataCompletenessChecker</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="data_fetcher.html#data_gatherer.data_fetcher.DataFetcher"><code class="docutils literal notranslate"><span class="pre">DataFetcher</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="data_fetcher.html#data_gatherer.data_fetcher.DatabaseFetcher"><code class="docutils literal notranslate"><span class="pre">DatabaseFetcher</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="data_fetcher.html#data_gatherer.data_fetcher.WebScraper"><code class="docutils literal notranslate"><span class="pre">WebScraper</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="parser.html"><code class="docutils literal notranslate"><span class="pre">LLMParser</span></code></a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Data Gatherer</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Step I: Fetch data</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/example_notebook.ipynb.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <p>Import orchestrator, and load environment variables from “.env” file</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre><span></span>from data_gatherer.orchestrator import Orchestrator
+from data_gatherer.data_fetcher import DataFetcher, WebScraper, DatabaseFetcher, APIClient
+from data_gatherer.selenium_setup import create_driver
+from data_gatherer.parser import LLMParser
+import requests
+import pandas as pd
+import time
+from dotenv import load_dotenv
+
+load_dotenv()
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+True
+</pre></div></div>
+</div>
+<p>Instantiate the orchestrator as data gatherer</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre><span></span>data_gatherer = Orchestrator()
+</pre></div>
+</div>
+</div>
+<section id="Step-I:-Fetch-data">
+<h1>Step I: Fetch data<a class="headerlink" href="#Step-I:-Fetch-data" title="Link to this heading"></a></h1>
+<p>The Fetcher is responsible for fetching raw data about scientific publications on the internet. The parent class is DataFetcher, and the child classes are the following:</p>
+<ul class="simple">
+<li><p><strong>WebScraper</strong>, given a URL, it scrapes the page extracting the HTML content.</p></li>
+<li><p><strong>DatabaseFetcher</strong>, given a key, it fetches raw data (HTML or XML) from a local DataFrame.</p></li>
+<li><p><strong>APIClient</strong>, given a URI, it fetches raw data (XML) from an API.</p></li>
+</ul>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre><span></span>data_gatherer.setup_data_fetcher()
+</pre></div>
+</div>
+</div>
+<section id="Fetch-from-API">
+<h2>Fetch from API<a class="headerlink" href="#Fetch-from-API" title="Link to this heading"></a></h2>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre><span></span>API_supported_input = &quot;https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6141466&quot;
+api_fetcher = APIClient(requests,&#39;PMC_API&#39;,data_gatherer.config, data_gatherer.logger)
+api_fetcher
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+&lt;data_gatherer.data_fetcher.APIClient at 0x142f4db10&gt;
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre><span></span>raw_data_API = api_fetcher.fetch_data(API_supported_input)
+raw_data_API
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+&lt;Element pmc-articleset at 0x13e6ff8c0&gt;
+</pre></div></div>
+</div>
+</section>
+<section id="Fetch-from-Local-Data">
+<h2>Fetch from Local Data<a class="headerlink" href="#Fetch-from-Local-Data" title="Link to this heading"></a></h2>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre><span></span>local_fetch_supported_input = &quot;https://www.ncbi.nlm.nih.gov/pmc/articles/pmc11425778&quot;
+</pre></div>
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre><span></span>df_fetcher = DatabaseFetcher(data_gatherer.config, data_gatherer.logger)
+df_fetcher
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+&lt;data_gatherer.data_fetcher.DatabaseFetcher at 0x13e0220d0&gt;
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre><span></span>raw_data_local = df_fetcher.fetch_data(local_fetch_supported_input)
+print(f&quot;Length of raw content: {len(raw_data_local)}&quot;)
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Length of raw content: 205661
+</pre></div></div>
+</div>
+</section>
+<section id="Fetch-Raw-HTML-from-a-web-page">
+<h2>Fetch Raw HTML from a web page<a class="headerlink" href="#Fetch-Raw-HTML-from-a-web-page" title="Link to this heading"></a></h2>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre><span></span>API_unsupported_input = &quot;https://pmc.ncbi.nlm.nih.gov/articles/PMC7233456/&quot;
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre><span></span>driver = create_driver(data_gatherer.config[&#39;DRIVER_PATH&#39;], data_gatherer.config[&#39;BROWSER&#39;], data_gatherer.config[&#39;HEADLESS&#39;], data_gatherer.logger)
+web_fetcher = WebScraper(driver, data_gatherer.config, data_gatherer.logger)
+</pre></div>
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre><span></span>raw_html = web_fetcher.fetch_data(API_unsupported_input)
+print(f&quot;Length of raw content: {len(raw_html)}&quot;)
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Length of raw content: 564434
+</pre></div></div>
+</div>
+</section>
+</section>
+<section id="Step-II:-Parse-data">
+<h1>Step II: Parse data<a class="headerlink" href="#Step-II:-Parse-data" title="Link to this heading"></a></h1>
+<p>The Parser is responsible for extracting the relevant information from the raw documents fetched by the Fetcher. It has two main discovery methods:</p>
+<ul class="simple">
+<li><p><strong>Retrieve-Then-Read</strong>, the parser passes to the LLMs only the relevant sections of the raw document, and the LLMs extract the relevant information.</p></li>
+<li><p><strong>Full-Document-Read</strong>, Large-context LLMs read the entire raw document and extract the relevant information.</p></li>
+</ul>
+<section id="Retrieve-Then-Read">
+<h2>Retrieve-Then-Read<a class="headerlink" href="#Retrieve-Then-Read" title="Link to this heading"></a></h2>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre><span></span>parser = LLMParser(data_gatherer.config[&#39;parser_config_path&#39;], data_gatherer.logger, full_document_read=False)
+</pre></div>
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[13]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre><span></span>input_url = [API_supported_input, local_fetch_supported_input, API_unsupported_input]
+input_format = [&quot;XML&quot;, &quot;full_HTML&quot;, &quot;full_HTML&quot;]
+input_cont = [raw_data_API, raw_data_local, raw_html]
+
+dfs_dict_RTR = {}
+for i in range(len(input_url)):
+    append_data = parser.parse_data(input_cont[i], &quot;PMC&quot;, input_url[i], raw_data_format=input_format[i])
+    dfs_dict_RTR[input_url[i]] = append_data
+    print(f&quot;Parsed data from {input_url[i]}. Found {len(append_data)} candidate datasets.&quot;)
+    time.sleep(1)  # To print the output in the right order
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+parser.py - line 1710 - WARNING - Identifier PHS001049 does not match pattern for dbgap
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Parsed data from https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6141466. Found 32 candidate datasets.
+Parsed data from https://www.ncbi.nlm.nih.gov/pmc/articles/pmc11425778. Found 3 candidate datasets.
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+parser.py - line 1710 - WARNING - Identifier phs001287 does not match pattern for dbgap
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Parsed data from https://pmc.ncbi.nlm.nih.gov/articles/PMC7233456/. Found 10 candidate datasets.
+</pre></div></div>
+</div>
+</section>
+<section id="Full-Document-Read">
+<h2>Full-Document-Read<a class="headerlink" href="#Full-Document-Read" title="Link to this heading"></a></h2>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[14]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre><span></span>parser = LLMParser(data_gatherer.config[&#39;parser_config_path&#39;], data_gatherer.logger, full_document_read=True)
+</pre></div>
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[15]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre><span></span>input_url = [API_supported_input, local_fetch_supported_input, API_unsupported_input]
+input_format = [&quot;XML&quot;, &quot;full_HTML&quot;, &quot;full_HTML&quot;]
+input_cont = [raw_data_API, raw_data_local, raw_html]
+
+dfs_dict_FDR = {}
+for i in range(len(input_url)):
+    append_data = parser.parse_data(input_cont[i], &quot;PMC&quot;, input_url[i], raw_data_format=input_format[i])
+    dfs_dict_FDR[input_url[i]] = append_data
+    print(f&quot;Parsed data from {input_url[i]}. Found {len(append_data)} candidate datasets.&quot;)
+    time.sleep(1)  # To print the output in the right order
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+parser.py - line 1710 - WARNING - Identifier PHS001049 does not match pattern for dbgap
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Parsed data from https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6141466. Found 17 candidate datasets.
+Parsed data from https://www.ncbi.nlm.nih.gov/pmc/articles/pmc11425778. Found 3 candidate datasets.
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+parser.py - line 1710 - WARNING - Identifier phs001287 does not match pattern for dbgap
+parser.py - line 1828 - WARNING - Repository cptac data portal not supported in config. Skipping dataset 2.
+parser.py - line 1828 - WARNING - Repository linkedomics not supported in config. Skipping dataset 3.
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Parsed data from https://pmc.ncbi.nlm.nih.gov/articles/PMC7233456/. Found 12 candidate datasets.
+</pre></div></div>
+</div>
+</section>
+</section>
+<section id="Step-III:-Classify-data">
+<h1>Step III: Classify data<a class="headerlink" href="#Step-III:-Classify-data" title="Link to this heading"></a></h1>
+<p>For now, we are only considering raw data files, i.e. those objects that can be accessed from a repository with an accession code. However, the classifier can be extended to include other types of objects, such as supplementary materials.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[16]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre><span></span>print(f&quot;Fetched from {len(dfs_dict_FDR)} publications.&quot;)
+raw_data_files = data_gatherer.classifier.get_raw_data_files(dfs_dict_FDR)
+print(f&quot;Fetched {len(raw_data_files)} raw data files:&quot;)
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Fetched from 3 publications.
+Fetched 6 raw data files:
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[17]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython2 notranslate"><div class="highlight"><pre><span></span>raw_data_files
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[17]:
+</pre></div>
+</div>
+<div class="output_area rendered_html docutils container">
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>publication_url</th>
+      <th>dataset_identifier</th>
+      <th>data_repository</th>
+      <th>dataset_webpage</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6...</td>
+      <td>PHS001049</td>
+      <td>dbGAP</td>
+      <td>https://www.ncbi.nlm.nih.gov/projects/gap/cgi-...</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6...</td>
+      <td>PRJNA306801</td>
+      <td>SRA</td>
+      <td>https://www.ncbi.nlm.nih.gov/bioproject/?term=...</td>
+    </tr>
+    <tr>
+      <th>17</th>
+      <td>https://www.ncbi.nlm.nih.gov/pmc/articles/pmc1...</td>
+      <td>MSV000092944</td>
+      <td>MassIVE database</td>
+      <td>https://massive.ucsd.edu/ProteoSAFe/dataset.js...</td>
+    </tr>
+    <tr>
+      <th>20</th>
+      <td>https://pmc.ncbi.nlm.nih.gov/articles/PMC7233456/</td>
+      <td>phs001287</td>
+      <td>dbGaP</td>
+      <td>https://www.ncbi.nlm.nih.gov/projects/gap/cgi-...</td>
+    </tr>
+    <tr>
+      <th>21</th>
+      <td>https://pmc.ncbi.nlm.nih.gov/articles/PMC7233456/</td>
+      <td>https://cptac-data-portal.georgetown.edu/cptac...</td>
+      <td>CPTAC Data Portal</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>22</th>
+      <td>https://pmc.ncbi.nlm.nih.gov/articles/PMC7233456/</td>
+      <td>http://www.linkedomics.org/</td>
+      <td>LinkedOmics</td>
+      <td>NaN</td>
+    </tr>
+  </tbody>
+</table>
+</div></div>
+</div>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="getting_started.html" class="btn btn-neutral float-left" title="Getting Started" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="orchestrator.html" class="btn btn-neutral float-right" title="&lt;no title&gt;" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Pietro Marini.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

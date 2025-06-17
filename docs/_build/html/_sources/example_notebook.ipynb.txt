@@ -1,0 +1,631 @@
+{
+ "cells": [
+  {
+   "metadata": {},
+   "cell_type": "markdown",
+   "source": "Import orchestrator, and load environment variables from \".env\" file",
+   "id": "b8f07b9099035d2c"
+  },
+  {
+   "cell_type": "code",
+   "id": "initial_id",
+   "metadata": {
+    "collapsed": true,
+    "ExecuteTime": {
+     "end_time": "2025-05-27T23:34:20.712463Z",
+     "start_time": "2025-05-27T23:34:16.462743Z"
+    }
+   },
+   "source": [
+    "from data_gatherer.orchestrator import Orchestrator\n",
+    "from data_gatherer.data_fetcher import DataFetcher, WebScraper, DatabaseFetcher, APIClient\n",
+    "from data_gatherer.selenium_setup import create_driver\n",
+    "from data_gatherer.parser import LLMParser\n",
+    "import requests\n",
+    "import pandas as pd\n",
+    "import time\n",
+    "from dotenv import load_dotenv\n",
+    "\n",
+    "load_dotenv()"
+   ],
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "True"
+      ]
+     },
+     "execution_count": 1,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "execution_count": 1
+  },
+  {
+   "metadata": {},
+   "cell_type": "markdown",
+   "source": "Instantiate the orchestrator as data gatherer",
+   "id": "a300c482cd96117"
+  },
+  {
+   "metadata": {
+    "ExecuteTime": {
+     "end_time": "2025-05-27T23:34:20.719810Z",
+     "start_time": "2025-05-27T23:34:20.714327Z"
+    }
+   },
+   "cell_type": "code",
+   "source": "data_gatherer = Orchestrator()",
+   "id": "34f3046b7ea80e86",
+   "outputs": [],
+   "execution_count": 2
+  },
+  {
+   "metadata": {},
+   "cell_type": "markdown",
+   "source": "## Step I: Fetch data",
+   "id": "c009e195a3bc6fdb"
+  },
+  {
+   "metadata": {},
+   "cell_type": "markdown",
+   "source": [
+    "The Fetcher is responsible for fetching raw data about scientific publications on the internet. The parent class is DataFetcher, and the child classes are the following:\n",
+    "\n",
+    "\n",
+    "\n",
+    "- **WebScraper**, given a URL, it scrapes the page extracting the HTML content.\n",
+    "\n",
+    "\n",
+    "- **DatabaseFetcher**, given a key, it fetches raw data (HTML or XML) from a local DataFrame.\n",
+    "\n",
+    "\n",
+    "- **APIClient**, given a URI, it fetches raw data (XML) from an API."
+   ],
+   "id": "247052f9f7ee22fa"
+  },
+  {
+   "metadata": {
+    "ExecuteTime": {
+     "end_time": "2025-05-27T23:34:20.864617Z",
+     "start_time": "2025-05-27T23:34:20.721005Z"
+    }
+   },
+   "cell_type": "code",
+   "source": "data_gatherer.setup_data_fetcher()",
+   "id": "99a91efa8baec42",
+   "outputs": [],
+   "execution_count": 3
+  },
+  {
+   "metadata": {},
+   "cell_type": "markdown",
+   "source": "### Fetch from API",
+   "id": "c4364fb25bb6ac6b"
+  },
+  {
+   "metadata": {
+    "ExecuteTime": {
+     "end_time": "2025-05-27T23:34:20.869794Z",
+     "start_time": "2025-05-27T23:34:20.865763Z"
+    }
+   },
+   "cell_type": "code",
+   "source": [
+    "API_supported_input = \"https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6141466\"\n",
+    "api_fetcher = APIClient(requests,'PMC_API',data_gatherer.config, data_gatherer.logger)\n",
+    "api_fetcher"
+   ],
+   "id": "b50f0289f8a85d1d",
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "<data_gatherer.data_fetcher.APIClient at 0x142f4db10>"
+      ]
+     },
+     "execution_count": 4,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "execution_count": 4
+  },
+  {
+   "metadata": {
+    "ExecuteTime": {
+     "end_time": "2025-05-27T23:34:21.296829Z",
+     "start_time": "2025-05-27T23:34:20.873065Z"
+    }
+   },
+   "cell_type": "code",
+   "source": [
+    "raw_data_API = api_fetcher.fetch_data(API_supported_input)\n",
+    "raw_data_API"
+   ],
+   "id": "7c532d5582f6d1a7",
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "<Element pmc-articleset at 0x13e6ff8c0>"
+      ]
+     },
+     "execution_count": 5,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "execution_count": 5
+  },
+  {
+   "metadata": {},
+   "cell_type": "markdown",
+   "source": "### Fetch from Local Data",
+   "id": "5e3c60bbdd017ba3"
+  },
+  {
+   "metadata": {
+    "ExecuteTime": {
+     "end_time": "2025-05-27T23:34:21.302781Z",
+     "start_time": "2025-05-27T23:34:21.299160Z"
+    }
+   },
+   "cell_type": "code",
+   "source": "local_fetch_supported_input = \"https://www.ncbi.nlm.nih.gov/pmc/articles/pmc11425778\"",
+   "id": "6193a95867778f36",
+   "outputs": [],
+   "execution_count": 6
+  },
+  {
+   "metadata": {
+    "ExecuteTime": {
+     "end_time": "2025-05-27T23:34:21.337747Z",
+     "start_time": "2025-05-27T23:34:21.305371Z"
+    }
+   },
+   "cell_type": "code",
+   "source": [
+    "df_fetcher = DatabaseFetcher(data_gatherer.config, data_gatherer.logger)\n",
+    "df_fetcher"
+   ],
+   "id": "4af48d0a2321c99c",
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "<data_gatherer.data_fetcher.DatabaseFetcher at 0x13e0220d0>"
+      ]
+     },
+     "execution_count": 7,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "execution_count": 7
+  },
+  {
+   "metadata": {
+    "ExecuteTime": {
+     "end_time": "2025-05-27T23:34:21.347752Z",
+     "start_time": "2025-05-27T23:34:21.339050Z"
+    }
+   },
+   "cell_type": "code",
+   "source": [
+    "raw_data_local = df_fetcher.fetch_data(local_fetch_supported_input)\n",
+    "print(f\"Length of raw content: {len(raw_data_local)}\")"
+   ],
+   "id": "d30d1232bc5c0841",
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Length of raw content: 205661\n"
+     ]
+    }
+   ],
+   "execution_count": 8
+  },
+  {
+   "metadata": {},
+   "cell_type": "markdown",
+   "source": "### Fetch Raw HTML from a web page",
+   "id": "3d995cafd36f74fe"
+  },
+  {
+   "metadata": {
+    "ExecuteTime": {
+     "end_time": "2025-05-27T23:34:21.351945Z",
+     "start_time": "2025-05-27T23:34:21.349097Z"
+    }
+   },
+   "cell_type": "code",
+   "source": "API_unsupported_input = \"https://pmc.ncbi.nlm.nih.gov/articles/PMC7233456/\"",
+   "id": "96928dc7cf83e5b1",
+   "outputs": [],
+   "execution_count": 9
+  },
+  {
+   "metadata": {
+    "ExecuteTime": {
+     "end_time": "2025-05-27T23:34:26.906506Z",
+     "start_time": "2025-05-27T23:34:21.353182Z"
+    }
+   },
+   "cell_type": "code",
+   "source": [
+    "driver = create_driver(data_gatherer.config['DRIVER_PATH'], data_gatherer.config['BROWSER'], data_gatherer.config['HEADLESS'], data_gatherer.logger)\n",
+    "web_fetcher = WebScraper(driver, data_gatherer.config, data_gatherer.logger)"
+   ],
+   "id": "8810d2a06b0061b8",
+   "outputs": [],
+   "execution_count": 10
+  },
+  {
+   "metadata": {
+    "ExecuteTime": {
+     "end_time": "2025-05-27T23:34:30.903891Z",
+     "start_time": "2025-05-27T23:34:26.909360Z"
+    }
+   },
+   "cell_type": "code",
+   "source": [
+    "raw_html = web_fetcher.fetch_data(API_unsupported_input)\n",
+    "print(f\"Length of raw content: {len(raw_html)}\")"
+   ],
+   "id": "79bb5a9d7a80e20a",
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Length of raw content: 564434\n"
+     ]
+    }
+   ],
+   "execution_count": 11
+  },
+  {
+   "metadata": {},
+   "cell_type": "markdown",
+   "source": [
+    "## Step II: Parse data\n",
+    "\n",
+    "The Parser is responsible for extracting the relevant information from the raw documents fetched by the Fetcher. It has two main discovery methods:\n",
+    "\n",
+    "\n",
+    "- **Retrieve-Then-Read**, the parser passes to the LLMs only the relevant sections of the raw document, and the LLMs extract the relevant information.\n",
+    "\n",
+    "\n",
+    "- **Full-Document-Read**, Large-context LLMs read the entire raw document and extract the relevant information."
+   ],
+   "id": "605ec31956889a57"
+  },
+  {
+   "metadata": {},
+   "cell_type": "markdown",
+   "source": "### Retrieve-Then-Read",
+   "id": "ece85d2274ea0039"
+  },
+  {
+   "metadata": {
+    "ExecuteTime": {
+     "end_time": "2025-05-27T23:34:30.910032Z",
+     "start_time": "2025-05-27T23:34:30.905283Z"
+    }
+   },
+   "cell_type": "code",
+   "source": "parser = LLMParser(data_gatherer.config['parser_config_path'], data_gatherer.logger, full_document_read=False)",
+   "id": "b9d52f23ac6a3c73",
+   "outputs": [],
+   "execution_count": 12
+  },
+  {
+   "metadata": {
+    "ExecuteTime": {
+     "end_time": "2025-05-27T23:34:39.556525Z",
+     "start_time": "2025-05-27T23:34:30.911782Z"
+    }
+   },
+   "cell_type": "code",
+   "source": [
+    "input_url = [API_supported_input, local_fetch_supported_input, API_unsupported_input]\n",
+    "input_format = [\"XML\", \"full_HTML\", \"full_HTML\"]\n",
+    "input_cont = [raw_data_API, raw_data_local, raw_html]\n",
+    "\n",
+    "dfs_dict_RTR = {}\n",
+    "for i in range(len(input_url)):\n",
+    "    append_data = parser.parse_data(input_cont[i], \"PMC\", input_url[i], raw_data_format=input_format[i])\n",
+    "    dfs_dict_RTR[input_url[i]] = append_data\n",
+    "    print(f\"Parsed data from {input_url[i]}. Found {len(append_data)} candidate datasets.\")\n",
+    "    time.sleep(1)  # To print the output in the right order"
+   ],
+   "id": "7749b302b27a2c37",
+   "outputs": [
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "parser.py - line 1710 - WARNING - Identifier PHS001049 does not match pattern for dbgap\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Parsed data from https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6141466. Found 32 candidate datasets.\n",
+      "Parsed data from https://www.ncbi.nlm.nih.gov/pmc/articles/pmc11425778. Found 3 candidate datasets.\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "parser.py - line 1710 - WARNING - Identifier phs001287 does not match pattern for dbgap\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Parsed data from https://pmc.ncbi.nlm.nih.gov/articles/PMC7233456/. Found 10 candidate datasets.\n"
+     ]
+    }
+   ],
+   "execution_count": 13
+  },
+  {
+   "metadata": {},
+   "cell_type": "markdown",
+   "source": "### Full-Document-Read",
+   "id": "2e5f5716d545a191"
+  },
+  {
+   "metadata": {
+    "ExecuteTime": {
+     "end_time": "2025-05-27T23:34:40.108730Z",
+     "start_time": "2025-05-27T23:34:39.562231Z"
+    }
+   },
+   "cell_type": "code",
+   "source": "parser = LLMParser(data_gatherer.config['parser_config_path'], data_gatherer.logger, full_document_read=True)",
+   "id": "85277bc7cf47d4b1",
+   "outputs": [],
+   "execution_count": 14
+  },
+  {
+   "metadata": {
+    "ExecuteTime": {
+     "end_time": "2025-05-27T23:34:50.478760Z",
+     "start_time": "2025-05-27T23:34:40.109987Z"
+    }
+   },
+   "cell_type": "code",
+   "source": [
+    "input_url = [API_supported_input, local_fetch_supported_input, API_unsupported_input]\n",
+    "input_format = [\"XML\", \"full_HTML\", \"full_HTML\"]\n",
+    "input_cont = [raw_data_API, raw_data_local, raw_html]\n",
+    "\n",
+    "dfs_dict_FDR = {}\n",
+    "for i in range(len(input_url)):\n",
+    "    append_data = parser.parse_data(input_cont[i], \"PMC\", input_url[i], raw_data_format=input_format[i])\n",
+    "    dfs_dict_FDR[input_url[i]] = append_data\n",
+    "    print(f\"Parsed data from {input_url[i]}. Found {len(append_data)} candidate datasets.\")\n",
+    "    time.sleep(1)  # To print the output in the right order"
+   ],
+   "id": "e77187b1bdda3ecc",
+   "outputs": [
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "parser.py - line 1710 - WARNING - Identifier PHS001049 does not match pattern for dbgap\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Parsed data from https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6141466. Found 17 candidate datasets.\n",
+      "Parsed data from https://www.ncbi.nlm.nih.gov/pmc/articles/pmc11425778. Found 3 candidate datasets.\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "parser.py - line 1710 - WARNING - Identifier phs001287 does not match pattern for dbgap\n",
+      "parser.py - line 1828 - WARNING - Repository cptac data portal not supported in config. Skipping dataset 2.\n",
+      "parser.py - line 1828 - WARNING - Repository linkedomics not supported in config. Skipping dataset 3.\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Parsed data from https://pmc.ncbi.nlm.nih.gov/articles/PMC7233456/. Found 12 candidate datasets.\n"
+     ]
+    }
+   ],
+   "execution_count": 15
+  },
+  {
+   "metadata": {},
+   "cell_type": "markdown",
+   "source": [
+    "## Step III: Classify data\n",
+    "\n",
+    "For now, we are only considering raw data files, i.e. those objects that can be accessed from a repository with an accession code. However, the classifier can be extended to include other types of objects, such as supplementary materials."
+   ],
+   "id": "686d613afae5e90c"
+  },
+  {
+   "metadata": {
+    "ExecuteTime": {
+     "end_time": "2025-05-27T23:34:50.498798Z",
+     "start_time": "2025-05-27T23:34:50.482284Z"
+    }
+   },
+   "cell_type": "code",
+   "source": [
+    "print(f\"Fetched from {len(dfs_dict_FDR)} publications.\")\n",
+    "raw_data_files = data_gatherer.classifier.get_raw_data_files(dfs_dict_FDR)\n",
+    "print(f\"Fetched {len(raw_data_files)} raw data files:\")"
+   ],
+   "id": "d8eb143abe00f7db",
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Fetched from 3 publications.\n",
+      "Fetched 6 raw data files:\n"
+     ]
+    }
+   ],
+   "execution_count": 16
+  },
+  {
+   "metadata": {
+    "ExecuteTime": {
+     "end_time": "2025-05-27T23:34:50.511055Z",
+     "start_time": "2025-05-27T23:34:50.500363Z"
+    }
+   },
+   "cell_type": "code",
+   "source": "raw_data_files",
+   "id": "e18c2df3980ef877",
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "                                      publication_url  \\\n",
+       "0   https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6...   \n",
+       "1   https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6...   \n",
+       "17  https://www.ncbi.nlm.nih.gov/pmc/articles/pmc1...   \n",
+       "20  https://pmc.ncbi.nlm.nih.gov/articles/PMC7233456/   \n",
+       "21  https://pmc.ncbi.nlm.nih.gov/articles/PMC7233456/   \n",
+       "22  https://pmc.ncbi.nlm.nih.gov/articles/PMC7233456/   \n",
+       "\n",
+       "                                   dataset_identifier    data_repository  \\\n",
+       "0                                           PHS001049              dbGAP   \n",
+       "1                                         PRJNA306801                SRA   \n",
+       "17                                       MSV000092944   MassIVE database   \n",
+       "20                                          phs001287              dbGaP   \n",
+       "21  https://cptac-data-portal.georgetown.edu/cptac...  CPTAC Data Portal   \n",
+       "22                        http://www.linkedomics.org/        LinkedOmics   \n",
+       "\n",
+       "                                      dataset_webpage  \n",
+       "0   https://www.ncbi.nlm.nih.gov/projects/gap/cgi-...  \n",
+       "1   https://www.ncbi.nlm.nih.gov/bioproject/?term=...  \n",
+       "17  https://massive.ucsd.edu/ProteoSAFe/dataset.js...  \n",
+       "20  https://www.ncbi.nlm.nih.gov/projects/gap/cgi-...  \n",
+       "21                                                NaN  \n",
+       "22                                                NaN  "
+      ],
+      "text/html": [
+       "<div>\n",
+       "<style scoped>\n",
+       "    .dataframe tbody tr th:only-of-type {\n",
+       "        vertical-align: middle;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe tbody tr th {\n",
+       "        vertical-align: top;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe thead th {\n",
+       "        text-align: right;\n",
+       "    }\n",
+       "</style>\n",
+       "<table border=\"1\" class=\"dataframe\">\n",
+       "  <thead>\n",
+       "    <tr style=\"text-align: right;\">\n",
+       "      <th></th>\n",
+       "      <th>publication_url</th>\n",
+       "      <th>dataset_identifier</th>\n",
+       "      <th>data_repository</th>\n",
+       "      <th>dataset_webpage</th>\n",
+       "    </tr>\n",
+       "  </thead>\n",
+       "  <tbody>\n",
+       "    <tr>\n",
+       "      <th>0</th>\n",
+       "      <td>https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6...</td>\n",
+       "      <td>PHS001049</td>\n",
+       "      <td>dbGAP</td>\n",
+       "      <td>https://www.ncbi.nlm.nih.gov/projects/gap/cgi-...</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>1</th>\n",
+       "      <td>https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6...</td>\n",
+       "      <td>PRJNA306801</td>\n",
+       "      <td>SRA</td>\n",
+       "      <td>https://www.ncbi.nlm.nih.gov/bioproject/?term=...</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>17</th>\n",
+       "      <td>https://www.ncbi.nlm.nih.gov/pmc/articles/pmc1...</td>\n",
+       "      <td>MSV000092944</td>\n",
+       "      <td>MassIVE database</td>\n",
+       "      <td>https://massive.ucsd.edu/ProteoSAFe/dataset.js...</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>20</th>\n",
+       "      <td>https://pmc.ncbi.nlm.nih.gov/articles/PMC7233456/</td>\n",
+       "      <td>phs001287</td>\n",
+       "      <td>dbGaP</td>\n",
+       "      <td>https://www.ncbi.nlm.nih.gov/projects/gap/cgi-...</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>21</th>\n",
+       "      <td>https://pmc.ncbi.nlm.nih.gov/articles/PMC7233456/</td>\n",
+       "      <td>https://cptac-data-portal.georgetown.edu/cptac...</td>\n",
+       "      <td>CPTAC Data Portal</td>\n",
+       "      <td>NaN</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>22</th>\n",
+       "      <td>https://pmc.ncbi.nlm.nih.gov/articles/PMC7233456/</td>\n",
+       "      <td>http://www.linkedomics.org/</td>\n",
+       "      <td>LinkedOmics</td>\n",
+       "      <td>NaN</td>\n",
+       "    </tr>\n",
+       "  </tbody>\n",
+       "</table>\n",
+       "</div>"
+      ]
+     },
+     "execution_count": 17,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "execution_count": 17
+  }
+ ],
+ "metadata": {
+  "kernelspec": {
+   "display_name": "Python 3",
+   "language": "python",
+   "name": "python3"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 2
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython2",
+   "version": "2.7.6"
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 5
+}

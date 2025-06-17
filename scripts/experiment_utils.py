@@ -5,12 +5,14 @@ import pandas as pd
 from bs4 import BeautifulSoup
 import os
 import re
+from pathlib import Path
 
-def load_pmc_files_from_html_xml_dir_to_dataframe_fetch_file(src_dir,raw_HTML_data_filepath):
+def load_pmc_files_from_html_xml_dir_to_dataframe_fetch_file(src_dir, raw_HTML_data_filepath, base_output_dir="../output"):
     """
     Loads all files from the specified HTML/XML directory into a DataFrame and saves it as a parquet file.
     Args:
-        raw_HTML_data_filepath (str): The path where the DataFrame will be saved as a parquet file.
+        raw_HTML_data_filepath (str): The path where the DataFrame will be saved as a parquet file (relative to base_output_dir).
+        base_output_dir (str): The base directory for output files.
     """
     # find all the files in the html_xml_dir directory
     files_df = []
@@ -40,7 +42,16 @@ def load_pmc_files_from_html_xml_dir_to_dataframe_fetch_file(src_dir,raw_HTML_da
             })
 
     files_df = pd.DataFrame(files_df)
-    files_df.to_parquet("../" + raw_HTML_data_filepath, index=False)
+
+    # Secure output path construction
+    base_dir = Path(base_output_dir).resolve()
+    output_path = (base_dir / raw_HTML_data_filepath).resolve()
+
+    # Ensure output_path is within base_dir
+    if not str(output_path).startswith(str(base_dir)):
+        raise ValueError("Unsafe output path detected (possible path traversal)")
+
+    files_df.to_parquet(str(output_path), index=False)
 
 def PMID_to_doi(pmid,pmid_doi_mapping):
     if pmid in pmid_doi_mapping:

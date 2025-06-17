@@ -1,0 +1,400 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>&lt;no title&gt; &mdash; Data Gatherer 0.3.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=e259d695"></script>
+      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="&lt;no title&gt;" href="parser.html" />
+    <link rel="prev" title="&lt;no title&gt;" href="orchestrator.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            Data Gatherer
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="example_notebook.html">Step I: Fetch data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="example_notebook.html#Step-II:-Parse-data">Step II: Parse data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="example_notebook.html#Step-III:-Classify-data">Step III: Classify data</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Library Documentation:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="orchestrator.html"><code class="docutils literal notranslate"><span class="pre">Orchestrator</span></code></a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#"><code class="docutils literal notranslate"><span class="pre">APIClient</span></code></a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#data_gatherer.data_fetcher.APIClient.download_xml"><code class="docutils literal notranslate"><span class="pre">APIClient.download_xml()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#data_gatherer.data_fetcher.APIClient.fetch_data"><code class="docutils literal notranslate"><span class="pre">APIClient.fetch_data()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="#data_gatherer.data_fetcher.DataCompletenessChecker"><code class="docutils literal notranslate"><span class="pre">DataCompletenessChecker</span></code></a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#data_gatherer.data_fetcher.DataCompletenessChecker.extract_namespaces"><code class="docutils literal notranslate"><span class="pre">DataCompletenessChecker.extract_namespaces()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#data_gatherer.data_fetcher.DataCompletenessChecker.has_links_in_section"><code class="docutils literal notranslate"><span class="pre">DataCompletenessChecker.has_links_in_section()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#data_gatherer.data_fetcher.DataCompletenessChecker.has_target_section"><code class="docutils literal notranslate"><span class="pre">DataCompletenessChecker.has_target_section()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#data_gatherer.data_fetcher.DataCompletenessChecker.is_xml_data_complete"><code class="docutils literal notranslate"><span class="pre">DataCompletenessChecker.is_xml_data_complete()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="#data_gatherer.data_fetcher.DataFetcher"><code class="docutils literal notranslate"><span class="pre">DataFetcher</span></code></a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#data_gatherer.data_fetcher.DataFetcher.update_DataFetcher_settings"><code class="docutils literal notranslate"><span class="pre">DataFetcher.update_DataFetcher_settings()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#data_gatherer.data_fetcher.DataFetcher.url_in_dataframe"><code class="docutils literal notranslate"><span class="pre">DataFetcher.url_in_dataframe()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="#data_gatherer.data_fetcher.DatabaseFetcher"><code class="docutils literal notranslate"><span class="pre">DatabaseFetcher</span></code></a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#data_gatherer.data_fetcher.DatabaseFetcher.fetch_data"><code class="docutils literal notranslate"><span class="pre">DatabaseFetcher.fetch_data()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="#data_gatherer.data_fetcher.WebScraper"><code class="docutils literal notranslate"><span class="pre">WebScraper</span></code></a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#data_gatherer.data_fetcher.WebScraper.download_file_from_url"><code class="docutils literal notranslate"><span class="pre">WebScraper.download_file_from_url()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#data_gatherer.data_fetcher.WebScraper.download_html"><code class="docutils literal notranslate"><span class="pre">WebScraper.download_html()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#data_gatherer.data_fetcher.WebScraper.fetch_data"><code class="docutils literal notranslate"><span class="pre">WebScraper.fetch_data()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#data_gatherer.data_fetcher.WebScraper.get_opendata_from_pubmed_id"><code class="docutils literal notranslate"><span class="pre">WebScraper.get_opendata_from_pubmed_id()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#data_gatherer.data_fetcher.WebScraper.get_publication_name_from_driver"><code class="docutils literal notranslate"><span class="pre">WebScraper.get_publication_name_from_driver()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#data_gatherer.data_fetcher.WebScraper.normalize_HTML"><code class="docutils literal notranslate"><span class="pre">WebScraper.normalize_HTML()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#data_gatherer.data_fetcher.WebScraper.normalize_links"><code class="docutils literal notranslate"><span class="pre">WebScraper.normalize_links()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="parser.html"><code class="docutils literal notranslate"><span class="pre">LLMParser</span></code></a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Data Gatherer</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">&lt;no title&gt;</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/data_fetcher.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <dl class="py class" id="module-data_gatherer.data_fetcher">
+<dt class="sig sig-object py" id="data_gatherer.data_fetcher.APIClient">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">data_gatherer.data_fetcher.</span></span><span class="sig-name descname"><span class="pre">APIClient</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">api_client</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">API</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#data_gatherer.data_fetcher.APIClient" title="Link to this definition"></a></dt>
+<dd><p>Class for fetching data from an API using the requests library.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="data_gatherer.data_fetcher.APIClient.download_xml">
+<span class="sig-name descname"><span class="pre">download_xml</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">directory</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">api_data</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#data_gatherer.data_fetcher.APIClient.download_xml" title="Link to this definition"></a></dt>
+<dd><p>Downloads the XML data to a specified directory.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>directory</strong> – The directory where the XML file will be saved.</p></li>
+<li><p><strong>api_data</strong> – The XML data to be saved.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="data_gatherer.data_fetcher.APIClient.fetch_data">
+<span class="sig-name descname"><span class="pre">fetch_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">article_url</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">retries</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">delay</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#data_gatherer.data_fetcher.APIClient.fetch_data" title="Link to this definition"></a></dt>
+<dd><p>Fetches data from the API using the provided article URL.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>article_url</strong> – The URL of the article to fetch data for.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="data_gatherer.data_fetcher.DataCompletenessChecker">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">data_gatherer.data_fetcher.</span></span><span class="sig-name descname"><span class="pre">DataCompletenessChecker</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">publisher</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'PMC'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#data_gatherer.data_fetcher.DataCompletenessChecker" title="Link to this definition"></a></dt>
+<dd><p>Class to check the completeness of data sections in API responses.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="data_gatherer.data_fetcher.DataCompletenessChecker.extract_namespaces">
+<span class="sig-name descname"><span class="pre">extract_namespaces</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">xml_element</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#data_gatherer.data_fetcher.DataCompletenessChecker.extract_namespaces" title="Link to this definition"></a></dt>
+<dd><p>Extract all namespaces in use, including xlink.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="data_gatherer.data_fetcher.DataCompletenessChecker.has_links_in_section">
+<span class="sig-name descname"><span class="pre">has_links_in_section</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">section</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">namespaces</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="headerlink" href="#data_gatherer.data_fetcher.DataCompletenessChecker.has_links_in_section" title="Link to this definition"></a></dt>
+<dd><p>Check if the given section contains any external links.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>section</strong> – The section element to search for links.</p></li>
+<li><p><strong>namespaces</strong> – Namespaces to use for XML parsing.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>True if links are found, False otherwise.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="data_gatherer.data_fetcher.DataCompletenessChecker.has_target_section">
+<span class="sig-name descname"><span class="pre">has_target_section</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">raw_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">section_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="headerlink" href="#data_gatherer.data_fetcher.DataCompletenessChecker.has_target_section" title="Link to this definition"></a></dt>
+<dd><p>Check if the target section (data availability or supplementary data) exists in the raw data.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>raw_data</strong> – Raw XML data.</p></li>
+<li><p><strong>section_name</strong> – Name of the section to check.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>True if the section is found with relevant links, False otherwise.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="data_gatherer.data_fetcher.DataCompletenessChecker.is_xml_data_complete">
+<span class="sig-name descname"><span class="pre">is_xml_data_complete</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">raw_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">url</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">required_sections</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">['data_availability',</span> <span class="pre">'supplementary_data']</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="headerlink" href="#data_gatherer.data_fetcher.DataCompletenessChecker.is_xml_data_complete" title="Link to this definition"></a></dt>
+<dd><p>Check if required sections are present in the raw_data.
+Return True if all required sections are present.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>raw_data</strong> – Raw XML data.</p></li>
+<li><p><strong>url</strong> – The URL of the article.</p></li>
+<li><p><strong>required_sections</strong> – List of required sections to check.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>True if all required sections are present, False otherwise.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="data_gatherer.data_fetcher.DataFetcher">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">data_gatherer.data_fetcher.</span></span><span class="sig-name descname"><span class="pre">DataFetcher</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">src</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'WebScraper'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#data_gatherer.data_fetcher.DataFetcher" title="Link to this definition"></a></dt>
+<dd><dl class="py method">
+<dt class="sig sig-object py" id="data_gatherer.data_fetcher.DataFetcher.update_DataFetcher_settings">
+<span class="sig-name descname"><span class="pre">update_DataFetcher_settings</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">url</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">entire_doc_model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">HTML_fallback</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#data_gatherer.data_fetcher.DataFetcher.update_DataFetcher_settings" title="Link to this definition"></a></dt>
+<dd><p>Sets up either a web scraper or API client based on the URL domain.
+Also used to avoid re_instantiating another selenium webdriver.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>url</strong> – The URL to fetch data from.</p></li>
+<li><p><strong>entire_doc_model</strong> – Flag to indicate if the entire document model is being used.</p></li>
+<li><p><strong>logger</strong> – The logger instance for logging messages.</p></li>
+<li><p><strong>HTML_fallback</strong> – Flag to indicate if HTML fallback is needed.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>An instance of the appropriate data fetcher (WebScraper or APIClient).</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="data_gatherer.data_fetcher.DataFetcher.url_in_dataframe">
+<span class="sig-name descname"><span class="pre">url_in_dataframe</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">url</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#data_gatherer.data_fetcher.DataFetcher.url_in_dataframe" title="Link to this definition"></a></dt>
+<dd><p>Checks if the given doi / pmcid is present in the DataFrame.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>url</strong> – The URL to check.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>True if the URL is found, False otherwise.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="data_gatherer.data_fetcher.DatabaseFetcher">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">data_gatherer.data_fetcher.</span></span><span class="sig-name descname"><span class="pre">DatabaseFetcher</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#data_gatherer.data_fetcher.DatabaseFetcher" title="Link to this definition"></a></dt>
+<dd><p>Class for fetching data from a DataFrame.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="data_gatherer.data_fetcher.DatabaseFetcher.fetch_data">
+<span class="sig-name descname"><span class="pre">fetch_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">url_key</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">retries</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">delay</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#data_gatherer.data_fetcher.DatabaseFetcher.fetch_data" title="Link to this definition"></a></dt>
+<dd><p>Fetches data from a local file or database.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>url_key</strong> – The key to identify the data in the database.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The raw HTML content of the page.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="data_gatherer.data_fetcher.WebScraper">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">data_gatherer.data_fetcher.</span></span><span class="sig-name descname"><span class="pre">WebScraper</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">scraper_tool</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#data_gatherer.data_fetcher.WebScraper" title="Link to this definition"></a></dt>
+<dd><p>Class for fetching data from web pages using Selenium.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="data_gatherer.data_fetcher.WebScraper.download_file_from_url">
+<span class="sig-name descname"><span class="pre">download_file_from_url</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">url</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_root</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">paper_id</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#data_gatherer.data_fetcher.WebScraper.download_file_from_url" title="Link to this definition"></a></dt>
+<dd><p>Downloads a file from the given URL and saves it to the specified directory.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>url</strong> – The URL to download the file from.</p></li>
+<li><p><strong>output_root</strong> – The root directory where the file will be saved.</p></li>
+<li><p><strong>paper_id</strong> – The ID of the paper, used to create a subdirectory.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="data_gatherer.data_fetcher.WebScraper.download_html">
+<span class="sig-name descname"><span class="pre">download_html</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dir</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#data_gatherer.data_fetcher.WebScraper.download_html" title="Link to this definition"></a></dt>
+<dd><p>Downloads the HTML content to a specified directory.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>dir</strong> – The directory where the HTML file will be saved.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="data_gatherer.data_fetcher.WebScraper.fetch_data">
+<span class="sig-name descname"><span class="pre">fetch_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">url</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">retries</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">delay</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#data_gatherer.data_fetcher.WebScraper.fetch_data" title="Link to this definition"></a></dt>
+<dd><p>Fetches data from the given URL, by simulating user scroll, waiting some delay time and doing multiple retries
+to allow for page load and then get the source html</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>url</strong> – The URL to fetch data from.</p></li>
+<li><p><strong>retries</strong> – Number of retries in case of failure.</p></li>
+<li><p><strong>delay</strong> – Delay time between retries.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The raw HTML content of the page.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="data_gatherer.data_fetcher.WebScraper.get_opendata_from_pubmed_id">
+<span class="sig-name descname"><span class="pre">get_opendata_from_pubmed_id</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pmid</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#data_gatherer.data_fetcher.WebScraper.get_opendata_from_pubmed_id" title="Link to this definition"></a></dt>
+<dd><p>Given a PubMed ID, fetches the corresponding PMC ID and DOI from PubMed.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>pmid</strong> – The PubMed ID to fetch data for.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A tuple containing the PMC ID and DOI.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="data_gatherer.data_fetcher.WebScraper.get_publication_name_from_driver">
+<span class="sig-name descname"><span class="pre">get_publication_name_from_driver</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#data_gatherer.data_fetcher.WebScraper.get_publication_name_from_driver" title="Link to this definition"></a></dt>
+<dd><p>Extracts the publication name from the WebDriver’s current page title. <strong>Remark</strong>: this should be called after
+scraper_tool.get(url) to ensure the page is loaded.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The publication name as a string.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="data_gatherer.data_fetcher.WebScraper.normalize_HTML">
+<span class="sig-name descname"><span class="pre">normalize_HTML</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">html</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keep_tags</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#data_gatherer.data_fetcher.WebScraper.normalize_HTML" title="Link to this definition"></a></dt>
+<dd><p>Normalize the HTML content by removing unnecessary tags and attributes.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>html</strong> – The raw HTML content to be normalized.</p></li>
+<li><p><strong>keep_tags</strong> – List of tags to keep in the HTML content. May be useful for some servers that host target info inside specific tags (e.g., &lt;form&gt; or &lt;script&gt;) that are otherwise removed by the scraper.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The normalized HTML content.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="data_gatherer.data_fetcher.WebScraper.normalize_links">
+<span class="sig-name descname"><span class="pre">normalize_links</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">links_raw_dict</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#data_gatherer.data_fetcher.WebScraper.normalize_links" title="Link to this definition"></a></dt>
+<dd><p>Convert Selenium WebElement objects to strings and keep existing string links unchanged.</p>
+</dd></dl>
+
+</dd></dl>
+
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="orchestrator.html" class="btn btn-neutral float-left" title="&lt;no title&gt;" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="parser.html" class="btn btn-neutral float-right" title="&lt;no title&gt;" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Pietro Marini.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
