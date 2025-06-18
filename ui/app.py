@@ -29,7 +29,7 @@ if st.button("🚀 Run Extraction"):
         st.info(f"Processing {len(pmcids)} PMCID(s)...")
 
         try:
-            orch = Orchestrator()
+            orch = Orchestrator(llm_name='gemini-2.0-flash')
 
             if linux:
                 driver_path = '/usr/local/bin/geckodriver'
@@ -38,7 +38,7 @@ if st.button("🚀 Run Extraction"):
 
             orch.setup_data_fetcher('url_list', driver_path=driver_path)
 
-            results = orch.process_articles(pmcids, driver_path=driver_path)
+            results = orch.process_articles(pmcids, driver_path=driver_path, use_portkey_for_gemini=True)
 
             st.success("Extraction complete.")
             for pmcid, result in results.items():
