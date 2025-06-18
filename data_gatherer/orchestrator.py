@@ -617,7 +617,8 @@ class Orchestrator:
             metadata['paper_with_dataset_citation'] = row['source_url']
 
             if return_metadata:
-                ret_list.append(metadata)
+                flat_metadata = self.metadata_parser.flatten_metadata_dict(metadata)
+                ret_list.append(flat_metadata)
 
             self.display_data_preview(metadata, display_type=display_type, interactive=interactive)
 

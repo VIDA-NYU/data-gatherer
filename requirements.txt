@@ -25,3 +25,4 @@ pyarrow
 streamlit
 ipywidgets
 portkey-ai
+xlsxwriter

@@ -11,7 +11,7 @@ class LLMClassifier:
         self.logger = logger
         self.setup_client()
         self.show_classify_stats = True
-        self.prompt_manager = PromptManager("prompts", self.logger)
+        self.prompt_manager = PromptManager("data_gatherer/prompts/prompt_templates", self.logger)
 
     def setup_client(self, llm_name='put your model'):
         """
