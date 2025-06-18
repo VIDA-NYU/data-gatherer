@@ -2148,7 +2148,8 @@ class LLMParser(Parser):
 
         return n_tokens
 
-    def parse_metadata(self, metadata: str, model = 'gemini-2.0-flash') -> dict:
+    def parse_metadata(self, metadata: str, model = 'gemini-2.0-flash', use_portkey_for_gemini=True,
+                       prompt_name='gpt_metadata_extract') -> dict:
         """
         Given the metadata, extract the dataset information using the LLM.
 
@@ -2160,10 +2161,13 @@ class LLMParser(Parser):
         """
         #metadata = self.normalize_full_DOM(metadata)
         self.logger.info(f"Parsing metadata len: {len(metadata)}")
-        dataset_info = self.extract_dataset_info(metadata, subdir='metadata_prompts')
+        dataset_info = self.extract_dataset_info(metadata, subdir='metadata_prompts',
+                                                 use_portkey_for_gemini=use_portkey_for_gemini,
+                                                 prompt_name=prompt_name)
         return dataset_info
 
-    def extract_dataset_info(self, metadata, subdir='', model=None):
+    def extract_dataset_info(self, metadata, subdir='', model=None, use_portkey_for_gemini=True,
+                             prompt_name='gpt_metadata_extract'):
         """
         Given the metadata, extract the dataset information using the LLM.
 
@@ -2182,7 +2186,7 @@ class LLMParser(Parser):
             model=model if model else self.llm_name,
             logger=self.logger,
             save_prompts=self.save_dynamic_prompts,
-            use_portkey_for_gemini=self.use_portkey_for_gemini
+            use_portkey_for_gemini=use_portkey_for_gemini
         )
         response = llm.api_call(metadata, subdir=subdir)
 
