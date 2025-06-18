@@ -1416,7 +1416,8 @@ class LLMParser(Parser):
                         )
                         if self.full_document_read:
                             resps = self.safe_parse_json(response)
-                            resps = resps.get("datasets", []) if resps is not None else []
+                            if isinstance(resps, dict):
+                                resps = resps.get("datasets", []) if resps is not None else []
                         else:
                             try:
                                 self.logger.info(f"Portkey Gemini response: {response}")
@@ -2165,6 +2166,26 @@ class LLMParser(Parser):
                                                  use_portkey_for_gemini=use_portkey_for_gemini,
                                                  prompt_name=prompt_name)
         return dataset_info
+
+    def flatten_metadata_dict(self, metadata: dict, parent_key: str = '', sep: str = '.') -> dict:
+        """
+        Recursively flattens a nested dictionary, concatenating keys with `sep`.
+        Lists of dicts are expanded with their index.
+        """
+        items = []
+        for k, v in metadata.items():
+            new_key = f"{parent_key}{sep}{k}" if parent_key else k
+            if isinstance(v, dict):
+                items.extend(self.flatten_metadata_dict(v, new_key, sep=sep).items())
+            elif isinstance(v, list):
+                for i, item in enumerate(v):
+                    if isinstance(item, dict):
+                        items.extend(self.flatten_metadata_dict(item, f"{new_key}[{i}]", sep=sep).items())
+                    else:
+                        items.append((f"{new_key}[{i}]", item))
+            else:
+                items.append((new_key, v))
+        return dict(items)
 
     def extract_dataset_info(self, metadata, subdir='', model=None, use_portkey_for_gemini=True,
                              prompt_name='gpt_metadata_extract'):
