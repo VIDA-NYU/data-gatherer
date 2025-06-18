@@ -7,6 +7,7 @@ prompts/
 scripts/
 tests/
 tmp/
+.git
 
 # Exclude specific files
 test_refactor.ipynb
