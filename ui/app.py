@@ -11,7 +11,7 @@ use_portkey = True
 prompt_name = 'GPT_from_full_input_Examples'
 model_name = 'gemini-2.0-flash'
 metadata_prompt_name = 'portkey_gemini_metadata_extract'
-full_document_read = False
+full_document_read = True
 
 # Load environment variables from .env file
 load_dotenv()
