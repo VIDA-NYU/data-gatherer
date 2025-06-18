@@ -138,7 +138,8 @@ class Orchestrator:
 
     def parse_data(self, raw_data, current_url, parser_mode='LLMParser', publisher='PMC', additional_data=None,
                    raw_data_format='XML', save_xml_output=False, html_xml_dir='tmp/html_xml_samples/',
-                   process_DAS_links_separately=False, full_document_read=False):
+                   process_DAS_links_separately=False, full_document_read=False,
+                   prompt_name='retrieve_datasets_simple_JSON', use_portkey_for_gemini=True):
         """
         Parses the raw data fetched from the source URL using the configured parser (LLMParser or RuleBasedParser).
 
@@ -164,12 +165,13 @@ class Orchestrator:
 
         if parser_mode == "LLMParser":
             self.parser = LLMParser(self.open_data_repos_ontology, self.logger, full_document_read=full_document_read,
-                                    llm_name=self.llm)
+                                    llm_name=self.llm, use_portkey_for_gemini=use_portkey_for_gemini)
 
         cont = raw_data.values()
         cont = list(cont)[0]
 
-        return self.parser.parse_data(cont, publisher, current_url, raw_data_format=raw_data_format,)
+        return self.parser.parse_data(cont, publisher, current_url, raw_data_format=raw_data_format,
+                                      prompt_name=prompt_name, use_portkey_for_gemini=use_portkey_for_gemini,)
 
 
     def setup_data_fetcher(self, search_method='url_list', driver_path='', browser='Firefox', headless=True):
@@ -231,8 +233,8 @@ class Orchestrator:
         if url.startswith("PMC"):
             return self.PMCID_to_URL(url)
 
-    def process_url(self, url, save_staging_table=False, html_xml_dir='tmp/html_xmls/', driver_path=None,
-                    browser='Firefox', headless=True):
+    def process_url(self, url, save_staging_table=False, html_xml_dir='tmp/html_xmls/', use_portkey_for_gemini=True,
+                    driver_path=None, browser='Firefox', headless=True):
         """
         Orchestrates the process for a single given source URL (publication).
 
@@ -340,8 +342,10 @@ class Orchestrator:
 
             elif self.raw_data_format == "XML" and raw_data is not None:
                 self.logger.info("Using LLMParser to parse data.")
-                self.parser = LLMParser(self.open_data_repos_ontology, self.logger, llm_name=self.llm,
-                                        full_document_read=self.full_document_read)
+                self.parser = LLMParser(self.open_data_repos_ontology, self.logger,
+                                        llm_name=self.llm,
+                                        full_document_read=self.full_document_read,
+                                        use_portkey_for_gemini=use_portkey_for_gemini)
 
                 if additional_data is None:
                     parsed_data = self.parser.parse_data(raw_data, self.publisher, self.current_url)
@@ -362,8 +366,10 @@ class Orchestrator:
 
             elif self.raw_data_format == "full_HTML" or self.parser_mode == "LLMParser":
                 self.logger.info("Using LLMParser to parse data.")
-                self.parser = LLMParser(self.open_data_repos_ontology, self.logger, llm_name=self.llm,
-                                        full_document_read=self.full_document_read)
+                self.parser = LLMParser(self.open_data_repos_ontology, self.logger,
+                                        llm_name=self.llm,
+                                        full_document_read=self.full_document_read,
+                                        use_portkey_for_gemini=use_portkey_for_gemini)
                 parsed_data = self.parser.parse_data(raw_data, self.publisher, self.current_url, raw_data_format="full_HTML")
                 parsed_data['source_url'] = url
                 self.logger.info(f"Parsed data extraction completed. Elements collected: {len(parsed_data)}")
@@ -428,7 +434,8 @@ class Orchestrator:
         self.logger.info(f"Deduplication completed. {len(classified_links)} unique links found.")
         return classified_links
 
-    def process_articles(self, url_list, log_modulo=10, driver_path=None, browser='Firefox', headless=True):
+    def process_articles(self, url_list, log_modulo=10, driver_path=None, browser='Firefox', headless=True,
+                         use_portkey_for_gemini=True):
         """
         Processes a list of URLs and returns classified data.
 
@@ -446,7 +453,8 @@ class Orchestrator:
         for iteration, url in enumerate(url_list):
             url = self.preprocess_url(url)
             self.logger.info(f"{iteration}th function call: self.process_url({url})")
-            results[url] = self.process_url(url, driver_path=driver_path, browser=browser, headless=headless,)
+            results[url] = self.process_url(url, driver_path=driver_path, browser=browser, headless=headless,
+                                            use_portkey_for_gemini=use_portkey_for_gemini)
 
             if iteration % log_modulo == 0:
                 elapsed = time.time() - start_time  # Time elapsed since start
@@ -511,14 +519,15 @@ class Orchestrator:
             raise FileNotFoundError(f"Create file with input links! File not found: {input_file}\n\n{e}\n")
 
     def get_data_preview(self, combined_df, display_type='console', interactive=True, return_metadata=False,
-                         write_raw_metadata=False, html_xml_dir='tmp/html_xmls/'):
+                         write_raw_metadata=False, html_xml_dir='tmp/html_xmls/', use_portkey_for_gemini=True,
+                         prompt_name='gpt_metadata_extract'):
         """
         Shows user a preview of the data they are about to download.
         -- future release
         """
         self.already_previewed = []
         self.metadata_parser = LLMParser(self.open_data_repos_ontology, self.logger, full_document_read=True,
-                                         llm_name=self.llm)
+                                         llm_name=self.llm,  use_portkey_for_gemini=use_portkey_for_gemini)
         self.data_fetcher = self.data_fetcher.update_DataFetcher_settings('any_url',
                                                                           self.full_document_read,
                                                                           self.logger,
