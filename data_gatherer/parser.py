@@ -8,6 +8,7 @@ from lxml import html
 from ollama import Client
 from openai import OpenAI
 import google.generativeai as genai
+from portkey_ai import Portkey
 import typing_extensions as typing
 from pydantic import BaseModel
 import os
@@ -442,7 +443,8 @@ class LLMParser(Parser):
     """
     def __init__(self, open_data_repos_ontology, logger, log_file_override=None, full_document_read=True,
                  prompt_dir="data_gatherer/prompts/prompt_templates", response_file="data_gatherer/prompts/LLMs_responses_cache.json",
-                 llm_name=None, save_dynamic_prompts=False, save_responses_to_cache=False, use_cached_responses=False):
+                 llm_name=None, save_dynamic_prompts=False, save_responses_to_cache=False, use_cached_responses=False,
+                 use_portkey_for_gemini=True):
         """
         Initialize the LLMParser with configuration, logger, and optional log file override.
 
@@ -466,6 +468,16 @@ class LLMParser(Parser):
 
         self.full_document_read = full_document_read
         self.llm_name = llm_name
+        self.use_portkey_for_gemini = use_portkey_for_gemini
+        self.portkey_api_key = os.environ.get("PORTKEY_API_KEY")
+        self.portkey_route = os.environ.get("PORTKEY_ROUTE")
+
+        if self.use_portkey_for_gemini:
+            self.portkey = Portkey(
+                api_key=self.portkey_api_key,
+                virtual_key=self.portkey_route,
+                base_url="https://ai-gateway.apps.cloud.rt.nyu.edu/v1"
+            )
 
         if llm_name == 'gemma2:9b':
             self.client = Client(host=os.environ['NYU_LLM_API'])  # env variable
@@ -477,23 +489,38 @@ class LLMParser(Parser):
             self.client = OpenAI(api_key=os.environ['GPT_API_KEY'])
 
         elif llm_name == 'gemini-1.5-flash':
-            genai.configure(api_key=os.environ['GEMINI_KEY'])
-            self.client = genai.GenerativeModel('gemini-1.5-flash')
+            if not self.use_portkey_for_gemini:
+                genai.configure(api_key=os.environ['GEMINI_KEY'])
+                self.client = genai.GenerativeModel('gemini-1.5-flash')
+            else:
+                self.client = None
 
         elif llm_name == 'gemini-2.0-flash-exp':
-            genai.configure(api_key=os.environ['GEMINI_KEY'])
-            self.client = genai.GenerativeModel('gemini-2.0-flash-exp')
+            if not self.use_portkey_for_gemini:
+                genai.configure(api_key=os.environ['GEMINI_KEY'])
+                self.client = genai.GenerativeModel('gemini-2.0-flash-exp')
+            else:
+                self.client = None
 
         elif llm_name == 'gemini-2.0-flash':
-            genai.configure(api_key=os.environ['GEMINI_KEY'])
-            self.client = genai.GenerativeModel('gemini-2.0-flash')
+            if not self.use_portkey_for_gemini:
+                genai.configure(api_key=os.environ['GEMINI_KEY'])
+                self.client = genai.GenerativeModel('gemini-2.0-flash')
+            else:
+                self.client = None
 
         elif llm_name == 'gemini-1.5-pro':
-            genai.configure(api_key=os.environ['GEMINI_KEY'])
-            self.client = genai.GenerativeModel('gemini-1.5-pro')
+            if not self.use_portkey_for_gemini:
+                genai.configure(api_key=os.environ['GEMINI_KEY'])
+                self.client = genai.GenerativeModel('gemini-1.5-pro')
+            else:
+                self.client = None
+        else:
+            raise ValueError(f"Unsupported LLM name: {llm_name}.")
 
     def parse_data(self, api_data, publisher, current_url_address, additional_data=None, raw_data_format='XML',
-                   save_xml_output=False, html_xml_dir='html_xml_samples/', process_DAS_links_separately=False):
+                   save_xml_output=False, html_xml_dir='html_xml_samples/', process_DAS_links_separately=False,
+                   prompt_name='retrieve_datasets_simple_JSON', use_portkey_for_gemini=True):
         """
         Parse the API data and extract relevant links and metadata.
 
@@ -569,7 +596,8 @@ class LLMParser(Parser):
             else:
                 data_availability_cont = self.get_data_availability_text(api_data)
 
-                augmented_dataset_links = self.process_data_availability_text(data_availability_cont)
+                augmented_dataset_links = self.process_data_availability_text(data_availability_cont,
+                                                                              prompt_name=prompt_name)
 
                 if additional_data is not None and len(additional_data) > 0:
                     self.logger.info(f"Additional data ({type(additional_data), len(additional_data)} items) "
@@ -616,7 +644,8 @@ class LLMParser(Parser):
                 augmented_dataset_links = self.retrieve_datasets_from_content(preprocessed_data,
                                                                               self.open_data_repos_ontology['repos'],
                                                                               self.llm_name,
-                                                                              temperature=0)
+                                                                              temperature=0,
+                                                                              prompt_name=prompt_name)
 
                 self.logger.info(f"Augmented dataset links: {augmented_dataset_links}")
 
@@ -638,7 +667,9 @@ class LLMParser(Parser):
 
                 augmented_dataset_links = self.retrieve_datasets_from_content(data_availability_str,
                                                                               self.open_data_repos_ontology['repos'],
-                                                                              model=self.llm_name)
+                                                                              model=self.llm_name,
+                                                                              temperature=0,
+                                                                              prompt_name=prompt_name)
 
                 dataset_links_w_target_pages = self.get_dataset_webpage(augmented_dataset_links)
 
@@ -1161,7 +1192,7 @@ class LLMParser(Parser):
         self.logger.info(f"Additional data\n{additional_data}")
         return pd.concat([parsed_data, additional_data], ignore_index=True)
 
-    def process_additional_data(self, additional_data):
+    def process_additional_data(self, additional_data, prompt_name='retrieve_datasets_simple_JSON'):
         """
         Process the additional data from the webpage. This is the data matched from the HTML with the patterns in
         retrieval_patterns xpaths.
@@ -1197,7 +1228,8 @@ class LLMParser(Parser):
                     or 'data availability' in cont) and len(cont) > 1:
                 self.logger.info(f"Processing data availability text")
                 # Call the generalized function
-                datasets = self.retrieve_datasets_from_content(cont, repos_elements, model=self.llm_name, temperature=0)
+                datasets = self.retrieve_datasets_from_content(cont, repos_elements, model=self.llm_name, temperature=0,
+                                                               prompt_name=prompt_name)
 
                 for dt in datasets:
                     dt['source_section'] = element['source_section']
@@ -1212,7 +1244,7 @@ class LLMParser(Parser):
         self.logger.debug(f"Final ret additional data: {ret}")
         return ret
 
-    def process_data_availability_text(self, DAS_content):
+    def process_data_availability_text(self, DAS_content, prompt_name='retrieve_datasets_simple_JSON'):
         """
         Process the data availability section from the webpage.
 
@@ -1239,7 +1271,8 @@ class LLMParser(Parser):
         for element in DAS_content:
             datasets.extend(self.retrieve_datasets_from_content(element, repos_elements,
                                                                 model=self.llm_name,
-                                                                temperature=0))
+                                                                temperature=0,
+                                                                prompt_name=prompt_name))
 
         # Add source_section information and return
         ret = []
@@ -1368,44 +1401,77 @@ class LLMParser(Parser):
                 self.logger.info(f"Response {type(resps)} saved to cache") if self.save_responses_to_cache else None
 
             elif 'gemini' in model:
-                if model == 'gemini-1.5-flash' or model == 'gemini-2.0-flash-exp' or model == 'gemini-2.0-flash':
-                    response = self.client.generate_content(
-                        messages,
-                        generation_config=genai.GenerationConfig(
-                            response_mime_type="application/json",
-                            response_schema=list[Dataset]
+                if self.use_portkey_for_gemini:
+                    # --- Portkey Gemini call ---
+                    portkey_payload = {
+                        "model": model,
+                        "messages": messages,
+                        "temperature": temperature,
+                    }
+                    try:
+                        response = self.portkey.chat.completions.create(
+                            api_key=self.portkey_api_key,
+                            route=self.portkey_route,
+                            **portkey_payload
                         )
-                    )
-                    self.logger.debug(f"Gemini response: {response}")
-
-                elif model == 'gemini-1.5-pro':
-                    response = self.client.generate_content(
-                        messages,
-                        request_options={"timeout": 1200},
-                        generation_config=genai.GenerationConfig(
-                            response_mime_type="application/json",
-                            response_schema=list[Dataset]
-                        )
-                    )
-                    self.logger.debug(f"Gemini Pro response: {response}")
-
-                try:
-                    candidates = response.candidates  # Get the list of candidates
-                    if candidates:
-                        self.logger.info(f"Found {len(candidates)} candidates in the response.")
-                        response_text = candidates[0].content.parts[0].text  # Access the first part's text
-                        self.logger.info(f"Gemini response text: {response_text}")
-                        parsed_response = json.loads(response_text)  # Parse the JSON response
+                        if self.full_document_read:
+                            resps = self.safe_parse_json(response)
+                            resps = resps.get("datasets", []) if resps is not None else []
+                        else:
+                            try:
+                                self.logger.info(f"Portkey Gemini response: {response}")
+                                resps = self.safe_parse_json(response)
+                                if not isinstance(resps, list):
+                                    raise ValueError("Expected a list of datasets, but got something else.")
+                            except json.JSONDecodeError as e:
+                                self.logger.error(f"JSON decoding error: {e}")
+                                resps = []
+                        # Save response if needed
                         if self.save_responses_to_cache:
-                            self.prompt_manager.save_response(prompt_id, parsed_response)
-                            self.logger.info(f"Response saved to cache")
-                        parsed_response_dedup = self.deduplicate_response(parsed_response)
-                        resps = parsed_response_dedup
-                    else:
-                        self.logger.error("No candidates found in the response.")
-                except Exception as e:
-                    self.logger.error(f"Error processing Gemini response: {e}")
-                    return None
+                            self.prompt_manager.save_response(prompt_id, resps)
+                    except Exception as e:
+                        self.logger.error(f"Portkey Gemini call failed: {e}")
+                        resps = []
+                else:
+                    # ...existing Gemini logic unchanged...
+                    if model == 'gemini-1.5-flash' or model == 'gemini-2.0-flash-exp' or model == 'gemini-2.0-flash':
+                        response = self.client.generate_content(
+                            messages,
+                            generation_config=genai.GenerationConfig(
+                                response_mime_type="application/json",
+                                response_schema=list[Dataset]
+                            )
+                        )
+                        self.logger.debug(f"Gemini response: {response}")
+
+                    elif model == 'gemini-1.5-pro':
+                        response = self.client.generate_content(
+                            messages,
+                            request_options={"timeout": 1200},
+                            generation_config=genai.GenerationConfig(
+                                response_mime_type="application/json",
+                                response_schema=list[Dataset]
+                            )
+                        )
+                        self.logger.debug(f"Gemini Pro response: {response}")
+
+                    try:
+                        candidates = response.candidates  # Get the list of candidates
+                        if candidates:
+                            self.logger.info(f"Found {len(candidates)} candidates in the response.")
+                            response_text = candidates[0].content.parts[0].text  # Access the first part's text
+                            self.logger.info(f"Gemini response text: {response_text}")
+                            parsed_response = json.loads(response_text)  # Parse the JSON response
+                            if self.save_responses_to_cache:
+                                self.prompt_manager.save_response(prompt_id, parsed_response)
+                                self.logger.info(f"Response saved to cache")
+                            parsed_response_dedup = self.deduplicate_response(parsed_response)
+                            resps = parsed_response_dedup
+                        else:
+                            self.logger.error("No candidates found in the response.")
+                    except Exception as e:
+                        self.logger.error(f"Error processing Gemini response: {e}")
+                        return None
 
         if not self.full_document_read:
             return resps
@@ -1493,24 +1559,36 @@ class LLMParser(Parser):
         """
         Cleans and safely parses JSON from an LLM response, fixing common issues.
 
-        :param response_text: str — the JSON string to be parsed.
+        :param response_text: str or dict — the JSON string or Portkey response object to be parsed.
 
         :return: dict or None — parsed JSON object or None if parsing fails.
         """
+        # Handle Portkey Gemini response object or OpenAI-like object
+        # Accept both dict and objects with .choices attribute
+        if hasattr(response_text, "choices"):
+            # Likely an OpenAI/Portkey object, extract content
+            try:
+                response_text = response_text.choices[0].message.content
+            except Exception as e:
+                print(f"Could not extract content from response object: {e}")
+                return None
+        elif isinstance(response_text, dict):
+            try:
+                response_text = response_text["choices"][0]["message"]["content"]
+            except Exception as e:
+                print(f"Could not extract content from response dict: {e}")
+                return None
+
         try:
             response_text = response_text.strip()  # Remove extra spaces/newlines
 
-            # Fix common truncation issues by ensuring it ends properly
-            # if not response_text.endswith("\"]}"):
-            #     response_text += "\"]}"
-            #
-            # # Fix invalid JSON artifacts
-            # response_text = response_text.replace("=>", ":")  # Convert invalid separators
-            #response_text = re.sub(r',\s*}', '}', response_text)  # Remove trailing commas before closing braces
-            #response_text = re.sub(r',\s*\]', ']', response_text)  # Remove trailing commas before closing brackets
+            # Remove markdown code block if present (e.g., ```json ... ```)
+            if response_text.startswith("```"):
+                response_text = re.sub(r"^```[a-zA-Z]*\n?", "", response_text)
+                response_text = re.sub(r"\n?```$", "", response_text)
 
             # process dict-like list
-            if "{" not in response_text[1:-1] and "{" not in response_text[1:-1] and "[" in response_text[1:-1]:
+            if len(response_text) > 2 and "{" not in response_text[1:-1] and "[" in response_text[1:-1]:
                 response_text = (response_text[:1] +
                                  response_text[1:-1].replace("[", "{").replace("]","}") + response_text[-1:])
             # Attempt JSON parsing
@@ -2062,9 +2140,8 @@ class LLMParser(Parser):
 
         elif 'gemini' in model:
             try:
-                gemini_prompt = [{"role": "user", "parts": [{"text": prompt}]}]
-                response = self.client.count_tokens(prompts=gemini_prompt)
-                n_tokens = response["total_tokens"]  # Adjust based on the response structure
+                n_tokens = len(prompt)//4  # Adjust based on the response structure
+                self.logger.debug(f"Rough estimate of token count for Gemini model '{model}': {n_tokens}")
             except Exception as e:
                 self.logger.error(f"Error counting tokens for Gemini model '{model}': {e}")
                 n_tokens = 0
@@ -2104,7 +2181,8 @@ class LLMParser(Parser):
         llm = LLMClient(
             model=model if model else self.llm_name,
             logger=self.logger,
-            save_prompts=self.save_dynamic_prompts
+            save_prompts=self.save_dynamic_prompts,
+            use_portkey_for_gemini=self.use_portkey_for_gemini
         )
         response = llm.api_call(metadata, subdir=subdir)
 
@@ -2167,10 +2245,13 @@ class MyBeautifulSoup(BeautifulSoup):
     text = property(get_text)
 
 class LLMClient:
-    def __init__(self, model:str, logger=None, save_prompts:bool=False):
+    def __init__(self, model:str, logger=None, save_prompts:bool=False, use_portkey_for_gemini=True):
         self.model = model
         self.logger = logger or logging.getLogger(__name__)
         self.logger.info(f"Initializing LLMClient with model: {self.model}")
+        self.use_portkey_for_gemini = use_portkey_for_gemini
+        self.portkey_api_key = os.environ.get("PORTKEY_API_KEY")
+        self.portkey_route = os.environ.get("PORTKEY_ROUTE")
         self._initialize_client(model)
         self.save_prompts = save_prompts
         self.prompt_manager = PromptManager("data_gatherer/prompts/prompt_templates/metadata_prompts", self.logger)
@@ -2178,11 +2259,18 @@ class LLMClient:
     def _initialize_client(self, model):
         if model.startswith('gpt'):
             self.client = OpenAI(api_key=os.environ['GPT_API_KEY'])
-        elif model.startswith('gemini'):
+        elif model.startswith('gemini') and not self.use_portkey_for_gemini:
             genai.configure(api_key=os.environ['GEMINI_KEY'])
             self.client = genai.GenerativeModel(model)
+        elif model.startswith('gemini') and self.use_portkey_for_gemini:
+            self.portkey = Portkey(
+                api_key=self.portkey_api_key,
+                virtual_key=self.portkey_route,
+                base_url="https://ai-gateway.apps.cloud.rt.nyu.edu/v1"
+            )
+            self.client = self.portkey
         else:
-            raise ValueError(f"Unsupported model: {self.model}")
+            self.client = None
         self.logger.info(f"Client initialized: {self.client}")
 
     def api_call(self, content, subdir=''):
@@ -2190,7 +2278,10 @@ class LLMClient:
         if self.model.startswith('gpt'):
             return self._call_openai(content, subdir=subdir)
         elif self.model.startswith('gemini'):
-            return self._call_gemini(content, subdir=subdir)
+            if self.use_portkey_for_gemini:
+                return self._call_portkey_gemini(content, subdir=subdir)
+            else:
+                return self._call_gemini(content, subdir=subdir)
         else:
             raise ValueError(f"Unsupported model: {self.model}")
 
@@ -2233,3 +2324,35 @@ class LLMClient:
             )
         )
         return response.text
+
+    def _call_portkey_gemini(self, content, temperature=0.0, subdir=''):
+        self.logger.info(f"Calling Gemini via Portkey with content length {len(content)}, subdir: {subdir}")
+        # Render the prompt (should be a single message with 'parts')
+        messages = self.prompt_manager.render_prompt(
+            self.prompt_manager.load_prompt("portkey_gemini_metadata_extract", subdir=subdir),
+            entire_doc=True,
+            content=content,
+        )
+        if self.save_prompts:
+            self.prompt_manager.save_prompt(prompt_id='abc', prompt_content=messages)
+
+        portkey_payload = {
+            "model": self.model,
+            "messages": messages,
+            "temperature": temperature,
+        }
+
+        self.logger.debug(f"Portkey payload: {portkey_payload}")
+
+        try:
+            response = self.portkey.chat.completions.create(
+                api_key=self.portkey_api_key,
+                route=self.portkey_route,
+                headers={"Content-Type": "application/json"},
+                **portkey_payload
+            )
+
+            return response
+
+        except Exception as e:
+            raise RuntimeError(f"Portkey API call failed: {e}")
