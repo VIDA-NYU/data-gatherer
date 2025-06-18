@@ -7,6 +7,11 @@ import os
 
 linux = os.path.exists('/.dockerenv')
 
+use_portkey = True
+prompt_name = 'GPT_from_full_input_Examples'
+model_name = 'gemini-2.0-flash'
+metadata_prompt_name = 'portkey_gemini_metadata_extract'
+full_document_read = False
 
 # Load environment variables from .env file
 load_dotenv()
@@ -29,7 +34,7 @@ if st.button("🚀 Run Extraction"):
         st.info(f"Processing {len(pmcids)} PMCID(s)...")
 
         try:
-            orch = Orchestrator(llm_name='gemini-2.0-flash')
+            orch = Orchestrator(llm_name=model_name, process_entire_document=full_document_read,)
 
             if linux:
                 driver_path = '/usr/local/bin/geckodriver'
@@ -38,7 +43,8 @@ if st.button("🚀 Run Extraction"):
 
             orch.setup_data_fetcher('url_list', driver_path=driver_path)
 
-            results = orch.process_articles(pmcids, driver_path=driver_path, use_portkey_for_gemini=True)
+            results = orch.process_articles(pmcids, driver_path=driver_path, use_portkey_for_gemini=use_portkey,
+                                            prompt_name=prompt_name)
 
             st.success("Extraction complete.")
             for pmcid, result in results.items():
@@ -84,7 +90,9 @@ if st.button("🚀 Run Extraction"):
                         with st.spinner(
                                 f"Fetching metadata from repo: {data_item['data_repository']}... {data_item['dataset_webpage']}"):
                             item = orch.get_data_preview(data_item, interactive=False, return_metadata=True,
-                                                         write_raw_metadata=False)[0]
+                                                         write_raw_metadata=False,
+                                                         use_portkey_for_gemini=use_portkey,
+                                                         prompt_name=metadata_prompt_name)[0]
 
                         st.markdown(f"#### Dataset {data_item['dataset_identifier']} ({data_item['data_repository']}) metadata")
                         display_item = None
