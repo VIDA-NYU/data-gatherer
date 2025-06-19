@@ -172,6 +172,23 @@ class DataFetcher(ABC):
 
         return path
 
+    def url_to_pmcid(self, url):
+        """
+        Extracts the PMC ID from a given URL.
+
+        :param url: The URL to extract the PMC ID from.
+
+        :return: The extracted PMC ID or None if not found.
+        """
+        match = re.search(r'PMC(\d+)', url)
+        if match:
+            pmcid = f"PMC{match.group(1)}"
+            self.logger.info(f"Extracted PMC ID: {pmcid}")
+            return pmcid
+        else:
+            self.logger.warning(f"No PMC ID found in URL: {url}")
+            return None
+
 # Implementation for fetching data via web scraping
 class WebScraper(DataFetcher):
     """

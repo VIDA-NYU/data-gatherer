@@ -1416,7 +1416,8 @@ class LLMParser(Parser):
                         )
                         if self.full_document_read:
                             resps = self.safe_parse_json(response)
-                            resps = resps.get("datasets", []) if resps is not None else []
+                            if isinstance(resps, dict):
+                                resps = resps.get("datasets", []) if resps is not None else []
                         else:
                             try:
                                 self.logger.info(f"Portkey Gemini response: {response}")
@@ -1915,7 +1916,7 @@ class LLMParser(Parser):
             return url
 
         self.logger.info(f"Extracting repo domain from URL: {url}")
-        match = re.match(r'^https?://([\.\w\-]+)\/', url)
+        match = re.match(r'^https?://([\.\w\-]+)\/*', url)
         if match:
             domain = match.group(1)
             self.logger.debug(f"Repo Domain: {domain}")
@@ -1985,24 +1986,32 @@ class LLMParser(Parser):
                     ret.append(self.resolve_data_repository(r))
             return ret
 
+        resolved_to_known_repo = False
+
         for k, v in self.open_data_repos_ontology['repos'].items():
             self.logger.debug(f"Checking if {repo} == {k}")
             repo = re.sub("\s+\(\w+\)\s*", "", repo)  # remove any text in parentheses
             # match where repo_link has been extracted
             if k == repo:
                 self.logger.info(f"Exact match found for repo: {repo}")
+                resolved_to_known_repo = True
                 break
 
             elif 'repo_name' in v.keys():
                 if repo.lower() == v['repo_name'].lower():
                     self.logger.info(f"Found repo_name match for {repo}")
                     repo = k
+                    resolved_to_known_repo = True
                     break
 
                 elif v['repo_name'].lower() in repo.lower():
                     self.logger.info(f"Found partial match for {repo} in {v['repo_name']}")
                     repo = k
+                    resolved_to_known_repo = True
                     break
+
+        if not resolved_to_known_repo:
+            repo = self.url_to_repo_domain(repo)
 
         return repo  # fallback
 
@@ -2040,9 +2049,11 @@ class LLMParser(Parser):
                 self.logger.info(f"Raw accession ID: {accession_id}")
 
             if 'data_repository' in item.keys():
-                repo = self.resolve_data_repository(item['data_repository']).lower()
+                original_repo = item['data_repository']
+                repo = self.resolve_data_repository(original_repo).lower()
             elif 'repository_reference' in item.keys():
-                repo = self.resolve_data_repository(item['repository_reference']).lower()
+                original_repo = item['repository_reference']
+                repo = self.resolve_data_repository(original_repo).lower()
             else:
                 self.logger.error(f"Error extracting data repository for item: {item}")
                 continue
@@ -2083,6 +2094,10 @@ class LLMParser(Parser):
                     access_mode = self.open_data_repos_ontology['repos'][repo]['access_mode']
                     datasets[i]['access_mode'] = access_mode
                     self.logger.info(f"Adding access mode for dataset {1 + i}: {access_mode}")
+
+            elif original_repo.startswith('http'):
+                    datasets[i]['data_repository'] = repo
+                    datasets[i]['dataset_webpage'] = original_repo
 
             else:
                 self.logger.warning(f"Repository {repo} unknown in Ontology. Skipping dataset {1 + i}.")
@@ -2148,7 +2163,8 @@ class LLMParser(Parser):
 
         return n_tokens
 
-    def parse_metadata(self, metadata: str, model = 'gemini-2.0-flash') -> dict:
+    def parse_metadata(self, metadata: str, model = 'gemini-2.0-flash', use_portkey_for_gemini=True,
+                       prompt_name='gpt_metadata_extract') -> dict:
         """
         Given the metadata, extract the dataset information using the LLM.
 
@@ -2160,10 +2176,33 @@ class LLMParser(Parser):
         """
         #metadata = self.normalize_full_DOM(metadata)
         self.logger.info(f"Parsing metadata len: {len(metadata)}")
-        dataset_info = self.extract_dataset_info(metadata, subdir='metadata_prompts')
+        dataset_info = self.extract_dataset_info(metadata, subdir='metadata_prompts',
+                                                 use_portkey_for_gemini=use_portkey_for_gemini,
+                                                 prompt_name=prompt_name)
         return dataset_info
 
-    def extract_dataset_info(self, metadata, subdir='', model=None):
+    def flatten_metadata_dict(self, metadata: dict, parent_key: str = '', sep: str = '.') -> dict:
+        """
+        Recursively flattens a nested dictionary, concatenating keys with `sep`.
+        Lists of dicts are expanded with their index.
+        """
+        items = []
+        for k, v in metadata.items():
+            new_key = f"{parent_key}{sep}{k}" if parent_key else k
+            if isinstance(v, dict):
+                items.extend(self.flatten_metadata_dict(v, new_key, sep=sep).items())
+            elif isinstance(v, list):
+                for i, item in enumerate(v):
+                    if isinstance(item, dict):
+                        items.extend(self.flatten_metadata_dict(item, f"{new_key}[{i}]", sep=sep).items())
+                    else:
+                        items.append((f"{new_key}[{i}]", item))
+            else:
+                items.append((new_key, v))
+        return dict(items)
+
+    def extract_dataset_info(self, metadata, subdir='', model=None, use_portkey_for_gemini=True,
+                             prompt_name='gpt_metadata_extract'):
         """
         Given the metadata, extract the dataset information using the LLM.
 
@@ -2182,7 +2221,7 @@ class LLMParser(Parser):
             model=model if model else self.llm_name,
             logger=self.logger,
             save_prompts=self.save_dynamic_prompts,
-            use_portkey_for_gemini=self.use_portkey_for_gemini
+            use_portkey_for_gemini=use_portkey_for_gemini
         )
         response = llm.api_call(metadata, subdir=subdir)
 

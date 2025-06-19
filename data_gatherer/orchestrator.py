@@ -234,7 +234,7 @@ class Orchestrator:
             return self.PMCID_to_URL(url)
 
     def process_url(self, url, save_staging_table=False, html_xml_dir='tmp/html_xmls/', use_portkey_for_gemini=True,
-                    driver_path=None, browser='Firefox', headless=True):
+                    driver_path=None, browser='Firefox', headless=True, prompt_name='retrieve_datasets_simple_JSON'):
         """
         Orchestrates the process for a single given source URL (publication).
 
@@ -348,13 +348,14 @@ class Orchestrator:
                                         use_portkey_for_gemini=use_portkey_for_gemini)
 
                 if additional_data is None:
-                    parsed_data = self.parser.parse_data(raw_data, self.publisher, self.current_url)
+                    parsed_data = self.parser.parse_data(raw_data, self.publisher, self.current_url,
+                                                         prompt_name=prompt_name)
 
                 else:
                     self.logger.info(f"Processing additional data. # of items: {len(additional_data)}")
                     # add the additional data to the parsed_data
                     add_data = self.parser.parse_data(raw_data, self.publisher, self.current_url,
-                                                         additional_data=additional_data)
+                                                         additional_data=additional_data, prompt_name=prompt_name)
                     self.logger.info(type(add_data))
 
                     parsed_data = pd.concat([parsed_data, add_data], ignore_index=True).drop_duplicates()
@@ -370,7 +371,8 @@ class Orchestrator:
                                         llm_name=self.llm,
                                         full_document_read=self.full_document_read,
                                         use_portkey_for_gemini=use_portkey_for_gemini)
-                parsed_data = self.parser.parse_data(raw_data, self.publisher, self.current_url, raw_data_format="full_HTML")
+                parsed_data = self.parser.parse_data(raw_data, self.publisher, self.current_url,
+                                                     raw_data_format="full_HTML", prompt_name=prompt_name)
                 parsed_data['source_url'] = url
                 self.logger.info(f"Parsed data extraction completed. Elements collected: {len(parsed_data)}")
                 if self.logger.level == logging.DEBUG:
@@ -435,7 +437,7 @@ class Orchestrator:
         return classified_links
 
     def process_articles(self, url_list, log_modulo=10, driver_path=None, browser='Firefox', headless=True,
-                         use_portkey_for_gemini=True):
+                         use_portkey_for_gemini=True, prompt_name='retrieve_datasets_simple_JSON'):
         """
         Processes a list of URLs and returns classified data.
 
@@ -454,7 +456,7 @@ class Orchestrator:
             url = self.preprocess_url(url)
             self.logger.info(f"{iteration}th function call: self.process_url({url})")
             results[url] = self.process_url(url, driver_path=driver_path, browser=browser, headless=headless,
-                                            use_portkey_for_gemini=use_portkey_for_gemini)
+                                            use_portkey_for_gemini=use_portkey_for_gemini, prompt_name=prompt_name)
 
             if iteration % log_modulo == 0:
                 elapsed = time.time() - start_time  # Time elapsed since start
@@ -467,6 +469,13 @@ class Orchestrator:
                     f"| ETA: {time.strftime('%H:%M:%S', time.gmtime(estimated_remaining))}\n"
                 )
         self.logger.debug("Completed processing all URLs.")
+        # rename 'dataset_id', 'repository_reference' to 'dataset_identifier', 'data_repository' respectively
+        for url, df in results.items():
+            if df is not None and not df.empty:
+                if 'dataset_id' in df.columns:
+                    df.rename(columns={'dataset_id': 'dataset_identifier'}, inplace=True)
+                if 'repository_reference' in df.columns:
+                    df.rename(columns={'repository_reference': 'data_repository'}, inplace=True)
         return results
 
     def summarize_result(self, df):
@@ -477,7 +486,7 @@ class Orchestrator:
 
         :return: Summary dict with URL, number of classified links, and additional metadata.
         """
-        self.logger.info("Summarizing results...")
+        self.logger.info(f"Summarizing results...{df.columns}")
         if df is not None and not df.empty:
             file_ext_counts = df[
                 'file_extension'].dropna().value_counts().to_dict() if 'file_extension' in df.columns else {}
@@ -595,7 +604,8 @@ class Orchestrator:
                         self.data_fetcher.download_html(html_xml_dir + 'raw_metadata/')
                 else:
                     html = requests.get(row['dataset_webpage']).text
-                metadata = self.metadata_parser.parse_metadata(html)
+                metadata = self.metadata_parser.parse_metadata(html, use_portkey_for_gemini=use_portkey_for_gemini,
+                                                               prompt_name=prompt_name)
                 metadata['source_url_for_metadata'] = row['dataset_webpage']
                 metadata['access_mode'] = row.get('access_mode', None)
                 metadata['source_section'] = row.get('source_section', row.get('section_class', None))
@@ -607,7 +617,8 @@ class Orchestrator:
             metadata['paper_with_dataset_citation'] = row['source_url']
 
             if return_metadata:
-                ret_list.append(metadata)
+                flat_metadata = self.metadata_parser.flatten_metadata_dict(metadata)
+                ret_list.append(flat_metadata)
 
             self.display_data_preview(metadata, display_type=display_type, interactive=interactive)
 
