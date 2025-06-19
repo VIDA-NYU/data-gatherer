@@ -1916,7 +1916,7 @@ class LLMParser(Parser):
             return url
 
         self.logger.info(f"Extracting repo domain from URL: {url}")
-        match = re.match(r'^https?://([\.\w\-]+)\/', url)
+        match = re.match(r'^https?://([\.\w\-]+)\/*', url)
         if match:
             domain = match.group(1)
             self.logger.debug(f"Repo Domain: {domain}")
@@ -1986,24 +1986,32 @@ class LLMParser(Parser):
                     ret.append(self.resolve_data_repository(r))
             return ret
 
+        resolved_to_known_repo = False
+
         for k, v in self.open_data_repos_ontology['repos'].items():
             self.logger.debug(f"Checking if {repo} == {k}")
             repo = re.sub("\s+\(\w+\)\s*", "", repo)  # remove any text in parentheses
             # match where repo_link has been extracted
             if k == repo:
                 self.logger.info(f"Exact match found for repo: {repo}")
+                resolved_to_known_repo = True
                 break
 
             elif 'repo_name' in v.keys():
                 if repo.lower() == v['repo_name'].lower():
                     self.logger.info(f"Found repo_name match for {repo}")
                     repo = k
+                    resolved_to_known_repo = True
                     break
 
                 elif v['repo_name'].lower() in repo.lower():
                     self.logger.info(f"Found partial match for {repo} in {v['repo_name']}")
                     repo = k
+                    resolved_to_known_repo = True
                     break
+
+        if not resolved_to_known_repo:
+            repo = self.url_to_repo_domain(repo)
 
         return repo  # fallback
 
@@ -2041,9 +2049,11 @@ class LLMParser(Parser):
                 self.logger.info(f"Raw accession ID: {accession_id}")
 
             if 'data_repository' in item.keys():
-                repo = self.resolve_data_repository(item['data_repository']).lower()
+                original_repo = item['data_repository']
+                repo = self.resolve_data_repository(original_repo).lower()
             elif 'repository_reference' in item.keys():
-                repo = self.resolve_data_repository(item['repository_reference']).lower()
+                original_repo = item['repository_reference']
+                repo = self.resolve_data_repository(original_repo).lower()
             else:
                 self.logger.error(f"Error extracting data repository for item: {item}")
                 continue
@@ -2084,6 +2094,10 @@ class LLMParser(Parser):
                     access_mode = self.open_data_repos_ontology['repos'][repo]['access_mode']
                     datasets[i]['access_mode'] = access_mode
                     self.logger.info(f"Adding access mode for dataset {1 + i}: {access_mode}")
+
+            elif original_repo.startswith('http'):
+                    datasets[i]['data_repository'] = repo
+                    datasets[i]['dataset_webpage'] = original_repo
 
             else:
                 self.logger.warning(f"Repository {repo} unknown in Ontology. Skipping dataset {1 + i}.")

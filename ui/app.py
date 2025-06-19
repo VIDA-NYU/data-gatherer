@@ -10,10 +10,10 @@ import xlsxwriter
 linux = os.path.exists('/.dockerenv')
 
 use_portkey = True
-prompt_name = 'retrieve_datasets_simple_JSON'
+prompt_name = 'GPT_from_full_input_Examples'
 model_name = 'gemini-2.0-flash'
 metadata_prompt_name = 'portkey_gemini_metadata_extract'
-full_document_read = False
+full_document_read = True
 
 # Load environment variables from .env file
 load_dotenv()
@@ -101,38 +101,43 @@ if st.button("🚀 Run Extraction"):
                     # Add to excel
                     excel_tabs[f"{pmcid}_available_data"] = avail_df
 
-                    for j, data_item in files_with_repo.iterrows():
-                        with st.spinner(
-                                f"Fetching metadata from repo: {data_item['data_repository']}... {data_item['dataset_webpage']}"):
-                            item = orch.get_data_preview(data_item, interactive=False, return_metadata=True,
-                                                         write_raw_metadata=False,
-                                                         use_portkey_for_gemini=use_portkey,
-                                                         prompt_name=metadata_prompt_name)[0]
+                    try:
 
-                        st.markdown(f"#### Dataset {data_item['dataset_identifier']} ({data_item['data_repository']}) metadata")
-                        display_item = None
-                        if isinstance(item, dict):
-                            unwanted = {'', 'na', 'n/a', 'nan', 'unavailable', 'none', '0'}
-                            pairs = [
-                                (k, v) for k, v in item.items()
-                                if str(v).strip().lower() not in unwanted and str(v).strip() != ''
-                            ]
-                            display_item = pd.DataFrame(pairs, columns=["Field", "Value"])
-                            display_item['Value'] = display_item['Value'].astype(str)
-                            # Drop rows where Value is empty after filtering
-                            display_item = display_item[display_item["Value"].astype(str).str.strip() != ""]
+                        for j, data_item in files_with_repo.iterrows():
+                            with st.spinner(
+                                    f"Fetching metadata from repo: {data_item['data_repository']}... {data_item['dataset_webpage']}"):
+                                item = orch.get_data_preview(data_item, interactive=False, return_metadata=True,
+                                                             write_raw_metadata=False,
+                                                             use_portkey_for_gemini=use_portkey,
+                                                             prompt_name=metadata_prompt_name)[0]
 
-                        if display_item is not None and not display_item.empty:
-                            st.dataframe(display_item, use_container_width=True)
-                            # Add to excel
-                            sheet_name = f"{pmcid}_meta_{data_item['dataset_identifier']}"
-                            # Excel sheet names must be <= 31 chars and not contain []:*?/\
-                            invalid_chars = set(r'[]:*?/\\')
-                            sanitized = ''.join('_' if c in invalid_chars else c for c in str(sheet_name))
-                            sanitized = sanitized[:31]
-                            excel_tabs[sanitized] = display_item
-                        else:
-                            st.warning(f"No data preview available for item {j + 1}")
+                            st.markdown(f"#### Dataset {data_item['dataset_identifier']} ({data_item['data_repository']}) metadata")
+                            display_item = None
+                            if isinstance(item, dict):
+                                unwanted = {'', 'na', 'n/a', 'nan', 'unavailable', 'none', '0'}
+                                pairs = [
+                                    (k, v) for k, v in item.items()
+                                    if str(v).strip().lower() not in unwanted and str(v).strip() != ''
+                                ]
+                                display_item = pd.DataFrame(pairs, columns=["Field", "Value"])
+                                display_item['Value'] = display_item['Value'].astype(str)
+                                # Drop rows where Value is empty after filtering
+                                display_item = display_item[display_item["Value"].astype(str).str.strip() != ""]
+
+                            if display_item is not None and not display_item.empty:
+                                st.dataframe(display_item, use_container_width=True)
+                                # Add to excel
+                                sheet_name = f"{pmcid}_meta_{data_item['dataset_identifier']}"
+                                # Excel sheet names must be <= 31 chars and not contain []:*?/\
+                                invalid_chars = set(r'[]:*?/\\')
+                                sanitized = ''.join('_' if c in invalid_chars else c for c in str(sheet_name))
+                                sanitized = sanitized[:31]
+                                excel_tabs[sanitized] = display_item
+                            else:
+                                st.warning(f"No data preview available for item {j + 1}")
+
+                    except Exception as e:
+                        st.error(f"Error fetching metadata: {e}")
 
             # Write all collected DataFrames to Excel
             if xlsxwriter and excel_tabs:
