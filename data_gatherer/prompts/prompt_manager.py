@@ -5,7 +5,7 @@ from data_gatherer.resources_loader import load_prompt
 
 class PromptManager:
     def __init__(self, prompt_dir, logger, response_file="data_gatherer/prompts/LLMs_responses_cache.json",
-                 save_dir="prompts/prompt_evals", save_dynamic_prompts=False,
+                 save_dir="prompts/prompt_evals", save_dynamic_prompts=False, log_file_override=None,
                  save_responses_to_cache=False):
         self.prompt_dir = prompt_dir
         self.prompt_save_dir = save_dir
