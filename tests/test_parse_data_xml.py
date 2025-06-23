@@ -9,7 +9,8 @@ load_dotenv()
 
 def test_extract_paragraphs_from_xml():
     logger = setup_logging("test_logger", log_file="logs/scraper.log")
-    parser = LLMParser("open_bio_data_repos.json", logger, log_file_override=None)
+    parser = LLMParser("open_bio_data_repos.json", logger, log_file_override=None,
+                       llm_name='gemini-2.0-flash')
     xml_file_path = os.path.join('test_data', 'test_1.xml')
     with open(xml_file_path, 'rb') as f:  # ✅ open in binary mode
         xml_root = etree.fromstring(f.read())
@@ -21,7 +22,8 @@ def test_extract_paragraphs_from_xml():
 
 def test_extract_sections_from_xml():
     logger = setup_logging("test_logger", log_file="logs/scraper.log")
-    parser = LLMParser("open_bio_data_repos.json", logger, log_file_override=None)
+    parser = LLMParser("open_bio_data_repos.json", logger, log_file_override=None,
+                       llm_name='gemini-2.0-flash')
     xml_file_path = os.path.join('test_data', 'test_1.xml')
     with open(xml_file_path, 'rb') as f:  # ✅ open in binary mode
         xml_root = etree.fromstring(f.read())
