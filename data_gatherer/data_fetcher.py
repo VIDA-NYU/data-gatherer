@@ -309,7 +309,7 @@ class WebScraper(DataFetcher):
 
         return self.normalize_links(rule_based_matches)
 
-    def normalize_HTML(self,html, keep_tags=None):
+    def normalize_HTML(self, html, keep_tags=None):
         """
         Normalize the HTML content by removing unnecessary tags and attributes.
 
@@ -325,7 +325,7 @@ class WebScraper(DataFetcher):
             soup = BeautifulSoup(html, "html.parser")
 
             # 1. Remove script, style, and meta tags
-            for tag in ["script", "style", 'img', 'noscript', 'svg', 'button', 'form', 'input']:
+            for tag in ["script", "style", 'img', 'noscript', 'svg', 'button', 'form', 'input', 'head']:
                 if keep_tags and tag in keep_tags:
                     self.logger.info(f"Keeping tag: {tag}")
                     continue

@@ -537,6 +537,10 @@ class Orchestrator:
         self.already_previewed = []
         self.metadata_parser = LLMParser(self.open_data_repos_ontology, self.logger, full_document_read=True,
                                          llm_name=self.llm,  use_portkey_for_gemini=use_portkey_for_gemini)
+
+        if self.data_fetcher is None:
+            self.setup_data_fetcher(search_method='url_list')
+
         self.data_fetcher = self.data_fetcher.update_DataFetcher_settings('any_url',
                                                                           self.full_document_read,
                                                                           self.logger,
@@ -599,11 +603,19 @@ class Orchestrator:
                     if "informative_html_metadata_tags" in self.open_data_repos_ontology['repos'][resolved_key]:
                         html = self.data_fetcher.normalize_HTML(html, self.open_data_repos_ontology['repos'][
                             resolved_key]['informative_html_metadata_tags'])
+                    else:
+                        html = self.data_fetcher.normalize_HTML(html)
                     if write_raw_metadata:
                         self.logger.info(f"Saving raw metadata to: {html_xml_dir+ 'raw_metadata/'}")
                         self.data_fetcher.download_html(html_xml_dir + 'raw_metadata/')
                 else:
-                    html = requests.get(row['dataset_webpage']).text
+                    if 'informative_html_metadata_tags' in self.open_data_repos_ontology['repos'][resolved_key]:
+                        keep_sect = self.open_data_repos_ontology['repos'][resolved_key]['informative_html_metadata_tags']
+                    else:
+                        keep_sect = None
+                    response = requests.get(row['dataset_webpage'], timeout=3)
+                    html = self.data_fetcher.normalize_HTML(response.text, keep_tags=keep_sect)
+
                 metadata = self.metadata_parser.parse_metadata(html, use_portkey_for_gemini=use_portkey_for_gemini,
                                                                prompt_name=prompt_name)
                 metadata['source_url_for_metadata'] = row['dataset_webpage']

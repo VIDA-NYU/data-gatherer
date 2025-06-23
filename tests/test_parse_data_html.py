@@ -10,7 +10,7 @@ load_dotenv()
 
 def test_get_data_availability_elements_from_HTML():
     logger = setup_logging("test_logger", log_file="logs/scraper.log")
-    parser = LLMParser("open_bio_data_repos.json", logger)
+    parser = LLMParser("open_bio_data_repos.json", logger, llm_name='gemini-2.0-flash')
     html_file_path = os.path.join('test_data', 'test_extract_1.html')
     with open(html_file_path, 'rb') as f:
         raw_html = f.read()
