@@ -1126,7 +1126,7 @@ class LLMParser(Parser):
         elif content_type == 'media p':
             file_name = os.path.basename(href)
             self.logger.debug(f"Extracted file name: {file_name} from href: {href}")
-            download_link = "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC" + PMCID + '/bin/' + file_name
+            download_link = "https://www.ncbi.nlm.nih.gov/pmc" + href
         return download_link
 
     def get_sibling_text(self, media_element):

@@ -232,6 +232,8 @@ class Orchestrator:
     def preprocess_url(self, url):
         if url.startswith("PMC"):
             return self.PMCID_to_URL(url)
+        elif url.startswith("https://"):
+            return url
 
     def process_url(self, url, save_staging_table=False, html_xml_dir='tmp/html_xmls/', use_portkey_for_gemini=True,
                     driver_path=None, browser='Firefox', headless=True, prompt_name='retrieve_datasets_simple_JSON'):

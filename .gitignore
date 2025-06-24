@@ -104,3 +104,5 @@ nosetests.xml
 *.env
 **/*.env
 
+/scripts/exp_input/Local_fetched_data.parquet
+/scripts/Vector_Retrieval_copy_latest.ipynb
