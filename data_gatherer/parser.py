@@ -1993,7 +1993,8 @@ class LLMParser(Parser):
 
         for k, v in self.open_data_repos_ontology['repos'].items():
             self.logger.debug(f"Checking if {repo} == {k}")
-            repo = re.sub("\s+\(\w+\)\s*", "", repo)  # remove any text in parentheses
+            repo = re.sub("\(", " ", repo)
+            repo = re.sub("\)", " ", repo)
             # match where repo_link has been extracted
             if k == repo:
                 self.logger.info(f"Exact match found for repo: {repo}")
