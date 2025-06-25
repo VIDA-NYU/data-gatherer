@@ -29,8 +29,6 @@ documentation for details.
    :caption: Library Documentation:
 
    orchestrator
-   data_fetcher
-   parser
 
 
 Indices and tables

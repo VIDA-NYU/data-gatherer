@@ -44,6 +44,20 @@ class Orchestrator:
 
         :param download_data_for_description_generation: Flag to indicate if data should be downloaded for description generation.
 
+        :param data_resource_preview: Flag to indicate if a preview of data resources should be generated.
+
+        :param download_previewed_data_resources: Flag to indicate if previewed data resources should be downloaded.
+
+        :param full_output_file: Path to the output file where results will be saved.
+
+        :param log_level: Logging level for the logger.
+
+        :param clear_previous_logs: Flag to clear previous logs before setting up logging.
+
+        :param retrieval_patterns_file: Path to the JSON file containing retrieval patterns for classification.
+
+        Initializes the Orchestrator with the given configuration file and sets up logging.
+
         """
 
         self.open_data_repos_ontology = load_config('open_bio_data_repos.json')
@@ -62,7 +76,6 @@ class Orchestrator:
 
         self.write_htmls_xmls = write_htmls_xmls
         self.html_xml_dir = html_xml_dir
-
 
         self.download_data_for_description_generation = download_data_for_description_generation
 
@@ -84,19 +97,26 @@ class Orchestrator:
         """
         Fetches data from the given URL using the configured data fetcher (WebScraper or APIClient).
 
-        :param url: The list of URLs to fetch data from.
+        :param urls: The list of URLs to fetch data from.
 
-        :param search_method: Optional method to override the default search method.
+        :param search_method: Optional method to override the default search method. Supported values are 'url_list', 'cloudscraper', 'google_scholar'.
 
-        :param driver_path: Path to the WebDriver executable (if applicable).
+        :param driver_path: Path to your local WebDriver executable (if applicable). When set to None, Webdriver manager will be used.
 
-        :param browser: Browser type to use for scraping (if applicable).
+        :param browser: Browser to use for scraping (if applicable). Supported values are 'Firefox', 'Chrome'.
 
         :param headless: Whether to run the browser in headless mode (if applicable).
 
-        :param HTML_fallback: Flag to indicate if HTML fallback should be used when fetching data.
+        :param HTML_fallback: Flag to indicate if HTML fallback should be used when fetching data. This will override any other fetching resource (i.e. API).
 
-        :param local_fetch_file: Optional file containing commodity data to be used in the fetching process.
+        :param local_fetch_file: Optional file containing data to be used in the fetching process. Supported format is 'parquet' file.
+
+        :param write_htmls_xmls: Flag to indicate if raw HTML/XML files should be saved. Overwrites the default setting.
+
+        :param html_xml_dir: Directory to save the raw HTML/XML files. Overwrites the default setting.
+
+        :return: Dictionary with URLs as keys and raw data as values.
+
         """
 
         if not isinstance(urls, str) and not isinstance(urls, list):
@@ -105,7 +125,7 @@ class Orchestrator:
         if isinstance(urls, str):
             urls = [urls]
 
-        self.setup_data_fetcher(search_method, driver_path, browser, headless)
+        self.setup_data_fetcher(search_method, driver_path, browser, headless, raw_HTML_data_fp=local_fetch_file)
 
         raw_data = {}
 
@@ -136,16 +156,18 @@ class Orchestrator:
 
         return raw_data
 
-    def parse_data(self, raw_data, current_url, parser_mode='LLMParser', publisher='PMC', additional_data=None,
+    def parse_data(self, current_url, raw_data, parser_mode='LLMParser', publisher='PMC', additional_data=None,
                    raw_data_format='XML', save_xml_output=False, html_xml_dir='tmp/html_xml_samples/',
                    process_DAS_links_separately=False, full_document_read=False,
                    prompt_name='retrieve_datasets_simple_JSON', use_portkey_for_gemini=True):
         """
         Parses the raw data fetched from the source URL using the configured parser (LLMParser or RuleBasedParser).
 
-        :param raw_data: The raw data to parse, typically HTML or XML content.
-
         :param current_url: The URL of the current data source being processed.
+
+        :param raw_data: The raw data to parse, typically string formatted as HTML or XML content.
+
+        :param parser_mode: The mode of the parser to use. Supported values are 'LLMParser' and 'RuleBasedParser'.
 
         :param publisher: The publisher domain or identifier for the data source.
 
@@ -167,14 +189,22 @@ class Orchestrator:
             self.parser = LLMParser(self.open_data_repos_ontology, self.logger, full_document_read=full_document_read,
                                     llm_name=self.llm, use_portkey_for_gemini=use_portkey_for_gemini)
 
-        cont = raw_data.values()
-        cont = list(cont)[0]
+        if isinstance(raw_data, dict):
+            cont = raw_data.values()
+            cont = list(cont)[0]
+
+        else:
+            cont = raw_data
 
         return self.parser.parse_data(cont, publisher, current_url, raw_data_format=raw_data_format,
-                                      prompt_name=prompt_name, use_portkey_for_gemini=use_portkey_for_gemini,)
+                                      prompt_name=prompt_name, use_portkey_for_gemini=use_portkey_for_gemini,
+                                      save_xml_output=save_xml_output, html_xml_dir=html_xml_dir,
+                                      additional_data=additional_data,
+                                      process_DAS_links_separately=process_DAS_links_separately)
 
 
-    def setup_data_fetcher(self, search_method='url_list', driver_path='', browser='Firefox', headless=True):
+    def setup_data_fetcher(self, search_method='url_list', driver_path='', browser='Firefox', headless=True,
+                           raw_HTML_data_fp=None):
         """
         Sets up either an empty web scraper, one with scraper_tool, or an API client based on the config.
         """
@@ -198,16 +228,16 @@ class Orchestrator:
 
         elif self.search_method == 'url_list':
             self.data_fetcher = WebScraper(None, self.logger, driver_path=driver_path, browser=browser,
-                                           headless=headless)
+                                           headless=headless, local_fetch_fp=raw_HTML_data_fp)
 
         elif self.search_method == 'cloudscraper':
             driver = cloudscraper.create_scraper()
-            self.data_fetcher = WebScraper(driver, self.logger)
+            self.data_fetcher = WebScraper(driver, self.logger, local_fetch_fp=raw_HTML_data_fp)
 
         elif self.search_method == 'google_scholar':
             driver = create_driver(driver_path, browser, headless, self.logger)
             self.data_fetcher = WebScraper(driver, self.logger, driver_path=driver_path, browser=browser,
-                                           headless=headless)
+                                           headless=headless, local_fetch_fp=raw_HTML_data_fp)
 
         else:
             raise ValueError(f"Invalid search method: {self.search_method}")
@@ -251,6 +281,20 @@ class Orchestrator:
         param url: The URL to process.
 
         param save_staging_table: Flag to save the staging table.
+
+        param html_xml_dir: Directory to save the raw HTML/XML files.
+
+        param use_portkey_for_gemini: Flag to use Portkey for Gemini LLM.
+
+        param driver_path: Path to your local WebDriver executable (if applicable). When set to None, Webdriver manager will be used.
+
+        param browser: Browser to use for scraping (if applicable). Supported values are 'Firefox', 'Chrome'.
+
+        param headless: Whether to run the browser in headless mode (if applicable).
+
+        param prompt_name: Name of the prompt to use for LLM parsing.
+
+        :return: DataFrame of classified links or None if an error occurs.
         """
         self.logger.info(f"Processing URL: {url}")
         self.current_url = url
@@ -441,11 +485,21 @@ class Orchestrator:
     def process_articles(self, url_list, log_modulo=10, driver_path=None, browser='Firefox', headless=True,
                          use_portkey_for_gemini=True, prompt_name='retrieve_datasets_simple_JSON'):
         """
-        Processes a list of URLs and returns classified data.
+        Processes a list of article URLs and returns parsed data.
 
         :param url_list: List of URLs/PMCIDs to process.
 
         :param log_modulo: Frequency of logging progress (useful when url_list is long).
+
+        :param driver_path: Path to your local WebDriver executable (if applicable). When set to None, Webdriver manager will be used.
+
+        :param browser: Browser to use for scraping (if applicable). Supported values are 'Firefox', 'Chrome'.
+
+        :param headless: Whether to run the browser in headless mode (if applicable).
+
+        :param use_portkey_for_gemini: Flag to use Portkey for Gemini LLM.
+
+        :param prompt_name: Name of the prompt to use for LLM parsing.
 
         :return: Dictionary with URLs as keys and DataFrames of classified data as values.
         """
@@ -482,7 +536,7 @@ class Orchestrator:
 
     def summarize_result(self, df):
         """
-        Summarizes the results of 1 processed URL.
+        Summarizes the result of 1 processed URL.
 
         :param df: Dataframe of candidate datasets from source article.
 
@@ -533,9 +587,27 @@ class Orchestrator:
                          write_raw_metadata=False, html_xml_dir='tmp/html_xmls/', use_portkey_for_gemini=True,
                          prompt_name='gpt_metadata_extract'):
         """
-        Shows user a preview of the data they are about to download.
-        -- future release
+        This method iterates through the combined_df DataFrame, checks for dataset webpages or download links,
+
+        :param combined_df: DataFrame containing the data to preview. It should contain columns like 'dataset_webpage', 'download_link', etc.
+
+        :param display_type: Type of display for the preview. Options are 'console', 'html', or 'json'.
+
+        :param interactive: If True, allows user interaction for displaying data previews.
+
+        :param return_metadata: If True, returns a list of metadata dictionaries instead of displaying them.
+
+        :param write_raw_metadata: If True, saves raw metadata to the specified directory.
+
+        :param html_xml_dir: Directory to save raw HTML/XML files if write_raw_metadata is True.
+
+        :param use_portkey_for_gemini: If True, uses Portkey for Gemini LLM.
+
+        :param prompt_name: Name of the prompt to use for LLM parsing.
+
+        :return: If return_metadata is True, returns a list of metadata dictionaries. Otherwise, displays the data preview.
         """
+
         self.already_previewed = []
         self.metadata_parser = LLMParser(self.open_data_repos_ontology, self.logger, full_document_read=True,
                                          llm_name=self.llm,  use_portkey_for_gemini=use_portkey_for_gemini)
@@ -658,7 +730,12 @@ class Orchestrator:
     def display_data_preview(self, metadata, display_type='console', interactive=True):
         """
         Display extracted metadata as a clean table in both Jupyter and terminal environments.
-        -- future release
+
+        :param metadata: Dictionary containing metadata to display.
+
+        :param display_type: Type of display for the preview. Options are 'console' or 'ipynb'.
+
+        :param interactive: If True, allows user interaction for displaying data previews.
         """
         self.logger.info("Displaying metadata preview")
 
@@ -760,9 +837,12 @@ class Orchestrator:
 
     def download_previewed_data_resources(self, output_root="output/suppl_files"):
         """
-        Function to download all the files
-        -- future release
+        Function to download all the files that were previewed and confirmed for download.
+
+        :param output_root: Root directory where the files will be downloaded.
+
         """
+
         self.logger.info(f"Downloading {len(self.downloadables)} previewed data resources.")
         for metadata in self.downloadables:
             download_link = metadata.get('download_link', None)
@@ -775,7 +855,11 @@ class Orchestrator:
 
     def get_internal_id(self, metadata):
         """
-        Function to get the internal ID of the dataset from metadata (utils).
+        Function to get the internal ID of the dataset from metadata.
+
+        :param metadata: Dictionary containing metadata of the dataset.
+
+        :return: Internal ID of the dataset if found, otherwise None.
         """
         self.logger.info(f"Getting internal ID for {metadata}")
         if 'source_url_for_metadata' in metadata and metadata['source_url_for_metadata'] is not None and metadata[
@@ -791,16 +875,39 @@ class Orchestrator:
             return None
 
     def raw_data_contains_required_sections(self, raw_data, url, required_sections):
+        """
+        Checks if the raw data contains all the required sections.
+
+        :param raw_data: Raw data fetched from the source URL.
+
+        :param url: Source URL from which the raw data was fetched.
+
+        :param required_sections: List of required sections to check in the raw data.
+
+        :return: True if all required sections are present, False otherwise.
+
+        """
         required_sections = [sect + "_sections" for sect in required_sections]
         return self.data_checker.is_xml_data_complete(raw_data, url, required_sections)
 
     def run(self,search_by='url_list', input_file='input/test_input.txt'):
         """
-        Main method to run the Orchestrator simple workflow:
+        This method orchestrates the entire data gathering process by performing the following steps:
+
         1. Setup data fetcher (web scraper or API client)
+
         2. Load URLs from input_file
+
         3. Process each URL and return results as a dictionary like source_url: DataFrame_of_data_links
+
         4. Write results to output file specified in configuration file
+
+        :param search_by: Method to search for data. Options are 'url_list' or 'google_scholar'.
+
+        :param input_file: Path to the input file containing URLs or PMCIDs to process.
+
+        :return: Combined DataFrame of all processed data links.
+
         """
         self.logger.debug("Orchestrator run started.")
         try:
