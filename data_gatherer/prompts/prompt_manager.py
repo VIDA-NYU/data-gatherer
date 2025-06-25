@@ -35,7 +35,6 @@ class PromptManager:
 
     def render_prompt(self, static_prompt, entire_doc, **dynamic_parts):
         """Render a dynamic prompt by replacing placeholders."""
-#        if entire_doc:
         if entire_doc or "parts" in static_prompt[0]:
             # Handle the "parts" elements in the prompt
             for item in static_prompt:

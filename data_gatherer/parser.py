@@ -185,6 +185,9 @@ class Parser(ABC):
         """
         sections = []
 
+        if not isinstance(xml_root, etree._Element):
+            raise TypeError(f"Invalid XML root type: {type(xml_root)}. Expected lxml.etree.Element.")
+
         # Iterate over all section blocks
         for sec in xml_root.findall(".//sec"):
             sec_type = sec.get("sec-type", "unknown")
@@ -632,13 +635,13 @@ class LLMParser(Parser):
         else:
             # Extract links from entire webpage
             if self.full_document_read:
-                self.logger.info(f"Extracting links from full HTML content.")
+                self.logger.info(f"Extracting links from full HTML/XML content.")
                 # preprocess the content to get only elements that do not change over different sessions
                 supplementary_material_links = self.extract_href_from_html_supplementary_material(api_data, current_url_address)
 
                 preprocessed_data = self.normalize_full_DOM(api_data)
 
-                #self.logger.info(f"Preprocessed data: {preprocessed_data}")
+                self.logger.debug(f"Preprocessed data: {preprocessed_data}")
 
                 # Extract dataset links from the entire text
                 augmented_dataset_links = self.retrieve_datasets_from_content(preprocessed_data,
@@ -1264,7 +1267,7 @@ class LLMParser(Parser):
         repos = ', '.join(repos_elements)
 
         # Log for debugging
-        self.logger.info(f"Repos elements: {repos_elements}")
+        self.logger.debug(f"Repos elements: {repos_elements}")
 
         # Call the generalized function
         datasets = []
@@ -1311,9 +1314,9 @@ class LLMParser(Parser):
         n_tokens_static_prompt = self.count_tokens(static_prompt, model)
 
         if 'gpt-4o' in model:
-            while self.tokens_over_limit(content, model,allowance_static_prompt=n_tokens_static_prompt):
+            while self.tokens_over_limit(content, model, allowance_static_prompt=n_tokens_static_prompt):
                 content = content[:-2000]
-            self.logger.info(f"Content length: {len(content)}")
+        self.logger.info(f"Content length: {len(content)}")
 
         self.logger.debug(f"static_prompt: {static_prompt}")
 

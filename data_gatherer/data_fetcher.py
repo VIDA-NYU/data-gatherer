@@ -24,6 +24,8 @@ class DataFetcher(ABC):
         self.raw_HTML_data_filepath = raw_HTML_data_filepath
         self.fetch_source = src
         self.logger = logger
+        self.logger.warning(
+            "DataFetcher raw_HTML_data_filepath set no None") if raw_HTML_data_filepath is None else None
         self.logger.debug("DataFetcher initialized.")
         self.driver_path = driver_path
         self.browser = browser
@@ -43,8 +45,7 @@ class DataFetcher(ABC):
             self.logger.info(f"Publisher: {domain}")
             return domain
         else:
-            self.logger.info("Unknown publisher")
-            return 'Unknown Publisher'
+            return self.url_to_publisher_root(url)
 
     def url_to_publisher_root(self, url):
         # Extract the root domain name from the URL
@@ -54,6 +55,7 @@ class DataFetcher(ABC):
             self.logger.info(f"Root: {root}")
             return root
         else:
+            self.logger.warning("No valid domain extracted from URL. This may cause issues with data gathering.")
             return 'Unknown Publisher'
 
     def update_DataFetcher_settings(self, url, entire_doc_model, logger, HTML_fallback=False, driver_path=None,
@@ -82,7 +84,7 @@ class DataFetcher(ABC):
         }
 
         if not HTML_fallback:
-            # Check if the URL corresponds to PubMed Central (PMC)
+            # Check if the URL corresponds to any PubMed Central (PMC)
             for ptr,src in API_supported_url_patterns.items():
                 self.logger.debug(f"Checking {src} with pattern {ptr}")
                 match = re.match(ptr, url)
@@ -494,8 +496,8 @@ class DatabaseFetcher(DataFetcher):
         split_source_url = url_key.split('/')
         key = (split_source_url[-1] if len(split_source_url[-1]) > 0 else split_source_url[-2]).lower()
         self.logger.info(f"Fetching data for {key}")
-        self.logger.info(f"Data file: {self.dataframe.columns}")
-        self.logger.info(f"Data file: {self.dataframe[self.dataframe['publication'] == key]}")
+        self.logger.debug(f"Data file: {self.dataframe.columns}")
+        self.logger.debug(f"Data file: {self.dataframe[self.dataframe['publication'] == key]}")
         self.logger.info(f"Fetching data from {self.data_file}")
         self.fetch_source = 'Local_data'
         for i, row in self.dataframe[self.dataframe['publication'] == key].iterrows():
