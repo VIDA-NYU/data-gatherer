@@ -93,14 +93,14 @@ class DataFetcher(ABC):
                     API = f"{src}_API"
                     break
 
+        if self.raw_HTML_data_filepath and self.dataframe_fetch and self.url_in_dataframe(url, self.raw_HTML_data_filepath):
+            self.logger.info(f"URL {url} found in DataFrame. Using DatabaseFetcher.")
+            return DatabaseFetcher(logger, self.raw_HTML_data_filepath)
+
         if API is not None and not(entire_doc_model):
         # Initialize the corresponding API client, from API_supported_url_patterns
             self.logger.info(f"Initializing APIClient({'requests', API, 'self.config'})")
             return APIClient(requests, API, logger)
-
-        if self.raw_HTML_data_filepath and self.dataframe_fetch and self.url_in_dataframe(url, self.raw_HTML_data_filepath):
-            self.logger.info(f"URL {url} found in DataFrame. Using DatabaseFetcher.")
-            return DatabaseFetcher(logger, self.raw_HTML_data_filepath)
 
         # Reuse existing driver if we already have one
         if isinstance(self, WebScraper) and self.scraper_tool is not None:
@@ -145,8 +145,11 @@ class DataFetcher(ABC):
 
         fn = dir + pub_name + '.html'
 
-        with open(fn, 'w', encoding='utf-8') as f:
-            f.write(self.scraper_tool.page_source)
+        if hasattr(self, 'scraper_tool') and isinstance(self.scraper_tool, WebScraper):
+            with open(fn, 'w', encoding='utf-8') as f:
+                f.write(self.scraper_tool.page_source)
+        else:
+            raise Exception("scraper_tool undefined")
 
     def is_url_API(self, url):
         raise Exception("This method has not been implemented yet.")
@@ -196,8 +199,9 @@ class WebScraper(DataFetcher):
     """
     Class for fetching data from web pages using Selenium.
     """
-    def __init__(self, scraper_tool, logger, retrieval_patterns_file=None, driver_path=None, browser='firefox', headless=True):
-        super().__init__(logger, src='WebScraper')
+    def __init__(self, scraper_tool, logger, retrieval_patterns_file=None, driver_path=None, browser='firefox',
+                 headless=True, local_fetch_fp=None):
+        super().__init__(logger, src='WebScraper', raw_HTML_data_filepath=local_fetch_fp)
         self.scraper_tool = scraper_tool  # Inject your scraping tool (BeautifulSoup, Selenium, etc.)
         self.retrieval_patterns = load_config('retrieval_patterns.json')
         self.bad_patterns = self.retrieval_patterns['general']['bad_patterns']
@@ -549,7 +553,7 @@ class APIClient(DataFetcher):
     """
     Class for fetching data from an API using the requests library.
     """
-    def __init__(self, api_client, API, logger):
+    def __init__(self, api_client, API, logger, local_fetch_fp=None):
         """
         Initializes the APIClient with the specified API client.
 
@@ -561,7 +565,7 @@ class APIClient(DataFetcher):
         :param logger: The logger instance for logging messages.
 
         """
-        super().__init__(logger, src=API)
+        super().__init__(logger, src=API, raw_HTML_data_filepath=local_fetch_fp)
         self.api_client = api_client.Session()
 
         API_base_url = {

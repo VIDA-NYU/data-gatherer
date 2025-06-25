@@ -210,10 +210,10 @@ class Parser(ABC):
                     section_rawtxt_from_paragraphs += "\n" + para_text + "\n"
 
             sections.append({
-                "raw_sec_txt": section_rawtxt_from_paragraphs,
+                "sec_txt": section_rawtxt_from_paragraphs,
                 "section_title": section_title,
                 "sec_type": sec_type,
-                "sec_txt": section_text_from_paragraphs
+                "sec_txt_clean": section_text_from_paragraphs
             })
         return sections
 
@@ -544,7 +544,9 @@ class LLMParser(Parser):
         # Check if api_data is a string, and convert to XML if needed
         self.logger.info(f"Function call: parse_data(api_data({type(api_data)}), {publisher}, {current_url_address}, "
                          f"additional_data, {raw_data_format})")
-        if isinstance(api_data, str) and raw_data_format != 'full_HTML':
+        self.publisher = publisher
+
+        if isinstance(api_data, str) and 'HTML' not in raw_data_format and not self.full_document_read:
             try:
                 api_data = etree.fromstring(api_data)  # Convert string to lxml Element
                 self.logger.info(f"api_data converted to lxml element")
@@ -552,7 +554,7 @@ class LLMParser(Parser):
                 self.logger.error(f"Error parsing API data: {e}")
                 return None
 
-        if raw_data_format != 'full_HTML':
+        if isinstance(api_data, etree._Element) and not self.full_document_read:
             # Extract title (adjust XPath to match the structure)
             title_element = api_data.find('.//title-group/article-title')  # XPath for article title
             title = title_element.text if title_element is not None else "No Title Found"
@@ -615,7 +617,8 @@ class LLMParser(Parser):
             dataset_links_w_target_pages = self.get_dataset_webpage(augmented_dataset_links)
 
             # Create a DataFrame from the dataset links union supplementary material links
-            out_df = pd.concat([pd.DataFrame(dataset_links_w_target_pages),
+            out_df = pd.concat([pd.DataFrame(dataset_links_w_target_pages).rename(
+                columns={'dataset_id': 'dataset_identifier', 'repository_reference': 'data_repository'}),
                                 pd.DataFrame(supplementary_material_links)])  # check index error here
             self.logger.info(f"Dataset Links type: {type(out_df)} of len {len(out_df)}, with cols: {out_df.columns}")
             self.logger.debug(f"Datasets: {out_df}")
@@ -943,6 +946,7 @@ class LLMParser(Parser):
         supplementary_links = []
 
         anchors = tree.xpath("//a[@data-ga-action='click_feat_suppl']")
+        anchors.extend(tree.xpath("//a[@data-track-action='view supplementary info']"))
         self.logger.debug(f"Found {len(anchors)} anchors with data-ga-action='click_feat_suppl'.")
 
         for anchor in anchors:
@@ -1077,7 +1081,7 @@ class LLMParser(Parser):
                     self.logger.debug(f"Description: {description}")
                     self.logger.debug(f"Download_link: {download_link}")
 
-                    if href:
+                    if href and href not in [item['link'] for item in hrefs]:
                         hrefs.append({
                             'link': href,
                             'source_url': current_url_address,
@@ -1121,15 +1125,16 @@ class LLMParser(Parser):
         #repo = self.url_to_repo_domain(current_url_address)
         # match the digits of the PMC ID (after PMC) in the URL
         self.logger.debug(f"Function_call: reconstruct_download_link({href}, {content_type}, {current_url_address})")
-        PMCID = re.search(r'PMC(\d+)', current_url_address, re.IGNORECASE).group(1)
-        self.logger.debug(
-            f"Inputs to reconstruct_download_link: {href}, {content_type}, {current_url_address}, {PMCID}")
-        if content_type == 'local-data':
-            download_link = "https://pmc.ncbi.nlm.nih.gov/articles/instance/" + PMCID + '/bin/' + href
-        elif content_type == 'media p':
-            file_name = os.path.basename(href)
-            self.logger.debug(f"Extracted file name: {file_name} from href: {href}")
-            download_link = "https://www.ncbi.nlm.nih.gov/pmc" + href
+        if self.publisher == 'PMC':
+            PMCID = re.search(r'PMC(\d+)', current_url_address, re.IGNORECASE).group(1)
+            self.logger.debug(
+                f"Inputs to reconstruct_download_link: {href}, {content_type}, {current_url_address}, {PMCID}")
+            if content_type == 'local-data':
+                download_link = "https://pmc.ncbi.nlm.nih.gov/articles/instance/" + PMCID + '/bin/' + href
+            elif content_type == 'media p':
+                file_name = os.path.basename(href)
+                self.logger.debug(f"Extracted file name: {file_name} from href: {href}")
+                download_link = "https://www.ncbi.nlm.nih.gov/pmc" + href
         return download_link
 
     def get_sibling_text(self, media_element):
