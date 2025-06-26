@@ -835,7 +835,7 @@ class Orchestrator:
             self.logger.warning(f"Unsupported display type: {display_type}. Cannot display metadata preview.")
             return
 
-    def download_previewed_data_resources(self, output_root="output/suppl_files"):
+    def download_data_resources(self, output_root="output/suppl_files"):
         """
         Function to download all the files that were previewed and confirmed for download.
 
@@ -934,7 +934,7 @@ class Orchestrator:
                 self.get_data_preview(combined_df)
 
                 if self.download_previewed_data_resources:
-                    self.download_previewed_data_resources()
+                    self.download_data_resources()
 
             combined_df.to_csv(self.full_output_file, index=False)
 
