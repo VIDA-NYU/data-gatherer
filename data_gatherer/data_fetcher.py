@@ -139,8 +139,11 @@ class DataFetcher(ABC):
         """
         logging.info(f"Dir {dir} exists") if os.path.exists(dir) else os.mkdir(dir)
 
-        pub_name = self.get_publication_name_from_driver()
+        if hasattr(self, 'get_publication_name_from_driver'):
+            pub_name = self.get_publication_name_from_driver()
 
+        else:
+            raise Exception("Pubblication name extraction is only supported for WebScraper instances.")
         pub_name = re.sub(r'[\\/:*?"<>|]', '_', pub_name)  # Replace invalid characters in filename
 
         fn = dir + pub_name + '.html'
@@ -410,8 +413,8 @@ class WebScraper(DataFetcher):
         self.logger.info(f"DOI: {doi}")
         return doi
 
-    def get_filename_from_url(self,url):
-        parsed_url = urlparse(self,url)
+    def get_filename_from_url(self, url):
+        parsed_url = urlparse(url)
         return os.path.basename(parsed_url.path)
 
     def reconstruct_PMC_link(self, PMCID):
@@ -689,6 +692,7 @@ class DataCompletenessChecker:
         self.retrieval_patterns = load_config(retrieval_patterns_file)
         self.css_selectors = self.retrieval_patterns[publisher]['css_selectors']
         self.xpaths = self.retrieval_patterns[publisher]['xpaths']
+        self.xml_tags = self.retrieval_patterns[publisher]['xml_tags']
 
     def extract_namespaces(self, xml_element):
         """Extract all namespaces in use, including xlink."""
@@ -760,23 +764,11 @@ class DataCompletenessChecker:
         return False
 
     def load_target_sections_ptrs(self, section_name) -> list:
+        """
+        Load the XML tags for the specified section name. Publisher-specific.
+        """
 
-        target_sections = {
-            "data_availability_sections": [
-                ".//sec[@sec-type='data-availability']",
-                ".//notes[@notes-type='data-availability']",
-                ".//sec[@sec-type='associated-data']"
-            ],
-            "supplementary_data_sections": [
-                ".//sec[@sec-type='supplementary-material']",
-                ".//supplementary-material",
-                ".//sec[@sec-type='associated-data']",
-                ".//sec[@sec-type='extended-data']",
-                ".//sec[@sec-type='samples-and-clinical-data']",
-                ".//sec[@sec-type='footnotes']",
-                ".//sec[@sec-type='STAR★Methods']"
-            ]
-        }
+        target_sections = self.xml_tags
         if section_name not in target_sections:
             self.logger.error(f"Invalid section name: {section_name}. Available sections: {list(target_sections.keys())}")
             raise ValueError(f"Invalid section name: {section_name}")

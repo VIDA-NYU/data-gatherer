@@ -368,8 +368,9 @@ class RuleBasedParser(Parser):
         # initialize output
         links_on_webpage = []
         self.logger.info("Function call: RuleBasedParser.parse_data(source_html)")
-        soup = BeautifulSoup(source_html, "html.parser")
-        compressed_HTML = self.compress_HTML(source_html)
+        normalized_html = self.normalize_full_DOM(source_html)
+        soup = BeautifulSoup(normalized_html, "html.parser")
+        compressed_HTML = self.compress_HTML(normalized_html)
         count = 0
         for anchor in soup.find_all('a'):
             link = anchor.get('href')
@@ -699,68 +700,6 @@ class LLMParser(Parser):
 
             return out_df
 
-    def normalize_full_DOM(self, api_data: str) -> str:
-        """
-        Normalize the full HTML DOM by removing dynamic elements and attributes
-        that frequently change, such as random IDs, inline styles, analytics tags,
-        and CSRF tokens.
-
-        :param api_data: The raw HTML data to be normalized.
-
-        :return: Normalized HTML string.
-
-        """
-
-        #self.logger.info(f"Function_call: normalize_full_DOM(api_data). Length of raw api data: {self.count_tokens(api_data,self.config['llm_name'])} tokens")
-
-        try:
-            # Parse the HTML content
-            soup = BeautifulSoup(api_data, "html.parser")
-
-            # 1. Remove script, style, and meta tags
-            for tag in ["script", "style", 'img', 'iframe', 'noscript', 'svg', 'button', 'form', 'input']:
-                for element in soup.find_all(tag):
-                    element.decompose()
-
-            remove_meta_tags = True
-            if remove_meta_tags:
-                for meta in soup.find_all('meta'):
-                    meta.decompose()
-
-            # 2. Remove dynamic attributes
-            for tag in soup.find_all(True):  # True matches all tags
-                # Remove dynamic `id` attributes that match certain patterns (e.g., `tooltip-*`)
-                if "id" in tag.attrs and re.match(r"tooltip-\d+", tag.attrs["id"]):
-                    del tag.attrs["id"]
-
-                # Remove dynamic `aria-describedby` attributes
-                if "aria-describedby" in tag.attrs and re.match(r"tooltip-\d+", tag.attrs["aria-describedby"]):
-                    del tag.attrs["aria-describedby"]
-
-                # Remove inline styles
-                if "style" in tag.attrs:
-                    del tag.attrs["style"]
-
-                # Remove all `data-*` attributes
-                tag.attrs = {key: val for key, val in tag.attrs.items() if not key.startswith("data-")}
-
-                # Remove `csrfmiddlewaretoken` inputs
-                if tag.name == "input" and tag.get("name") == "csrfmiddlewaretoken":
-                    tag.decompose()
-
-            # 3. Remove comments
-            for comment in soup.find_all(string=lambda text: isinstance(text, Comment)):
-                comment.extract()
-
-            # 4. Normalize whitespace
-            normalized_html = re.sub(r"\s+", " ", soup.prettify())
-
-            return normalized_html.strip()
-
-        except Exception as e:
-            self.logger.error(f"Error normalizing DOM: {e}")
-            return ""
-
     def extract_file_extension(self, download_link):
         self.logger.debug(f"Function_call: extract_file_extension({download_link})")
         # Extract the file extension from the download link
@@ -773,41 +712,28 @@ class LLMParser(Parser):
 
     def load_patterns_for_tgt_section(self, section_name):
         """
-        Load the XPath pointer for the target section from the configuration.
+        Load the XML tag patterns for the target section from the configuration.
 
         :param section_name: str — name of the section to load.
 
-        :return: str — XPath pointer for the target section.
+        :return: str — XML tag patterns for the target section.
         """
-        section_patterns = {
-            "data_availability_sections": [
-                ".//sec[@sec-type='data-availability']",
-                ".//notes[@notes-type='data-availability']",
-                ".//notes[@notes-type='data-availability']"
-            ],
-            "supplementary_material_sections": [
-                ".//sec[@sec-type='supplementary-material']",
-                ".//supplementary-material"
-            ],
-            "supplementary_data_sections": [
-                ".//sec[@sec-type='supplementary-material']",
-                ".//supplementary-material",
-                ".//sec[@sec-type='associated-data']",
-                ".//sec[@sec-type='extended-data']",
-                ".//sec[@sec-type='samples-and-clinical-data']",
-                ".//sec[@sec-type='footnotes']"
-            ],
-            "key_resources_table": [
-                "//sec[.//title[contains(text(), \"Key resources table\")]]//table-wrap"
-            ]
-        }
 
-        if section_name in section_patterns.keys():
-            return section_patterns[section_name]
+        if self.publisher in self.retrieval_patterns:
+            if 'xml_tags' not in self.retrieval_patterns[self.publisher]:
+                self.logger.error(f"XML tags not set for publisher '{self.publisher}' in retrieval patterns.")
+                return None
+            else:
+                section_patterns = self.retrieval_patterns[self.publisher]
+                if section_name in section_patterns.keys():
+                    return section_patterns[section_name]
+
+                else:
+                    self.logger.error(f"Section name '{section_name}' not found in section patterns.")
+                    return None
 
         else:
-            self.logger.error(f"Section name '{section_name}' not found in section patterns.")
-            return None
+            self.logger.warning(f"Publisher '{self.publisher}' not found in retrieval patterns. Using default patterns.")
 
 
     def extract_href_from_data_availability(self, api_xml):
@@ -1302,6 +1228,7 @@ class LLMParser(Parser):
         """
         Retrieve datasets from the given content using a specified LLM model.
         Uses a static prompt template and dynamically injects the required content.
+        It also performs token counting and llm response normalization.
 
         :param content: The content to be processed.
 
