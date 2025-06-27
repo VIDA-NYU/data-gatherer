@@ -6,13 +6,12 @@ from data_gatherer.resources_loader import load_prompt
 class PromptManager:
     def __init__(self, prompt_dir, logger, response_file="data_gatherer/prompts/LLMs_responses_cache.json",
                  save_dir="prompts/prompt_evals", save_dynamic_prompts=False, log_file_override=None,
-                 save_responses_to_cache=False):
+                 save_responses_to_cache=False, use_cached_responses=False):
         self.prompt_dir = prompt_dir
         self.prompt_save_dir = save_dir
         self.response_file = response_file
         self.logger = logger
-        os.makedirs(self.prompt_dir, exist_ok=True)
-        if not os.path.exists(self.response_file):
+        if not os.path.exists(self.response_file) and save_responses_to_cache and use_cached_responses:
             with open(self.response_file, 'w') as f:
                 json.dump({}, f)
 
