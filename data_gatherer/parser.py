@@ -16,6 +16,10 @@ import json
 from data_gatherer.prompts.prompt_manager import PromptManager
 import tiktoken
 from data_gatherer.resources_loader import load_config
+from data_gatherer.retriever.base_retriever import BaseRetriever
+from data_gatherer.retriever.embeddings_retriever import EmbeddingsRetriever
+from data_gatherer.retriever.xml_retriever import xmlRetriever
+from data_gatherer.retriever.html_retriever import htmlRetriever
 
 dataset_response_schema_gpt = {
     "type": "json_schema",
@@ -2161,6 +2165,133 @@ class LLMParser(Parser):
         self.logger.info(f"Extracted dataset info: {dataset_info}")
         return dataset_info
 
+class HTMLParser(Parser):
+    """
+    Custom HTML parser that has only support for HTML or HTML-like input
+    """
+    def __init__(self):
+        super().__init__()
+        self.logger = logging.getLogger(__name__)
+        self.logger.info("Initializing HTMLParser")
+        self.llm_name = os.environ.get('LLM_NAME', 'gpt-4o-mini')
+        self.save_dynamic_prompts = os.environ.get('SAVE_DYNAMIC_PROMPTS', 'False').lower() == 'true'
+        self.open_data_repos_ontology = load_config('open_data_repos_ontology.json')
+        self.retriever = htmlRetriever(
+            '',
+            publisher='PMC',
+            logger=self.logger,
+        )
+
+    def normalize_HTML(self, html, keep_tags=None):
+        """
+        Normalize the HTML content by removing unnecessary tags and attributes.
+
+        :param html: The raw HTML content to be normalized.
+
+        :param keep_tags: List of tags to keep in the HTML content. May be useful for some servers that host target info inside specific tags (e.g., <form> or <script>) that are otherwise removed by the scraper.
+
+        :return: The normalized HTML content.
+
+        """
+        try:
+            # Parse the HTML content
+            soup = BeautifulSoup(html, "html.parser")
+
+            # 1. Remove script, style, and meta tags
+            for tag in ["script", "style", 'img', 'noscript', 'svg', 'button', 'form', 'input', 'head']:
+                if keep_tags and tag in keep_tags:
+                    self.logger.info(f"Keeping tag: {tag}")
+                    continue
+                for element in soup.find_all(tag):
+                    element.decompose()
+
+            remove_meta_tags = True
+            if remove_meta_tags:
+                for meta in soup.find_all('meta'):
+                    meta.decompose()
+
+            # 2. Remove dynamic attributes
+            for tag in soup.find_all(True):  # True matches all tags
+                # Remove dynamic `id` attributes that match certain patterns (e.g., `tooltip-*`)
+                if "id" in tag.attrs and re.match(r"tooltip-\d+", tag.attrs["id"]):
+                    del tag.attrs["id"]
+
+                # Remove dynamic `aria-describedby` attributes
+                if "aria-describedby" in tag.attrs and re.match(r"tooltip-\d+", tag.attrs["aria-describedby"]):
+                    del tag.attrs["aria-describedby"]
+
+                # Remove inline styles
+                if "style" in tag.attrs:
+                    del tag.attrs["style"]
+
+                # Remove all `data-*` attributes
+                tag.attrs = {key: val for key, val in tag.attrs.items() if not key.startswith("data-")}
+
+                # Remove `csrfmiddlewaretoken` inputs
+                if tag.name == "input" and tag.get("name") == "csrfmiddlewaretoken":
+                    tag.decompose()
+
+            # 3. Remove comments
+            for comment in soup.find_all(string=lambda text: isinstance(text, Comment)):
+                comment.extract()
+
+            # 4. Normalize whitespace
+            normalized_html = re.sub(r"\s+", " ", soup.prettify())
+
+            return normalized_html.strip()
+
+        except Exception as e:
+            self.logger.error(f"Error normalizing DOM: {e}")
+            return ""
+
+    def get_rule_based_matches(self, publisher, html_content):
+
+        html_tree = html.fromstring(html_content)
+
+        if publisher in self.retriever.retrieval_patterns:
+            self.retriever.update_class_patterns(publisher)
+
+        rule_based_matches = {}
+
+        # Collect links using CSS selectors
+        for css_selector in self.retriever.css_selectors:
+            self.logger.debug(f"Parsing page with selector: {css_selector}")
+            links = html_tree.cssselect(css_selector)
+            self.logger.debug(f"Found Links: {links}")
+            for link in links:
+                rule_based_matches[link] = self.retriever.css_selectors[css_selector]
+        self.logger.info(f"Rule-based matches from css_selectors: {rule_based_matches}")
+
+        # Collect links using XPath
+        for xpath in self.retriever.xpaths:
+            self.logger.info(f"Checking path: {xpath}")
+            try:
+                child_element = html_tree.xpath(xpath)
+                section_element = child_element.xpath("./ancestor::section")
+                a_elements = section_element.xpath('a')
+                for a_element in a_elements:
+                    rule_based_matches[a_element] = self.retriever.xpaths[xpath]
+            except Exception as e:
+                self.logger.error(f"Invalid xpath: {xpath}")
+
+        return self.normalize_links(rule_based_matches)
+
+    def normalize_links(self, links_raw_dict):
+        """
+        Convert Selenium WebElement objects to strings and keep existing string links unchanged.
+        """
+        normalized_links = {}
+        for link, cls  in links_raw_dict.items():
+            if isinstance(link, str):
+                normalized_links[link] = cls
+            else:
+                try:
+                    href = link.get_attribute('href')
+                    if href:
+                        normalized_links[href] = cls
+                except Exception as e:
+                    self.logger.error(f"Error getting href attribute from WebElement: {e}")
+        return normalized_links
 
 class MyBeautifulSoup(BeautifulSoup):
     # this function will extract text from the HTML, by also keeping the links where they appear in the HTML

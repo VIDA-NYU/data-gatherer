@@ -12,6 +12,7 @@ from bs4 import BeautifulSoup, Comment
 from urllib.parse import urlparse
 import pandas as pd
 from data_gatherer.resources_loader import load_config
+from data_gatherer.retriever.xml_retriever import xmlRetriever
 
 # Abstract base class for fetching data
 class DataFetcher(ABC):
@@ -284,9 +285,6 @@ class WebScraper(DataFetcher):
         """
         logging.info(f"Dir {dir} exists") if os.path.exists(dir) else os.mkdir(dir)
 
-                # Remove dynamic `aria-describedby` attributes
-                if "aria-describedby" in tag.attrs and re.match(r"tooltip-\d+", tag.attrs["aria-describedby"]):
-                    del tag.attrs["aria-describedby"]
         if hasattr(self, 'extract_publication_title'):
             pub_name = self.extract_publication_title()
 
@@ -433,36 +431,6 @@ class DatabaseFetcher(DataFetcher):
             self.logger.info("No cookie pattern 1 found in HTML")
         return html
 
-    def get_rule_based_matches(self, publisher):
-
-        if publisher in self.retrieval_patterns:
-            self.update_class_patterns(publisher)
-
-        rule_based_matches = {}
-
-        # Collect links using CSS selectors
-        for css_selector in self.css_selectors:
-            self.logger.debug(f"Parsing page with selector: {css_selector}")
-            links = self.scraper_tool.find_elements(By.CSS_SELECTOR, css_selector)
-            self.logger.debug(f"Found Links: {links}")
-            for link in links:
-                rule_based_matches[link] = self.css_selectors[css_selector]
-        self.logger.info(f"Rule-based matches from css_selectors: {rule_based_matches}")
-
-        # Collect links using XPath
-        for xpath in self.xpaths:
-            self.logger.info(f"Checking path: {xpath}")
-            try:
-                child_element = self.scraper_tool.find_element(By.XPATH, xpath)
-                section_element = child_element.find_element(By.XPATH, "./ancestor::section")
-                a_elements = section_element.find_elements(By.TAG_NAME, 'a')
-                for a_element in a_elements:
-                    rule_based_matches[a_element] = self.xpaths[xpath]
-            except Exception as e:
-                self.logger.error(f"Invalid xpath: {xpath}")
-
-        return self.normalize_links(rule_based_matches)
-
 # Implementation for fetching data from an API
 class EntrezFetcher(DataFetcher):
     """
@@ -601,24 +569,10 @@ class DataCompletenessChecker:
 
         """
         self.logger = logger
-        self.retrieval_patterns = load_config(retrieval_patterns_file)
-        self.css_selectors = self.retrieval_patterns[publisher]['css_selectors']
-        self.xpaths = self.retrieval_patterns[publisher]['xpaths']
-        self.xml_tags = self.retrieval_patterns[publisher]['xml_tags']
-
-    def extract_namespaces(self, xml_element):
-        """Extract all namespaces in use, including xlink."""
-        ns_map = {'xlink': 'http://www.w3.org/1999/xlink'}
-        for elem in xml_element.iter():
-            tag = getattr(elem, "tag", None)
-            if isinstance(tag, str) and tag.startswith("{"):
-                uri = tag[1:].split("}")[0]
-                prefix = elem.prefix or 'ns0'
-                ns_map[prefix] = uri
-        return ns_map
+        self.retriever = xmlRetriever(publisher, retrieval_patterns_file, logger)
 
     def is_xml_data_complete(self, raw_data, url,
-                             required_sections = ["data_availability_sections", "supplementary_data_sections"]) -> bool:
+                             required_sections=["data_availability_sections", "supplementary_data_sections"]) -> bool:
         """
         Check if required sections are present in the raw_data.
         Return True if all required sections are present.
@@ -631,90 +585,4 @@ class DataCompletenessChecker:
 
         :return: True if all required sections are present, False otherwise.
         """
-        self.logger.debug(f"Checking XML completeness for {url}")
-
-        for section in required_sections:
-            if not self.has_target_section(raw_data, section):
-                self.logger.info(f"Missing section in XML: {section}")
-                return False
-
-        self.logger.info("XML data contains all required sections.")
-        return True
-
-    def has_target_section(self, raw_data, section_name: str) -> bool:
-        """
-        Check if the target section (data availability or supplementary data) exists in the raw data.
-
-        :param raw_data: Raw XML data.
-
-        :param section_name: Name of the section to check.
-
-        :return: True if the section is found with relevant links, False otherwise.
-        """
-
-        if raw_data is None:
-            self.logger.info("No raw data to check for sections.")
-            return False
-
-        self.logger.debug(f"type of raw_data: {type(raw_data)}, raw_data: {raw_data}")
-
-        self.logger.info(f"----Checking for {section_name} section in raw data.")
-        section_patterns = self.load_target_sections_ptrs(section_name)
-        self.logger.debug(f"Section patterns: {section_patterns}")
-        namespaces = self.extract_namespaces(raw_data)
-        self.logger.debug(f"Namespaces: {namespaces}")
-
-        for pattern in section_patterns:
-            self.logger.debug(f"Checking pattern: {pattern}")
-            sections = raw_data.findall(pattern, namespaces=namespaces)
-            if sections:
-                for section in sections:
-                    self.logger.info(f"----Found section: {ET.tostring(section, encoding='unicode')}")
-                    if self.has_links_in_section(section, namespaces):
-                        return True
-
-        return False
-
-    def load_target_sections_ptrs(self, section_name) -> list:
-        """
-        Load the XML tags for the specified section name. Publisher-specific.
-        """
-
-        target_sections = self.xml_tags
-        if section_name not in target_sections:
-            self.logger.error(f"Invalid section name: {section_name}. Available sections: {list(target_sections.keys())}")
-            raise ValueError(f"Invalid section name: {section_name}")
-
-        return target_sections[section_name]
-
-    def has_links_in_section(self, section, namespaces: dict[str, str]) -> bool:
-        """
-        Check if the given section contains any external links.
-
-        :param section: The section element to search for links.
-
-        :param namespaces: Namespaces to use for XML parsing.
-
-        :return: True if links are found, False otherwise.
-        """
-        ext_links = section.findall(".//ext-link", namespaces)
-        #uris = section.findall(".//uri", namespaces)
-
-        media_links = section.findall(".//media", namespaces)
-        xlink_hrefs = [m.get('{http://www.w3.org/1999/xlink}href') for m in media_links if
-                 m.get('{http://www.w3.org/1999/xlink}href')]
-
-        self.logger.debug(f"Found {len(ext_links)} ext-links and {len(xlink_hrefs)} xlink:hrefs.")
-        return bool(ext_links or xlink_hrefs)  #or uris)
-
-    def url_to_publisher_domain(self, url):
-        # Extract the domain name from the URL
-        if re.match(r'^https?://www\.ncbi\.nlm\.nih\.gov/pmc', url) or re.match(r'^https?://pmc\.ncbi\.nlm\.nih\.gov/', url):
-            return 'PMC'
-        match = re.match(r'^https?://(?:\w+\.)?([\w\d\-]+)\.\w+', url)
-        if match:
-            domain = match.group(1)
-            self.logger.info(f"Publisher: {domain}")
-            return domain
-        else:
-            return 'Unknown Publisher'
+        return self.retriever.is_xml_data_complete(raw_data, url, required_sections)
