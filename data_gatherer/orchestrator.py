@@ -270,7 +270,7 @@ class Orchestrator:
         """
         Orchestrates the process for a single given source URL (publication).
 
-        1. Fetches raw data using the data fetcher (WebScraper or APIClient).
+        1. Fetches raw data using the data fetcher (WebScraper or EntrezFetcher).
 
         2. Parses the raw data using the parser (LLMParser).
 
@@ -303,7 +303,7 @@ class Orchestrator:
         self.data_fetcher = self.data_fetcher.update_DataFetcher_settings(url, self.full_document_read, self.logger,
                                                                           driver_path=driver_path, browser=browser,
                                                                           headless=headless)
-        # Step 1: Use DataFetcher (WebScraper or APIClient) to fetch raw data
+        # Step 1: Use DataFetcher (WebScraper or EntrezFetcher) to fetch raw data
         self.logger.debug(f"data_fetcher.fetch_source = {self.data_fetcher.fetch_source}")
 
         try:
@@ -956,6 +956,6 @@ class Orchestrator:
                 self.logger.info("Quitting the WebDriver.")
                 self.data_fetcher.scraper_tool.quit()
 
-            if isinstance(self.data_fetcher, APIClient):
-                self.logger.info("Closing the APIClient.")
+            if isinstance(self.data_fetcher, EntrezFetcher):
+                self.logger.info("Closing the EntrezFetcher.")
                 self.data_fetcher.api_client.close()
