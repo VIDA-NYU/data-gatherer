@@ -95,7 +95,7 @@ class Orchestrator:
     def fetch_data(self, urls, search_method='url_list', driver_path=None, browser=None, headless=True,
                    HTML_fallback=False, local_fetch_file=None, write_htmls_xmls=False, html_xml_dir='tmp/html_xmls/'):
         """
-        Fetches data from the given URL using the configured data fetcher (WebScraper or APIClient).
+        Fetches data from the given URL using the configured data fetcher (WebScraper or EntrezFetcher).
 
         :param urls: The list of URLs to fetch data from.
 
@@ -146,7 +146,7 @@ class Orchestrator:
                 directory = html_xml_dir + self.publisher + '/'
                 self.logger.info(f"Raw Data is {self.data_fetcher.raw_data_format}.")
                 if self.data_fetcher.raw_data_format == "HTML" or self.data_fetcher.raw_data_format == "full_HTML":
-                    self.data_fetcher.download_html(directory)
+                    self.data_fetcher.html_page_source_download(directory)
                     self.logger.info(f"Raw HTML saved to: {directory}")
                 elif self.data_fetcher.raw_data_format == "XML":
                     self.data_fetcher.download_xml(directory, raw_data[src_url])
@@ -356,7 +356,7 @@ class Orchestrator:
                 directory = html_xml_dir + self.publisher + '/'
                 self.logger.info(f"Raw Data is {self.raw_data_format}.")
                 if self.raw_data_format == "HTML" or self.raw_data_format == "full_HTML":
-                    self.data_fetcher.download_html(directory)
+                    self.data_fetcher.html_page_source_download(directory)
                     self.logger.info(f"Raw HTML saved to: {directory}")
                 elif self.raw_data_format == "XML":
                     self.data_fetcher.download_xml(directory, raw_data)
@@ -372,7 +372,7 @@ class Orchestrator:
 
                 parsed_data['rule_based_classification'] = 'n/a'
                 self.logger.info(f"Parsed data extraction completed. Links collected: {len(parsed_data)}")
-                rule_based_matches = self.data_fetcher.get_rule_based_matches(self.publisher)
+                rule_based_matches = self.parser.get_rule_based_matches(self.publisher)
                 #            print(f"rule_based_matches pre: {rule_based_matches}")
                 #            rule_based_matches = self.data_fetcher.normalize_links(rule_based_matches)
                 #            print(f"rule_based_matches post: {rule_based_matches}")
@@ -681,7 +681,7 @@ class Orchestrator:
                         html = self.data_fetcher.normalize_HTML(html)
                     if write_raw_metadata:
                         self.logger.info(f"Saving raw metadata to: {html_xml_dir+ 'raw_metadata/'}")
-                        self.data_fetcher.download_html(html_xml_dir + 'raw_metadata/')
+                        self.data_fetcher.html_page_source_download(html_xml_dir + 'raw_metadata/')
                 else:
                     if 'informative_html_metadata_tags' in self.open_data_repos_ontology['repos'][resolved_key]:
                         keep_sect = self.open_data_repos_ontology['repos'][resolved_key]['informative_html_metadata_tags']

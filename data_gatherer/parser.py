@@ -462,7 +462,8 @@ class LLMParser(Parser):
         self.title = None
         self.prompt_manager = PromptManager(prompt_dir, self.logger, response_file,
                                             save_dynamic_prompts=save_dynamic_prompts,
-                                            save_responses_to_cache=save_responses_to_cache)
+                                            save_responses_to_cache=save_responses_to_cache,
+                                            use_cached_responses=use_cached_responses)
         self.repo_names = self.get_repo_names()
         self.repo_domain_to_name_mapping = self.get_repo_domain_to_name_mapping()
 
@@ -1064,6 +1065,11 @@ class LLMParser(Parser):
         return download_link
 
     def get_sibling_text(self, media_element):
+        """
+        Extracts text surrounding the <media> element including the parent and its siblings.
+        This includes inline text and any <p> tags that may provide context for the media element.
+
+        """
         sibling_text = []
 
         # Get the parent element's text (if any)
@@ -1187,18 +1193,7 @@ class LLMParser(Parser):
         :return: List of dictionaries containing processed data.
         """
         self.logger.info(f"Processing DAS_content: {DAS_content}")
-        repos_elements = []
-        for repo, details in self.open_data_repos_ontology['repos'].items():
-            entry = repo
-            if 'repo_name' in details:
-                entry += f" ({details['repo_name']})"
-            repos_elements.append(entry)
-
-        # Join the elements into a properly formatted string
-        repos = ', '.join(repos_elements)
-
-        # Log for debugging
-        self.logger.debug(f"Repos elements: {repos_elements}")
+        repos_elements = self.repo_names
 
         # Call the generalized function
         datasets = []
@@ -1226,7 +1221,7 @@ class LLMParser(Parser):
                                        prompt_name: str = 'retrieve_datasets_simple_JSON',
                                        full_document_read=True) -> list:
         """
-        Retrieve datasets from the given content using a specified LLM model.
+        Extract datasets from the given content using a specified LLM model.
         Uses a static prompt template and dynamically injects the required content.
         It also performs token counting and llm response normalization.
 
