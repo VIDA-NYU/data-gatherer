@@ -38,7 +38,9 @@ class EmbeddingsRetriever(BaseRetriever):
         results = []
         for idx, score in zip(I[0], D[0]):
             results.append({
-                'text': self.corpus[idx],
+                'text': self.corpus[idx]['sec_txt'],
+                'section_title': self.corpus[idx]['section_title'],
+                'sec_type': self.corpus[idx]['sec_type'],
                 'Faiss_index': float(score)
             })
         return results

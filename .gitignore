@@ -108,3 +108,4 @@ nosetests.xml
 /scripts/Vector_Retrieval_copy_latest.ipynb
 /scripts/example_notebook.ipynb
 /scripts/mdc2025/mdc_2025.ipynb
+/scripts/mdc2025/mdc_2025_xml_test.ipynb
