@@ -17,6 +17,7 @@ class xmlRetriever:
 
         """
         self.logger = logger
+        self.publisher = publisher
         self.retrieval_patterns = load_config(retrieval_patterns_file)
         self.css_selectors = self.retrieval_patterns[publisher]['css_selectors']
         self.xpaths = self.retrieval_patterns[publisher]['xpaths']
@@ -56,40 +57,6 @@ class xmlRetriever:
 
         self.logger.info("XML data contains all required sections.")
         return True
-
-    def has_target_section(self, raw_data, section_name: str) -> bool:
-        """
-        Check if the target section (data availability or supplementary data) exists in the raw data.
-
-        :param raw_data: Raw XML data.
-
-        :param section_name: Name of the section to check.
-
-        :return: True if the section is found with relevant links, False otherwise.
-        """
-
-        if raw_data is None:
-            self.logger.info("No raw data to check for sections.")
-            return False
-
-        self.logger.debug(f"type of raw_data: {type(raw_data)}, raw_data: {raw_data}")
-
-        self.logger.info(f"----Checking for {section_name} section in raw data.")
-        section_patterns = self.load_target_sections_ptrs(section_name)
-        self.logger.debug(f"Section patterns: {section_patterns}")
-        namespaces = self.extract_namespaces(raw_data)
-        self.logger.debug(f"Namespaces: {namespaces}")
-
-        for pattern in section_patterns:
-            self.logger.debug(f"Checking pattern: {pattern}")
-            sections = raw_data.findall(pattern, namespaces=namespaces)
-            if sections:
-                for section in sections:
-                    self.logger.info(f"----Found section: {ET.tostring(section, encoding='unicode')}")
-                    if self.has_links_in_section(section, namespaces):
-                        return True
-
-        return False
 
     def load_target_sections_ptrs(self, section_name) -> list:
         """
@@ -135,7 +102,7 @@ class xmlRetriever:
         else:
             return 'Unknown Publisher'
 
-    def load_patterns_for_tgt_section(self, section_name, publisher=None):
+    def load_patterns_for_tgt_section(self, section_name, publisher='PMC'):
         """
         Load the XML tag patterns for the target section from the configuration.
 
@@ -145,15 +112,21 @@ class xmlRetriever:
         """
 
         self.publisher = publisher
+        self.logger.info(f"Loading patterns for section '{section_name}' for publisher '{self.publisher}'.")
 
         if self.publisher in self.retrieval_patterns:
             if 'xml_tags' not in self.retrieval_patterns[self.publisher]:
                 self.logger.error(f"XML tags not set for publisher '{self.publisher}' in retrieval patterns.")
                 return None
             else:
-                section_patterns = self.retrieval_patterns[self.publisher]
-                if section_name in section_patterns.keys():
-                    return section_patterns[section_name]
+                section_xml_tags_patterns = self.retrieval_patterns[self.publisher]['xml_tags']
+                self.logger.info(f"Section pattern keys for publisher {self.publisher}: {section_xml_tags_patterns.keys()}")
+                self.logger.info(f"Section name: {section_name}")
+                if section_name in section_xml_tags_patterns.keys():
+                    self.logger.info(f"Found section '{section_name}' in patterns for publisher '{self.publisher}'.")
+                    ret = section_xml_tags_patterns[section_name]
+                    self.logger.info(f"Loaded patterns for section '{section_name}': {ret}")
+                    return ret
 
                 else:
                     self.logger.error(f"Section name '{section_name}' not found in section patterns.")
@@ -390,81 +363,6 @@ class xmlRetriever:
                 self.logger.debug(f"Extracted supplementary material links:\n{hrefs}")
         return hrefs
 
-    def get_data_availability_text(self, api_xml):
-        """
-        This function handles the retrieval step. Given the data availability statement, extract the dataset
-        information from the text.
-
-        :param api_xml: lxml.etree.Element — parsed XML root.
-
-        :return: List of strings from sections that match the data availability section patterns.
-
-        """
-        # find the data availability section
-        data_availability_sections = []
-        for ptr in self.load_patterns_for_tgt_section('data_availability_sections'):
-            data_availability_sections.extend(api_xml.findall(ptr))
-
-        data_availability_cont = []
-
-        # extract the text from the data availability section
-        for sect in data_availability_sections:
-            cont = ""
-            for elem in sect.iter():
-                if elem.text:
-                    cont += ' '
-                    cont += elem.text
-                    cont += ' '
-                if elem.tail:
-                    cont += ' '
-                    cont += elem.tail
-                    cont += ' '
-                # also include the links in the data availability section
-                if elem.tag == 'ext-link':
-                    cont += ' '
-                    cont += elem.get('{http://www.w3.org/1999/xlink}href')
-                    cont += ' '
-                if elem.tag == 'xref':
-                    cont += ' '
-                    cont += elem.text
-                    cont += ' '
-            data_availability_cont.append(cont) if cont not in data_availability_cont else None
-
-        supplementary_data_sections = []
-
-        # find the data availability statement in other sections
-        for ptr in self.load_patterns_for_tgt_section('supplementary_data_sections'):
-            if ptr.startswith('.//'):
-                supplementary_data_sections.extend(api_xml.findall(ptr))
-
-        self.logger.info(f"Found {len(supplementary_data_sections)} supplementary data sections")
-
-        for sect in supplementary_data_sections:
-            # check if section contains data availability statement
-            if sect.text is None:  # key resources table
-                self.logger.debug(f"Section with no text: {sect}")
-            elif 'data availability' in sect.text:
-                data_availability_cont.append(sect.text) if sect.text not in data_availability_cont else None
-            elif 'Deposited data' in sect.text:
-                data_availability_cont.append(sect.text) if sect.text not in data_availability_cont else None
-            elif 'Accession number' in sect.text:
-                data_availability_cont.append(sect.text) if sect.text not in data_availability_cont else None
-
-        key_resources_table = []
-
-        for ptr in self.load_patterns_for_tgt_section('key_resources_table'):
-            key_resources_table.extend(api_xml.xpath(ptr))
-
-        for sect in key_resources_table:
-            self.logger.info(f"Found key resources table: {sect}")
-            table_text = self.table_to_text(sect)   # this will also go into parser
-            self.logger.info(f"Table text: {table_text}")
-            data_availability_cont.append(table_text)
-
-        self.logger.info(f"Found data availability content: {data_availability_cont}")
-
-        return data_availability_cont
-
     def get_surrounding_text(self, element):
         """
         Extracts text surrounding the element (including parent and siblings) for more context.
@@ -506,3 +404,9 @@ class xmlRetriever:
         surrounding_text = " ".join(parent_text)
 
         return re.sub("[\s\n]+(\s+)]", "\1", surrounding_text)
+
+    def get_data_availability_sections(self, api_xml):
+        data_availability_sections = []
+        for ptr in self.load_patterns_for_tgt_section('data_availability_sections'):
+            data_availability_sections.extend(api_xml.findall(ptr))
+        return data_availability_sections

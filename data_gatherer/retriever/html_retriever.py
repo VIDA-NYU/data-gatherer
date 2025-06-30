@@ -11,7 +11,7 @@ class htmlRetriever(BaseRetriever):
     This class is designed to extract specific data availability elements from a given webpage URL.
     It uses BeautifulSoup for parsing HTML and extracting relevant information.
     """
-    def __init__(self, url, publisher, logger, retrieval_patterns_file='retrieval_patterns.json', headers=None):
+    def __init__(self, logger, publisher='PMC', retrieval_patterns_file='retrieval_patterns.json', headers=None):
         """
         Initialize the HTMLRetriever with a URL and optional headers.
 
@@ -19,14 +19,12 @@ class htmlRetriever(BaseRetriever):
             url (str): The URL of the webpage to retrieve data from.
             headers (dict, optional): Optional HTTP headers to use for the request.
         """
-        self.url = url
         self.headers = headers if headers else {}
         self.logger = logger
         self.publisher = publisher
         self.retrieval_patterns = load_config(retrieval_patterns_file)
         self.css_selectors = self.retrieval_patterns[publisher]['css_selectors']
         self.xpaths = self.retrieval_patterns[publisher]['xpaths']
-        self.xml_tags = self.retrieval_patterns[publisher]['xml_tags']
 
     def extract_href_from_html_supplementary_material(self, raw_html, current_url_address):
         """
@@ -165,3 +163,59 @@ class htmlRetriever(BaseRetriever):
         self.logger.info(f"Found {len(data_availability_elements)} data availability elements from HTML.")
         return data_availability_elements
 
+    def get_data_availability_elements_from_webpage(self, preprocessed_html, publisher='PMC'):
+        """
+        Given the preprocessed HTML, extract paragraphs or links under data availability sections.
+        """
+        self.retrieval_patterns = load_config('retrieval_patterns.json')
+        self.logger.info("Extracting data availability elements from HTML")
+
+        # Merge general + publisher-specific selectors
+        self.css_selectors = self.retrieval_patterns.get('general', {}).get('css_selectors', {})
+        publisher_selectors = self.retrieval_patterns.get(publisher, {}).get('css_selectors', {})
+        self.css_selectors.update(publisher_selectors)
+
+        soup = BeautifulSoup(preprocessed_html, "html.parser")
+        data_availability_elements = []
+
+        for selector in self.css_selectors.get('data_availability', []):
+            self.logger.info(f"Using selector: {selector}")
+            matches = soup.select(selector)
+            for match in matches:
+                if match.name in ['h2', 'h3']:  # headings usually don't contain content directly
+                    container = match.find_parent('section') or match.find_next_sibling()
+                    if container:
+                        children = container.find_all(['p', 'li', 'a', 'div'], recursive=True)
+                    else:
+                        children = []
+                else:
+                    children = match.find_all(['p', 'li', 'a', 'div'], recursive=True)
+
+                text_val, html_val = '', ''
+                for child in children:
+                    if not child.get_text(strip=True):
+                        continue
+                    text_val += child.get_text(strip=True) + " \n"
+                    html_val += str(child) + " \n"
+
+                element_info = {
+                    'retrieval_pattern': selector,
+                    'text': text_val,
+                    'html': html_val
+                }
+                data_availability_elements.append(element_info)
+
+                # fallback if nothing found
+                if not children:
+                    data_availability_elements.append({
+                        'retrieval_pattern': selector,
+                        'tag': match.name,
+                        'text': match.get_text(strip=True),
+                        'html': str(match)
+                    })
+                    data_availability_elements.append(element_info)
+
+                self.logger.debug(f"Extracted data availability element: {element_info}")
+
+        self.logger.info(f"Found {len(data_availability_elements)} data availability elements from HTML.")
+        return data_availability_elements
