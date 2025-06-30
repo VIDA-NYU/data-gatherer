@@ -181,11 +181,11 @@ class XMLParser(LLMParser):
 
                 if semantic_retrieval:
                     corpus = self.extract_sections_from_xml(api_data)
-                    top_k_sections = self.semantic_retrieve_from_corpus(corpus)
-                    top_k_sections_str = "\n".join([item['text'] for item in top_k_sections])
-                    data_availability_str = top_k_sections_str + "\n" + data_availability_cont
+                    top_k_sections = self.semantic_retrieve_from_corpus(corpus, topk_docs_to_retrieve=2)
+                    top_k_sections_text = [item['text'] for item in top_k_sections]
+                    data_availability_cont.extend(top_k_sections_text)
 
-                augmented_dataset_links = self.process_data_availability_text(data_availability_str,
+                augmented_dataset_links = self.process_data_availability_text(data_availability_cont,
                                                                               prompt_name=prompt_name)
 
                 if additional_data is not None and len(additional_data) > 0:
@@ -242,7 +242,8 @@ class XMLParser(LLMParser):
                 dataset_links_w_target_pages = self.get_dataset_page(augmented_dataset_links)
 
                 # Create a DataFrame from the dataset links union supplementary material links
-                out_df = pd.concat([pd.DataFrame(dataset_links_w_target_pages), supplementary_material_links])
+                out_df = pd.concat([pd.DataFrame(dataset_links_w_target_pages),
+                                    pd.DataFrame(supplementary_material_links)])
 
             self.logger.info(f"Dataset Links type: {type(out_df)} of len {len(out_df)}, with cols: {out_df.columns}")
 
@@ -271,10 +272,17 @@ class XMLParser(LLMParser):
 
         :return: Normalized XML data as a string.
         """
-        try:
-            # Parse the XML data
-            xml_root = etree.fromstring(xml_data)
+        if isinstance(xml_data, str):
+            try:
+                xml_root = etree.fromstring(xml_data)
+                return self.normalize_XML(xml_root)
 
+            except etree.XMLSyntaxError as e:
+                self.logger.error(f"Error parsing XML data for normalization: {e}")
+                return None
+
+        elif isinstance(xml_data, etree._Element):
+            xml_root = xml_data
             # Remove unnecessary whitespace and normalize text
             for elem in xml_root.iter():
                 if elem.text:
@@ -286,10 +294,6 @@ class XMLParser(LLMParser):
             normalized_xml = etree.tostring(xml_root, pretty_print=True, xml_declaration=True, encoding='UTF-8').decode('utf-8')
 
             return normalized_xml
-
-        except etree.XMLSyntaxError as e:
-            self.logger.error(f"XML Syntax Error during normalization: {e}")
-            return None
 
     def extract_href_from_data_availability(self, api_xml):
         """

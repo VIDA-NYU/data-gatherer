@@ -282,7 +282,7 @@ class LLMParser(ABC):
         """
 
         self.logger.info(f"Function_call: load_patterns_for_tgt_section({section_name})")
-        self.logger.warning(f"Consider migrating this function to the BaseRetriever class.")
+        self.logger.info(f"Consider migrating this function to the BaseRetriever class.")
         return self.retriever.load_target_sections_ptrs(section_name)
 
 
@@ -1061,7 +1061,7 @@ class LLMParser(ABC):
                     datasets[i]['dataset_webpage'] = original_repo
 
             else:
-                self.logger.warning(f"Repository {repo} unknown in Ontology. Skipping dataset {1 + i}.")
+                self.logger.warning(f"Repository {repo} unknown in Ontology. Skipping dataset page {1 + i}.")
                 continue
 
         self.logger.info(f"Updated datasets len: {len(datasets)}")

@@ -380,7 +380,8 @@ class HTMLParser(LLMParser):
             if semantic_retrieval:
                 corpus = self.extract_sections_from_html(preprocessed_data)
                 top_k_sections = self.semantic_retrieve_from_corpus(corpus)
-                top_k_sections_str = "\n".join([item['text'] for item in top_k_sections])
+                top_k_sections_text = [item['text'] for item in top_k_sections]
+                top_k_sections_str = "\n".join(top_k_sections_text)
                 data_availability_str = top_k_sections_str + "\n" + data_availability_str
 
             augmented_dataset_links = self.extract_datasets_info_from_content(data_availability_str,
