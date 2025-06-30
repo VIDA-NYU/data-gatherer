@@ -1,5 +1,4 @@
 from data_gatherer.parser.base_parser import *
-from data_gatherer.resources_loader import load_config
 from data_gatherer.retriever.html_retriever import htmlRetriever
 import os
 import re

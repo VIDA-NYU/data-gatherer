@@ -1,9 +1,7 @@
 from data_gatherer.retriever.xml_retriever import xmlRetriever
 from data_gatherer.parser.base_parser import *
-import logging
 from lxml import etree
 import os
-from data_gatherer.resources_loader import load_config
 import pandas as pd
 import json
 import re
