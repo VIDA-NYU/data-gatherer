@@ -321,7 +321,7 @@ class HTMLParser(LLMParser):
 
     def parse_data(self, api_data, publisher, current_url_address, additional_data=None, raw_data_format='HTML',
                    save_xml_output=False, html_xml_dir='html_xml_samples/', process_DAS_links_separately=False,
-                   prompt_name='retrieve_datasets_simple_JSON', use_portkey_for_gemini=True):
+                   prompt_name='retrieve_datasets_simple_JSON', use_portkey_for_gemini=True, semantic_retrieval=False):
         """
         Parse the API data and extract relevant links and metadata.
 
@@ -377,6 +377,12 @@ class HTMLParser(LLMParser):
             data_availability_elements = self.retriever.get_data_availability_elements_from_webpage(preprocessed_data)
 
             data_availability_str = "\n".join([item['html'] + "\n" for item in data_availability_elements])
+
+            if semantic_retrieval:
+                corpus = self.extract_sections_from_html(preprocessed_data)
+                top_k_sections = self.semantic_retrieve_from_corpus(corpus)
+                top_k_sections_str = "\n".join([item['text'] for item in top_k_sections])
+                data_availability_str = top_k_sections_str + "\n" + data_availability_str
 
             augmented_dataset_links = self.extract_datasets_info_from_content(data_availability_str,
                                                                               self.open_data_repos_ontology['repos'],

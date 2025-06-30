@@ -37,5 +37,8 @@ class EmbeddingsRetriever(BaseRetriever):
         D, I = self.index.search(query_emb, k)
         results = []
         for idx, score in zip(I[0], D[0]):
-            results.append((self.corpus[idx], float(score)))
+            results.append({
+                'text': self.corpus[idx],
+                'Faiss_index': float(score)
+            })
         return results

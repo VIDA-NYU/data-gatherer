@@ -1195,6 +1195,30 @@ class LLMParser(ABC):
         self.logger.info(f"Extracted dataset info: {dataset_info}")
         return dataset_info
 
+    def semantic_retrieve_from_corpus(self, corpus, model_name='sentence-transformers/all-MiniLM-L6-v2',
+                                      topk_docs_to_retrieve=5):
+
+        query = """Explicitly identify all the datasets by their database accession codes, repository names, and links
+         to deposited datasets mentioned in this paper."""
+
+        retriever = EmbeddingsRetriever(
+            model_name=model_name,  # or any other model you prefer
+            device="cpu",
+            corpus=corpus
+        )
+        # Other queries can be used here as well, e.g.:
+        # "Available data, accession code, data repository, deposited data"
+        # "Explicitly identify all database accession codes, repository names, and links to deposited datasets or ...
+        # ...supplementary data mentioned in this paper."
+        # "Deposited data will be available in the repository XYZ, with accession code ABC123."
+
+        result = retriever.search(
+            query=query,
+            k=topk_docs_to_retrieve
+        )
+
+        return result
+
 class LLMClient:
     def __init__(self, model:str, logger=None, save_prompts:bool=False, use_portkey_for_gemini=True):
         self.model = model

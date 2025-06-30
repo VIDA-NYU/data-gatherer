@@ -103,7 +103,7 @@ class XMLParser(LLMParser):
 
     def parse_data(self, api_data, publisher, current_url_address, additional_data=None, raw_data_format='XML',
                    save_xml_output=False, html_xml_dir='html_xml_samples/', process_DAS_links_separately=False,
-                   prompt_name='retrieve_datasets_simple_JSON', use_portkey_for_gemini=True):
+                   prompt_name='retrieve_datasets_simple_JSON', use_portkey_for_gemini=True, semantic_retrieval=False):
         """
         Parse the API data and extract relevant links and metadata.
 
@@ -181,7 +181,13 @@ class XMLParser(LLMParser):
             else:
                 data_availability_cont = self.get_data_availability_text(api_data)
 
-                augmented_dataset_links = self.process_data_availability_text(data_availability_cont,
+                if semantic_retrieval:
+                    corpus = self.extract_sections_from_xml(api_data)
+                    top_k_sections = self.semantic_retrieve_from_corpus(corpus)
+                    top_k_sections_str = "\n".join([item['text'] for item in top_k_sections])
+                    data_availability_str = top_k_sections_str + "\n" + data_availability_cont
+
+                augmented_dataset_links = self.process_data_availability_text(data_availability_str,
                                                                               prompt_name=prompt_name)
 
                 if additional_data is not None and len(additional_data) > 0:
