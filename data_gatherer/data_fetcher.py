@@ -569,7 +569,7 @@ class DataCompletenessChecker:
 
         """
         self.logger = logger
-        self.retriever = xmlRetriever(publisher, retrieval_patterns_file, logger)
+        self.retriever = xmlRetriever(logger, publisher, retrieval_patterns_file)
 
     def is_xml_data_complete(self, raw_data, url,
                              required_sections=["data_availability_sections", "supplementary_data_sections"]) -> bool:

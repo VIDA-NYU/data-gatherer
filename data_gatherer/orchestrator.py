@@ -1,10 +1,8 @@
-import logging
-
-import numpy as np
-import requests
 from data_gatherer.logger_setup import setup_logging
 from data_gatherer.data_fetcher import *
-from data_gatherer.parser import RuleBasedParser, LLMParser
+from data_gatherer.parser.base_parser import *
+from data_gatherer.parser.html_parser import *
+from data_gatherer.parser.xml_parser import *
 from data_gatherer.classifier import LLMClassifier
 import json
 from data_gatherer.selenium_setup import create_driver
@@ -156,18 +154,16 @@ class Orchestrator:
 
         return raw_data
 
-    def parse_data(self, current_url, raw_data, parser_mode='LLMParser', publisher='PMC', additional_data=None,
+    def parse_data(self, current_url, raw_data, publisher='PMC', additional_data=None,
                    raw_data_format='XML', save_xml_output=False, html_xml_dir='tmp/html_xml_samples/',
                    process_DAS_links_separately=False, full_document_read=False,
                    prompt_name='retrieve_datasets_simple_JSON', use_portkey_for_gemini=True):
         """
-        Parses the raw data fetched from the source URL using the configured parser (LLMParser or RuleBasedParser).
+        Parses the raw data fetched from the source URL using the appropriate parser.
 
         :param current_url: The URL of the current data source being processed.
 
         :param raw_data: The raw data to parse, typically string formatted as HTML or XML content.
-
-        :param parser_mode: The mode of the parser to use. Supported values are 'LLMParser' and 'RuleBasedParser'.
 
         :param publisher: The publisher domain or identifier for the data source.
 
@@ -185,9 +181,13 @@ class Orchestrator:
         """
         self.logger.info(f"Parsing data from URL: {current_url} with publisher: {publisher}")
 
-        if parser_mode == "LLMParser":
-            self.parser = LLMParser(self.open_data_repos_ontology, self.logger, full_document_read=full_document_read,
+        if raw_data_format == "XML":
+            self.parser = XMLParser(self.open_data_repos_ontology, self.logger, full_document_read=full_document_read,
                                     llm_name=self.llm, use_portkey_for_gemini=use_portkey_for_gemini)
+
+        elif raw_data_format == "HTML" or raw_data_format == "full_HTML":
+            self.parser = HTMLParser(self.open_data_repos_ontology, self.logger, full_document_read=full_document_read,
+                                     llm_name=self.llm, use_portkey_for_gemini=use_portkey_for_gemini)
 
         if isinstance(raw_data, dict):
             cont = raw_data.values()
@@ -340,7 +340,6 @@ class Orchestrator:
 
                 elif not self.data_checker.is_xml_data_complete(raw_data, url):
                     self.raw_data_format = "HTML"
-                    self.parser_mode = "LLMParser"
                     self.logger.info(f"Fallback to HTML data fetcher for {url}.")
                     self.data_fetcher = self.data_fetcher.update_DataFetcher_settings(url,
                                                                                       self.full_document_read,
@@ -367,7 +366,7 @@ class Orchestrator:
             # Step 2: Use RuleBasedParser to parse and extract HTML elements and rule-based matches
             if self.raw_data_format == "HTML" and self.parser_mode == "RuleBasedParser":
                 self.logger.info("Using RuleBasedParser to parse data.")
-                self.parser = RuleBasedParser(self.open_data_repos_ontology, self.logger)
+                self.parser = HTMLParser(self.open_data_repos_ontology, self.logger)
                 parsed_data = self.parser.parse_data(raw_data, self.publisher, self.current_url)
 
                 parsed_data['rule_based_classification'] = 'n/a'
@@ -387,8 +386,8 @@ class Orchestrator:
                 parsed_data.to_csv('staging_table/parsed_data.csv', index=False) if save_staging_table else None
 
             elif self.raw_data_format == "XML" and raw_data is not None:
-                self.logger.info("Using LLMParser to parse data.")
-                self.parser = LLMParser(self.open_data_repos_ontology, self.logger,
+                self.logger.info("Using XMLParser to parse data.")
+                self.parser = XMLParser(self.open_data_repos_ontology, self.logger,
                                         llm_name=self.llm,
                                         full_document_read=self.full_document_read,
                                         use_portkey_for_gemini=use_portkey_for_gemini)
@@ -411,9 +410,9 @@ class Orchestrator:
                 if self.logger.level == logging.DEBUG:
                     parsed_data.to_csv('staging_table/parsed_data_from_XML.csv', index=False) if save_staging_table else None
 
-            elif self.raw_data_format == "full_HTML" or self.parser_mode == "LLMParser":
-                self.logger.info("Using LLMParser to parse data.")
-                self.parser = LLMParser(self.open_data_repos_ontology, self.logger,
+            elif self.raw_data_format == "full_HTML":
+                self.logger.info("Using HTMLParser to parse data.")
+                self.parser = HTMLParser(self.open_data_repos_ontology, self.logger,
                                         llm_name=self.llm,
                                         full_document_read=self.full_document_read,
                                         use_portkey_for_gemini=use_portkey_for_gemini)
@@ -438,16 +437,13 @@ class Orchestrator:
 
             # Step 3: Use Classifier to classify Extracted and Parsed elements
             if parsed_data is not None:
-                if self.raw_data_format == "HTML" and self.parser_mode != "LLMParser":
+                if self.raw_data_format == "HTML":
                     classified_links = self.classifier.classify_anchor_elements_links(parsed_data)
                     self.logger.info("Link classification completed.")
                 elif self.raw_data_format == "XML":
                     self.logger.info("XML element classification not needed. Using parsed_data.")
                     classified_links = parsed_data
                 elif self.raw_data_format == "full_HTML":
-                    classified_links = parsed_data
-                    self.logger.info("Full HTML element classification not supported. Using parsed_data.")
-                elif self.parser_mode == "LLMParser":
                     classified_links = parsed_data
                     self.logger.info("Full HTML element classification not supported. Using parsed_data.")
                 else:
@@ -609,7 +605,7 @@ class Orchestrator:
         """
 
         self.already_previewed = []
-        self.metadata_parser = LLMParser(self.open_data_repos_ontology, self.logger, full_document_read=True,
+        self.metadata_parser = HTMLParser(self.open_data_repos_ontology, self.logger, full_document_read=True,
                                          llm_name=self.llm,  use_portkey_for_gemini=use_portkey_for_gemini)
 
         if self.data_fetcher is None:
@@ -656,7 +652,7 @@ class Orchestrator:
                     continue
                 else:
                     self.logger.info(f"Potentially a valid dataset, displaying hardscraped metadata")
-                    #metadata = self.metadata_parser.parse_metadata(row['source_section'])
+                    #metadata = self.metadata_parser.parse_datasets_metadata(row['source_section'])
                     hardscraped_metadata = {k:v for k,v in row.items() if v is not None and v not in ['nan', 'None', '', 'n/a', np.nan, 'NaN', 'na']}
                     self.already_previewed.append(download_link)
                     if self.download_data_for_description_generation:
@@ -678,7 +674,7 @@ class Orchestrator:
                         html = self.data_fetcher.normalize_HTML(html, self.open_data_repos_ontology['repos'][
                             resolved_key]['informative_html_metadata_tags'])
                     else:
-                        html = self.data_fetcher.normalize_HTML(html)
+                        html = self.parser.normalize_HTML(html)
                     if write_raw_metadata:
                         self.logger.info(f"Saving raw metadata to: {html_xml_dir+ 'raw_metadata/'}")
                         self.data_fetcher.html_page_source_download(html_xml_dir + 'raw_metadata/')
@@ -690,7 +686,7 @@ class Orchestrator:
                     response = requests.get(row['dataset_webpage'], timeout=3)
                     html = self.data_fetcher.normalize_HTML(response.text, keep_tags=keep_sect)
 
-                metadata = self.metadata_parser.parse_metadata(html, use_portkey_for_gemini=use_portkey_for_gemini,
+                metadata = self.metadata_parser.parse_datasets_metadata(html, use_portkey_for_gemini=use_portkey_for_gemini,
                                                                prompt_name=prompt_name)
                 metadata['source_url_for_metadata'] = row['dataset_webpage']
                 metadata['access_mode'] = row.get('access_mode', None)
