@@ -107,3 +107,4 @@ nosetests.xml
 /scripts/exp_input/Local_fetched_data.parquet
 /scripts/Vector_Retrieval_copy_latest.ipynb
 /scripts/example_notebook.ipynb
+/scripts/mdc2025/mdc_2025.ipynb
