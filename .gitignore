@@ -109,3 +109,7 @@ nosetests.xml
 /scripts/example_notebook.ipynb
 /scripts/mdc2025/mdc_2025.ipynb
 /scripts/mdc2025/mdc_2025_xml_test.ipynb
+/scripts/E-utility/EFetch_XML.ipynb
+/scripts/E-utility/pmcid_analysis.csv
+/scripts/E-utility/output.txt
+/scripts/E-utility/output_no_body.txt

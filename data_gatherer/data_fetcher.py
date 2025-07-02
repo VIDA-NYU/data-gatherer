@@ -221,7 +221,7 @@ class WebScraper(DataFetcher):
     def __init__(self, scraper_tool, logger, retrieval_patterns_file=None, driver_path=None, browser='firefox',
                  headless=True, local_fetch_fp=None):
         super().__init__(logger, src='WebScraper', raw_HTML_data_filepath=local_fetch_fp)
-        self.scraper_tool = scraper_tool  # Inject your scraping tool (BeautifulSoup, Selenium, etc.)
+        self.scraper_tool = scraper_tool  # Inject your scraping tool (Selenium)
         self.driver_path = driver_path
         self.browser = browser
         self.headless = headless
@@ -459,16 +459,16 @@ class EntrezFetcher(DataFetcher):
         self.publisher = 'PMC'
 
 
-    def fetch_data(self, article_url, retries=3, delay=2):
+    def fetch_data(self, article_id, retries=3, delay=2):
         """
         Fetches data from the API using the provided article URL.
 
-        :param article_url: The URL of the article to fetch data for.
+        :param article_id: The URL of the article to fetch data for.
 
         """
         try:
-            # Extract the PMC ID from the article URL
-            PMCID = re.search(r'PMC\d+', article_url).group(0)
+            # Extract the PMC ID from the article URL, ignore case
+            PMCID = re.search(r'PMC\d+', article_id, re.IGNORECASE).group(0)
             self.PMCID = PMCID
 
             # Construct the API call using the PMC ID
@@ -508,11 +508,11 @@ class EntrezFetcher(DataFetcher):
 
         except requests.exceptions.RequestException as req_err:
             # Catch all request-related errors (timeouts, network errors, etc.)
-            self.logger.error(f"Network error fetching data for {article_url}: {req_err}")
+            self.logger.error(f"Network error fetching data for {article_id}: {req_err}")
             return None
         except Exception as e:
             # Log any other exceptions
-            self.logger.error(f"Error fetching data for {article_url}: {e}")
+            self.logger.error(f"Error fetching data for {article_id}: {e}")
             return None
 
     def download_xml(self, directory, api_data):
