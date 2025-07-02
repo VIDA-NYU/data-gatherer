@@ -9,16 +9,31 @@ import xlsxwriter
 
 linux = os.path.exists('/.dockerenv')
 
-use_portkey = True
-prompt_name = 'GPT_from_full_input_Examples'
-model_name = 'gemini-2.0-flash'
-metadata_prompt_name = 'portkey_gemini_metadata_extract'
-full_document_read = True
+st.set_page_config(page_title="Data Gatherer", layout="wide")
+
+# --- PARAMETER SELECTION UI ---
+st.sidebar.header("⚙️ Extraction Settings")
+
+MODEL_OPTIONS = [
+    "gemini-1.5-flash", "gemini-1.5-pro", "gemini-2.0-flash-exp", "gemini-2.0-flash", "gpt-4o", "gpt-4o-mini"
+]
+PROMPT_OPTIONS = [
+    'GEMINI_from_full_input_Examples', 'GPT_from_full_input_Examples', 'retrieve_datasets_simple_JSON',
+    'retrieve_datasets_simple_JSON_gemini'
+]
+METADATA_PROMPT_OPTIONS = [
+    'gpt_metadata_extract', 'gemini_metadata_extract', 'portkey_gemini_metadata_extract'
+]
+
+model_name = st.sidebar.selectbox("Model", MODEL_OPTIONS, index=MODEL_OPTIONS.index('gemini-2.0-flash'))
+prompt_name = st.sidebar.selectbox("Prompt", PROMPT_OPTIONS, index=PROMPT_OPTIONS.index('GPT_from_full_input_Examples'))
+metadata_prompt_name = st.sidebar.selectbox("Metadata Prompt", METADATA_PROMPT_OPTIONS, index=METADATA_PROMPT_OPTIONS.index('portkey_gemini_metadata_extract'))
+use_portkey = st.sidebar.checkbox("Use Portkey", value=True)
+full_document_read = st.sidebar.checkbox("Full Document Read", value=True)
 
 # Load environment variables from .env file
 load_dotenv()
 
-st.set_page_config(page_title="Data Gatherer", layout="wide")
 st.title("📄 Data Gatherer – Dataset Reference Extractor")
 
 st.markdown("Enter one or more **PMCIDs** to extract dataset references from open-access publications.")
@@ -47,59 +62,104 @@ if st.button("🚀 Run Extraction"):
             excel_tabs = {}
 
             for pmcid, result in results.items():
-                st.subheader(f"Results for {pmcid}")
                 pmcid = orch.data_fetcher.url_to_pmcid(pmcid)
-                summary = orch.summarize_result(result)
 
-                files_with_extension = result[result["file_extension"].notna()]
-                files_with_repo = result[result["data_repository"].notna()]
+                # --- Robustly extract title ---
+                title = result["pub_title"]
+                if isinstance(title, pd.Series):
+                    title = title.iloc[0]
+                elif isinstance(title, list):
+                    title = title[0]
 
-                supp_df = files_with_extension[["download_link", "description"]]
-                # Drop duplicates in supplementary files
-                if not supp_df.empty:
-                    supp_df = supp_df.drop_duplicates()
-                    # Also drop duplicates from files_with_extension for correct file type counts
-                    files_with_extension = files_with_extension.drop_duplicates(subset=["download_link", "description"])
+                # --- Top-level expander for each article (no nested expanders) ---
+                with st.expander(f"Results for: {title}", expanded=False):
+                    # Make the title larger and bold at the top
+                    st.markdown(f"<h2 style='text-align: left; font-size: 2em; font-weight: bold; margin-bottom: 0.5em;'>{title}</h2>", unsafe_allow_html=True)
 
-                avail_df = files_with_repo[["data_repository", "dataset_identifier", "dataset_webpage"]]
+                    summary = orch.summarize_result(result)
 
-                # Now compute file_exts after deduplication
-                file_exts = pd.DataFrame.from_dict(
-                    files_with_extension["file_extension"].value_counts().to_dict(),
-                    orient="index", columns=["Count"]
-                ).reset_index().rename(columns={"index": "File Type"})
+                    files_with_extension = result[result["file_extension"].notna()]
+                    files_with_repo = result[result["data_repository"].notna()]
 
-                repos = pd.DataFrame.from_dict(summary["frequency_of_data_repository"], orient="index",
-                                               columns=["Count"]).reset_index().rename(columns={"index": "Repository"})
+                    supp_df = files_with_extension[["download_link", "description"]]
+                    if not supp_df.empty:
+                        supp_df = supp_df.drop_duplicates()
+                        files_with_extension = files_with_extension.drop_duplicates(
+                            subset=["download_link", "description"],
+                            keep='first'
+                        )
 
-                # --- Web display ---
-                st.markdown("### 📊 Visual Summary")
-                col1, col2 = st.columns(2)
+                    avail_df = files_with_repo[["data_repository", "dataset_identifier", "dataset_webpage"]]
 
-                with col1:
-                    st.markdown("#### Supplementary Material Summary")
-                    bar_chart1 = alt.Chart(file_exts).mark_bar().encode(
-                        x=alt.X("File Type:N", sort="-y"),
-                        y="Count:Q",
-                        tooltip=["File Type", "Count"]
-                    ).properties(width=300, height=200)
-                    st.altair_chart(bar_chart1, use_container_width=False)
+                    file_exts = pd.DataFrame.from_dict(
+                        files_with_extension["file_extension"].value_counts().to_dict(),
+                        orient="index", columns=["Count"]
+                    ).reset_index().rename(columns={"index": "File Type"})
+
+                    repos = pd.DataFrame.from_dict(summary["frequency_of_data_repository"], orient="index",
+                                                   columns=["Count"]).reset_index().rename(columns={"index": "Repository"})
+
+                    # --- Show bar charts side by side at the top ---
+                    col1, col2 = st.columns(2)
+                    with col1:
+                        st.markdown("<h3 style='text-align: center; font-size: 1.3em;'>Supplementary File Types</h3>", unsafe_allow_html=True)
+                        bar_chart1 = alt.Chart(file_exts).mark_bar().encode(
+                            x=alt.X("File Type:N", sort="-y"),
+                            y="Count:Q",
+                            tooltip=["File Type", "Count"]
+                        ).properties(width=300, height=200)
+                        st.altair_chart(bar_chart1, use_container_width=False)
+                    with col2:
+                        st.markdown("<h3 style='text-align: center; font-size: 1.3em;'>Available Data Repositories</h3>", unsafe_allow_html=True)
+                        bar_chart2 = alt.Chart(repos).mark_bar().encode(
+                            x=alt.X("Repository:N", sort="-y"),
+                            y="Count:Q",
+                            tooltip=["Repository", "Count"]
+                        ).properties(width=300, height=200)
+                        st.altair_chart(bar_chart2, use_container_width=False)
+
+                    # --- Supplementary Material section ---
+                    st.markdown("### Supplementary Material")
+                    st.markdown("#### Supplementary File Types")
+                    st.dataframe(file_exts, use_container_width=True)
+                    st.markdown("#### Supplementary Files")
                     st.dataframe(supp_df, use_container_width=True)
 
-                with col2:
-                    st.markdown("#### Available Data Summary")
-                    bar_chart2 = alt.Chart(repos).mark_bar().encode(
-                        x=alt.X("Repository:N", sort="-y"),
-                        y="Count:Q",
-                        tooltip=["Repository", "Count"]
-                    ).properties(width=300, height=200)
-                    st.altair_chart(bar_chart2, use_container_width=False)
-                    st.dataframe(avail_df, use_container_width=True)
+                    # --- Available datasets section ---
+                    st.markdown("### Available datasets")
+                    if avail_df.empty:
+                        st.info("No datasets found.")
+                    else:
+                        for j, data_item in files_with_repo.iterrows():
+                            dataset_label = f"**{data_item['dataset_identifier']}** ({data_item['data_repository']})"
+                            st.markdown(f"- {dataset_label}")
+                            with st.spinner(
+                                f"Fetching metadata from repo: {data_item['data_repository']}... {data_item['dataset_webpage']}"):
+                                try:
+                                    item = orch.get_data_preview(
+                                        data_item, interactive=False, return_metadata=True,
+                                        write_raw_metadata=False,
+                                        use_portkey_for_gemini=use_portkey,
+                                        prompt_name=metadata_prompt_name
+                                    )[0]
+                                    display_item = None
+                                    if isinstance(item, dict):
+                                        unwanted = {'', 'na', 'n/a', 'nan', 'unavailable', 'none', '0'}
+                                        pairs = [
+                                            (k, v) for k, v in item.items()
+                                            if str(v).strip().lower() not in unwanted and str(v).strip() != ''
+                                        ]
+                                        display_item = pd.DataFrame(pairs, columns=["Field", "Value"])
+                                        display_item['Value'] = display_item['Value'].astype(str)
+                                        display_item = display_item[display_item["Value"].astype(str).str.strip() != ""]
+                                    if display_item is not None and not display_item.empty:
+                                        st.dataframe(display_item, use_container_width=True)
+                                    else:
+                                        st.warning("No data preview available.")
+                                except Exception as e:
+                                    st.error(f"Error fetching metadata: {e}")
 
                 # --- Excel summary sheet ---
-                # Create a single summary sheet per PMCID with both sides, but visually separate tables using merged cells and spacing
-
-                # Prepare the summary tables
                 file_exts_table = file_exts.copy()
                 repos_table = repos.copy()
                 supp_table = supp_df.rename(columns={"download_link": "Download Link", "description": "Description"})
@@ -109,7 +169,6 @@ if st.button("🚀 Run Extraction"):
                     "dataset_webpage": "Dataset Webpage"
                 })
 
-                # We'll build a list of (df, title) for each section
                 summary_sections = [
                     ("Supplementary File Types", file_exts_table),
                     ("Available Data Repositories", repos_table),
@@ -117,20 +176,15 @@ if st.button("🚀 Run Extraction"):
                     ("Available Data Table", avail_table)
                 ]
 
-                # Store for writing to Excel
                 excel_tabs[f"{pmcid}_summary"] = summary_sections
 
-                # --- Metadata tabs for each available dataset ---
                 try:
                     for j, data_item in files_with_repo.iterrows():
-                        with st.spinner(
-                                f"Fetching metadata from repo: {data_item['data_repository']}... {data_item['dataset_webpage']}"):
-                            item = orch.get_data_preview(data_item, interactive=False, return_metadata=True,
-                                                         write_raw_metadata=False,
-                                                         use_portkey_for_gemini=use_portkey,
-                                                         prompt_name=metadata_prompt_name)[0]
+                        item = orch.get_data_preview(data_item, interactive=False, return_metadata=True,
+                                                     write_raw_metadata=False,
+                                                     use_portkey_for_gemini=use_portkey,
+                                                     prompt_name=metadata_prompt_name)[0]
 
-                        st.markdown(f"#### Dataset {data_item['dataset_identifier']} ({data_item['data_repository']}) metadata")
                         display_item = None
                         if isinstance(item, dict):
                             unwanted = {'', 'na', 'n/a', 'nan', 'unavailable', 'none', '0'}
@@ -143,42 +197,32 @@ if st.button("🚀 Run Extraction"):
                             display_item = display_item[display_item["Value"].astype(str).str.strip() != ""]
 
                         if display_item is not None and not display_item.empty:
-                            st.dataframe(display_item, use_container_width=True)
-                            # Add to excel
                             sheet_name = f"{pmcid}_meta_{data_item['dataset_identifier']}"
                             invalid_chars = set(r'[]:*?/\\')
                             sanitized = ''.join('_' if c in invalid_chars else c for c in str(sheet_name))
                             sanitized = sanitized[:31]
                             excel_tabs[sanitized] = display_item
-                        else:
-                            st.warning(f"No data preview available for item {j + 1}")
 
                 except Exception as e:
                     st.error(f"Error fetching metadata: {e}")
 
-            # Write all collected DataFrames to Excel
             if xlsxwriter and excel_tabs:
                 with pd.ExcelWriter(excel_buffer, engine="xlsxwriter") as writer:
                     for sheet_name, sections in excel_tabs.items():
                         if isinstance(sections, list):
-                            # This is our summary sheet with multiple tables
                             startrow = 0
                             worksheet = None
                             for title, df in sections:
                                 df = df.copy()
-                                # Write section title with merged cells
                                 df_rows, df_cols = df.shape
                                 df_cols = max(df_cols, 1)
                                 df_startcol = 0
                                 df_endcol = df_cols - 1
-                                # Write the title
                                 df.to_excel(writer, sheet_name=sheet_name, startrow=startrow+1, index=False, header=True)
                                 worksheet = writer.sheets[sheet_name]
-                                # Merge cells for the section title
                                 worksheet.merge_range(startrow, df_startcol, startrow, df_endcol, title, writer.book.add_format({
                                     'bold': True, 'align': 'center', 'valign': 'vcenter', 'bg_color': '#D9E1F2', 'border': 1
                                 }))
-                                # Set column widths
                                 for i, col in enumerate(df.columns):
                                     max_len = max(
                                         df[col].astype(str).map(len).max() if not df.empty else 0,
@@ -186,10 +230,8 @@ if st.button("🚀 Run Extraction"):
                                         15
                                     )
                                     worksheet.set_column(i, i, max_len + 2)
-                                # Add spacing between tables
-                                startrow += len(df) + 4  # 4 rows: 1 for title, 1 for header, 2 for spacing
+                                startrow += len(df) + 4
                         else:
-                            # Metadata tab: just write as before
                             df = sections
                             df.to_excel(writer, sheet_name=sheet_name, index=False)
                             worksheet = writer.sheets[sheet_name]

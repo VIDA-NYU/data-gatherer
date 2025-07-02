@@ -254,12 +254,14 @@ class Orchestrator:
 
         :return: The corresponding URL.
         """
+        pmcid = pmcid.strip().upper()
         if not pmcid.startswith("PMC"):
             raise ValueError("Invalid PMCID format. Must start with 'PMC'.")
 
         return f"https://www.ncbi.nlm.nih.gov/pmc/articles/{pmcid}/"
 
     def preprocess_url(self, url):
+        url = url.upper()
         if url.startswith("PMC"):
             return self.PMCID_to_URL(url)
         elif url.startswith("https://"):
@@ -363,29 +365,8 @@ class Orchestrator:
 
             self.logger.info("Successfully fetched Raw content.")
 
-            # Step 2: Use RuleBasedParser to parse and extract HTML elements and rule-based matches
-            if self.raw_data_format == "HTML":
-                self.logger.info("Using RuleBasedParser to parse data.")
-                self.parser = HTMLParser(self.open_data_repos_ontology, self.logger)
-                parsed_data = self.parser.parse_data(raw_data, self.publisher, self.current_url)
-
-                parsed_data['rule_based_classification'] = 'n/a'
-                self.logger.info(f"Parsed data extraction completed. Links collected: {len(parsed_data)}")
-                rule_based_matches = self.parser.get_rule_based_matches(self.publisher)
-                #            print(f"rule_based_matches pre: {rule_based_matches}")
-                #            rule_based_matches = self.data_fetcher.normalize_links(rule_based_matches)
-                #            print(f"rule_based_matches post: {rule_based_matches}")
-
-                self.logger.info(f"rule_based_matches: {rule_based_matches}")
-                # create a new null column in the parsed_data DataFrame to store the rule_based_matches
-                # iterate through the rule_based_matches and update the parsed_data DataFrame
-                for key, value in rule_based_matches.items():
-                    self.logger.debug(f"key: {key}, value: {value}")
-                    parsed_data.loc[parsed_data['link'].str.contains(key), 'rule_based_classification'] = value
-
-                parsed_data.to_csv('staging_table/parsed_data.csv', index=False) if save_staging_table else None
-
-            elif self.raw_data_format == "XML" and raw_data is not None:
+            # Step 2: Use HTML/XMLParser to parse and extract HTML elements and rule-based matches
+            if self.raw_data_format == "XML" and raw_data is not None:
                 self.logger.info("Using XMLParser to parse data.")
                 self.parser = XMLParser(self.open_data_repos_ontology, self.logger,
                                         llm_name=self.llm,
@@ -406,11 +387,12 @@ class Orchestrator:
                     parsed_data = pd.concat([parsed_data, add_data], ignore_index=True).drop_duplicates()
 
                 parsed_data['source_url'] = url
+                parsed_data['pub_title'] = self.data_fetcher.extract_publication_title(raw_data)
                 self.logger.info(f"Parsed data extraction completed. Elements collected: {len(parsed_data)}")
                 if self.logger.level == logging.DEBUG:
                     parsed_data.to_csv('staging_table/parsed_data_from_XML.csv', index=False) if save_staging_table else None
 
-            elif self.raw_data_format == "full_HTML":
+            elif 'HTML' in self.raw_data_format:
                 self.logger.info("Using HTMLParser to parse data.")
                 self.parser = HTMLParser(self.open_data_repos_ontology, self.logger,
                                         llm_name=self.llm,
@@ -419,6 +401,7 @@ class Orchestrator:
                 parsed_data = self.parser.parse_data(raw_data, self.publisher, self.current_url,
                                                      raw_data_format="full_HTML", prompt_name=prompt_name)
                 parsed_data['source_url'] = url
+                parsed_data['pub_title'] = self.data_fetcher.extract_publication_title()
                 self.logger.info(f"Parsed data extraction completed. Elements collected: {len(parsed_data)}")
                 if self.logger.level == logging.DEBUG:
                     parsed_data.to_csv('staging_table/parsed_data_from_XML.csv', index=False) if save_staging_table else None
@@ -671,7 +654,7 @@ class Orchestrator:
                     self.logger.info(f"JavaScript load required for {repo_mapping_key} dataset webpage. Using WebScraper.")
                     html = self.data_fetcher.fetch_data(row['dataset_webpage'], delay=5)
                     if "informative_html_metadata_tags" in self.open_data_repos_ontology['repos'][resolved_key]:
-                        html = self.data_fetcher.normalize_HTML(html, self.open_data_repos_ontology['repos'][
+                        html = self.parser.normalize_HTML(html, self.open_data_repos_ontology['repos'][
                             resolved_key]['informative_html_metadata_tags'])
                     else:
                         html = self.parser.normalize_HTML(html)
@@ -684,7 +667,7 @@ class Orchestrator:
                     else:
                         keep_sect = None
                     response = requests.get(row['dataset_webpage'], timeout=3)
-                    html = self.data_fetcher.normalize_HTML(response.text, keep_tags=keep_sect)
+                    html = self.parser.normalize_HTML(response.text, keep_tags=keep_sect)
 
                 metadata = self.metadata_parser.parse_datasets_metadata(html, use_portkey_for_gemini=use_portkey_for_gemini,
                                                                prompt_name=prompt_name)
