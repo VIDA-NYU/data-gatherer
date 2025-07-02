@@ -3,18 +3,16 @@ import re
 import logging
 import numpy as np
 from selenium.webdriver.common.by import By
-import json
 import os
 import time
 import requests
 from lxml import etree as ET
 from data_gatherer.selenium_setup import create_driver
-from data_gatherer.logger_setup import setup_logging
-import mimetypes
 from bs4 import BeautifulSoup, Comment
 from urllib.parse import urlparse
 import pandas as pd
 from data_gatherer.resources_loader import load_config
+from data_gatherer.retriever.xml_retriever import xmlRetriever
 
 # Abstract base class for fetching data
 class DataFetcher(ABC):
@@ -31,8 +29,25 @@ class DataFetcher(ABC):
         self.browser = browser
         self.headless = headless
 
+    @abstractmethod
+    def fetch_data(self, url, retries=3, delay=2):
+        """
+        Abstract method to fetch data from a given URL.
+
+        :param url: The URL to fetch data from.
+
+        :param retries: Number of retries in case of failure.
+
+        :param delay: Delay time between retries.
+
+        :return: The raw content of the page.
+        """
+        pass
+
     def url_to_publisher_domain(self, url):
-        # Extract the domain name from the URL
+        """
+        Extracts the publisher domain from a given URL.
+        """
         self.logger.debug(f"URL: {url}")
         if re.match(r'^https?://www\.ncbi\.nlm\.nih\.gov/pmc', url) or re.match(r'^https?://pmc\.ncbi\.nlm\.nih\.gov/', url):
             return 'PMC'
@@ -48,7 +63,9 @@ class DataFetcher(ABC):
             return self.url_to_publisher_root(url)
 
     def url_to_publisher_root(self, url):
-        # Extract the root domain name from the URL
+        """
+        Extracts the root domain from a given URL.
+        """
         match = re.match('(https?:\/\/[\w\.]+)\/', url)
         if match:
             root = match.group(1)
@@ -57,6 +74,44 @@ class DataFetcher(ABC):
         else:
             self.logger.warning("No valid domain extracted from URL. This may cause issues with data gathering.")
             return 'Unknown Publisher'
+
+    def url_to_pmcid(self, url):
+        """
+        Extracts the PMC ID from a given URL.
+
+        :param url: The URL to extract the PMC ID from.
+
+        :return: The extracted PMC ID or None if not found.
+        """
+        match = re.search(r'PMC(\d+)', url)
+        if match:
+            pmcid = f"PMC{match.group(1)}"
+            self.logger.info(f"Extracted PMC ID: {pmcid}")
+            return pmcid
+        else:
+            self.logger.warning(f"No PMC ID found in URL: {url}")
+            return None
+
+    def url_to_doi(self, url : str):
+        # Extract DOI from the URL
+        url = url.lower()
+        match = re.search(r'(10\.\d{4,9}/[-._;()/:A-Z0-9]+)', url, re.IGNORECASE)
+        if match:
+            doi = match.group(1)
+            self.logger.info(f"DOI: {doi}")
+            return doi
+        else:
+            return None
+
+    def url_to_filename(self, url):
+        parsed_url = urlparse(url)
+        return os.path.basename(parsed_url.path)
+
+    def pmid_to_url(self, pubmed_id):
+        return f"https://pubmed.ncbi.nlm.nih.gov/{pubmed_id}/"
+
+    def PMCID_to_url(self, PMCID):
+        return f"https://www.ncbi.nlm.nih.gov/pmc/articles/{PMCID}"
 
     def update_DataFetcher_settings(self, url, entire_doc_model, logger, HTML_fallback=False, driver_path=None,
                                     browser='firefox', headless=True):
@@ -72,26 +127,14 @@ class DataFetcher(ABC):
 
         :param HTML_fallback: Flag to indicate if HTML fallback is needed.
 
-        :return: An instance of the appropriate data fetcher (WebScraper or APIClient).
+        :return: An instance of the appropriate data fetcher (WebScraper or EntrezFetcher).
         """
         self.logger.debug(f"update_DataFetcher_settings for current URL")
 
         API = None
 
-        API_supported_url_patterns = {
-            'https://www.ncbi.nlm.nih.gov/pmc/articles/': 'PMC',
-            'https://pmc.ncbi.nlm.nih.gov/': 'PMC'
-        }
-
         if not HTML_fallback:
-            # Check if the URL corresponds to any PubMed Central (PMC)
-            for ptr,src in API_supported_url_patterns.items():
-                self.logger.debug(f"Checking {src} with pattern {ptr}")
-                match = re.match(ptr, url)
-                if match:
-                    self.logger.debug(f"URL detected as {src}.")
-                    API = f"{src}_API"
-                    break
+            API = self.url_to_api_root(url)
 
         if self.raw_HTML_data_filepath and self.dataframe_fetch and self.url_in_dataframe(url, self.raw_HTML_data_filepath):
             self.logger.info(f"URL {url} found in DataFrame. Using DatabaseFetcher.")
@@ -99,8 +142,8 @@ class DataFetcher(ABC):
 
         if API is not None and not(entire_doc_model):
         # Initialize the corresponding API client, from API_supported_url_patterns
-            self.logger.info(f"Initializing APIClient({'requests', API, 'self.config'})")
-            return APIClient(requests, API, logger)
+            self.logger.info(f"Initializing EntrezFetcher({'requests', API, 'self.config'})")
+            return EntrezFetcher(requests, API, logger)
 
         # Reuse existing driver if we already have one
         if isinstance(self, WebScraper) and self.scraper_tool is not None:
@@ -108,7 +151,7 @@ class DataFetcher(ABC):
             return self  # Reuse current instance
 
         self.logger.info(f"WebScraper instance: {isinstance(self, WebScraper)}")
-        self.logger.info(f"APIClient instance: {isinstance(self, APIClient)}")
+        self.logger.info(f"EntrezFetcher instance: {isinstance(self, EntrezFetcher)}")
         self.logger.info(f"scraper_tool attribute: {hasattr(self,'scraper_tool')}")
 
         self.logger.info("Initializing new selenium driver.")
@@ -130,29 +173,21 @@ class DataFetcher(ABC):
 
         return True if pmcid.lower() in df_fetch['publication'].values else False
 
-    def download_html(self, dir):
-        """
-        Downloads the HTML content to a specified directory.
+    def url_to_api_root(self, url):
 
-        :param dir: The directory where the HTML file will be saved.
+        API_supported_url_patterns = {
+            'https://www.ncbi.nlm.nih.gov/pmc/articles/': 'PMC',
+            'https://pmc.ncbi.nlm.nih.gov/': 'PMC'
+        }
 
-        """
-        logging.info(f"Dir {dir} exists") if os.path.exists(dir) else os.mkdir(dir)
-
-        pub_name = self.get_publication_name_from_driver()
-
-        pub_name = re.sub(r'[\\/:*?"<>|]', '_', pub_name)  # Replace invalid characters in filename
-
-        fn = dir + pub_name + '.html'
-
-        if hasattr(self, 'scraper_tool') and isinstance(self.scraper_tool, WebScraper):
-            with open(fn, 'w', encoding='utf-8') as f:
-                f.write(self.scraper_tool.page_source)
-        else:
-            raise Exception("scraper_tool undefined")
-
-    def is_url_API(self, url):
-        raise Exception("This method has not been implemented yet.")
+        # Check if the URL corresponds to any API_supported_url_patterns
+        for ptr, src in API_supported_url_patterns.items():
+            self.logger.debug(f"Checking {src} with pattern {ptr}")
+            match = re.match(ptr, url)
+            if match:
+                self.logger.debug(f"URL detected as {src}.")
+                API = f"{src}_API"
+                return API
 
     def download_file_from_url(self, url, output_root="output/suppl_files", paper_id=None):
         output_dir = os.path.join(output_root, paper_id)
@@ -177,22 +212,6 @@ class DataFetcher(ABC):
 
         return path
 
-    def url_to_pmcid(self, url):
-        """
-        Extracts the PMC ID from a given URL.
-
-        :param url: The URL to extract the PMC ID from.
-
-        :return: The extracted PMC ID or None if not found.
-        """
-        match = re.search(r'PMC(\d+)', url)
-        if match:
-            pmcid = f"PMC{match.group(1)}"
-            self.logger.info(f"Extracted PMC ID: {pmcid}")
-            return pmcid
-        else:
-            self.logger.warning(f"No PMC ID found in URL: {url}")
-            return None
 
 # Implementation for fetching data via web scraping
 class WebScraper(DataFetcher):
@@ -202,11 +221,7 @@ class WebScraper(DataFetcher):
     def __init__(self, scraper_tool, logger, retrieval_patterns_file=None, driver_path=None, browser='firefox',
                  headless=True, local_fetch_fp=None):
         super().__init__(logger, src='WebScraper', raw_HTML_data_filepath=local_fetch_fp)
-        self.scraper_tool = scraper_tool  # Inject your scraping tool (BeautifulSoup, Selenium, etc.)
-        self.retrieval_patterns = load_config('retrieval_patterns.json')
-        self.bad_patterns = self.retrieval_patterns['general']['bad_patterns']
-        self.css_selectors = self.retrieval_patterns['general']['css_selectors']
-        self.xpaths = self.retrieval_patterns['general']['xpaths']
+        self.scraper_tool = scraper_tool  # Inject your scraping tool (Selenium)
         self.driver_path = driver_path
         self.browser = browser
         self.headless = headless
@@ -261,123 +276,31 @@ class WebScraper(DataFetcher):
                 break
             last_height = new_height
 
-    def update_class_patterns(self, publisher):
-        patterns = self.retrieval_patterns[publisher]
-        self.css_selectors.update(patterns['css_selectors'])
-        self.xpaths.update(patterns['xpaths'])
-        if 'bad_patterns' in patterns.keys():
-            self.bad_patterns.extend(patterns['bad_patterns'])
-
-    def normalize_links(self, links_raw_dict):
+    def html_page_source_download(self, dir):
         """
-        Convert Selenium WebElement objects to strings and keep existing string links unchanged.
-        """
-        normalized_links = {}
-        for link, cls  in links_raw_dict.items():
-            if isinstance(link, str):
-                normalized_links[link] = cls
-            else:
-                try:
-                    href = link.get_attribute('href')
-                    if href:
-                        normalized_links[href] = cls
-                except Exception as e:
-                    logging.error(f"Error getting href attribute from WebElement")
-        return normalized_links
+        Downloads the HTML page source as html file in the specified directory.
 
-    def get_rule_based_matches(self, publisher):
-
-        if publisher in self.retrieval_patterns:
-            self.update_class_patterns(publisher)
-
-        rule_based_matches = {}
-
-        # Collect links using CSS selectors
-        for css_selector in self.css_selectors:
-            self.logger.debug(f"Parsing page with selector: {css_selector}")
-            links = self.scraper_tool.find_elements(By.CSS_SELECTOR, css_selector)
-            self.logger.debug(f"Found Links: {links}")
-            for link in links:
-                rule_based_matches[link] = self.css_selectors[css_selector]
-        self.logger.info(f"Rule-based matches from css_selectors: {rule_based_matches}")
-
-        # Collect links using XPath
-        for xpath in self.xpaths:
-            self.logger.info(f"Checking path: {xpath}")
-            try:
-                child_element = self.scraper_tool.find_element(By.XPATH, xpath)
-                section_element = child_element.find_element(By.XPATH, "./ancestor::section")
-                a_elements = section_element.find_elements(By.TAG_NAME, 'a')
-                for a_element in a_elements:
-                    rule_based_matches[a_element] = self.xpaths[xpath]
-            except Exception as e:
-                self.logger.error(f"Invalid xpath: {xpath}")
-
-        return self.normalize_links(rule_based_matches)
-
-    def normalize_HTML(self, html, keep_tags=None):
-        """
-        Normalize the HTML content by removing unnecessary tags and attributes.
-
-        :param html: The raw HTML content to be normalized.
-
-        :param keep_tags: List of tags to keep in the HTML content. May be useful for some servers that host target info inside specific tags (e.g., <form> or <script>) that are otherwise removed by the scraper.
-
-        :return: The normalized HTML content.
+        :param dir: The directory where the HTML file will be saved.
 
         """
-        try:
-            # Parse the HTML content
-            soup = BeautifulSoup(html, "html.parser")
+        logging.info(f"Dir {dir} exists") if os.path.exists(dir) else os.mkdir(dir)
 
-            # 1. Remove script, style, and meta tags
-            for tag in ["script", "style", 'img', 'noscript', 'svg', 'button', 'form', 'input', 'head']:
-                if keep_tags and tag in keep_tags:
-                    self.logger.info(f"Keeping tag: {tag}")
-                    continue
-                for element in soup.find_all(tag):
-                    element.decompose()
+        if hasattr(self, 'extract_publication_title'):
+            pub_name = self.extract_publication_title()
 
-            remove_meta_tags = True
-            if remove_meta_tags:
-                for meta in soup.find_all('meta'):
-                    meta.decompose()
+        else:
+            raise Exception("Pubblication name extraction is only supported for WebScraper instances.")
+        pub_name = re.sub(r'[\\/:*?"<>|]', '_', pub_name)  # Replace invalid characters in filename
 
-            # 2. Remove dynamic attributes
-            for tag in soup.find_all(True):  # True matches all tags
-                # Remove dynamic `id` attributes that match certain patterns (e.g., `tooltip-*`)
-                if "id" in tag.attrs and re.match(r"tooltip-\d+", tag.attrs["id"]):
-                    del tag.attrs["id"]
+        fn = dir + pub_name + '.html'
 
-                # Remove dynamic `aria-describedby` attributes
-                if "aria-describedby" in tag.attrs and re.match(r"tooltip-\d+", tag.attrs["aria-describedby"]):
-                    del tag.attrs["aria-describedby"]
+        if hasattr(self, 'scraper_tool') and isinstance(self.scraper_tool, WebScraper):
+            with open(fn, 'w', encoding='utf-8') as f:
+                f.write(self.scraper_tool.page_source)
+        else:
+            raise Exception("scraper_tool undefined")
 
-                # Remove inline styles
-                if "style" in tag.attrs:
-                    del tag.attrs["style"]
-
-                # Remove all `data-*` attributes
-                tag.attrs = {key: val for key, val in tag.attrs.items() if not key.startswith("data-")}
-
-                # Remove `csrfmiddlewaretoken` inputs
-                if tag.name == "input" and tag.get("name") == "csrfmiddlewaretoken":
-                    tag.decompose()
-
-            # 3. Remove comments
-            for comment in soup.find_all(string=lambda text: isinstance(text, Comment)):
-                comment.extract()
-
-            # 4. Normalize whitespace
-            normalized_html = re.sub(r"\s+", " ", soup.prettify())
-
-            return normalized_html.strip()
-
-        except Exception as e:
-            self.logger.error(f"Error normalizing DOM: {e}")
-            return ""
-
-    def get_publication_name_from_driver(self):
+    def extract_publication_title(self):
         """
         Extracts the publication name from the WebDriver's current page title. **Remark**: this should be called after
         scraper_tool.get(url) to ensure the page is loaded.
@@ -390,9 +313,6 @@ class WebScraper(DataFetcher):
         publication_name = re.sub("^\s+", "", publication_name)
         self.logger.info(f"Paper name: {publication_name}")
         return publication_name
-
-    def get_url_from_pubmed_id(self, pubmed_id):
-        return f"https://pubmed.ncbi.nlm.nih.gov/{pubmed_id}/"
 
     def get_PMCID_from_pubmed_html(self, html):
         soup = BeautifulSoup(html, 'html.parser')
@@ -410,13 +330,6 @@ class WebScraper(DataFetcher):
         self.logger.info(f"DOI: {doi}")
         return doi
 
-    def get_filename_from_url(self,url):
-        parsed_url = urlparse(self,url)
-        return os.path.basename(parsed_url.path)
-
-    def reconstruct_PMC_link(self, PMCID):
-        return f"https://www.ncbi.nlm.nih.gov/pmc/articles/{PMCID}"
-
     def get_opendata_from_pubmed_id(self, pmid):
         """
         Given a PubMed ID, fetches the corresponding PMC ID and DOI from PubMed.
@@ -426,7 +339,7 @@ class WebScraper(DataFetcher):
         :return: A tuple containing the PMC ID and DOI.
 
         """
-        url = self.get_url_from_pubmed_id(pmid)
+        url = self.pmid_to_url(pmid)
         self.logger.info(f"Reconstructed URL: {url}")
 
         html = self.fetch_data(url)
@@ -518,44 +431,14 @@ class DatabaseFetcher(DataFetcher):
             self.logger.info("No cookie pattern 1 found in HTML")
         return html
 
-    def get_rule_based_matches(self, publisher):
-
-        if publisher in self.retrieval_patterns:
-            self.update_class_patterns(publisher)
-
-        rule_based_matches = {}
-
-        # Collect links using CSS selectors
-        for css_selector in self.css_selectors:
-            self.logger.debug(f"Parsing page with selector: {css_selector}")
-            links = self.scraper_tool.find_elements(By.CSS_SELECTOR, css_selector)
-            self.logger.debug(f"Found Links: {links}")
-            for link in links:
-                rule_based_matches[link] = self.css_selectors[css_selector]
-        self.logger.info(f"Rule-based matches from css_selectors: {rule_based_matches}")
-
-        # Collect links using XPath
-        for xpath in self.xpaths:
-            self.logger.info(f"Checking path: {xpath}")
-            try:
-                child_element = self.scraper_tool.find_element(By.XPATH, xpath)
-                section_element = child_element.find_element(By.XPATH, "./ancestor::section")
-                a_elements = section_element.find_elements(By.TAG_NAME, 'a')
-                for a_element in a_elements:
-                    rule_based_matches[a_element] = self.xpaths[xpath]
-            except Exception as e:
-                self.logger.error(f"Invalid xpath: {xpath}")
-
-        return self.normalize_links(rule_based_matches)
-
 # Implementation for fetching data from an API
-class APIClient(DataFetcher):
+class EntrezFetcher(DataFetcher):
     """
     Class for fetching data from an API using the requests library.
     """
     def __init__(self, api_client, API, logger, local_fetch_fp=None):
         """
-        Initializes the APIClient with the specified API client.
+        Initializes the EntrezFetcher with the specified API client.
 
         :param api_client: The API client to use (e.g., requests).
 
@@ -573,17 +456,19 @@ class APIClient(DataFetcher):
         }
 
         self.base = API_base_url[API]
+        self.publisher = 'PMC'
 
-    def fetch_data(self, article_url, retries=3, delay=2):
+
+    def fetch_data(self, article_id, retries=3, delay=2):
         """
         Fetches data from the API using the provided article URL.
 
-        :param article_url: The URL of the article to fetch data for.
+        :param article_id: The URL of the article to fetch data for.
 
         """
         try:
-            # Extract the PMC ID from the article URL
-            PMCID = re.search(r'PMC\d+', article_url).group(0)
+            # Extract the PMC ID from the article URL, ignore case
+            PMCID = re.search(r'PMC\d+', article_id, re.IGNORECASE).group(0)
             self.PMCID = PMCID
 
             # Construct the API call using the PMC ID
@@ -623,11 +508,11 @@ class APIClient(DataFetcher):
 
         except requests.exceptions.RequestException as req_err:
             # Catch all request-related errors (timeouts, network errors, etc.)
-            self.logger.error(f"Network error fetching data for {article_url}: {req_err}")
+            self.logger.error(f"Network error fetching data for {article_id}: {req_err}")
             return None
         except Exception as e:
             # Log any other exceptions
-            self.logger.error(f"Error fetching data for {article_url}: {e}")
+            self.logger.error(f"Error fetching data for {article_id}: {e}")
             return None
 
     def download_xml(self, directory, api_data):
@@ -641,7 +526,7 @@ class APIClient(DataFetcher):
 
         os.makedirs(directory, exist_ok=True)  # Ensure directory exists
         # Construct the file path
-        fn = os.path.join(directory, f"{self.extract_article_title(api_data)}.xml")
+        fn = os.path.join(directory, f"{self.extract_publication_title(api_data)}.xml")
 
         # Check if the file already exists
         if os.path.exists(fn):
@@ -652,9 +537,7 @@ class APIClient(DataFetcher):
         ET.ElementTree(api_data).write(fn, pretty_print=True, xml_declaration=True, encoding="UTF-8")
         self.logger.info(f"Downloaded XML file: {fn}")
 
-    from lxml import etree as ET
-
-    def extract_article_title(self, api_data):
+    def extract_publication_title(self, api_data):
         """
         Extracts the article title and the surname of the first author from the XML content.
 
@@ -686,23 +569,10 @@ class DataCompletenessChecker:
 
         """
         self.logger = logger
-        self.retrieval_patterns = load_config(retrieval_patterns_file)
-        self.css_selectors = self.retrieval_patterns[publisher]['css_selectors']
-        self.xpaths = self.retrieval_patterns[publisher]['xpaths']
-
-    def extract_namespaces(self, xml_element):
-        """Extract all namespaces in use, including xlink."""
-        ns_map = {'xlink': 'http://www.w3.org/1999/xlink'}
-        for elem in xml_element.iter():
-            tag = getattr(elem, "tag", None)
-            if isinstance(tag, str) and tag.startswith("{"):
-                uri = tag[1:].split("}")[0]
-                prefix = elem.prefix or 'ns0'
-                ns_map[prefix] = uri
-        return ns_map
+        self.retriever = xmlRetriever(logger, publisher, retrieval_patterns_file)
 
     def is_xml_data_complete(self, raw_data, url,
-                             required_sections = ["data_availability_sections", "supplementary_data_sections"]) -> bool:
+                             required_sections=["data_availability_sections", "supplementary_data_sections"]) -> bool:
         """
         Check if required sections are present in the raw_data.
         Return True if all required sections are present.
@@ -715,102 +585,4 @@ class DataCompletenessChecker:
 
         :return: True if all required sections are present, False otherwise.
         """
-        self.logger.debug(f"Checking XML completeness for {url}")
-
-        for section in required_sections:
-            if not self.has_target_section(raw_data, section):
-                self.logger.info(f"Missing section in XML: {section}")
-                return False
-
-        self.logger.info("XML data contains all required sections.")
-        return True
-
-    def has_target_section(self, raw_data, section_name: str) -> bool:
-        """
-        Check if the target section (data availability or supplementary data) exists in the raw data.
-
-        :param raw_data: Raw XML data.
-
-        :param section_name: Name of the section to check.
-
-        :return: True if the section is found with relevant links, False otherwise.
-        """
-
-        if raw_data is None:
-            self.logger.info("No raw data to check for sections.")
-            return False
-
-        self.logger.debug(f"type of raw_data: {type(raw_data)}, raw_data: {raw_data}")
-
-        self.logger.info(f"----Checking for {section_name} section in raw data.")
-        section_patterns = self.load_target_sections_ptrs(section_name)
-        self.logger.debug(f"Section patterns: {section_patterns}")
-        namespaces = self.extract_namespaces(raw_data)
-        self.logger.debug(f"Namespaces: {namespaces}")
-
-        for pattern in section_patterns:
-            self.logger.debug(f"Checking pattern: {pattern}")
-            sections = raw_data.findall(pattern, namespaces=namespaces)
-            if sections:
-                for section in sections:
-                    self.logger.info(f"----Found section: {ET.tostring(section, encoding='unicode')}")
-                    if self.has_links_in_section(section, namespaces):
-                        return True
-
-        return False
-
-    def load_target_sections_ptrs(self, section_name) -> list:
-
-        target_sections = {
-            "data_availability_sections": [
-                ".//sec[@sec-type='data-availability']",
-                ".//notes[@notes-type='data-availability']",
-                ".//sec[@sec-type='associated-data']"
-            ],
-            "supplementary_data_sections": [
-                ".//sec[@sec-type='supplementary-material']",
-                ".//supplementary-material",
-                ".//sec[@sec-type='associated-data']",
-                ".//sec[@sec-type='extended-data']",
-                ".//sec[@sec-type='samples-and-clinical-data']",
-                ".//sec[@sec-type='footnotes']",
-                ".//sec[@sec-type='STAR★Methods']"
-            ]
-        }
-        if section_name not in target_sections:
-            self.logger.error(f"Invalid section name: {section_name}. Available sections: {list(target_sections.keys())}")
-            raise ValueError(f"Invalid section name: {section_name}")
-
-        return target_sections[section_name]
-
-    def has_links_in_section(self, section, namespaces: dict[str, str]) -> bool:
-        """
-        Check if the given section contains any external links.
-
-        :param section: The section element to search for links.
-
-        :param namespaces: Namespaces to use for XML parsing.
-
-        :return: True if links are found, False otherwise.
-        """
-        ext_links = section.findall(".//ext-link", namespaces)
-        #uris = section.findall(".//uri", namespaces)
-
-        media_links = section.findall(".//media", namespaces)
-        xlink_hrefs = [m.get('{http://www.w3.org/1999/xlink}href') for m in media_links if
-                 m.get('{http://www.w3.org/1999/xlink}href')]
-
-        self.logger.debug(f"Found {len(ext_links)} ext-links and {len(xlink_hrefs)} xlink:hrefs.")
-        return bool(ext_links or xlink_hrefs)  #or uris)
-
-    def url_to_publisher_domain(self, url):
-        # Extract the domain name from the URL
-        if re.match(r'^https?://www\.ncbi\.nlm\.nih\.gov/pmc', url) or re.match(r'^https?://pmc\.ncbi\.nlm\.nih\.gov/', url):
-            return 'PMC'
-        match = re.match(r'^https?://(?:\w+\.)?([\w\d\-]+)\.\w+', url)
-        if match:
-            domain = match.group(1)
-            self.logger.info(f"Publisher: {domain}")
-            return domain
-        else:
-            return 'Unknown Publisher'
+        return self.retriever.is_xml_data_complete(raw_data, url, required_sections)

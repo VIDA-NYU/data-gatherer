@@ -70,6 +70,30 @@
         "//section[h2[contains(text(), 'Extended Data')]]": "supplementary",
         "//section[h3[contains(text(), 'Clinical Data')]]": "supplementary"
       }
+    },
+    "xml_tags": {
+      "data_availability_sections": [
+        ".//sec[@sec-type='data-availability']",
+        ".//notes[@notes-type='data-availability']",
+        ".//notes[@notes-type='data-availability']"
+      ],
+      "supplementary_material_sections": [
+        ".//supplementary-material"
+      ],
+      "supplementary_data_sections": [
+        ".//sec[@sec-type='supplementary-material']",
+        ".//supplementary-material",
+        ".//sec[@sec-type='associated-data']",
+        ".//sec[@sec-type='extended-data']",
+        ".//sec[@sec-type='samples-and-clinical-data']",
+        ".//sec[@sec-type='footnotes']"
+      ],
+      "key_resources_table": [
+        "//sec[.//title[contains(text(), \"Key resources table\")]]//table-wrap"
+      ],
+      "methods_sections": [
+        ".//sec[@sec-type='STAR★Methods']"
+      ]
     }
   }
 }
