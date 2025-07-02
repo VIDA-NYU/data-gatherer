@@ -364,7 +364,7 @@ class Orchestrator:
             self.logger.info("Successfully fetched Raw content.")
 
             # Step 2: Use RuleBasedParser to parse and extract HTML elements and rule-based matches
-            if self.raw_data_format == "HTML" and self.parser_mode == "RuleBasedParser":
+            if self.raw_data_format == "HTML":
                 self.logger.info("Using RuleBasedParser to parse data.")
                 self.parser = HTMLParser(self.open_data_repos_ontology, self.logger)
                 parsed_data = self.parser.parse_data(raw_data, self.publisher, self.current_url)
