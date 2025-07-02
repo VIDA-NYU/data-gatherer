@@ -1241,7 +1241,8 @@ class LLMClient:
             self.portkey = Portkey(
                 api_key=self.portkey_api_key,
                 virtual_key=self.portkey_route,
-                base_url="https://ai-gateway.apps.cloud.rt.nyu.edu/v1"
+                base_url="https://ai-gateway.apps.cloud.rt.nyu.edu/v1",
+                config="pc-portke-23e57e"
             )
             self.client = self.portkey
         else:
