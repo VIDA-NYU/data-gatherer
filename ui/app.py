@@ -61,6 +61,10 @@ if st.button("🚀 Run Extraction"):
             excel_buffer = io.BytesIO()
             excel_tabs = {}
 
+            # --- Prepare global summary tables ---
+            all_supp_rows = []
+            all_avail_rows = []
+
             for pmcid, result in results.items():
                 pmcid = orch.data_fetcher.url_to_pmcid(pmcid)
 
@@ -80,6 +84,22 @@ if st.button("🚀 Run Extraction"):
 
                     files_with_extension = result[result["file_extension"].notna()]
                     files_with_repo = result[result["data_repository"].notna()]
+
+                    # Supplementary Material rows
+                    supp_df = files_with_extension[["download_link", "description"]].copy()
+                    supp_df["Source PMCID"] = pmcid
+                    supp_df["Source Title"] = title
+                    if not supp_df.empty:
+                        supp_df = supp_df.drop_duplicates()
+                        all_supp_rows.append(supp_df)
+
+                    # Available Datasets rows
+                    avail_df = files_with_repo[["data_repository", "dataset_identifier", "dataset_webpage"]].copy()
+                    avail_df["Source PMCID"] = pmcid
+                    avail_df["Source Title"] = title
+                    if not avail_df.empty:
+                        avail_df = avail_df.drop_duplicates()
+                        all_avail_rows.append(avail_df)
 
                     supp_df = files_with_extension[["download_link", "description"]]
                     if not supp_df.empty:
@@ -159,24 +179,23 @@ if st.button("🚀 Run Extraction"):
                                 except Exception as e:
                                     st.error(f"Error fetching metadata: {e}")
 
-                # --- Excel summary sheet ---
-                file_exts_table = file_exts.copy()
-                repos_table = repos.copy()
-                supp_table = supp_df.rename(columns={"download_link": "Download Link", "description": "Description"})
-                avail_table = avail_df.rename(columns={
-                    "data_repository": "Repository",
-                    "dataset_identifier": "Dataset Identifier",
-                    "dataset_webpage": "Dataset Webpage"
-                })
-
-                summary_sections = [
-                    ("Supplementary File Types", file_exts_table),
-                    ("Available Data Repositories", repos_table),
-                    ("Supplementary Files Table", supp_table),
-                    ("Available Data Table", avail_table)
-                ]
-
-                excel_tabs[f"{pmcid}_summary"] = summary_sections
+                ## --- Excel summary sheet ---
+                #file_exts_table = file_exts.copy()
+                #repos_table = repos.copy()
+                #supp_table = supp_df.rename(columns={"download_link": "Download Link", "description": "Description"})
+                #avail_table = avail_df.rename(columns={
+                ##    "data_repository": "Repository",
+                #    "dataset_identifier": "Dataset Identifier",
+                #    "dataset_webpage": "Dataset Webpage"
+                #})
+                #file_exts_table = file_exts.rename(columns={"index": "File Type"})
+                #summary_sections = [
+                #    ("Supplementary File Types", file_exts_table),
+                #    ("Available Data Repositories", repos_table),
+                #    ("Supplementary Files Table", supp_table),
+                #    ("Available Data Table", avail_table)
+                #]
+                #excel_tabs[f"{pmcid}_summary"] = summary_sections
 
                 try:
                     for j, data_item in files_with_repo.iterrows():
@@ -206,8 +225,43 @@ if st.button("🚀 Run Extraction"):
                 except Exception as e:
                     st.error(f"Error fetching metadata: {e}")
 
-            if xlsxwriter and excel_tabs:
+            # --- Combine all supplementary and dataset rows for summary tabs ---
+            if all_supp_rows:
+                supp_summary_df = pd.concat(all_supp_rows, ignore_index=True)
+            else:
+                supp_summary_df = pd.DataFrame(columns=["download_link", "description", "Source PMCID", "Source Title"])
+
+            if all_avail_rows:
+                avail_summary_df = pd.concat(all_avail_rows, ignore_index=True)
+            else:
+                avail_summary_df = pd.DataFrame(columns=["data_repository", "dataset_identifier", "dataset_webpage", "Source PMCID", "Source Title"])
+
+            # --- Excel writing ---
+            if xlsxwriter and (excel_tabs or not supp_summary_df.empty or not avail_summary_df.empty):
                 with pd.ExcelWriter(excel_buffer, engine="xlsxwriter") as writer:
+                    # Write Supplementary Material summary tab
+                    supp_summary_df.to_excel(writer, sheet_name="Supplementary Material", index=False)
+                    worksheet = writer.sheets["Supplementary Material"]
+                    for i, col in enumerate(supp_summary_df.columns):
+                        max_len = max(
+                            supp_summary_df[col].astype(str).map(len).max() if not supp_summary_df.empty else 0,
+                            len(str(col)),
+                            15
+                        )
+                        worksheet.set_column(i, i, max_len + 2)
+
+                    # Write Data Availability summary tab
+                    avail_summary_df.to_excel(writer, sheet_name="Data Availability", index=False)
+                    worksheet = writer.sheets["Data Availability"]
+                    for i, col in enumerate(avail_summary_df.columns):
+                        max_len = max(
+                            avail_summary_df[col].astype(str).map(len).max() if not avail_summary_df.empty else 0,
+                            len(str(col)),
+                            15
+                        )
+                        worksheet.set_column(i, i, max_len + 2)
+
+                    # Write per-dataset meta tabs as before
                     for sheet_name, sections in excel_tabs.items():
                         if isinstance(sections, list):
                             startrow = 0
