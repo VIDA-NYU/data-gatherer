@@ -14,11 +14,13 @@ import ipywidgets as widgets
 from IPython.display import display, clear_output
 import textwrap
 
+
 class Orchestrator:
     """
     This class orchestrates the data gathering process by coordinating the data fetcher, parser, and classifier in a
     single workflow.
     """
+
     def __init__(self, llm_name='gpt-4o-mini', process_entire_document=False, log_file_override=None,
                  write_htmls_xmls=False, html_xml_dir='tmp/html_xmls/', skip_unstructured_files=False,
                  download_data_for_description_generation=False, data_resource_preview=False,
@@ -77,12 +79,13 @@ class Orchestrator:
 
         self.download_data_for_description_generation = download_data_for_description_generation
 
-        entire_document_models = ["gemini-1.5-flash", "gemini-1.5-pro", "gemini-2.0-flash-exp", "gemini-2.0-flash", "gpt-4o", "gpt-4o-mini"]
+        entire_document_models = ["gemini-1.5-flash", "gemini-1.5-pro", "gemini-2.0-flash-exp", "gemini-2.0-flash",
+                                  "gpt-4o", "gpt-4o-mini"]
         self.full_document_read = llm_name in entire_document_models and process_entire_document
         self.logger.info(f"Data_Gatherer Orchestrator initialized. Extraction Model: {llm_name}")
         self.llm = llm_name
 
-        self.search_method = 'url_list' # Default search method
+        self.search_method = 'url_list'  # Default search method
 
         self.full_output_file = full_output_file
 
@@ -156,7 +159,7 @@ class Orchestrator:
 
     def parse_data(self, current_url, raw_data, publisher='PMC', additional_data=None,
                    raw_data_format='XML', save_xml_output=False, html_xml_dir='tmp/html_xml_samples/',
-                   process_DAS_links_separately=False, full_document_read=False,
+                   process_DAS_links_separately=False, full_document_read=False, semantic_retrieval=False,
                    prompt_name='retrieve_datasets_simple_JSON', use_portkey_for_gemini=True):
         """
         Parses the raw data fetched from the source URL using the appropriate parser.
@@ -200,8 +203,8 @@ class Orchestrator:
                                       prompt_name=prompt_name, use_portkey_for_gemini=use_portkey_for_gemini,
                                       save_xml_output=save_xml_output, html_xml_dir=html_xml_dir,
                                       additional_data=additional_data,
-                                      process_DAS_links_separately=process_DAS_links_separately)
-
+                                      process_DAS_links_separately=process_DAS_links_separately,
+                                      semantic_retrieval=semantic_retrieval)
 
     def setup_data_fetcher(self, search_method='url_list', driver_path='', browser='Firefox', headless=True,
                            raw_HTML_data_fp=None):
@@ -261,14 +264,16 @@ class Orchestrator:
         return f"https://www.ncbi.nlm.nih.gov/pmc/articles/{pmcid}/"
 
     def preprocess_url(self, url):
-        url = url.upper()
-        if url.startswith("PMC"):
+        if url.upper().startswith("PMC"):
             return self.PMCID_to_URL(url)
-        elif url.startswith("https://"):
+        elif url.lower().startswith("https://"):
             return url
+        else:
+            raise ValueError(f"Invalid URL format: {url}. Must start with 'PMC' or 'https://'.")
 
     def process_url(self, url, save_staging_table=False, html_xml_dir='tmp/html_xmls/', use_portkey_for_gemini=True,
-                    driver_path=None, browser='Firefox', headless=True, prompt_name='retrieve_datasets_simple_JSON'):
+                    driver_path=None, browser='Firefox', headless=True, prompt_name='retrieve_datasets_simple_JSON',
+                    semantic_retrieval=False):
         """
         Orchestrates the process for a single given source URL (publication).
 
@@ -317,9 +322,9 @@ class Orchestrator:
             # if model processes the entire document, fetch the entire document and go to the parsing step
             if self.full_document_read:
                 self.logger.info("Fetching entire document for processing.")
-                self.raw_data_format = "full_HTML"
                 raw_data = self.data_fetcher.fetch_data(url)
-                raw_data = self.data_fetcher.remove_cookie_patterns(raw_data)
+                self.raw_data_format = self.data_fetcher.raw_data_format
+                raw_data = self.data_fetcher.remove_cookie_patterns(raw_data) if self.raw_data_format == "HTML" else raw_data
 
             # if model processes selected parts of the document, fetch the relevant sections and go to the parsing step
             else:
@@ -375,36 +380,41 @@ class Orchestrator:
 
                 if additional_data is None:
                     parsed_data = self.parser.parse_data(raw_data, self.publisher, self.current_url,
-                                                         prompt_name=prompt_name)
+                                                         prompt_name=prompt_name, semantic_retrieval=semantic_retrieval)
 
                 else:
                     self.logger.info(f"Processing additional data. # of items: {len(additional_data)}")
                     # add the additional data to the parsed_data
                     add_data = self.parser.parse_data(raw_data, self.publisher, self.current_url,
-                                                         additional_data=additional_data, prompt_name=prompt_name)
+                                                      additional_data=additional_data, prompt_name=prompt_name,
+                                                      semantic_retrieval=semantic_retrieval)
                     self.logger.info(type(add_data))
 
                     parsed_data = pd.concat([parsed_data, add_data], ignore_index=True).drop_duplicates()
 
                 parsed_data['source_url'] = url
-                parsed_data['pub_title'] = self.data_fetcher.extract_publication_title(raw_data)
+                parsed_data['pub_title'] = self.parser.retriever.extract_publication_title(raw_data)
                 self.logger.info(f"Parsed data extraction completed. Elements collected: {len(parsed_data)}")
                 if self.logger.level == logging.DEBUG:
-                    parsed_data.to_csv('staging_table/parsed_data_from_XML.csv', index=False) if save_staging_table else None
+                    parsed_data.to_csv('staging_table/parsed_data_from_XML.csv',
+                                       index=False) if save_staging_table else None
 
             elif 'HTML' in self.raw_data_format:
                 self.logger.info("Using HTMLParser to parse data.")
                 self.parser = HTMLParser(self.open_data_repos_ontology, self.logger,
-                                        llm_name=self.llm,
-                                        full_document_read=self.full_document_read,
-                                        use_portkey_for_gemini=use_portkey_for_gemini)
+                                         llm_name=self.llm,
+                                         full_document_read=self.full_document_read,
+                                         use_portkey_for_gemini=use_portkey_for_gemini)
                 parsed_data = self.parser.parse_data(raw_data, self.publisher, self.current_url,
-                                                     raw_data_format="full_HTML", prompt_name=prompt_name)
+                                                     raw_data_format="full_HTML", prompt_name=prompt_name,
+                                                     semantic_retrieval=semantic_retrieval)
                 parsed_data['source_url'] = url
-                parsed_data['pub_title'] = self.data_fetcher.extract_publication_title()
+                parsed_data['pub_title'] = self.data_fetcher.title if self.data_fetcher.title else \
+                    self.parser.retriever.extract_publication_title(raw_data)
                 self.logger.info(f"Parsed data extraction completed. Elements collected: {len(parsed_data)}")
                 if self.logger.level == logging.DEBUG:
-                    parsed_data.to_csv('staging_table/parsed_data_from_XML.csv', index=False) if save_staging_table else None
+                    parsed_data.to_csv('staging_table/parsed_data_from_XML.csv',
+                                       index=False) if save_staging_table else None
 
             else:
                 self.logger.error(f"Unsupported raw data format: {self.raw_data_format}. Cannot parse data.")
@@ -420,15 +430,12 @@ class Orchestrator:
 
             # Step 3: Use Classifier to classify Extracted and Parsed elements
             if parsed_data is not None:
-                if self.raw_data_format == "HTML":
-                    classified_links = self.classifier.classify_anchor_elements_links(parsed_data)
-                    self.logger.info("Link classification completed.")
-                elif self.raw_data_format == "XML":
+                if self.raw_data_format == "XML":
                     self.logger.info("XML element classification not needed. Using parsed_data.")
                     classified_links = parsed_data
-                elif self.raw_data_format == "full_HTML":
+                elif 'HTML' in self.raw_data_format:
                     classified_links = parsed_data
-                    self.logger.info("Full HTML element classification not supported. Using parsed_data.")
+                    self.logger.info("HTML element classification not supported. Using parsed_data.")
                 else:
                     self.logger.error(f"Unsupported raw data format and parser mode combination.")
                     return None
@@ -462,7 +469,8 @@ class Orchestrator:
         return classified_links
 
     def process_articles(self, url_list, log_modulo=10, driver_path=None, browser='Firefox', headless=True,
-                         use_portkey_for_gemini=True, prompt_name='retrieve_datasets_simple_JSON'):
+                         use_portkey_for_gemini=True, prompt_name='retrieve_datasets_simple_JSON',
+                         semantic_retrieval=False):
         """
         Processes a list of article URLs and returns parsed data.
 
@@ -491,7 +499,8 @@ class Orchestrator:
             url = self.preprocess_url(url)
             self.logger.info(f"{iteration}th function call: self.process_url({url})")
             results[url] = self.process_url(url, driver_path=driver_path, browser=browser, headless=headless,
-                                            use_portkey_for_gemini=use_portkey_for_gemini, prompt_name=prompt_name)
+                                            use_portkey_for_gemini=use_portkey_for_gemini, prompt_name=prompt_name,
+                                            semantic_retrieval=semantic_retrieval)
 
             if iteration % log_modulo == 0:
                 elapsed = time.time() - start_time  # Time elapsed since start
@@ -499,7 +508,7 @@ class Orchestrator:
                 remaining_iters = total_iters - (iteration + 1)
                 estimated_remaining = avg_time_per_iter * remaining_iters  # Estimated time remaining
                 self.logger.info(
-                    f"\nProgress: {iteration+1}/{total_iters} ({(iteration+1)/total_iters*100:.2f}%) "
+                    f"\nProgress: {iteration + 1}/{total_iters} ({(iteration + 1) / total_iters * 100:.2f}%) "
                     f"| Elapsed: {time.strftime('%H:%M:%S', time.gmtime(elapsed))} "
                     f"| ETA: {time.strftime('%H:%M:%S', time.gmtime(estimated_remaining))}\n"
                 )
@@ -523,8 +532,10 @@ class Orchestrator:
         """
         self.logger.info(f"Summarizing results...{df.columns}")
         if df is not None and not df.empty:
-            file_ext_counts = df[
-                'file_extension'].dropna().value_counts().to_dict() if 'file_extension' in df.columns else {}
+            if 'file_extension' in df.columns:
+                file_ext_counts = df['file_extension'].dropna().value_counts().to_dict()
+            else:
+                file_ext_counts = {}
             repo_counts = df[
                 'data_repository'].dropna().value_counts().to_dict() if 'data_repository' in df.columns else {}
 
@@ -564,7 +575,7 @@ class Orchestrator:
 
     def get_data_preview(self, combined_df, display_type='console', interactive=True, return_metadata=False,
                          write_raw_metadata=False, html_xml_dir='tmp/html_xmls/', use_portkey_for_gemini=True,
-                         prompt_name='gpt_metadata_extract'):
+                         prompt_name='gpt_metadata_extract', timeout=3):
         """
         This method iterates through the combined_df DataFrame, checks for dataset webpages or download links,
 
@@ -589,7 +600,7 @@ class Orchestrator:
 
         self.already_previewed = []
         self.metadata_parser = HTMLParser(self.open_data_repos_ontology, self.logger, full_document_read=True,
-                                         llm_name=self.llm,  use_portkey_for_gemini=use_portkey_for_gemini)
+                                          llm_name=self.llm, use_portkey_for_gemini=use_portkey_for_gemini)
 
         if self.data_fetcher is None:
             self.setup_data_fetcher(search_method='url_list')
@@ -629,48 +640,57 @@ class Orchestrator:
 
             # identify those that may be datasets
             if dataset_webpage is None or not isinstance(dataset_webpage, str) or len(dataset_webpage) <= 5:
-                if (row.get('file_extension', None) is not None and 'data' not in row['source_section'] and row['file_extension'] not
+                if (row.get('file_extension', None) is not None and 'data' not in row['source_section'] and row[
+                    'file_extension'] not
                         in ['xlsx', 'csv', 'json', 'xml', 'zip']):
-                    self.logger.info(f"Skipping row {i} as it does not contain a valid dataset webpage or file extension.")
+                    self.logger.info(
+                        f"Skipping row {i} as it does not contain a valid dataset webpage or file extension.")
                     continue
                 else:
                     self.logger.info(f"Potentially a valid dataset, displaying hardscraped metadata")
                     #metadata = self.metadata_parser.parse_datasets_metadata(row['source_section'])
-                    hardscraped_metadata = {k:v for k,v in row.items() if v is not None and v not in ['nan', 'None', '', 'n/a', np.nan, 'NaN', 'na']}
+                    hardscraped_metadata = {k: v for k, v in row.items() if
+                                            v is not None and v not in ['nan', 'None', '', 'n/a', np.nan, 'NaN', 'na']}
                     self.already_previewed.append(download_link)
                     if self.download_data_for_description_generation:
                         split_source_url = hardscraped_metadata.get('source_url').split('/')
                         paper_id = split_source_url[-1] if len(split_source_url[-1]) > 0 else split_source_url[-2]
                         self.data_fetcher.download_file_from_url(download_link, "output/suppl_files", paper_id)
-                        hardscraped_metadata['data_description_generated'] = self.metadata_parser.generate_dataset_description(download_link)
+                        hardscraped_metadata[
+                            'data_description_generated'] = self.metadata_parser.generate_dataset_description(
+                            download_link)
                     self.display_data_preview(hardscraped_metadata, display_type=display_type, interactive=interactive)
                     continue
 
             else:
                 self.logger.info(f"LLM scraped metadata")
-                repo_mapping_key = row['repository_reference'].lower() if 'repository_reference' in row else row['data_repository'].lower()
+                repo_mapping_key = row['repository_reference'].lower() if 'repository_reference' in row else row[
+                    'data_repository'].lower()
                 resolved_key = self.parser.resolve_data_repository(repo_mapping_key)
                 if ('javascript_load_required' in self.open_data_repos_ontology['repos'][resolved_key]):
-                    self.logger.info(f"JavaScript load required for {repo_mapping_key} dataset webpage. Using WebScraper.")
+                    self.logger.info(
+                        f"JavaScript load required for {repo_mapping_key} dataset webpage. Using WebScraper.")
                     html = self.data_fetcher.fetch_data(row['dataset_webpage'], delay=5)
                     if "informative_html_metadata_tags" in self.open_data_repos_ontology['repos'][resolved_key]:
-                        html = self.parser.normalize_HTML(html, self.open_data_repos_ontology['repos'][
+                        html = self.metadata_parser.normalize_HTML(html, self.open_data_repos_ontology['repos'][
                             resolved_key]['informative_html_metadata_tags'])
                     else:
-                        html = self.parser.normalize_HTML(html)
+                        html = self.metadata_parser.normalize_HTML(html)
                     if write_raw_metadata:
-                        self.logger.info(f"Saving raw metadata to: {html_xml_dir+ 'raw_metadata/'}")
+                        self.logger.info(f"Saving raw metadata to: {html_xml_dir + 'raw_metadata/'}")
                         self.data_fetcher.html_page_source_download(html_xml_dir + 'raw_metadata/')
                 else:
                     if 'informative_html_metadata_tags' in self.open_data_repos_ontology['repos'][resolved_key]:
-                        keep_sect = self.open_data_repos_ontology['repos'][resolved_key]['informative_html_metadata_tags']
+                        keep_sect = self.open_data_repos_ontology['repos'][resolved_key][
+                            'informative_html_metadata_tags']
                     else:
                         keep_sect = None
                     response = requests.get(row['dataset_webpage'], timeout=3)
-                    html = self.parser.normalize_HTML(response.text, keep_tags=keep_sect)
+                    html = self.metadata_parser.normalize_HTML(response.text, keep_tags=keep_sect)
 
-                metadata = self.metadata_parser.parse_datasets_metadata(html, use_portkey_for_gemini=use_portkey_for_gemini,
-                                                               prompt_name=prompt_name)
+                metadata = self.metadata_parser.parse_datasets_metadata(html,
+                                                                        use_portkey_for_gemini=use_portkey_for_gemini,
+                                                                        prompt_name=prompt_name)
                 metadata['source_url_for_metadata'] = row['dataset_webpage']
                 metadata['access_mode'] = row.get('access_mode', None)
                 metadata['source_section'] = row.get('source_section', row.get('section_class', None))
@@ -869,7 +889,7 @@ class Orchestrator:
         required_sections = [sect + "_sections" for sect in required_sections]
         return self.data_checker.is_xml_data_complete(raw_data, url, required_sections)
 
-    def run(self,search_by='url_list', input_file='input/test_input.txt'):
+    def run(self, search_by='url_list', input_file='input/test_input.txt'):
         """
         This method orchestrates the entire data gathering process by performing the following steps:
 
@@ -906,8 +926,8 @@ class Orchestrator:
 
             # evaluate the performance if ground_truth is provided
             #if 'ground_truth' in self.config:
-               # self.logger.info("Evaluating performance...")
-               # self.classifier.evaluate_performance(combined_df, self.config['ground_truth'])
+            # self.logger.info("Evaluating performance...")
+            # self.classifier.evaluate_performance(combined_df, self.config['ground_truth'])
 
             if self.data_resource_preview:
                 self.get_data_preview(combined_df)

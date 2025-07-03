@@ -18,7 +18,7 @@ MODEL_OPTIONS = [
     "gemini-1.5-flash", "gemini-1.5-pro", "gemini-2.0-flash-exp", "gemini-2.0-flash", "gpt-4o", "gpt-4o-mini"
 ]
 PROMPT_OPTIONS = [
-    'GEMINI_from_full_input_Examples', 'GPT_from_full_input_Examples', 'retrieve_datasets_simple_JSON',
+    'GEMINI_from_full_input_Examples_4', 'GPT_from_full_input_Examples', 'retrieve_datasets_simple_JSON',
     'retrieve_datasets_simple_JSON_gemini'
 ]
 METADATA_PROMPT_OPTIONS = [
@@ -30,6 +30,7 @@ prompt_name = st.sidebar.selectbox("Prompt", PROMPT_OPTIONS, index=PROMPT_OPTION
 metadata_prompt_name = st.sidebar.selectbox("Metadata Prompt", METADATA_PROMPT_OPTIONS, index=METADATA_PROMPT_OPTIONS.index('portkey_gemini_metadata_extract'))
 use_portkey = st.sidebar.checkbox("Use Portkey", value=True)
 full_document_read = st.sidebar.checkbox("Full Document Read", value=True)
+semantic_retrieval = st.sidebar.checkbox("Semantic RTR", value=False)
 
 # Load environment variables from .env file
 load_dotenv()
@@ -53,7 +54,8 @@ if st.button("🚀 Run Extraction"):
             orch.setup_data_fetcher('url_list', driver_path=driver_path)
 
             results = orch.process_articles(
-                pmcids, driver_path=driver_path, use_portkey_for_gemini=use_portkey, prompt_name=prompt_name
+                pmcids, driver_path=driver_path, use_portkey_for_gemini=use_portkey, prompt_name=prompt_name,
+                semantic_retrieval=semantic_retrieval
             )
 
             st.success("Extraction complete.")
@@ -75,31 +77,35 @@ if st.button("🚀 Run Extraction"):
                 elif isinstance(title, list):
                     title = title[0]
 
+                # --- Safely handle missing columns ---
+                files_with_extension = result[result["file_extension"].notna()] if "file_extension" in result else pd.DataFrame(columns=["download_link", "description", "file_extension"])
+                files_with_repo = result[result["data_repository"].notna()] if "data_repository" in result else pd.DataFrame(columns=["data_repository", "dataset_identifier"])
+
+                # Supplementary Material rows
+                supp_df = files_with_extension[["download_link", "description"]].copy() if not files_with_extension.empty else pd.DataFrame(columns=["download_link", "description"])
+                supp_df["Source PMCID"] = pmcid
+                supp_df["Source Title"] = title
+                if not supp_df.empty:
+                    supp_df = supp_df.drop_duplicates()
+                    all_supp_rows.append(supp_df)
+
+                # Available Datasets rows (handle missing 'dataset_webpage')
+                avail_cols = ["data_repository", "dataset_identifier"]
+                if "dataset_webpage" in files_with_repo.columns:
+                    avail_cols.append("dataset_webpage")
+                avail_df = files_with_repo[avail_cols].copy() if not files_with_repo.empty else pd.DataFrame(columns=avail_cols)
+                avail_df["Source PMCID"] = pmcid
+                avail_df["Source Title"] = title
+                if not avail_df.empty:
+                    avail_df = avail_df.drop_duplicates()
+                    all_avail_rows.append(avail_df)
+
                 # --- Top-level expander for each article (no nested expanders) ---
                 with st.expander(f"Results for: {title}", expanded=False):
                     # Make the title larger and bold at the top
                     st.markdown(f"<h2 style='text-align: left; font-size: 2em; font-weight: bold; margin-bottom: 0.5em;'>{title}</h2>", unsafe_allow_html=True)
 
                     summary = orch.summarize_result(result)
-
-                    files_with_extension = result[result["file_extension"].notna()]
-                    files_with_repo = result[result["data_repository"].notna()]
-
-                    # Supplementary Material rows
-                    supp_df = files_with_extension[["download_link", "description"]].copy()
-                    supp_df["Source PMCID"] = pmcid
-                    supp_df["Source Title"] = title
-                    if not supp_df.empty:
-                        supp_df = supp_df.drop_duplicates()
-                        all_supp_rows.append(supp_df)
-
-                    # Available Datasets rows
-                    avail_df = files_with_repo[["data_repository", "dataset_identifier", "dataset_webpage"]].copy()
-                    avail_df["Source PMCID"] = pmcid
-                    avail_df["Source Title"] = title
-                    if not avail_df.empty:
-                        avail_df = avail_df.drop_duplicates()
-                        all_avail_rows.append(avail_df)
 
                     supp_df = files_with_extension[["download_link", "description"]]
                     if not supp_df.empty:
@@ -122,21 +128,50 @@ if st.button("🚀 Run Extraction"):
                     # --- Show bar charts side by side at the top ---
                     col1, col2 = st.columns(2)
                     with col1:
-                        st.markdown("<h3 style='text-align: center; font-size: 1.3em;'>Supplementary File Types</h3>", unsafe_allow_html=True)
-                        bar_chart1 = alt.Chart(file_exts).mark_bar().encode(
-                            x=alt.X("File Type:N", sort="-y"),
-                            y="Count:Q",
-                            tooltip=["File Type", "Count"]
-                        ).properties(width=300, height=200)
+                        st.markdown(
+                            "<h3 style='text-align: center; font-size: 1.3em;'>Supplementary File Types</h3>",
+                            unsafe_allow_html=True
+                        )
+                        bar_chart1 = (
+                            alt.Chart(file_exts)
+                            .mark_bar()
+                            .encode(
+                                x=alt.X("File Type:N", sort="-y", axis=alt.Axis(labelAngle=0, labelFontSize=13, titleFontSize=15)),
+                                y=alt.Y("Count:Q"),
+                                tooltip=["File Type", "Count"]
+                            )
+                            .properties(width=300, height=200)
+                            .configure_axis(labelFontSize=13, titleFontSize=15)
+                        )
+                        # Center the chart using HTML/CSS flexbox
+                        st.markdown(
+                            "<div style='display: flex; justify-content: center; align-items: center;'>",
+                            unsafe_allow_html=True
+                        )
                         st.altair_chart(bar_chart1, use_container_width=False)
+                        st.markdown("</div>", unsafe_allow_html=True)
                     with col2:
-                        st.markdown("<h3 style='text-align: center; font-size: 1.3em;'>Available Data Repositories</h3>", unsafe_allow_html=True)
-                        bar_chart2 = alt.Chart(repos).mark_bar().encode(
-                            x=alt.X("Repository:N", sort="-y"),
-                            y="Count:Q",
-                            tooltip=["Repository", "Count"]
-                        ).properties(width=300, height=200)
+                        st.markdown(
+                            "<h3 style='text-align: center; font-size: 1.3em;'>Available Data Repositories</h3>",
+                            unsafe_allow_html=True
+                        )
+                        bar_chart2 = (
+                            alt.Chart(repos)
+                            .mark_bar()
+                            .encode(
+                                x=alt.X("Repository:N", sort="-y", axis=alt.Axis(labelAngle=0, labelFontSize=13, titleFontSize=15)),
+                                y=alt.Y("Count:Q"),
+                                tooltip=["Repository", "Count"]
+                            )
+                            .properties(width=300, height=200)
+                            .configure_axis(labelFontSize=13, titleFontSize=15)
+                        )
+                        st.markdown(
+                            "<div style='display: flex; justify-content: center; align-items: center;'>",
+                            unsafe_allow_html=True
+                        )
                         st.altair_chart(bar_chart2, use_container_width=False)
+                        st.markdown("</div>", unsafe_allow_html=True)
 
                     # --- Supplementary Material section ---
                     st.markdown("### Supplementary Material")
@@ -147,21 +182,33 @@ if st.button("🚀 Run Extraction"):
 
                     # --- Available datasets section ---
                     st.markdown("### Available datasets")
-                    if avail_df.empty:
+                    if files_with_repo.empty:
                         st.info("No datasets found.")
                     else:
+                        st.dataframe(avail_df, use_container_width=True)
                         for j, data_item in files_with_repo.iterrows():
                             dataset_label = f"**{data_item['dataset_identifier']}** ({data_item['data_repository']})"
                             st.markdown(f"- {dataset_label}")
+                            dataset_webpage = data_item["dataset_webpage"] if "dataset_webpage" in data_item and pd.notna(data_item["dataset_webpage"]) else ""
                             with st.spinner(
-                                f"Fetching metadata from repo: {data_item['data_repository']}... {data_item['dataset_webpage']}"):
+                                f"Fetching metadata from repo: {data_item['data_repository']}... {dataset_webpage}"):
                                 try:
-                                    item = orch.get_data_preview(
-                                        data_item, interactive=False, return_metadata=True,
-                                        write_raw_metadata=False,
-                                        use_portkey_for_gemini=use_portkey,
-                                        prompt_name=metadata_prompt_name
-                                    )[0]
+                                    try:
+                                        preview_result = orch.get_data_preview(
+                                            data_item, interactive=False, return_metadata=True,
+                                            write_raw_metadata=False,
+                                            use_portkey_for_gemini=use_portkey,
+                                            prompt_name=metadata_prompt_name,
+                                            timeout=10  # <-- Increase timeout from 3 to 15 seconds
+                                        )
+                                        if not preview_result or not isinstance(preview_result, list) or len(preview_result) == 0:
+                                            st.warning("No data preview available.")
+                                            continue
+                                        item = preview_result[0]
+                                    except Exception as e:
+                                        st.warning(f"No data preview available: {e}")
+                                        continue
+
                                     display_item = None
                                     if isinstance(item, dict):
                                         unwanted = {'', 'na', 'n/a', 'nan', 'unavailable', 'none', '0'}
