@@ -69,3 +69,28 @@ def test_resolve_data_repository():
         assert isinstance(data_repo, str)
         assert data_repo.lower() == tgt.lower()
         print('\n')
+
+def test_extract_title_from_xml():
+    logger = setup_logging("test_logger", log_file="../logs/scraper.log")
+    parser = XMLParser("open_bio_data_repos.json", logger, log_file_override=None,
+                       llm_name='gemini-2.0-flash')
+    xml_file_path = os.path.join('test_data', 'test_1.xml')
+    with open(xml_file_path, 'rb') as f:  # ✅ open in binary mode
+        xml_root = etree.fromstring(f.read())
+    title = parser.extract_publication_title(xml_root)
+    assert isinstance(title, str)
+    assert len(title) > 0
+    assert title == "Dual molecule targeting HDAC6 leads to intratumoral CD4+ cytotoxic lymphocytes recruitment through MHC-II upregulation on lung cancer cells"
+    print('\n')
+
+def test_extract_title_from_html():
+    logger = setup_logging("test_logger", log_file="../logs/scraper.log")
+    parser = HTMLParser("open_bio_data_repos.json", logger, llm_name='gemini-2.0-flash')
+    html_file_path = os.path.join('test_data', 'test_extract_1.html')
+    with open(html_file_path, 'rb') as f:
+        raw_html = f.read()
+    title = parser.extract_publication_title(raw_html)
+    assert isinstance(title, str)
+    assert len(title) > 0
+    assert "Proteogenomic insights suggest druggable pathways in endometrial carcinoma" in title
+    print('\n')

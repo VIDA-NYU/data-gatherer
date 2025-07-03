@@ -409,8 +409,7 @@ class Orchestrator:
                                                      raw_data_format="full_HTML", prompt_name=prompt_name,
                                                      semantic_retrieval=semantic_retrieval)
                 parsed_data['source_url'] = url
-                parsed_data['pub_title'] = self.data_fetcher.title if self.data_fetcher.title else \
-                    self.parser.retriever.extract_publication_title(raw_data)
+                parsed_data['pub_title'] = self.parser.extract_publication_title(raw_data)
                 self.logger.info(f"Parsed data extraction completed. Elements collected: {len(parsed_data)}")
                 if self.logger.level == logging.DEBUG:
                     parsed_data.to_csv('staging_table/parsed_data_from_XML.csv',
