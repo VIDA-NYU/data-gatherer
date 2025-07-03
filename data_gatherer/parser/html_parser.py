@@ -409,6 +409,7 @@ class HTMLParser(LLMParser):
             out_df = out_df.drop_duplicates(subset=['download_link'], keep='first')
 
         out_df['source_url'] = current_url_address
+        out_df['article_title'] = self.retriever.extract_publication_title(preprocessed_data)
 
         return out_df
 

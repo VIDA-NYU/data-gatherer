@@ -629,7 +629,7 @@ class LLMParser(ABC):
 
             result.append({
                 "dataset_identifier": dataset_id,
-                "data_repository": data_repository
+                "data_repository": self.resolve_data_repository(data_repository)
             })
 
             if 'decision_rationale' in dataset:
