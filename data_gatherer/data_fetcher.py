@@ -140,7 +140,7 @@ class DataFetcher(ABC):
             self.logger.info(f"URL {url} found in DataFrame. Using DatabaseFetcher.")
             return DatabaseFetcher(logger, self.raw_HTML_data_filepath)
 
-        if API is not None and not(entire_doc_model):
+        if API is not None:
         # Initialize the corresponding API client, from API_supported_url_patterns
             self.logger.info(f"Initializing EntrezFetcher({'requests', API, 'self.config'})")
             return EntrezFetcher(requests, API, logger)
