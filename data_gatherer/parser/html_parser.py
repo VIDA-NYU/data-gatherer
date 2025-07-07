@@ -409,6 +409,7 @@ class HTMLParser(LLMParser):
             out_df = out_df.drop_duplicates(subset=['download_link'], keep='first')
 
         out_df['source_url'] = current_url_address
+        out_df['article_title'] = self.retriever.extract_publication_title(preprocessed_data)
 
         return out_df
 
@@ -488,3 +489,21 @@ class HTMLParser(LLMParser):
 
         return df_supp
 
+    def extract_publication_title(self, raw_data):
+        """
+        Extract the publication title from the HTML content.
+
+        :return: str — the publication title.
+        """
+        self.logger.info("Extracting publication title from HTML")
+        soup = BeautifulSoup(raw_data, "html.parser")
+        title_tag = soup.find('title')
+
+        h1 = soup.find("h1", class_="article-title")
+        if h1:
+            return h1.get_text(strip=True)
+        elif title_tag:
+            return title_tag.get_text(strip=True)
+        else:
+            self.logger.warning("No publication title found in the HTML data.")
+            return "No title found"

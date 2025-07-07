@@ -99,6 +99,24 @@ class XMLParser(LLMParser):
             })
         return sections
 
+    def extract_publication_title(self, api_data):
+        """
+        Extracts the article title and the surname of the first author from the XML content.
+
+        :param xml_content: The XML content as a string.
+
+        :return: A tuple containing the article title and the first author's surname.
+        """
+        try:
+            # Extract the article title
+            title = api_data.find(".//title-group/article-title")
+            article_title = title.text.strip() if title is not None else None
+            return article_title
+
+        except etree.XMLSyntaxError as e:
+            self.logger.error(f"Error parsing XML: {e}")
+            return None
+
     def parse_data(self, api_data, publisher, current_url_address, additional_data=None, raw_data_format='XML',
                    save_xml_output=False, html_xml_dir='html_xml_samples/', process_DAS_links_separately=False,
                    prompt_name='retrieve_datasets_simple_JSON', use_portkey_for_gemini=True, semantic_retrieval=False):
@@ -132,136 +150,136 @@ class XMLParser(LLMParser):
                 self.logger.error(f"Error parsing API data: {e}")
                 return None
 
-        if isinstance(api_data, etree._Element) and not self.full_document_read:
-            # Extract title (adjust XPath to match the structure)
-            title_element = api_data.find('.//title-group/article-title')  # XPath for article title
-            title = title_element.text if title_element is not None else "No Title Found"
-            self.logger.info(f"Extracted title:'{title}'")
-            self.title = title
+        if isinstance(api_data, etree._Element):
+            self.title = self.extract_publication_title(api_data)
 
-            # Save XML content for debugging purposes
-            if save_xml_output:
-                dir = html_xml_dir + publisher + '/' + title + '.xml'
-                # if directory does not exist, create it
-                self.logger.info(f"Saving XML content to: {dir}")
-                if not os.path.exists(os.path.dirname(dir)):
-                    os.makedirs(os.path.dirname(dir))
-                etree.ElementTree(api_data).write(dir, pretty_print=True, xml_declaration=True, encoding='UTF-8')
+            if not self.full_document_read:
+                # Save XML content for debugging purposes
+                if save_xml_output:
+                    dir = html_xml_dir + publisher + '/' + self.title + '.xml'
+                    # if directory does not exist, create it
+                    self.logger.info(f"Saving XML content to: {dir}")
+                    if not os.path.exists(os.path.dirname(dir)):
+                        os.makedirs(os.path.dirname(dir))
+                    etree.ElementTree(api_data).write(dir, pretty_print=True, xml_declaration=True, encoding='UTF-8')
 
-            # supplementary_material_links
-            supplementary_material_links = self.extract_href_from_supplementary_material(api_data, current_url_address)
-            self.logger.debug(f"supplementary_material_links: {supplementary_material_links}")
-
-            if process_DAS_links_separately:
-                # Extract dataset links
-                dataset_links = self.extract_href_from_data_availability(api_data)
-                dataset_links.extend(self.extract_xrefs_from_data_availability(api_data, current_url_address))
-                self.logger.info(f"dataset_links: {dataset_links}")
-                if len(dataset_links) == 0:
-                    self.logger.info(
-                        f"No dataset links in data-availability section from XML. Scraping {current_url_address}.")
-                    #dataset_links = self.get_data_availability_section_from_webpage(current_url_address)
-                # Process dataset links to get more context
-                augmented_dataset_links = self.process_data_availability_links(dataset_links)
-                self.logger.info(f"Len of augmented_dataset_links: {len(augmented_dataset_links)}")
-
-                self.logger.debug(f"Additional data: {(additional_data)}")
-                if additional_data is not None and len(additional_data) > 0:
-                    self.logger.info(f"Additional data ({type(additional_data), len(additional_data)} items) "
-                                     f"and Parsed data ({type(augmented_dataset_links), len(augmented_dataset_links)} items).")
-                    # extend the dataset links with additional data
-                    augmented_dataset_links = augmented_dataset_links + self.process_additional_data(additional_data)
-                    self.logger.debug(f"Type: {type(augmented_dataset_links)}")
-                    self.logger.debug(f"Len of augmented_dataset_links: {len(augmented_dataset_links)}")
-
-                self.logger.debug(f"Content of augmented_dataset_links: {augmented_dataset_links}")
-
-            else:
-                data_availability_cont = self.get_data_availability_text(api_data)
-
-                if semantic_retrieval:
-                    corpus = self.extract_sections_from_xml(api_data)
-                    top_k_sections = self.semantic_retrieve_from_corpus(corpus, topk_docs_to_retrieve=2)
-                    top_k_sections_text = [item['text'] for item in top_k_sections]
-                    data_availability_cont.extend(top_k_sections_text)
-
-                augmented_dataset_links = self.process_data_availability_text(data_availability_cont,
-                                                                              prompt_name=prompt_name)
-
-                if additional_data is not None and len(additional_data) > 0:
-                    self.logger.info(f"Additional data ({type(additional_data), len(additional_data)} items) "
-                                     f"and Parsed data ({type(augmented_dataset_links), len(augmented_dataset_links)} items).")
-                    # extend the dataset links with additional data
-                    augmented_dataset_links = augmented_dataset_links + self.process_additional_data(additional_data)
-                    self.logger.debug(f"Type: {type(augmented_dataset_links)}, Len: {len(augmented_dataset_links)}")
-                    self.logger.debug(f"Augmented_dataset_links: {augmented_dataset_links}")
-
-                self.logger.debug(f"Content of augmented_dataset_links: {augmented_dataset_links}")
-
-            dataset_links_w_target_pages = self.get_dataset_page(augmented_dataset_links)
-
-            # Create a DataFrame from the dataset links union supplementary material links
-            out_df = pd.concat([pd.DataFrame(dataset_links_w_target_pages).rename(
-                columns={'dataset_id': 'dataset_identifier', 'repository_reference': 'data_repository'}),
-                                pd.DataFrame(supplementary_material_links)])  # check index error here
-            self.logger.info(f"Dataset Links type: {type(out_df)} of len {len(out_df)}, with cols: {out_df.columns}")
-            self.logger.debug(f"Datasets: {out_df}")
-
-            # Extract file extensions from download links if possible, and add to the dataframe out_df as column
-            if 'download_link' in out_df.columns:
-                out_df['file_extension'] = out_df['download_link'].apply(lambda x: self.extract_file_extension(x))
-            elif 'link' in out_df.columns:
-                out_df['file_extension'] = out_df['link'].apply(lambda x: self.extract_file_extension(x))
-
-            # drop duplicates but keep nulls
-            if 'dataset_identifier' in out_df.columns and 'download_link' in out_df.columns:
-                out_df = out_df.drop_duplicates(subset=['download_link', 'dataset_identifier'], keep='first')
-
-            return out_df
-
-        else:
-            # Extract links from entire webpage
-            if self.full_document_read:
-                self.logger.info(f"Extracting links from full XML content.")
-                # preprocess the content to get only elements that do not change over different sessions
+                # supplementary_material_links
                 supplementary_material_links = self.extract_href_from_supplementary_material(api_data, current_url_address)
+                self.logger.debug(f"supplementary_material_links: {supplementary_material_links}")
 
-                preprocessed_data = self.normalize_XML(api_data)
+                if process_DAS_links_separately:
+                    # Extract dataset links
+                    dataset_links = self.extract_href_from_data_availability(api_data)
+                    dataset_links.extend(self.extract_xrefs_from_data_availability(api_data, current_url_address))
+                    self.logger.info(f"dataset_links: {dataset_links}")
+                    if len(dataset_links) == 0:
+                        self.logger.info(
+                            f"No dataset links in data-availability section from XML. Scraping {current_url_address}.")
+                        #dataset_links = self.get_data_availability_section_from_webpage(current_url_address)
+                    # Process dataset links to get more context
+                    augmented_dataset_links = self.process_data_availability_links(dataset_links)
+                    self.logger.info(f"Len of augmented_dataset_links: {len(augmented_dataset_links)}")
 
-                self.logger.debug(f"Preprocessed data: {preprocessed_data}")
+                    self.logger.debug(f"Additional data: {(additional_data)}")
+                    if additional_data is not None and len(additional_data) > 0:
+                        self.logger.info(f"Additional data ({type(additional_data), len(additional_data)} items) "
+                                         f"and Parsed data ({type(augmented_dataset_links), len(augmented_dataset_links)} items).")
+                        # extend the dataset links with additional data
+                        augmented_dataset_links = augmented_dataset_links + self.process_additional_data(additional_data)
+                        self.logger.debug(f"Type: {type(augmented_dataset_links)}")
+                        self.logger.debug(f"Len of augmented_dataset_links: {len(augmented_dataset_links)}")
 
-                # Extract dataset links from the entire text
-                augmented_dataset_links = self.extract_datasets_info_from_content(preprocessed_data,
-                                                                              self.open_data_repos_ontology['repos'],
-                                                                              model=self.llm_name,
-                                                                              temperature=0,
-                                                                              prompt_name=prompt_name)
+                    self.logger.debug(f"Content of augmented_dataset_links: {augmented_dataset_links}")
 
-                self.logger.info(f"Augmented dataset links: {augmented_dataset_links}")
+                else:
+                    data_availability_cont = self.get_data_availability_text(api_data)
+
+                    if semantic_retrieval:
+                        corpus = self.extract_sections_from_xml(api_data)
+                        top_k_sections = self.semantic_retrieve_from_corpus(corpus, topk_docs_to_retrieve=2)
+                        top_k_sections_text = [item['text'] for item in top_k_sections]
+                        data_availability_cont.extend(top_k_sections_text)
+
+                    augmented_dataset_links = self.process_data_availability_text(data_availability_cont,
+                                                                                  prompt_name=prompt_name)
+
+                    if additional_data is not None and len(additional_data) > 0:
+                        self.logger.info(f"Additional data ({type(additional_data), len(additional_data)} items) "
+                                         f"and Parsed data ({type(augmented_dataset_links), len(augmented_dataset_links)} items).")
+                        # extend the dataset links with additional data
+                        augmented_dataset_links = augmented_dataset_links + self.process_additional_data(additional_data)
+                        self.logger.debug(f"Type: {type(augmented_dataset_links)}, Len: {len(augmented_dataset_links)}")
+                        self.logger.debug(f"Augmented_dataset_links: {augmented_dataset_links}")
+
+                    self.logger.debug(f"Content of augmented_dataset_links: {augmented_dataset_links}")
 
                 dataset_links_w_target_pages = self.get_dataset_page(augmented_dataset_links)
 
                 # Create a DataFrame from the dataset links union supplementary material links
-                out_df = pd.concat([pd.DataFrame(dataset_links_w_target_pages),
-                                    pd.DataFrame(supplementary_material_links)])
+                out_df = pd.concat([pd.DataFrame(dataset_links_w_target_pages).rename(
+                    columns={'dataset_id': 'dataset_identifier', 'repository_reference': 'data_repository'}),
+                                    pd.DataFrame(supplementary_material_links)])  # check index error here
+                self.logger.info(f"Dataset Links type: {type(out_df)} of len {len(out_df)}, with cols: {out_df.columns}")
+                self.logger.debug(f"Datasets: {out_df}")
 
-            self.logger.info(f"Dataset Links type: {type(out_df)} of len {len(out_df)}, with cols: {out_df.columns}")
+                # Extract file extensions from download links if possible, and add to the dataframe out_df as column
+                if 'download_link' in out_df.columns:
+                    out_df['file_extension'] = out_df['download_link'].apply(lambda x: self.extract_file_extension(x))
+                elif 'link' in out_df.columns:
+                    out_df['file_extension'] = out_df['link'].apply(lambda x: self.extract_file_extension(x))
 
-            # Extract file extensions from download links if possible, and add to the dataframe out_df as column
-            if 'download_link' in out_df.columns:
-                out_df['file_extension'] = out_df['download_link'].apply(lambda x: self.extract_file_extension(x))
-            elif 'link' in out_df.columns:
-                out_df['file_extension'] = out_df['link'].apply(lambda x: self.extract_file_extension(x))
+                # drop duplicates but keep nulls
+                if 'dataset_identifier' in out_df.columns and 'download_link' in out_df.columns:
+                    out_df = out_df.drop_duplicates(subset=['download_link', 'dataset_identifier'], keep='first')
 
-            # drop duplicates but keep nulls
-            if 'download_link' in out_df.columns and 'dataset_identifier' in out_df.columns:
-                out_df = out_df.drop_duplicates(subset=['download_link', 'dataset_identifier'], keep='first')
-            elif 'download_link' in out_df.columns:
-                out_df = out_df.drop_duplicates(subset=['download_link'], keep='first')
+                out_df['article_title'] = self.title
 
-            out_df['source_url'] = current_url_address
+                return out_df
 
-            return out_df
+            else:
+                # Extract links from entire webpage
+                if self.full_document_read:
+                    self.logger.info(f"Extracting links from full XML content.")
+                    # preprocess the content to get only elements that do not change over different sessions
+                    supplementary_material_links = self.extract_href_from_supplementary_material(api_data, current_url_address)
+
+                    preprocessed_data = self.normalize_XML(api_data)
+
+                    self.logger.debug(f"Preprocessed data: {preprocessed_data}")
+
+                    # Extract dataset links from the entire text
+                    augmented_dataset_links = self.extract_datasets_info_from_content(preprocessed_data,
+                                                                                  self.open_data_repos_ontology['repos'],
+                                                                                  model=self.llm_name,
+                                                                                  temperature=0,
+                                                                                  prompt_name=prompt_name)
+
+                    self.logger.info(f"Augmented dataset links: {augmented_dataset_links}")
+
+                    dataset_links_w_target_pages = self.get_dataset_page(augmented_dataset_links)
+
+                    # Create a DataFrame from the dataset links union supplementary material links
+                    out_df = pd.concat([pd.DataFrame(dataset_links_w_target_pages),
+                                        pd.DataFrame(supplementary_material_links)])
+
+                self.logger.info(f"Dataset Links type: {type(out_df)} of len {len(out_df)}, with cols: {out_df.columns}")
+
+                # Extract file extensions from download links if possible, and add to the dataframe out_df as column
+                if 'download_link' in out_df.columns:
+                    out_df['file_extension'] = out_df['download_link'].apply(lambda x: self.extract_file_extension(x))
+                elif 'link' in out_df.columns:
+                    out_df['file_extension'] = out_df['link'].apply(lambda x: self.extract_file_extension(x))
+
+                # drop duplicates but keep nulls
+                if 'download_link' in out_df.columns and 'dataset_identifier' in out_df.columns:
+                    out_df = out_df.drop_duplicates(subset=['download_link', 'dataset_identifier'], keep='first')
+                elif 'download_link' in out_df.columns:
+                    out_df = out_df.drop_duplicates(subset=['download_link'], keep='first')
+
+                out_df['source_url'] = current_url_address
+                out_df['article_title'] = self.title
+
+                return out_df
 
 
     def normalize_XML(self, xml_data):

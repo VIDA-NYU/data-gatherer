@@ -20,7 +20,7 @@ from data_gatherer.retriever.base_retriever import BaseRetriever
 from data_gatherer.retriever.embeddings_retriever import EmbeddingsRetriever
 from data_gatherer.retriever.xml_retriever import xmlRetriever
 from data_gatherer.retriever.html_retriever import htmlRetriever
-from data_gatherer.env import PORTKEY_GATEWAY_URL, PORTKEY_API_KEY, PORTKEY_ROUTE
+from data_gatherer.env import PORTKEY_GATEWAY_URL, PORTKEY_API_KEY, PORTKEY_ROUTE, PORTKEY_CONFIG, NYU_LLM_API, GPT_API_KEY, GEMINI_KEY
 
 dataset_response_schema_gpt = {
     "type": "json_schema",
@@ -201,46 +201,48 @@ class LLMParser(ABC):
         self.llm_name = llm_name
         self.use_portkey_for_gemini = use_portkey_for_gemini
 
-        if self.use_portkey_for_gemini:
+        if self.use_portkey_for_gemini and 'gemini' in llm_name:
             self.portkey = Portkey(
                 api_key=PORTKEY_API_KEY,
                 virtual_key=PORTKEY_ROUTE,
                 base_url=PORTKEY_GATEWAY_URL,
+                config=PORTKEY_CONFIG
             )
 
-        if llm_name == 'gemma2:9b':
-            self.client = Client(host=os.environ['NYU_LLM_API'])  # env variable
+
+        elif llm_name == 'gemma2:9b':
+            self.client = Client(host=NYU_LLM_API)  # env variable
 
         elif llm_name == 'gpt-4o-mini':
-            self.client = OpenAI(api_key=os.environ['GPT_API_KEY'])
+            self.client = OpenAI(api_key=GPT_API_KEY)
 
         elif llm_name == 'gpt-4o':
-            self.client = OpenAI(api_key=os.environ['GPT_API_KEY'])
+            self.client = OpenAI(api_key=GPT_API_KEY)
 
         elif llm_name == 'gemini-1.5-flash':
             if not self.use_portkey_for_gemini:
-                genai.configure(api_key=os.environ['GEMINI_KEY'])
+                genai.configure(api_key=GEMINI_KEY)
                 self.client = genai.GenerativeModel('gemini-1.5-flash')
             else:
                 self.client = None
 
         elif llm_name == 'gemini-2.0-flash-exp':
             if not self.use_portkey_for_gemini:
-                genai.configure(api_key=os.environ['GEMINI_KEY'])
+                genai.configure(api_key=GEMINI_KEY)
                 self.client = genai.GenerativeModel('gemini-2.0-flash-exp')
             else:
                 self.client = None
 
         elif llm_name == 'gemini-2.0-flash':
             if not self.use_portkey_for_gemini:
-                genai.configure(api_key=os.environ['GEMINI_KEY'])
+                genai.configure(api_key=GEMINI_KEY)
                 self.client = genai.GenerativeModel('gemini-2.0-flash')
             else:
                 self.client = None
 
         elif llm_name == 'gemini-1.5-pro':
             if not self.use_portkey_for_gemini:
-                genai.configure(api_key=os.environ['GEMINI_KEY'])
+                genai.configure(api_key=GEMINI_KEY)
                 self.client = genai.GenerativeModel('gemini-1.5-pro')
             else:
                 self.client = None
@@ -618,9 +620,9 @@ class LLMParser(ABC):
                 elif 'dataset_identifier' in dataset:
                     dataset_id = dataset['dataset_identifier']
                 if 'data_repository' in dataset:
-                    data_repository = dataset['data_repository']
+                    data_repository = self.resolve_data_repository(dataset['data_repository'])
                 elif 'repository_reference' in dataset:
-                    data_repository = dataset['repository_reference']
+                    data_repository = self.resolve_data_repository(dataset['repository_reference'])
 
                 if dataset_id == 'n/a' and data_repository in self.open_data_repos_ontology['repos']:
                     self.logger.info(f"Dataset ID is 'n/a' and repository name from prompt")
@@ -1230,15 +1232,16 @@ class LLMClient:
 
     def _initialize_client(self, model):
         if model.startswith('gpt'):
-            self.client = OpenAI(api_key=os.environ['GPT_API_KEY'])
+            self.client = OpenAI(api_key=GPT_API_KEY)
         elif model.startswith('gemini') and not self.use_portkey_for_gemini:
-            genai.configure(api_key=os.environ['GEMINI_KEY'])
+            genai.configure(api_key=GEMINI_KEY)
             self.client = genai.GenerativeModel(model)
         elif model.startswith('gemini') and self.use_portkey_for_gemini:
             self.portkey = Portkey(
                 api_key=PORTKEY_API_KEY,
                 virtual_key=PORTKEY_ROUTE,
                 base_url=PORTKEY_GATEWAY_URL,
+                config=PORTKEY_CONFIG
             )
             self.client = self.portkey
         else:

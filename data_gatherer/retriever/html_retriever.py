@@ -219,3 +219,22 @@ class htmlRetriever(BaseRetriever):
 
         self.logger.info(f"Found {len(data_availability_elements)} data availability elements from HTML.")
         return data_availability_elements
+
+    def extract_publication_title(self, raw_data):
+        """
+        Extract the publication title from the HTML content.
+
+        :return: str — the publication title.
+        """
+        self.logger.info("Extracting publication title from HTML")
+        soup = BeautifulSoup(raw_data, "html.parser")
+        title_tag = soup.find('article-title')
+
+        h1 = soup.find("h1", class_="article-title")
+        if h1:
+            return h1.get_text(strip=True)
+        elif title_tag:
+            return title_tag.get_text(strip=True)
+        else:
+            self.logger.warning("No publication title found in the HTML data.")
+            return "No title found"
