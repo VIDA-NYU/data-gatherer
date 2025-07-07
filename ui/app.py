@@ -49,7 +49,7 @@ if st.button("🚀 Run Extraction"):
         st.info(f"Processing {len(pmcids)} PMCID(s)...")
 
         try:
-            orch = Orchestrator(llm_name=model_name, process_entire_document=full_document_read,)
+            orch = Orchestrator(llm_name=model_name, process_entire_document=full_document_read, log_level="INFO")
             driver_path = '/usr/local/bin/geckodriver' if linux else None
             orch.setup_data_fetcher('url_list', driver_path=driver_path)
 

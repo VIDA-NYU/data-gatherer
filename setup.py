@@ -5,7 +5,7 @@ with open('requirements.txt') as f:
 
 setup(
     name='data_gatherer',
-    version='0.3.0',
+    version='0.1.1',
     packages=find_packages(),
     include_package_data=True,
     install_requires=requirements,

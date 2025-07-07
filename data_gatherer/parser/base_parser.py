@@ -20,7 +20,7 @@ from data_gatherer.retriever.base_retriever import BaseRetriever
 from data_gatherer.retriever.embeddings_retriever import EmbeddingsRetriever
 from data_gatherer.retriever.xml_retriever import xmlRetriever
 from data_gatherer.retriever.html_retriever import htmlRetriever
-from data_gatherer.env import PORTKEY_GATEWAY_URL, PORTKEY_API_KEY, PORTKEY_ROUTE, PORTKEY_CONFIG, NYU_LLM_API, GPT_API_KEY, GEMINI_KEY
+from data_gatherer.env import PORTKEY_GATEWAY_URL, PORTKEY_API_KEY, PORTKEY_ROUTE, PORTKEY_CONFIG, NYU_LLM_API, GPT_API_KEY, GEMINI_KEY, DATA_GATHERER_USER_NAME
 
 dataset_response_schema_gpt = {
     "type": "json_schema",
@@ -206,7 +206,8 @@ class LLMParser(ABC):
                 api_key=PORTKEY_API_KEY,
                 virtual_key=PORTKEY_ROUTE,
                 base_url=PORTKEY_GATEWAY_URL,
-                config=PORTKEY_CONFIG
+                config=PORTKEY_CONFIG,
+                metadata={"_user": DATA_GATHERER_USER_NAME}
             )
 
 
@@ -311,6 +312,11 @@ class LLMParser(ABC):
                 file_name = os.path.basename(href)
                 self.logger.debug(f"Extracted file name: {file_name} from href: {href}")
                 download_link = "https://www.ncbi.nlm.nih.gov/pmc" + href
+
+        else:
+            self.logger.debug(f"Extracted download_link as href: {href}")
+            download_link = href
+
         return download_link
 
 
@@ -1253,7 +1259,8 @@ class LLMClient:
                 api_key=PORTKEY_API_KEY,
                 virtual_key=PORTKEY_ROUTE,
                 base_url=PORTKEY_GATEWAY_URL,
-                config=PORTKEY_CONFIG
+                config=PORTKEY_CONFIG,
+                metadata={"_user": DATA_GATHERER_USER_NAME}
             )
             self.client = self.portkey
         else:
