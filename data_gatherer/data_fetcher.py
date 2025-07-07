@@ -188,6 +188,7 @@ class DataFetcher(ABC):
                 self.logger.debug(f"URL detected as {src}.")
                 API = f"{src}_API"
                 return API
+        self.logger.debug("No API pattern matched.")
 
     def download_file_from_url(self, url, output_root="output/suppl_files", paper_id=None):
         output_dir = os.path.join(output_root, paper_id)
@@ -277,14 +278,17 @@ class WebScraper(DataFetcher):
                 break
             last_height = new_height
 
-    def html_page_source_download(self, dir):
+    def html_page_source_download(self, directory):
         """
         Downloads the HTML page source as html file in the specified directory.
 
-        :param dir: The directory where the HTML file will be saved.
+        :param directory: The directory where the HTML file will be saved.
 
         """
-        logging.info(f"Dir {dir} exists") if os.path.exists(dir) else os.mkdir(dir)
+        if os.path.exists(directory):
+            logging.info(f"Dir {directory} exists")
+        else:
+            os.makedirs(directory, exist_ok=True)
 
         if hasattr(self, 'extract_publication_title'):
             pub_name = self.extract_publication_title()
@@ -293,13 +297,16 @@ class WebScraper(DataFetcher):
             raise Exception("Pubblication name extraction is only supported for WebScraper instances.")
         pub_name = re.sub(r'[\\/:*?"<>|]', '_', pub_name)  # Replace invalid characters in filename
 
-        fn = dir + pub_name + '.html'
+        fn = directory + pub_name + '.html'
+        self.logger.info(f"Downloading HTML page source to {fn}")
 
-        if hasattr(self, 'scraper_tool') and isinstance(self.scraper_tool, WebScraper):
+        self.logger.debug(f"scraper_tool: {self.scraper_tool}, page_source: {getattr(self.scraper_tool, 'page_source', None)}")
+
+        if hasattr(self, 'scraper_tool') and self.scraper_tool.page_source:
             with open(fn, 'w', encoding='utf-8') as f:
                 f.write(self.scraper_tool.page_source)
         else:
-            raise Exception("scraper_tool undefined")
+            raise RuntimeError(f"Error saving HTML page source to {fn}. scraper_tool or page_source not available.")
 
     def extract_publication_title(self):
         """

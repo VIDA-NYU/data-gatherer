@@ -26,3 +26,4 @@ streamlit
 ipywidgets
 portkey-ai
 xlsxwriter
+sentence-transformers

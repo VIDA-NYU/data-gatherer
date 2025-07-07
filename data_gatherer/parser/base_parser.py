@@ -1198,14 +1198,26 @@ class LLMParser(ABC):
 
     def semantic_retrieve_from_corpus(self, corpus, model_name='sentence-transformers/all-MiniLM-L6-v2',
                                       topk_docs_to_retrieve=5):
+        """
+        Given a corpus of text, retrieve the most relevant documents using semantic search.
+
+        :param corpus: list of str — the corpus of text to search.
+
+        :param model_name: str — the name of the embedding model to use (default: 'sentence-transformers/all-MiniLM-L6-v2').
+
+        :param topk_docs_to_retrieve: int — the number of top documents to retrieve (default: 5).
+
+        :return: list of dict — the most relevant documents from the corpus.
+        """
 
         query = """Explicitly identify all the datasets by their database accession codes, repository names, and links
          to deposited datasets mentioned in this paper."""
 
         retriever = EmbeddingsRetriever(
+            corpus=corpus,
             model_name=model_name,  # or any other model you prefer
             device="cpu",
-            corpus=corpus
+            logger=self.logger
         )
         # Other queries can be used here as well, e.g.:
         # "Available data, accession code, data repository, deposited data"
