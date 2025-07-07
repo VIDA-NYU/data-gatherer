@@ -79,7 +79,7 @@ if st.button("🚀 Run Extraction"):
 
                 # --- Safely handle missing columns ---
                 files_with_extension = result[result["file_extension"].notna()] if "file_extension" in result else pd.DataFrame(columns=["download_link", "description", "file_extension"])
-                files_with_repo = result[result["data_repository"].notna()] if "data_repository" in result else pd.DataFrame(columns=["data_repository", "dataset_identifier"])
+                files_with_repo = result[result["data_repository"].notna()] if "data_repository" in result else pd.DataFrame(columns=["data_repository", "dataset_identifier", "dataset_webpage"])
 
                 # Supplementary Material rows
                 supp_df = files_with_extension[["download_link", "description"]].copy() if not files_with_extension.empty else pd.DataFrame(columns=["download_link", "description"])
@@ -90,9 +90,7 @@ if st.button("🚀 Run Extraction"):
                     all_supp_rows.append(supp_df)
 
                 # Available Datasets rows (handle missing 'dataset_webpage')
-                avail_cols = ["data_repository", "dataset_identifier"]
-                if "dataset_webpage" in files_with_repo.columns:
-                    avail_cols.append("dataset_webpage")
+                avail_cols = ["data_repository", "dataset_identifier", "dataset_webpage"]
                 avail_df = files_with_repo[avail_cols].copy() if not files_with_repo.empty else pd.DataFrame(columns=avail_cols)
                 avail_df["Source PMCID"] = pmcid
                 avail_df["Source Title"] = title

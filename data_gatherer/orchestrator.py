@@ -146,12 +146,14 @@ class Orchestrator:
                 self.publisher = self.data_fetcher.url_to_publisher_domain(self.current_url)
                 directory = html_xml_dir + self.publisher + '/'
                 self.logger.info(f"Raw Data is {self.data_fetcher.raw_data_format}.")
-                if self.data_fetcher.raw_data_format == "HTML" or self.data_fetcher.raw_data_format == "full_HTML":
+                if self.data_fetcher.raw_data_format == "HTML":
                     self.data_fetcher.html_page_source_download(directory)
                     self.logger.info(f"Raw HTML saved to: {directory}")
                 elif self.data_fetcher.raw_data_format == "XML":
                     self.data_fetcher.download_xml(directory, raw_data[src_url])
                     self.logger.info(f"Raw XML saved in {directory} directory")
+                else:
+                    self.logger.warning(f"Unsupported raw data format: {self.data_fetcher.raw_data_format}.")
 
         self.data_fetcher.scraper_tool.quit() if hasattr(self.data_fetcher, 'scraper_tool') else None
 
@@ -172,7 +174,7 @@ class Orchestrator:
 
         :param additional_data: Optional additional data to include in the parsing process, such as metadata or supplementary information.
 
-        :param raw_data_format: The format of the raw data (e.g., 'HTML', 'XML', 'full_HTML').
+        :param raw_data_format: The format of the raw data (e.g., 'HTML', 'XML').
 
         :param save_xml_output: Flag to indicate if the parsed XML output should be saved.
 
@@ -188,9 +190,12 @@ class Orchestrator:
             self.parser = XMLParser(self.open_data_repos_ontology, self.logger, full_document_read=full_document_read,
                                     llm_name=self.llm, use_portkey_for_gemini=use_portkey_for_gemini)
 
-        elif raw_data_format == "HTML" or raw_data_format == "full_HTML":
+        elif raw_data_format == "HTML":
             self.parser = HTMLParser(self.open_data_repos_ontology, self.logger, full_document_read=full_document_read,
                                      llm_name=self.llm, use_portkey_for_gemini=use_portkey_for_gemini)
+
+        else:
+            raise ValueError(f"Unsupported raw data format: {raw_data_format}")
 
         if isinstance(raw_data, dict):
             cont = raw_data.values()
@@ -361,12 +366,14 @@ class Orchestrator:
             if self.write_htmls_xmls and not isinstance(self.data_fetcher, DatabaseFetcher):
                 directory = html_xml_dir + self.publisher + '/'
                 self.logger.info(f"Raw Data is {self.raw_data_format}.")
-                if self.raw_data_format == "HTML" or self.raw_data_format == "full_HTML":
+                if self.raw_data_format == "HTML":
                     self.data_fetcher.html_page_source_download(directory)
                     self.logger.info(f"Raw HTML saved to: {directory}")
                 elif self.raw_data_format == "XML":
                     self.data_fetcher.download_xml(directory, raw_data)
                     self.logger.info(f"Raw XML saved in {directory} directory")
+                else:
+                    self.logger.warning(f"Unsupported raw data format: {self.raw_data_format}.")
 
             self.logger.info("Successfully fetched Raw content.")
 
@@ -399,14 +406,14 @@ class Orchestrator:
                     parsed_data.to_csv('staging_table/parsed_data_from_XML.csv',
                                        index=False) if save_staging_table else None
 
-            elif 'HTML' in self.raw_data_format:
+            elif self.raw_data_format=='HTML':
                 self.logger.info("Using HTMLParser to parse data.")
                 self.parser = HTMLParser(self.open_data_repos_ontology, self.logger,
                                          llm_name=self.llm,
                                          full_document_read=self.full_document_read,
                                          use_portkey_for_gemini=use_portkey_for_gemini)
                 parsed_data = self.parser.parse_data(raw_data, self.publisher, self.current_url,
-                                                     raw_data_format="full_HTML", prompt_name=prompt_name,
+                                                     raw_data_format=self.raw_data_format, prompt_name=prompt_name,
                                                      semantic_retrieval=semantic_retrieval)
                 parsed_data['source_url'] = url
                 parsed_data['pub_title'] = self.parser.extract_publication_title(raw_data)
@@ -916,7 +923,7 @@ class Orchestrator:
             urls = self.load_urls_from_input_file(input_file)
 
             # Process each URL and return results as a dictionary like source_url: DataFrame_of_data_links
-            results = self.process_urls(urls)
+            results = self.process_articles(urls)
 
             # return the union of all the results
             combined_df = pd.DataFrame()
