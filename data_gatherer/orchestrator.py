@@ -132,7 +132,7 @@ class Orchestrator:
 
         for src_url in urls:
             self.current_url = src_url
-            self.logger.info(f"Fetching data from URL: {src_url}")
+            self.logger.info(f"Setting target URL to: {src_url}")
             self.data_fetcher = self.data_fetcher.update_DataFetcher_settings(src_url,
                                                                               self.full_document_read,
                                                                               self.logger,
@@ -140,6 +140,7 @@ class Orchestrator:
                                                                               driver_path=driver_path,
                                                                               browser=browser,
                                                                               headless=headless)
+            self.logger.info(f"Fetching data from URL: {src_url}")
             raw_data[src_url] = self.data_fetcher.fetch_data(src_url)
 
             if write_htmls_xmls and not isinstance(self.data_fetcher, DatabaseFetcher):
@@ -148,10 +149,8 @@ class Orchestrator:
                 self.logger.info(f"Raw Data is {self.data_fetcher.raw_data_format}.")
                 if self.data_fetcher.raw_data_format == "HTML":
                     self.data_fetcher.html_page_source_download(directory)
-                    self.logger.info(f"Raw HTML saved to: {directory}")
                 elif self.data_fetcher.raw_data_format == "XML":
                     self.data_fetcher.download_xml(directory, raw_data[src_url])
-                    self.logger.info(f"Raw XML saved in {directory} directory")
                 else:
                     self.logger.warning(f"Unsupported raw data format: {self.data_fetcher.raw_data_format}.")
 

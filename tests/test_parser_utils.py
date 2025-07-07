@@ -83,7 +83,7 @@ def test_extract_title_from_xml():
     assert title == "Dual molecule targeting HDAC6 leads to intratumoral CD4+ cytotoxic lymphocytes recruitment through MHC-II upregulation on lung cancer cells"
     print('\n')
 
-def test_extract_title_from_html():
+def test_extract_title_from_html_PMC():
     logger = setup_logging("test_logger", log_file="../logs/scraper.log")
     parser = HTMLParser("open_bio_data_repos.json", logger, llm_name='gemini-2.0-flash')
     html_file_path = os.path.join('test_data', 'test_extract_1.html')
@@ -93,4 +93,36 @@ def test_extract_title_from_html():
     assert isinstance(title, str)
     assert len(title) > 0
     assert "Proteogenomic insights suggest druggable pathways in endometrial carcinoma" in title
+    print('\n')
+
+def test_extract_title_from_html_nature():
+    logger = setup_logging("test_logger", log_file="../logs/scraper.log")
+    parser = HTMLParser("open_bio_data_repos.json", logger, llm_name='gemini-2.0-flash')
+    html_file_path = os.path.join('test_data', 'Webscraper_fetch_1.html')
+    with open(html_file_path, 'rb') as f:
+        raw_html = f.read()
+    title = parser.extract_publication_title(raw_html)
+    assert isinstance(title, str)
+    assert "Defective N-glycosylation of IL6 induces metastasis and tyrosine kinase inhibitor resistance" in title
+    print('\n')
+
+def test_semantic_retrieve_from_corpus():
+    logger = setup_logging("test_logger", log_file="../logs/scraper.log")
+    parser = HTMLParser("open_bio_data_repos.json", logger, llm_name='gemini-2.0-flash')
+    html_file_path = os.path.join('test_data', 'Webscraper_fetch_1.html')
+    with open(html_file_path, 'rb') as f:
+        raw_html = f.read()
+    corpus = parser.extract_sections_from_html(raw_html)
+    top_k_sections = parser.semantic_retrieve_from_corpus(corpus, topk_docs_to_retrieve=3)
+    accession_ids = ['GSE269782', 'GSE31210', 'GSE106765', 'GSE60189', 'GSE59239', 'GSE122005', 'GSE38121', 'GSE71587',
+                     'GSE37699', 'PXD051771']
+    scores = [ 0.9393497109413147, 1.3575516939163208, 1.4186346530914307]
+    DAS_text = ".\n".join([item['text'] for item in top_k_sections])
+    assert isinstance(top_k_sections, list)
+    assert len(top_k_sections) == 3
+    assert all(isinstance(res, dict) for res in top_k_sections)
+    for acc_id in accession_ids:
+        assert acc_id in DAS_text
+    for sect_i, sect in enumerate(top_k_sections):
+        assert abs(sect['L2_distance'] - scores[sect_i]) < 0.01
     print('\n')
