@@ -1,12 +1,16 @@
 from data_gatherer.resources_loader import load_config
+from data_gatherer.retriever.base_retriever import BaseRetriever
 from lxml import etree as ET
 import re
+import os
 import json
 
-class xmlRetriever:
+
+class xmlRetriever(BaseRetriever):
     """
     Class to check the completeness of data sections in API responses.
     """
+
     def __init__(self, logger, publisher='PMC', retrieval_patterns_file='retrieval_patterns.json'):
         """
         Initializes the DataCompletenessChecker with the specified logger.
@@ -16,9 +20,9 @@ class xmlRetriever:
         :param publisher: The publisher to check for (default is 'PMC').
 
         """
+        super().__init__(publisher, retrieval_patterns_file)
         self.logger = logger
         self.publisher = publisher
-        self.retrieval_patterns = load_config(retrieval_patterns_file)
         self.css_selectors = self.retrieval_patterns[publisher]['css_selectors']
         self.xpaths = self.retrieval_patterns[publisher]['xpaths']
         self.xml_tags = self.retrieval_patterns[publisher]['xml_tags']
@@ -35,7 +39,7 @@ class xmlRetriever:
         return ns_map
 
     def is_xml_data_complete(self, raw_data, url,
-                             required_sections = ["data_availability_sections", "supplementary_data_sections"]) -> bool:
+                             required_sections=("data_availability_sections", "supplementary_data_sections")) -> bool:
         """
         Check if required sections are present in the raw_data.
         Return True if all required sections are present.
@@ -65,7 +69,8 @@ class xmlRetriever:
 
         target_sections = self.xml_tags
         if section_name not in target_sections:
-            self.logger.error(f"Invalid section name: {section_name}. Available sections: {list(target_sections.keys())}")
+            self.logger.error(
+                f"Invalid section name: {section_name}. Available sections: {list(target_sections.keys())}")
             raise ValueError(f"Invalid section name: {section_name}")
 
         return target_sections[section_name]
@@ -81,20 +86,21 @@ class xmlRetriever:
         :return: True if links are found, False otherwise.
         """
         ext_links = section.findall(".//ext-link", namespaces)
-        #uris = section.findall(".//uri", namespaces)
+        # uris = section.findall(".//uri", namespaces)
 
         media_links = section.findall(".//media", namespaces)
         xlink_hrefs = [m.get('{http://www.w3.org/1999/xlink}href') for m in media_links if
-                 m.get('{http://www.w3.org/1999/xlink}href')]
+                       m.get('{http://www.w3.org/1999/xlink}href')]
 
         self.logger.debug(f"Found {len(ext_links)} ext-links and {len(xlink_hrefs)} xlink:hrefs.")
-        return bool(ext_links or xlink_hrefs)  #or uris)
+        return bool(ext_links or xlink_hrefs)  # or uris)
 
     def url_to_publisher_domain(self, url):
         # Extract the domain name from the URL
-        if re.match(r'^https?://www\.ncbi\.nlm\.nih\.gov/pmc', url) or re.match(r'^https?://pmc\.ncbi\.nlm\.nih\.gov/', url):
+        if re.match(r'^https?://www\.ncbi\.nlm\.nih\.gov/pmc', url) or re.match(r'^https?://pmc\.ncbi\.nlm\.nih\.gov/',
+                                                                                url):
             return 'PMC'
-        match = re.match(r'^https?://(?:\w+\.)?([\w\d\-]+)\.\w+', url)
+        match = re.match(r'^https?://(?:\w+\.)?([\w\-]+)\.\w+', url)
         if match:
             domain = match.group(1)
             self.logger.info(f"Publisher: {domain}")
@@ -108,6 +114,8 @@ class xmlRetriever:
 
         :param section_name: str — name of the section to load.
 
+        :param publisher: str — name of the publisher to load patterns for (default is 'PMC').
+
         :return: str — XML tag patterns for the target section.
         """
 
@@ -120,7 +128,8 @@ class xmlRetriever:
                 return None
             else:
                 section_xml_tags_patterns = self.retrieval_patterns[self.publisher]['xml_tags']
-                self.logger.info(f"Section pattern keys for publisher {self.publisher}: {section_xml_tags_patterns.keys()}")
+                self.logger.info(
+                    f"Section pattern keys for publisher {self.publisher}: {section_xml_tags_patterns.keys()}")
                 self.logger.info(f"Section name: {section_name}")
                 if section_name in section_xml_tags_patterns.keys():
                     self.logger.info(f"Found section '{section_name}' in patterns for publisher '{self.publisher}'.")
@@ -133,7 +142,8 @@ class xmlRetriever:
                     return None
 
         else:
-            self.logger.warning(f"Publisher '{self.publisher}' not found in retrieval patterns. Using default patterns.")
+            self.logger.warning(
+                f"Publisher '{self.publisher}' not found in retrieval patterns. Using default patterns.")
 
     def extract_href_from_data_availability(self, api_xml):
         """
@@ -147,6 +157,8 @@ class xmlRetriever:
         # Namespace dictionary - adjust 'ns0' to match the XML if necessary
         self.logger.info(f"Function_call: extract_href_from_data_availability(api_xml)")
         namespaces = {'ns0': 'http://www.w3.org/1999/xlink'}
+
+        title = self.extract_publication_title(api_xml)
 
         # Find all sections with "data-availability"
         data_availability_sections = []
@@ -168,7 +180,8 @@ class xmlRetriever:
                 if uris is not None:
                     ext_links.extend(uris)
 
-                self.logger.info(f"Retrieved {len(ext_links)} ext-links in data availability section pattern {pattern}.")
+                self.logger.info(
+                    f"Retrieved {len(ext_links)} ext-links in data availability section pattern {pattern}.")
 
                 for link in ext_links:
                     # Extract href attribute
@@ -183,7 +196,7 @@ class xmlRetriever:
                     if href:
                         hrefs.append({
                             'href': href,
-                            'title': self.title,
+                            'title': title,
                             'link_text': link_text,
                             'surrounding_text': surrounding_text,
                             'source_section': 'data availability',
@@ -295,7 +308,9 @@ class xmlRetriever:
                     # Extract attributes from <supplementary-material>
                     content_type = supplementary_material_parent.get('content-type', 'Unknown content type')
 
-                    download_link = self.reconstruct_download_link(href, content_type, current_url_address) # this is not up to the retriever to reconstruct the download link, it will go inside parser
+                    download_link = self.reconstruct_download_link(href, content_type,
+                                                                   current_url_address)
+                    # this is not up to the retriever to reconstruct the download link, it will go inside parser
 
                     media_id = supplementary_material_parent.get('id', 'No ID')
 
@@ -410,3 +425,71 @@ class xmlRetriever:
         for ptr in self.load_patterns_for_tgt_section('data_availability_sections'):
             data_availability_sections.extend(api_xml.findall(ptr))
         return data_availability_sections
+
+    def has_target_section(self, raw_data, section_name: str) -> bool:
+        """
+        Check if the target section (data availability or supplementary data) exists in the raw data.
+
+        :param raw_data: Raw XML data.
+
+        :param section_name: Name of the section to check.
+
+        :return: True if the section is found with relevant links, False otherwise.
+        """
+
+        if raw_data is None:
+            self.logger.info("No raw data to check for sections.")
+            return False
+
+        self.logger.debug(f"type of raw_data: {type(raw_data)}, raw_data: {raw_data}")
+
+        self.logger.info(f"----Checking for {section_name} section in raw data.")
+        section_patterns = self.load_target_sections_ptrs(section_name)
+        self.logger.debug(f"Section patterns: {section_patterns}")
+        namespaces = self.extract_namespaces(raw_data)
+        self.logger.debug(f"Namespaces: {namespaces}")
+
+        for pattern in section_patterns:
+            self.logger.debug(f"Checking pattern: {pattern}")
+            sections = raw_data.findall(pattern, namespaces=namespaces)
+            if sections:
+                for section in sections:
+                    self.logger.info(f"----Found section: {ET.tostring(section, encoding='unicode')}")
+                    if self.has_links_in_section(section, namespaces):
+                        return True
+
+        return False
+
+    def extract_publication_title(self, xml_data):
+        """
+        Extracts the publication title from the XML data.
+
+        :param xml_data: lxml.etree.Element — parsed XML root.
+
+        :return: str — publication title or 'No title found'.
+        """
+        self.logger.info("Extracting publication title from XML data.")
+        title_element = xml_data.find(".//article-title")
+        if title_element is not None and title_element.text:
+            title = title_element.text.strip()
+            self.logger.info(f"Publication title found: {title}")
+            return title
+        else:
+            self.logger.warning("No publication title found in the XML data.")
+            return "No title found"
+
+    def reconstruct_download_link(self, href, content_type, current_url_address):
+        download_link = None
+        # match the digits of the PMC ID (after PMC) in the URL
+        self.logger.debug(f"Function_call: reconstruct_download_link({href}, {content_type}, {current_url_address})")
+        if self.publisher == 'PMC':
+            pmcid = re.search(r'PMC(\d+)', current_url_address, re.IGNORECASE).group(1)
+            self.logger.debug(
+                f"Inputs to reconstruct_download_link: {href}, {content_type}, {current_url_address}, {pmcid}")
+            if content_type == 'local-data':
+                download_link = "https://pmc.ncbi.nlm.nih.gov/articles/instance/" + pmcid + '/bin/' + href
+            elif content_type == 'media p':
+                file_name = os.path.basename(href)
+                self.logger.debug(f"Extracted file name: {file_name} from href: {href}")
+                download_link = "https://www.ncbi.nlm.nih.gov/pmc" + href
+        return download_link

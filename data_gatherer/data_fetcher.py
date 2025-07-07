@@ -8,10 +8,9 @@ import time
 import requests
 from lxml import etree as ET
 from data_gatherer.selenium_setup import create_driver
-from bs4 import BeautifulSoup, Comment
+from bs4 import BeautifulSoup
 from urllib.parse import urlparse
 import pandas as pd
-from data_gatherer.resources_loader import load_config
 from data_gatherer.retriever.xml_retriever import xmlRetriever
 
 # Abstract base class for fetching data
@@ -66,13 +65,14 @@ class DataFetcher(ABC):
         """
         Extracts the root domain from a given URL.
         """
-        match = re.match('(https?:\/\/[\w\.]+)\/', url)
+        self.logger.debug(f"Function call url_to_publisher_root: {url}")
+        match = re.match('https?://([\w\.]+)/', url, re.IGNORECASE)
         if match:
             root = match.group(1)
             self.logger.info(f"Root: {root}")
             return root
         else:
-            self.logger.warning("No valid domain extracted from URL. This may cause issues with data gathering.")
+            self.logger.warning("No valid root extracted from URL. This may cause issues with data gathering.")
             return 'Unknown Publisher'
 
     def url_to_pmcid(self, url):
@@ -140,7 +140,7 @@ class DataFetcher(ABC):
             self.logger.info(f"URL {url} found in DataFrame. Using DatabaseFetcher.")
             return DatabaseFetcher(logger, self.raw_HTML_data_filepath)
 
-        if API is not None and not(entire_doc_model):
+        if API is not None:
         # Initialize the corresponding API client, from API_supported_url_patterns
             self.logger.info(f"Initializing EntrezFetcher({'requests', API, 'self.config'})")
             return EntrezFetcher(requests, API, logger)
@@ -243,6 +243,7 @@ class WebScraper(DataFetcher):
         self.raw_data_format = 'HTML'  # Default format for web scraping
         self.scraper_tool.get(url)
         self.simulate_user_scroll(delay)
+        self.title = self.extract_publication_title()
         return self.scraper_tool.page_source
 
     def remove_cookie_patterns(self, html: str):
@@ -309,10 +310,15 @@ class WebScraper(DataFetcher):
 
         """
         publication_name_pointer = self.scraper_tool.find_element(By.TAG_NAME, 'title')
-        publication_name = re.sub("\n+", "", (publication_name_pointer.get_attribute("text")))
-        publication_name = re.sub("^\s+", "", publication_name)
-        self.logger.info(f"Paper name: {publication_name}")
-        return publication_name
+        if publication_name_pointer is not None and publication_name_pointer.text:
+            publication_name = publication_name_pointer.text
+            publication_name = re.sub("\n+", "", publication_name)
+            publication_name = re.sub("^\s+", "", publication_name)
+            self.logger.info(f"Paper name: {publication_name}")
+            return publication_name
+        else:
+            self.logger.warning("Publication name not found in the page title.")
+            return "No title found"
 
     def get_PMCID_from_pubmed_html(self, html):
         soup = BeautifulSoup(html, 'html.parser')
@@ -434,7 +440,7 @@ class DatabaseFetcher(DataFetcher):
 # Implementation for fetching data from an API
 class EntrezFetcher(DataFetcher):
     """
-    Class for fetching data from an API using the requests library.
+    Class for fetching data from an API using the requests library for ncbi e-utilities API.
     """
     def __init__(self, api_client, API, logger, local_fetch_fp=None):
         """
@@ -536,24 +542,6 @@ class EntrezFetcher(DataFetcher):
         # Write the XML data to the file
         ET.ElementTree(api_data).write(fn, pretty_print=True, xml_declaration=True, encoding="UTF-8")
         self.logger.info(f"Downloaded XML file: {fn}")
-
-    def extract_publication_title(self, api_data):
-        """
-        Extracts the article title and the surname of the first author from the XML content.
-
-        :param xml_content: The XML content as a string.
-
-        :return: A tuple containing the article title and the first author's surname.
-        """
-        try:
-            # Extract the article title
-            title = api_data.find(".//title-group/article-title")
-            article_title = title.text.strip() if title is not None else None
-            return article_title
-
-        except ET.XMLSyntaxError as e:
-            print(f"Error parsing XML: {e}")
-            return None
 
 class DataCompletenessChecker:
     """

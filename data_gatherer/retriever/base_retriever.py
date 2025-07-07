@@ -8,16 +8,14 @@ class BaseRetriever(ABC):
     Base class for all retrievers.
     """
 
-    def __init__(self, publisher='general'):
+    def __init__(self, publisher='general', retrieval_patterns_file='retrieval_patterns.json'):
         """
         Initialize the BaseRetriever with retrieval patterns.
 
         :param retrieval_patterns_file: Path to the file containing retrieval patterns.
         """
-        self.retrieval_patterns = load_config('retrieval_patterns.json')
-        self.css_selectors = self.retrieval_patterns[publisher]['css_selectors']
-        self.xpaths = self.retrieval_patterns[publisher]['xpaths']
-        self.xml_tags = self.retrieval_patterns[publisher]['xml_tags']
+        self.publisher = publisher
+        self.retrieval_patterns = load_config(retrieval_patterns_file)
         self.bad_patterns = self.retrieval_patterns[publisher].get('bad_patterns', [])
 
     def update_class_patterns(self, publisher):
@@ -28,40 +26,6 @@ class BaseRetriever(ABC):
             self.bad_patterns.extend(patterns['bad_patterns'])
         if 'xml_tags' in patterns.keys():
             self.xml_tags.update(patterns['xml_tags'])
-
-    def has_target_section(self, raw_data, section_name: str) -> bool:
-        """
-        Check if the target section (data availability or supplementary data) exists in the raw data.
-
-        :param raw_data: Raw XML data.
-
-        :param section_name: Name of the section to check.
-
-        :return: True if the section is found with relevant links, False otherwise.
-        """
-
-        if raw_data is None:
-            self.logger.info("No raw data to check for sections.")
-            return False
-
-        self.logger.debug(f"type of raw_data: {type(raw_data)}, raw_data: {raw_data}")
-
-        self.logger.info(f"----Checking for {section_name} section in raw data.")
-        section_patterns = self.load_target_sections_ptrs(section_name)
-        self.logger.debug(f"Section patterns: {section_patterns}")
-        namespaces = self.extract_namespaces(raw_data)
-        self.logger.debug(f"Namespaces: {namespaces}")
-
-        for pattern in section_patterns:
-            self.logger.debug(f"Checking pattern: {pattern}")
-            sections = raw_data.findall(pattern, namespaces=namespaces)
-            if sections:
-                for section in sections:
-                    self.logger.info(f"----Found section: {ET.tostring(section, encoding='unicode')}")
-                    if self.has_links_in_section(section, namespaces):
-                        return True
-
-        return False
 
     def load_target_sections_ptrs(self, section_name):
         """
