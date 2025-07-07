@@ -20,6 +20,7 @@ from data_gatherer.retriever.base_retriever import BaseRetriever
 from data_gatherer.retriever.embeddings_retriever import EmbeddingsRetriever
 from data_gatherer.retriever.xml_retriever import xmlRetriever
 from data_gatherer.retriever.html_retriever import htmlRetriever
+from data_gatherer.env import PORTKEY_GATEWAY_URL, PORTKEY_API_KEY, PORTKEY_ROUTE
 
 dataset_response_schema_gpt = {
     "type": "json_schema",
@@ -199,14 +200,12 @@ class LLMParser(ABC):
         self.full_document_read = full_document_read
         self.llm_name = llm_name
         self.use_portkey_for_gemini = use_portkey_for_gemini
-        self.portkey_api_key = os.environ.get("PORTKEY_API_KEY")
-        self.portkey_route = os.environ.get("PORTKEY_ROUTE")
 
         if self.use_portkey_for_gemini:
             self.portkey = Portkey(
-                api_key=self.portkey_api_key,
-                virtual_key=self.portkey_route,
-                base_url="https://ai-gateway.apps.cloud.rt.nyu.edu/v1"
+                api_key=PORTKEY_API_KEY,
+                virtual_key=PORTKEY_ROUTE,
+                base_url=PORTKEY_GATEWAY_URL,
             )
 
         if llm_name == 'gemma2:9b':
@@ -527,8 +526,8 @@ class LLMParser(ABC):
                     }
                     try:
                         response = self.portkey.chat.completions.create(
-                            api_key=self.portkey_api_key,
-                            route=self.portkey_route,
+                            api_key=PORTKEY_API_KEY,
+                            route=PORTKEY_ROUTE,
                             **portkey_payload
                         )
                         if self.full_document_read:
@@ -1225,8 +1224,6 @@ class LLMClient:
         self.logger = logger or logging.getLogger(__name__)
         self.logger.info(f"Initializing LLMClient with model: {self.model}")
         self.use_portkey_for_gemini = use_portkey_for_gemini
-        self.portkey_api_key = os.environ.get("PORTKEY_API_KEY")
-        self.portkey_route = os.environ.get("PORTKEY_ROUTE")
         self._initialize_client(model)
         self.save_prompts = save_prompts
         self.prompt_manager = PromptManager("data_gatherer/prompts/prompt_templates/metadata_prompts", self.logger)
@@ -1239,9 +1236,9 @@ class LLMClient:
             self.client = genai.GenerativeModel(model)
         elif model.startswith('gemini') and self.use_portkey_for_gemini:
             self.portkey = Portkey(
-                api_key=self.portkey_api_key,
-                virtual_key=self.portkey_route,
-                base_url="https://ai-gateway.apps.cloud.rt.nyu.edu/v1"
+                api_key=PORTKEY_API_KEY,
+                virtual_key=PORTKEY_ROUTE,
+                base_url=PORTKEY_GATEWAY_URL,
             )
             self.client = self.portkey
         else:
@@ -1321,8 +1318,8 @@ class LLMClient:
 
         try:
             response = self.portkey.chat.completions.create(
-                api_key=self.portkey_api_key,
-                route=self.portkey_route,
+                api_key=PORTKEY_API_KEY,
+                route=PORTKEY_ROUTE,
                 headers={"Content-Type": "application/json"},
                 **portkey_payload
             )
