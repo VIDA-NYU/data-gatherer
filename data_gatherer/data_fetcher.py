@@ -19,7 +19,6 @@ class DataFetcher(ABC):
                  raw_HTML_data_filepath=None):
         self.dataframe_fetch = True  # Flag to indicate dataframe fetch supported or not
         self.raw_HTML_data_filepath = raw_HTML_data_filepath
-        self.fetch_source = src
         self.logger = logger
         self.logger.warning(
             "DataFetcher raw_HTML_data_filepath set no None") if raw_HTML_data_filepath is None else None
@@ -140,10 +139,9 @@ class DataFetcher(ABC):
             self.logger.info(f"URL {url} found in DataFrame. Using DatabaseFetcher.")
             return DatabaseFetcher(logger, self.raw_HTML_data_filepath)
 
-        if API is not None:
-        # Initialize the corresponding API client, from API_supported_url_patterns
-            self.logger.info(f"Initializing EntrezFetcher({'requests', API, 'self.config'})")
-            return EntrezFetcher(requests, API, logger)
+        if API == 'PMC':
+            self.logger.info(f"Initializing EntrezFetcher({'requests', 'self.config'})")
+            return EntrezFetcher(requests, logger)
 
         # Reuse existing driver if we already have one
         if isinstance(self, WebScraper) and self.scraper_tool is not None:
@@ -186,8 +184,7 @@ class DataFetcher(ABC):
             match = re.match(ptr, url)
             if match:
                 self.logger.debug(f"URL detected as {src}.")
-                API = f"{src}_API"
-                return API
+                return src
         self.logger.debug("No API pattern matched.")
 
     def download_file_from_url(self, url, output_root="output/suppl_files", paper_id=None):
@@ -411,9 +408,8 @@ class DatabaseFetcher(DataFetcher):
     Class for fetching data from a DataFrame.
     """
     def __init__(self, logger, raw_HTML_data_filepath):
-        super().__init__(logger)
-        self.data_file = raw_HTML_data_filepath
-        self.dataframe = pd.read_parquet(self.data_file)
+        super().__init__(logger, src='DatabaseFetcher', raw_HTML_data_filepath=raw_HTML_data_filepath)
+        self.dataframe = pd.read_parquet(self.raw_HTML_data_filepath)
 
     def fetch_data(self, url_key, retries=3, delay=2):
         """
@@ -428,8 +424,7 @@ class DatabaseFetcher(DataFetcher):
         self.logger.info(f"Fetching data for {key}")
         self.logger.debug(f"Data file: {self.dataframe.columns}")
         self.logger.debug(f"Data file: {self.dataframe[self.dataframe['publication'] == key]}")
-        self.logger.info(f"Fetching data from {self.data_file}")
-        self.fetch_source = 'Local_data'
+        self.logger.info(f"Fetching data from {self.raw_HTML_data_filepath}")
         for i, row in self.dataframe[self.dataframe['publication'] == key].iterrows():
             self.raw_data_format = row['format']
             return row['raw_cont']
@@ -449,7 +444,7 @@ class EntrezFetcher(DataFetcher):
     """
     Class for fetching data from an API using the requests library for ncbi e-utilities API.
     """
-    def __init__(self, api_client, API, logger, local_fetch_fp=None):
+    def __init__(self, api_client, logger, local_fetch_fp=None):
         """
         Initializes the EntrezFetcher with the specified API client.
 
@@ -461,14 +456,10 @@ class EntrezFetcher(DataFetcher):
         :param logger: The logger instance for logging messages.
 
         """
-        super().__init__(logger, src=API, raw_HTML_data_filepath=local_fetch_fp)
+        super().__init__(logger, src='EntrezFetcher', raw_HTML_data_filepath=local_fetch_fp)
         self.api_client = api_client.Session()
-
-        API_base_url = {
-            'PMC_API': 'https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pmc&id=__PMCID__&retmode=xml'
-        }
-
-        self.base = API_base_url[API]
+        self.raw_data_format = 'XML'
+        self.base = 'https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pmc&id=__PMCID__&retmode=xml'
         self.publisher = 'PMC'
 
 
@@ -487,7 +478,6 @@ class EntrezFetcher(DataFetcher):
             # Construct the API call using the PMC ID
             api_call = re.sub('__PMCID__', PMCID, self.base)
             self.logger.info(f"Fetching data from request: {api_call}")
-            self.raw_data_format = 'XML'  # Default format for API calls
 
             # Retry logic for API calls
             for attempt in range(retries):

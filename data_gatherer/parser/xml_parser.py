@@ -110,8 +110,8 @@ class XMLParser(LLMParser):
         try:
             # Extract the article title
             title = api_data.find(".//title-group/article-title")
-            article_title = title.text.strip() if title is not None else None
-            return article_title
+            pub_title = title.text.strip() if title is not None else None
+            return pub_title
 
         except etree.XMLSyntaxError as e:
             self.logger.error(f"Error parsing XML: {e}")
@@ -232,7 +232,7 @@ class XMLParser(LLMParser):
                 if 'dataset_identifier' in out_df.columns and 'download_link' in out_df.columns:
                     out_df = out_df.drop_duplicates(subset=['download_link', 'dataset_identifier'], keep='first')
 
-                out_df['article_title'] = self.title
+                out_df['pub_title'] = self.title
 
                 return out_df
 
@@ -277,7 +277,7 @@ class XMLParser(LLMParser):
                     out_df = out_df.drop_duplicates(subset=['download_link'], keep='first')
 
                 out_df['source_url'] = current_url_address
-                out_df['article_title'] = self.title
+                out_df['pub_title'] = self.title
 
                 return out_df
 

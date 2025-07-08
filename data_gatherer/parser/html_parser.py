@@ -1,11 +1,11 @@
 from data_gatherer.parser.base_parser import *
 from data_gatherer.retriever.html_retriever import htmlRetriever
-import os
 import re
 import logging
 import pandas as pd
 from bs4 import BeautifulSoup, Comment, NavigableString, CData
 from lxml import html
+
 
 class MyBeautifulSoup(BeautifulSoup):
     # this function will extract text from the HTML, by also keeping the links where they appear in the HTML
@@ -59,12 +59,15 @@ class MyBeautifulSoup(BeautifulSoup):
     getText = get_text
     text = property(get_text)
 
+
 class HTMLParser(LLMParser):
     """
     Custom HTML parser that has only support for HTML or HTML-like input
     """
+
     def __init__(self, open_data_repos_ontology, logger, log_file_override=None, full_document_read=True,
-                 prompt_dir="data_gatherer/prompts/prompt_templates", response_file="data_gatherer/prompts/LLMs_responses_cache.json",
+                 prompt_dir="data_gatherer/prompts/prompt_templates",
+                 response_file="data_gatherer/prompts/LLMs_responses_cache.json",
                  llm_name=None, save_dynamic_prompts=False, save_responses_to_cache=False, use_cached_responses=False,
                  use_portkey_for_gemini=True):
 
@@ -77,7 +80,8 @@ class HTMLParser(LLMParser):
 
         self.logger = logger
         self.logger.info("Initializing htmlRetriever")
-        self.retriever = htmlRetriever(logger, 'general', retrieval_patterns_file='retrieval_patterns.json', headers=None)
+        self.retriever = htmlRetriever(logger, 'general', retrieval_patterns_file='retrieval_patterns.json',
+                                       headers=None)
 
     def normalize_HTML(self, html, keep_tags=None):
         """
@@ -178,7 +182,7 @@ class HTMLParser(LLMParser):
         Convert Selenium WebElement objects to strings and keep existing string links unchanged.
         """
         normalized_links = {}
-        for link, cls  in links_raw_dict.items():
+        for link, cls in links_raw_dict.items():
             if isinstance(link, str):
                 normalized_links[link] = cls
             else:
@@ -189,7 +193,6 @@ class HTMLParser(LLMParser):
                 except Exception as e:
                     self.logger.error(f"Error getting href attribute from WebElement: {e}")
         return normalized_links
-
 
     def extract_paragraphs_from_html(self, html_content: str) -> list[dict]:
         """
@@ -230,8 +233,8 @@ class HTMLParser(LLMParser):
         """
         soup = BeautifulSoup(html_content, "html.parser")
         sections = []
-        for section in soup.find_all(['section']): # 'div'
-            if section.find(['section']): # 'div'
+        for section in soup.find_all(['section']):  # 'div'
+            if section.find(['section']):  # 'div'
                 continue
             section_title = section.find(['h1', 'h2', 'h3', 'h4', 'h5', 'h6'])
             section_title_text = section_title.get_text(strip=True) if section_title else "No Title"
@@ -339,18 +342,17 @@ class HTMLParser(LLMParser):
         """
         out_df = None
         # Check if api_data is a string, and convert to XML if needed
-        self.logger.info(f"Function call: parse_data(api_data({type(api_data)}), {publisher}, {current_url_address}, "
+        self.logger.info(f"Function call: parse_data(api_data(html_str, {publisher}, {current_url_address}, "
                          f"additional_data, {raw_data_format})")
         self.publisher = publisher
 
+        supplementary_material_links = self.extract_href_from_html_supplementary_material(api_data, current_url_address)
+
+        preprocessed_data = self.normalize_HTML(api_data)
+        self.logger.debug(f"Preprocessed data: {preprocessed_data}")
+
         if self.full_document_read:
             self.logger.info(f"Extracting links from full HTML content.")
-            # preprocess the content to get only elements that do not change over different sessions
-            supplementary_material_links = self.extract_href_from_html_supplementary_material(api_data, current_url_address)
-
-            preprocessed_data = self.normalize_HTML(api_data)
-
-            self.logger.debug(f"Preprocessed data: {preprocessed_data}")
 
             # Extract dataset links from the entire text
             augmented_dataset_links = self.extract_datasets_info_from_content(preprocessed_data,
@@ -368,9 +370,6 @@ class HTMLParser(LLMParser):
 
         else:
             self.logger.info(f"Chunking the HTML content for the parsing step.")
-            supplementary_material_links = self.extract_href_from_html_supplementary_material(api_data,
-                                                                                                  current_url_address)
-            preprocessed_data = self.normalize_HTML(api_data)
 
             # Extract dataset links from the entire text
             data_availability_elements = self.retriever.get_data_availability_elements_from_webpage(preprocessed_data)
@@ -409,7 +408,7 @@ class HTMLParser(LLMParser):
             out_df = out_df.drop_duplicates(subset=['download_link'], keep='first')
 
         out_df['source_url'] = current_url_address
-        out_df['article_title'] = self.retriever.extract_publication_title(preprocessed_data)
+        out_df['pub_title'] = self.retriever.extract_publication_title(preprocessed_data)
 
         return out_df
 
@@ -465,14 +464,17 @@ class HTMLParser(LLMParser):
             }
 
             if link_data['section_class'] == 'ref-list font-sm':
-                self.logger.debug(f"Skipping link with section_class 'ref-list font-sm', likely to be a reference list.")
+                self.logger.debug(
+                    f"Skipping link with section_class 'ref-list font-sm', likely to be a reference list.")
                 continue
 
             #if 'doi.org' in link_data['link'] or 'scholar.google.com' in link_data['link']: ############ Same as above
             #    continue
 
-            link_data['download_link'] = self.reconstruct_download_link(href, link_data['section_class'], current_url_address)
-            link_data['file_extension'] = self.extract_file_extension(link_data['download_link']) if link_data['download_link'] is not None else None
+            link_data['download_link'] = self.reconstruct_download_link(href, link_data['section_class'],
+                                                                        current_url_address)
+            link_data['file_extension'] = self.extract_file_extension(link_data['download_link']) if link_data[
+                                                                                                         'download_link'] is not None else None
 
             # Merge anchor attributes (prefix keys to avoid collision)
             for attr_key, attr_value in anchor_attributes.items():
