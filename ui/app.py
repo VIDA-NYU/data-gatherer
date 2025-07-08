@@ -11,6 +11,14 @@ linux = os.path.exists('/.dockerenv')
 
 st.set_page_config(page_title="Data Gatherer", layout="wide")
 
+st.markdown("""
+    <style>
+    [data-testid="stExpander"] p {
+        font-size: 20px !important;  /* Change this to desired size */
+    }
+    </style>
+""", unsafe_allow_html=True)
+
 # --- PARAMETER SELECTION UI ---
 st.sidebar.header("⚙️ Extraction Settings")
 
