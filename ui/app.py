@@ -17,20 +17,24 @@ st.sidebar.header("⚙️ Extraction Settings")
 MODEL_OPTIONS = [
     "gemini-1.5-flash", "gemini-1.5-pro", "gemini-2.0-flash-exp", "gemini-2.0-flash", "gpt-4o", "gpt-4o-mini"
 ]
-PROMPT_OPTIONS = [
-    'GEMINI_from_full_input_Examples_4', 'GPT_from_full_input_Examples', 'retrieve_datasets_simple_JSON',
-    'retrieve_datasets_simple_JSON_gemini'
-]
-METADATA_PROMPT_OPTIONS = [
-    'gpt_metadata_extract', 'gemini_metadata_extract', 'portkey_gemini_metadata_extract'
-]
+PROMPT_MODEL_OPTIONS = {
+    'FDR': 'GPT_from_full_input_Examples',
+    'RTR': 'retrieve_datasets_simple_JSON',
+}
+
+metadata_prompt_name = 'portkey_gemini_metadata_extract'
 
 model_name = st.sidebar.selectbox("Model", MODEL_OPTIONS, index=MODEL_OPTIONS.index('gemini-2.0-flash'))
-prompt_name = st.sidebar.selectbox("Prompt", PROMPT_OPTIONS, index=PROMPT_OPTIONS.index('GPT_from_full_input_Examples'))
-metadata_prompt_name = st.sidebar.selectbox("Metadata Prompt", METADATA_PROMPT_OPTIONS, index=METADATA_PROMPT_OPTIONS.index('portkey_gemini_metadata_extract'))
-use_portkey = st.sidebar.checkbox("Use Portkey", value=True)
-full_document_read = st.sidebar.checkbox("Full Document Read", value=True)
-semantic_retrieval = st.sidebar.checkbox("Semantic RTR", value=False)
+use_portkey = True
+
+extraction_mode = st.sidebar.radio(
+    "Extraction Mode",
+    options=["Full Document Read", "Retrieve Then Read"],
+    index=0
+)
+
+full_document_read = extraction_mode == "Full Document Read"
+prompt_name = PROMPT_MODEL_OPTIONS['FDR'] if full_document_read else PROMPT_MODEL_OPTIONS['RTR']
 
 # Load environment variables from .env file
 load_dotenv()
@@ -55,7 +59,7 @@ if st.button("🚀 Run Extraction"):
 
             results = orch.process_articles(
                 pmcids, driver_path=driver_path, use_portkey_for_gemini=use_portkey, prompt_name=prompt_name,
-                semantic_retrieval=semantic_retrieval
+                semantic_retrieval=True
             )
 
             st.success("Extraction complete.")
@@ -223,52 +227,6 @@ if st.button("🚀 Run Extraction"):
                                         st.warning("No data preview available.")
                                 except Exception as e:
                                     st.error(f"Error fetching metadata: {e}")
-
-                ## --- Excel summary sheet ---
-                #file_exts_table = file_exts.copy()
-                #repos_table = repos.copy()
-                #supp_table = supp_df.rename(columns={"download_link": "Download Link", "description": "Description"})
-                #avail_table = avail_df.rename(columns={
-                ##    "data_repository": "Repository",
-                #    "dataset_identifier": "Dataset Identifier",
-                #    "dataset_webpage": "Dataset Webpage"
-                #})
-                #file_exts_table = file_exts.rename(columns={"index": "File Type"})
-                #summary_sections = [
-                #    ("Supplementary File Types", file_exts_table),
-                #    ("Available Data Repositories", repos_table),
-                #    ("Supplementary Files Table", supp_table),
-                #    ("Available Data Table", avail_table)
-                #]
-                #excel_tabs[f"{pmcid}_summary"] = summary_sections
-
-                try:
-                    for j, data_item in files_with_repo.iterrows():
-                        item = orch.get_data_preview(data_item, interactive=False, return_metadata=True,
-                                                     write_raw_metadata=False,
-                                                     use_portkey_for_gemini=use_portkey,
-                                                     prompt_name=metadata_prompt_name)[0]
-
-                        display_item = None
-                        if isinstance(item, dict):
-                            unwanted = {'', 'na', 'n/a', 'nan', 'unavailable', 'none', '0'}
-                            pairs = [
-                                (k, v) for k, v in item.items()
-                                if str(v).strip().lower() not in unwanted and str(v).strip() != ''
-                            ]
-                            display_item = pd.DataFrame(pairs, columns=["Field", "Value"])
-                            display_item['Value'] = display_item['Value'].astype(str)
-                            display_item = display_item[display_item["Value"].astype(str).str.strip() != ""]
-
-                        if display_item is not None and not display_item.empty:
-                            sheet_name = f"{pmcid}_meta_{data_item['dataset_identifier']}"
-                            invalid_chars = set(r'[]:*?/\\')
-                            sanitized = ''.join('_' if c in invalid_chars else c for c in str(sheet_name))
-                            sanitized = sanitized[:31]
-                            excel_tabs[sanitized] = display_item
-
-                except Exception as e:
-                    st.error(f"Error fetching metadata: {e}")
 
             # --- Combine all supplementary and dataset rows for summary tabs ---
             if all_supp_rows:
