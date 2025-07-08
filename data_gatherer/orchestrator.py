@@ -1,6 +1,5 @@
 from data_gatherer.logger_setup import setup_logging
 from data_gatherer.data_fetcher import *
-from data_gatherer.parser.base_parser import *
 from data_gatherer.parser.html_parser import *
 from data_gatherer.parser.xml_parser import *
 from data_gatherer.classifier import LLMClassifier
@@ -22,10 +21,10 @@ class Orchestrator:
     """
 
     def __init__(self, llm_name='gpt-4o-mini', process_entire_document=False, log_file_override=None,
-                 write_htmls_xmls=False, html_xml_dir='tmp/html_xmls/', skip_unstructured_files=False,
+                 write_htmls_xmls=False, html_xml_dir='tmp/html_xmls/', full_output_file='output/result.csv',
                  download_data_for_description_generation=False, data_resource_preview=False,
-                 download_previewed_data_resources=False, full_output_file='output/result.csv', log_level=logging.INFO,
-                 clear_previous_logs=True, retrieval_patterns_file='retrieval_patterns.json'
+                 download_previewed_data_resources=False, log_level=logging.INFO, clear_previous_logs=True,
+                  retrieval_patterns_file='retrieval_patterns.json'
                  ):
         """
         Initializes the Orchestrator with the given configuration file and sets up logging.
@@ -61,8 +60,6 @@ class Orchestrator:
         """
 
         self.open_data_repos_ontology = load_config('open_bio_data_repos.json')
-        self.skip_unstructured_files = skip_unstructured_files
-        self.skip_file_extensions = []
 
         log_file = log_file_override or 'logs/data_gatherer.log'
         self.logger = setup_logging('orchestrator', log_file, level=log_level,
@@ -314,8 +311,7 @@ class Orchestrator:
         self.data_fetcher = self.data_fetcher.update_DataFetcher_settings(url, self.full_document_read, self.logger,
                                                                           driver_path=driver_path, browser=browser,
                                                                           headless=headless)
-        # Step 1: Use DataFetcher (WebScraper or EntrezFetcher) to fetch raw data
-        self.logger.debug(f"data_fetcher.fetch_source = {self.data_fetcher.fetch_source}")
+        self.logger.info(f"Type of data_fetcher {self.data_fetcher.__class__.__name__}")
 
         try:
             self.logger.debug("Fetching Raw content...")
@@ -325,58 +321,50 @@ class Orchestrator:
 
             # if model processes the entire document, fetch the entire document and go to the parsing step
             if self.full_document_read:
-                self.logger.info("Fetching entire document for processing.")
                 raw_data = self.data_fetcher.fetch_data(url)
                 self.raw_data_format = self.data_fetcher.raw_data_format
-                raw_data = self.data_fetcher.remove_cookie_patterns(raw_data) if self.raw_data_format == "HTML" else raw_data
 
             # if model processes selected parts of the document, fetch the relevant sections and go to the parsing step
             else:
 
-                if "API" in self.data_fetcher.fetch_source:
-                    self.logger.debug(f"Using {self.data_fetcher.fetch_source} to fetch data.")
-                    self.raw_data_format = "XML"
-                    self.search_method = 'api'
-                elif isinstance(self.data_fetcher, DatabaseFetcher):
-                    self.raw_data_format = self.data_fetcher.raw_data_format
-                else:
-                    self.logger.debug("Using WebScraper to fetch data.")
-                    self.raw_data_format = "HTML"
-
                 raw_data = self.data_fetcher.fetch_data(url)
-                self.logger.info(f"Raw data fetched from source: {self.data_fetcher.fetch_source}")
+                self.raw_data_format = self.data_fetcher.raw_data_format
 
-                if "API" not in self.data_fetcher.fetch_source:
-                    raw_data = self.data_fetcher.scraper_tool.page_source
-
-                elif not self.data_checker.is_xml_data_complete(raw_data, url):
-                    self.raw_data_format = "HTML"
+            if self.raw_data_format == "XML":
+                if not self.data_checker.is_xml_data_complete(raw_data, url):
                     self.logger.info(f"Fallback to HTML data fetcher for {url}.")
+                    self.raw_data_format = "HTML"
                     self.data_fetcher = self.data_fetcher.update_DataFetcher_settings(url,
-                                                                                      self.full_document_read,
-                                                                                      self.logger,
-                                                                                      HTML_fallback=True,
-                                                                                      driver_path=driver_path,
-                                                                                      browser=browser,
-                                                                                      headless=headless)
+                                                                                        self.full_document_read,
+                                                                                        self.logger,
+                                                                                        HTML_fallback=True,
+                                                                                        driver_path=driver_path,
+                                                                                        browser=browser,
+                                                                                        headless=headless)
                     raw_data = self.data_fetcher.fetch_data(url)
-                    raw_data = self.data_fetcher.remove_cookie_patterns(raw_data)
+
+                else:
+                    self.logger.info(f"XML data is complete for {url}.")
+
+            raw_data = self.data_fetcher.remove_cookie_patterns(raw_data) if self.raw_data_format == "HTML" else raw_data
+
+            self.logger.info(f"Raw {self.raw_data_format} data fetched from {url} is ready for parsing.")
 
             if self.write_htmls_xmls and not isinstance(self.data_fetcher, DatabaseFetcher):
                 directory = html_xml_dir + self.publisher + '/'
                 self.logger.info(f"Raw Data is {self.raw_data_format}.")
-                if self.raw_data_format == "HTML":
+                if isinstance(self.data_fetcher, WebScraper):
                     self.data_fetcher.html_page_source_download(directory)
                     self.logger.info(f"Raw HTML saved to: {directory}")
-                elif self.raw_data_format == "XML":
+                elif isinstance(self.data_fetcher, EntrezFetcher):
                     self.data_fetcher.download_xml(directory, raw_data)
                     self.logger.info(f"Raw XML saved in {directory} directory")
                 else:
                     self.logger.warning(f"Unsupported raw data format: {self.raw_data_format}.")
+            else:
+                self.logger.info("Skipping raw HTML/XML saving.")
 
-            self.logger.info("Successfully fetched Raw content.")
-
-            # Step 2: Use HTML/XMLParser to parse and extract HTML elements and rule-based matches
+            # Step 2: Use HTMLParser/XMLParser
             if self.raw_data_format == "XML" and raw_data is not None:
                 self.logger.info("Using XMLParser to parse data.")
                 self.parser = XMLParser(self.open_data_repos_ontology, self.logger,
@@ -390,22 +378,14 @@ class Orchestrator:
 
                 else:
                     self.logger.info(f"Processing additional data. # of items: {len(additional_data)}")
-                    # add the additional data to the parsed_data
                     add_data = self.parser.parse_data(raw_data, self.publisher, self.current_url,
                                                       additional_data=additional_data, prompt_name=prompt_name,
                                                       semantic_retrieval=semantic_retrieval)
-                    self.logger.info(type(add_data))
+                    self.logger.debug(f"Type of additional data{type(add_data)}")
 
                     parsed_data = pd.concat([parsed_data, add_data], ignore_index=True).drop_duplicates()
 
-                parsed_data['source_url'] = url
-                parsed_data['pub_title'] = self.parser.retriever.extract_publication_title(raw_data)
-                self.logger.info(f"Parsed data extraction completed. Elements collected: {len(parsed_data)}")
-                if self.logger.level == logging.DEBUG:
-                    parsed_data.to_csv('staging_table/parsed_data_from_XML.csv',
-                                       index=False) if save_staging_table else None
-
-            elif self.raw_data_format=='HTML':
+            elif self.raw_data_format == 'HTML':
                 self.logger.info("Using HTMLParser to parse data.")
                 self.parser = HTMLParser(self.open_data_repos_ontology, self.logger,
                                          llm_name=self.llm,
@@ -417,23 +397,15 @@ class Orchestrator:
                 parsed_data['source_url'] = url
                 parsed_data['pub_title'] = self.parser.extract_publication_title(raw_data)
                 self.logger.info(f"Parsed data extraction completed. Elements collected: {len(parsed_data)}")
-                if self.logger.level == logging.DEBUG:
-                    parsed_data.to_csv('staging_table/parsed_data_from_XML.csv',
-                                       index=False) if save_staging_table else None
 
             else:
                 self.logger.error(f"Unsupported raw data format: {self.raw_data_format}. Cannot parse data.")
                 return None
 
             self.logger.info("Raw Data parsing completed.")
+            parsed_data.to_csv('staging_table/parsed_data.csv', index=False) if save_staging_table else None
 
-            # skip unstructured files and filter out unstructured files from dataframe
-            if self.skip_unstructured_files and 'file_extension' in parsed_data.columns:
-                for ext in self.skip_file_extensions:
-                    # filter out unstructured files
-                    parsed_data = parsed_data[parsed_data['file_extension'] != ext]
-
-            # Step 3: Use Classifier to classify Extracted and Parsed elements
+            # Step 3: Use Classifier to classify Parsed data
             if parsed_data is not None:
                 if self.raw_data_format == "XML":
                     self.logger.info("XML element classification not needed. Using parsed_data.")

@@ -1,3 +1,5 @@
+import pandas as pd
+
 from data_gatherer.parser.base_parser import LLMParser
 from data_gatherer.parser.xml_parser import XMLParser
 from data_gatherer.parser.html_parser import HTMLParser
@@ -24,6 +26,18 @@ def test_get_data_availability_elements_from_HTML():
     assert all(isinstance(sm, dict) for sm in DAS_elements)
     print('\n')
 
+def test_extract_href_from_html_supplementary_material():
+    logger = setup_logging("test_logger", log_file="../logs/scraper.log")
+    parser = HTMLParser("open_bio_data_repos.json", logger, llm_name='gemini-2.0-flash')
+    html_file_path = os.path.join('test_data', 'test_extract_2.html')
+    with open(html_file_path, 'rb') as f:
+        raw_html = f.read()
+    parser.publisher = "PMC"
+    hrefs = parser.extract_href_from_html_supplementary_material(raw_html,
+                                                                 "https://pmc.ncbi.nlm.nih.gov/articles/PMC8628860/")
+    assert isinstance(hrefs, pd.DataFrame)
+    assert len(hrefs) == 58
+    print('\n')
 
 def test_extract_paragraphs_from_xml():
     logger = setup_logging("test_logger", log_file="../logs/scraper.log")
