@@ -1064,11 +1064,12 @@ class LLMParser(ABC):
                     self.logger.info(f"Adding access mode for dataset {1 + i}: {access_mode}")
 
             elif original_repo.startswith('http'):
-                    datasets[i]['data_repository'] = repo
-                    datasets[i]['dataset_webpage'] = original_repo
+                datasets[i]['data_repository'] = repo
+                datasets[i]['dataset_webpage'] = original_repo
 
             else:
                 self.logger.warning(f"Repository {repo} unknown in Ontology. Skipping dataset page {1 + i}.")
+                datasets[i]['dataset_webpage'] = 'n/a'
                 continue
 
         self.logger.info(f"Updated datasets len: {len(datasets)}")
