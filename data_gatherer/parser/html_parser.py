@@ -346,7 +346,7 @@ class HTMLParser(LLMParser):
                          f"additional_data, {raw_data_format})")
         self.publisher = publisher
 
-        supplementary_material_links = self.extract_href_from_html_supplementary_material(api_data, current_url_address)
+        supplementary_material_links = self.extract_href_from_supplementary_material(api_data, current_url_address)
 
         preprocessed_data = self.normalize_HTML(api_data)
         self.logger.debug(f"Preprocessed data: {preprocessed_data}")
@@ -412,7 +412,7 @@ class HTMLParser(LLMParser):
 
         return out_df
 
-    def extract_href_from_html_supplementary_material(self, raw_html, current_url_address):
+    def extract_href_from_supplementary_material(self, raw_html, current_url_address):
         """
         Extracts href links from supplementary material sections of the HTML.
 
@@ -423,7 +423,7 @@ class HTMLParser(LLMParser):
         :return: DataFrame containing extracted links and their context.
 
         """
-        self.logger.info(f"Function_call: extract_href_from_html_supplementary_material(tree, {current_url_address})")
+        self.logger.info(f"Function_call: extract_href_from_supplementary_material(tree, {current_url_address})")
 
         tree = html.fromstring(raw_html)
 
@@ -444,9 +444,44 @@ class HTMLParser(LLMParser):
             sup = anchor.getparent().xpath("./sup")
             file_info = sup[0].text_content().strip() if sup else "n/a"
 
-            # Get <p> description if exists
-            p_desc = anchor.getparent().xpath("./p")
-            description = p_desc[0].text_content().strip() if p_desc else "n/a"
+            # Extract file description from the surrounding <p> or <div> element
+            # Improved logic: look for a <p> in a preceding sibling <div> with class 'caption'
+            description = "n/a"
+            parent = anchor.getparent()
+            # 1. Try direct child <p> of parent
+            p_desc = parent.xpath("./p")
+            if p_desc:
+                description = p_desc[0].text_content().strip()
+            else:
+                # 2. Try preceding sibling <div> with class 'caption p' and get its <p>
+                prev_caption_divs = parent.xpath("preceding-sibling::div[contains(@class, 'caption p')]")
+                found = False
+                for div in prev_caption_divs:
+                    p_in_div = div.xpath(".//p")
+                    if p_in_div:
+                        description = p_in_div[0].text_content().strip()
+                        found = True
+                        break
+                # 3. If not found, try to get <p> from parent's parent (for cases like <div class="media p"><div class="caption">...</div></div>)
+                if not found:
+                    grandparent = parent.getparent()
+                    if grandparent is not None:
+                        # Look for a preceding sibling <div> with class 'caption p' in grandparent
+                        prev_caption_divs_gp = grandparent.xpath("preceding-sibling::div[contains(@class, 'caption p')]")
+                        for div in prev_caption_divs_gp:
+                            p_in_div = div.xpath(".//p")
+                            if p_in_div:
+                                description = p_in_div[0].text_content().strip()
+                                found = True
+                                break
+                # 4. If still not found, try to get <p> from any ancestor <div class='caption p'>
+                if not found:
+                    ancestor_caption_divs = parent.xpath("ancestor::div[contains(@class, 'caption p')]")
+                    for div in ancestor_caption_divs:
+                        p_in_div = div.xpath(".//p")
+                        if p_in_div:
+                            description = p_in_div[0].text_content().strip()
+                            break
 
             # Extract attributes from parent <section> for context
             section = anchor.getparent().getparent()  # Assuming structure stays the same

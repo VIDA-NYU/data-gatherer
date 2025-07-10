@@ -26,7 +26,7 @@ class htmlRetriever(BaseRetriever):
         self.css_selectors = self.retrieval_patterns[publisher]['css_selectors']
         self.xpaths = self.retrieval_patterns[publisher]['xpaths']
 
-    def extract_href_from_html_supplementary_material(self, raw_html, current_url_address):
+    def extract_href_from_supplementary_material(self, raw_html, current_url_address):
         """
         Extracts href links from supplementary material sections of the HTML.
 
@@ -37,7 +37,7 @@ class htmlRetriever(BaseRetriever):
         :return: DataFrame containing extracted links and their context.
 
         """
-        self.logger.info(f"Function_call: extract_href_from_html_supplementary_material(tree, {current_url_address})")
+        self.logger.info(f"Function_call: extract_href_from_supplementary_material(tree, {current_url_address})")
 
         tree = html.fromstring(raw_html)
 
@@ -61,6 +61,7 @@ class htmlRetriever(BaseRetriever):
             # Get <p> description if exists
             p_desc = anchor.getparent().xpath("./p")
             description = p_desc[0].text_content().strip() if p_desc else "n/a"
+            self.logger.debug(f"Extracted link: {href}, title: {title}, file_info: {file_info}, description: {description}")
 
             # Extract attributes from parent <section> for context
             section = anchor.getparent().getparent()  # Assuming structure stays the same
