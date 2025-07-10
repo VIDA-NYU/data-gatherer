@@ -103,7 +103,8 @@
       "access_mode": "Complex download",
       "javascript_load_required": true
     },
-    "Mendeley": {
+    "data.mendeley.com": {
+      "repo_name": "Mendeley"
     }
   }
 }
