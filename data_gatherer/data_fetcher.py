@@ -94,6 +94,10 @@ class DataFetcher(ABC):
     def url_to_doi(self, url : str):
         # Extract DOI from the URL
         url = url.lower()
+
+        # url_doi mappings for different publishers
+        url = re.sub(r'www=\.nature\.com/articles', '10.1038', url, re.IGNORECASE) # nature
+
         match = re.search(r'(10\.\d{4,9}/[-._;()/:A-Z0-9]+)', url, re.IGNORECASE)
         if match:
             doi = match.group(1)
