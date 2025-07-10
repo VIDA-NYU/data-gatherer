@@ -1,19 +1,54 @@
+import tempfile
 from data_gatherer.orchestrator import Orchestrator
-from data_gatherer.parser.html_parser import HTMLParser
+from data_gatherer.data_fetcher import *
+import requests
 import pandas as pd
-from dotenv import load_dotenv
 
-load_dotenv()
+def test_process_url_with_mocked_fetch_data_and_parser(monkeypatch):
+    orchestrator = Orchestrator()
 
-def test_orchestrator_data_preview():
-    # Check if the DataFrame is not empty
-    combined_df = pd.read_csv('test_data/test_combined_data.csv')
-    assert not combined_df.empty, "The DataFrame is empty."
-    orchestrator = Orchestrator('gemini-2.0-flash', log_file_override=None)
-    orchestrator.write_raw_metadata = False
-    orchestrator.parser = HTMLParser('open_bio_data_repos.json', orchestrator.logger,
-                                    log_file_override=None, llm_name='gemini-2.0-flash')
-    metadata_list = orchestrator.get_data_preview(combined_df, interactive=False, return_metadata=True)
-    assert isinstance(metadata_list, list), "Metadata list is not a list."
-    assert len(metadata_list) > 0, "Metadata list is empty."
-    assert all(isinstance(metadata, dict) for metadata in metadata_list), "Not all items in metadata list are dictionaries."
+    # Setup the data fetcher (ensure it's not None)
+    orchestrator.data_fetcher = orchestrator.setup_data_fetcher()
+    if orchestrator.data_fetcher is None:
+        orchestrator.data_fetcher = EntrezFetcher(requests, logger=logging.getLogger("data_gatherer"))
+    assert orchestrator.data_fetcher is not None, "Data fetcher could not be set up."
+
+    # Mock fetch_data to return the contents of a test XML file
+    def mock_fetch_data(*args, **kwargs):
+        with open("test_data/test_2.xml", "r", encoding="utf-8") as f:
+            return f.read()
+    orchestrator.data_fetcher.fetch_data = mock_fetch_data
+
+    # Mock XMLParser.extract_datasets_info_from_content to return a controlled value
+    def mock_extract_datasets_info_from_content(self, *args, **kwargs):
+        if args and isinstance(args[0], str):
+            if len(args[0]) > 4000:
+                # print(f"Mocking extract_datasets_info_from_content with a long string {args[0]}\n\n\n")
+                return [{'dataset_identifier': 'PXD043612', 'data_repository': 'www.ebi.ac.uk', 'dataset_webpage': 'https://www.ebi.ac.uk/pride/archive/projects/PXD043612'}, {'dataset_identifier': '10.17632/3wfxrz66w2.1', 'data_repository': 'doi.org', 'dataset_webpage': 'n/a'}, {'dataset_identifier': '10.17632/bvdn865y9c.1', 'data_repository': 'doi.org', 'dataset_webpage': 'n/a'}, {'dataset_identifier': 'PDC000234', 'data_repository': 'pdc.cancer.gov', 'dataset_webpage': 'n/a'}, {'dataset_identifier': 'PDC000127', 'data_repository': 'pdc.cancer.gov', 'dataset_webpage': 'n/a'}, {'dataset_identifier': 'PDC000204', 'data_repository': 'pdc.cancer.gov', 'dataset_webpage': 'n/a'}, {'dataset_identifier': 'PDC000221', 'data_repository': 'pdc.cancer.gov', 'dataset_webpage': 'n/a'}, {'dataset_identifier': 'PDC000198', 'data_repository': 'pdc.cancer.gov', 'dataset_webpage': 'n/a'}, {'dataset_identifier': 'PDC000110', 'data_repository': 'pdc.cancer.gov', 'dataset_webpage': 'n/a'}, {'dataset_identifier': 'PDC000270', 'data_repository': 'pdc.cancer.gov', 'dataset_webpage': 'n/a'}, {'dataset_identifier': 'PDC000125', 'data_repository': 'pdc.cancer.gov', 'dataset_webpage': 'n/a'}, {'dataset_identifier': 'PDC000153', 'data_repository': 'pdc.cancer.gov', 'dataset_webpage': 'n/a'}]
+            else:
+                # print(f"Mocking extract_datasets_info_from_content with a short string {args[0]}\n\n\n")
+                return []
+    from data_gatherer.parser.xml_parser import XMLParser
+    monkeypatch.setattr(XMLParser, "extract_datasets_info_from_content", mock_extract_datasets_info_from_content)
+
+    url = 'https://pmc.ncbi.nlm.nih.gov/articles/PMC11129317/'
+    orchestrator.current_url = url
+    orchestrator.publisher = orchestrator.data_fetcher.url_to_publisher_domain(url)
+
+    # Run the orchestrator's process_url method
+    result = orchestrator.process_url(url)
+
+    # Basic assertion: result should not be None
+    assert result is not None
+    assert isinstance(result, pd.DataFrame), "Result should be a pandas DataFrame"
+    expected_columns = [
+        'dataset_identifier', 'data_repository', 'dataset_webpage',
+        'source_section', 'retrieval_pattern', 'access_mode', 'link',
+        'source_url', 'download_link', 'title', 'content_type', 'id',
+        'surrounding_text', 'description', 'file_extension', 'pub_title'
+    ]
+    assert list(result.columns) == expected_columns, f"Columns do not match. Got: {list(result.columns)}"
+    # print(f"Result DataFrame:\n{result.columns}")
+    assert len(result) == 22, "Expected 22 datasets in the result"
+
+    # Clean up the temporary log file

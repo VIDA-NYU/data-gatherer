@@ -80,7 +80,7 @@ if st.button("🚀 Run Extraction"):
                 for idx, article_id in enumerate(pmcids):
                     log_placeholder.info(f"Processing article {idx+1} of {len(pmcids)}: {article_id}")
                     pmcid = orch.data_fetcher.url_to_pmcid(article_id)
-                    doi = orch.data_fetcher.url_to_doi(article_id)
+                    doi = orch.data_fetcher.url_to_doi(article_id, pmcid)
                     url = orch.preprocess_url(article_id)
 
                     result = orch.process_url(

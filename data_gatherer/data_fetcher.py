@@ -91,7 +91,7 @@ class DataFetcher(ABC):
             self.logger.warning(f"No PMC ID found in URL: {url}")
             return None
 
-    def url_to_doi(self, url : str):
+    def url_to_doi(self, url : str, candidate_pmcid=None):
         # Extract DOI from the URL
         url = url.lower()
 
@@ -99,11 +99,33 @@ class DataFetcher(ABC):
         url = re.sub(r'www=\.nature\.com/articles', '10.1038', url, re.IGNORECASE) # nature
 
         match = re.search(r'(10\.\d{4,9}/[-._;()/:A-Z0-9]+)', url, re.IGNORECASE)
+
         if match:
             doi = match.group(1)
             self.logger.info(f"DOI: {doi}")
             return doi
+
+        elif candidate_pmcid is not None:
+            return self.PMCID_to_doi(candidate_pmcid)
+
         else:
+            return None
+
+    def PMCID_to_doi(self, pmid):
+        base_url = "https://pmc.ncbi.nlm.nih.gov/tools/idconv/api/v1/articles/?ids=__ID__&format=json"
+
+        url_request = base_url.replace('__ID__', pmid)
+        response = requests.get(url_request, headers={"User-Agent": "Mozilla/5.0"})
+
+        if response.status_code == 200:
+            data = response.json()
+            records = data.get("records")
+            id = records[0] if records else None
+            if 'doi' in id:
+                doi = id['doi']
+                return doi
+        else:
+            self.logger.info(f"Failed to fetch DOI for PMCID {pmid}. Status code: {response.status_code}")
             return None
 
     def url_to_filename(self, url):
@@ -227,6 +249,7 @@ class WebScraper(DataFetcher):
         self.driver_path = driver_path
         self.browser = browser
         self.headless = headless
+        self.logger.debug("WebScraper initialized.")
 
     def fetch_data(self, url, retries=3, delay=2):
         """
@@ -414,6 +437,7 @@ class DatabaseFetcher(DataFetcher):
     def __init__(self, logger, raw_HTML_data_filepath):
         super().__init__(logger, src='DatabaseFetcher', raw_HTML_data_filepath=raw_HTML_data_filepath)
         self.dataframe = pd.read_parquet(self.raw_HTML_data_filepath)
+        self.logger.debug("DatabaseFetcher initialized.")
 
     def fetch_data(self, url_key, retries=3, delay=2):
         """
@@ -465,6 +489,7 @@ class EntrezFetcher(DataFetcher):
         self.raw_data_format = 'XML'
         self.base = 'https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pmc&id=__PMCID__&retmode=xml'
         self.publisher = 'PMC'
+        self.logger.debug("EntrezFetcher initialized.")
 
 
     def fetch_data(self, article_id, retries=3, delay=2):
@@ -544,6 +569,22 @@ class EntrezFetcher(DataFetcher):
         ET.ElementTree(api_data).write(fn, pretty_print=True, xml_declaration=True, encoding="UTF-8")
         self.logger.info(f"Downloaded XML file: {fn}")
 
+    def extract_publication_title(self, xml_data):
+        """
+        Extracts the publication title from the XML data.
+
+        :param xml_data: The XML data to extract the title from.
+
+        :return: The publication title as a string.
+        """
+        # Use XPath to find the title element
+        title_element = xml_data.find('.//article-title')
+        if title_element is not None:
+            return title_element.text.strip()
+        else:
+            self.logger.warning("No article title found in XML data.")
+            return "No Title Found"
+
 class DataCompletenessChecker:
     """
     Class to check the completeness of data sections in API responses.
@@ -559,6 +600,7 @@ class DataCompletenessChecker:
         """
         self.logger = logger
         self.retriever = xmlRetriever(logger, publisher, retrieval_patterns_file)
+        self.logger.debug("DataCompletenessChecker initialized.")
 
     def is_xml_data_complete(self, raw_data, url,
                              required_sections=["data_availability_sections", "supplementary_data_sections"]) -> bool:
