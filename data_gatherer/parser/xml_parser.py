@@ -669,12 +669,12 @@ class XMLParser(LLMParser):
             key_resources_table.extend(api_xml.xpath(ptr))
 
         for sect in key_resources_table:
-            self.logger.info(f"Found key resources table: {sect}")
+            self.logger.info(f"Found key resources table: {sect}.")
             table_text = self.table_to_text(sect)
-            self.logger.info(f"Table text: {table_text}")
+            self.logger.debug(f"Table text: {table_text}")
             data_availability_cont.append(table_text)
 
-        self.logger.info(f"Found data availability content: {data_availability_cont}")
+        self.logger.debug(f"Found data availability content: {data_availability_cont}")
 
         return data_availability_cont
 

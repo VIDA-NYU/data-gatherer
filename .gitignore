@@ -113,3 +113,6 @@ nosetests.xml
 /scripts/E-utility/pmcid_analysis.csv
 /scripts/E-utility/output.txt
 /scripts/E-utility/output_no_body.txt
+/scripts/exp_input/article_ids.csv
+/scripts/article_id.ipynb
+/docs/getting_started_ignore.ipynb

@@ -457,6 +457,9 @@ class xmlRetriever(BaseRetriever):
                     self.logger.info(f"----Found section: {ET.tostring(section, encoding='unicode')}")
                     if self.has_links_in_section(section, namespaces):
                         return True
+                    else:
+                        self.logger.warning("No links found in the section.")
+                        return True
 
         return False
 
