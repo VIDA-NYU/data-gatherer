@@ -218,7 +218,7 @@ class XMLParser(LLMParser):
                 # Create a DataFrame from the dataset links union supplementary material links
                 out_df = pd.concat([pd.DataFrame(dataset_links_w_target_pages).rename(
                     columns={'dataset_id': 'dataset_identifier', 'repository_reference': 'data_repository'}),
-                                    pd.DataFrame(supplementary_material_links)])  # check index error here
+                                    supplementary_material_links])  # check index error here
                 self.logger.info(f"Dataset Links type: {type(out_df)} of len {len(out_df)}, with cols: {out_df.columns}")
                 self.logger.debug(f"Datasets: {out_df}")
 
@@ -259,8 +259,7 @@ class XMLParser(LLMParser):
                     dataset_links_w_target_pages = self.get_dataset_page(augmented_dataset_links)
 
                     # Create a DataFrame from the dataset links union supplementary material links
-                    out_df = pd.concat([pd.DataFrame(dataset_links_w_target_pages),
-                                        pd.DataFrame(supplementary_material_links)])
+                    out_df = pd.concat([pd.DataFrame(dataset_links_w_target_pages), supplementary_material_links])
 
                 self.logger.info(f"Dataset Links type: {type(out_df)} of len {len(out_df)}, with cols: {out_df.columns}")
 
@@ -433,7 +432,7 @@ class XMLParser(LLMParser):
 
         :param current_url_address: The current URL address being processed.
 
-        :return: List of dictionaries containing href links and their context.
+        :return: DataFrame containing href links and their context.
 
         """
 
@@ -489,9 +488,9 @@ class XMLParser(LLMParser):
                         surrounding_text = "No surrounding text found"
 
                     # Extract the full description within the <p> tag if available
-                    description_element = supplementary_material_parent.find(".//caption/p")
-                    description = " ".join(
-                        description_element.itertext()).strip() if description_element is not None else "No description"
+                    caption_element = supplementary_material_parent.find(".//caption/p")
+                    caption = " ".join(
+                        caption_element.itertext()).strip() if caption_element is not None else "No description"
 
                     # Log media attributes and add to results
                     self.logger.debug(f"Extracted media item with href: {href}")
@@ -499,7 +498,7 @@ class XMLParser(LLMParser):
                     self.logger.debug(f"Supplementary material title: {title}")
                     self.logger.debug(f"Content type: {content_type}, ID: {media_id}")
                     self.logger.debug(f"Surrounding text for media: {surrounding_text}")
-                    self.logger.debug(f"Description: {description}")
+                    self.logger.debug(f"Caption: {caption}")
                     self.logger.debug(f"Download_link: {download_link}")
 
                     if href and href not in [item['link'] for item in hrefs]:
@@ -510,8 +509,8 @@ class XMLParser(LLMParser):
                             'title': title,
                             'content_type': content_type,
                             'id': media_id,
-                            'surrounding_text': surrounding_text,
-                            'description': description,
+                            'caption': caption,
+                            'description': surrounding_text,
                             'source_section': 'supplementary material',
                             "retrieval_pattern": pattern,
                         })
@@ -536,7 +535,7 @@ class XMLParser(LLMParser):
                     })
 
                 self.logger.debug(f"Extracted supplementary material links:\n{hrefs}")
-        return hrefs
+        return pd.DataFrame(hrefs)
 
     def get_surrounding_text(self, element):
         """
