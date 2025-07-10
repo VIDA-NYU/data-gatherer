@@ -102,7 +102,7 @@ if st.button("🚀 Run Extraction"):
                     # Supplementary Material rows
                     supp_df = files_with_extension[["download_link", "description"]].copy() if not files_with_extension.empty else pd.DataFrame(columns=["download_link", "description"])
                     supp_df["Source PMCID"] = pmcid
-                    # supp_df["Source DOI"] = doi
+                    supp_df["Source DOI"] = doi
                     supp_df["Source Title"] = title
                     if not supp_df.empty:
                         supp_df = supp_df.drop_duplicates()
@@ -112,7 +112,7 @@ if st.button("🚀 Run Extraction"):
                     avail_cols = ["data_repository", "dataset_identifier", "dataset_webpage"]
                     avail_df = files_with_repo[avail_cols].copy() if not files_with_repo.empty else pd.DataFrame(columns=avail_cols)
                     avail_df["Source PMCID"] = pmcid
-                    # avail_df["Source DOI"] = doi
+                    avail_df["Source DOI"] = doi
                     avail_df["Source Title"] = title
                     if not avail_df.empty:
                         avail_df = avail_df.drop_duplicates()
