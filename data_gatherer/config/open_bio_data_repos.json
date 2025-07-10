@@ -47,6 +47,8 @@
       "repo_name": "Proteomic Data Commons",
       "javascript_load_required": true,
       "url_concat_string": "/pdc/study/__ID__",
+      "dataset_webpage_url_ptr": "https://proteomic.datacommons.cancer.gov/pdc/study/__ID__",
+      "id_pattern": "PDC[0-9]+",
       "access_mode": "Complex download or Application to access"
     },
     "gdc.cancer.gov": {
@@ -71,7 +73,7 @@
       "access_mode": "Complex download"
     },
     "doi.org": {
-      "dataset_webpage_url_ptr": "https://doi.org/d+.d+/pdb([wd]+)/pdb"
+      "dataset_webpage_url_ptr": "https://doi.org/__ID__"
     },
     "geo" : {
       "repo_name": "GEO",
@@ -100,6 +102,8 @@
       "dataset_webpage_url_ptr": "https://www.ebi.ac.uk/biostudies/ArrayExpress/studies/__ID__/sdrf",
       "access_mode": "Complex download",
       "javascript_load_required": true
+    },
+    "Mendeley": {
     }
   }
 }

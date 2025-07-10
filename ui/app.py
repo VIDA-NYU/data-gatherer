@@ -80,6 +80,7 @@ if st.button("🚀 Run Extraction"):
                 for idx, article_id in enumerate(pmcids):
                     log_placeholder.info(f"Processing article {idx+1} of {len(pmcids)}: {article_id}")
                     pmcid = orch.data_fetcher.url_to_pmcid(article_id)
+                    doi = orch.data_fetcher.url_to_doi(article_id)
                     url = orch.preprocess_url(article_id)
 
                     result = orch.process_url(
@@ -101,6 +102,7 @@ if st.button("🚀 Run Extraction"):
                     # Supplementary Material rows
                     supp_df = files_with_extension[["download_link", "description"]].copy() if not files_with_extension.empty else pd.DataFrame(columns=["download_link", "description"])
                     supp_df["Source PMCID"] = pmcid
+                    # supp_df["Source DOI"] = doi
                     supp_df["Source Title"] = title
                     if not supp_df.empty:
                         supp_df = supp_df.drop_duplicates()
@@ -110,6 +112,7 @@ if st.button("🚀 Run Extraction"):
                     avail_cols = ["data_repository", "dataset_identifier", "dataset_webpage"]
                     avail_df = files_with_repo[avail_cols].copy() if not files_with_repo.empty else pd.DataFrame(columns=avail_cols)
                     avail_df["Source PMCID"] = pmcid
+                    # avail_df["Source DOI"] = doi
                     avail_df["Source Title"] = title
                     if not avail_df.empty:
                         avail_df = avail_df.drop_duplicates()
@@ -236,6 +239,14 @@ if st.button("🚀 Run Extraction"):
                                             display_item = display_item[display_item["Value"].astype(str).str.strip() != ""]
                                         if display_item is not None and not display_item.empty:
                                             st.dataframe(display_item, use_container_width=True)
+                                            # --- ADDITION: Save per-dataset metadata DataFrame for Excel ---
+                                            safe_dataset_identifier = data_item["dataset_identifier"].replace("/", "_")
+                                            sheet_name = f"{pmcid}_meta_{safe_dataset_identifier}"
+                                            # Excel sheet names max 31 chars
+                                            if len(sheet_name) > 31:
+                                                sheet_name = sheet_name[:31]
+                                            # Store DataFrame in excel_tabs
+                                            excel_tabs[sheet_name] = display_item
                                         else:
                                             st.warning("No data preview available.")
                                     except Exception as e:
