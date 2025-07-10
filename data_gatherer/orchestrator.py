@@ -79,7 +79,6 @@ class Orchestrator:
         entire_document_models = ["gemini-1.5-flash", "gemini-1.5-pro", "gemini-2.0-flash-exp", "gemini-2.0-flash",
                                   "gpt-4o", "gpt-4o-mini"]
         self.full_document_read = llm_name in entire_document_models and process_entire_document
-        self.logger.info(f"Data_Gatherer Orchestrator initialized. Extraction Model: {llm_name}")
         self.llm = llm_name
 
         self.search_method = 'url_list'  # Default search method
@@ -89,6 +88,7 @@ class Orchestrator:
         self.data_resource_preview = data_resource_preview
         self.download_previewed_data_resources = download_previewed_data_resources
         self.downloadables = []
+        self.logger.info(f"Data_Gatherer Orchestrator initialized. Extraction Model: {llm_name}")
 
     def fetch_data(self, urls, search_method='url_list', driver_path=None, browser=None, headless=True,
                    HTML_fallback=False, local_fetch_file=None, write_htmls_xmls=False, html_xml_dir='tmp/html_xmls/'):

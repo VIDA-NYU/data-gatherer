@@ -667,6 +667,8 @@ class LLMParser(ABC):
 
             self.logger.info(f"Extracted dataset: {result[-1]}")
 
+        self.logger.debug(f"Final result: {result}")
+
         return result
 
     def deduplicate_response(self, response):

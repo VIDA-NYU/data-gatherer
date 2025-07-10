@@ -1,11 +1,13 @@
 import logging
 import os
+import sys
 
 def setup_logging(logger_name, log_file=None, level=logging.INFO, clear_previous_logs=False):
     """
     Creates and returns a logger with the specified name.
     If `log_file` is None, only logs to console (used in testing).
     """
+    logging.basicConfig(stream=sys.stdout)
     logger = logging.getLogger(logger_name)
 
     # Remove any existing handlers to avoid duplication
@@ -20,8 +22,12 @@ def setup_logging(logger_name, log_file=None, level=logging.INFO, clear_previous
         logger.setLevel(logging.CRITICAL)  # suppress all logs
         return logger
 
+    WHITE = "\033[97m"
+    RESET = "\033[0m"
+    console_format = f"{WHITE}%(filename)s - line %(lineno)d - %(levelname)s - %(message)s{RESET}"
+
     # Formatters
-    console_formatter = logging.Formatter('%(filename)s - line %(lineno)d - %(levelname)s - %(message)s')
+    console_formatter = logging.Formatter(console_format)
     logfile_formatter = logging.Formatter('%(asctime)s - %(filename)s - line %(lineno)d - %(levelname)s - %(message)s')
 
     # Always add console handler
