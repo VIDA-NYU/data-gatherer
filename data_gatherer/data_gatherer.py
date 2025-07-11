@@ -14,7 +14,7 @@ from IPython.display import display, clear_output
 import textwrap
 
 
-class Orchestrator:
+class DataGatherer:
     """
     This class orchestrates the data gathering process by coordinating the data fetcher, parser, and classifier in a
     single workflow.
@@ -27,7 +27,7 @@ class Orchestrator:
                   retrieval_patterns_file='retrieval_patterns.json'
                  ):
         """
-        Initializes the Orchestrator with the given configuration file and sets up logging.
+        Initializes the DataGatherer with the given configuration file and sets up logging.
 
         :param llm_name: The LLM model to use for parsing and classification.
 
@@ -55,7 +55,7 @@ class Orchestrator:
 
         :param retrieval_patterns_file: Path to the JSON file containing retrieval patterns for classification.
 
-        Initializes the Orchestrator with the given configuration file and sets up logging.
+        Initializes the DataGatherer with the given configuration file and sets up logging.
 
         """
 
@@ -88,7 +88,7 @@ class Orchestrator:
         self.data_resource_preview = data_resource_preview
         self.download_previewed_data_resources = download_previewed_data_resources
         self.downloadables = []
-        self.logger.info(f"Data_Gatherer Orchestrator initialized. Extraction Model: {llm_name}")
+        self.logger.info(f"DataGatherer orchestrator initialized. Extraction Model: {llm_name}")
 
     def fetch_data(self, urls, search_method='url_list', driver_path=None, browser=None, headless=True,
                    HTML_fallback=False, local_fetch_file=None, write_htmls_xmls=False, html_xml_dir='tmp/html_xmls/'):
@@ -885,7 +885,7 @@ class Orchestrator:
         :return: Combined DataFrame of all processed data links.
 
         """
-        self.logger.debug("Orchestrator run started.")
+        self.logger.debug("DataGatherer run started.")
         try:
             # Setup data fetcher (web scraper or API client)
             self.setup_data_fetcher(search_by)
@@ -918,7 +918,7 @@ class Orchestrator:
 
             self.logger.info(f"File Download Schedule: {self.downloadables}")
 
-            self.logger.debug("Orchestrator run completed.")
+            self.logger.debug("DataGatherer run completed.")
 
             return combined_df
 

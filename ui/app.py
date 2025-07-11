@@ -1,5 +1,5 @@
 import streamlit as st
-from data_gatherer.orchestrator import Orchestrator
+from data_gatherer.data_gatherer import DataGatherer
 from dotenv import load_dotenv
 import pandas as pd
 import altair as alt
@@ -63,7 +63,7 @@ if st.button("🚀 Run Extraction"):
         with st.spinner("Extraction in progress..."):
             log_placeholder = st.empty()
             try:
-                orch = Orchestrator(llm_name=model_name, process_entire_document=full_document_read, log_level="INFO")
+                orch = DataGatherer(llm_name=model_name, process_entire_document=full_document_read, log_level="INFO")
                 driver_path = '/usr/local/bin/geckodriver' if linux else None
                 orch.setup_data_fetcher('url_list', driver_path=driver_path)
 
