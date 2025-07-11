@@ -1001,7 +1001,7 @@ class LLMParser(ABC):
             pattern = repo_config.get('id_pattern')
             if pattern and not re.match(pattern, dataset_identifier):
                 self.logger.warning(f"Identifier {dataset_identifier} does not match pattern for {data_repository}")
-            if 'default_id_suffix' in repo_config:
+            if 'default_id_suffix' in repo_config and not dataset_identifier.endswith(repo_config['default_id_suffix']):
                 return dataset_identifier.lower() + repo_config['default_id_suffix']
         return dataset_identifier
 
