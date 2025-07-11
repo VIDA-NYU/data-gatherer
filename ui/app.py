@@ -63,7 +63,8 @@ if st.button("🚀 Run Extraction"):
         with st.spinner("Extraction in progress..."):
             log_placeholder = st.empty()
             try:
-                orch = DataGatherer(llm_name=model_name, process_entire_document=full_document_read, log_level="INFO")
+                orch = DataGatherer(llm_name=model_name, process_entire_document=full_document_read, log_level="INFO",
+                                    load_from_cache=True, save_to_cache=True)
                 driver_path = '/usr/local/bin/geckodriver' if linux else None
                 orch.setup_data_fetcher('url_list', driver_path=driver_path)
 
@@ -205,7 +206,7 @@ if st.button("🚀 Run Extraction"):
                         else:
                             st.dataframe(avail_df, use_container_width=True)
                             for j, data_item in files_with_repo.iterrows():
-                                dataset_label = f"**{data_item['dataset_identifier']}** ({data_item['data_repository']})"
+                                dataset_label = f"**{data_item['dataset_identifier']}** ({data_item['dataset_webpage']})"
                                 st.markdown(f"- {dataset_label}")
                                 dataset_webpage = data_item["dataset_webpage"] if "dataset_webpage" in data_item and pd.notna(data_item["dataset_webpage"]) else ""
                                 with st.spinner(
@@ -219,7 +220,8 @@ if st.button("🚀 Run Extraction"):
                                                 prompt_name=metadata_prompt_name,
                                                 timeout=10  # <-- Increase timeout from 3 to 15 seconds
                                             )
-                                            if not preview_result or not isinstance(preview_result, list) or len(preview_result) == 0:
+                                            if not preview_result or not isinstance(preview_result, list) or\
+                                                    len(preview_result) == 0:
                                                 st.warning("No data preview available.")
                                                 continue
                                             item = preview_result[0]

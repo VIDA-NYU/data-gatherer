@@ -1,8 +1,10 @@
+import os.path
 from data_gatherer.logger_setup import setup_logging
 from data_gatherer.data_fetcher import *
 from data_gatherer.parser.html_parser import *
 from data_gatherer.parser.xml_parser import *
 from data_gatherer.classifier import LLMClassifier
+from data_gatherer.env import CACHE_BASE_DIR
 import json
 from data_gatherer.selenium_setup import create_driver
 import pandas as pd
@@ -24,7 +26,7 @@ class DataGatherer:
                  write_htmls_xmls=False, html_xml_dir='tmp/html_xmls/', full_output_file='output/result.csv',
                  download_data_for_description_generation=False, data_resource_preview=False,
                  download_previewed_data_resources=False, log_level=logging.INFO, clear_previous_logs=True,
-                  retrieval_patterns_file='retrieval_patterns.json'
+                  retrieval_patterns_file='retrieval_patterns.json', load_from_cache=False, save_to_cache=False,
                  ):
         """
         Initializes the DataGatherer with the given configuration file and sets up logging.
@@ -73,6 +75,8 @@ class DataGatherer:
 
         self.write_htmls_xmls = write_htmls_xmls
         self.html_xml_dir = html_xml_dir
+        self.load_from_cache = load_from_cache
+        self.save_to_cache = save_to_cache
 
         self.download_data_for_description_generation = download_data_for_description_generation
 
@@ -313,6 +317,13 @@ class DataGatherer:
                                                                           headless=headless)
         self.logger.info(f"Type of data_fetcher {self.data_fetcher.__class__.__name__}")
 
+        article_id = self.url_to_article_id(url)
+        process_id = self.llm + "-FDR-" + article_id if self.full_document_read else self.llm + "-RTR-" + article_id
+        if self.load_from_cache:
+            cache = json.load(open(os.path.join(CACHE_BASE_DIR, "process_url_cache.json"), 'r'))
+            if process_id in cache:
+                return pd.DataFrame(cache[process_id])
+
         try:
             self.logger.debug("Fetching Raw content...")
             raw_data = None
@@ -422,6 +433,8 @@ class DataGatherer:
             # add the deduplication step here
             #classified_links = self.classifier.deduplicate_links(classified_links)
 
+            if self.save_to_cache:
+                self.save_func_output_to_cache(classified_links.to_dict(orient='records'), process_id, 'process_url')
             return classified_links
 
         except Exception as e:
@@ -604,6 +617,7 @@ class DataGatherer:
 
             dataset_webpage = row.get('dataset_webpage', None)
             download_link = row.get('download_link', None)
+            dataset_webpage_id = self.url_to_article_id(dataset_webpage) if dataset_webpage is not None else None
 
             if dataset_webpage is None and download_link is None:
                 self.logger.info(f"Row {i} does not contain 'dataset_webpage' or 'download_link'. Skipping...")
@@ -643,8 +657,17 @@ class DataGatherer:
                 self.logger.info(f"LLM scraped metadata")
                 repo_mapping_key = row['repository_reference'].lower() if 'repository_reference' in row else row[
                     'data_repository'].lower()
-                resolved_key = self.parser.resolve_data_repository(repo_mapping_key)
-                if ('javascript_load_required' in self.open_data_repos_ontology['repos'][resolved_key]):
+                resolved_key = self.metadata_parser.resolve_data_repository(repo_mapping_key)
+
+                # caching: load_from_cache
+                skip, cache = False, {}
+                process_id = self.llm + "-" + dataset_webpage_id
+                if self.load_from_cache and os.path.exists(os.path.join(CACHE_BASE_DIR, "get_data_preview_cache.json")):
+                    cache = json.load(open(os.path.join(CACHE_BASE_DIR, "get_data_preview_cache.json"), 'r'))
+                    if process_id in cache:
+                        metadata, skip = cache[process_id], True
+
+                if ('javascript_load_required' in self.open_data_repos_ontology['repos'][resolved_key]) and not skip:
                     self.logger.info(
                         f"JavaScript load required for {repo_mapping_key} dataset webpage. Using WebScraper.")
                     html = self.data_fetcher.fetch_data(row['dataset_webpage'], delay=5)
@@ -656,7 +679,7 @@ class DataGatherer:
                     if write_raw_metadata:
                         self.logger.info(f"Saving raw metadata to: {html_xml_dir + 'raw_metadata/'}")
                         self.data_fetcher.html_page_source_download(html_xml_dir + 'raw_metadata/')
-                else:
+                elif not skip:
                     if 'informative_html_metadata_tags' in self.open_data_repos_ontology['repos'][resolved_key]:
                         keep_sect = self.open_data_repos_ontology['repos'][resolved_key][
                             'informative_html_metadata_tags']
@@ -665,18 +688,23 @@ class DataGatherer:
                     response = requests.get(row['dataset_webpage'], timeout=3)
                     html = self.metadata_parser.normalize_HTML(response.text, keep_tags=keep_sect)
 
-                metadata = self.metadata_parser.parse_datasets_metadata(html,
-                                                                        use_portkey_for_gemini=use_portkey_for_gemini,
-                                                                        prompt_name=prompt_name)
-                metadata['source_url_for_metadata'] = row['dataset_webpage']
-                metadata['access_mode'] = row.get('access_mode', None)
-                metadata['source_section'] = row.get('source_section', row.get('section_class', None))
-                metadata['download_link'] = row.get('download_link', None)
-                metadata['accession_id'] = row.get('dataset_id', row.get('dataset_identifier', None))
-                metadata['data_repository'] = repo_mapping_key
-                self.already_previewed.append(row['dataset_webpage'])
+                if not skip:
+                    metadata = self.metadata_parser.parse_datasets_metadata(html,
+                                                                            use_portkey_for_gemini=use_portkey_for_gemini,
+                                                                            prompt_name=prompt_name)
+                    metadata['source_url_for_metadata'] = row['dataset_webpage']
+                    metadata['access_mode'] = row.get('access_mode', None)
+                    metadata['source_section'] = row.get('source_section', row.get('section_class', None))
+                    metadata['download_link'] = row.get('download_link', None)
+                    metadata['accession_id'] = row.get('dataset_id', row.get('dataset_identifier', None))
+                    metadata['data_repository'] = repo_mapping_key
+                    self.already_previewed.append(row['dataset_webpage'])
 
             metadata['paper_with_dataset_citation'] = row['source_url']
+
+            if self.save_to_cache:
+                self.logger.info(f"Saving metadata to cache for process ID: {process_id}")
+                self.save_func_output_to_cache(metadata, process_id, 'get_data_preview')
 
             if return_metadata:
                 flat_metadata = self.metadata_parser.flatten_metadata_dict(metadata)
@@ -865,6 +893,25 @@ class DataGatherer:
         """
         required_sections = [sect + "_sections" for sect in required_sections]
         return self.data_checker.is_xml_data_complete(raw_data, url, required_sections)
+
+    def url_to_article_id(self, url):
+        url = re.sub(r'^https?://', '', url)
+        article_id = re.sub(r'[^A-Za-z0-9]', '_', url)
+        if article_id.endswith('_'):
+            article_id = article_id[:-1]
+        return article_id
+
+    def save_func_output_to_cache(self, output, process_id, function_name):
+        self.logger.info(f"Saving results to cache with process_id: {process_id}")
+        cache = {}
+        if os.path.exists(os.path.join(CACHE_BASE_DIR, function_name + "_cache.json")):
+            with open(os.path.join(CACHE_BASE_DIR, function_name + "_cache.json"), 'r') as f:
+                cache = json.load(f)
+        else:
+            os.makedirs(CACHE_BASE_DIR, exist_ok=True)
+        cache[process_id] = output
+        with open(os.path.join(CACHE_BASE_DIR, function_name + "_cache.json"), 'w') as f:
+            json.dump(cache, f, indent=4)
 
     def run(self, search_by='url_list', input_file='input/test_input.txt'):
         """

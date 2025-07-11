@@ -8,12 +8,12 @@ import re
 
 class XMLParser(LLMParser):
     def __init__(self, open_data_repos_ontology, logger, log_file_override=None, full_document_read=True,
-                 prompt_dir="data_gatherer/prompts/prompt_templates", response_file="data_gatherer/prompts/LLMs_responses_cache.json",
+                 prompt_dir="data_gatherer/prompts/prompt_templates",
                  llm_name=None, save_dynamic_prompts=False, save_responses_to_cache=False, use_cached_responses=False,
                  use_portkey_for_gemini=True):
 
         super().__init__(open_data_repos_ontology, logger, log_file_override=log_file_override,
-                         full_document_read=full_document_read, prompt_dir=prompt_dir, response_file=response_file,
+                         full_document_read=full_document_read, prompt_dir=prompt_dir,
                          llm_name=llm_name, save_dynamic_prompts=save_dynamic_prompts,
                          save_responses_to_cache=save_responses_to_cache,
                          use_cached_responses=use_cached_responses, use_portkey_for_gemini=use_portkey_for_gemini

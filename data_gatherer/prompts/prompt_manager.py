@@ -2,14 +2,15 @@ import json
 import hashlib
 import os
 from data_gatherer.resources_loader import load_prompt
+from data_gatherer.env import CACHE_BASE_DIR
 
 class PromptManager:
-    def __init__(self, prompt_dir, logger, response_file="data_gatherer/prompts/LLMs_responses_cache.json",
+    def __init__(self, prompt_dir, logger,
                  save_dir="prompts/prompt_evals", save_dynamic_prompts=False, log_file_override=None,
                  save_responses_to_cache=False, use_cached_responses=False):
         self.prompt_dir = prompt_dir
         self.prompt_save_dir = save_dir
-        self.response_file = response_file
+        self.response_file = os.path.join(CACHE_BASE_DIR + "process_url_cache.json")
         self.logger = logger
         if not os.path.exists(self.response_file) and save_responses_to_cache and use_cached_responses:
             with open(self.response_file, 'w') as f:
@@ -83,6 +84,7 @@ class PromptManager:
     def retrieve_response(self, prompt_id):
         """Retrieve a saved response based on the prompt_id."""
         if not os.path.exists(self.response_file):
+            self.logger.warning(f"Response file does not exist: {self.response_file}")
             return None
         with open(self.response_file, 'r') as f:
             self.logger.debug(f"Retrieving response for prompt_id: {prompt_id}")
