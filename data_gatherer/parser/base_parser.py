@@ -163,7 +163,7 @@ class LLMParser(ABC):
     - Retrieve Then Read (LLMs will only read a target section retrieved from the document)
     """
     def __init__(self, open_data_repos_ontology, logger, log_file_override=None, full_document_read=True,
-                 prompt_dir="data_gatherer/prompts/prompt_templates", response_file="data_gatherer/prompts/LLMs_responses_cache.json",
+                 prompt_dir="data_gatherer/prompts/prompt_templates",
                  llm_name=None, save_dynamic_prompts=False, save_responses_to_cache=False, use_cached_responses=False,
                  use_portkey_for_gemini=True):
         """
@@ -186,7 +186,7 @@ class LLMParser(ABC):
 
         self.full_document_read = full_document_read and self.llm_name in entire_document_models
         self.title = None
-        self.prompt_manager = PromptManager(prompt_dir, self.logger, response_file,
+        self.prompt_manager = PromptManager(prompt_dir, self.logger,
                                             save_dynamic_prompts=save_dynamic_prompts,
                                             save_responses_to_cache=save_responses_to_cache,
                                             use_cached_responses=use_cached_responses)
@@ -791,7 +791,6 @@ class LLMParser(ABC):
 
             # Generate a unique checksum for the prompt
             prompt_id = f"{model}-{temperature}-{self.prompt_manager._calculate_checksum(str(messages))}"
-            #prompt_id = self.prompt_manager._calculate_checksum(str(messages))
             self.logger.info(f"Prompt ID: {prompt_id}")
 
             # Check if the response exists
@@ -1326,7 +1325,8 @@ class LLMClient:
         self.use_portkey_for_gemini = use_portkey_for_gemini
         self._initialize_client(model)
         self.save_prompts = save_prompts
-        self.prompt_manager = PromptManager("data_gatherer/prompts/prompt_templates/metadata_prompts", self.logger)
+        self.prompt_manager = PromptManager("data_gatherer/prompts/prompt_templates/metadata_prompts",
+                                            self.logger)
 
     def _initialize_client(self, model):
         if model.startswith('gpt'):
