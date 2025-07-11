@@ -1,11 +1,11 @@
 import tempfile
-from data_gatherer.orchestrator import Orchestrator
+from data_gatherer.data_gatherer import DataGatherer
 from data_gatherer.data_fetcher import *
 import requests
 import pandas as pd
 
 def test_process_url_with_mocked_fetch_data_and_parser(monkeypatch):
-    orchestrator = Orchestrator()
+    orchestrator = DataGatherer()
 
     # Setup the data fetcher (ensure it's not None)
     orchestrator.data_fetcher = orchestrator.setup_data_fetcher()
