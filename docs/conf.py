@@ -26,6 +26,7 @@ release = data_gatherer.__version__
 extensions = [
     'sphinx.ext.autodoc',
     'nbsphinx',
+    'nbsphinx_link'
 ]
 
 templates_path = ['_templates']
