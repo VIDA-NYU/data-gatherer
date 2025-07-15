@@ -25,8 +25,9 @@ class DataGatherer:
     def __init__(self, llm_name='gpt-4o-mini', process_entire_document=False, log_file_override=None,
                  write_htmls_xmls=False, html_xml_dir='tmp/html_xmls/', full_output_file='output/result.csv',
                  download_data_for_description_generation=False, data_resource_preview=False,
-                 download_previewed_data_resources=False, log_level=logging.INFO, clear_previous_logs=True,
-                  retrieval_patterns_file='retrieval_patterns.json', load_from_cache=False, save_to_cache=False,
+                 download_previewed_data_resources=False, log_level=logging.ERROR, clear_previous_logs=True,
+                 retrieval_patterns_file='retrieval_patterns.json', load_from_cache=False, save_to_cache=False,
+                 driver_path=None
                  ):
         """
         Initializes the DataGatherer with the given configuration file and sets up logging.
@@ -71,6 +72,7 @@ class DataGatherer:
         self.data_fetcher = None
         self.parser = None
         self.raw_data_format = None
+        self.setup_data_fetcher(driver_path=driver_path)
         self.data_checker = DataCompletenessChecker(self.logger)
 
         self.write_htmls_xmls = write_htmls_xmls
@@ -127,8 +129,6 @@ class DataGatherer:
         if isinstance(urls, str):
             urls = [urls]
 
-        self.setup_data_fetcher(search_method, driver_path, browser, headless, raw_HTML_data_fp=local_fetch_file)
-
         raw_data = {}
 
         for src_url in urls:
@@ -162,7 +162,7 @@ class DataGatherer:
     def parse_data(self, current_url, raw_data, publisher='PMC', additional_data=None,
                    raw_data_format='XML', save_xml_output=False, html_xml_dir='tmp/html_xml_samples/',
                    process_DAS_links_separately=False, full_document_read=False, semantic_retrieval=False,
-                   prompt_name='retrieve_datasets_simple_JSON', use_portkey_for_gemini=True):
+                   prompt_name='retrieve_datasets_simple_JSON', use_portkey_for_gemini=True, section_filter=None):
         """
         Parses the raw data fetched from the source URL using the appropriate parser.
 
@@ -209,7 +209,9 @@ class DataGatherer:
                                       save_xml_output=save_xml_output, html_xml_dir=html_xml_dir,
                                       additional_data=additional_data,
                                       process_DAS_links_separately=process_DAS_links_separately,
-                                      semantic_retrieval=semantic_retrieval)
+                                      semantic_retrieval=semantic_retrieval,
+                                      section_filter=section_filter
+                                      )
 
     def setup_data_fetcher(self, search_method='url_list', driver_path='', browser='Firefox', headless=True,
                            raw_HTML_data_fp=None):
@@ -278,7 +280,7 @@ class DataGatherer:
 
     def process_url(self, url, save_staging_table=False, html_xml_dir='tmp/html_xmls/', use_portkey_for_gemini=True,
                     driver_path=None, browser='Firefox', headless=True, prompt_name='retrieve_datasets_simple_JSON',
-                    semantic_retrieval=False):
+                    semantic_retrieval=False, section_filter=None):
         """
         Orchestrates the process for a single given source URL (publication).
 
@@ -305,6 +307,10 @@ class DataGatherer:
         param headless: Whether to run the browser in headless mode (if applicable).
 
         param prompt_name: Name of the prompt to use for LLM parsing.
+
+        :param semantic_retrieval: Flag to indicate if semantic retrieval should be used.
+
+        :param section_filter: Optional filter to apply to the sections (supplementary_material', 'data_availability_statement').
 
         :return: DataFrame of classified links or None if an error occurs.
         """
@@ -385,13 +391,15 @@ class DataGatherer:
 
                 if additional_data is None:
                     parsed_data = self.parser.parse_data(raw_data, self.publisher, self.current_url,
-                                                         prompt_name=prompt_name, semantic_retrieval=semantic_retrieval)
+                                                         prompt_name=prompt_name, semantic_retrieval=semantic_retrieval,
+                                                         section_filter=section_filter)
 
                 else:
                     self.logger.info(f"Processing additional data. # of items: {len(additional_data)}")
                     add_data = self.parser.parse_data(raw_data, self.publisher, self.current_url,
                                                       additional_data=additional_data, prompt_name=prompt_name,
-                                                      semantic_retrieval=semantic_retrieval)
+                                                      semantic_retrieval=semantic_retrieval,
+                                                      section_filter=section_filter)
                     self.logger.debug(f"Type of additional data{type(add_data)}")
 
                     parsed_data = pd.concat([parsed_data, add_data], ignore_index=True).drop_duplicates()
@@ -404,7 +412,8 @@ class DataGatherer:
                                          use_portkey_for_gemini=use_portkey_for_gemini)
                 parsed_data = self.parser.parse_data(raw_data, self.publisher, self.current_url,
                                                      raw_data_format=self.raw_data_format, prompt_name=prompt_name,
-                                                     semantic_retrieval=semantic_retrieval)
+                                                     semantic_retrieval=semantic_retrieval,
+                                                     section_filter=section_filter)
                 parsed_data['source_url'] = url
                 parsed_data['pub_title'] = self.parser.extract_publication_title(raw_data)
                 self.logger.info(f"Parsed data extraction completed. Elements collected: {len(parsed_data)}")
@@ -591,9 +600,6 @@ class DataGatherer:
         self.already_previewed = []
         self.metadata_parser = HTMLParser(self.open_data_repos_ontology, self.logger, full_document_read=True,
                                           llm_name=self.llm, use_portkey_for_gemini=use_portkey_for_gemini)
-
-        if self.data_fetcher is None:
-            self.setup_data_fetcher(search_method='url_list')
 
         self.data_fetcher = self.data_fetcher.update_DataFetcher_settings('any_url',
                                                                           self.full_document_read,
@@ -913,7 +919,7 @@ class DataGatherer:
         with open(os.path.join(CACHE_BASE_DIR, function_name + "_cache.json"), 'w') as f:
             json.dump(cache, f, indent=4)
 
-    def run(self, search_by='url_list', input_file='input/test_input.txt'):
+    def run(self, input_file='input/test_input.txt'):
         """
         This method orchestrates the entire data gathering process by performing the following steps:
 
@@ -934,8 +940,6 @@ class DataGatherer:
         """
         self.logger.debug("DataGatherer run started.")
         try:
-            # Setup data fetcher (web scraper or API client)
-            self.setup_data_fetcher(search_by)
 
             # Load URLs from input file
             urls = self.load_urls_from_input_file(input_file)

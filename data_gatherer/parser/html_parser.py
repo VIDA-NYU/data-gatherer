@@ -320,37 +320,46 @@ class HTMLParser(LLMParser):
         self.logger.debug(f"compress HTML. Final len: {len(text)}")
         return text
 
-    def parse_data(self, api_data, publisher, current_url_address, additional_data=None, raw_data_format='HTML',
-                   save_xml_output=False, html_xml_dir='html_xml_samples/', process_DAS_links_separately=False,
+    def parse_data(self, html_str, publisher=None, current_url_address=None, additional_data=None,
+                   raw_data_format='HTML',
+                   article_file_dir='tmp/raw_files/', process_DAS_links_separately=False, section_filter=None,
                    prompt_name='retrieve_datasets_simple_JSON', use_portkey_for_gemini=True, semantic_retrieval=False):
         """
         Parse the API data and extract relevant links and metadata.
 
-        :param api_data: The raw API data (XML or HTML) to be parsed.
+        Args:
+            html_str (str): The raw HTML content to be parsed.
+            publisher (str): The publisher of the content.
+            current_url_address (str): The URL address of the content.
+            additional_data (dict): Additional data to be used in the parsing.
+            raw_data_format (str): The format of the raw data (default is 'HTML').
+            article_file_dir (str): Directory to save article files (default is 'tmp/raw_files/').
+            process_DAS_links_separately (bool): Whether to process Data Availability Statement links separately.
+            section_filter (str): Filter for sections to be processed.
+            prompt_name (str): Name of the prompt to be used for dataset extraction.
+            use_portkey_for_gemini (bool): Whether to use Portkey for Gemini model.
+            semantic_retrieval (bool): Whether to use semantic retrieval for extracting sections.
 
-        :param publisher: The publisher name or identifier.
-
-        :param current_url_address: The current URL address being processed.
-
-        :param additional_data: Additional data to be processed (optional).
-
-        :param raw_data_format: The format of the raw data ('XML' or 'HTML').
-
-        :return: A DataFrame containing the extracted links and links to metadata - if repo is supported. Add support for unsupported repos in the ontology.
+        Returns:
+            pd.DataFrame: A DataFrame containing the extracted dataset links and metadata (if repo is supported or info
+            is available in paper). Feel free to add support for unsupported repos in the ontology!
 
         """
         out_df = None
-        # Check if api_data is a string, and convert to XML if needed
-        self.logger.info(f"Function call: parse_data(api_data(html_str, {publisher}, {current_url_address}, "
+        self.logger.info(f"Function call: parse_data(html_str, {publisher}, {current_url_address}, "
                          f"additional_data, {raw_data_format})")
         self.publisher = publisher
 
-        supplementary_material_links = self.extract_href_from_supplementary_material(api_data, current_url_address)
+        filter_supp = section_filter == 'supplementary_material' or section_filter is None
+        filter_das = section_filter == 'data_availability_statement' or section_filter is None
 
-        preprocessed_data = self.normalize_HTML(api_data)
+        supplementary_material_links = self.extract_href_from_supplementary_material(html_str, current_url_address) if \
+            filter_supp or filter_supp is None else pd.DataFrame()
+
+        preprocessed_data = self.normalize_HTML(html_str)
         self.logger.debug(f"Preprocessed data: {preprocessed_data}")
 
-        if self.full_document_read:
+        if self.full_document_read and (filter_das is None or filter_das is True):
             self.logger.info(f"Extracting links from full HTML content.")
 
             # Extract dataset links from the entire text
@@ -367,7 +376,7 @@ class HTMLParser(LLMParser):
             # Create a DataFrame from the dataset links union supplementary material links
             out_df = pd.concat([pd.DataFrame(dataset_links_w_target_pages), supplementary_material_links])
 
-        else:
+        elif filter_das is None or filter_das is True:
             self.logger.info(f"Chunking the HTML content for the parsing step.")
 
             # Extract dataset links from the entire text
@@ -391,6 +400,9 @@ class HTMLParser(LLMParser):
             dataset_links_w_target_pages = self.get_dataset_page(augmented_dataset_links)
 
             out_df = pd.concat([pd.DataFrame(dataset_links_w_target_pages), supplementary_material_links])
+
+        else:
+            out_df = supplementary_material_links
 
         self.logger.info(f"Dataset Links type: {type(out_df)} of len {len(out_df)}, with cols: {out_df.columns}")
 
@@ -466,7 +478,8 @@ class HTMLParser(LLMParser):
                     grandparent = parent.getparent()
                     if grandparent is not None:
                         # Look for a preceding sibling <div> with class 'caption p' in grandparent
-                        prev_caption_divs_gp = grandparent.xpath("preceding-sibling::div[contains(@class, 'caption p')]")
+                        prev_caption_divs_gp = grandparent.xpath(
+                            "preceding-sibling::div[contains(@class, 'caption p')]")
                         for div in prev_caption_divs_gp:
                             p_in_div = div.xpath(".//p")
                             if p_in_div:

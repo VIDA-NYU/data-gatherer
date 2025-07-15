@@ -117,8 +117,8 @@ class XMLParser(LLMParser):
             self.logger.error(f"Error parsing XML: {e}")
             return None
 
-    def parse_data(self, api_data, publisher, current_url_address, additional_data=None, raw_data_format='XML',
-                   save_xml_output=False, html_xml_dir='html_xml_samples/', process_DAS_links_separately=False,
+    def parse_data(self, api_data, publisher=None, current_url_address=None, additional_data=None, raw_data_format='XML',
+                   article_file_dir='tmp/raw_files/', process_DAS_links_separately=False, section_filter=None,
                    prompt_name='retrieve_datasets_simple_JSON', use_portkey_for_gemini=True, semantic_retrieval=False):
         """
         Parse the API data and extract relevant links and metadata.
@@ -150,33 +150,26 @@ class XMLParser(LLMParser):
                 self.logger.error(f"Error parsing API data: {e}")
                 return None
 
+        filter_supp = section_filter == 'supplementary_material' or section_filter is None
+        filter_das = section_filter == 'data_availability_statement' or section_filter is None
+
         if isinstance(api_data, etree._Element):
             self.title = self.extract_publication_title(api_data)
 
+            if filter_supp is None or filter_supp:
+                supplementary_material_links = self.extract_href_from_supplementary_material(api_data,
+                                                                                             current_url_address)
+            else:
+                supplementary_material_links = pd.DataFrame()
+            self.logger.debug(f"supplementary_material_links: {supplementary_material_links}")
+
             if not self.full_document_read:
-                # Save XML content for debugging purposes
-                if save_xml_output:
-                    dir = html_xml_dir + publisher + '/' + self.title + '.xml'
-                    # if directory does not exist, create it
-                    self.logger.info(f"Saving XML content to: {dir}")
-                    if not os.path.exists(os.path.dirname(dir)):
-                        os.makedirs(os.path.dirname(dir))
-                    etree.ElementTree(api_data).write(dir, pretty_print=True, xml_declaration=True, encoding='UTF-8')
-
-                # supplementary_material_links
-                supplementary_material_links = self.extract_href_from_supplementary_material(api_data, current_url_address)
-                self.logger.debug(f"supplementary_material_links: {supplementary_material_links}")
-
-                if process_DAS_links_separately:
+                if process_DAS_links_separately and (filter_das is None or filter_das):
                     # Extract dataset links
                     dataset_links = self.extract_href_from_data_availability(api_data)
                     dataset_links.extend(self.extract_xrefs_from_data_availability(api_data, current_url_address))
                     self.logger.info(f"dataset_links: {dataset_links}")
-                    if len(dataset_links) == 0:
-                        self.logger.info(
-                            f"No dataset links in data-availability section from XML. Scraping {current_url_address}.")
-                        #dataset_links = self.get_data_availability_section_from_webpage(current_url_address)
-                    # Process dataset links to get more context
+
                     augmented_dataset_links = self.process_data_availability_links(dataset_links)
                     self.logger.info(f"Len of augmented_dataset_links: {len(augmented_dataset_links)}")
 
@@ -190,8 +183,9 @@ class XMLParser(LLMParser):
                         self.logger.debug(f"Len of augmented_dataset_links: {len(augmented_dataset_links)}")
 
                     self.logger.debug(f"Content of augmented_dataset_links: {augmented_dataset_links}")
+                    dataset_links_w_target_pages = self.get_dataset_page(augmented_dataset_links)
 
-                else:
+                elif filter_das is None or filter_das:
                     data_availability_cont = self.get_data_availability_text(api_data)
 
                     if semantic_retrieval:
@@ -212,8 +206,11 @@ class XMLParser(LLMParser):
                         self.logger.debug(f"Augmented_dataset_links: {augmented_dataset_links}")
 
                     self.logger.debug(f"Content of augmented_dataset_links: {augmented_dataset_links}")
+                    dataset_links_w_target_pages = self.get_dataset_page(augmented_dataset_links)
 
-                dataset_links_w_target_pages = self.get_dataset_page(augmented_dataset_links)
+                else:
+                    self.logger.info(f"Skipping data availability statement extraction as per section_filter: {section_filter}")
+                    dataset_links_w_target_pages = []
 
                 # Create a DataFrame from the dataset links union supplementary material links
                 out_df = pd.concat([pd.DataFrame(dataset_links_w_target_pages).rename(
@@ -238,10 +235,8 @@ class XMLParser(LLMParser):
 
             else:
                 # Extract links from entire webpage
-                if self.full_document_read:
+                if self.full_document_read and (filter_das is None or filter_das):
                     self.logger.info(f"Extracting links from full XML content.")
-                    # preprocess the content to get only elements that do not change over different sessions
-                    supplementary_material_links = self.extract_href_from_supplementary_material(api_data, current_url_address)
 
                     preprocessed_data = self.normalize_XML(api_data)
 
@@ -260,6 +255,8 @@ class XMLParser(LLMParser):
 
                     # Create a DataFrame from the dataset links union supplementary material links
                     out_df = pd.concat([pd.DataFrame(dataset_links_w_target_pages), supplementary_material_links])
+                else:
+                    out_df = supplementary_material_links
 
                 self.logger.info(f"Dataset Links type: {type(out_df)} of len {len(out_df)}, with cols: {out_df.columns}")
 
@@ -279,6 +276,8 @@ class XMLParser(LLMParser):
                 out_df['pub_title'] = self.title
 
                 return out_df
+        else:
+            raise TypeError(f"Invalid API data type: {type(api_data)}. Expected lxml.etree.Element.")
 
 
     def normalize_XML(self, xml_data):
