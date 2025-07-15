@@ -7,8 +7,6 @@ import pandas as pd
 def test_process_url_with_mocked_fetch_data_and_parser(monkeypatch):
     orchestrator = DataGatherer()
 
-    # Setup the data fetcher (ensure it's not None)
-    orchestrator.data_fetcher = orchestrator.setup_data_fetcher()
     if orchestrator.data_fetcher is None:
         orchestrator.data_fetcher = EntrezFetcher(requests, logger=logging.getLogger("data_gatherer"))
     assert orchestrator.data_fetcher is not None, "Data fetcher could not be set up."

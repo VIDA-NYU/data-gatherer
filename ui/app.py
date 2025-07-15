@@ -63,10 +63,9 @@ if st.button("🚀 Run Extraction"):
         with st.spinner("Extraction in progress..."):
             log_placeholder = st.empty()
             try:
-                orch = DataGatherer(llm_name=model_name, process_entire_document=full_document_read, log_level="INFO",
-                                    load_from_cache=True, save_to_cache=True)
                 driver_path = '/usr/local/bin/geckodriver' if linux else None
-                orch.setup_data_fetcher('url_list', driver_path=driver_path)
+                orch = DataGatherer(llm_name=model_name, process_entire_document=full_document_read, log_level="INFO",
+                                    load_from_cache=True, save_to_cache=True, driver_path=driver_path)
 
                 excel_buffer = io.BytesIO()
                 excel_tabs = {}
