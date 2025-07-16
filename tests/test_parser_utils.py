@@ -1,9 +1,11 @@
+import re
 import pandas as pd
-
 from data_gatherer.parser.base_parser import LLMParser
 from data_gatherer.parser.xml_parser import XMLParser
 from data_gatherer.parser.html_parser import HTMLParser
+from data_gatherer.parser.pdf_parser import PDFParser
 from data_gatherer.logger_setup import setup_logging
+from conftest import get_test_data_path
 from lxml import etree
 
 import os
@@ -13,11 +15,10 @@ load_dotenv()
 
 # To see logs in the test output, configure the logger to also log to the console (StreamHandler), or set log_file=None in setup_logging.
 
-def test_get_data_availability_elements_from_HTML():
+def test_get_data_availability_elements_from_HTML(get_test_data_path):
     logger = setup_logging("test_logger", log_file="logs/scraper.log")
     parser = HTMLParser("open_bio_data_repos.json", logger, llm_name='gemini-2.0-flash')
-    html_file_path = os.path.join('test_data', 'test_extract_1.html')
-    with open(html_file_path, 'rb') as f:
+    with open(get_test_data_path('test_extract_1.html'), 'rb') as f:
         raw_html = f.read()
     preprocessed_data = parser.normalize_HTML(raw_html)
     DAS_elements = parser.retriever.get_data_availability_elements_from_webpage(preprocessed_data)
@@ -26,11 +27,10 @@ def test_get_data_availability_elements_from_HTML():
     assert all(isinstance(sm, dict) for sm in DAS_elements)
     print('\n')
 
-def test_extract_href_from_supplementary_material_html():
+def test_extract_href_from_supplementary_material_html(get_test_data_path):
     logger = setup_logging("test_logger", log_file="../logs/scraper.log")
     parser = HTMLParser("open_bio_data_repos.json", logger, llm_name='gemini-2.0-flash')
-    html_file_path = os.path.join('test_data', 'test_extract_2.html')
-    with open(html_file_path, 'rb') as f:
+    with open(get_test_data_path('test_extract_2.html'), 'rb') as f:
         raw_html = f.read()
     parser.publisher = "PMC"
     hrefs = parser.extract_href_from_supplementary_material(raw_html,
@@ -44,11 +44,10 @@ def test_extract_href_from_supplementary_material_html():
     assert len(hrefs) == 58
     print('\n')
 
-def test_extract_href_from_supplementary_material_xml():
+def test_extract_href_from_supplementary_material_xml(get_test_data_path):
     logger = setup_logging("test_logger", log_file="../logs/scraper.log")
     parser = XMLParser("open_bio_data_repos.json", logger, llm_name='gemini-2.0-flash')
-    html_file_path = os.path.join('test_data', 'test_2.xml')
-    with open(html_file_path, 'rb') as f:
+    with open(get_test_data_path('test_2.xml'), 'rb') as f:
         api_xml = f.read()
     parser.publisher = "PMC"
     api_xml = etree.fromstring(api_xml)
@@ -61,12 +60,11 @@ def test_extract_href_from_supplementary_material_xml():
     assert len(hrefs) == 10
     print('\n')
 
-def test_extract_paragraphs_from_xml():
+def test_extract_paragraphs_from_xml(get_test_data_path):
     logger = setup_logging("test_logger", log_file="../logs/scraper.log")
     parser = XMLParser("open_bio_data_repos.json", logger, log_file_override=None,
                        llm_name='gemini-2.0-flash')
-    xml_file_path = os.path.join('test_data', 'test_1.xml')
-    with open(xml_file_path, 'rb') as f:  # ✅ open in binary mode
+    with open(get_test_data_path('test_1.xml'), 'rb') as f:  # ✅ open in binary mode
         xml_root = etree.fromstring(f.read())
     paragraphs = parser.extract_paragraphs_from_xml(xml_root)
     assert isinstance(paragraphs, list)
@@ -74,12 +72,11 @@ def test_extract_paragraphs_from_xml():
     assert all(isinstance(p, dict) for p in paragraphs)
     print('\n')
 
-def test_extract_sections_from_xml():
+def test_extract_sections_from_xml(get_test_data_path):
     logger = setup_logging("test_logger", log_file="../logs/scraper.log")
     parser = XMLParser("open_bio_data_repos.json", logger, log_file_override=None,
                        llm_name='gemini-2.0-flash')
-    xml_file_path = os.path.join('test_data', 'test_1.xml')
-    with open(xml_file_path, 'rb') as f:  # ✅ open in binary mode
+    with open(get_test_data_path('test_1.xml'), 'rb') as f:  # ✅ open in binary mode
         xml_root = etree.fromstring(f.read())
     section = parser.extract_sections_from_xml(xml_root)
     assert isinstance(section, list)
@@ -87,6 +84,17 @@ def test_extract_sections_from_xml():
     assert all(isinstance(s, dict) for s in section)
     print('\n')
 
+def test_extract_sections_from_text(get_test_data_path):
+    logger = setup_logging("test_logger", log_file="../logs/scraper.log")
+    parser = PDFParser("open_bio_data_repos.json", logger, log_file_override=None,
+                       llm_name='gemini-2.0-flash')
+    text = parser.extract_text_from_pdf(get_test_data_path('test_pdf_extract_1.pdf'))
+    normalized_text = parser.normalize_extracted_text(text)
+    sections = parser.extract_sections_from_text(normalized_text)
+    assert isinstance(sections, list)
+    assert len(sections) > 0 and len(sections) < 200
+    assert all(isinstance(s, dict) for s in sections)
+    print('\n')
 
 def test_resolve_data_repository():
     logger = setup_logging("test_logger", log_file="../logs/scraper.log", level="INFO",
@@ -106,12 +114,11 @@ def test_resolve_data_repository():
         assert data_repo.lower() == tgt.lower()
         print('\n')
 
-def test_extract_title_from_xml():
+def test_extract_title_from_xml(get_test_data_path):
     logger = setup_logging("test_logger", log_file="../logs/scraper.log")
     parser = XMLParser("open_bio_data_repos.json", logger, log_file_override=None,
                        llm_name='gemini-2.0-flash')
-    xml_file_path = os.path.join('test_data', 'test_1.xml')
-    with open(xml_file_path, 'rb') as f:  # ✅ open in binary mode
+    with open(get_test_data_path('test_1.xml'), 'rb') as f:  # ✅ open in binary mode
         xml_root = etree.fromstring(f.read())
     title = parser.extract_publication_title(xml_root)
     assert isinstance(title, str)
@@ -119,11 +126,10 @@ def test_extract_title_from_xml():
     assert title == "Dual molecule targeting HDAC6 leads to intratumoral CD4+ cytotoxic lymphocytes recruitment through MHC-II upregulation on lung cancer cells"
     print('\n')
 
-def test_extract_title_from_html_PMC():
+def test_extract_title_from_html_PMC(get_test_data_path):
     logger = setup_logging("test_logger", log_file="../logs/scraper.log")
     parser = HTMLParser("open_bio_data_repos.json", logger, llm_name='gemini-2.0-flash')
-    html_file_path = os.path.join('test_data', 'test_extract_1.html')
-    with open(html_file_path, 'rb') as f:
+    with open(get_test_data_path('test_extract_1.html'), 'rb') as f:
         raw_html = f.read()
     title = parser.extract_publication_title(raw_html)
     assert isinstance(title, str)
@@ -131,22 +137,20 @@ def test_extract_title_from_html_PMC():
     assert "Proteogenomic insights suggest druggable pathways in endometrial carcinoma" in title
     print('\n')
 
-def test_extract_title_from_html_nature():
+def test_extract_title_from_html_nature(get_test_data_path):
     logger = setup_logging("test_logger", log_file="../logs/scraper.log")
     parser = HTMLParser("open_bio_data_repos.json", logger, llm_name='gemini-2.0-flash')
-    html_file_path = os.path.join('test_data', 'Webscraper_fetch_1.html')
-    with open(html_file_path, 'rb') as f:
+    with open(get_test_data_path('Webscraper_fetch_1.html'), 'rb') as f:
         raw_html = f.read()
     title = parser.extract_publication_title(raw_html)
     assert isinstance(title, str)
     assert "Defective N-glycosylation of IL6 induces metastasis and tyrosine kinase inhibitor resistance" in title
     print('\n')
 
-def test_semantic_retrieve_from_corpus():
+def test_semantic_retrieve_from_corpus(get_test_data_path):
     logger = setup_logging("test_logger", log_file="../logs/scraper.log")
     parser = HTMLParser("open_bio_data_repos.json", logger, llm_name='gemini-2.0-flash')
-    html_file_path = os.path.join('test_data', 'Webscraper_fetch_1.html')
-    with open(html_file_path, 'rb') as f:
+    with open(get_test_data_path('Webscraper_fetch_1.html'), 'rb') as f:
         raw_html = f.read()
     corpus = parser.extract_sections_from_html(raw_html)
     top_k_sections = parser.semantic_retrieve_from_corpus(corpus, topk_docs_to_retrieve=3)
@@ -161,4 +165,16 @@ def test_semantic_retrieve_from_corpus():
         assert acc_id in DAS_text
     for sect_i, sect in enumerate(top_k_sections):
         assert abs(sect['L2_distance'] - scores[sect_i]) < 0.01
+    print('\n')
+
+def test_normalize_text_from_pdf(get_test_data_path):
+    logger = setup_logging("test_logger", log_file="../logs/scraper.log")
+    parser = PDFParser("open_bio_data_repos.json", logger, llm_name='gemini-2.0-flash')
+    raw_text = parser.extract_text_from_pdf(get_test_data_path('test_pdf_extract_1.pdf'))
+    normalized_text = parser.normalize_extracted_text(raw_text)
+    assert isinstance(normalized_text, str)
+    assert len(normalized_text) > 0
+    assert len(normalized_text) < 178720
+    assert not re.search('\nPage\s+\d+\s*', normalized_text)
+    assert not re.search('\nNewpage\s+\d+\s*', normalized_text)
     print('\n')

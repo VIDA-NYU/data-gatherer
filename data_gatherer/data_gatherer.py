@@ -1,8 +1,10 @@
 import os.path
+import os
 from data_gatherer.logger_setup import setup_logging
 from data_gatherer.data_fetcher import *
 from data_gatherer.parser.html_parser import *
 from data_gatherer.parser.xml_parser import *
+from data_gatherer.parser.pdf_parser import *
 from data_gatherer.classifier import LLMClassifier
 from data_gatherer.env import CACHE_BASE_DIR
 import json
@@ -23,7 +25,7 @@ class DataGatherer:
     """
 
     def __init__(self, llm_name='gpt-4o-mini', process_entire_document=False, log_file_override=None,
-                 write_htmls_xmls=False, html_xml_dir='tmp/html_xmls/', full_output_file='output/result.csv',
+                 write_htmls_xmls=False, article_file_dir='tmp/raw_files/', full_output_file='output/result.csv',
                  download_data_for_description_generation=False, data_resource_preview=False,
                  download_previewed_data_resources=False, log_level=logging.ERROR, clear_previous_logs=True,
                  retrieval_patterns_file='retrieval_patterns.json', load_from_cache=False, save_to_cache=False,
@@ -40,9 +42,9 @@ class DataGatherer:
 
         :param write_htmls_xmls: Flag to indicate if raw HTML/XML files should be saved.
 
-        :param html_xml_dir: Directory to save the raw HTML/XML files.
+        :param article_file_dir: Directory to save the raw HTML/XML/PDF files.
 
-        :param skip_unstructured_files: Flag to skip unstructured files based on file extensions.
+        :param full_output_file: Path to the output file where results will be saved.
 
         :param download_data_for_description_generation: Flag to indicate if data should be downloaded for description generation.
 
@@ -50,13 +52,17 @@ class DataGatherer:
 
         :param download_previewed_data_resources: Flag to indicate if previewed data resources should be downloaded.
 
-        :param full_output_file: Path to the output file where results will be saved.
-
         :param log_level: Logging level for the logger.
 
         :param clear_previous_logs: Flag to clear previous logs before setting up logging.
 
         :param retrieval_patterns_file: Path to the JSON file containing retrieval patterns for classification.
+
+        :param load_from_cache: Flag to indicate if results should be loaded from cache.
+
+        :param save_to_cache: Flag to indicate if results should be saved to cache.
+
+        :param driver_path: Path to the WebDriver executable for the data fetcher (if applicable).
 
         Initializes the DataGatherer with the given configuration file and sets up logging.
 
@@ -76,7 +82,7 @@ class DataGatherer:
         self.data_checker = DataCompletenessChecker(self.logger)
 
         self.write_htmls_xmls = write_htmls_xmls
-        self.html_xml_dir = html_xml_dir
+        self.article_file_dir = article_file_dir
         self.load_from_cache = load_from_cache
         self.save_to_cache = save_to_cache
 
@@ -96,8 +102,10 @@ class DataGatherer:
         self.downloadables = []
         self.logger.info(f"DataGatherer orchestrator initialized. Extraction Model: {llm_name}")
 
+        os.environ["TOKENIZERS_PARALLELISM"] = "false"
+
     def fetch_data(self, urls, search_method='url_list', driver_path=None, browser=None, headless=True,
-                   HTML_fallback=False, local_fetch_file=None, write_htmls_xmls=False, html_xml_dir='tmp/html_xmls/'):
+                   HTML_fallback=False, local_fetch_file=None, write_htmls_xmls=False, article_file_dir='tmp/raw_files/'):
         """
         Fetches data from the given URL using the configured data fetcher (WebScraper or EntrezFetcher).
 
@@ -117,7 +125,7 @@ class DataGatherer:
 
         :param write_htmls_xmls: Flag to indicate if raw HTML/XML files should be saved. Overwrites the default setting.
 
-        :param html_xml_dir: Directory to save the raw HTML/XML files. Overwrites the default setting.
+        :param article_file_dir: Directory to save the raw HTML/XML/PDF files. Overwrites the default setting.
 
         :return: Dictionary with URLs as keys and raw data as values.
 
@@ -142,16 +150,18 @@ class DataGatherer:
                                                                               browser=browser,
                                                                               headless=headless)
             self.logger.info(f"Fetching data from URL: {src_url}")
-            raw_data[src_url] = self.data_fetcher.fetch_data(src_url)
+            raw_data[src_url] = self.data_fetcher.fetch_data(src_url, )
 
             if write_htmls_xmls and not isinstance(self.data_fetcher, DatabaseFetcher):
                 self.publisher = self.data_fetcher.url_to_publisher_domain(self.current_url)
-                directory = html_xml_dir + self.publisher + '/'
+                directory = article_file_dir + self.publisher + '/'
                 self.logger.info(f"Raw Data is {self.data_fetcher.raw_data_format}.")
                 if self.data_fetcher.raw_data_format == "HTML":
                     self.data_fetcher.html_page_source_download(directory)
                 elif self.data_fetcher.raw_data_format == "XML":
                     self.data_fetcher.download_xml(directory, raw_data[src_url])
+                elif self.data_fetcher.raw_data_format == "PDF":
+                    self.data_fetcher.download_pdf(directory, raw_data[src_url], src_url)
                 else:
                     self.logger.warning(f"Unsupported raw data format: {self.data_fetcher.raw_data_format}.")
 
@@ -159,14 +169,14 @@ class DataGatherer:
 
         return raw_data
 
-    def parse_data(self, current_url, raw_data, publisher='PMC', additional_data=None,
-                   raw_data_format='XML', save_xml_output=False, html_xml_dir='tmp/html_xml_samples/',
+    def parse_data(self, raw_data, publisher=None, current_url_address=None, additional_data=None,
+                   raw_data_format='XML', parsed_data_dir='tmp/parsed_articles/',
                    process_DAS_links_separately=False, full_document_read=False, semantic_retrieval=False,
                    prompt_name='retrieve_datasets_simple_JSON', use_portkey_for_gemini=True, section_filter=None):
         """
         Parses the raw data fetched from the source URL using the appropriate parser.
 
-        :param current_url: The URL of the current data source being processed.
+        :param current_url_address: The URL of the current data source being processed.
 
         :param raw_data: The raw data to parse, typically string formatted as HTML or XML content.
 
@@ -176,15 +186,13 @@ class DataGatherer:
 
         :param raw_data_format: The format of the raw data (e.g., 'HTML', 'XML').
 
-        :param save_xml_output: Flag to indicate if the parsed XML output should be saved.
-
-        :param html_xml_dir: Directory to save the parsed HTML/XML files.
+        :param parsed_data_dir: Directory to save the parsed HTML/XML/PDF files.
 
         :param process_DAS_links_separately: Flag to indicate if DAS links should be processed separately.
 
         :return: Parsed data as a DataFrame or dictionary, depending on the parser used.
         """
-        self.logger.info(f"Parsing data from URL: {current_url} with publisher: {publisher}")
+        self.logger.info(f"Parsing data from URL: {current_url_address} with publisher: {publisher}")
 
         if raw_data_format == "XML":
             self.parser = XMLParser(self.open_data_repos_ontology, self.logger, full_document_read=full_document_read,
@@ -194,6 +202,10 @@ class DataGatherer:
             self.parser = HTMLParser(self.open_data_repos_ontology, self.logger, full_document_read=full_document_read,
                                      llm_name=self.llm, use_portkey_for_gemini=use_portkey_for_gemini)
 
+        elif raw_data_format == "PDF":
+            self.parser = PDFParser(self.open_data_repos_ontology, self.logger, full_document_read=full_document_read,
+                                    llm_name=self.llm, use_portkey_for_gemini=use_portkey_for_gemini)
+
         else:
             raise ValueError(f"Unsupported raw data format: {raw_data_format}")
 
@@ -201,12 +213,19 @@ class DataGatherer:
             cont = raw_data.values()
             cont = list(cont)[0]
 
+        elif isinstance(raw_data, str):
+            cont = raw_data
+
         else:
             cont = raw_data
 
-        return self.parser.parse_data(cont, publisher, current_url, raw_data_format=raw_data_format,
-                                      prompt_name=prompt_name, use_portkey_for_gemini=use_portkey_for_gemini,
-                                      save_xml_output=save_xml_output, html_xml_dir=html_xml_dir,
+        return self.parser.parse_data(cont,
+                                      publisher=publisher,
+                                      current_url_address=current_url_address,
+                                      raw_data_format=raw_data_format,
+                                      prompt_name=prompt_name,
+                                      use_portkey_for_gemini=use_portkey_for_gemini,
+                                      article_file_dir=parsed_data_dir,
                                       additional_data=additional_data,
                                       process_DAS_links_separately=process_DAS_links_separately,
                                       semantic_retrieval=semantic_retrieval,
@@ -278,7 +297,7 @@ class DataGatherer:
         else:
             raise ValueError(f"Invalid URL format: {url}. Must start with 'PMC' or 'https://'.")
 
-    def process_url(self, url, save_staging_table=False, html_xml_dir='tmp/html_xmls/', use_portkey_for_gemini=True,
+    def process_url(self, url, save_staging_table=False, article_file_dir='tmp/raw_files/', use_portkey_for_gemini=True,
                     driver_path=None, browser='Firefox', headless=True, prompt_name='retrieve_datasets_simple_JSON',
                     semantic_retrieval=False, section_filter=None):
         """
@@ -296,7 +315,7 @@ class DataGatherer:
 
         param save_staging_table: Flag to save the staging table.
 
-        param html_xml_dir: Directory to save the raw HTML/XML files.
+        param article_file_dir: Directory to save the raw HTML/XML/PDF files.
 
         param use_portkey_for_gemini: Flag to use Portkey for Gemini LLM.
 
@@ -368,7 +387,7 @@ class DataGatherer:
             self.logger.info(f"Raw {self.raw_data_format} data fetched from {url} is ready for parsing.")
 
             if self.write_htmls_xmls and not isinstance(self.data_fetcher, DatabaseFetcher):
-                directory = html_xml_dir + self.publisher + '/'
+                directory = article_file_dir + self.publisher + '/'
                 self.logger.info(f"Raw Data is {self.raw_data_format}.")
                 if isinstance(self.data_fetcher, WebScraper):
                     self.data_fetcher.html_page_source_download(directory)
@@ -469,7 +488,7 @@ class DataGatherer:
 
     def process_articles(self, url_list, log_modulo=10, driver_path=None, browser='Firefox', headless=True,
                          use_portkey_for_gemini=True, prompt_name='retrieve_datasets_simple_JSON',
-                         semantic_retrieval=False):
+                         semantic_retrieval=False, section_filter=None):
         """
         Processes a list of article URLs and returns parsed data.
 
@@ -499,7 +518,7 @@ class DataGatherer:
             self.logger.info(f"{iteration}th function call: self.process_url({url})")
             results[url] = self.process_url(url, driver_path=driver_path, browser=browser, headless=headless,
                                             use_portkey_for_gemini=use_portkey_for_gemini, prompt_name=prompt_name,
-                                            semantic_retrieval=semantic_retrieval)
+                                            semantic_retrieval=semantic_retrieval, section_filter=section_filter)
 
             if iteration % log_modulo == 0:
                 elapsed = time.time() - start_time  # Time elapsed since start
@@ -573,7 +592,7 @@ class DataGatherer:
             raise FileNotFoundError(f"Create file with input links! File not found: {input_file}\n\n{e}\n")
 
     def get_data_preview(self, combined_df, display_type='console', interactive=True, return_metadata=False,
-                         write_raw_metadata=False, html_xml_dir='tmp/html_xmls/', use_portkey_for_gemini=True,
+                         write_raw_metadata=False, article_file_dir='tmp/raw_files/', use_portkey_for_gemini=True,
                          prompt_name='gpt_metadata_extract', timeout=3):
         """
         This method iterates through the combined_df DataFrame, checks for dataset webpages or download links,
@@ -588,7 +607,7 @@ class DataGatherer:
 
         :param write_raw_metadata: If True, saves raw metadata to the specified directory.
 
-        :param html_xml_dir: Directory to save raw HTML/XML files if write_raw_metadata is True.
+        :param article_file_dir: Directory to save raw HTML/XML files if write_raw_metadata is True.
 
         :param use_portkey_for_gemini: If True, uses Portkey for Gemini LLM.
 
@@ -683,8 +702,8 @@ class DataGatherer:
                     else:
                         html = self.metadata_parser.normalize_HTML(html)
                     if write_raw_metadata:
-                        self.logger.info(f"Saving raw metadata to: {html_xml_dir + 'raw_metadata/'}")
-                        self.data_fetcher.html_page_source_download(html_xml_dir + 'raw_metadata/')
+                        self.logger.info(f"Saving raw metadata to: {article_file_dir + 'raw_metadata/'}")
+                        self.data_fetcher.html_page_source_download(article_file_dir + 'raw_metadata/')
                 elif not skip:
                     if 'informative_html_metadata_tags' in self.open_data_repos_ontology['repos'][resolved_key]:
                         keep_sect = self.open_data_repos_ontology['repos'][resolved_key][
