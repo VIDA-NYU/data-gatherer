@@ -2,7 +2,6 @@ from data_gatherer.parser.base_parser import *
 import re
 import pandas as pd
 import pymupdf, fitz
-import pypdf
 import unicodedata
 from collections import Counter
 

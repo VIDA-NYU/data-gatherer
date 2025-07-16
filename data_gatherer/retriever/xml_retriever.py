@@ -328,7 +328,7 @@ class xmlRetriever(BaseRetriever):
 
                     # Extract the full description within the <p> tag if available
                     description_element = supplementary_material_parent.find(".//caption/p")
-                    description = " ".join(
+                    description = ". ".join(
                         description_element.itertext()).strip() if description_element is not None else "No description"
 
                     # Log media attributes and add to results

@@ -344,7 +344,7 @@ class DataGatherer:
 
         article_id = self.url_to_article_id(url)
         process_id = self.llm + "-FDR-" + article_id if self.full_document_read else self.llm + "-RTR-" + article_id
-        if self.load_from_cache:
+        if os.path.exists(os.path.join(CACHE_BASE_DIR, "process_url_cache.json")) and self.load_from_cache:
             cache = json.load(open(os.path.join(CACHE_BASE_DIR, "process_url_cache.json"), 'r'))
             if process_id in cache:
                 return pd.DataFrame(cache[process_id])
