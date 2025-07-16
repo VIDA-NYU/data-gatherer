@@ -252,13 +252,13 @@ class LLMParser(ABC):
 
     # create abstract method for subclasses to implement parse_data
     @abstractmethod
-    def parse_data(self, raw_data, current_url_address):
+    def parse_data(self, raw_data, current_url):
         """
         Parse the raw data using the configured LLM.
 
         :param raw_data: The raw data to be parsed (XML or HTML).
 
-        :param current_url_address: The current URL address being processed.
+        :param current_url: The current URL address being processed.
 
         :return: Parsed data as a DataFrame or list of dictionaries.
         """

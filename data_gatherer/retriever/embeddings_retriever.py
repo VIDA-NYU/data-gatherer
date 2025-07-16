@@ -54,7 +54,7 @@ class EmbeddingsRetriever(BaseRetriever):
         results = []
         for idx, score in zip(idxs, dists):
             results.append({
-                'text': self.corpus[idx]['sec_txt'],
+                'text': self.corpus[idx]['sec_txt'] if 'sec_txt' in self.corpus[idx] else self.corpus[idx]['text'],
                 'section_title': self.corpus[idx]['section_title'],
                 'sec_type': self.corpus[idx]['sec_type'],
                 'L2_distance': float(score)

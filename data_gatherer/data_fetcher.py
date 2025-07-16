@@ -12,6 +12,7 @@ from bs4 import BeautifulSoup
 from urllib.parse import urlparse
 import pandas as pd
 from data_gatherer.retriever.xml_retriever import xmlRetriever
+import tempfile
 
 # Abstract base class for fetching data
 class DataFetcher(ABC):
@@ -174,6 +175,10 @@ class DataFetcher(ABC):
             self.logger.info(f"Reusing existing WebScraper driver: {self.scraper_tool}")
             return self  # Reuse current instance
 
+        if self.url_is_pdf(url):
+            self.logger.info(f"URL {url} is a PDF. Using PdfFetcher.")
+            return PdfFetcher(logger)
+
         self.logger.info(f"WebScraper instance: {isinstance(self, WebScraper)}")
         self.logger.info(f"EntrezFetcher instance: {isinstance(self, EntrezFetcher)}")
         self.logger.info(f"scraper_tool attribute: {hasattr(self,'scraper_tool')}")
@@ -212,6 +217,22 @@ class DataFetcher(ABC):
                 self.logger.debug(f"URL detected as {src}.")
                 return src
         self.logger.debug("No API pattern matched.")
+
+    def url_is_pdf(self, url):
+        """
+        Checks if the given URL points to a PDF file.
+
+        :param url: The URL to check.
+
+        :return: True if the URL points to a PDF file, False otherwise.
+        """
+        self.logger.debug(f"Checking if URL is a PDF: {url}")
+        if url.lower().endswith('.pdf'):
+            self.logger.info(f"URL {url} ends with .pdf")
+            return True
+        elif re.search(r'arxiv\.org/pdf/', url, re.IGNORECASE):
+            return True
+        return False
 
     def download_file_from_url(self, url, output_root="output/suppl_files", paper_id=None):
         output_dir = os.path.join(output_root, paper_id)
@@ -584,6 +605,49 @@ class EntrezFetcher(DataFetcher):
         else:
             self.logger.warning("No article title found in XML data.")
             return "No Title Found"
+
+class PdfFetcher(DataFetcher):
+    """
+    Class for fetching PDF files from URLs.
+    """
+    def __init__(self, logger, driver_path=None, browser='firefox', headless=True):
+        super().__init__(logger, src='PdfFetcher', driver_path=driver_path, browser=browser, headless=headless)
+        self.logger.debug("PdfFetcher initialized.")
+
+    def fetch_data(self, url, return_temp=True, **kwargs):
+        """
+        Fetches PDF data from the given URL.
+
+        :param url: The URL to fetch data from.
+
+        :return: The raw content of the PDF file.
+        """
+        self.raw_data_format = 'PDF'
+        self.logger.info(f"Fetching PDF data from {url}")
+        response = requests.get(url)
+        if response.status_code == 200:
+            if return_temp:
+                # Write the PDF content to a temporary file
+                with tempfile.NamedTemporaryFile(delete=False, suffix='.pdf') as temp_file:
+                    temp_file.write(response.content)
+                    self.logger.info(f"PDF data written to temporary file: {temp_file.name}")
+                    return temp_file.name
+            else:
+                return response.content
+        else:
+            self.logger.error(f"Failed to fetch PDF data from {url}, status code: {response.status_code}")
+            return None
+
+    def download_pdf(self, directory, raw_data, src_url):
+        """
+        Downloads the PDF data to a specified directory.
+        """
+        fn = os.path.join(directory, f"{self.url_to_filename(src_url)}.pdf")
+
+        self.logger.info(f"Downloading PDF from {src_url}")
+        with open(fn, 'wb') as file:
+            file.write(raw_data)
+            self.logger.info(f"PDF data written to file: {file}")
 
 class DataCompletenessChecker:
     """
