@@ -44,6 +44,27 @@ def test_extract_href_from_supplementary_material_html(get_test_data_path):
     assert len(hrefs) == 58
     print('\n')
 
+def test_extract_supplementary_material_refs_html(get_test_data_path):
+    logger = setup_logging("test_logger", log_file="../logs/scraper.log")
+    parser = HTMLParser("open_bio_data_repos.json", logger, llm_name='gemini-2.0-flash')
+    with open(get_test_data_path('test_extract_2.html'), 'rb') as f:
+        raw_html = f.read()
+    parser.publisher = "PMC"
+    hrefs = parser.extract_href_from_supplementary_material(raw_html,
+                                                                 "https://pmc.ncbi.nlm.nih.gov/articles/PMC8628860/")
+    metadata = parser.extract_supplementary_material_refs(raw_html, hrefs)
+
+    expected_len_descriptions = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 23665, 1287, 554, 1636, 287, 0, 572, 185, 317, 481,
+                                 880, 834, 341, 504, 1412, 615, 630, 440, 491, 1084, 576, 0, 0, 576, 286, 181, 2202, 0,
+                                 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 33]
+
+    len_descriptions = [len(desc) for desc in metadata['context_description'].tolist()]
+
+    assert isinstance(metadata, pd.DataFrame)
+    assert len(metadata) == 58
+    assert len_descriptions == expected_len_descriptions
+
+    print('\n')
 def test_extract_href_from_supplementary_material_xml(get_test_data_path):
     logger = setup_logging("test_logger", log_file="../logs/scraper.log")
     parser = XMLParser("open_bio_data_repos.json", logger, llm_name='gemini-2.0-flash')
@@ -58,6 +79,28 @@ def test_extract_href_from_supplementary_material_xml(get_test_data_path):
 
     assert isinstance(hrefs, pd.DataFrame)
     assert len(hrefs) == 10
+    print('\n')
+
+def test_extract_supplementary_material_refs_xml(get_test_data_path):
+    logger = setup_logging("test_logger", log_file="../logs/scraper.log")
+    parser = XMLParser("open_bio_data_repos.json", logger, llm_name='gemini-2.0-flash')
+    with open(get_test_data_path('test_2.xml'), 'rb') as f:
+        api_xml = f.read()
+    parser.publisher = "PMC"
+    api_xml = etree.fromstring(api_xml)
+
+    hrefs = parser.extract_href_from_supplementary_material(api_xml,
+                                                                 "https://pmc.ncbi.nlm.nih.gov/articles/PMC11129317/")
+    metadata = parser.extract_supplementary_material_refs(api_xml, hrefs)
+
+    expected_len_descriptions = [9086, 728, 163, 389, 400, 177, 405, 209, 147, 0]
+
+    len_descriptions = [len(desc) for desc in metadata['context_description'].tolist()]
+
+    assert isinstance(metadata, pd.DataFrame)
+    assert len(metadata) == 10
+    assert len_descriptions == expected_len_descriptions
+
     print('\n')
 
 def test_extract_paragraphs_from_xml(get_test_data_path):
