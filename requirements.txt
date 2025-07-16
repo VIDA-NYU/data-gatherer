@@ -27,3 +27,4 @@ ipywidgets
 portkey-ai
 xlsxwriter
 sentence-transformers
+pymupdf
