@@ -106,7 +106,7 @@ nosetests.xml
 
 /scripts/exp_input/Local_fetched_data.parquet
 /scripts/Vector_Retrieval_copy_latest.ipynb
-/scripts/example_notebook.ipynb
+/scripts/ignore/example_notebook.ipynb
 /scripts/mdc2025/mdc_2025.ipynb
 /scripts/mdc2025/mdc_2025_xml_test.ipynb
 /scripts/E-utility/EFetch_XML.ipynb
@@ -114,6 +114,11 @@ nosetests.xml
 /scripts/E-utility/output.txt
 /scripts/E-utility/output_no_body.txt
 /scripts/exp_input/article_ids.csv
-/scripts/article_id.ipynb
+/scripts/ignore/article_id.ipynb
 /docs/getting_started_ignore.ipynb
 /examples/getting_started_ignore.ipynb
+/scripts/ignore/article_id.ipynb
+/scripts/exp_input/article_ids.csv
+/examples/getting_started_ignore.ipynb
+/scripts/ignore/get_context.ipynb
+/scripts/ignore/logs/data_gatherer.log

@@ -4,7 +4,7 @@ from lxml import etree
 import os
 import pandas as pd
 import json
-import re
+import regex as re
 
 class XMLParser(LLMParser):
     def __init__(self, open_data_repos_ontology, logger, log_file_override=None, full_document_read=True,
@@ -159,9 +159,11 @@ class XMLParser(LLMParser):
             if filter_supp is None or filter_supp:
                 supplementary_material_links = self.extract_href_from_supplementary_material(api_data,
                                                                                              current_url_address)
+                supplementary_material_metadata = self.extract_supplementary_material_refs(api_data,
+                                                                                           supplementary_material_links)
             else:
-                supplementary_material_links = pd.DataFrame()
-            self.logger.debug(f"supplementary_material_links: {supplementary_material_links}")
+                supplementary_material_metadata = pd.DataFrame()
+            self.logger.debug(f"supplementary_material_metadata: {supplementary_material_metadata}")
 
             if not self.full_document_read:
                 if process_DAS_links_separately and (filter_das is None or filter_das):
@@ -215,7 +217,7 @@ class XMLParser(LLMParser):
                 # Create a DataFrame from the dataset links union supplementary material links
                 out_df = pd.concat([pd.DataFrame(dataset_links_w_target_pages).rename(
                     columns={'dataset_id': 'dataset_identifier', 'repository_reference': 'data_repository'}),
-                                    supplementary_material_links])  # check index error here
+                                    supplementary_material_metadata])  # check index error here
                 self.logger.info(f"Dataset Links type: {type(out_df)} of len {len(out_df)}, with cols: {out_df.columns}")
                 self.logger.debug(f"Datasets: {out_df}")
 
@@ -254,9 +256,9 @@ class XMLParser(LLMParser):
                     dataset_links_w_target_pages = self.get_dataset_page(augmented_dataset_links)
 
                     # Create a DataFrame from the dataset links union supplementary material links
-                    out_df = pd.concat([pd.DataFrame(dataset_links_w_target_pages), supplementary_material_links])
+                    out_df = pd.concat([pd.DataFrame(dataset_links_w_target_pages), supplementary_material_metadata])
                 else:
-                    out_df = supplementary_material_links
+                    out_df = supplementary_material_metadata
 
                 self.logger.info(f"Dataset Links type: {type(out_df)} of len {len(out_df)}, with cols: {out_df.columns}")
 
@@ -536,6 +538,55 @@ class XMLParser(LLMParser):
                 self.logger.debug(f"Extracted supplementary material links:\n{hrefs}")
         return pd.DataFrame(hrefs)
 
+    def extract_supplementary_material_refs(self, api_xml, supplementary_material_links):
+        """
+        Extract metadata from xrefs to supplementary material ids in the XML.
+        """
+        self.logger.info(f"Function_call: extract_supplementary_material_refs(api_xml, supplementary_material_links)")
+        for i,row in supplementary_material_links.iterrows():
+            # Find the <href> elements that reference the supplementary material <a href="#id">
+            context_descr = ""
+            href_id = row['id']
+            self.logger.debug(f"Processing href_id: {href_id} for supplementary material links.")
+            xref_elements = api_xml.xpath(f".//xref[@rid='{href_id}']")
+            self.logger.debug(f"Found {len(xref_elements)} xref elements href_id: {href_id}.")
+            # Iterate through each xref element:
+            for xref in xref_elements:
+                # Extract the sentence that contains the xref
+                surrounding_text = self.get_surrounding_text(xref)
+                text_segment = self.get_sentence_segment(surrounding_text, href_id)
+                if text_segment not in context_descr:
+                    context_descr += text_segment + "\n"
+            # Add the context description to the supplementary material links DataFrame
+            self.logger.info(f"Extracted context_descr for xref {href_id}: {context_descr}")
+            supplementary_material_links.at[i, 'context_description'] = context_descr.strip()
+        return supplementary_material_links
+
+    def get_sentence_segment(self, surrounding_text, rid):
+        """
+        Extract inter-period sentence segments containing the xref from the XML content.
+        """
+        ref_subst_text = re.sub(f'rid={rid}', 'this file', surrounding_text)
+
+        # Split the surrounding text into sentences based on periods that do not end with an abbreviation
+        target_sentences = self.naive_sentence_tokenizer(ref_subst_text)
+
+        ret = ""
+        for sentence in target_sentences:
+            if rid in sentence or 'this file' in sentence:
+                # Return the first sentence that contains the xref
+                if sentence not in ret:
+                    ret += sentence.strip() + " "
+
+        return ret
+
+    def naive_sentence_tokenizer(self, text):
+        # Pattern: match period/question/exclamation followed by space + capital letter
+        # Negative lookbehind for common abbreviations or initials
+        pattern = r'(?<!\b(?:Dr|Mr|Mrs|Ms|Prof|Inc|e\.g|i\.e|Fig|vs|et al))(?<=[.!?])\s+(?=[A-Z])'
+        sentences = re.split(pattern, text)
+        return sentences
+
     def get_surrounding_text(self, element):
         """
         Extracts text surrounding the element (including parent and siblings) for more context.
@@ -567,8 +618,11 @@ class XMLParser(LLMParser):
             elif child.tag == 'xref':
                 # Handle the case for cross-references
                 xref_text = child.text if child.text else '[xref]'
-                parent_text.append(xref_text)
-
+                rid = child.get('rid')
+                if rid:
+                    parent_text.append(f"{xref_text} [rid={rid}]")
+                else:
+                    parent_text.append(xref_text)
             # Add the tail text (text after the inline element)
             if child.tail:
                 parent_text.append(child.tail.strip())
