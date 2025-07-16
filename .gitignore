@@ -120,5 +120,4 @@ nosetests.xml
 /scripts/ignore/article_id.ipynb
 /scripts/exp_input/article_ids.csv
 /examples/getting_started_ignore.ipynb
-/scripts/ignore/get_context.ipynb
-/scripts/ignore/logs/data_gatherer.log
+/scripts/ignore/**
