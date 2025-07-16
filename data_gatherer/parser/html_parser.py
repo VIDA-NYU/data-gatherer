@@ -1,6 +1,6 @@
 from data_gatherer.parser.base_parser import *
 from data_gatherer.retriever.html_retriever import htmlRetriever
-import re
+import regex as re
 import logging
 import pandas as pd
 from bs4 import BeautifulSoup, Comment, NavigableString, CData
@@ -353,8 +353,12 @@ class HTMLParser(LLMParser):
         filter_supp = section_filter == 'supplementary_material' or section_filter is None
         filter_das = section_filter == 'data_availability_statement' or section_filter is None
 
-        supplementary_material_links = self.extract_href_from_supplementary_material(html_str, current_url_address) if \
-            filter_supp or filter_supp is None else pd.DataFrame()
+        if filter_supp or filter_supp is None:
+            supplementary_material_links = self.extract_href_from_supplementary_material(html_str, current_url_address)
+            supplementary_material_metadata = self.extract_supplementary_material_refs(html_str,
+                                                                                       supplementary_material_links)
+        else:
+            supplementary_material_metadata = pd.DataFrame()
 
         preprocessed_data = self.normalize_HTML(html_str)
         self.logger.debug(f"Preprocessed data: {preprocessed_data}")
@@ -374,7 +378,7 @@ class HTMLParser(LLMParser):
             dataset_links_w_target_pages = self.get_dataset_page(augmented_dataset_links)
 
             # Create a DataFrame from the dataset links union supplementary material links
-            out_df = pd.concat([pd.DataFrame(dataset_links_w_target_pages), supplementary_material_links])
+            out_df = pd.concat([pd.DataFrame(dataset_links_w_target_pages), supplementary_material_metadata])
 
         elif filter_das is None or filter_das is True:
             self.logger.info(f"Chunking the HTML content for the parsing step.")
@@ -399,10 +403,10 @@ class HTMLParser(LLMParser):
 
             dataset_links_w_target_pages = self.get_dataset_page(augmented_dataset_links)
 
-            out_df = pd.concat([pd.DataFrame(dataset_links_w_target_pages), supplementary_material_links])
+            out_df = pd.concat([pd.DataFrame(dataset_links_w_target_pages), supplementary_material_metadata])
 
         else:
-            out_df = supplementary_material_links
+            out_df = supplementary_material_metadata
 
         self.logger.info(f"Dataset Links type: {type(out_df)} of len {len(out_df)}, with cols: {out_df.columns}")
 
@@ -418,8 +422,11 @@ class HTMLParser(LLMParser):
         elif 'download_link' in out_df.columns:
             out_df = out_df.drop_duplicates(subset=['download_link'], keep='first')
 
-        out_df['source_url'] = current_url_address
-        out_df['pub_title'] = self.retriever.extract_publication_title(preprocessed_data)
+        # Ensure out_df is a copy to avoid SettingWithCopyWarning
+        out_df = out_df.copy()
+
+        out_df.loc[:, 'source_url'] = current_url_address
+        out_df.loc[:, 'pub_title'] = self.retriever.extract_publication_title(preprocessed_data)
 
         return out_df
 
@@ -499,6 +506,8 @@ class HTMLParser(LLMParser):
             section = anchor.getparent().getparent()  # Assuming structure stays the same
             section_id = section.get('id', 'n/a')
             section_class = section.get('class', 'n/a')
+            ancestor_section = anchor.xpath("ancestor::section[1]")
+            ancestor_section_id = ancestor_section[0].get('id') if ancestor_section and ancestor_section[0].get('id') else section_id
 
             # Combine all extracted info
             link_data = {
@@ -506,7 +515,7 @@ class HTMLParser(LLMParser):
                 'title': title,
                 'file_info': file_info,
                 'description': description,
-                'source_section': section_id,
+                'source_section': ancestor_section_id,
                 'section_class': section_class,
             }
 
@@ -537,6 +546,89 @@ class HTMLParser(LLMParser):
         self.logger.info(f"Extracted {len(df_supp)} unique supplementary material links from HTML.")
 
         return df_supp
+
+    def extract_supplementary_material_refs(self, raw_html, supplementary_material_links):
+        """
+        Extract metadata from references to supplementary material ids in the HTML.
+        For each supplementary material link, find <a href="#id"> and extract a short context sentence.
+        Adds a 'context_description' column to the DataFrame.
+        """
+        self.logger.info("Function_call: extract_supplementary_material_refs(raw_html, supplementary_material_links)")
+        tree = html.fromstring(raw_html)
+
+        for i, row in supplementary_material_links.iterrows():
+            context_descr = ""
+            href_id = row.get('source_section', None)
+            if not href_id or href_id == 'n/a':
+                supplementary_material_links.at[i, 'context_description'] = ""
+                continue
+
+            a_elements = tree.xpath(f".//a[@href='#{href_id}']")
+            self.logger.info(f"Found {len(a_elements)} <a> elements with href='#{href_id}'.")
+
+            for ref in a_elements:
+                surrounding_text = self.get_surrounding_text(ref)
+                text_segment = self.get_sentence_segment(surrounding_text, href_id)
+                if text_segment not in context_descr:
+                    context_descr += text_segment + "\n"
+
+            self.logger.info(f"Extracted context description (len: {len(context_descr)}) for {href_id}: "
+                             f"{context_descr.strip()}")
+            supplementary_material_links.at[i, 'context_description'] = context_descr.strip()
+
+        return supplementary_material_links
+
+    def naive_sentence_tokenizer(self, text):
+        """
+        Split text into sentences using a simple regex, avoiding common abbreviations.
+        """
+        pattern = r'(?<!\b(?:Dr|Mr|Mrs|Ms|Prof|Inc|e\.g|i\.e|Fig|vs|et al))(?<=[.!?])\s+(?=[A-Z])'
+        sentences = re.split(pattern, text)
+        return sentences
+
+    def get_sentence_segment(self, surrounding_text, ref_id):
+        """
+        Extract the shortest sentence(s) containing the reference id or anchor from the surrounding text.
+        """
+        ref_subst_text = re.sub(f'#{ref_id}', 'this file', surrounding_text)
+        sentences = self.naive_sentence_tokenizer(ref_subst_text)
+        ret = ""
+        for sentence in sentences:
+            if ref_id in sentence or 'this file' in sentence:
+                if sentence not in ret:
+                    ret += sentence.strip() + " "
+        return ret.strip()
+
+    def get_surrounding_text(self, element):
+        """
+        Extracts text surrounding the element (including parent and siblings) for more context.
+        For HTML, this collects the parent text and inline elements.
+        """
+        parent = element.getparent()
+        if parent is None:
+            return "No parent element found"
+        parent_text = []
+        if parent.text:
+            parent_text.append(parent.text.strip())
+        for child in parent:
+            if child.tag == 'a':
+                link_text = child.text_content() if child.text_content() else ''
+                href = child.get('href')
+                if href:
+                    parent_text.append(f"{link_text} [href={href}]")
+                else:
+                    parent_text.append(link_text)
+            elif child.tag == 'xref':
+                xref_text = child.text_content() if child.text_content() else '[xref]'
+                rid = child.get('rid')
+                if rid:
+                    parent_text.append(f"{xref_text} [rid={rid}]")
+                else:
+                    parent_text.append(xref_text)
+            if child.tail:
+                parent_text.append(child.tail.strip())
+        surrounding_text = " ".join(parent_text)
+        return re.sub(r"[\s\n]+", " ", surrounding_text)
 
     def extract_publication_title(self, raw_data):
         """

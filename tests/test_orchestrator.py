@@ -44,7 +44,7 @@ def test_process_url_with_mocked_fetch_data_and_parser(monkeypatch):
         'dataset_identifier', 'data_repository', 'dataset_webpage',
         'source_section', 'retrieval_pattern', 'access_mode', 'link',
         'source_url', 'download_link', 'title', 'content_type', 'id',
-        'caption', 'description', 'file_extension', 'pub_title'
+        'caption', 'description', 'context_description', 'file_extension', 'pub_title'
     ]
     assert list(result.columns) == expected_columns, f"Columns do not match. Got: {list(result.columns)}"
     # print(f"Result DataFrame:\n{result.columns}")
