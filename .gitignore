@@ -116,8 +116,8 @@ nosetests.xml
 /scripts/exp_input/article_ids.csv
 /scripts/ignore/article_id.ipynb
 /docs/getting_started_ignore.ipynb
-/examples/getting_started_ignore.ipynb
+/scripts/ignore/getting_started_ignore.ipynb
 /scripts/ignore/article_id.ipynb
 /scripts/exp_input/article_ids.csv
-/examples/getting_started_ignore.ipynb
+/scripts/ignore/getting_started_ignore.ipynb
 /scripts/ignore/**

@@ -140,7 +140,7 @@ class DataFetcher(ABC):
         return f"https://www.ncbi.nlm.nih.gov/pmc/articles/{PMCID}"
 
     def update_DataFetcher_settings(self, url, entire_doc_model, logger, HTML_fallback=False, driver_path=None,
-                                    browser='firefox', headless=True):
+                                    browser='firefox', headless=True, raw_HTML_data_filepath=None):
         """
         Sets up either a web scraper or API client based on the URL domain.
         Also used to avoid re_instantiating another selenium webdriver.
@@ -161,6 +161,9 @@ class DataFetcher(ABC):
 
         if not HTML_fallback:
             API = self.url_to_api_root(url)
+
+        self.raw_HTML_data_filepath = raw_HTML_data_filepath if raw_HTML_data_filepath else self.raw_HTML_data_filepath
+        self.logger.info(f"raw_HTML_data_filepath: {self.raw_HTML_data_filepath}")
 
         if self.raw_HTML_data_filepath and self.dataframe_fetch and self.url_in_dataframe(url, self.raw_HTML_data_filepath):
             self.logger.info(f"URL {url} found in DataFrame. Using DatabaseFetcher.")
@@ -200,7 +203,7 @@ class DataFetcher(ABC):
 
         df_fetch = pd.read_parquet(raw_HTML_data_filepath)
 
-        return True if pmcid.lower() in df_fetch['publication'].values else False
+        return True if pmcid and pmcid.lower() in df_fetch['publication'].values else False
 
     def url_to_api_root(self, url):
 
