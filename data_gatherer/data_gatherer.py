@@ -148,7 +148,8 @@ class DataGatherer:
                                                                               HTML_fallback=HTML_fallback,
                                                                               driver_path=driver_path,
                                                                               browser=browser,
-                                                                              headless=headless)
+                                                                              headless=headless,
+                                                                              raw_HTML_data_filepath=local_fetch_file)
             self.logger.info(f"Fetching data from URL: {src_url}")
             raw_data[src_url] = self.data_fetcher.fetch_data(src_url, )
 
@@ -728,7 +729,7 @@ class DataGatherer:
             metadata['paper_with_dataset_citation'] = row['source_url']
 
             if self.save_to_cache:
-                self.logger.info(f"Saving metadata to cache for process ID: {process_id}")
+                self.logger.debug(f"Saving metadata to cache for process ID: {process_id}")
                 self.save_func_output_to_cache(metadata, process_id, 'get_data_preview')
 
             if return_metadata:

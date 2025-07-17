@@ -76,19 +76,19 @@
       "dataset_webpage_url_ptr": "https://doi.org/__ID__"
     },
     "geo" : {
-      "repo_name": "GEO",
+      "repo_name": "Gene Expression Omnibus",
       "dataset_webpage_url_ptr": "https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=__ID__",
       "access_mode": "Complex download"
     },
     "dbgap" : {
-      "repo_name": "dbGaP",
+      "repo_name": "database of Genotypes and Phenotypes",
       "dataset_webpage_url_ptr": "https://www.ncbi.nlm.nih.gov/projects/gap/cgi-bin/study.cgi?study_id=__ID__",
       "id_pattern": "phs[0-9]+\\.\\w+\\d+\\.\\w+\\d+",
       "default_id_suffix": ".v1.p1",
       "access_mode": "Application to access"
     },
     "sra": {
-      "repo_name": "sra",
+      "repo_name": "Sequence Read Archive",
       "dataset_webpage_url_ptr": "https://www.ncbi.nlm.nih.gov/bioproject/?term=__ID__",
       "access_mode": "Complex download",
       "javascript_load_required": true,
@@ -99,7 +99,7 @@
     "ArrayExpress": {
       "repo_name": "ArrayExpress",
       "repo_root": "www.ebi.ac.uk",
-      "dataset_webpage_url_ptr": "https://www.ebi.ac.uk/biostudies/ArrayExpress/studies/__ID__/sdrf",
+      "dataset_webpage_url_ptr": "https://www.ebi.ac.uk/biostudies/ArrayExpress/studies/__ID__",
       "access_mode": "Complex download",
       "javascript_load_required": true
     },

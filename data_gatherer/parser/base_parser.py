@@ -1,10 +1,7 @@
 from abc import ABC, abstractmethod
-from bs4 import BeautifulSoup, NavigableString, CData, Comment
 import re
 import logging
 import pandas as pd
-from lxml import etree
-from lxml import html
 from ollama import Client
 from openai import OpenAI
 import google.generativeai as genai
@@ -16,11 +13,9 @@ import json
 from data_gatherer.prompts.prompt_manager import PromptManager
 import tiktoken
 from data_gatherer.resources_loader import load_config
-from data_gatherer.retriever.base_retriever import BaseRetriever
 from data_gatherer.retriever.embeddings_retriever import EmbeddingsRetriever
-from data_gatherer.retriever.xml_retriever import xmlRetriever
-from data_gatherer.retriever.html_retriever import htmlRetriever
 from data_gatherer.env import PORTKEY_GATEWAY_URL, PORTKEY_API_KEY, PORTKEY_ROUTE, PORTKEY_CONFIG, NYU_LLM_API, GPT_API_KEY, GEMINI_KEY, DATA_GATHERER_USER_NAME
+import requests
 
 dataset_response_schema_gpt = {
     "type": "json_schema",
@@ -474,7 +469,7 @@ class LLMParser(ABC):
         else:
             # Make the request to the model
             self.logger.info(
-                f"Requesting datasets from content using model: {model}, temperature: {temperature}, messages: "
+                f"Requesting datasets from content using model: {model}, temperature: {temperature}, messages length: "
                 f"{self.count_tokens(messages, model)} tokens")
             resps = []
 
@@ -506,11 +501,13 @@ class LLMParser(ABC):
                     resps = self.safe_parse_json(response.choices[0].message.content)  # 'datasets' keyError?
                     self.logger.info(f"Response is {type(resps)}: {resps}")
                     resps = resps.get("datasets", []) if resps is not None else []
+                    resps = self.deduplicate_response(resps)
                     self.logger.info(f"Response is {type(resps)}: {resps}")
                     self.prompt_manager.save_response(prompt_id, resps) if self.save_responses_to_cache else None
                 else:
                     try:
                         resps = self.safe_parse_json(response.choices[0].message.content)  # Ensure it's properly parsed
+                        resps = self.deduplicate_response(resps)
                         self.logger.info(f"Response is {type(resps)}: {resps}")
                         if not isinstance(resps, list):  # Ensure it's a list
                             raise ValueError("Expected a list of datasets, but got something else.")
@@ -538,14 +535,16 @@ class LLMParser(ABC):
                             route=PORTKEY_ROUTE,
                             **portkey_payload
                         )
+                        self.logger.info(f"Portkey Gemini response: {response}")
                         if self.full_document_read:
                             resps = self.safe_parse_json(response)
+                            resps = self.deduplicate_response(resps)
                             if isinstance(resps, dict):
                                 resps = resps.get("datasets", []) if resps is not None else []
                         else:
                             try:
-                                self.logger.info(f"Portkey Gemini response: {response}")
                                 resps = self.safe_parse_json(response)
+                                resps = self.deduplicate_response(resps)
                                 if not isinstance(resps, list):
                                     raise ValueError("Expected a list of datasets, but got something else.")
                             except json.JSONDecodeError as e:
@@ -558,7 +557,6 @@ class LLMParser(ABC):
                         self.logger.error(f"Portkey Gemini call failed: {e}")
                         resps = []
                 else:
-                    # ...existing Gemini logic unchanged...
                     if model == 'gemini-1.5-flash' or model == 'gemini-2.0-flash-exp' or model == 'gemini-2.0-flash':
                         response = self.client.generate_content(
                             messages,
@@ -971,23 +969,32 @@ class LLMParser(ABC):
         This function checks for hallucinations, i.e. if the dataset identifier is a known repository name.
         """
         self.logger.info(f"Validating Dataset Page: {dataset_webpage_url}")
+        resolved_dataset_page = self.resolve_url(dataset_webpage_url)
         if repo in self.open_data_repos_ontology['repos']:
             if 'dataset_webpage_url_ptr' in self.open_data_repos_ontology['repos'][repo].keys():
-                pattern = self.open_data_repos_ontology['repos'][repo]['dataset_webpage_url_ptr']
-                self.logger.debug(f"Pattern: {pattern}")
-                match = re.search(pattern, dataset_webpage_url, re.IGNORECASE)
-                if match:
+                dataset_webpage_url_ptr = self.open_data_repos_ontology['repos'][repo]['dataset_webpage_url_ptr']
+                pattern = re.sub('__ID__', '', dataset_webpage_url_ptr)
+                self.logger.info(f"Pattern: {pattern}")
+                if pattern.lower() in resolved_dataset_page.lower():
                     self.logger.info(f"Link matches the pattern {pattern}")
-                    return dataset_webpage_url
+                    return resolved_dataset_page
                 else:
                     self.logger.info(f"Link does not match the pattern {pattern}")
                     return 'n/a'
             else:
                 self.logger.info(f"No dataset_webpage_url_ptr found for {repo}")
-                return dataset_webpage_url
+                return resolved_dataset_page
         self.logger.info(f"Repository {repo} not found in ontology")
         return 'n/a'
 
+    def resolve_url(self,url):
+        try:
+            response = requests.get(url, allow_redirects=True, timeout=5)
+            self.logger.info(f"Resolved URL: {response.url}")
+            return response.url
+        except requests.RequestException as e:
+            self.logger.error(f"Error resolving URL {url}: {e}")
+            return url
 
     def resolve_accession_id_for_repository(self, dataset_identifier, data_repository):
         """
@@ -1029,9 +1036,10 @@ class LLMParser(ABC):
             repo = re.sub("\(", " ", repo)
             repo = re.sub("\)", " ", repo)
             # match where repo_link has been extracted
-            if k == repo:
-                self.logger.info(f"Exact match found for repo: {repo}")
+            if k.lower() == repo.lower() or k.lower() in repo.lower():
+                self.logger.info(f"Exact - case insensitive - match found for repo: {repo}")
                 resolved_to_known_repo = True
+                repo = k
                 break
 
             elif 'repo_name' in v.keys():
