@@ -27,4 +27,4 @@ jobs:
 
       - name: Test with pytest
         run: |
-          pytest
+          pytest -s -o log_cli=true
