@@ -1,10 +1,28 @@
 data_gatherer Documentation
 ============================
+**Data Gatherer** is a Python library for automatically extracting dataset references from scientific publications.
+It processes full-text articles—whether in HTML or XML format—and uses both rule-based and LLM-based methods
+to identify and structure dataset citations.
 
-**Version:** |version|
+What It Does
+------------
 
-The data_gatherer is a library that assist users in performing data discovery.
+- Parses scientific articles from open-access sources like PubMed Central (PMC).
+- Extracts dataset mentions from structured sections (e.g., Data Availability, Supplementary Material).
+- Supports two main strategies:
 
+  - **Retrieve-Then-Read (RTR)**: First retrieves relevant sections using hand-crafted rules, then applies LLMs.
+  - **Full-Document Read (FDR)**: Applies LLMs to the full text without section filtering.
+
+- Outputs structured results in JSON format.
+- Includes support for known repositories (e.g., GEO, PRIDE, MassIVE) via a configurable ontology.
+
+Use Cases
+---------
+
+- Helping data curators and librarians identify datasets cited in publications.
+- Supporting meta-analysis and secondary data discovery.
+- Enabling dataset indexing and retrieval across the open-access literature.
 
 You can find the source code in our `GitHub repository <https://github.com/VIDA-NYU/data-gatherer>`__.
 
@@ -13,9 +31,9 @@ You can find the source code in our `GitHub repository <https://github.com/VIDA-
    :maxdepth: 2
    :caption: User Guide
 
+   installation
    quick-start
    getting-started
-   examples
 
 .. toctree::
    :maxdepth: 2

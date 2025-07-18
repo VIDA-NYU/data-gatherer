@@ -177,11 +177,11 @@ class DataGatherer:
         """
         Parses the raw data fetched from the source URL using the appropriate parser.
 
-        :param current_url_address: The URL of the current data source being processed.
-
         :param raw_data: The raw data to parse, typically string formatted as HTML or XML content.
 
         :param publisher: The publisher domain or identifier for the data source.
+
+        param current_url_address: The URL of the current data source being processed.
 
         :param additional_data: Optional additional data to include in the parsing process, such as metadata or supplementary information.
 
@@ -190,6 +190,16 @@ class DataGatherer:
         :param parsed_data_dir: Directory to save the parsed HTML/XML/PDF files.
 
         :param process_DAS_links_separately: Flag to indicate if DAS links should be processed separately.
+
+        :param full_document_read: Flag to indicate if the model processes the entire document.
+
+        :param semantic_retrieval: Flag to indicate if semantic retrieval should be used.
+
+        :param prompt_name: Name of the prompt to use for LLM parsing.
+
+        :param use_portkey_for_gemini: Flag to use Portkey for Gemini LLM.
+
+        :param section_filter: Optional filter to apply to the sections (supplementary_material', 'data_availability_statement').
 
         :return: Parsed data as a DataFrame or dictionary, depending on the parser used.
         """
@@ -487,15 +497,19 @@ class DataGatherer:
         self.logger.info(f"Deduplication completed. {len(classified_links)} unique links found.")
         return classified_links
 
-    def process_articles(self, url_list, log_modulo=10, driver_path=None, browser='Firefox', headless=True,
-                         use_portkey_for_gemini=True, prompt_name='retrieve_datasets_simple_JSON',
-                         semantic_retrieval=False, section_filter=None):
+    def process_articles(self, url_list, log_modulo=10, save_staging_table=False, article_file_dir='tmp/raw_files/',
+                         driver_path=None, browser='Firefox', headless=True, use_portkey_for_gemini=True,
+                         prompt_name='retrieve_datasets_simple_JSON', semantic_retrieval=False, section_filter=None):
         """
         Processes a list of article URLs and returns parsed data.
 
         :param url_list: List of URLs/PMCIDs to process.
 
         :param log_modulo: Frequency of logging progress (useful when url_list is long).
+
+        :param save_staging_table: Flag to save the staging table.
+
+        :param article_file_dir: Directory to save the raw HTML/XML/PDF files.
 
         :param driver_path: Path to your local WebDriver executable (if applicable). When set to None, Webdriver manager will be used.
 
@@ -507,8 +521,13 @@ class DataGatherer:
 
         :param prompt_name: Name of the prompt to use for LLM parsing.
 
+        :param semantic_retrieval: Flag to indicate if semantic retrieval should be used.
+
+        :param section_filter: Optional filter to apply to the sections (supplementary_material', 'data_availability_statement').
+
         :return: Dictionary with URLs as keys and DataFrames of classified data as values.
         """
+
         self.logger.debug("Starting to process URL list...")
         start_time = time.time()
         total_iters = len(url_list)
@@ -517,9 +536,19 @@ class DataGatherer:
         for iteration, url in enumerate(url_list):
             url = self.preprocess_url(url)
             self.logger.info(f"{iteration}th function call: self.process_url({url})")
-            results[url] = self.process_url(url, driver_path=driver_path, browser=browser, headless=headless,
-                                            use_portkey_for_gemini=use_portkey_for_gemini, prompt_name=prompt_name,
-                                            semantic_retrieval=semantic_retrieval, section_filter=section_filter)
+
+            results[url] = self.process_url(
+                url,
+                save_staging_table=save_staging_table,
+                article_file_dir=article_file_dir,
+                driver_path=driver_path,
+                browser=browser,
+                headless=headless,
+                use_portkey_for_gemini=use_portkey_for_gemini,
+                prompt_name=prompt_name,
+                semantic_retrieval=semantic_retrieval,
+                section_filter=section_filter
+            )
 
             if iteration % log_modulo == 0:
                 elapsed = time.time() - start_time  # Time elapsed since start
@@ -574,7 +603,7 @@ class DataGatherer:
             }
             return empty_summary
 
-    def load_urls_from_input_file(self, input_file):
+    def load_urls_from_input(self, input_file):
         """
         Loads URLs from the input file.
 
@@ -583,6 +612,11 @@ class DataGatherer:
         :return: List of URLs loaded from the file.
         """
         self.logger.debug(f"Loading URLs from file: {input_file}")
+        if not os.path.exists(input_file):
+            if isinstance(input_file, str):
+                return [input_file.strip()]
+            elif isinstance(input_file, list):
+                return input_file
         try:
             with open(input_file, 'r') as file:
                 url_list = [line.strip() for line in file]
@@ -592,9 +626,9 @@ class DataGatherer:
         except FileNotFoundError as e:
             raise FileNotFoundError(f"Create file with input links! File not found: {input_file}\n\n{e}\n")
 
-    def get_data_preview(self, combined_df, display_type='console', interactive=True, return_metadata=False,
+    def process_metadata(self, combined_df, display_type='console', interactive=True, return_metadata=False,
                          write_raw_metadata=False, article_file_dir='tmp/raw_files/', use_portkey_for_gemini=True,
-                         prompt_name='gpt_metadata_extract', timeout=3):
+                         prompt_name='gpt_metadata_extract', timeout=1):
         """
         This method iterates through the combined_df DataFrame, checks for dataset webpages or download links,
 
@@ -613,6 +647,8 @@ class DataGatherer:
         :param use_portkey_for_gemini: If True, uses Portkey for Gemini LLM.
 
         :param prompt_name: Name of the prompt to use for LLM parsing.
+
+        :param timeout: Timeout for requests to fetch dataset webpages.
 
         :return: If return_metadata is True, returns a list of metadata dictionaries. Otherwise, displays the data preview.
         """
@@ -676,7 +712,7 @@ class DataGatherer:
                         hardscraped_metadata[
                             'data_description_generated'] = self.metadata_parser.generate_dataset_description(
                             download_link)
-                    self.display_data_preview(hardscraped_metadata, display_type=display_type, interactive=interactive)
+                    self.display_metadata(hardscraped_metadata, display_type=display_type, interactive=interactive)
                     continue
 
             else:
@@ -688,8 +724,8 @@ class DataGatherer:
                 # caching: load_from_cache
                 skip, cache = False, {}
                 process_id = self.llm + "-" + dataset_webpage_id
-                if self.load_from_cache and os.path.exists(os.path.join(CACHE_BASE_DIR, "get_data_preview_cache.json")):
-                    cache = json.load(open(os.path.join(CACHE_BASE_DIR, "get_data_preview_cache.json"), 'r'))
+                if self.load_from_cache and os.path.exists(os.path.join(CACHE_BASE_DIR, "process_metadata_cache.json")):
+                    cache = json.load(open(os.path.join(CACHE_BASE_DIR, "process_metadata_cache.json"), 'r'))
                     if process_id in cache:
                         metadata, skip = cache[process_id], True
 
@@ -711,7 +747,7 @@ class DataGatherer:
                             'informative_html_metadata_tags']
                     else:
                         keep_sect = None
-                    response = requests.get(row['dataset_webpage'], timeout=3)
+                    response = requests.get(row['dataset_webpage'], timeout=timeout)
                     html = self.metadata_parser.normalize_HTML(response.text, keep_tags=keep_sect)
 
                 if not skip:
@@ -730,13 +766,13 @@ class DataGatherer:
 
             if self.save_to_cache:
                 self.logger.debug(f"Saving metadata to cache for process ID: {process_id}")
-                self.save_func_output_to_cache(metadata, process_id, 'get_data_preview')
+                self.save_func_output_to_cache(metadata, process_id, 'process_metadata')
 
             if return_metadata:
                 flat_metadata = self.metadata_parser.flatten_metadata_dict(metadata)
                 ret_list.append(flat_metadata)
 
-            self.display_data_preview(metadata, display_type=display_type, interactive=interactive)
+            self.display_metadata(metadata, display_type=display_type, interactive=interactive)
 
         return ret_list if return_metadata else None
 
@@ -757,7 +793,7 @@ class DataGatherer:
             items.append((parent_key, y))
         return items
 
-    def display_data_preview(self, metadata, display_type='console', interactive=True):
+    def display_metadata(self, metadata, display_type='console', interactive=True):
         """
         Display extracted metadata as a clean table in both Jupyter and terminal environments.
 
@@ -904,7 +940,7 @@ class DataGatherer:
             self.logger.warning("No valid internal ID found in metadata.")
             return None
 
-    def raw_data_contains_required_sections(self, raw_data, url, required_sections):
+    def check_required_sections(self, raw_data, url, required_sections):
         """
         Checks if the raw data contains all the required sections.
 
@@ -951,8 +987,6 @@ class DataGatherer:
 
         4. Write results to output file specified in configuration file
 
-        :param search_by: Method to search for data. Options are 'url_list' or 'google_scholar'.
-
         :param input_file: Path to the input file containing URLs or PMCIDs to process.
 
         :return: Combined DataFrame of all processed data links.
@@ -962,7 +996,7 @@ class DataGatherer:
         try:
 
             # Load URLs from input file
-            urls = self.load_urls_from_input_file(input_file)
+            urls = self.load_urls_from_input(input_file)
 
             # Process each URL and return results as a dictionary like source_url: DataFrame_of_data_links
             results = self.process_articles(urls)
@@ -978,7 +1012,7 @@ class DataGatherer:
             # self.classifier.evaluate_performance(combined_df, self.config['ground_truth'])
 
             if self.data_resource_preview:
-                self.get_data_preview(combined_df)
+                self.process_metadata(combined_df)
 
                 if self.download_previewed_data_resources:
                     self.download_data_resources()
