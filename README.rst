@@ -2,24 +2,29 @@
    :target: https://data-gatherer.readthedocs.io/en/latest/
    :alt: Documentation Status
 
-********************
 Data Gatherer
-********************
+=============
 
-*Data Gatherer* is a tool for automating the extraction of datasets from scientific article webpages.
-It integrates large language models (LLMs), dynamic prompt management, and rule-based parsing
-to support data harmonization in biomedical research—and potentially beyond.
+**Data Gatherer** is a Python library for automatically extracting dataset references from scientific publications.
+It processes full-text articles—whether in HTML or XML format—and uses both rule-based and LLM-based methods
+to identify and structure dataset citations.
 
-When a dataset is found, Data Gatherer classifies its access type into one of four categories:
+What It Does
+------------
 
-1. **Easy download**
-   Three or fewer files, publicly accessible.
+- Parses scientific articles from open-access sources like PubMed Central (PMC).
+- Extracts dataset mentions from structured sections (e.g., Data Availability, Supplementary Material).
+- Supports two main strategies:
 
-2. **Complex download**
-   Four or more files, publicly accessible.
+  - **Retrieve-Then-Read (RTR)**: First retrieves relevant sections using hand-crafted rules, then applies LLMs.
+  - **Full-Document Read (FDR)**: Applies LLMs to the full text without section filtering.
 
-3. **Application to access**
-   Requires application through a centralized process with clear procedures.
+- Outputs structured results in JSON format.
+- Includes support for known repositories (e.g., GEO, PRIDE, MassIVE) via a configurable ontology.
 
-4. **Contact to access**
-   Requires reaching out to the data provider; procedures are unclear or informal.
+Use Cases
+---------
+
+- Helping data curators and librarians identify datasets cited in publications.
+- Supporting meta-analysis and secondary data discovery.
+- Enabling dataset indexing and retrieval across the open-access literature.

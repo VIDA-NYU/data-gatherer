@@ -401,8 +401,8 @@ class LLMParser(ABC):
             dataset['retrieval_pattern'] = 'data availability'
             ret.append(dataset)
 
-        self.logger.info(f"Final ret additional data: {len(ret)} items")
-        self.logger.debug(f"Final ret additional data: {ret}")
+        self.logger.info(f"Final ret data availability: {len(ret)} items")
+        self.logger.info(f"Final ret data availability: {ret}")
         return ret
 
     def extract_datasets_info_from_content(self, content: str, repos: list, model: str = 'gpt-4o-mini',
@@ -993,7 +993,7 @@ class LLMParser(ABC):
             self.logger.info(f"Resolved URL: {response.url}")
             return response.url
         except requests.RequestException as e:
-            self.logger.error(f"Error resolving URL {url}: {e}")
+            self.logger.warning(f"Error resolving URL {url}: {e}")
             return url
 
     def resolve_accession_id_for_repository(self, dataset_identifier, data_repository):
@@ -1066,6 +1066,11 @@ class LLMParser(ABC):
         if not resolved_to_known_repo:
             repo = self.url_to_repo_domain(repo, dataset_page)
             self.logger.info(f"data_repository not resolved, using domain")
+
+        if repo in self.open_data_repos_ontology['repos'] and 'repo_mapping' in self.open_data_repos_ontology['repos'][repo]:
+            repo = self.open_data_repos_ontology['repos'][repo]['repo_mapping']
+            self.logger.info(f"Resolved data repository: {repo}")
+            return repo.lower()
 
         return repo  # fallback
 
