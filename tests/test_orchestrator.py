@@ -5,7 +5,7 @@ from conftest import get_test_data_path
 import requests
 import pandas as pd
 
-def test_process_url_with_mocked_fetch_data_and_parser(monkeypatch):
+def test_process_url_with_mocked_fetch_data_and_parser(monkeypatch, get_test_data_path):
     orchestrator = DataGatherer()
 
     if orchestrator.data_fetcher is None:
