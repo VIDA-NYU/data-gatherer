@@ -7,7 +7,7 @@ import pandas as pd
 import xml.etree.ElementTree as ET
 
 def test_process_url_with_mocked_fetch_data_and_parser(monkeypatch, get_test_data_path):
-    orchestrator = DataGatherer()
+    orchestrator = DataGatherer(log_level="INFO")
 
     if orchestrator.data_fetcher is None:
         orchestrator.data_fetcher = EntrezFetcher(requests, logger=logging.getLogger("data_gatherer"))
