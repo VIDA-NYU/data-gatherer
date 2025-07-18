@@ -96,7 +96,7 @@
         "form"
       ]
     },
-    "ArrayExpress": {
+    "arrayexpress": {
       "repo_name": "ArrayExpress",
       "repo_root": "www.ebi.ac.uk",
       "dataset_webpage_url_ptr": "https://www.ebi.ac.uk/biostudies/ArrayExpress/studies/__ID__",

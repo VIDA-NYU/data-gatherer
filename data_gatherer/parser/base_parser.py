@@ -401,8 +401,8 @@ class LLMParser(ABC):
             dataset['retrieval_pattern'] = 'data availability'
             ret.append(dataset)
 
-        self.logger.info(f"Final ret additional data: {len(ret)} items")
-        self.logger.debug(f"Final ret additional data: {ret}")
+        self.logger.info(f"Final ret data availability: {len(ret)} items")
+        self.logger.info(f"Final ret data availability: {ret}")
         return ret
 
     def extract_datasets_info_from_content(self, content: str, repos: list, model: str = 'gpt-4o-mini',
@@ -993,7 +993,7 @@ class LLMParser(ABC):
             self.logger.info(f"Resolved URL: {response.url}")
             return response.url
         except requests.RequestException as e:
-            self.logger.error(f"Error resolving URL {url}: {e}")
+            self.logger.warning(f"Error resolving URL {url}: {e}")
             return url
 
     def resolve_accession_id_for_repository(self, dataset_identifier, data_repository):

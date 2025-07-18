@@ -212,7 +212,7 @@ if st.button("🚀 Run Extraction"):
                                     f"Fetching metadata from repo: {data_item['data_repository']}... {dataset_webpage}"):
                                     try:
                                         try:
-                                            preview_result = orch.get_data_preview(
+                                            preview_result = orch.process_metadata(
                                                 data_item, interactive=False, return_metadata=True,
                                                 write_raw_metadata=False,
                                                 use_portkey_for_gemini=use_portkey,
