@@ -7,7 +7,7 @@ import pandas as pd
 import xml.etree.ElementTree as ET
 
 def test_process_url_with_mocked_fetch_data_and_parser(monkeypatch, get_test_data_path):
-    orchestrator = DataGatherer(log_level="INFO")
+    orchestrator = DataGatherer(log_level="INFO", process_entire_document=True)
 
     if orchestrator.data_fetcher is None:
         orchestrator.data_fetcher = EntrezFetcher(requests, logger=logging.getLogger("data_gatherer"))
@@ -31,21 +31,17 @@ def test_process_url_with_mocked_fetch_data_and_parser(monkeypatch, get_test_dat
     from data_gatherer.parser.xml_parser import XMLParser
     monkeypatch.setattr(XMLParser, "extract_datasets_info_from_content", mock_extract_datasets_info_from_content)
 
-    url = 'https://pmc.ncbi.nlm.nih.gov/articles/PMC11129317/'
-    orchestrator.current_url = url
-    orchestrator.publisher = orchestrator.data_fetcher.url_to_publisher_domain(url)
-
     # Run the orchestrator's process_url method
-    result = orchestrator.process_url(url)
+    result = orchestrator.process_url('https://pmc.ncbi.nlm.nih.gov/articles/PMC11129317/')
 
     # Basic assertion: result should not be None
     assert result is not None
     assert isinstance(result, pd.DataFrame), "Result should be a pandas DataFrame"
     expected_columns = [
-        'dataset_identifier', 'data_repository', 'dataset_webpage',
-        'source_section', 'retrieval_pattern', 'access_mode', 'link',
+        'dataset_identifier', 'data_repository', 'dataset_webpage', 'access_mode', 'link',
         'source_url', 'download_link', 'title', 'content_type', 'id',
-        'caption', 'description', 'context_description', 'file_extension', 'pub_title'
+        'caption', 'description', 'source_section', 'retrieval_pattern',
+        'context_description', 'file_extension', 'pub_title'
     ]
     assert list(result.columns) == expected_columns, f"Columns do not match. Got: {list(result.columns)}"
     # print(f"Result DataFrame:\n{result.columns}")
