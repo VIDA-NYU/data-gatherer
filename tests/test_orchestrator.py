@@ -4,6 +4,7 @@ from data_gatherer.data_fetcher import *
 from conftest import get_test_data_path
 import requests
 import pandas as pd
+import xml.etree.ElementTree as ET
 
 def test_process_url_with_mocked_fetch_data_and_parser(monkeypatch, get_test_data_path):
     orchestrator = DataGatherer()
@@ -15,7 +16,7 @@ def test_process_url_with_mocked_fetch_data_and_parser(monkeypatch, get_test_dat
     # Mock fetch_data to return the contents of a test XML file
     def mock_fetch_data(*args, **kwargs):
         with open(get_test_data_path("test_2.xml"), "r", encoding="utf-8") as f:
-            return f.read()
+            return ET.fromstring(f.read())
     orchestrator.data_fetcher.fetch_data = mock_fetch_data
 
     # Mock XMLParser.extract_datasets_info_from_content to return a controlled value
