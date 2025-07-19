@@ -1067,6 +1067,11 @@ class LLMParser(ABC):
             repo = self.url_to_repo_domain(repo, dataset_page)
             self.logger.info(f"data_repository not resolved, using domain")
 
+        if repo in self.open_data_repos_ontology['repos'] and 'repo_mapping' in self.open_data_repos_ontology['repos'][repo]:
+            repo = self.open_data_repos_ontology['repos'][repo]['repo_mapping']
+            self.logger.info(f"Resolved data repository: {repo}")
+            return repo.lower()
+
         return repo  # fallback
 
     def get_dataset_page(self, datasets):
