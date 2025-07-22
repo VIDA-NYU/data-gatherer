@@ -205,15 +205,15 @@ class DataGatherer:
         """
         self.logger.info(f"Parsing data from URL: {current_url_address} with publisher: {publisher}")
 
-        if raw_data_format == "XML":
+        if raw_data_format.upper() == "XML":
             self.parser = XMLParser(self.open_data_repos_ontology, self.logger, full_document_read=full_document_read,
                                     llm_name=self.llm, use_portkey_for_gemini=use_portkey_for_gemini)
 
-        elif raw_data_format == "HTML":
+        elif raw_data_format.upper() == "HTML":
             self.parser = HTMLParser(self.open_data_repos_ontology, self.logger, full_document_read=full_document_read,
                                      llm_name=self.llm, use_portkey_for_gemini=use_portkey_for_gemini)
 
-        elif raw_data_format == "PDF":
+        elif raw_data_format.upper() == "PDF":
             self.parser = PDFParser(self.open_data_repos_ontology, self.logger, full_document_read=full_document_read,
                                     llm_name=self.llm, use_portkey_for_gemini=use_portkey_for_gemini)
 
