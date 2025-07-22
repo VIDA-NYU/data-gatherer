@@ -16,16 +16,17 @@ from data_gatherer.resources_loader import load_config
 from data_gatherer.retriever.embeddings_retriever import EmbeddingsRetriever
 from data_gatherer.env import PORTKEY_GATEWAY_URL, PORTKEY_API_KEY, PORTKEY_ROUTE, PORTKEY_CONFIG, NYU_LLM_API, GPT_API_KEY, GEMINI_KEY, DATA_GATHERER_USER_NAME
 import requests
+from data_gatherer.llm.llm_client import LLMClient_dev
 
 dataset_response_schema_gpt = {
     "type": "json_schema",
-        "json_schema": {
+    "json_schema": {
         "name": "GPT_response_schema",
         "schema": {
             "type": "object",  # Root must be an object
             "properties": {
                 "datasets": {  # Use a property to hold the array
-                "type": "array",
+                    "type": "array",
                     "items": {
                         "type": "object",
                         "properties": {
@@ -125,14 +126,17 @@ dataset_metadata_response_schema_gpt = {
     }
 }
 
+
 class Dataset(BaseModel):
     dataset_id: str
     repository_reference: str
+
 
 class Dataset_w_Description(typing.TypedDict):
     dataset_id: str
     repository_reference: str
     rationale: str
+
 
 class Dataset_metadata(BaseModel):
     number_of_files: int
@@ -157,6 +161,7 @@ class LLMParser(ABC):
 
     - Retrieve Then Read (LLMs will only read a target section retrieved from the document)
     """
+
     def __init__(self, open_data_repos_ontology, logger, log_file_override=None, full_document_read=True,
                  prompt_dir="data_gatherer/prompts/prompt_templates",
                  llm_name=None, save_dynamic_prompts=False, save_responses_to_cache=False, use_cached_responses=False,
@@ -177,7 +182,7 @@ class LLMParser(ABC):
 
         self.llm_name = llm_name
         entire_document_models = ["gemini-1.5-flash", "gemini-1.5-pro", "gemini-2.0-flash-exp", "gemini-2.0-flash",
-                                      "gpt-4o", "gpt-4o-mini"]
+                                  "gpt-4o", "gpt-4o-mini"]
 
         self.full_document_read = full_document_read and self.llm_name in entire_document_models
         self.title = None
@@ -205,6 +210,8 @@ class LLMParser(ABC):
                 metadata={"_user": DATA_GATHERER_USER_NAME}
             )
 
+        elif llm_name == 'gemma3:1b':
+            self.client = LLMClient_dev(model='gemma3:1b', logger=self.logger)
 
         elif llm_name == 'gemma2:9b':
             self.client = Client(host=NYU_LLM_API)  # env variable
@@ -282,7 +289,6 @@ class LLMParser(ABC):
         self.logger.info(f"Consider migrating this function to the BaseRetriever class.")
         return self.retriever.load_target_sections_ptrs(section_name)
 
-
     def generate_dataset_description(self, data_file):
         # from data file
         # excel, csv, json, xml, etc.
@@ -313,7 +319,6 @@ class LLMParser(ABC):
             download_link = href
 
         return download_link
-
 
     def union_additional_data(self, parsed_data, additional_data):
         self.logger.info(f"Merging additional data ({type(additional_data)}) with parsed data({type(parsed_data)}).")
@@ -353,11 +358,12 @@ class LLMParser(ABC):
                 continue
 
             if (element['source_section'] in ['data availability', 'data_availability', 'data_availability_elements']
-                    or 'data availability' in cont) and len(cont) > 1:
+                or 'data availability' in cont) and len(cont) > 1:
                 self.logger.info(f"Processing data availability text")
                 # Call the generalized function
-                datasets = self.extract_datasets_info_from_content(cont, repos_elements, model=self.llm_name, temperature=0,
-                                                               prompt_name=prompt_name)
+                datasets = self.extract_datasets_info_from_content(cont, repos_elements, model=self.llm_name,
+                                                                   temperature=0,
+                                                                   prompt_name=prompt_name)
 
                 for dt in datasets:
                     dt['source_section'] = element['source_section']
@@ -387,9 +393,9 @@ class LLMParser(ABC):
         datasets = []
         for element in DAS_content:
             datasets.extend(self.extract_datasets_info_from_content(element, repos_elements,
-                                                                model=self.llm_name,
-                                                                temperature=0,
-                                                                prompt_name=prompt_name))
+                                                                    model=self.llm_name,
+                                                                    temperature=0,
+                                                                    prompt_name=prompt_name))
 
         # Add source_section information and return
         ret = []
@@ -406,9 +412,9 @@ class LLMParser(ABC):
         return ret
 
     def extract_datasets_info_from_content(self, content: str, repos: list, model: str = 'gpt-4o-mini',
-                                       temperature: float = 0.0,
-                                       prompt_name: str = 'retrieve_datasets_simple_JSON',
-                                       full_document_read=True) -> list:
+                                           temperature: float = 0.0,
+                                           prompt_name: str = 'retrieve_datasets_simple_JSON',
+                                           full_document_read=True) -> list:
         """
         Extract datasets from the given content using a specified LLM model.
         Uses a static prompt template and dynamically injects the required content.
@@ -479,8 +485,26 @@ class LLMParser(ABC):
                     f"Response received from model: {response.get('message', {}).get('content', 'No content')}")
                 resps = response['message']['content'].split("\n")
                 # Save the response
-                self.prompt_manager.save_response(prompt_id, response['message']['content']) if self.save_responses_to_cache else None
+                self.prompt_manager.save_response(prompt_id, response['message'][
+                    'content']) if self.save_responses_to_cache else None
                 self.logger.info(f"Response saved to cache")
+
+            elif model == 'gemma3:1b':
+                response = self.client.api_call(messages, response_format=list[Dataset])
+                candidates = self.safe_parse_json(response)
+                if candidates:
+                    self.logger.info(f"Found {len(candidates)} candidates in the response.")
+                    response_text = candidates[0].content.parts[0].text  # Access the first part's text
+                    self.logger.info(f"Gemini response text: {response_text}")
+                    parsed_response = json.loads(response_text)  # Parse the JSON response
+                    if self.save_responses_to_cache:
+                        self.prompt_manager.save_response(prompt_id, parsed_response)
+                        self.logger.info(f"Response saved to cache")
+                    parsed_response_dedup = self.deduplicate_response(parsed_response)
+                    resps = parsed_response_dedup
+                else:
+                    self.logger.error("No candidates found in the response.")
+
 
             elif model == 'gpt-4o-mini' or model == 'gpt-4o':
                 response = None
@@ -595,6 +619,8 @@ class LLMParser(ABC):
                     except Exception as e:
                         self.logger.error(f"Error processing Gemini response: {e}")
                         return None
+            else:
+                raise ValueError(f"Unsupported model: {model}. Please use a supported LLM model.")
 
         #if not self.full_document_read:
         #    return resps
@@ -635,7 +661,8 @@ class LLMParser(ABC):
                                                                    identifier=dataset_id,
                                                                    dataset_page=dataset.get('dataset_webpage'))
                 else:
-                    self.logger.info(f"Candidate is missing 'data_repository' or 'repository_reference', skipping dataset")
+                    self.logger.info(
+                        f"Candidate is missing 'data_repository' or 'repository_reference', skipping dataset")
                     continue
 
                 if 'dataset_webpage' in dataset:
@@ -663,9 +690,9 @@ class LLMParser(ABC):
             if 'dataset-publication_relationship' in dataset:
                 result[-1]['dataset-publication_relationship'] = dataset['dataset-publication_relationship']
 
-            self.logger.info(f"Extracted dataset: {result[-1]}")
+            self.logger.debug(f"Extracted dataset: {result[-1]}")
 
-        self.logger.debug(f"Final result: {result}")
+        self.logger.info(f"Final result: {result}")
 
         return result
 
@@ -699,7 +726,6 @@ class LLMParser(ABC):
 
         return deduped
 
-
     def safe_parse_json(self, response_text):
         """
         Cleans and safely parses JSON from an LLM response, fixing common issues.
@@ -708,10 +734,8 @@ class LLMParser(ABC):
 
         :return: dict or None — parsed JSON object or None if parsing fails.
         """
-        # Handle Portkey Gemini response object or OpenAI-like object
-        # Accept both dict and objects with .choices attribute
+        # Extract content if response_text is an object
         if hasattr(response_text, "choices"):
-            # Likely an OpenAI/Portkey object, extract content
             try:
                 response_text = response_text.choices[0].message.content
             except Exception as e:
@@ -725,24 +749,34 @@ class LLMParser(ABC):
                 return None
 
         try:
-            response_text = response_text.strip()  # Remove extra spaces/newlines
+            response_text = response_text.strip()
 
-            # Remove markdown code block if present (e.g., ```json ... ```)
             if response_text.startswith("```"):
                 response_text = re.sub(r"^```[a-zA-Z]*\n?", "", response_text)
                 response_text = re.sub(r"\n?```$", "", response_text)
 
-            # process dict-like list
-            if len(response_text) > 2 and "{" not in response_text[1:-1] and "[" in response_text[1:-1]:
-                response_text = (response_text[:1] +
-                                 response_text[1:-1].replace("[", "{").replace("]","}") + response_text[-1:])
+            # Remove control characters (newlines, tabs, etc.) inside quoted strings
+            def clean_control_chars_in_quotes(match):
+                s = match.group(0)
+                # Remove newlines, carriage returns, tabs inside quotes
+                return re.sub(r'[\r\n\t]', ' ', s)
+
+            response_text = re.sub(r'"(?:[^"\\]|\\.)*"', clean_control_chars_in_quotes, response_text)
+
+            # Fix malformed JSON: replace [ ... ] with { ... } for objects
+            # Replace [ "key": "value", ... ] with { "key": "value", ... }
+            response_text = re.sub(r'\[\s*(".*?":)', r'{\1', response_text)
+            response_text = re.sub(r'(".*?")\s*\]', r'\1}', response_text)
+            # Remove trailing commas before closing braces/brackets
+            response_text = re.sub(r',\s*([\]}])', r'\1', response_text)
+
             # Attempt JSON parsing
             return json.loads(response_text)
 
         except json.JSONDecodeError as e:
             print(f"JSONDecodeError: {e}")
-            print(f"Malformed JSON: {response_text[:500]}")  # Print first 500 chars for debugging
-            return None  # Return None to indicate failure
+            print(f"Malformed JSON: {response_text[:500]}")
+            return None
 
     def process_data_availability_links(self, dataset_links):
         """
@@ -836,7 +870,8 @@ class LLMParser(ABC):
                     append_item['dataset_identifier'] = append_item['dataset_identifier'].strip()
                     append_item['data_repository'] = append_item['data_repository'].strip()
                     append_item['source_section'] = link['source_section']
-                    append_item['retrieval_pattern'] = link['retrieval_pattern'] if 'retrieval_pattern' in link.keys() else None
+                    append_item['retrieval_pattern'] = link[
+                        'retrieval_pattern'] if 'retrieval_pattern' in link.keys() else None
                     ret.append(append_item)
                     self.logger.info(f"Response appended to df {append_item}")
                     progress += 1
@@ -849,7 +884,8 @@ class LLMParser(ABC):
                 ret_element['dataset_identifier'] = ret_element['dataset_identifier'].strip()
                 ret_element['data_repository'] = ret_element['data_repository'].strip()
                 ret_element['source_section'] = link['source_section']
-                ret_element['retrieval_pattern'] = link['retrieval_pattern'] if 'retrieval_pattern' in link.keys() else None
+                ret_element['retrieval_pattern'] = link[
+                    'retrieval_pattern'] if 'retrieval_pattern' in link.keys() else None
                 ret.append(ret_element)
                 progress += 1
 
@@ -942,7 +978,7 @@ class LLMParser(ABC):
             else:
                 repo_mapping[k] = k
 
-        ret = {v:k for k,v in repo_mapping.items()}
+        ret = {v: k for k, v in repo_mapping.items()}
         self.logger.debug(f"Repo mapping: {ret}")
         return ret
 
@@ -987,7 +1023,7 @@ class LLMParser(ABC):
         self.logger.info(f"Repository {repo} not found in ontology")
         return 'n/a'
 
-    def resolve_url(self,url):
+    def resolve_url(self, url):
         try:
             response = requests.get(url, allow_redirects=True, timeout=5)
             self.logger.info(f"Resolved URL: {response.url}")
@@ -1067,7 +1103,8 @@ class LLMParser(ABC):
             repo = self.url_to_repo_domain(repo, dataset_page)
             self.logger.info(f"data_repository not resolved, using domain")
 
-        if repo in self.open_data_repos_ontology['repos'] and 'repo_mapping' in self.open_data_repos_ontology['repos'][repo]:
+        if repo in self.open_data_repos_ontology['repos'] and 'repo_mapping' in self.open_data_repos_ontology['repos'][
+            repo]:
             repo = self.open_data_repos_ontology['repos'][repo]['repo_mapping']
             self.logger.info(f"Resolved data repository: {repo}")
             return repo.lower()
@@ -1135,14 +1172,15 @@ class LLMParser(ABC):
                         '__ID__',
                         accession_id,
                         self.open_data_repos_ontology['repos'][repo]['url_concat_string'])
-                    )
+                                       )
 
                 elif ('dataset_webpage' in item.keys()):
                     self.logger.debug(f"Skipping dataset {1 + i}: already has dataset_webpage")
                     continue
 
                 else:
-                    self.logger.warning(f"No dataset_webpage_url_ptr or url_concat_string found for {repo}. Maybe lost in refactoring 21 April 2025")
+                    self.logger.warning(
+                        f"No dataset_webpage_url_ptr or url_concat_string found for {repo}. Maybe lost in refactoring 21 April 2025")
                     dataset_webpage = 'na'
 
                 self.logger.info(f"Dataset page: {dataset_webpage}")
@@ -1181,14 +1219,13 @@ class LLMParser(ABC):
             """
         raise NotImplementedError("This method should be implemented in a subclass.")
 
-
-    def tokens_over_limit(self, html_cont : str, model="gpt-4", limit=128000, allowance_static_prompt=200):
+    def tokens_over_limit(self, html_cont: str, model="gpt-4", limit=128000, allowance_static_prompt=200):
         # Load the appropriate encoding for the model
         encoding = tiktoken.encoding_for_model(model)
         # Encode the prompt and count tokens
         tokens = encoding.encode(html_cont)
         self.logger.info(f"Number of tokens: {len(tokens)}")
-        return len(tokens)+int(allowance_static_prompt*1.25)>limit
+        return len(tokens) + int(allowance_static_prompt * 1.25) > limit
 
     def count_tokens(self, prompt, model="gpt-4o-mini") -> int:
         """
@@ -1217,9 +1254,9 @@ class LLMParser(ABC):
             encoding = tiktoken.encoding_for_model(model)
             n_tokens = len(encoding.encode(prompt))
 
-        elif 'gemini' in model:
+        elif 'gemini' in model or 'gemma' in model:
             try:
-                n_tokens = len(prompt)//4  # Adjust based on the response structure
+                n_tokens = len(prompt) // 4  # Adjust based on the response structure
                 self.logger.debug(f"Rough estimate of token count for Gemini model '{model}': {n_tokens}")
             except Exception as e:
                 self.logger.error(f"Error counting tokens for Gemini model '{model}': {e}")
@@ -1228,7 +1265,7 @@ class LLMParser(ABC):
         return n_tokens
 
     def parse_datasets_metadata(self, metadata: str, model='gemini-2.0-flash', use_portkey_for_gemini=True,
-                       prompt_name='gpt_metadata_extract') -> dict:
+                                prompt_name='gpt_metadata_extract') -> dict:
         """
         Given the metadata, extract the dataset information using the LLM.
 
@@ -1330,8 +1367,9 @@ class LLMParser(ABC):
 
         return result
 
+
 class LLMClient:
-    def __init__(self, model:str, logger=None, save_prompts:bool=False, use_portkey_for_gemini=True):
+    def __init__(self, model: str, logger=None, save_prompts: bool = False, use_portkey_for_gemini=True):
         self.model = model
         self.logger = logger or logging.getLogger(__name__)
         self.logger.info(f"Initializing LLMClient with model: {self.model}")
@@ -1356,6 +1394,10 @@ class LLMClient:
                 metadata={"_user": DATA_GATHERER_USER_NAME}
             )
             self.client = self.portkey
+
+        elif model.startswith('gemma'):
+            self.client = Client(host="http://localhost:11434")
+
         else:
             self.client = None
         self.logger.info(f"Client initialized: {self.client}")
@@ -1375,7 +1417,7 @@ class LLMClient:
     def _call_openai(self, content, temperature=0.0, subdir=''):
         self.logger.info(f"Calling OpenAI with content length {len(content)}, subdir: {subdir}")
         messages = self.prompt_manager.render_prompt(
-            self.prompt_manager.load_prompt("gpt_metadata_extract",subdir=subdir),
+            self.prompt_manager.load_prompt("gpt_metadata_extract", subdir=subdir),
             entire_doc=True,
             content=content,
         )
@@ -1394,7 +1436,7 @@ class LLMClient:
     def _call_gemini(self, content, temperature=0.0, subdir=''):
         self.logger.info(f"Calling Gemini with content length {len(content)}, subdir: {subdir}")
         messages = self.prompt_manager.render_prompt(
-            self.prompt_manager.load_prompt("gemini_metadata_extract",subdir=subdir),
+            self.prompt_manager.load_prompt("gemini_metadata_extract", subdir=subdir),
             entire_doc=True,
             content=content,
         )

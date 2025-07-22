@@ -55,9 +55,10 @@ class EmbeddingsRetriever(BaseRetriever):
         for idx, score in zip(idxs, dists):
             results.append({
                 'text': self.corpus[idx]['sec_txt'] if 'sec_txt' in self.corpus[idx] else self.corpus[idx]['text'],
-                'section_title': self.corpus[idx]['section_title'],
-                'sec_type': self.corpus[idx]['sec_type'],
+                'section_title': self.corpus[idx]['section_title'] if 'section_title' in self.corpus[idx] else None,
+                'sec_type': self.corpus[idx]['sec_type'] if 'sec_type' in self.corpus[idx] else None,
                 'L2_distance': float(score)
             })
-            self.logger.debug(f"Retrieved passage: {self.corpus[idx]['sec_txt'][:100]}... with L2 distance: {score}")
+            passage = results[-1]['text']
+            self.logger.debug(f"Retrieved passage: {passage[:100]}... with L2 distance: {score}")
         return results
