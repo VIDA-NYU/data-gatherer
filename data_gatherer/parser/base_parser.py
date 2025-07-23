@@ -80,6 +80,9 @@ class LLMParser(ABC):
         elif llm_name == 'gemma3:1b':
             self.client = LLMClient_dev(model='gemma3:1b', logger=self.logger)
 
+        elif llm_name == 'gemma3:4b':
+            self.client = LLMClient_dev(model='gemma3:4b', logger=self.logger)
+
         elif llm_name == 'gemma2:9b':
             self.client = Client(host=NYU_LLM_API)  # env variable
 
@@ -351,7 +354,7 @@ class LLMParser(ABC):
                     'content']) if self.save_responses_to_cache else None
                 self.logger.info(f"Response saved to cache")
 
-            elif model == 'gemma3:1b':
+            elif model == 'gemma3:1b' or model == 'gemma3:4b':
                 response = self.client.api_call(messages, response_format=Dataset_w_Page.model_json_schema())
                 candidates = self.safe_parse_json(response)
                 if candidates:
