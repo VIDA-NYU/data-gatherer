@@ -6,8 +6,6 @@ from ollama import Client
 from openai import OpenAI
 import google.generativeai as genai
 from portkey_ai import Portkey
-import typing_extensions as typing
-from pydantic import BaseModel
 import os
 import json
 from data_gatherer.prompts.prompt_manager import PromptManager
@@ -17,139 +15,7 @@ from data_gatherer.retriever.embeddings_retriever import EmbeddingsRetriever
 from data_gatherer.env import PORTKEY_GATEWAY_URL, PORTKEY_API_KEY, PORTKEY_ROUTE, PORTKEY_CONFIG, NYU_LLM_API, GPT_API_KEY, GEMINI_KEY, DATA_GATHERER_USER_NAME
 import requests
 from data_gatherer.llm.llm_client import LLMClient_dev
-
-dataset_response_schema_gpt = {
-    "type": "json_schema",
-    "json_schema": {
-        "name": "GPT_response_schema",
-        "schema": {
-            "type": "object",  # Root must be an object
-            "properties": {
-                "datasets": {  # Use a property to hold the array
-                    "type": "array",
-                    "items": {
-                        "type": "object",
-                        "properties": {
-                            "dataset_id": {
-                                "type": "string",
-                                "description": "A unique identifier for the dataset."
-                            },
-                            "repository_reference": {
-                                "type": "string",
-                                "description": "A valid URI or string referring to the repository."
-                            },
-                            "decision_rationale": {
-                                "type": "string",
-                                "description": "Why did we select this dataset?"
-                            }
-                        },
-                        "required": ["dataset_id", "repository_reference"]
-                    },
-                    "minItems": 1,
-                    "uniqueItems": True
-                }
-            },
-            "required": ["datasets"]
-        }
-    }
-}
-
-dataset_metadata_response_schema_gpt = {
-    "type": "json_schema",
-    "json_schema": {
-        "name": "Dataset_metadata_response",
-        "schema": {
-            "type": "object",
-            "properties": {
-                "number_of_files": {
-                    "type": "string",
-                    "description": "Total number of files."
-                },
-                "sample_size": {
-                    "type": "string",
-                    "description": "How many samples are recorded in the dataset."
-                },
-                "file_size": {
-                    "type": "string",
-                    "description": "Cumulative file size or range."
-                },
-                "file_format": {
-                    "type": "string",
-                    "description": "Format of the file (e.g., CSV, FASTQ)."
-                },
-                "file_type": {
-                    "type": "string",
-                    "description": "Type or category of the file."
-                },
-                "dataset_description": {
-                    "type": "string",
-                    "description": "Short summary of the dataset contents, plus - if mentioned - the use in the research publication of interes."
-                },
-                "file_url": {
-                    "type": "string",
-                    "description": "Direct link to the file."
-                },
-                "file_name": {
-                    "type": "string",
-                    "description": "Filename or archive name."
-                },
-                "file_license": {
-                    "type": "string",
-                    "description": "License under which the file is distributed."
-                },
-                "request_access_needed": {
-                    "type": "string",
-                    "description": "[Yes or No] Whether access to the file requires a request."
-                },
-                "request_access_form_links": {
-                    "type": "array",
-                    "items": {
-                        "type": "string",
-                        "format": "uri",
-                        "description": "Links to forms or pages where access requests can be made."
-                    },
-                    "description": "Links to forms or pages where access requests can be made."
-                },
-                "dataset_id": {
-                    "type": "string",
-                    "description": "A unique identifier for the dataset."
-                },
-                "download_type": {
-                    "type": "string",
-                    "description": "Type of download (e.g., HTTP, FTP, API, ...)."
-                }
-            },
-            "required": [
-                "dataset_description"
-            ]
-        }
-    }
-}
-
-
-class Dataset(BaseModel):
-    dataset_id: str
-    repository_reference: str
-
-
-class Dataset_w_Description(typing.TypedDict):
-    dataset_id: str
-    repository_reference: str
-    rationale: str
-
-
-class Dataset_metadata(BaseModel):
-    number_of_files: int
-    file_size: str
-    file_format: str
-    file_type: str
-    dataset_description: str
-    file_url: str
-    file_name: str
-    file_license: str
-    request_access_needed: str
-    dataset_id: str
-    download_type: str
+from data_gatherer.llm.response_schema import Dataset_w_Page, dataset_response_schema_gpt, Dataset
 
 
 # Abstract base class for parsing data
@@ -296,12 +162,7 @@ class LLMParser(ABC):
         raise NotImplementedError("DDG not implemented yet")
 
     def reconstruct_download_link(self, href, content_type, current_url_address):
-        # https: // pmc.ncbi.nlm.nih.gov / articles / instance / 11252349 / bin / 41598_2024_67079_MOESM1_ESM.zip
-        # https://pmc.ncbi.nlm.nih.gov/articles/instance/PMC11252349/bin/41598_2024_67079_MOESM1_ESM.zip
-        # https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11252349/bin/41598_2024_67079_MOESM1_ESM.zip
         download_link = None
-        #repo = self.url_to_repo_domain(current_url_address)
-        # match the digits of the PMC ID (after PMC) in the URL
         self.logger.debug(f"Function_call: reconstruct_download_link({href}, {content_type}, {current_url_address})")
         if self.publisher == 'PMC':
             PMCID = re.search(r'PMC(\d+)', current_url_address, re.IGNORECASE).group(1)
@@ -490,13 +351,11 @@ class LLMParser(ABC):
                 self.logger.info(f"Response saved to cache")
 
             elif model == 'gemma3:1b':
-                response = self.client.api_call(messages, response_format=list[Dataset])
+                response = self.client.api_call(messages, response_format=Dataset_w_Page.model_json_schema())
                 candidates = self.safe_parse_json(response)
                 if candidates:
-                    self.logger.info(f"Found {len(candidates)} candidates in the response.")
-                    response_text = candidates[0].content.parts[0].text  # Access the first part's text
-                    self.logger.info(f"Gemini response text: {response_text}")
-                    parsed_response = json.loads(response_text)  # Parse the JSON response
+                    self.logger.info(f"Found {len(candidates)} candidates in the response. Type {type(candidates)}")
+                    parsed_response = candidates
                     if self.save_responses_to_cache:
                         self.prompt_manager.save_response(prompt_id, parsed_response)
                         self.logger.info(f"Response saved to cache")
@@ -709,6 +568,9 @@ class LLMParser(ABC):
         """
         seen = set()
         deduped = []
+
+        if not isinstance(response, list) and isinstance(response, dict):
+            response = [response]
 
         for item in response:
             dataset_id = item.get("dataset_id", item.get("dataset_identifier", ""))

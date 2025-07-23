@@ -71,7 +71,7 @@ class LLMClient_dev:
 
         self.logger.info(f"Client initialized: {self.client}")
 
-    def api_call(self, content, **kwargs):
+    def api_call(self, content, response_format, temperature=0.0, **kwargs):
         self.logger.info(f"Calling {self.model} with prompt length {len(content)}")
         if self.model.startswith('gpt'):
             return self._call_openai(content, **kwargs)
@@ -80,8 +80,8 @@ class LLMClient_dev:
                 return self._call_portkey_gemini(content, **kwargs)
             else:
                 return self._call_gemini(content, **kwargs)
-        elif self.model.startswith('gemma3:1b'):
-            return self._call_ollama(content, **kwargs)
+        elif self.model.startswith('gemma'):
+            return self._call_ollama(content, response_format, temperature=temperature)
         else:
             raise ValueError(f"Unsupported model: {self.model}")
 
@@ -110,11 +110,12 @@ class LLMClient_dev:
         )
         return response.text
 
-    def _call_ollama(self, messages, temperature=0.0, **kwargs):
+    def _call_ollama(self, messages, response_format, temperature=0.0):
         self.logger.info(f"Calling Ollama with messages: {messages}")
         if self.save_prompts:
             self.prompt_manager.save_prompt(prompt_id='abc', prompt_content=messages)
-        response = self.client.chat(model=self.model, options={"temperature": temperature}, messages=messages)
+        response = self.client.chat(model=self.model, options={"temperature": temperature}, messages=messages,
+                                    format=response_format)
         self.logger.info(f"Ollama response: {response['message']['content']}")
         return response['message']['content']
 

@@ -40,12 +40,14 @@ class PDFParser(LLMParser):
     def extract_sections_from_text(self, pdf_content: str) -> list[dict]:
         """
         Heuristically extract section titles and texts from normalized PDF content.
+        Treat the 'References' section separately as a vocabulary, not as a regular section.
 
         Args:
             pdf_content: str — normalized plain-text PDF content.
 
         Returns:
-            List[dict] — list of sections with 'section_title' and 'text'
+            List[dict] — list of sections with 'section_title' and 'text'.
+            If a 'References' section is found, it is returned as a separate dict with key 'references'.
         """
         self.logger.info("Extracting sections using heuristics.")
 
@@ -53,16 +55,31 @@ class PDFParser(LLMParser):
         sections = []
         current_section = {"section_title": "Start", "text": ""}
         candidate_pattern = re.compile(r"^\s*(\d{1,2}(\.\d{1,2})*\.?\s*)?[A-Z][\w\s,\-:]{3,80}$")
+        references_section = None
+        in_references = False
 
         for i, line in enumerate(lines):
             line_stripped = line.strip()
+
+            # Detect start of References section
+            if re.match(r"^references$", line_stripped, re.IGNORECASE):
+                # Save previous section
+                if current_section["text"].strip():
+                    sections.append(current_section)
+                # Start collecting references
+                in_references = True
+                references_section = {"section_title": "references", "text": ""}
+                continue
+
+            if in_references:
+                references_section["text"] += line + "\n"
+                continue
 
             # Check if line is a candidate section heading
             if candidate_pattern.match(line_stripped) and not line_stripped.endswith('.'):
                 # Start new section
                 if current_section["text"].strip():
                     sections.append(current_section)
-
                 current_section = {
                     "section_title": line_stripped,
                     "text": ""
@@ -70,13 +87,48 @@ class PDFParser(LLMParser):
             else:
                 current_section["text"] += line + "\n"
 
-        # Append last section
-        if current_section["text"].strip():
+        if not in_references and current_section["text"].strip():
             sections.append(current_section)
 
-        self.logger.info(f"Extracted {len(sections)} sections.")
+        if references_section:
+            sections.extend(self.split_references(references_section['text']))
+        else:
+            self.logger.info("No References section found in the document.")
+
+        self.logger.info(f"Extracted {len(sections)} sections (including references if present).")
+        self.logger.info(f"sections: {sections}")
         return sections
 
+    def split_references(self, references_text):
+        """
+        Split a references section into individual references, robust to different bibstyles.
+        Uses heuristics: a new reference likely starts with a capitalized word (author) and a year (possibly with a/b/c),
+        and may span multiple lines.
+        Returns a list of dicts with 'section_title' and 'text'.
+        """
+        self.logger.info("Splitting references section into individual references (robust heuristic).")
+        # Pattern: line starts with capitalized word(s), then year (possibly in parentheses), then period or colon
+        # e.g. "Smith J. 2020.", "Smith J, Doe A. (2020).", "Smith J. 2020a:"
+        # Accepts: "Ahnesjö I. 1992a. ...", "Alonso-Alvarez C, Velando A. 2012. ..."
+        # Also allow for lines that start with a number (for numbered bibs)
+        ref_start = re.compile(r"^(\d+\.\s*)?([A-ZÅÄÖ][\w\-']+(\s+[A-Z][\w\-']+)*[\s,\.]+)+((\(|\s)?\d{4}[a-zA-Z]?\)?)[\.:\s]")
+        lines = references_text.strip().splitlines()
+        refs = []
+        current_ref = ''
+        for line in lines:
+            if ref_start.match(line.strip()):
+                if current_ref.strip():
+                    refs.append(current_ref.strip())
+                current_ref = line.strip()
+            else:
+                # Continuation of previous reference
+                current_ref += ' ' + line.strip()
+        if current_ref.strip():
+            refs.append(current_ref.strip())
+        # Save as dicts
+        refs = [{"section_title": f"Ref_{i + 1}", "text": ref} for i, ref in enumerate(refs) if ref]
+        self.logger.info(f"Split into {len(refs)} individual references.")
+        return refs
 
     def extract_text_from_pdf(self, file_path, pdf_reader='pymupdf', start_page=0, end_page=None):
         """
@@ -164,7 +216,7 @@ class PDFParser(LLMParser):
         return markdown
 
     def normalize_extracted_text(self, text, top_n=10, bottom_n=10, repeat_thresh=0.5):
-        self.logger.info("Normalizing extracted text.")
+        self.logger.info("Normalizing extracted text. Initial length: " f"{len(text)} characters")
 
         # More flexible page splitting
         pages = re.split(r'\n{2,}', text)
@@ -194,8 +246,38 @@ class PDFParser(LLMParser):
 
         normalized_text = re.sub(r'\n?Page\s+\d+\s*\n?', '\n', normalized_text, flags=re.IGNORECASE)
 
-        self.logger.info(f"Normalized text length: {len(normalized_text)}")
-        return normalized_text
+        ret_text = self.merge_pdf_line_breaks(normalized_text)
+
+        self.logger.info(f"Normalized text length: {len(ret_text)}")
+        self.logger.info(f"Normalized text: {ret_text}")
+        return ret_text
+
+    def merge_pdf_line_breaks(self, text):
+        """
+        Merge lines that are broken by hard PDF line breaks but do not end with sentence-ending punctuation.
+        Also fix broken words split by hyphen and newline.
+        Additionally, merge line breaks that occur within URLs (e.g., after 'http', 'https', 'www', or inside a domain).
+        Keep newlines if the next character is a capital letter (likely a heading or new section).
+        """
+        # Fix broken words: e.g. "wo-\nrd" -> "word"
+        text = re.sub(r'(\w+)-\n(\w+)', r'\1\2', text)
+
+        # Remove line breaks within URLs (e.g., after http, https, www, or inside a domain)
+        # This will join lines that are split in the middle of a URL
+        text = re.sub(r'(https?://[^\s\n]+)\n([^\s\n]+)', r'\1\2', text)
+        text = re.sub(r'(www\.[^\s\n]+)\n([^\s\n]+)', r'\1\2', text)
+        # Also handle line breaks after domain dots (e.g., dx.doi.\norg)
+        text = re.sub(r'(\.[a-z]{2,6})\n([a-zA-Z0-9])', r'\1\2', text)
+
+        # Protect double newlines (paragraph breaks)
+        text = text.replace('\n\n', '<PARA>')
+
+        # Merge single newlines not after . ! ? and not followed by a capital letter
+        text = re.sub(r'(?<![.!?])\n(?![A-Z])', ' ', text)
+
+        # Restore paragraph breaks
+        text = text.replace('<PARA>', '\n\n')
+        return text
 
     def parse_data(self, file_path, publisher=None, current_url_address=None, additional_data=None, raw_data_format='PDF',
                    file_path_is_temp=False, article_file_dir='tmp/raw_files/', process_DAS_links_separately=False,
@@ -250,7 +332,7 @@ class PDFParser(LLMParser):
             if semantic_retrieval:
                 self.logger.info("Semantic retrieval is enabled, extracting sections from the preprocessed data.")
                 corpus = self.extract_sections_from_text(preprocessed_data)
-                top_k_sections = self.semantic_retrieve_from_corpus(corpus)
+                top_k_sections = self.semantic_retrieve_from_corpus(corpus, topk_docs_to_retrieve=2)
                 top_k_sections_text = [item['section_title'] + '\n' + item['text'] for item in top_k_sections]
                 data_availability_str = "\n".join(top_k_sections_text)
             else:
