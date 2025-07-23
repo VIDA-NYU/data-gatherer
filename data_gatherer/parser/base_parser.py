@@ -12,7 +12,8 @@ from data_gatherer.prompts.prompt_manager import PromptManager
 import tiktoken
 from data_gatherer.resources_loader import load_config
 from data_gatherer.retriever.embeddings_retriever import EmbeddingsRetriever
-from data_gatherer.env import PORTKEY_GATEWAY_URL, PORTKEY_API_KEY, PORTKEY_ROUTE, PORTKEY_CONFIG, NYU_LLM_API, GPT_API_KEY, GEMINI_KEY, DATA_GATHERER_USER_NAME
+from data_gatherer.env import PORTKEY_GATEWAY_URL, PORTKEY_API_KEY, PORTKEY_ROUTE, PORTKEY_CONFIG, NYU_LLM_API, \
+    GPT_API_KEY, GEMINI_KEY, DATA_GATHERER_USER_NAME
 import requests
 from data_gatherer.llm.llm_client import LLMClient_dev
 from data_gatherer.llm.response_schema import Dataset_w_Page, dataset_response_schema_gpt, Dataset
@@ -310,7 +311,7 @@ class LLMParser(ABC):
             content=content,
             repos=', '.join(repos)
         )
-        self.logger.info(f"Prompt messages total length: {self.count_tokens(messages,model)} tokens")
+        self.logger.info(f"Prompt messages total length: {self.count_tokens(messages, model)} tokens")
         self.logger.debug(f"Prompt messages: {messages}")
 
         # Generate the checksum for the prompt content
@@ -529,7 +530,8 @@ class LLMParser(ABC):
                 else:
                     dataset_webpage = 'n/a'
 
-                if dataset_id == 'n/a' and data_repository in self.open_data_repos_ontology['repos']:
+                if dataset_id == 'n/a' and type(data_repository) == str and data_repository in \
+                        self.open_data_repos_ontology['repos']:
                     self.logger.info(f"Dataset ID is 'n/a' and repository name from prompt")
                     continue
 
@@ -866,7 +868,17 @@ class LLMParser(ABC):
         """
         This function checks for hallucinations, i.e. if the dataset identifier is a known repository name.
         """
-        self.logger.info(f"Validating Dataset Page: {dataset_webpage_url}")
+        self.logger.info(
+            f"Validating Dataset Page: {dataset_webpage_url}, type: {type(dataset_webpage_url)}, repo: {repo}")
+        if ',' in dataset_webpage_url:
+            self.logger.warning(
+                f"Dataset Page contains a comma: {dataset_webpage_url}. Same data may be in multiple repos.")
+            ret = []
+            for dp in dataset_webpage_url.split(','):
+                dp = dp.strip()
+                if dp in self.open_data_repos_ontology['repos']:
+                    ret.append(self.validate_dataset_webpage(dp, repo))
+            return ret
         resolved_dataset_page = self.resolve_url(dataset_webpage_url)
         if repo in self.open_data_repos_ontology['repos']:
             if 'dataset_webpage_url_ptr' in self.open_data_repos_ontology['repos'][repo].keys():

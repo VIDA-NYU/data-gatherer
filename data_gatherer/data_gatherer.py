@@ -172,7 +172,7 @@ class DataGatherer:
 
     def parse_data(self, raw_data, publisher=None, current_url_address=None, additional_data=None,
                    raw_data_format='XML', parsed_data_dir='tmp/parsed_articles/',
-                   process_DAS_links_separately=False, full_document_read=False, semantic_retrieval=False,
+                   process_DAS_links_separately=False, full_document_read=False, semantic_retrieval=False, top_k=5,
                    prompt_name='retrieve_datasets_simple_JSON', use_portkey_for_gemini=True, section_filter=None):
         """
         Parses the raw data fetched from the source URL using the appropriate parser.
@@ -240,6 +240,7 @@ class DataGatherer:
                                       additional_data=additional_data,
                                       process_DAS_links_separately=process_DAS_links_separately,
                                       semantic_retrieval=semantic_retrieval,
+                                      top_k=top_k,
                                       section_filter=section_filter
                                       )
 
