@@ -27,7 +27,7 @@ class LLMClient_dev:
                 metadata={"_user": DATA_GATHERER_USER_NAME}
             )
 
-        elif model.startswith('gemma3:1b'):
+        elif model.startswith('gemma3'):
             self.client = Client(host="http://localhost:11434")
 
         elif model == 'gemma2:9b':
