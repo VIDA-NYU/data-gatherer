@@ -49,6 +49,8 @@ class EmbeddingsRetriever(BaseRetriever):
             List[Tuple[str, float]]: List of (passage, score) tuples.
         """
         self.logger.info(f"Searching for top-{k} passages similar to the query by embeddings.")
+        if k > len(self.corpus):
+            raise ValueError("top-k k-parameter is greated than the corpus size. Please set k to a smaller value.")
         query_emb = self.model.encode([query], convert_to_numpy=True)[0]
         idxs, dists = self._l2_search(query_emb, k)
         results = []

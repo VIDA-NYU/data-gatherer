@@ -113,6 +113,11 @@ class Dataset(BaseModel):
     dataset_id: str
     repository_reference: str
 
+class Dataset_w_Page(BaseModel):
+    dataset_id: str
+    repository_reference: str
+    dataset_webpage: str
+
 class Dataset_w_Description(typing.TypedDict):
     dataset_id: str
     repository_reference: str

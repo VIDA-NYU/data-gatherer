@@ -139,6 +139,20 @@ def test_extract_sections_from_text(get_test_data_path):
     assert all(isinstance(s, dict) for s in sections)
     print('\n')
 
+def test_split_references_from_text(get_test_data_path):
+    logger = setup_logging("test_logger", log_file="../logs/scraper.log")
+    parser = PDFParser("open_bio_data_repos.json", logger, log_file_override=None,
+                       llm_name='gemini-2.0-flash')
+    text = parser.extract_text_from_pdf(get_test_data_path('test_pdf_refs_1.pdf'))
+    normalized_text = parser.normalize_extracted_text(text)
+    sections = parser.extract_sections_from_text(normalized_text)
+    references = [sections[i] for i in range(len(sections)) if sections[i]['section_title'].startswith("Ref")]
+    print(f"references (len {len(references)}): \n\n{references}\n\n")
+    assert isinstance(references, list)
+    assert len(references) > 0 and len(references) < 200
+    assert all(isinstance(r, dict) for r in references)
+    print('\n')
+
 def test_resolve_data_repository():
     logger = setup_logging("test_logger", log_file="../logs/scraper.log", level="INFO",
                                     clear_previous_logs=True)
