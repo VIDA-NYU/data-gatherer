@@ -282,7 +282,7 @@ class PDFParser(LLMParser):
     def parse_data(self, file_path, publisher=None, current_url_address=None, additional_data=None, raw_data_format='PDF',
                    file_path_is_temp=False, article_file_dir='tmp/raw_files/', process_DAS_links_separately=False,
                    prompt_name='retrieve_datasets_simple_JSON', use_portkey_for_gemini=True, semantic_retrieval=False,
-                   section_filter=None):
+                   top_k=2, section_filter=None):
         """
         Parse the PDF file and extract metadata of the relevant datasets.
 
@@ -332,7 +332,7 @@ class PDFParser(LLMParser):
             if semantic_retrieval:
                 self.logger.info("Semantic retrieval is enabled, extracting sections from the preprocessed data.")
                 corpus = self.extract_sections_from_text(preprocessed_data)
-                top_k_sections = self.semantic_retrieve_from_corpus(corpus, topk_docs_to_retrieve=2)
+                top_k_sections = self.semantic_retrieve_from_corpus(corpus, topk_docs_to_retrieve=top_k)
                 top_k_sections_text = [item['section_title'] + '\n' + item['text'] for item in top_k_sections]
                 data_availability_str = "\n".join(top_k_sections_text)
             else:
