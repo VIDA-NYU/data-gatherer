@@ -68,7 +68,7 @@
     },
     "repository.jpostdb.org": {
       "repo_name": "JPOST",
-      "url_concat_string": "entry/__ID__",
+      "url_concat_string": "/entry/__ID__",
       "download_root": "https://repository.jpostdb.org/entry/__ID__",
       "access_mode": "Complex download"
     },
