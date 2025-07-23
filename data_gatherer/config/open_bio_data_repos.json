@@ -77,6 +77,7 @@
     },
     "geo" : {
       "repo_name": "Gene Expression Omnibus",
+      "id_pattern": "\\bGSE\\d+|GSM\\d+|GPL\\d+|GDS\\d+\\b",
       "dataset_webpage_url_ptr": "https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=__ID__",
       "access_mode": "Complex download"
     },
