@@ -158,15 +158,22 @@ def test_resolve_data_repository():
                                     clear_previous_logs=True)
     parser = XMLParser("open_bio_data_repos.json", logger, log_file_override=None,
                        llm_name='gemini-2.0-flash')
-    test_cases = {
-        "NCBI GEO": "GEO",
-        "NCBI Gene Expression Omnibus (GEO)": "GEO"
-        # add more test cases as needed
-    }
-
-    for url,tgt in test_cases.items():
-        print(f"Testing URL: {url}")
-        data_repo = parser.resolve_data_repository(url)
+    test_cases = [
+        {
+            "extracted_name": "NCBI GEO",
+            "target_name": "GEO",
+            "extracted_id": "GSE123456"
+        },
+        {
+            "extracted_name": "NCBI Gene Expression Omnibus (GEO)",
+            "target_name": "GEO",
+            "extracted_id": "GSE923456"
+        }
+    ]
+    for obj in test_cases:
+        repo, tgt, extracted_id = obj["extracted_name"], obj["target_name"], obj["extracted_id"]
+        print(f"Testing URL: {repo}")
+        data_repo = parser.resolve_data_repository(repo, identifier=extracted_id)
         assert isinstance(data_repo, str)
         assert data_repo.lower() == tgt.lower()
         print('\n')

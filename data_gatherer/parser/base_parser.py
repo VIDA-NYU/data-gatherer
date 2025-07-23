@@ -934,13 +934,13 @@ class LLMParser(ABC):
             repo = re.sub("\(", " ", repo)
             repo = re.sub("\)", " ", repo)
             # match where repo_link has been extracted
-            if k.lower() == repo.lower() or k.lower() in repo.lower():
+            if k.lower() == repo.lower():
                 self.logger.info(f"Exact - case insensitive - match found for repo: {repo}")
                 resolved_to_known_repo = True
                 repo = k
                 break
 
-            elif 'repo_name' in v.keys():
+            if not resolved_to_known_repo and 'repo_name' in v.keys():
                 if repo.lower() == v['repo_name'].lower():
                     self.logger.info(f"Found repo_name match for {repo}")
                     repo = k
@@ -953,7 +953,7 @@ class LLMParser(ABC):
                     resolved_to_known_repo = True
                     break
 
-            elif identifier is not None and 'id_pattern' in v.keys():
+            if not resolved_to_known_repo and identifier is not None and 'id_pattern' in v.keys():
                 self.logger.info(f"Checking id_pattern {v['id_pattern']} match with identifier {identifier} for {repo}")
                 if re.match(v['id_pattern'], identifier, re.IGNORECASE):
                     self.logger.info(f"Found id_pattern match for {repo} in {v['id_pattern']}")
