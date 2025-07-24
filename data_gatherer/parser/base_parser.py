@@ -177,7 +177,7 @@ class LLMParser(ABC):
 
         self.llm_name = llm_name
         entire_document_models = ["gemini-1.5-flash", "gemini-1.5-pro", "gemini-2.0-flash-exp", "gemini-2.0-flash",
-                                      "gpt-4o", "gpt-4o-mini"]
+                                  "gemini-2.5-flash", "gpt-4o", "gpt-4o-mini"]
 
         self.full_document_read = full_document_read and self.llm_name in entire_document_models
         self.title = None
@@ -215,35 +215,16 @@ class LLMParser(ABC):
         elif llm_name == 'gpt-4o':
             self.client = OpenAI(api_key=GPT_API_KEY)
 
-        elif llm_name == 'gemini-1.5-flash':
+        elif 'gemini' in llm_name:
             if not self.use_portkey_for_gemini:
                 genai.configure(api_key=GEMINI_KEY)
-                self.client = genai.GenerativeModel('gemini-1.5-flash')
+                self.client = genai.GenerativeModel(llm_name)
             else:
                 self.client = None
 
-        elif llm_name == 'gemini-2.0-flash-exp':
-            if not self.use_portkey_for_gemini:
-                genai.configure(api_key=GEMINI_KEY)
-                self.client = genai.GenerativeModel('gemini-2.0-flash-exp')
-            else:
-                self.client = None
-
-        elif llm_name == 'gemini-2.0-flash':
-            if not self.use_portkey_for_gemini:
-                genai.configure(api_key=GEMINI_KEY)
-                self.client = genai.GenerativeModel('gemini-2.0-flash')
-            else:
-                self.client = None
-
-        elif llm_name == 'gemini-1.5-pro':
-            if not self.use_portkey_for_gemini:
-                genai.configure(api_key=GEMINI_KEY)
-                self.client = genai.GenerativeModel('gemini-1.5-pro')
-            else:
-                self.client = None
         else:
-            raise ValueError(f"Unsupported LLM name: {llm_name}.")
+            raise ValueError(f"Unsupported LLM model: {llm_name}. Supported models are: "
+                             f"{', '.join(entire_document_models)} and 'gemma2:9b'.")
 
     # create abstract method for subclasses to implement parse_data
     @abstractmethod
@@ -557,7 +538,7 @@ class LLMParser(ABC):
                         self.logger.error(f"Portkey Gemini call failed: {e}")
                         resps = []
                 else:
-                    if model == 'gemini-1.5-flash' or model == 'gemini-2.0-flash-exp' or model == 'gemini-2.0-flash':
+                    if 'gemini' in model and 'flash' in model:
                         response = self.client.generate_content(
                             messages,
                             generation_config=genai.GenerationConfig(

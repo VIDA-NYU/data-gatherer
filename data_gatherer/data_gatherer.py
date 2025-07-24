@@ -89,7 +89,7 @@ class DataGatherer:
         self.download_data_for_description_generation = download_data_for_description_generation
 
         entire_document_models = ["gemini-1.5-flash", "gemini-1.5-pro", "gemini-2.0-flash-exp", "gemini-2.0-flash",
-                                  "gpt-4o", "gpt-4o-mini"]
+                                  "gemini-2.5-flash", "gpt-4o", "gpt-4o-mini"]
         self.full_document_read = llm_name in entire_document_models and process_entire_document
         self.llm = llm_name
 
@@ -358,6 +358,7 @@ class DataGatherer:
         if os.path.exists(os.path.join(CACHE_BASE_DIR, "process_url_cache.json")) and self.load_from_cache:
             cache = json.load(open(os.path.join(CACHE_BASE_DIR, "process_url_cache.json"), 'r'))
             if process_id in cache:
+                self.logger.info(f"Loading results from cache for process ID: {process_id}")
                 return pd.DataFrame(cache[process_id])
 
         try:
@@ -964,16 +965,19 @@ class DataGatherer:
         return article_id
 
     def save_func_output_to_cache(self, output, process_id, function_name):
-        self.logger.info(f"Saving results to cache with process_id: {process_id}")
         cache = {}
         if os.path.exists(os.path.join(CACHE_BASE_DIR, function_name + "_cache.json")):
             with open(os.path.join(CACHE_BASE_DIR, function_name + "_cache.json"), 'r') as f:
                 cache = json.load(f)
         else:
             os.makedirs(CACHE_BASE_DIR, exist_ok=True)
-        cache[process_id] = output
-        with open(os.path.join(CACHE_BASE_DIR, function_name + "_cache.json"), 'w') as f:
-            json.dump(cache, f, indent=4)
+        if process_id not in cache:
+            self.logger.info(f"Saving results to cache with process_id: {process_id}")
+            cache[process_id] = output
+            with open(os.path.join(CACHE_BASE_DIR, function_name + "_cache.json"), 'w') as f:
+                json.dump(cache, f, indent=4)
+        else:
+            self.logger.debug(f"Process ID {process_id} already exists in cache. Skipping save.")
 
     def run(self, input_file='input/test_input.txt'):
         """
