@@ -8,7 +8,8 @@ from data_gatherer.parser.grobid_pdf_parser import GrobidPDFParser
 from data_gatherer.logger_setup import setup_logging
 from conftest import get_test_data_path
 from lxml import etree
-
+import requests
+import pytest
 import os
 from dotenv import load_dotenv
 
@@ -191,6 +192,14 @@ def test_extract_title_from_xml(get_test_data_path):
     assert title == "Dual molecule targeting HDAC6 leads to intratumoral CD4+ cytotoxic lymphocytes recruitment through MHC-II upregulation on lung cancer cells"
     print('\n')
 
+def grobid_is_alive(grobid_url="http://localhost:8070/api/isalive"):
+    try:
+        r = requests.get(grobid_url, timeout=2)
+        return r.status_code == 200
+    except Exception:
+        return False
+
+@pytest.mark.skipif(not grobid_is_alive(), reason="GROBID server is not running")
 def test_extract_publication_title_GrobidPDFParser(get_test_data_path):
     logger = setup_logging("test_logger", log_file="../logs/scraper.log")
     parser = GrobidPDFParser("open_bio_data_repos.json", logger, llm_name='gemini-2.0-flash')
@@ -199,7 +208,7 @@ def test_extract_publication_title_GrobidPDFParser(get_test_data_path):
     assert isinstance(title, str)
     assert len(title) > 0
     assert title == "Pipefish embryo oxygenation, survival, and development: egg size, male size, and temperature effects"
-    print('\n')
+
 
 def test_extract_title_from_html_PMC(get_test_data_path):
     logger = setup_logging("test_logger", log_file="../logs/scraper.log")
