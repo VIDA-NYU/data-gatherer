@@ -898,6 +898,9 @@ class LLMParser(ABC):
             return domain
         elif '.' not in url:
             return url
+        elif ' ' not in url and '/' not in url:
+            self.logger.warning(f"URL {url} may be a domain already.")
+            return url
         else:
             self.logger.error(f"Error extracting domain from URL: {url}")
             return 'Unknown_Publisher'
