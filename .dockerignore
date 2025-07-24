@@ -8,6 +8,7 @@ scripts/
 tests/
 tmp/
 .git
+/data_gatherer/parser/grobid-0.8.2
 
 # Exclude specific files
 test_refactor.ipynb

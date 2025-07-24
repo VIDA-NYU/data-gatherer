@@ -218,7 +218,7 @@ if st.button("🚀 Run Extraction"):
                                                 write_raw_metadata=False,
                                                 use_portkey_for_gemini=use_portkey,
                                                 prompt_name=metadata_prompt_name,
-                                                timeout=10  # <-- Increase timeout from 3 to 15 seconds
+                                                timeout=15  # <-- Increase timeout from 3 to 15 seconds
                                             )
                                             if not preview_result or not isinstance(preview_result, list) or\
                                                     len(preview_result) == 0:
