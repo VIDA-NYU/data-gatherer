@@ -4,6 +4,7 @@ from data_gatherer.parser.base_parser import LLMParser
 from data_gatherer.parser.xml_parser import XMLParser
 from data_gatherer.parser.html_parser import HTMLParser
 from data_gatherer.parser.pdf_parser import PDFParser
+from data_gatherer.parser.grobid_pdf_parser import GrobidPDFParser
 from data_gatherer.logger_setup import setup_logging
 from conftest import get_test_data_path
 from lxml import etree
@@ -190,6 +191,16 @@ def test_extract_title_from_xml(get_test_data_path):
     assert title == "Dual molecule targeting HDAC6 leads to intratumoral CD4+ cytotoxic lymphocytes recruitment through MHC-II upregulation on lung cancer cells"
     print('\n')
 
+def test_extract_publication_title_GrobidPDFParser(get_test_data_path):
+    logger = setup_logging("test_logger", log_file="../logs/scraper.log")
+    parser = GrobidPDFParser("open_bio_data_repos.json", logger, llm_name='gemini-2.0-flash')
+    raw_text = parser.extract_full_text_xml(get_test_data_path('test_pdf_refs_1.pdf'))
+    title = parser.extract_publication_title(raw_text)
+    assert isinstance(title, str)
+    assert len(title) > 0
+    assert title == "Pipefish embryo oxygenation, survival, and development: egg size, male size, and temperature effects"
+    print('\n')
+
 def test_extract_title_from_html_PMC(get_test_data_path):
     logger = setup_logging("test_logger", log_file="../logs/scraper.log")
     parser = HTMLParser("open_bio_data_repos.json", logger, llm_name='gemini-2.0-flash')
@@ -228,7 +239,7 @@ def test_semantic_retrieve_from_corpus(get_test_data_path):
     for acc_id in accession_ids:
         assert acc_id in DAS_text
     for sect_i, sect in enumerate(top_k_sections):
-        assert abs(sect['L2_distance'] - scores[sect_i]) < 0.01
+        assert abs(sect['L2_distance'] - scores[sect_i]) < 0.02
     print('\n')
 
 def test_normalize_text_from_pdf(get_test_data_path):

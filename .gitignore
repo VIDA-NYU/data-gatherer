@@ -121,3 +121,6 @@ nosetests.xml
 /scripts/exp_input/article_ids.csv
 /scripts/ignore/getting_started_ignore.ipynb
 /scripts/ignore/**
+
+#grobid ignore
+data_gatherer/parser/grobid-0.8.2
