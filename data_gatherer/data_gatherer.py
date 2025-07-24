@@ -5,6 +5,7 @@ from data_gatherer.data_fetcher import *
 from data_gatherer.parser.html_parser import *
 from data_gatherer.parser.xml_parser import *
 from data_gatherer.parser.pdf_parser import *
+from data_gatherer.parser.grobid_pdf_parser import *
 from data_gatherer.classifier import LLMClassifier
 from data_gatherer.env import CACHE_BASE_DIR
 import json
@@ -171,7 +172,7 @@ class DataGatherer:
         return raw_data
 
     def parse_data(self, raw_data, publisher=None, current_url_address=None, additional_data=None,
-                   raw_data_format='XML', parsed_data_dir='tmp/parsed_articles/',
+                   raw_data_format='XML', parsed_data_dir='tmp/parsed_articles/', grobid_for_pdf=False,
                    process_DAS_links_separately=False, full_document_read=False, semantic_retrieval=False, top_k=5,
                    prompt_name='retrieve_datasets_simple_JSON', use_portkey_for_gemini=True, section_filter=None):
         """
@@ -212,6 +213,10 @@ class DataGatherer:
         elif raw_data_format.upper() == "HTML":
             self.parser = HTMLParser(self.open_data_repos_ontology, self.logger, full_document_read=full_document_read,
                                      llm_name=self.llm, use_portkey_for_gemini=use_portkey_for_gemini)
+
+        elif raw_data_format.upper() == "PDF" and grobid_for_pdf:
+            self.parser = GrobidPDFParser(self.open_data_repos_ontology, self.logger, full_document_read=full_document_read,
+                                    llm_name=self.llm, use_portkey_for_gemini=use_portkey_for_gemini)
 
         elif raw_data_format.upper() == "PDF":
             self.parser = PDFParser(self.open_data_repos_ontology, self.logger, full_document_read=full_document_read,
