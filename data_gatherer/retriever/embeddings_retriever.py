@@ -14,10 +14,11 @@ class EmbeddingsRetriever(BaseRetriever):
             model_name (str): HuggingFace model name for sentence embeddings.
             device (str): Device for embedding model.
         """
+        self.logger = logger
         self.corpus = corpus
+        self.logger.info(f"Initializing EmbeddingsRetriever with: {model_name} on corpus: {len(corpus), type(corpus)}")
         self.model = SentenceTransformer(model_name, device=device)
         self.embeddings = self.model.encode(corpus, show_progress_bar=True, convert_to_numpy=True)
-        self.logger = logger
 
     def _l2_search(self, query_emb, k):
         """
