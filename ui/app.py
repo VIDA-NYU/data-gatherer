@@ -23,7 +23,8 @@ st.markdown("""
 st.sidebar.header("⚙️ Extraction Settings")
 
 MODEL_OPTIONS = [
-    "gemini-1.5-flash", "gemini-1.5-pro", "gemini-2.0-flash-exp", "gemini-2.0-flash", "gpt-4o", "gpt-4o-mini"
+    "gemini-1.5-flash", "gemini-1.5-pro", "gemini-2.0-flash-exp", "gemini-2.0-flash", "gemini-2.5-flash", "gpt-4o",
+    "gpt-4o-mini"
 ]
 PROMPT_MODEL_OPTIONS = {
     'FDR': 'GPT_from_full_input_Examples',
