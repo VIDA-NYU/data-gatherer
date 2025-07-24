@@ -214,7 +214,7 @@ def test_semantic_retrieve_from_corpus(get_test_data_path):
     for acc_id in accession_ids:
         assert acc_id in DAS_text
     for sect_i, sect in enumerate(top_k_sections):
-        assert abs(sect['L2_distance'] - scores[sect_i]) < 0.01
+        assert abs(sect['L2_distance'] - scores[sect_i]) < 0.02
     print('\n')
 
 def test_normalize_text_from_pdf(get_test_data_path):

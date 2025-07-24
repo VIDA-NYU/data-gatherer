@@ -104,6 +104,11 @@
       "access_mode": "Complex download",
       "javascript_load_required": true
     },
+    "nuccore": {
+      "repo_name": "Nucleotide",
+      "repo_root": "www.ncbi.nlm.nih.gov",
+      "dataset_webpage_url_ptr": "https://www.ncbi.nlm.nih.gov/nuccore/__ID__"
+    },
     "data.mendeley.com": {
       "repo_name": "Mendeley"
     }

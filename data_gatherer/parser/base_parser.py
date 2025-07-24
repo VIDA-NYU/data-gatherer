@@ -620,7 +620,7 @@ class LLMParser(ABC):
                     continue
 
                 if 'dataset_webpage' in dataset:
-                    dataset_webpage = self.validate_dataset_webpage(dataset['dataset_webpage'], data_repository)
+                    dataset_webpage = self.validate_dataset_webpage(dataset['dataset_webpage'], data_repository, dataset_id)
                 else:
                     dataset_webpage = 'n/a'
 
@@ -945,11 +945,11 @@ class LLMParser(ABC):
             self.logger.info(f"Accession ID {dataset_identifier} is valid")
             return dataset_identifier
 
-    def validate_dataset_webpage(self, dataset_webpage_url, repo):
+    def validate_dataset_webpage(self, dataset_webpage_url, repo, dataset_id):
         """
         This function checks for hallucinations, i.e. if the dataset identifier is a known repository name.
         """
-        self.logger.info(f"Validating Dataset Page: {dataset_webpage_url}")
+        self.logger.info(f"Validating Dataset Page: {dataset_webpage_url}, repo {repo}")
         resolved_dataset_page = self.resolve_url(dataset_webpage_url)
         if repo in self.open_data_repos_ontology['repos']:
             if 'dataset_webpage_url_ptr' in self.open_data_repos_ontology['repos'][repo].keys():
@@ -965,6 +965,9 @@ class LLMParser(ABC):
             else:
                 self.logger.info(f"No dataset_webpage_url_ptr found for {repo}")
                 return resolved_dataset_page
+        elif dataset_id in resolved_dataset_page:
+            self.logger.info(f"Dataset ID {dataset_id} found in resolved dataset page {resolved_dataset_page}")
+            return resolved_dataset_page
         self.logger.info(f"Repository {repo} not found in ontology")
         return 'n/a'
 
