@@ -27,7 +27,7 @@ class LLMClient_dev:
                 metadata={"_user": DATA_GATHERER_USER_NAME}
             )
 
-        elif model.startswith('gemma3'):
+        elif model.startswith('gemma3') or model.startswith('qwen'):
             self.client = Client(host="http://localhost:11434")
 
         elif model == 'gemma2:9b':
@@ -80,7 +80,7 @@ class LLMClient_dev:
                 return self._call_portkey_gemini(content, **kwargs)
             else:
                 return self._call_gemini(content, **kwargs)
-        elif self.model.startswith('gemma'):
+        elif self.model.startswith('gemma') or "qwen" in self.model:
             return self._call_ollama(content, response_format, temperature=temperature)
         else:
             raise ValueError(f"Unsupported model: {self.model}")
