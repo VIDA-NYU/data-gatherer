@@ -253,35 +253,65 @@ class GrobidPDFParser(PDFParser):
         self.logger.info(f"Function call: parse_data({file_path}, {current_url_address}, "
                          f"additional_data, {raw_data_format})")
 
-        # Always extract TEI XML from the PDF file
-        full_cont_xml = self.extract_full_text_xml(file_path)
-        self.logger.info(f"Parsing full text TEI XML from GROBID response.")
+        try:
+            full_cont_xml = self.extract_full_text_xml(file_path)
+            self.logger.info(f"Parsing full text TEI XML from GROBID response.")
 
-        # If semantic_retrieval, operate on paragraphs, else operate on full text
-        if self.full_document_read:
-            cont = self.extract_text(full_cont_xml)
-        else:
-            if semantic_retrieval:
-                paragraphs = self.extract_paragraphs(full_cont_xml, True)
-                top_k_sections = self.semantic_retrieve_from_corpus(paragraphs, topk_docs_to_retrieve=top_k)
-                top_k_sections_text = [item['text'] for item in top_k_sections]
-                cont = "\n".join(top_k_sections_text)
-                self.logger.info(f"Extracted top sections content for semantic retrieval.\n {cont}")
-
+            if self.full_document_read:
+                cont = self.extract_text(full_cont_xml)
             else:
-                raise ValueError("Set semantic_retrieval to True.")
+                if semantic_retrieval:
+                    paragraphs = self.extract_paragraphs(full_cont_xml, True)
+                    top_k_sections = self.semantic_retrieve_from_corpus(paragraphs, topk_docs_to_retrieve=top_k)
+                    top_k_sections_text = [item['text'] for item in top_k_sections]
+                    cont = "\n".join(top_k_sections_text)
+                    self.logger.info(f"Extracted top sections content for semantic retrieval.\n {cont}")
 
-        datasets = []
-        datasets.extend(self.extract_datasets_info_from_content(cont, self.repo_names, model=self.llm_name,
-                                                                temperature=0, prompt_name=prompt_name))
+                else:
+                    raise ValueError("Set semantic_retrieval to True.")
 
-        out_df = pd.DataFrame(datasets)
+            datasets = []
+            datasets.extend(self.extract_datasets_info_from_content(cont, self.repo_names, model=self.llm_name,
+                                                                    temperature=0, prompt_name=prompt_name))
 
-        out_df['source_file name'] = os.path.basename(file_path)
-        out_df['source_file_path'] = file_path
-        out_df['pub_title'] = self.extract_publication_title(full_cont_xml)
+            out_df = pd.DataFrame(datasets)
 
-        return out_df
+            out_df['source_file name'] = os.path.basename(file_path)
+            out_df['source_file_path'] = file_path
+            out_df['pub_title'] = self.extract_publication_title(full_cont_xml)
+
+            return out_df
+
+
+        except Exception as e:
+
+            self.logger.error(f"GROBID failed on {file_path}: {e}")
+
+            self.logger.info("Attempting fallback with PyMuPDF parser...")
+
+            try:
+                from .pdf_parser import PDFParser
+                fallback_parser = PDFParser(self.repo_ontology, self.logger, log_file_override=self.log_file_override,
+                                            full_document_read=self.full_document_read, prompt_dir=self.prompt_dir,
+                                            llm_name=self.llm_name, save_dynamic_prompts=self.save_dynamic_prompts,
+                                            save_responses_to_cache=self.save_responses_to_cache,
+                                            use_cached_responses=self.use_cached_responses,
+                                            use_portkey_for_gemini=self.use_portkey_for_gemini)
+
+                return fallback_parser.parse_data(file_path, publisher=publisher,
+                                                  current_url_address=current_url_address,
+                                                  additional_data=additional_data, raw_data_format=raw_data_format,
+                                                  file_path_is_temp=file_path_is_temp,
+                                                  article_file_dir=article_file_dir,
+                                                  process_DAS_links_separately=process_DAS_links_separately,
+                                                  prompt_name=prompt_name,
+                                                  use_portkey_for_gemini=use_portkey_for_gemini,
+                                                  semantic_retrieval=semantic_retrieval, top_k=top_k,
+                                                  section_filter=section_filter)
+
+            except Exception as fallback_error:
+                self.logger.error(f"Fallback parser also failed: {fallback_error}")
+                return pd.DataFrame()
 
     def extract_publication_title(self, tei_xml):
         """
