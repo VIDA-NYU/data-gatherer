@@ -83,6 +83,9 @@ class LLMParser(ABC):
         elif llm_name == 'gemma3:4b':
             self.client = LLMClient_dev(model='gemma3:4b', logger=self.logger)
 
+        elif llm_name == 'qwen:4b':
+            self.client = LLMClient_dev(model='qwen:4b', logger=self.logger)
+
         elif llm_name == 'gemma2:9b':
             self.client = Client(host=NYU_LLM_API)  # env variable
 
@@ -305,6 +308,12 @@ class LLMParser(ABC):
                 content = content[:-2000]
         self.logger.info(f"Content length: {len(content)}")
 
+        if 'gemma' in model or 'qwen' in model:
+            if self.tokens_over_limit(content, model, allowance_static_prompt=n_tokens_static_prompt, limit=32000):
+                self.logger.warning(f"Content length {len(content)} exceeds the model's token limit. "
+                                    f"Truncating content to fit within the limit.")
+                content = content[:-2000]
+
         self.logger.debug(f"static_prompt: {static_prompt}")
 
         # Render the prompt with dynamic content
@@ -354,7 +363,7 @@ class LLMParser(ABC):
                     'content']) if self.save_responses_to_cache else None
                 self.logger.info(f"Response saved to cache")
 
-            elif model == 'gemma3:1b' or model == 'gemma3:4b':
+            elif model == 'gemma3:1b' or model == 'gemma3:4b' or model == 'qwen:4b':
                 response = self.client.api_call(messages, response_format=Dataset_w_Page.model_json_schema())
                 candidates = self.safe_parse_json(response)
                 if candidates:
@@ -1236,6 +1245,8 @@ class LLMParser(ABC):
         # "Explicitly identify all database accession codes, repository names, and links to deposited datasets or ...
         # ...supplementary data mentioned in this paper."
         # "Deposited data will be available in the repository XYZ, with accession code ABC123."
+        # """Data availability statement, dataset reference, digital repository name, dataset identifier,
+        #         dataset accession code, dataset doi, dataset page"""
 
         result = retriever.search(
             query=query,
