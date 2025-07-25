@@ -66,6 +66,7 @@ class XMLParser(LLMParser):
             List of dicts with 'section_title' and 'sec_type'.
         """
         sections = []
+        self.logger.info(f"Function_call: extract_sections_from_xml(xml_root) with type {type(xml_root)}")
 
         if not isinstance(xml_root, etree._Element):
             raise TypeError(f"Invalid XML root type: {type(xml_root)}. Expected lxml.etree.Element.")
@@ -97,6 +98,8 @@ class XMLParser(LLMParser):
                 "sec_type": sec_type,
                 "sec_txt_clean": section_text_from_paragraphs
             })
+
+        self.logger.info(f"Extracted {len(sections)} sections from XML.")
         return sections
 
     def extract_publication_title(self, api_data):
@@ -145,8 +148,16 @@ class XMLParser(LLMParser):
 
         if isinstance(api_data, str):
             try:
-                api_data = etree.fromstring(api_data)  # Convert string to lxml Element
-                self.logger.info(f"api_data converted to lxml element")
+                if os.path.exists(api_data):
+                    with open(api_data, 'rb') as f:
+                        api_data = f.read()
+                    api_data = etree.fromstring(api_data)
+                else:
+                    if api_data.lstrip().startswith('<?xml'):
+                        api_data = etree.fromstring(api_data.encode('utf-8'))
+                    else:
+                        api_data = etree.fromstring(api_data)
+                self.logger.info("api_data converted to lxml element")
             except Exception as e:
                 self.logger.error(f"Error parsing API data: {e}")
                 return None
@@ -192,6 +203,7 @@ class XMLParser(LLMParser):
                     data_availability_cont = self.get_data_availability_text(api_data)
 
                     if semantic_retrieval:
+                        self.logger.info(f"Using semantic retrieval for data availability sections.")
                         corpus = self.extract_sections_from_xml(api_data)
                         top_k_sections = self.semantic_retrieve_from_corpus(corpus, topk_docs_to_retrieve=top_k)
                         top_k_sections_text = [item['text'] for item in top_k_sections]
@@ -727,6 +739,7 @@ class XMLParser(LLMParser):
             self.logger.debug(f"Table text: {table_text}")
             data_availability_cont.append(table_text)
 
+        self.logger.info(f"Data Availability len: {len(data_availability_cont)}, type: {type(data_availability_cont)}")
         self.logger.debug(f"Found data availability content: {data_availability_cont}")
 
         return data_availability_cont
@@ -754,3 +767,173 @@ class XMLParser(LLMParser):
 
         # Join rows with a newline to create the final table text
         return "\n".join(rows)
+
+    @staticmethod
+    def is_tei_xml_static(xml_root):
+        """
+        Static version for router use.
+        """
+        if not isinstance(xml_root, etree._Element):
+            return False
+        tei_ns = "http://www.tei-c.org/ns/1.0"
+        def has_tei_ns(elem):
+            ns = etree.QName(elem).namespace
+            if ns == tei_ns:
+                return True
+            for child in elem:
+                if has_tei_ns(child):
+                    return True
+            return False
+        return has_tei_ns(xml_root)
+
+class TEI_XMLParser(XMLParser):
+    """
+    Parser for TEI XML documents (from Grobid or similar).
+    Extend this class with TEI-specific extraction logic as needed.
+    """
+
+    def extract_sections(self, tei_xml):
+        root = etree.fromstring(tei_xml.encode('utf-8'))
+        ns = {'tei': 'http://www.tei-c.org/ns/1.0'}
+        sections = []
+        divs = root.xpath('.//tei:text/tei:body//tei:div[@type="section"]', namespaces=ns)
+        if not divs:
+            divs = root.xpath('.//tei:text/tei:body//tei:div', namespaces=ns)
+        for div in divs:
+            title_el = div.find('tei:head', namespaces=ns)
+            section_title = title_el.text if title_el is not None else ''
+            paragraphs = [etree.tostring(p, method="text", encoding="unicode").strip() for p in div.findall('tei:p', namespaces=ns)]
+            text = '\n'.join(paragraphs)
+            if section_title or text:
+                sections.append({'section_title': section_title, 'text': text})
+        return sections
+
+    def extract_reference_content(self, ref_id, tei_xml):
+        self.logger.debug(f"Extracting reference content for ID: {ref_id}")
+        root = etree.fromstring(tei_xml.encode('utf-8'))
+        ns = {'tei': 'http://www.tei-c.org/ns/1.0'}
+        ref_id_clean = ref_id.lstrip('#')
+        bibl = root.xpath(f".//tei:biblStruct[@xml:id='{ref_id_clean}']", namespaces=ns)
+        if bibl:
+            bibl = bibl[0]
+            analytic_title = bibl.find('.//tei:analytic/tei:title', namespaces=ns)
+            analytic_title_str = analytic_title.text.strip() if analytic_title is not None and analytic_title.text else ""
+            authors = bibl.findall('.//tei:analytic/tei:author/tei:persName', namespaces=ns)
+            author_names = []
+            for a in authors:
+                surname = a.find('tei:surname', namespaces=ns)
+                forename = a.find('tei:forename', namespaces=ns)
+                name = ""
+                if forename is not None and forename.text:
+                    name += forename.text + " "
+                if surname is not None and surname.text:
+                    name += surname.text
+                if name:
+                    author_names.append(name.strip())
+            author_str = ", ".join(author_names)
+            monogr_title = bibl.find('.//tei:monogr/tei:title', namespaces=ns)
+            monogr_title_str = monogr_title.text.strip() if monogr_title is not None and monogr_title.text else ""
+            date = bibl.find('.//tei:monogr/tei:imprint/tei:date', namespaces=ns)
+            date_str = date.text.strip() if date is not None and date.text else ""
+            idno = bibl.find('.//tei:idno', namespaces=ns)
+            idno_str = idno.text.strip() if idno is not None and idno.text else ""
+            parts = []
+            if author_str:
+                parts.append(author_str)
+            if analytic_title_str:
+                parts.append(analytic_title_str)
+            if monogr_title_str:
+                parts.append(monogr_title_str)
+            if date_str:
+                parts.append(date_str)
+            if idno_str:
+                parts.append(idno_str)
+            ref_content = ", ".join(parts)
+            self.logger.debug(f"Extracted reference: {ref_content}")
+            return ref_content if ref_content else ref_id
+        return ref_id
+
+    def extract_paragraphs(self, tei_xml, ref_substitutions=False):
+        self.logger.info(f"Extracting paragraphs from TEI XML. Type: {type(tei_xml)}")
+        root = etree.fromstring(tei_xml.encode('utf-8'))
+        ns = {'tei': 'http://www.tei-c.org/ns/1.0'}
+        paragraphs = []
+        for p in root.xpath('.//tei:p', namespaces=ns):
+            section_title = "No Title"
+            parent = p.getparent()
+            while parent is not None:
+                if parent.tag.endswith('div'):
+                    head = parent.find('tei:head', namespaces=ns)
+                    if head is not None and head.text:
+                        section_title = head.text.strip()
+                        break
+                parent = parent.getparent()
+            if ref_substitutions:
+                para_fragments = []
+                for node in p.iter():
+                    self.logger.debug(f"Processing node: {node.tag} with text: {node}")
+                    if node.tag.endswith('ref') and node.get('target'):
+                        ref_id = node.get('target')
+                        ref_content = self.extract_reference_content(ref_id, tei_xml)
+                        para_fragments.append(ref_content)
+                        if node.tail:
+                            para_fragments.append(node.tail.strip())
+                    elif node is p:
+                        if node.text:
+                            para_fragments.append(node.text.strip())
+                    elif node.tail and node.getparent() is p:
+                        para_fragments.append(node.tail.strip())
+                para_text = " ".join(para_fragments).strip()
+            else:
+                para_text = etree.tostring(p, encoding="unicode", method="text").strip()
+            itertext = " ".join(p.itertext()).strip()
+            if len(para_text) >= 5:
+                paragraphs.append({
+                    "section_title": section_title,
+                    "text": para_text,
+                })
+        self.logger.info(f"Extracted {len(paragraphs)} paragraphs from TEI XML.")
+        return paragraphs
+
+    def extract_text(self, tei_xml):
+        self.logger.info(f"Extracting text from TEI XML. Type: {type(tei_xml)}")
+        paragraphs = self.extract_paragraphs(tei_xml, ref_substitutions=True)
+        return "\n".join(paragraphs['text'] for paragraphs in paragraphs if 'text' in paragraphs)
+
+    def extract_publication_title(self, tei_xml):
+        root = etree.fromstring(tei_xml.encode('utf-8'))
+        ns = {'tei': 'http://www.tei-c.org/ns/1.0'}
+        title_el = root.find('.//tei:analytic/tei:title', namespaces=ns)
+        if title_el is not None and title_el.text:
+            return title_el.text.strip()
+        title_el = root.find('.//tei:monogr/tei:title', namespaces=ns)
+        if title_el is not None and title_el.text:
+            return title_el.text.strip()
+        return ""
+
+class XMLRouter:
+    """
+    Routes XML parsing to the appropriate parser class based on XML type (TEI or not).
+    """
+    def __init__(self, open_data_repos_ontology, logger, **parser_kwargs):
+        self.open_data_repos_ontology = open_data_repos_ontology
+        self.logger = logger
+        self.parser_kwargs = parser_kwargs
+
+    def get_parser(self, xml_root):
+        """
+        Returns an instance of the appropriate parser (TEI_XMLParser or XMLParser)
+        based on the XML content.
+        """
+        if not isinstance(xml_root, etree._Element):
+            try:
+                xml_root = etree.fromstring(xml_root.encode('utf-8'))
+            except etree.XMLSyntaxError as e:
+                self.logger.error(f"Failed to parse XML root: {e}")
+                raise ValueError("Invalid XML root provided.")
+        if XMLParser.is_tei_xml_static(xml_root):
+            self.logger.info("Detected TEI XML. Using TEI_XMLParser.")
+            return TEI_XMLParser(self.open_data_repos_ontology, self.logger, **self.parser_kwargs)
+        else:
+            self.logger.info("Detected non-TEI XML. Using XMLParser.")
+            return XMLParser(self.open_data_repos_ontology, self.logger, **self.parser_kwargs)
