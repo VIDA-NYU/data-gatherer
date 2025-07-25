@@ -874,8 +874,9 @@ class LLMParser(ABC):
         elif ' ' in dataset_identifier or dataset_identifier == 'n/a' or dataset_identifier.endswith('/'):
             self.logger.info(f"Accession ID {dataset_identifier} is invalid")
             return 'n/a'
-        elif dataset_identifier.startswith('http'):
+        elif dataset_identifier.startswith('http') or 'doi' in dataset_identifier.lower():
             dataset_identifier = re.sub(r'https?://doi\.org/', '', dataset_identifier, re.IGNORECASE)
+            dataset_identifier = re.sub(r'doi:', '', dataset_identifier, re.IGNORECASE)
             return dataset_identifier
         else:
             self.logger.info(f"Accession ID {dataset_identifier} is valid")

@@ -73,7 +73,8 @@
       "access_mode": "Complex download"
     },
     "doi.org": {
-      "dataset_webpage_url_ptr": "https://doi.org/__ID__"
+      "dataset_webpage_url_ptr": "https://doi.org/__ID__",
+      "id_pattern": "10\\.\\d{4,9}/"
     },
     "geo" : {
       "repo_name": "Gene Expression Omnibus",
@@ -103,6 +104,11 @@
       "dataset_webpage_url_ptr": "https://www.ebi.ac.uk/biostudies/ArrayExpress/studies/__ID__",
       "access_mode": "Complex download",
       "javascript_load_required": true
+    },
+    "pdb": {
+        "repo_name": "Protein Data Bank",
+        "id_pattern": "[1-9][a-zA-Z0-9]{3}",
+        "dataset_webpage_url_ptr": "https://www.rcsb.org/structure/__ID__"
     },
     "data.mendeley.com": {
       "repo_name": "Mendeley"
