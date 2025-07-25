@@ -112,5 +112,12 @@
     "data.mendeley.com": {
       "repo_name": "Mendeley"
     }
+    "synapse": {
+      "repo_name": "Synapse.org",
+      "repo_root": "www.synapse.org",
+      "dataset_webpage_url_ptr": "https://www.synapse.org/Synapse:__ID__",
+      "id_pattern": "(?<!\d)syn\d{7,12}(?!\d)",
+      "access_mode": "Complex download or application to access"
+    }
   }
 }
