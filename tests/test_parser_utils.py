@@ -1,7 +1,7 @@
 import re
 import pandas as pd
 from data_gatherer.parser.base_parser import LLMParser
-from data_gatherer.parser.xml_parser import XMLParser
+from data_gatherer.parser.xml_parser import XMLParser, XMLRouter, TEI_XMLParser
 from data_gatherer.parser.html_parser import HTMLParser
 from data_gatherer.parser.pdf_parser import PDFParser
 from data_gatherer.parser.grobid_pdf_parser import GrobidPDFParser
@@ -204,7 +204,10 @@ def test_extract_publication_title_GrobidPDFParser(get_test_data_path):
     logger = setup_logging("test_logger", log_file="../logs/scraper.log")
     parser = GrobidPDFParser("open_bio_data_repos.json", logger, llm_name='gemini-2.0-flash')
     raw_text = parser.extract_full_text_xml(get_test_data_path('test_pdf_refs_1.pdf'))
-    title = parser.extract_publication_title(raw_text)
+    router = XMLRouter("open_bio_data_repos.json", logger, llm_name='gemini-2.0-flash')
+    xml_parser = router.get_parser(raw_text)
+    assert isinstance(xml_parser, TEI_XMLParser)
+    title = xml_parser.extract_publication_title(raw_text)
     assert isinstance(title, str)
     assert len(title) > 0
     assert title == "Pipefish embryo oxygenation, survival, and development: egg size, male size, and temperature effects"
@@ -261,4 +264,22 @@ def test_normalize_text_from_pdf(get_test_data_path):
     assert len(normalized_text) < 178720
     assert not re.search('\nPage\s+\d+\s*', normalized_text)
     assert not re.search('\nNewpage\s+\d+\s*', normalized_text)
+    print('\n')
+
+def test_is_tei_xml(get_test_data_path):
+    logger = setup_logging("test_logger", log_file="../logs/scraper.log")
+    parser = XMLParser("open_bio_data_repos.json", logger, llm_name='gemini-2.0-flash')
+    with open(get_test_data_path('test_tei_xml_extract.xml'), 'rb') as f:
+        xml_bytes = f.read()
+    # Accept both string and etree.Element input for the router/static method
+    try:
+        xml_root = etree.fromstring(xml_bytes)
+    except Exception as e:
+        logger.error(f"Failed to parse XML: {e}")
+        assert False, "Could not parse test TEI XML file"
+
+    # Use the static method for robust detection
+    is_tei = XMLParser.is_tei_xml_static(xml_root)
+    assert isinstance(is_tei, bool)
+    assert is_tei is True
     print('\n')

@@ -66,7 +66,7 @@ class xmlRetriever(BaseRetriever):
         """
         Load the XML tags for the specified section name. Publisher-specific.
         """
-
+        self.logger.info(f"Loading target sections for section name: {section_name}")
         target_sections = self.xml_tags
         if section_name not in target_sections:
             self.logger.error(
