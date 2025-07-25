@@ -1106,12 +1106,17 @@ class LLMParser(ABC):
         raise NotImplementedError("This method should be implemented in a subclass.")
 
     def tokens_over_limit(self, html_cont: str, model="gpt-4", limit=128000, allowance_static_prompt=200):
-        # Load the appropriate encoding for the model
-        encoding = tiktoken.encoding_for_model(model)
-        # Encode the prompt and count tokens
-        tokens = encoding.encode(html_cont)
-        self.logger.info(f"Number of tokens: {len(tokens)}")
-        return len(tokens) + int(allowance_static_prompt * 1.25) > limit
+        # Use tiktoken only for OpenAI models, fallback to rough estimate for others
+        if 'gpt' in model:
+            encoding = tiktoken.encoding_for_model(model)
+            tokens = encoding.encode(html_cont)
+            self.logger.info(f"Number of tokens: {len(tokens)}")
+            return len(tokens) + int(allowance_static_prompt * 1.25) > limit
+        else:
+            # Rough estimate: 1 token ≈ 4 characters
+            n_tokens = len(html_cont) // 4
+            self.logger.info(f"Estimated number of tokens for model '{model}': {n_tokens}")
+            return n_tokens + int(allowance_static_prompt * 1.25) > limit
 
     def count_tokens(self, prompt, model="gpt-4o-mini") -> int:
         """
