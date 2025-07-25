@@ -1,5 +1,6 @@
 from data_gatherer.parser.base_parser import *
 from data_gatherer.retriever.html_retriever import htmlRetriever
+from data_gatherer.llm.response_schema import *
 import regex as re
 import logging
 import pandas as pd
@@ -323,7 +324,7 @@ class HTMLParser(LLMParser):
     def parse_data(self, html_str, publisher=None, current_url_address=None, additional_data=None,
                    raw_data_format='HTML', article_file_dir='tmp/raw_files/', process_DAS_links_separately=False,
                    section_filter=None, prompt_name='retrieve_datasets_simple_JSON', use_portkey_for_gemini=True,
-                   semantic_retrieval=False, top_k=2):
+                   semantic_retrieval=False, top_k=2, response_format=dataset_response_schema_gpt):
         """
         Parse the API data and extract relevant links and metadata.
 
@@ -371,7 +372,8 @@ class HTMLParser(LLMParser):
                                                                               self.open_data_repos_ontology['repos'],
                                                                               model=self.llm_name,
                                                                               temperature=0,
-                                                                              prompt_name=prompt_name)
+                                                                              prompt_name=prompt_name,
+                                                                              response_format=response_format)
 
             self.logger.info(f"Augmented dataset links: {augmented_dataset_links}")
 
@@ -399,7 +401,8 @@ class HTMLParser(LLMParser):
                                                                               self.open_data_repos_ontology['repos'],
                                                                               model=self.llm_name,
                                                                               temperature=0,
-                                                                              prompt_name=prompt_name)
+                                                                              prompt_name=prompt_name,
+                                                                              response_format=response_format)
 
             dataset_links_w_target_pages = self.get_dataset_page(augmented_dataset_links)
 

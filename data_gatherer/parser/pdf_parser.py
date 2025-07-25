@@ -279,7 +279,7 @@ class PDFParser(LLMParser):
     def parse_data(self, file_path, publisher=None, current_url_address=None, additional_data=None, raw_data_format='PDF',
                    file_path_is_temp=False, article_file_dir='tmp/raw_files/', process_DAS_links_separately=False,
                    prompt_name='retrieve_datasets_simple_JSON', use_portkey_for_gemini=True, semantic_retrieval=False,
-                   top_k=2, section_filter=None):
+                   top_k=2, section_filter=None, response_format=dataset_response_schema_gpt):
         """
         Parse the PDF file and extract metadata of the relevant datasets.
 
@@ -314,7 +314,8 @@ class PDFParser(LLMParser):
                                                                               self.open_data_repos_ontology['repos'],
                                                                               model=self.llm_name,
                                                                               temperature=0,
-                                                                              prompt_name=prompt_name)
+                                                                              prompt_name=prompt_name,
+                                                                              response_format=response_format)
 
             self.logger.info(f"Augmented dataset links: {augmented_dataset_links}")
 
@@ -339,7 +340,8 @@ class PDFParser(LLMParser):
                                                                               self.open_data_repos_ontology['repos'],
                                                                               model=self.llm_name,
                                                                               temperature=0,
-                                                                              prompt_name=prompt_name)
+                                                                              prompt_name=prompt_name,
+                                                                              response_format=response_format)
 
             # dataset_links_w_target_pages = self.get_dataset_page(augmented_dataset_links)
 
@@ -369,7 +371,8 @@ class PDFParser(LLMParser):
     def extract_datasets_info_from_content(self, content: str, repos: list, model: str = 'gpt-4o-mini',
                                            temperature: float = 0.0,
                                            prompt_name: str = 'retrieve_datasets_simple_JSON',
-                                           full_document_read=True) -> list:
+                                           full_document_read=True,
+                                           response_format=dataset_response_schema_gpt) -> list:
         """
         Extract datasets from the given content using a specified LLM model.
         Uses a static prompt template and dynamically injects the required content.
@@ -445,7 +448,7 @@ class PDFParser(LLMParser):
                 self.logger.info(f"Response saved to cache")
 
             elif model == 'gemma3:1b' or model == 'gemma3:4b' or model == 'qwen:4b':
-                response = self.client.api_call(messages, response_format=Dataset_w_Page.model_json_schema())
+                response = self.client.api_call(messages, response_format=response_format.model_json_schema())
                 candidates = self.safe_parse_json(response)
                 if candidates:
                     self.logger.info(f"Found {len(candidates)} candidates in the response. Type {type(candidates)}")
@@ -466,7 +469,7 @@ class PDFParser(LLMParser):
                         model=model,
                         messages=messages,
                         temperature=temperature,
-                        response_format=dataset_response_schema_gpt
+                        response_format=response_format
                     )
                 else:
                     response = self.client.chat.completions.create(model=model, messages=messages,

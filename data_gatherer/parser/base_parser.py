@@ -16,8 +16,7 @@ from data_gatherer.env import PORTKEY_GATEWAY_URL, PORTKEY_API_KEY, PORTKEY_ROUT
     GPT_API_KEY, GEMINI_KEY, DATA_GATHERER_USER_NAME
 import requests
 from data_gatherer.llm.llm_client import LLMClient_dev
-from data_gatherer.llm.response_schema import Dataset_w_Page, dataset_response_schema_gpt, Dataset
-
+from data_gatherer.llm.response_schema import *
 
 # Abstract base class for parsing data
 class LLMParser(ABC):
@@ -193,7 +192,8 @@ class LLMParser(ABC):
         self.logger.info(f"Additional data\n{additional_data}")
         return pd.concat([parsed_data, additional_data], ignore_index=True)
 
-    def process_additional_data(self, additional_data, prompt_name='retrieve_datasets_simple_JSON'):
+    def process_additional_data(self, additional_data, prompt_name='retrieve_datasets_simple_JSON',
+                                response_format=dataset_response_schema_gpt):
         """
         Process the additional data from the webpage. This is the data matched from the HTML with the patterns in
         retrieval_patterns xpaths.
@@ -231,7 +231,8 @@ class LLMParser(ABC):
                 # Call the generalized function
                 datasets = self.extract_datasets_info_from_content(cont, repos_elements, model=self.llm_name,
                                                                    temperature=0,
-                                                                   prompt_name=prompt_name)
+                                                                   prompt_name=prompt_name,
+                                                                   response_format=response_format)
 
                 for dt in datasets:
                     dt['source_section'] = element['source_section']
@@ -246,7 +247,8 @@ class LLMParser(ABC):
         self.logger.debug(f"Final ret additional data: {ret}")
         return ret
 
-    def process_data_availability_text(self, DAS_content, prompt_name='retrieve_datasets_simple_JSON'):
+    def process_data_availability_text(self, DAS_content, prompt_name='retrieve_datasets_simple_JSON',
+                                       response_format=dataset_response_schema_gpt):
         """
         Process the data availability section from the webpage.
 
@@ -263,7 +265,8 @@ class LLMParser(ABC):
             datasets.extend(self.extract_datasets_info_from_content(element, repos_elements,
                                                                     model=self.llm_name,
                                                                     temperature=0,
-                                                                    prompt_name=prompt_name))
+                                                                    prompt_name=prompt_name,
+                                                                    response_format=response_format))
 
         # Add source_section information and return
         ret = []
@@ -282,7 +285,8 @@ class LLMParser(ABC):
     def extract_datasets_info_from_content(self, content: str, repos: list, model: str = 'gpt-4o-mini',
                                            temperature: float = 0.0,
                                            prompt_name: str = 'retrieve_datasets_simple_JSON',
-                                           full_document_read=True) -> list:
+                                           full_document_read=True,
+                                           response_format = dataset_response_schema_gpt) -> list:
         """
         Extract datasets from the given content using a specified LLM model.
         Uses a static prompt template and dynamically injects the required content.
@@ -364,15 +368,15 @@ class LLMParser(ABC):
                 self.logger.info(f"Response saved to cache")
 
             elif model == 'gemma3:1b' or model == 'gemma3:4b' or model == 'qwen:4b':
-                response = self.client.api_call(messages, response_format=Dataset_w_Page.model_json_schema())
-                candidates = self.safe_parse_json(response)
+                response = self.client.api_call(messages, response_format=response_format.model_json_schema())
+                parsed_resp = self.safe_parse_json(response)
+                candidates = parsed_resp['datasets'] if isinstance(parsed_resp, dict) and 'datasets' in parsed_resp else parsed_resp
                 if candidates:
                     self.logger.info(f"Found {len(candidates)} candidates in the response. Type {type(candidates)}")
-                    parsed_response = candidates
                     if self.save_responses_to_cache:
-                        self.prompt_manager.save_response(prompt_id, parsed_response)
+                        self.prompt_manager.save_response(prompt_id, candidates)
                         self.logger.info(f"Response saved to cache")
-                    parsed_response_dedup = self.deduplicate_response(parsed_response)
+                    parsed_response_dedup = self.deduplicate_response(candidates)
                     resps = parsed_response_dedup
                 else:
                     self.logger.error("No candidates found in the response.")
@@ -555,6 +559,7 @@ class LLMParser(ABC):
                 "dataset_identifier": dataset_id,
                 "data_repository": data_repository,
                 "dataset_webpage": dataset_webpage if dataset_webpage is not None else 'n/a',
+                "citation_type": dataset.get('citation_type', 'n/a')
             })
 
             if 'decision_rationale' in dataset:
@@ -1295,7 +1300,7 @@ class LLMClient:
             self.client = None
         self.logger.info(f"Client initialized: {self.client}")
 
-    def api_call(self, content, subdir=''):
+    def api_call(self, content, subdir='', **kwargs):
         self.logger.info(f"Calling {self.model} with prompt length {len(content)}, subdir: {subdir}")
         if self.model.startswith('gpt'):
             return self._call_openai(content, subdir=subdir)
