@@ -207,7 +207,8 @@ def test_extract_publication_title_GrobidPDFParser(get_test_data_path):
     router = XMLRouter("open_bio_data_repos.json", logger, llm_name='gemini-2.0-flash')
     xml_parser = router.get_parser(raw_text)
     assert isinstance(xml_parser, TEI_XMLParser)
-    title = xml_parser.extract_publication_title(raw_text)
+    root = etree.fromstring(raw_text.encode('utf-8'))
+    title = xml_parser.extract_publication_title(root)
     assert isinstance(title, str)
     assert len(title) > 0
     assert title == "Pipefish embryo oxygenation, survival, and development: egg size, male size, and temperature effects"

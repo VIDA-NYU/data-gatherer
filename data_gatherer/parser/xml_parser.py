@@ -6,6 +6,7 @@ import pandas as pd
 import json
 import regex as re
 
+
 class XMLParser(LLMParser):
     def __init__(self, open_data_repos_ontology, logger, log_file_override=None, full_document_read=True,
                  prompt_dir="data_gatherer/prompts/prompt_templates",
@@ -120,10 +121,11 @@ class XMLParser(LLMParser):
             self.logger.error(f"Error parsing XML: {e}")
             return None
 
-    def parse_data(self, api_data, publisher=None, current_url_address=None, additional_data=None, raw_data_format='XML',
+    def parse_data(self, api_data, publisher=None, current_url_address=None, additional_data=None,
+                   raw_data_format='XML',
                    article_file_dir='tmp/raw_files/', process_DAS_links_separately=False, section_filter=None,
                    prompt_name='retrieve_datasets_simple_JSON', use_portkey_for_gemini=True, semantic_retrieval=False,
-                   top_k=2):
+                   top_k=2, response_format=dataset_response_schema_gpt):
         """
         Parse the API data and extract relevant links and metadata.
 
@@ -192,7 +194,8 @@ class XMLParser(LLMParser):
                         self.logger.info(f"Additional data ({type(additional_data), len(additional_data)} items) "
                                          f"and Parsed data ({type(augmented_dataset_links), len(augmented_dataset_links)} items).")
                         # extend the dataset links with additional data
-                        augmented_dataset_links = augmented_dataset_links + self.process_additional_data(additional_data)
+                        augmented_dataset_links = augmented_dataset_links + self.process_additional_data(
+                            additional_data)
                         self.logger.debug(f"Type: {type(augmented_dataset_links)}")
                         self.logger.debug(f"Len of augmented_dataset_links: {len(augmented_dataset_links)}")
 
@@ -210,13 +213,15 @@ class XMLParser(LLMParser):
                         data_availability_cont.extend(top_k_sections_text)
 
                     augmented_dataset_links = self.process_data_availability_text(data_availability_cont,
-                                                                                  prompt_name=prompt_name)
+                                                                                  prompt_name=prompt_name,
+                                                                                  response_format=response_format)
 
                     if additional_data is not None and len(additional_data) > 0:
                         self.logger.info(f"Additional data ({type(additional_data), len(additional_data)} items) "
                                          f"and Parsed data ({type(augmented_dataset_links), len(augmented_dataset_links)} items).")
                         # extend the dataset links with additional data
-                        augmented_dataset_links = augmented_dataset_links + self.process_additional_data(additional_data)
+                        augmented_dataset_links = augmented_dataset_links + self.process_additional_data(
+                            additional_data)
                         self.logger.debug(f"Type: {type(augmented_dataset_links)}, Len: {len(augmented_dataset_links)}")
                         self.logger.debug(f"Augmented_dataset_links: {augmented_dataset_links}")
 
@@ -224,14 +229,16 @@ class XMLParser(LLMParser):
                     dataset_links_w_target_pages = self.get_dataset_page(augmented_dataset_links)
 
                 else:
-                    self.logger.info(f"Skipping data availability statement extraction as per section_filter: {section_filter}")
+                    self.logger.info(
+                        f"Skipping data availability statement extraction as per section_filter: {section_filter}")
                     dataset_links_w_target_pages = []
 
                 # Create a DataFrame from the dataset links union supplementary material links
                 out_df = pd.concat([pd.DataFrame(dataset_links_w_target_pages).rename(
                     columns={'dataset_id': 'dataset_identifier', 'repository_reference': 'data_repository'}),
-                                    supplementary_material_metadata])  # check index error here
-                self.logger.info(f"Dataset Links type: {type(out_df)} of len {len(out_df)}, with cols: {out_df.columns}")
+                    supplementary_material_metadata])  # check index error here
+                self.logger.info(
+                    f"Dataset Links type: {type(out_df)} of len {len(out_df)}, with cols: {out_df.columns}")
                 self.logger.debug(f"Datasets: {out_df}")
 
                 # Extract file extensions from download links if possible, and add to the dataframe out_df as column
@@ -259,10 +266,12 @@ class XMLParser(LLMParser):
 
                     # Extract dataset links from the entire text
                     augmented_dataset_links = self.extract_datasets_info_from_content(preprocessed_data,
-                                                                                  self.open_data_repos_ontology['repos'],
-                                                                                  model=self.llm_name,
-                                                                                  temperature=0,
-                                                                                  prompt_name=prompt_name)
+                                                                                      self.open_data_repos_ontology[
+                                                                                          'repos'],
+                                                                                      model=self.llm_name,
+                                                                                      temperature=0,
+                                                                                      prompt_name=prompt_name,
+                                                                                      response_format=response_format)
 
                     self.logger.info(f"Augmented dataset links: {augmented_dataset_links}")
 
@@ -273,7 +282,8 @@ class XMLParser(LLMParser):
                 else:
                     out_df = supplementary_material_metadata
 
-                self.logger.info(f"Dataset Links type: {type(out_df)} of len {len(out_df)}, with cols: {out_df.columns}")
+                self.logger.info(
+                    f"Dataset Links type: {type(out_df)} of len {len(out_df)}, with cols: {out_df.columns}")
 
                 # Extract file extensions from download links if possible, and add to the dataframe out_df as column
                 if 'download_link' in out_df.columns:
@@ -293,7 +303,6 @@ class XMLParser(LLMParser):
                 return out_df
         else:
             raise TypeError(f"Invalid API data type: {type(api_data)}. Expected lxml.etree.Element.")
-
 
     def normalize_XML(self, xml_data):
         """
@@ -322,7 +331,8 @@ class XMLParser(LLMParser):
                     elem.tail = elem.tail.strip()
 
             # Convert back to string with pretty print
-            normalized_xml = etree.tostring(xml_root, pretty_print=True, xml_declaration=True, encoding='UTF-8').decode('utf-8')
+            normalized_xml = etree.tostring(xml_root, pretty_print=True, xml_declaration=True, encoding='UTF-8').decode(
+                'utf-8')
 
             return normalized_xml
 
@@ -497,7 +507,8 @@ class XMLParser(LLMParser):
                     # Extract the surrounding text (e.g., description within <p> tag)
                     parent_p = media.getparent()  # Assuming the media element is within a <p> tag
                     if parent_p is not None:
-                        surrounding_text = re.sub("[\s\n]+", "  ", " ".join(parent_p.itertext()).strip())  # Gets all text within the <p> tag
+                        surrounding_text = re.sub("[\s\n]+", "  ", " ".join(
+                            parent_p.itertext()).strip())  # Gets all text within the <p> tag
                     else:
                         surrounding_text = "No surrounding text found"
 
@@ -532,7 +543,8 @@ class XMLParser(LLMParser):
 
                 # Find all <inline-supplementary-material> elements in the section
                 inline_supplementary_materials = section.findall(".//inline-supplementary-material")
-                self.logger.debug(f"Found {len(inline_supplementary_materials)} inline-supplementary-material elements.")
+                self.logger.debug(
+                    f"Found {len(inline_supplementary_materials)} inline-supplementary-material elements.")
 
                 for inline in inline_supplementary_materials:
                     # repeating steps like in media links above
@@ -543,9 +555,10 @@ class XMLParser(LLMParser):
                         "title": inline.get('title', 'No Title'),
                         "source_section": 'supplementary material inline',
                         "retrieval_pattern": ".//inline-supplementary-material",
-                        "download_link": self.reconstruct_download_link(inline.get('{http://www.w3.org/1999/xlink}href'),
-                                                                        inline.get('content-type', 'Unknown content type'),
-                                                                        current_url_address)
+                        "download_link": self.reconstruct_download_link(
+                            inline.get('{http://www.w3.org/1999/xlink}href'),
+                            inline.get('content-type', 'Unknown content type'),
+                            current_url_address)
                     })
 
                 self.logger.debug(f"Extracted supplementary material links:\n{hrefs}")
@@ -556,7 +569,7 @@ class XMLParser(LLMParser):
         Extract metadata from xrefs to supplementary material ids in the XML.
         """
         self.logger.info(f"Function_call: extract_supplementary_material_refs(api_xml, supplementary_material_links)")
-        for i,row in supplementary_material_links.iterrows():
+        for i, row in supplementary_material_links.iterrows():
             # Find the <href> elements that reference the supplementary material <a href="#id">
             context_descr = ""
             href_id = row['id']
@@ -776,6 +789,7 @@ class XMLParser(LLMParser):
         if not isinstance(xml_root, etree._Element):
             return False
         tei_ns = "http://www.tei-c.org/ns/1.0"
+
         def has_tei_ns(elem):
             ns = etree.QName(elem).namespace
             if ns == tei_ns:
@@ -784,7 +798,9 @@ class XMLParser(LLMParser):
                 if has_tei_ns(child):
                     return True
             return False
+
         return has_tei_ns(xml_root)
+
 
 class TEI_XMLParser(XMLParser):
     """
@@ -792,20 +808,44 @@ class TEI_XMLParser(XMLParser):
     Extend this class with TEI-specific extraction logic as needed.
     """
 
-    def extract_sections(self, tei_xml):
-        root = etree.fromstring(tei_xml.encode('utf-8'))
+    def extract_sections_from_xml(self, tei_xml):
+        self.logger.info(f"Extracting sections from TEI XML. Type: {type(tei_xml)}")
+        # Accept both str and etree.Element
+        if isinstance(tei_xml, str):
+            root = etree.fromstring(tei_xml.encode('utf-8'))
+        elif isinstance(tei_xml, etree._Element):
+            root = tei_xml
+        else:
+            raise TypeError(f"Invalid TEI XML type: {type(tei_xml)}. Expected str or lxml.etree.Element.")
+
         ns = {'tei': 'http://www.tei-c.org/ns/1.0'}
         sections = []
-        divs = root.xpath('.//tei:text/tei:body//tei:div[@type="section"]', namespaces=ns)
-        if not divs:
-            divs = root.xpath('.//tei:text/tei:body//tei:div', namespaces=ns)
+
+        # Find all <div> elements in TEI namespace
+        divs = root.findall(".//{http://www.tei-c.org/ns/1.0}div")
         for div in divs:
-            title_el = div.find('tei:head', namespaces=ns)
-            section_title = title_el.text if title_el is not None else ''
-            paragraphs = [etree.tostring(p, method="text", encoding="unicode").strip() for p in div.findall('tei:p', namespaces=ns)]
-            text = '\n'.join(paragraphs)
-            if section_title or text:
-                sections.append({'section_title': section_title, 'text': text})
+            # Section title: text node of <div> before any children
+            section_title = (div.text or "").strip() or "No Title"
+            sec_type = "tei_div"
+            section_text_from_paragraphs = section_title + "\n"
+            section_rawtxt_from_paragraphs = ""
+            # Find all <p> in this <div>
+            for p in div.findall(".//{http://www.tei-c.org/ns/1.0}p"):
+                itertext = " ".join(p.itertext()).strip()
+                if len(itertext) >= 5:
+                    section_text_from_paragraphs += "\n" + itertext + "\n"
+                para_text = etree.tostring(p, encoding="unicode", method="xml").strip()
+                if len(para_text) >= 5:
+                    section_rawtxt_from_paragraphs += "\n" + para_text + "\n"
+            # If no <p>, but <div> has text, still add the section
+            if section_text_from_paragraphs.strip() or section_rawtxt_from_paragraphs.strip():
+                sections.append({
+                    "sec_txt": section_rawtxt_from_paragraphs,
+                    "section_title": section_title,
+                    "sec_type": sec_type,
+                    "sec_txt_clean": section_text_from_paragraphs
+                })
+        self.logger.info(f"Extracted {len(sections)} sections from TEI XML.")
         return sections
 
     def extract_reference_content(self, ref_id, tei_xml):
@@ -900,8 +940,7 @@ class TEI_XMLParser(XMLParser):
         paragraphs = self.extract_paragraphs(tei_xml, ref_substitutions=True)
         return "\n".join(paragraphs['text'] for paragraphs in paragraphs if 'text' in paragraphs)
 
-    def extract_publication_title(self, tei_xml):
-        root = etree.fromstring(tei_xml.encode('utf-8'))
+    def extract_publication_title(self, root):
         ns = {'tei': 'http://www.tei-c.org/ns/1.0'}
         title_el = root.find('.//tei:analytic/tei:title', namespaces=ns)
         if title_el is not None and title_el.text:
@@ -911,10 +950,194 @@ class TEI_XMLParser(XMLParser):
             return title_el.text.strip()
         return ""
 
+    def parse_data(self, api_data, publisher=None, current_url_address=None, additional_data=None,
+                   raw_data_format='XML',
+                   article_file_dir='tmp/raw_files/', process_DAS_links_separately=False, section_filter=None,
+                   prompt_name='retrieve_datasets_simple_JSON', use_portkey_for_gemini=True, semantic_retrieval=False,
+                   top_k=2, response_format=dataset_response_schema_gpt):
+        """
+        Parse the API data and extract relevant links and metadata.
+
+        :param api_data: The raw API data (XML or HTML) to be parsed.
+
+        :param publisher: The publisher name or identifier.
+
+        :param current_url_address: The current URL address being processed.
+
+        :param additional_data: Additional data to be processed (optional).
+
+        :param raw_data_format: The format of the raw data ('XML' or 'HTML').
+
+        :return: A DataFrame containing the extracted links and links to metadata - if repo is supported. Add support for unsupported repos in the ontology.
+
+        """
+        out_df = None
+        # Check if api_data is a string, and convert to XML if needed
+        self.logger.info(f"Function call: parse_data(api_data({type(api_data)}), {publisher}, {current_url_address}, "
+                         f"additional_data, {raw_data_format})")
+        self.publisher = publisher
+
+        if isinstance(api_data, str):
+            try:
+                if os.path.exists(api_data):
+                    with open(api_data, 'rb') as f:
+                        api_data = f.read()
+                    api_data = etree.fromstring(api_data)
+                else:
+                    if api_data.lstrip().startswith('<?xml'):
+                        api_data = etree.fromstring(api_data.encode('utf-8'))
+                    else:
+                        api_data = etree.fromstring(api_data)
+                self.logger.info("api_data converted to lxml element")
+            except Exception as e:
+                self.logger.error(f"Error parsing API data: {e}")
+                return None
+
+        filter_supp = section_filter == 'supplementary_material' or section_filter is None
+        filter_das = section_filter == 'data_availability_statement' or section_filter is None
+
+        if isinstance(api_data, etree._Element):
+            self.title = self.extract_publication_title(api_data)
+
+            if filter_supp is None or filter_supp:
+                supplementary_material_links = self.extract_href_from_supplementary_material(api_data,
+                                                                                             current_url_address)
+                supplementary_material_metadata = self.extract_supplementary_material_refs(api_data,
+                                                                                           supplementary_material_links)
+            else:
+                supplementary_material_metadata = pd.DataFrame()
+            self.logger.debug(f"supplementary_material_metadata: {supplementary_material_metadata}")
+
+            if not self.full_document_read:
+                if process_DAS_links_separately and (filter_das is None or filter_das):
+                    # Extract dataset links
+                    dataset_links = self.extract_href_from_data_availability(api_data)
+                    dataset_links.extend(self.extract_xrefs_from_data_availability(api_data, current_url_address))
+                    self.logger.info(f"dataset_links: {dataset_links}")
+
+                    augmented_dataset_links = self.process_data_availability_links(dataset_links)
+                    self.logger.info(f"Len of augmented_dataset_links: {len(augmented_dataset_links)}")
+
+                    self.logger.debug(f"Additional data: {(additional_data)}")
+                    if additional_data is not None and len(additional_data) > 0:
+                        self.logger.info(f"Additional data ({type(additional_data), len(additional_data)} items) "
+                                         f"and Parsed data ({type(augmented_dataset_links), len(augmented_dataset_links)} items).")
+                        # extend the dataset links with additional data
+                        augmented_dataset_links = augmented_dataset_links + self.process_additional_data(
+                            additional_data)
+                        self.logger.debug(f"Type: {type(augmented_dataset_links)}")
+                        self.logger.debug(f"Len of augmented_dataset_links: {len(augmented_dataset_links)}")
+
+                    self.logger.debug(f"Content of augmented_dataset_links: {augmented_dataset_links}")
+                    dataset_links_w_target_pages = self.get_dataset_page(augmented_dataset_links)
+
+                elif filter_das is None or filter_das:
+                    data_availability_cont = self.get_data_availability_text(api_data)
+
+                    if semantic_retrieval:
+                        self.logger.info(f"Using semantic retrieval for data availability sections.")
+                        corpus = self.extract_sections_from_xml(api_data)
+                        top_k_sections = self.semantic_retrieve_from_corpus(corpus, topk_docs_to_retrieve=top_k)
+                        top_k_sections_text = [item['text'] for item in top_k_sections]
+                        data_availability_cont.extend(top_k_sections_text)
+
+                    augmented_dataset_links = self.process_data_availability_text(data_availability_cont,
+                                                                                  prompt_name=prompt_name,
+                                                                                  response_format=response_format)
+
+                    if additional_data is not None and len(additional_data) > 0:
+                        self.logger.info(f"Additional data ({type(additional_data), len(additional_data)} items) "
+                                         f"and Parsed data ({type(augmented_dataset_links), len(augmented_dataset_links)} items).")
+                        # extend the dataset links with additional data
+                        augmented_dataset_links = augmented_dataset_links + self.process_additional_data(
+                            additional_data)
+                        self.logger.debug(f"Type: {type(augmented_dataset_links)}, Len: {len(augmented_dataset_links)}")
+                        self.logger.debug(f"Augmented_dataset_links: {augmented_dataset_links}")
+
+                    self.logger.debug(f"Content of augmented_dataset_links: {augmented_dataset_links}")
+                    dataset_links_w_target_pages = self.get_dataset_page(augmented_dataset_links)
+
+                else:
+                    self.logger.info(
+                        f"Skipping data availability statement extraction as per section_filter: {section_filter}")
+                    dataset_links_w_target_pages = []
+
+                # Create a DataFrame from the dataset links union supplementary material links
+                out_df = pd.concat([pd.DataFrame(dataset_links_w_target_pages).rename(
+                    columns={'dataset_id': 'dataset_identifier', 'repository_reference': 'data_repository'}),
+                    supplementary_material_metadata])  # check index error here
+                self.logger.info(
+                    f"Dataset Links type: {type(out_df)} of len {len(out_df)}, with cols: {out_df.columns}")
+                self.logger.debug(f"Datasets: {out_df}")
+
+                # Extract file extensions from download links if possible, and add to the dataframe out_df as column
+                if 'download_link' in out_df.columns:
+                    out_df['file_extension'] = out_df['download_link'].apply(lambda x: self.extract_file_extension(x))
+                elif 'link' in out_df.columns:
+                    out_df['file_extension'] = out_df['link'].apply(lambda x: self.extract_file_extension(x))
+
+                # drop duplicates but keep nulls
+                if 'dataset_identifier' in out_df.columns and 'download_link' in out_df.columns:
+                    out_df = out_df.drop_duplicates(subset=['download_link', 'dataset_identifier'], keep='first')
+
+                out_df['pub_title'] = self.title
+
+                return out_df
+
+            else:
+                # Extract links from entire webpage
+                if self.full_document_read and (filter_das is None or filter_das):
+                    self.logger.info(f"Extracting links from full XML content.")
+
+                    preprocessed_data = self.normalize_XML(api_data)
+
+                    self.logger.debug(f"Preprocessed data: {preprocessed_data}")
+
+                    # Extract dataset links from the entire text
+                    augmented_dataset_links = self.extract_datasets_info_from_content(preprocessed_data,
+                                                                                      self.open_data_repos_ontology[
+                                                                                          'repos'],
+                                                                                      model=self.llm_name,
+                                                                                      temperature=0,
+                                                                                      prompt_name=prompt_name,
+                                                                                      response_format=response_format)
+
+                    self.logger.info(f"Augmented dataset links: {augmented_dataset_links}")
+
+                    dataset_links_w_target_pages = self.get_dataset_page(augmented_dataset_links)
+
+                    # Create a DataFrame from the dataset links union supplementary material links
+                    out_df = pd.concat([pd.DataFrame(dataset_links_w_target_pages), supplementary_material_metadata])
+                else:
+                    out_df = supplementary_material_metadata
+
+                self.logger.info(
+                    f"Dataset Links type: {type(out_df)} of len {len(out_df)}, with cols: {out_df.columns}")
+
+                # Extract file extensions from download links if possible, and add to the dataframe out_df as column
+                if 'download_link' in out_df.columns:
+                    out_df['file_extension'] = out_df['download_link'].apply(lambda x: self.extract_file_extension(x))
+                elif 'link' in out_df.columns:
+                    out_df['file_extension'] = out_df['link'].apply(lambda x: self.extract_file_extension(x))
+
+                # drop duplicates but keep nulls
+                if 'download_link' in out_df.columns and 'dataset_identifier' in out_df.columns:
+                    out_df = out_df.drop_duplicates(subset=['download_link', 'dataset_identifier'], keep='first')
+                elif 'download_link' in out_df.columns:
+                    out_df = out_df.drop_duplicates(subset=['download_link'], keep='first')
+
+                out_df['source_url'] = current_url_address
+                out_df['pub_title'] = self.title
+
+                return out_df
+        else:
+            raise TypeError(f"Invalid API data type: {type(api_data)}. Expected lxml.etree.Element.")
+
 class XMLRouter:
     """
     Routes XML parsing to the appropriate parser class based on XML type (TEI or not).
     """
+
     def __init__(self, open_data_repos_ontology, logger, **parser_kwargs):
         self.open_data_repos_ontology = open_data_repos_ontology
         self.logger = logger
@@ -925,7 +1148,12 @@ class XMLRouter:
         Returns an instance of the appropriate parser (TEI_XMLParser or XMLParser)
         based on the XML content.
         """
-        if not isinstance(xml_root, etree._Element):
+        self.logger.info(f"Function_call: get_parser(xml_root) with type {type(xml_root)}")
+        if not isinstance(xml_root, etree._Element) and isinstance(xml_root, str):
+            if os.path.exists(xml_root):
+                self.logger.info(f"Loading XML from file: {xml_root}")
+                with open(xml_root, 'r', encoding='utf-8') as f:
+                    xml_root = f.read()
             try:
                 xml_root = etree.fromstring(xml_root.encode('utf-8'))
             except etree.XMLSyntaxError as e:

@@ -118,6 +118,14 @@ class Dataset_w_Page(BaseModel):
     repository_reference: str
     dataset_webpage: str
 
+class Dataset_w_CitationType(BaseModel):
+    dataset_id: str
+    repository_reference: str
+    citation_type: str
+
+class Array_Dataset_w_CitationType(BaseModel):
+    datasets: list[Dataset_w_CitationType]
+
 class Dataset_w_Description(typing.TypedDict):
     dataset_id: str
     repository_reference: str
