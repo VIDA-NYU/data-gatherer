@@ -791,7 +791,13 @@ class XMLParser(LLMParser):
         tei_ns = "http://www.tei-c.org/ns/1.0"
 
         def has_tei_ns(elem):
-            ns = etree.QName(elem).namespace
+            if not isinstance(elem, etree._Element):
+                return False
+            try:
+                ns = etree.QName(elem).namespace
+            except Exception:
+                return False
+
             if ns == tei_ns:
                 return True
             for child in elem:
@@ -1154,11 +1160,14 @@ class XMLRouter:
                 self.logger.info(f"Loading XML from file: {xml_root}")
                 with open(xml_root, 'r', encoding='utf-8') as f:
                     xml_root = f.read()
+            else:
+                self.logger.info(f"Parsing XML string: {xml_root[:100]}...")
             try:
                 xml_root = etree.fromstring(xml_root.encode('utf-8'))
             except etree.XMLSyntaxError as e:
                 self.logger.error(f"Failed to parse XML root: {e}")
                 raise ValueError("Invalid XML root provided.")
+        self.logger.info(f"Function_call: is_tei_xml_static(xml_root) with type {type(xml_root)}")
         if XMLParser.is_tei_xml_static(xml_root):
             self.logger.info("Detected TEI XML. Using TEI_XMLParser.")
             return TEI_XMLParser(self.open_data_repos_ontology, self.logger, **self.parser_kwargs)
