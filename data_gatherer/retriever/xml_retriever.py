@@ -454,7 +454,7 @@ class xmlRetriever(BaseRetriever):
             sections = raw_data.findall(pattern, namespaces=namespaces)
             if sections:
                 for section in sections:
-                    self.logger.info(f"----Found section: {ET.tostring(section, encoding='unicode')}")
+                    self.logger.info(f"----Found section: {ET.tostring(section, encoding='unicode')[:100]}...")
                     if self.has_links_in_section(section, namespaces):
                         return True
                     else:

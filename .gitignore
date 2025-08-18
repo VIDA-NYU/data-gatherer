@@ -123,3 +123,6 @@ nosetests.xml
 /scripts/ignore/**
 
 /data_gatherer/parser/grobid-0.8.2
+/scripts/exp_input/SAGE_groundtruth.csv
+/scripts/exp_input/SAGE_input.txt
+/scripts/exp_input/SAGE_input_Nicole.txt

@@ -438,7 +438,7 @@ def evaluate_performance(predict_df, ground_truth, orchestrator, false_positives
     for source_page in predict_df['source_url'].unique():
         orchestrator.logger.info(f"\nStarting performance evaluation for source page: {source_page}")
 
-        gt_data = ground_truth[ground_truth['publication'].str.lower() == source_page.lower()]  # extract grpund truth
+        gt_data = ground_truth[ground_truth['publication'].str.lower() == source_page.lower()]  # extract ground truth
 
         gt_datasets = set()
         for dataset_string in gt_data['dataset_uid'].dropna().str.lower():
