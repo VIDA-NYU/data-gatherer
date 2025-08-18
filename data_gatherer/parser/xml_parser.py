@@ -232,6 +232,7 @@ class XMLParser(LLMParser):
                     out_df = out_df.drop_duplicates(subset=['download_link', 'dataset_identifier'], keep='first')
 
                 out_df['pub_title'] = self.title
+                out_df['source_url'] = current_url_address
 
                 return out_df
 

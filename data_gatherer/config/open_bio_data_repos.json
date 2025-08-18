@@ -74,7 +74,8 @@
     },
     "doi.org": {
       "dataset_webpage_url_ptr": "https://doi.org/__ID__",
-      "id_pattern": "10\\.\\d{4,9}/"
+      "id_pattern": "10\\.\\d{4,9}/",
+      "javascript_load_required": true
     },
     "geo" : {
       "repo_name": "Gene Expression Omnibus",

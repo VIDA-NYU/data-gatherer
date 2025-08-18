@@ -512,8 +512,6 @@ class LLMParser(ABC):
                     }
                     try:
                         response = self.portkey.chat.completions.create(
-                            api_key=PORTKEY_API_KEY,
-                            route=PORTKEY_ROUTE,
                             **portkey_payload
                         )
                         self.logger.info(f"Portkey Gemini response: {response}")
@@ -1007,7 +1005,12 @@ class LLMParser(ABC):
         :return: str — the normalized repository name.
         """
         self.logger.info(f"Resolving data repository for candidate: {repo}, identifier: {identifier}")
-        if ',' in repo:
+
+        if repo is None or repo == 'n/a':
+            self.logger.warning(f"Repository is None or 'n/a', returning 'n/a'")
+            return 'n/a'
+
+        if ',' in repo and ',' in identifier:
             self.logger.warning(f"Repository contains a comma: {repo}. Same data may be in multiple repos.")
             ret = []
             for r in repo.split(','):

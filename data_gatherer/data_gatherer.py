@@ -979,7 +979,8 @@ class DataGatherer:
         else:
             self.logger.debug(f"Process ID {process_id} already exists in cache. Skipping save.")
 
-    def run(self, input_file='input/test_input.txt'):
+    def run(self, input_file='input/test_input.txt', semantic_retrieval=False, section_filter=None,
+            prompt_name='retrieve_datasets_simple_JSON'):
         """
         This method orchestrates the entire data gathering process by performing the following steps:
 
@@ -993,6 +994,12 @@ class DataGatherer:
 
         :param input_file: Path to the input file containing URLs or PMCIDs to process.
 
+        :param semantic_retrieval: Flag to indicate if semantic retrieval should be used.
+
+        :param section_filter: Optional filter to apply to the sections (supplementary_material', 'data_availability_statement').
+
+        :param prompt_name: Name of the prompt to use for LLM parsing.
+
         :return: Combined DataFrame of all processed data links.
 
         """
@@ -1003,7 +1010,8 @@ class DataGatherer:
             urls = self.load_urls_from_input(input_file)
 
             # Process each URL and return results as a dictionary like source_url: DataFrame_of_data_links
-            results = self.process_articles(urls)
+            results = self.process_articles(urls, semantic_retrieval=semantic_retrieval, section_filter=section_filter,
+                                            prompt_name=prompt_name,)
 
             # return the union of all the results
             combined_df = pd.DataFrame()
