@@ -607,11 +607,17 @@ class XMLParser(LLMParser):
         return ret
 
     def naive_sentence_tokenizer(self, text):
-        # Pattern: match period/question/exclamation followed by space + capital letter
-        # Negative lookbehind for common abbreviations or initials
-        pattern = r'(?<!\b(?:Dr|Mr|Mrs|Ms|Prof|Inc|e\.g|i\.e|Fig|vs|et al))(?<=[.!?])\s+(?=[A-Z])'
-        sentences = re.split(pattern, text)
-        return sentences
+        # Initial split on sentence boundaries
+        sentences = re.split(r'(?<=[.!?])\s+(?=[A-Z])', text)
+        # Merge sentences ending with abbreviations
+        abbreviations = ('Dr.', 'Mr.', 'Mrs.', 'Ms.', 'Prof.', 'Inc.', 'e.g.', 'i.e.', 'Fig.', 'vs.', 'et al.')
+        merged = []
+        for s in sentences:
+            if merged and any(merged[-1].endswith(abbr) for abbr in abbreviations):
+                merged[-1] += ' ' + s
+            else:
+                merged.append(s)
+        return merged
 
     def get_surrounding_text(self, element):
         """
