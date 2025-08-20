@@ -60,6 +60,39 @@ class PromptManager:
                 for item in static_prompt
             ]
 
+    # In PromptManager
+
+    def render_prompts_for_chunks(self, static_prompt, content, token_limit=2046, tokenizer=None, entire_doc=False,
+                                  **dynamic_parts):
+        """
+        Split content into chunks fitting the token limit, render prompts for each chunk.
+        Returns a list of rendered prompts.
+        """
+
+        # Helper to count tokens
+        def count_tokens(text):
+            return len(tokenizer.encode(text)) if tokenizer else len(text.split())//3.2
+
+        # Split content into chunks
+        chunks = []
+        current = ""
+        for paragraph in content.split('\n'):
+            if count_tokens(current + paragraph) > token_limit and current:
+                chunks.append(current)
+                current = paragraph
+            else:
+                current += "\n" + paragraph if current else paragraph
+        if current:
+            chunks.append(current)
+
+        # Render prompts for each chunk
+        prompts = []
+        for chunk in chunks:
+            dynamic_parts_chunk = {**dynamic_parts, "content": chunk}
+            rendered = self.render_prompt(static_prompt, entire_doc, **dynamic_parts_chunk)
+            prompts.append(rendered)
+        return prompts
+
     def save_response(self, prompt_id, response):
         """Save the response with prompt_id as the key. Skip if prompt_id is already responded."""
         self.logger.info(f"Saving response for prompt_id: {prompt_id}")

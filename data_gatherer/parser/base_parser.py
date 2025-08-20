@@ -63,8 +63,6 @@ class LLMParser(ABC):
         self.save_responses_to_cache = save_responses_to_cache
         self.use_cached_responses = use_cached_responses
 
-        self.full_document_read = full_document_read
-        self.llm_name = llm_name
         self.use_portkey_for_gemini = use_portkey_for_gemini
 
         if self.use_portkey_for_gemini and 'gemini' in llm_name:
