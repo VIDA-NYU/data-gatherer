@@ -246,7 +246,7 @@ class PDFParser(LLMParser):
         ret_text = self.merge_pdf_line_breaks(normalized_text)
 
         self.logger.info(f"Normalized text length: {len(ret_text)}")
-        self.logger.info(f"Normalized text: {ret_text}")
+        self.logger.debug(f"Normalized text: {ret_text}")
         return ret_text
 
     def merge_pdf_line_breaks(self, text):
