@@ -952,7 +952,16 @@ class LLMParser(ABC):
             for r in repo.split(','):
                 r = r.strip()
                 if r in self.open_data_repos_ontology['repos']:
-                    ret.append(self.resolve_data_repository(r))
+                    ret.append(self.resolve_data_repository(r).lower())
+            return ret
+
+        if isinstance(repo, list):
+            self.logger.warning(f"Repository is a list: {repo}. Same data may be in multiple repos.")
+            ret = []
+            for r in repo:
+                r = r.strip()
+                if r in self.open_data_repos_ontology['repos']:
+                    ret.append(self.resolve_data_repository(r).lower())
             return ret
 
         resolved_to_known_repo = False
@@ -999,7 +1008,7 @@ class LLMParser(ABC):
             self.logger.info(f"Resolved data repository: {repo}")
             return repo.lower()
 
-        return repo  # fallback
+        return repo.lower()  # fallback
 
     def get_dataset_page(self, datasets):
         """
@@ -1036,13 +1045,21 @@ class LLMParser(ABC):
 
             if 'data_repository' in item.keys():
                 original_repo = item['data_repository']
-                repo = self.resolve_data_repository(original_repo, identifier=accession_id).lower()
+                repo = self.resolve_data_repository(original_repo, identifier=accession_id)
             elif 'repository_reference' in item.keys():
                 original_repo = item['repository_reference']
-                repo = self.resolve_data_repository(original_repo, identifier=accession_id).lower()
+                repo = self.resolve_data_repository(original_repo, identifier=accession_id)
             else:
                 self.logger.error(f"Error extracting data repository for item: {item}")
                 continue
+
+            if isinstance(repo, list):
+                if len(repo) > 0:
+                    self.logger.info(f"Repository is a list: {repo}. Resolving accession ID for each element.")
+                    repo = repo[0]
+                else:
+                    self.logger.warning("Repository list is empty. Skipping this dataset.")
+                    continue  # or `return None`, depending on context
 
             accession_id = self.resolve_accession_id_for_repository(accession_id, repo)
 
