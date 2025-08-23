@@ -114,7 +114,7 @@ class XMLParser(LLMParser):
         try:
             # Extract the article title
             title = api_data.find(".//title-group/article-title")
-            pub_title = title.text.strip() if title is not None else None
+            pub_title = title.text.strip() if title is not None and title.text is not None else None
             return pub_title
 
         except etree.XMLSyntaxError as e:
