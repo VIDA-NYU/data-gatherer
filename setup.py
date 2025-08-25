@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 import os
 
 def read_readme():
-    with open(os.path.join(os.path.dirname(__file__), 'README.md'), encoding='utf8') as file:
+    with open(os.path.join(os.path.dirname(__file__), 'README.rst'), encoding='utf8') as file:
         return file.read()
 
 with open('requirements.txt') as f:
