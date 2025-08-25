@@ -19,7 +19,7 @@ setup(
     python_requires='>=3.11',
     description="DataGatherer Library",
     long_description=long_description,
-    long_description_content_type='text/markdown',
+    long_description_content_type='text/x-rst',
     url='https://github.com/VIDA-NYU/data-gatherer',
     keywords=['Information Extraction', 'NYU'],
 )
