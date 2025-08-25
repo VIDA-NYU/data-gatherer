@@ -1,0 +1,210 @@
+{
+  "repos": {
+    "bigd.big.ac.cn": {
+      "repo_name": "BIGD",
+      "url_concat_string": "/browse/__ID__",
+      "download_root": "https://download.cncb.ac.cn/gsa/__ID__"
+    },
+    "ega-archive.org": {
+      "repo_name": "European Genome-Phenome Archive",
+      "url_concat_string": "/studies/__ID__",
+      "download_root": "https://download.cncb.ac.cn/gsa/__ID__",
+      "access_mode": "Contact to access"
+    },
+    "massive.ucsd.edu": {
+      "repo_name": "MassIVE",
+      "url_concat_string": "/ProteoSAFe/dataset.jsp?accession=__ID__",
+      "download_root": "ftp://massive.ucsd.edu/v06/__ID__/",
+      "access_mode": "Complex download"
+    },
+    "www.ebi.ac.uk": {
+      "repo_name": "PRIDE",
+      "javascript_load_required": true,
+      "url_concat_string": "/pride/archive/projects/__ID__",
+      "download_root": "https://ftp.pride.ebi.ac.uk/pride/data/archive/2024/07/__ID__/",
+      "access_mode": "Complex download"
+    },
+    "www.iprox.cn": {
+      "repo_name": "iProX",
+      "url_concat_string": "/page/project.html?id=__ID__",
+      "download_root": "",
+      "access_mode": "Complex download"
+    },
+    "proteomecentral.proteomexchange.org": {
+      "repo_name": "ProteomeCentral",
+      "url_concat_string": "/cgi/GetDataset?ID=__ID__",
+      "download_root": "",
+      "access_mode": "Complex download"
+    },
+    "www.proteomexchange.org": {
+      "repo_name": "ProteomeXchange",
+      "url_concat_string": "/cgi/GetDataset?ID=__ID__",
+      "repo_mapping" : "proteomecentral.proteomexchange.org",
+      "download_root": "", 
+      "access_mode": "Complex download"
+    },
+    "pdc.cancer.gov": {
+      "repo_name": "Proteomic Data Commons",
+      "javascript_load_required": true,
+      "url_concat_string": "/pdc/study/__ID__",
+      "dataset_webpage_url_ptr": "https://proteomic.datacommons.cancer.gov/pdc/study/__ID__",
+      "id_pattern": "PDC[0-9]+",
+      "access_mode": "Complex download or Application to access"
+    },
+    "gdc.cancer.gov": {
+      "repo_name": "Genomic Data Commons",
+      "dataset_webpage_url_ptr": "https://www.ncbi.nlm.nih.gov/projects/gap/cgi-bin/study.cgi?study_id=__ID__",
+      "access_mode": "..."
+    },
+    "cancerimagingarchive.net": {
+      "repo_name": "The Cancer Imaging Archive",
+      "dataset_webpage_url_ptr": "https://doi.org/__ID__",
+      "access_mode": "..."
+    },
+    "imaging.datacommons.cancer.gov": {
+      "repo_name": "Imaging Data Commons",
+      "dataset_webpage_url_ptr": "https://doi.org/__ID__",
+      "access_mode": "..."
+    },
+    "repository.jpostdb.org": {
+      "repo_name": "JPOST",
+      "url_concat_string": "/entry/__ID__",
+      "download_root": "https://repository.jpostdb.org/entry/__ID__",
+      "access_mode": "Complex download"
+    },
+    "doi.org/10.5061": {
+      "repo_name": "Dryad",
+      "id_pattern": "10\\.5061/[^\\s]+",
+      "dataset_webpage_url_ptr": "https://doi.org/__ID__"
+    },
+    "doi.org/10.5281": {
+      "repo_name": "Zenodo",
+      "id_pattern": "10\\.5281/[^\\s]+",
+      "dataset_webpage_url_ptr": "https://doi.org/__ID__"
+    },
+    "doi.org/10.6084": {
+      "repo_name": "Figshare",
+      "id_pattern": "10\\.6084/[^\\s]+",
+      "dataset_webpage_url_ptr": "https://doi.org/__ID__"
+    },
+    "doi.org/10.24433": {
+      "repo_name": "Mendeley Data",
+      "id_pattern": "10\\.24433/[^\\s]+",
+      "dataset_webpage_url_ptr": "https://doi.org/__ID__"
+    },
+    "doi.org/10.17632": {
+      "repo_name": "Mendeley Data",
+      "id_pattern": "10\\.17632/[^\\s]+",
+      "dataset_webpage_url_ptr": "https://doi.org/__ID__"
+    },
+    "doi.org/10.7910": {
+      "repo_name": "Dataverse",
+      "id_pattern": "10\\.7910/DVN[^\\s]*",
+      "dataset_webpage_url_ptr": "https://doi.org/__ID__"
+    },
+    "doi.org/10.18112": {
+      "repo_name": "OpenNeuro",
+      "id_pattern": "10\\.18112/openneuro\\.[^\\s]+",
+      "dataset_webpage_url_ptr": "https://doi.org/__ID__"
+    },
+    "doi.org/10.1594": {
+      "repo_name": "PANGAEA",
+      "id_pattern": "10\\.1594/PANGAEA\\.[^\\s]+",
+      "dataset_webpage_url_ptr": "https://doi.org/__ID__"
+    },
+    "doi.org/10.21233": {
+      "repo_name": "Neotoma Paleoecology",
+      "id_pattern": "10\\.21233[^\\s]+",
+      "dataset_webpage_url_ptr": "https://doi.org/__ID__"
+    },
+    "doi.org/10.3886": {
+      "repo_name": "ICPSR",
+      "id_pattern": "10\\.3886[^\\s]+",
+      "dataset_webpage_url_ptr": "https://doi.org/__ID__"
+    },
+    "doi.org/10.7289": {
+      "repo_name": "NOAA NCEI",
+      "id_pattern": "10\\.7289[^\\s]+",
+      "dataset_webpage_url_ptr": "https://doi.org/__ID__"
+    },
+    "doi.org/10.5255": {
+      "repo_name": "UK Data Service",
+      "id_pattern": "10\\.5255[^\\s]+",
+      "dataset_webpage_url_ptr": "https://doi.org/__ID__"
+    },
+    "doi.org/10.6019": {
+      "repo_name": "EMPIAR",
+      "id_pattern": "10\\.6019[^\\s]+|\\bEMPIAR\\-\\d+\\b",
+      "dataset_webpage_url_ptr": "https://doi.org/__ID__"
+    },
+    "doi.org": {
+      "dataset_webpage_url_ptr": "https://doi.org/__ID__",
+      "id_pattern": "10\\.\\d{4,9}/"
+    },
+    "geo" : {
+      "repo_name": "Gene Expression Omnibus",
+      "id_pattern": "\\bGSE\\d+|GSM\\d+|GPL\\d+|GDS\\d+\\b",
+      "dataset_webpage_url_ptr": "https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=__ID__",
+      "access_mode": "Complex download"
+    },
+    "dbgap" : {
+      "repo_name": "database of Genotypes and Phenotypes",
+      "dataset_webpage_url_ptr": "https://www.ncbi.nlm.nih.gov/projects/gap/cgi-bin/study.cgi?study_id=__ID__",
+      "id_pattern": "phs[0-9]+\\.\\w+\\d+\\.\\w+\\d+",
+      "default_id_suffix": ".v1.p1",
+      "access_mode": "Application to access"
+    },
+    "sra": {
+      "repo_name": "Sequence Read Archive",
+      "id_pattern": "\\b(SRP\\d+|SRA\\d+|ERP\\d+|ERX\\d+)\\b",
+      "dataset_webpage_url_ptr": "https://www.ncbi.nlm.nih.gov/sra/?term=__ID__",
+      "access_mode": "Complex download",
+      "javascript_load_required": true,
+      "informative_html_metadata_tags": [
+        "form"
+      ]
+    },
+    "arrayexpress": {
+      "repo_name": "ArrayExpress",
+      "repo_root": "www.ebi.ac.uk",
+      "dataset_webpage_url_ptr": "https://www.ebi.ac.uk/biostudies/ArrayExpress/studies/__ID__",
+      "access_mode": "Complex download",
+      "javascript_load_required": true
+    },
+    "pdb": {
+        "repo_name": "Protein Data Bank",
+        "id_pattern": "[1-9][a-zA-Z0-9]{3}",
+        "dataset_webpage_url_ptr": "https://www.rcsb.org/structure/__ID__"
+    },
+    "data.mendeley.com": {
+      "repo_name": "Mendeley"
+    },
+    "synapse.org": {
+      "repo_name": "Synapse",
+      "repo_root": "www.synapse.org",
+      "dataset_webpage_url_ptr": "https://www.synapse.org/Synapse:__ID__",
+      "id_pattern": "(?<!\\d)syn\\d{7,12}(?!\\d)",
+      "access_mode": "Complex download or application to access"
+    },
+    "emdb": {
+      "repo_name": "Electron Microscopy Data Bank (EMDB)",
+      "id_pattern": "\\bEMD\\-\\d+\\b",
+      "dataset_webpage_url_ptr": "https://www.ebi.ac.uk/emdb/EMD-__ID__"
+    },
+    "genbank": {
+      "repo_name": "GenBank",
+      "id_pattern": "\\b(MN\\w+|NC_\\d+|CP\\w+|MT\\w+)\\b",
+      "dataset_webpage_url_ptr": "https://www.ncbi.nlm.nih.gov/nuccore/__ID__"
+    },
+    "metabolights": {
+      "repo_name": "MetaboLights",
+      "id_pattern": "\\bMTBLS\\d+\\b",
+      "dataset_webpage_url_ptr": "https://www.ebi.ac.uk/metabolights/MTBLS__NUM__"
+    },
+    "bioproject": {
+      "repo_name": "BioProject",
+      "id_pattern": "\\b(PRJNA\\d+|PRJEB\\d+|PRJDB\\d+)\\b",
+      "dataset_webpage_url_ptr": "https://www.ncbi.nlm.nih.gov/bioproject/__ID__"
+    }
+  }
+}
