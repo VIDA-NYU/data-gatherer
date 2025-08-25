@@ -1,0 +1,6 @@
+## Version 0.1.0 - 2025-08-25
+
+- Initial release to PyPI
+- Core functionality implemented: Dataset metadata extraction from scientific articles
+- Supports Python 3.11
+- Documentation and examples included
