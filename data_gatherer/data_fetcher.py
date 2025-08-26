@@ -186,8 +186,8 @@ class DataFetcher(ABC):
         self.logger.info(f"EntrezFetcher instance: {isinstance(self, EntrezFetcher)}")
         self.logger.info(f"scraper_tool attribute: {hasattr(self,'scraper_tool')}")
 
-        self.logger.info("Initializing new selenium driver.")
-        driver = create_driver(self.driver_path, self.browser, self.headless, self.logger)
+        self.logger.info(f"Initializing new selenium driver {driver_path}, {browser}, {headless}.")
+        driver = create_driver(driver_path, browser, headless, self.logger)
         return WebScraper(driver, logger)
 
     def url_in_dataframe(self, url, raw_HTML_data_filepath):
@@ -268,7 +268,8 @@ class WebScraper(DataFetcher):
     """
     def __init__(self, scraper_tool, logger, retrieval_patterns_file=None, driver_path=None, browser='firefox',
                  headless=True, local_fetch_fp=None):
-        super().__init__(logger, src='WebScraper', raw_HTML_data_filepath=local_fetch_fp)
+        super().__init__(logger, src='WebScraper', raw_HTML_data_filepath=local_fetch_fp, driver_path=driver_path,
+                         browser=browser, headless=headless)
         self.scraper_tool = scraper_tool  # Inject your scraping tool (Selenium)
         self.driver_path = driver_path
         self.browser = browser
