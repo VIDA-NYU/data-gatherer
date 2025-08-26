@@ -79,6 +79,7 @@ class DataGatherer:
         self.parser = None
         self.raw_data_format = None
         self.setup_data_fetcher(driver_path=driver_path)
+        self.fetcher_driver_path = driver_path
         self.data_checker = DataCompletenessChecker(self.logger)
 
         self.write_htmls_xmls = write_htmls_xmls
@@ -411,6 +412,8 @@ class DataGatherer:
                     self.logger.warning(f"Unsupported raw data format: {self.raw_data_format}.")
             else:
                 self.logger.info("Skipping raw HTML/XML saving.")
+
+            self.data_fetcher.scraper_tool.quit() if hasattr(self.data_fetcher, 'scraper_tool') else None
 
             # Step 2: Use HTMLParser/XMLParser
             if self.raw_data_format == "XML" and raw_data is not None:
@@ -1011,7 +1014,7 @@ class DataGatherer:
 
             # Process each URL and return results as a dictionary like source_url: DataFrame_of_data_links
             results = self.process_articles(urls, semantic_retrieval=semantic_retrieval, section_filter=section_filter,
-                                            prompt_name=prompt_name,)
+                                            prompt_name=prompt_name, driver_path=self.fetcher_driver_path)
 
             # return the union of all the results
             combined_df = pd.DataFrame()
