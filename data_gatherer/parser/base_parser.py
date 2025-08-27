@@ -29,7 +29,7 @@ dataset_response_schema_gpt = {
                     "items": {
                         "type": "object",
                         "properties": {
-                            "dataset_id": {
+                            "dataset_identifier": {
                                 "type": "string",
                                 "description": "A unique identifier for the dataset."
                             },
@@ -42,7 +42,7 @@ dataset_response_schema_gpt = {
                                 "description": "Why did we select this dataset?"
                             }
                         },
-                        "required": ["dataset_id", "repository_reference"]
+                        "required": ["dataset_identifier", "repository_reference"]
                     },
                     "minItems": 1,
                     "uniqueItems": True
@@ -109,7 +109,7 @@ dataset_metadata_response_schema_gpt = {
                     },
                     "description": "Links to forms or pages where access requests can be made."
                 },
-                "dataset_id": {
+                "dataset_identifier": {
                     "type": "string",
                     "description": "A unique identifier for the dataset."
                 },
@@ -126,11 +126,11 @@ dataset_metadata_response_schema_gpt = {
 }
 
 class Dataset(BaseModel):
-    dataset_id: str
+    dataset_identifier: str
     repository_reference: str
 
 class Dataset_w_Description(typing.TypedDict):
-    dataset_id: str
+    dataset_identifier: str
     repository_reference: str
     rationale: str
 
@@ -144,7 +144,7 @@ class Dataset_metadata(BaseModel):
     file_name: str
     file_license: str
     request_access_needed: str
-    dataset_id: str
+    dataset_identifier: str
     download_type: str
 
 
@@ -648,7 +648,7 @@ class LLMParser(ABC):
         self.logger.info(f"Schema validation vals: {dataset_id}, {data_repository}, {dataset_webpage}")
 
         if dataset_id is None:
-            dataset_id = self.validate_dataset_id(dataset.get('dataset_id', dataset.get('dataset_identifier', 'n/a')))
+            dataset_id = self.validate_dataset_id(dataset.get('dataset_identifier', dataset.get('dataset_id', 'n/a')))
         else:
             self.logger.info(f"Dataset ID found via pattern matching: {dataset_id}")
 
@@ -693,7 +693,7 @@ class LLMParser(ABC):
         deduped = []
 
         for item in response:
-            dataset_id = item.get("dataset_id", item.get("dataset_identifier", ""))
+            dataset_id = item.get("dataset_identifier", item.get("dataset_id", ""))
             if not dataset_id:
                 continue
 
