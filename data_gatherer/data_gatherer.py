@@ -29,7 +29,7 @@ class DataGatherer:
                  download_data_for_description_generation=False, data_resource_preview=False,
                  download_previewed_data_resources=False, log_level=logging.ERROR, clear_previous_logs=True,
                  retrieval_patterns_file='retrieval_patterns.json', load_from_cache=False, save_to_cache=False,
-                 driver_path=None
+                 driver_path=None, save_dynamic_prompts=False
                  ):
         """
         Initializes the DataGatherer with the given configuration file and sets up logging.
@@ -66,6 +66,8 @@ class DataGatherer:
 
         Initializes the DataGatherer with the given configuration file and sets up logging.
 
+        :param save_dynamic_prompts: Flag to indicate if dynamically generated prompts should be saved.
+
         """
 
         self.open_data_repos_ontology = load_config('open_bio_data_repos.json')
@@ -86,6 +88,7 @@ class DataGatherer:
         self.article_file_dir = article_file_dir
         self.load_from_cache = load_from_cache
         self.save_to_cache = save_to_cache
+        self.save_dynamic_prompts = save_dynamic_prompts
 
         self.download_data_for_description_generation = download_data_for_description_generation
 
@@ -208,15 +211,18 @@ class DataGatherer:
 
         if raw_data_format == "XML":
             self.parser = XMLParser(self.open_data_repos_ontology, self.logger, full_document_read=full_document_read,
-                                    llm_name=self.llm, use_portkey_for_gemini=use_portkey_for_gemini)
+                                    llm_name=self.llm, use_portkey_for_gemini=use_portkey_for_gemini,
+                                     save_dynamic_prompts=self.save_dynamic_prompts)
 
         elif raw_data_format == "HTML":
             self.parser = HTMLParser(self.open_data_repos_ontology, self.logger, full_document_read=full_document_read,
-                                     llm_name=self.llm, use_portkey_for_gemini=use_portkey_for_gemini)
+                                     llm_name=self.llm, use_portkey_for_gemini=use_portkey_for_gemini,
+                                     save_dynamic_prompts=self.save_dynamic_prompts)
 
         elif raw_data_format == "PDF":
             self.parser = PDFParser(self.open_data_repos_ontology, self.logger, full_document_read=full_document_read,
-                                    llm_name=self.llm, use_portkey_for_gemini=use_portkey_for_gemini)
+                                    llm_name=self.llm, use_portkey_for_gemini=use_portkey_for_gemini,
+                                     save_dynamic_prompts=self.save_dynamic_prompts)
 
         else:
             raise ValueError(f"Unsupported raw data format: {raw_data_format}")
@@ -231,18 +237,22 @@ class DataGatherer:
         else:
             cont = raw_data
 
-        return self.parser.parse_data(cont,
-                                      publisher=publisher,
-                                      current_url_address=current_url_address,
-                                      raw_data_format=raw_data_format,
-                                      prompt_name=prompt_name,
-                                      use_portkey_for_gemini=use_portkey_for_gemini,
-                                      article_file_dir=parsed_data_dir,
-                                      additional_data=additional_data,
-                                      process_DAS_links_separately=process_DAS_links_separately,
-                                      semantic_retrieval=semantic_retrieval,
-                                      section_filter=section_filter
-                                      )
+        ret = self.parser.parse_data(cont,
+                                     publisher=publisher,
+                                     current_url_address=current_url_address,
+                                     raw_data_format=raw_data_format,
+                                     prompt_name=prompt_name,
+                                     use_portkey_for_gemini=use_portkey_for_gemini,
+                                     article_file_dir=parsed_data_dir,
+                                     additional_data=additional_data,
+                                     process_DAS_links_separately=process_DAS_links_separately,
+                                     semantic_retrieval=semantic_retrieval,
+                                     section_filter=section_filter
+                                     )
+
+        ret['raw_data_format'] = raw_data_format
+
+        return ret
 
     def setup_data_fetcher(self, search_method='url_list', driver_path='', browser='Firefox', headless=True,
                            raw_HTML_data_fp=None):
@@ -421,7 +431,8 @@ class DataGatherer:
                 self.parser = XMLParser(self.open_data_repos_ontology, self.logger,
                                         llm_name=self.llm,
                                         full_document_read=self.full_document_read,
-                                        use_portkey_for_gemini=use_portkey_for_gemini)
+                                        use_portkey_for_gemini=use_portkey_for_gemini,
+                                        save_dynamic_prompts=self.save_dynamic_prompts)
 
                 if additional_data is None:
                     parsed_data = self.parser.parse_data(raw_data, self.publisher, self.current_url,
@@ -443,7 +454,8 @@ class DataGatherer:
                 self.parser = HTMLParser(self.open_data_repos_ontology, self.logger,
                                          llm_name=self.llm,
                                          full_document_read=self.full_document_read,
-                                         use_portkey_for_gemini=use_portkey_for_gemini)
+                                         use_portkey_for_gemini=use_portkey_for_gemini,
+                                         save_dynamic_prompts=self.save_dynamic_prompts)
                 parsed_data = self.parser.parse_data(raw_data, self.publisher, self.current_url,
                                                      raw_data_format=self.raw_data_format, prompt_name=prompt_name,
                                                      semantic_retrieval=semantic_retrieval,
