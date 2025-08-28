@@ -16,6 +16,7 @@ from data_gatherer.resources_loader import load_config
 from data_gatherer.retriever.embeddings_retriever import EmbeddingsRetriever
 from data_gatherer.env import PORTKEY_GATEWAY_URL, PORTKEY_API_KEY, PORTKEY_ROUTE, PORTKEY_CONFIG, NYU_LLM_API, GPT_API_KEY, GEMINI_KEY, DATA_GATHERER_USER_NAME
 import requests
+from json_repair import repair_json
 
 dataset_response_schema_gpt = {
     "type": "json_schema",
@@ -724,34 +725,35 @@ class LLMParser(ABC):
             try:
                 response_text = response_text.choices[0].message.content
             except Exception as e:
-                print(f"Could not extract content from response object: {e}")
+                self.logger.warning(f"Could not extract content from response object: {e}")
                 return None
         elif isinstance(response_text, dict):
             try:
                 response_text = response_text["choices"][0]["message"]["content"]
             except Exception as e:
-                print(f"Could not extract content from response dict: {e}")
+                self.logger.warning(f"Could not extract content from response dict: {e}")
                 return None
 
+        response_text = response_text.strip()
+
+        # Remove markdown formatting
+        if response_text.startswith("```"):
+            response_text = re.sub(r"^```[a-zA-Z]*\n?", "", response_text)
+            response_text = re.sub(r"\n?```$", "", response_text)
+
         try:
-            response_text = response_text.strip()  # Remove extra spaces/newlines
-
-            # Remove markdown code block if present (e.g., ```json ... ```)
-            if response_text.startswith("```"):
-                response_text = re.sub(r"^```[a-zA-Z]*\n?", "", response_text)
-                response_text = re.sub(r"\n?```$", "", response_text)
-
-            # process dict-like list
-            if len(response_text) > 2 and "{" not in response_text[1:-1] and "[" in response_text[1:-1]:
-                response_text = (response_text[:1] +
-                                 response_text[1:-1].replace("[", "{").replace("]","}") + response_text[-1:])
-            # Attempt JSON parsing
+            # First try standard parsing
             return json.loads(response_text)
+        except json.JSONDecodeError:
+            self.logger.warning("Initial JSON parsing failed. Attempting json_repair...")
 
-        except json.JSONDecodeError as e:
-            print(f"JSONDecodeError: {e}")
-            print(f"Malformed JSON: {response_text[:500]}")  # Print first 500 chars for debugging
-            return None  # Return None to indicate failure
+            try:
+                repaired = repair_json(response_text)
+                return json.loads(repaired)
+            except Exception as e:
+                self.logger.warning(f"json_repair failed: {e}")
+                print(f"Malformed JSON (after attempted repair): {response_text[:500]}")
+                return None
 
     def process_data_availability_links(self, dataset_links):
         """
