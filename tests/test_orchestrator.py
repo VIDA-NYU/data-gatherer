@@ -55,6 +55,6 @@ def test_process_url_with_mocks(monkeypatch, get_test_data_path):
         'dataset_identifier', 'data_repository', 'dataset_webpage',
         'source_section', 'retrieval_pattern', 'access_mode', 'link',
         'source_url', 'download_link', 'title', 'content_type', 'id',
-        'caption', 'description', 'context_description', 'file_extension', 'pub_title'
+        'caption', 'description', 'context_description', 'file_extension', 'pub_title', 'raw_data_format'
     ]
     assert list(result.columns) == expected_columns, f"Columns do not match. Got: {list(result.columns)}"
