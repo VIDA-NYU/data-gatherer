@@ -233,6 +233,7 @@ class XMLParser(LLMParser):
 
                 out_df['pub_title'] = self.title
                 out_df['source_url'] = current_url_address
+                out_df['raw_data_format'] = raw_data_format
 
                 return out_df
 
@@ -277,6 +278,7 @@ class XMLParser(LLMParser):
 
                 out_df['source_url'] = current_url_address
                 out_df['pub_title'] = self.title
+                out_df['raw_data_format'] = raw_data_format
 
                 return out_df
         else:

@@ -427,6 +427,7 @@ class HTMLParser(LLMParser):
 
         out_df.loc[:, 'source_url'] = current_url_address
         out_df.loc[:, 'pub_title'] = self.retriever.extract_publication_title(preprocessed_data)
+        out_df['raw_data_format'] = raw_data_format
 
         return out_df
 

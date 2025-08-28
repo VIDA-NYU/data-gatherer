@@ -283,6 +283,7 @@ class PDFParser(LLMParser):
         out_df['source_url'] = current_url_address if current_url_address else ''
         out_df['source_file_path'] = file_path
         out_df['pub_title'] = self.extract_publication_title(preprocessed_data)
+        out_df['raw_data_format'] = raw_data_format
 
         self.remove_temp_file(file_path) if os.path.exists(file_path) and file_path_is_temp else None
 
