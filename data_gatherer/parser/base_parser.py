@@ -760,6 +760,7 @@ class LLMParser(ABC):
 
             try:
                 repaired = repair_json(response_text)
+                repaired = re.sub(',\s*\{\}\]', ']', repaired)  # Remove trailing empty objects in lists
                 return json.loads(repaired)
             except Exception as e:
                 self.logger.warning(f"json_repair failed: {e}")
