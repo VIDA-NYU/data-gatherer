@@ -228,3 +228,17 @@ def test_normalize_text_from_pdf(get_test_data_path):
     assert not re.search('\nPage\s+\d+\s*', normalized_text)
     assert not re.search('\nNewpage\s+\d+\s*', normalized_text)
     print('\n')
+
+def test_safe_parse_json(get_test_data_path):
+    logger = setup_logging("test_logger", log_file="../logs/scraper.log")
+    parser = XMLParser("open_bio_data_repos.json", logger, llm_name='gemini-2.0-flash')
+    malformed_json = """
+    {"datasets":[{"dataset_identifier":"GSE39582","repository_reference":"https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE39582"},{"dataset_identifier":"GSE13067","repository_reference":"https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE13067"},{"dataset_identifier":"GSE13294","repository_reference":"https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE13294"},{"dataset_identifier":"GSE14333","repository_reference":"https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE14333"},{"dataset_identifier":"GSE17536","repository_reference":"https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE17536"},{"dataset_identifier":"GSE33113","repository_reference":"https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE33113"},{"dataset_identifier":"GSE37892","repository_reference":"https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE37892"},{"dataset_identifier":"GSE38832","repository_reference":"https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE38832"},{"dataset_identifier":"PRJEB23709","repository_reference":"https://www.ncbi.nlm.nih.gov/bioproject/PRJEB23709"},{"dataset_identifier":"GSE103479","repository_reference":"https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE103479"},{"
+    """
+    parsed_data = parser.safe_parse_json(malformed_json)
+    dada = parsed_data["datasets"]
+
+    print(f"parsed_data:\nType:{type(parsed_data)}\nLen:{len(dada)},Cont: {parsed_data}\n")
+    assert isinstance(parsed_data, dict)
+    assert len(parsed_data["datasets"]) == 11  # Only 9 complete entries should be parsed
+    print('\n')
