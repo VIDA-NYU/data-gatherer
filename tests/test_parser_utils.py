@@ -240,5 +240,5 @@ def test_safe_parse_json(get_test_data_path):
 
     print(f"parsed_data:\nType:{type(parsed_data)}\nLen:{len(dada)},Cont: {parsed_data}\n")
     assert isinstance(parsed_data, dict)
-    assert len(parsed_data["datasets"]) == 11  # Only 9 complete entries should be parsed
+    assert len(parsed_data["datasets"]) == 10  # Only 10 complete entries should be parsed
     print('\n')

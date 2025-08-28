@@ -28,4 +28,4 @@ portkey-ai
 xlsxwriter
 sentence-transformers
 pymupdf
-json-repair
+json_repair
