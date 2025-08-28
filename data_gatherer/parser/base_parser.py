@@ -483,13 +483,13 @@ class LLMParser(ABC):
                     resps = self.safe_parse_json(response.choices[0].message.content)  # 'datasets' keyError?
                     self.logger.info(f"Response is {type(resps)}: {resps}")
                     resps = resps.get("datasets", []) if resps is not None else []
-                    resps = self.deduplicate_response(resps)
+                    resps = self.normalize_response_type(resps)
                     self.logger.info(f"Response is {type(resps)}: {resps}")
                     self.prompt_manager.save_response(prompt_id, resps) if self.save_responses_to_cache else None
                 else:
                     try:
                         resps = self.safe_parse_json(response.choices[0].message.content)  # Ensure it's properly parsed
-                        resps = self.deduplicate_response(resps)
+                        resps = self.normalize_response_type(resps)
                         self.logger.info(f"Response is {type(resps)}: {resps}")
                         if not isinstance(resps, list):  # Ensure it's a list
                             raise ValueError("Expected a list of datasets, but got something else.")
@@ -518,13 +518,13 @@ class LLMParser(ABC):
                         self.logger.info(f"Portkey Gemini response: {response}")
                         if self.full_document_read:
                             resps = self.safe_parse_json(response)
-                            resps = self.deduplicate_response(resps)
+                            resps = self.normalize_response_type(resps)
                             if isinstance(resps, dict):
                                 resps = resps.get("datasets", []) if resps is not None else []
                         else:
                             try:
                                 resps = self.safe_parse_json(response)
-                                resps = self.deduplicate_response(resps)
+                                resps = self.normalize_response_type(resps)
                                 if not isinstance(resps, list):
                                     raise ValueError("Expected a list of datasets, but got something else.")
                             except json.JSONDecodeError as e:
@@ -568,7 +568,7 @@ class LLMParser(ABC):
                             if self.save_responses_to_cache:
                                 self.prompt_manager.save_response(prompt_id, parsed_response)
                                 self.logger.info(f"Response saved to cache")
-                            parsed_response_dedup = self.deduplicate_response(parsed_response)
+                            parsed_response_dedup = self.normalize_response_type(parsed_response)
                             resps = parsed_response_dedup
                         else:
                             self.logger.error("No candidates found in the response.")
@@ -679,7 +679,7 @@ class LLMParser(ABC):
 
         return dataset_id, data_repository, dataset_webpage
 
-    def deduplicate_response(self, response):
+    def normalize_response_type(self, response):
         """
         This function handles basic **postprocessing** of the LLM output.
         Normalize and deduplicate dataset responses by stripping DOI-style prefixes
@@ -690,13 +690,17 @@ class LLMParser(ABC):
         :return: List of deduplicated dataset responses.
 
         """
+        self.logger.info(f"Deduplicating response with {len(response)} items")
         seen = set()
         deduped = []
 
         for item in response:
+            self.logger.debug(f"Processing item: {item}")
             dataset_id = item.get("dataset_identifier", item.get("dataset_id", ""))
             if not dataset_id:
+                self.logger.warning(f"Skipping item with missing dataset_id: {item}")
                 continue
+            repo = item.get("data_repository", item.get("repository_reference", "n/a"))
 
             # Normalize: remove DOI prefix if it matches '10.x/PXD123456'
             clean_id = re.sub(r'10\.\d+/(\bPXD\d+\b)', r'\1', dataset_id)
@@ -704,8 +708,15 @@ class LLMParser(ABC):
             if clean_id not in seen:
                 # Update the dataset_id to the normalized version
                 item["dataset_id"] = clean_id
+                self.logger.info(f"Adding unique item: {clean_id}")
                 deduped.append(item)
                 seen.add(clean_id)
+
+            elif clean_id == 'n/a' and repo != 'n/a':
+                deduped.append(item)
+
+            else:
+                self.logger.info(f"Duplicate found and skipped: {clean_id}")
 
         return deduped
 
