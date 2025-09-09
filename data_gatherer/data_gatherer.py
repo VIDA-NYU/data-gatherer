@@ -5,6 +5,8 @@ from data_gatherer.data_fetcher import *
 from data_gatherer.parser.html_parser import *
 from data_gatherer.parser.xml_parser import *
 from data_gatherer.parser.pdf_parser import *
+from data_gatherer.parser.grobid_pdf_parser import *
+from data_gatherer.llm.response_schema import *
 from data_gatherer.classifier import LLMClassifier
 from data_gatherer.env import CACHE_BASE_DIR
 import json
@@ -175,9 +177,10 @@ class DataGatherer:
         return raw_data
 
     def parse_data(self, raw_data, publisher=None, current_url_address=None, additional_data=None,
-                   raw_data_format='XML', parsed_data_dir='tmp/parsed_articles/',
-                   process_DAS_links_separately=False, full_document_read=False, semantic_retrieval=False,
-                   prompt_name='retrieve_datasets_simple_JSON', use_portkey_for_gemini=True, section_filter=None):
+                   raw_data_format='XML', parsed_data_dir='tmp/parsed_articles/', grobid_for_pdf=False,
+                   process_DAS_links_separately=False, full_document_read=False, semantic_retrieval=False, top_k=5,
+                   prompt_name='retrieve_datasets_simple_JSON', use_portkey_for_gemini=True, section_filter=None,
+                   response_format=dataset_response_schema_gpt):
         """
         Parses the raw data fetched from the source URL using the appropriate parser.
 
@@ -209,17 +212,23 @@ class DataGatherer:
         """
         self.logger.info(f"Parsing data from URL: {current_url_address} with publisher: {publisher}")
 
-        if raw_data_format == "XML":
-            self.parser = XMLParser(self.open_data_repos_ontology, self.logger, full_document_read=full_document_read,
-                                    llm_name=self.llm, use_portkey_for_gemini=use_portkey_for_gemini,
+        if raw_data_format.upper() == "XML":
+            router = XMLRouter(self.open_data_repos_ontology, self.logger, full_document_read=full_document_read,
+                               llm_name=self.llm, use_portkey_for_gemini=use_portkey_for_gemini,
                                      save_dynamic_prompts=self.save_dynamic_prompts)
+            self.parser = router.get_parser(raw_data)
 
-        elif raw_data_format == "HTML":
+        elif raw_data_format.upper() == "HTML":
             self.parser = HTMLParser(self.open_data_repos_ontology, self.logger, full_document_read=full_document_read,
                                      llm_name=self.llm, use_portkey_for_gemini=use_portkey_for_gemini,
                                      save_dynamic_prompts=self.save_dynamic_prompts)
 
-        elif raw_data_format == "PDF":
+        elif raw_data_format.upper() == "PDF" and grobid_for_pdf:
+            self.parser = GrobidPDFParser(self.open_data_repos_ontology, self.logger, full_document_read=full_document_read,
+                                    llm_name=self.llm, use_portkey_for_gemini=use_portkey_for_gemini,
+                                     save_dynamic_prompts=self.save_dynamic_prompts)
+
+        elif raw_data_format.upper() == "PDF":
             self.parser = PDFParser(self.open_data_repos_ontology, self.logger, full_document_read=full_document_read,
                                     llm_name=self.llm, use_portkey_for_gemini=use_portkey_for_gemini,
                                      save_dynamic_prompts=self.save_dynamic_prompts)
@@ -238,17 +247,19 @@ class DataGatherer:
             cont = raw_data
 
         ret = self.parser.parse_data(cont,
-                                     publisher=publisher,
-                                     current_url_address=current_url_address,
-                                     raw_data_format=raw_data_format,
-                                     prompt_name=prompt_name,
-                                     use_portkey_for_gemini=use_portkey_for_gemini,
-                                     article_file_dir=parsed_data_dir,
-                                     additional_data=additional_data,
-                                     process_DAS_links_separately=process_DAS_links_separately,
-                                     semantic_retrieval=semantic_retrieval,
-                                     section_filter=section_filter
-                                     )
+                                      publisher=publisher,
+                                      current_url_address=current_url_address,
+                                      raw_data_format=raw_data_format,
+                                      prompt_name=prompt_name,
+                                      use_portkey_for_gemini=use_portkey_for_gemini,
+                                      article_file_dir=parsed_data_dir,
+                                      additional_data=additional_data,
+                                      process_DAS_links_separately=process_DAS_links_separately,
+                                      semantic_retrieval=semantic_retrieval,
+                                      top_k=top_k,
+                                      section_filter=section_filter,
+                                      response_format=response_format
+                                      )
 
         ret['raw_data_format'] = raw_data_format
 
@@ -980,6 +991,7 @@ class DataGatherer:
         return article_id
 
     def save_func_output_to_cache(self, output, process_id, function_name):
+        self.logger.info(f"Saving results to cache with process_id: {process_id}")
         cache = {}
         if os.path.exists(os.path.join(CACHE_BASE_DIR, function_name + "_cache.json")):
             with open(os.path.join(CACHE_BASE_DIR, function_name + "_cache.json"), 'r') as f:
