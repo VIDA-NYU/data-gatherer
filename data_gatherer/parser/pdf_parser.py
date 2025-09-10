@@ -457,7 +457,7 @@ class PDFParser(LLMParser):
                     if self.save_responses_to_cache:
                         self.prompt_manager.save_response(prompt_id, parsed_response)
                         self.logger.info(f"Response saved to cache")
-                    parsed_response_dedup = self.deduplicate_response(parsed_response)
+                    parsed_response_dedup = self.normalize_response_type(parsed_response)
                     resps = parsed_response_dedup
                 else:
                     self.logger.error("No candidates found in the response.")
@@ -482,13 +482,13 @@ class PDFParser(LLMParser):
                     resps = self.safe_parse_json(response.choices[0].message.content)  # 'datasets' keyError?
                     self.logger.info(f"Response is {type(resps)}: {resps}")
                     resps = resps.get("datasets", []) if resps is not None else []
-                    resps = self.deduplicate_response(resps)
+                    resps = self.normalize_response_type(resps)
                     self.logger.info(f"Response is {type(resps)}: {resps}")
                     self.prompt_manager.save_response(prompt_id, resps) if self.save_responses_to_cache else None
                 else:
                     try:
                         resps = self.safe_parse_json(response.choices[0].message.content)  # Ensure it's properly parsed
-                        resps = self.deduplicate_response(resps)
+                        resps = self.normalize_response_type(resps)
                         self.logger.info(f"Response is {type(resps)}: {resps}")
                         if not isinstance(resps, list):  # Ensure it's a list
                             raise ValueError("Expected a list of datasets, but got something else.")
@@ -519,13 +519,13 @@ class PDFParser(LLMParser):
                         self.logger.info(f"Portkey Gemini response: {response}")
                         if self.full_document_read:
                             resps = self.safe_parse_json(response)
-                            resps = self.deduplicate_response(resps)
+                            resps = self.normalize_response_type(resps)
                             if isinstance(resps, dict):
                                 resps = resps.get("datasets", []) if resps is not None else []
                         else:
                             try:
                                 resps = self.safe_parse_json(response)
-                                resps = self.deduplicate_response(resps)
+                                resps = self.normalize_response_type(resps)
                                 if not isinstance(resps, list):
                                     raise ValueError("Expected a list of datasets, but got something else.")
                             except json.JSONDecodeError as e:
@@ -569,7 +569,7 @@ class PDFParser(LLMParser):
                             if self.save_responses_to_cache:
                                 self.prompt_manager.save_response(prompt_id, parsed_response)
                                 self.logger.info(f"Response saved to cache")
-                            parsed_response_dedup = self.deduplicate_response(parsed_response)
+                            parsed_response_dedup = self.normalize_response_type(parsed_response)
                             resps = parsed_response_dedup
                         else:
                             self.logger.error("No candidates found in the response.")

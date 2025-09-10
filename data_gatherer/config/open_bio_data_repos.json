@@ -58,12 +58,10 @@
     },
     "cancerimagingarchive.net": {
       "repo_name": "The Cancer Imaging Archive",
-      "dataset_webpage_url_ptr": "https://doi.org/__ID__",
       "access_mode": "..."
     },
     "imaging.datacommons.cancer.gov": {
       "repo_name": "Imaging Data Commons",
-      "dataset_webpage_url_ptr": "https://doi.org/__ID__",
       "access_mode": "..."
     },
     "repository.jpostdb.org": {
@@ -72,14 +70,9 @@
       "download_root": "https://repository.jpostdb.org/entry/__ID__",
       "access_mode": "Complex download"
     },
-    "doi.org": {
-      "dataset_webpage_url_ptr": "https://doi.org/__ID__",
-      "id_pattern": "10\\.\\d{4,9}/",
-      "javascript_load_required": true
-    },
     "geo" : {
       "repo_name": "Gene Expression Omnibus",
-      "id_pattern": "\\bGSE\\d+|GSM\\d+|GPL\\d+|GDS\\d+\\b",
+      "id_pattern": "GSE\\d+|GSM\\d+|GPL\\d+|GDS\\d+",
       "dataset_webpage_url_ptr": "https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=__ID__",
       "access_mode": "Complex download"
     },
@@ -111,11 +104,6 @@
       "repo_root": "www.ncbi.nlm.nih.gov",
       "dataset_webpage_url_ptr": "https://www.ncbi.nlm.nih.gov/nuccore/__ID__"
     },
-    "pdb": {
-      "repo_name": "Protein Data Bank",
-      "id_pattern": "[1-9][a-zA-Z0-9]{3}",
-      "dataset_webpage_url_ptr": "https://www.rcsb.org/structure/__ID__"
-    },
     "data.mendeley.com": {
       "repo_name": "Mendeley"
     },
@@ -125,6 +113,16 @@
       "dataset_webpage_url_ptr": "https://www.synapse.org/[#!]*Synapse:__ID__",
       "id_pattern": "syn\\d{7,12}",
       "access_mode": "Complex download or application to access"
+    },
+    "doi.org": {
+      "dataset_webpage_url_ptr": "https://doi.org/__ID__",
+      "id_pattern": "10\\.\\d{4,9}/[^\\s,]+",
+      "javascript_load_required": true
+    },
+    "pdb": {
+      "repo_name": "Protein Data Bank",
+      "id_pattern": "[1-9][a-zA-Z0-9]{3}",
+      "dataset_webpage_url_ptr": "https://www.rcsb.org/structure/__ID__"
     }
   }
 }

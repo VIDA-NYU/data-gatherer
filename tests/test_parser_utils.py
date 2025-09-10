@@ -298,3 +298,34 @@ def test_is_tei_xml(get_test_data_path):
     assert isinstance(is_tei, bool)
     assert is_tei is True
     print('\n')
+
+def test_schema_validation(get_test_data_path):
+    logger = setup_logging("test_logger", log_file="../logs/scraper.log")
+    parser = XMLParser("open_bio_data_repos.json", logger, llm_name='gemini-2.0-flash')
+    test_cases = [
+        {'dataset_id': 'https://doi.org/10.1594/PANGAEA.964081', 'repository_reference': 'PANGAEA'},
+        {'dataset_id': 'https://doi.org/10.17632/xtb4mkvf8f.1', 'repository_reference': 'data.mendeley.com'},
+        {'dataset_id': 'MSV000081006', 'repository_reference': 'massive.ucsd.edu'}, 
+        {'dataset_id': '10.7937/tcia.2019.30ilqfcl', 'repository_reference': 'cancerimagingarchive.net'},
+        {'dataset_identifier': 'syn9702085', 'repository_reference': 'https://www.synapse.org/#!Synapse:syn9702085', 'dataset_id': 'syn9702085'},
+        {'dataset_identifier': 'M27187', 'repository_reference': 'https://www.ncbi.nlm.nih.gov/nuccore/M27187', 'dataset_id': 'M27187'}
+    ]
+    ret_cases = [  # change these when adding support for new repos
+        {'dataset_identifier': '10.1594/PANGAEA.964081', 'repository_reference': 'doi.org', 'dataset_webpage': 'https://doi.org/10.1594/PANGAEA.964081'}, 
+        {'dataset_identifier': '10.17632/xtb4mkvf8f.1', 'repository_reference': 'data.mendeley.com', 'dataset_webpage': 'https://doi.org/10.17632/xtb4mkvf8f.1'},
+        {'dataset_identifier': 'MSV000081006', 'repository_reference': 'massive.ucsd.edu'},
+        {'dataset_identifier': '10.7937/tcia.2019.30ilqfcl', 'repository_reference': 'cancerimagingarchive.net', 'dataset_webpage': 'https://doi.org/10.7937/tcia.2019.30ilqfcl'},
+        {'dataset_identifier': 'syn9702085', 'repository_reference': 'synapse.org', 'dataset_webpage': 'https://www.synapse.org/#!Synapse:syn9702085'},
+        {'dataset_identifier': 'M27187', 'repository_reference': 'nuccore', 'dataset_webpage': 'https://www.ncbi.nlm.nih.gov/nuccore/M27187'}
+    ]
+    for obj,ret in zip(test_cases, ret_cases):
+        dataset_id_val, data_repo_val, dataset_webpage_val = parser.schema_validation(obj)
+        print(f"Testing dataset_id_val: {dataset_id_val}, data_repo_val: {data_repo_val}, dataset_webpage_val: {dataset_webpage_val}\n")
+        assert isinstance(dataset_id_val, str)
+        assert isinstance(data_repo_val, str)
+        assert isinstance(dataset_webpage_val, str) or dataset_webpage_val is None
+        assert dataset_id_val == ret['dataset_identifier']
+        assert data_repo_val.lower() == ret['repository_reference'].lower()
+        assert dataset_webpage_val == ret['dataset_webpage'] if 'dataset_webpage' in ret else dataset_webpage_val is None
+        print('\n')
+        
