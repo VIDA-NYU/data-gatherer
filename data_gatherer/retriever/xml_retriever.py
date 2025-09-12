@@ -321,7 +321,7 @@ class xmlRetriever(BaseRetriever):
                     # Extract the surrounding text (e.g., description within <p> tag)
                     parent_p = media.getparent()  # Assuming the media element is within a <p> tag
                     if parent_p is not None:
-                        surrounding_text = re.sub("[\s\n]+", "  ", " ".join(
+                        surrounding_text = re.sub(r"[\s\n]+", "  ", " ".join(
                             parent_p.itertext()).strip())  # Gets all text within the <p> tag
                     else:
                         surrounding_text = "No surrounding text found"
@@ -418,7 +418,7 @@ class xmlRetriever(BaseRetriever):
         # Join the list into a single string for readability
         surrounding_text = " ".join(parent_text)
 
-        return re.sub("[\s\n]+(\s+)]", "\1", surrounding_text)
+        return re.sub(r"[\s\n]+(\s+)", "\1", surrounding_text)
 
     def get_data_availability_sections(self, api_xml):
         data_availability_sections = []

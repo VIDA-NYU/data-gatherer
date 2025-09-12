@@ -66,7 +66,7 @@ class DataFetcher(ABC):
         Extracts the root domain from a given URL.
         """
         self.logger.debug(f"Function call url_to_publisher_root: {url}")
-        match = re.match('https?://([\w\.]+)/', url, re.IGNORECASE)
+        match = re.match(r'https?://([\w\.]+)/', url, re.IGNORECASE)
         if match:
             root = match.group(1)
             self.logger.info(f"Root: {root}")
@@ -368,8 +368,8 @@ class WebScraper(DataFetcher):
         publication_name_pointer = self.scraper_tool.find_element(By.TAG_NAME, 'title')
         if publication_name_pointer is not None and publication_name_pointer.text:
             publication_name = publication_name_pointer.text
-            publication_name = re.sub("\n+", "", publication_name)
-            publication_name = re.sub("^\s+", "", publication_name)
+            publication_name = re.sub(r"\n+", "", publication_name)
+            publication_name = re.sub(r"^\s+", "", publication_name)
             self.logger.info(f"Paper name: {publication_name}")
             return publication_name
         else:

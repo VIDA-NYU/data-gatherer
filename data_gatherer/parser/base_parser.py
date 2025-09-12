@@ -635,7 +635,7 @@ class LLMParser(ABC):
         if dataset_webpage is None and 'dataset_webpage' in dataset:
             dataset_webpage = self.validate_dataset_webpage(dataset['dataset_webpage'], data_repository,
                                                             dataset_id, dataset)
-        elif 'dataset_webpage' is None:
+        elif dataset_webpage is None:
             self.logger.info(f"Dataset webpage not extracted")
         else:
             self.logger.info(f"Dataset webpage found via pattern matching: {dataset_webpage}")
