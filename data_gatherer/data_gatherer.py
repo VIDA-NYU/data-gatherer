@@ -427,7 +427,7 @@ class DataGatherer:
             else:
                 self.logger.info("Skipping raw HTML/XML saving.")
 
-            self.data_fetcher.scraper_tool.quit() if hasattr(self.data_fetcher, 'scraper_tool') else None
+            self.data_fetcher.quit() if hasattr(self.data_fetcher, 'scraper_tool') else None
 
             # Step 2: Use HTMLParser/XMLParser
             if self.raw_data_format == "XML" and raw_data is not None:
@@ -439,6 +439,7 @@ class DataGatherer:
                                         save_dynamic_prompts=self.save_dynamic_prompts)
 
                 if additional_data is None:
+                    self.logger.info("No additional data provided. Parsing raw data only.")
                     parsed_data = self.parser.parse_data(raw_data, self.publisher, self.current_url,
                                                          prompt_name=prompt_name, semantic_retrieval=semantic_retrieval,
                                                          section_filter=section_filter)

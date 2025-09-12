@@ -291,7 +291,9 @@ class WebScraper(DataFetcher):
         """
         # Use the scraper tool to fetch raw HTML from the URL
         self.raw_data_format = 'HTML'  # Default format for web scraping
+        self.logger.debug(f"Fetching data with function call: self.scraper_tool.get(url)")
         self.scraper_tool.get(url)
+        self.logger.debug(f"http get complete, now waiting {delay} seconds for page to load")
         self.simulate_user_scroll(delay)
         self.title = self.extract_publication_title()
         return self.scraper_tool.page_source
@@ -365,7 +367,9 @@ class WebScraper(DataFetcher):
         :return: The publication name as a string.
 
         """
+        self.logger.debug(f"Extracting publication title from page source")
         publication_name_pointer = self.scraper_tool.find_element(By.TAG_NAME, 'title')
+        self.logger.debug(f"Publication name pointer: {publication_name_pointer}")
         if publication_name_pointer is not None and publication_name_pointer.text:
             publication_name = publication_name_pointer.text
             publication_name = re.sub(r"\n+", "", publication_name)
