@@ -188,7 +188,7 @@ class DataGatherer:
 
         :param publisher: The publisher domain or identifier for the data source.
 
-        param current_url_address: The URL of the current data source being processed.
+        :param current_url_address: The URL of the current data source being processed.
 
         :param additional_data: Optional additional data to include in the parsing process, such as metadata or supplementary information.
 
@@ -309,13 +309,6 @@ class DataGatherer:
         return self.data_fetcher.scraper_tool
 
     def PMCID_to_URL(self, pmcid):
-        """
-        Converts a PMCID to a URL.
-
-        :param pmcid: The PMCID to convert.
-
-        :return: The corresponding URL.
-        """
         pmcid = pmcid.strip().upper()
         if not pmcid.startswith("PMC"):
             raise ValueError("Invalid PMCID format. Must start with 'PMC'.")
@@ -344,21 +337,21 @@ class DataGatherer:
 
         4. Classifies the parsed data using the classifier (LLMClassifier).
 
-        param url: The URL to process.
+        :param url: The URL to process.
 
-        param save_staging_table: Flag to save the staging table.
+        :param save_staging_table: Flag to save the staging table.
 
-        param article_file_dir: Directory to save the raw HTML/XML/PDF files.
+        :param article_file_dir: Directory to save the raw HTML/XML/PDF files.
 
-        param use_portkey_for_gemini: Flag to use Portkey for Gemini LLM.
+        :param use_portkey_for_gemini: Flag to use Portkey for Gemini LLM.
 
-        param driver_path: Path to your local WebDriver executable (if applicable). When set to None, Webdriver manager will be used.
+        :param driver_path: Path to your local WebDriver executable (if applicable). When set to None, Webdriver manager will be used.
 
-        param browser: Browser to use for scraping (if applicable). Supported values are 'Firefox', 'Chrome'.
+        :param browser: Browser to use for scraping (if applicable). Supported values are 'Firefox', 'Chrome'.
 
-        param headless: Whether to run the browser in headless mode (if applicable).
+        :param headless: Whether to run the browser in headless mode (if applicable).
 
-        param prompt_name: Name of the prompt to use for LLM parsing.
+        :param prompt_name: Name of the prompt to use for LLM parsing.
 
         :param semantic_retrieval: Flag to indicate if semantic retrieval should be used.
 

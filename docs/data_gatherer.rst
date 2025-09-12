@@ -1,3 +1,6 @@
+Docs Data Gatherer
+==================================
+
 .. docs/data_gatherer.rst
 
 .. automodule:: data_gatherer.data_gatherer
