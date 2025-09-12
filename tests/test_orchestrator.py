@@ -32,7 +32,7 @@ def mock_datasets_info(self, *args, **kwargs):
 
 def test_process_url_with_mocks(monkeypatch, get_test_data_path):
     # Setup
-    orchestrator = DataGatherer(log_level="INFO")
+    orchestrator = DataGatherer(log_level="INFO", llm_name="gemini-2.0-flash")
 
     if orchestrator.data_fetcher is None:
         orchestrator.data_fetcher = EntrezFetcher(requests, logger=logging.getLogger("data_gatherer"))
@@ -42,6 +42,10 @@ def test_process_url_with_mocks(monkeypatch, get_test_data_path):
     # Monkeypatch extract_datasets_info_from_content
     monkeypatch.setattr(XMLParser, "extract_datasets_info_from_content", mock_datasets_info)
     monkeypatch.setenv("OPENAI_API_KEY", "test-gpt-key")
+    monkeypatch.setenv("PORTKEY_API_KEY", "test-port-key")
+    monkeypatch.setenv("PORTKEY_ROUTE", "gemini-vertexai-test-key")
+    monkeypatch.setenv("PORTKEY_CONFIG", "test-portkey-config")
+    monkeypatch.setenv("PORTKEY_GATEWAY_URL", "https://test-portkey-gateway-url.com")
 
     url = 'https://pmc.ncbi.nlm.nih.gov/articles/PMC11129317/'
     result = orchestrator.process_url(url)
