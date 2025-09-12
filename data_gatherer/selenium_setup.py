@@ -43,6 +43,7 @@ def create_driver(driver_path=None, browser="Firefox", headless=True, logger=Non
             logger.info(f"Using GeckoDriverManager to auto-install Firefox driver {service}.") if logger else None
 
         driver = webdriver.Firefox(service=service, options=firefox_options)
+        logger.info("Firefox WebDriver created successfully.")
 
     elif browser.lower() == 'chrome':
         chrome_options = ChromeOptions()
@@ -58,6 +59,7 @@ def create_driver(driver_path=None, browser="Firefox", headless=True, logger=Non
             service = ChromeService(ChromeDriverManager().install())
 
         driver = webdriver.Chrome(service=service, options=chrome_options)
+        logger.info("Chrome WebDriver created successfully.")
 
     else:
         raise ValueError(f"Unsupported browser: {browser}")

@@ -4,6 +4,7 @@ import logging
 import pandas as pd
 from ollama import Client
 from openai import OpenAI
+from openai.types.responses.response_reasoning_item import ResponseReasoningItem
 import google.generativeai as genai
 from portkey_ai import Portkey
 import typing_extensions as typing
@@ -52,7 +53,7 @@ class LLMParser(ABC):
 
         self.llm_name = llm_name
         entire_document_models = ["gemini-1.5-flash", "gemini-1.5-pro", "gemini-2.0-flash-exp", "gemini-2.0-flash",
-                                  "gemini-2.5-flash", "gpt-4o", "gpt-4o-mini"]
+                                  "gemini-2.5-flash", "gpt-4o", "gpt-4o-mini", "gpt-5-nano", "gpt-5-mini", "gpt-5"]
 
         self.full_document_read = full_document_read and self.llm_name in entire_document_models
         self.title = None
@@ -94,6 +95,15 @@ class LLMParser(ABC):
             self.client = OpenAI(api_key=GPT_API_KEY)
 
         elif llm_name == 'gpt-4o':
+            self.client = OpenAI(api_key=GPT_API_KEY)
+
+        elif llm_name == 'gpt-5-nano':
+            self.client = OpenAI(api_key=GPT_API_KEY)
+
+        elif llm_name == 'gpt-5-mini':
+            self.client = OpenAI(api_key=GPT_API_KEY)
+
+        elif llm_name == 'gpt-5':
             self.client = OpenAI(api_key=GPT_API_KEY)
 
         elif 'gemini' in llm_name:
@@ -212,10 +222,13 @@ class LLMParser(ABC):
                 or 'data availability' in cont) and len(cont) > 1:
                 self.logger.info(f"Processing data availability text")
                 # Call the generalized function
-                datasets = self.extract_datasets_info_from_content(cont, repos_elements, model=self.llm_name,
-                                                                   temperature=0,
-                                                                   prompt_name=prompt_name,
-                                                                   response_format=response_format)
+                datasets = self.extract_datasets_info_from_content(
+                    cont, 
+                    repos_elements, model=self.llm_name,
+                    temperature=0,
+                    prompt_name=prompt_name,
+                    response_format=response_format
+                )
 
                 for dt in datasets:
                     dt['source_section'] = element['source_section']
@@ -290,7 +303,7 @@ class LLMParser(ABC):
         static_prompt = self.prompt_manager.load_prompt(prompt_name)
         n_tokens_static_prompt = self.count_tokens(static_prompt, model)
 
-        if 'gpt-4o' in model:
+        if 'gpt' in model:
             while self.tokens_over_limit(content, model, allowance_static_prompt=n_tokens_static_prompt):
                 content = content[:-2000]
         self.logger.info(f"Content length: {len(content)}")
@@ -327,7 +340,7 @@ class LLMParser(ABC):
 
         if self.use_cached_responses and cached_response:
             self.logger.info(f"Using cached response {type(cached_response)} from model: {model}")
-            if type(cached_response) == str and 'gpt-4o' in model:
+            if type(cached_response) == str and 'gpt' in model:
                 resps = [json.loads(cached_response)]
             if type(cached_response) == str:
                 resps = cached_response.split("\n")
@@ -337,7 +350,7 @@ class LLMParser(ABC):
             # Make the request to the model
             self.logger.info(
                 f"Requesting datasets from content using model: {model}, temperature: {temperature}, messages length: "
-                f"{self.count_tokens(messages, model)} tokens")
+                f"{self.count_tokens(messages, model)} tokens, schema: {response_format}")
             resps = []
 
             if model == 'gemma2:9b':
@@ -364,24 +377,44 @@ class LLMParser(ABC):
                 else:
                     self.logger.error("No candidates found in the response.")
 
-
-            elif model == 'gpt-4o-mini' or model == 'gpt-4o':
+            elif 'gpt' in model:
                 response = None
-                if self.full_document_read:
-                    response = self.client.chat.completions.create(
-                        model=model,
-                        messages=messages,
-                        temperature=temperature,
-                        response_format=dataset_response_schema_gpt
-                    )
-                else:
-                    response = self.client.chat.completions.create(model=model, messages=messages,
-                                                                   temperature=temperature)
+                if 'gpt-5' in model:
+                    if self.full_document_read:
+                        response = self.client.responses.create(
+                            model=model,
+                            input=messages,
+                            text={
+                                "format": response_format
+                            }
+                        )
+                    else:
+                        response = self.client.responses.create(
+                            model=model, 
+                            input=messages,
+                        )
 
-                self.logger.info(f"GPT response: {response.choices[0].message.content}")
+                elif 'gpt-4o' in model: 
+                    if self.full_document_read:
+                        response = self.client.responses.create(
+                            model=model,
+                            input=messages,
+                            temperature=temperature,
+                            text={
+                                "format": response_format
+                            }
+                        )
+                    else:
+                        response = self.client.responses.create(
+                            model=model, 
+                            input=messages,
+                            temperature=temperature
+                        )
+
+                self.logger.info(f"GPT response: {response.output}")
 
                 if self.full_document_read:
-                    resps = self.safe_parse_json(response.choices[0].message.content)  # 'datasets' keyError?
+                    resps = self.safe_parse_json(response.output)  # 'datasets' keyError?
                     self.logger.info(f"Response is {type(resps)}: {resps}")
                     resps = resps.get("datasets", []) if resps is not None else []
                     resps = self.normalize_response_type(resps)
@@ -389,7 +422,7 @@ class LLMParser(ABC):
                     self.prompt_manager.save_response(prompt_id, resps) if self.save_responses_to_cache else None
                 else:
                     try:
-                        resps = self.safe_parse_json(response.choices[0].message.content)  # Ensure it's properly parsed
+                        resps = self.safe_parse_json(response.output)  # Ensure it's properly parsed
                         resps = self.normalize_response_type(resps)
                         self.logger.info(f"Response is {type(resps)}: {resps}")
                         if not isinstance(resps, list):  # Ensure it's a list
@@ -504,8 +537,8 @@ class LLMParser(ABC):
 
                 dataset_id, data_repository, dataset_webpage = self.schema_validation(dataset)
 
-            if dataset_id is None or data_repository is None or dataset_webpage is None:
-                self.logger.info(f"Skipping dataset due to missing ID or repository: {dataset}")
+            if (dataset_id is None or data_repository is None) and dataset_webpage is None:
+                self.logger.info(f"Skipping dataset due to missing ID, repository, dataset page: {dataset}")
                 continue
 
             result.append({
@@ -553,7 +586,7 @@ class LLMParser(ABC):
                                                            identifier=dataset.get('dataset_identifier', dataset.get('dataset_id', 'n/a')),
                                                            dataset_page=dataset_webpage,
                                                            candidate_repo=repo_key)
-                        continue
+                                                           
                 if 'id_pattern' in repo_vals:
                     if re.search(repo_vals['id_pattern'], val, re.IGNORECASE):
                         self.logger.info(f"Matched id_pattern: {repo_vals['id_pattern']} to value: {val}")
@@ -678,6 +711,16 @@ class LLMParser(ABC):
             except Exception as e:
                 self.logger.warning(f"Could not extract content from response object: {e}")
                 return None
+        elif isinstance(response_text, list):
+            self.logger.info(f"Response is a list of length: {len(response_text)}")
+            for response_item in response_text:
+                self.logger.info(f"List item type: {type(response_item)}")
+                if hasattr(response_item, "content"):
+                    self.logger.info(f"Item has content attribute, of type: {type(response_item.content)}")
+                    if isinstance(response_item.content, list) and len(response_item.content) > 0:
+                        response_text = response_item.content[0].text
+                else:
+                    response_text = str(response_item)
         elif isinstance(response_text, dict):
             try:
                 response_text = response_text["choices"][0]["message"]["content"]
@@ -721,7 +764,7 @@ class LLMParser(ABC):
         self.logger.debug(f"Text from data-availability: {dataset_links}")
 
         model = self.llm_name
-        temperature = 0.3
+        temperature = 0.0
 
         ret = []
         progress = 0
@@ -765,19 +808,28 @@ class LLMParser(ABC):
                 resp = []
 
                 if model == 'gemma2:9b':
-                    response = self.client.chat(model='gemma2:9b', options={"temperature": 0.5}, messages=messages)
+                    response = self.client.chat(model='gemma2:9b', options={"temperature": 0}, messages=messages)
                     self.logger.info(
                         f"Response received from gemma2:9b: {response.get('message', {}).get('content', 'No content')}")
                     resp = response['message']['content'].split("\n")
                     self.prompt_manager.save_response(prompt_id, response['message']['content'])
                     self.logger.info(f"Response saved to cache")
 
-                elif model == 'gpt-4o-mini':
-                    response = self.client.chat.completions.create(model='gpt-4o-mini', messages=messages,
-                                                                   temperature=0.5)
-                    self.logger.info(f"GPT response: {response.choices[0].message.content}")
-                    resp = response.choices[0].message.content.split("\n")
-                    self.prompt_manager.save_response(prompt_id, response.choices[0].message.content)
+                elif 'gpt' in model:
+                    if 'gpt-4o' in model:
+                        response = self.client.responses.create(
+                            model=model,
+                            input=messages,
+                            temperature=0
+                        )
+                    elif 'gpt-5' in model:
+                        response = self.client.responses.create(
+                            model=model,
+                            input=messages,
+                        )
+                    self.logger.info(f"GPT response: {response.output}")
+                    resp = response.output.split("\n")
+                    self.prompt_manager.save_response(prompt_id, response.output)
                     self.logger.info(f"Response saved to cache")
 
             # Process the response
@@ -1242,7 +1294,7 @@ class LLMParser(ABC):
 
     def tokens_over_limit(self, html_cont: str, model="gpt-4", limit=128000, allowance_static_prompt=200):
         # Use tiktoken only for OpenAI models, fallback to rough estimate for others
-        if 'gpt' in model:
+        if 'gpt-4' in model:
             encoding = tiktoken.encoding_for_model(model)
             tokens = encoding.encode(html_cont)
             self.logger.info(f"Number of tokens: {len(tokens)}")
@@ -1442,7 +1494,7 @@ class LLMClient:
         else:
             raise ValueError(f"Unsupported model: {self.model}")
 
-    def _call_openai(self, content, temperature=0.0, subdir=''):
+    def _call_openai(self, content, temperature=0.0, subdir='', **kwargs):
         self.logger.info(f"Calling OpenAI with content length {len(content)}, subdir: {subdir}")
         messages = self.prompt_manager.render_prompt(
             self.prompt_manager.load_prompt("gpt_metadata_extract", subdir=subdir),
@@ -1453,13 +1505,15 @@ class LLMClient:
         if self.save_prompts:
             self.prompt_manager.save_prompt(prompt_id='abc', prompt_content=messages)
 
-        response = self.client.chat.completions.create(
+        response = self.client.responses.create(
             model=self.model,
-            messages=messages,
+            input=messages,
             temperature=temperature,
-            response_format={"type": "json_object"}
+            text={
+                "format": kwargs.get('response_format', {"type": "json_object"})
+            }
         )
-        return response.choices[0].message.content
+        return response.output
 
     def _call_gemini(self, content, temperature=0.0, subdir=''):
         self.logger.info(f"Calling Gemini with content length {len(content)}, subdir: {subdir}")
