@@ -24,14 +24,14 @@ class MyBeautifulSoup(BeautifulSoup):
             # element is Tag, we want to keep the anchor elements hrefs and the text in every Tag
             if element.name == 'a':  # or do the check of href in element.attrs
                 logging.info("anchor element")
-                newstring = re.sub("\s+", " ", element.getText())
+                newstring = re.sub(r"\s+", " ", element.getText())
                 strings.append(newstring)
                 if element.href is not None:
                     strings.append(element.href)
                     logging.info(f"link in 'a': {element.href}")
                     print(f"link in 'a': {element.href}")
             else:
-                strings.append(re.sub("\s+", " ", element.getText()))
+                strings.append(re.sub(r"\s+", " ", element.getText()))
         #logging.info(f"strings: {strings}")
         return strings
 
@@ -277,7 +277,7 @@ class HTMLParser(LLMParser):
                      'link': link,
                      'reconstructed_link': reconstructed_link,
                      'element': str(anchor),  # Full HTML of the anchor element
-                     'text': re.sub("\s+", " ", anchor.get_text(strip=True)),
+                     'text': re.sub(r"\s+", " ", anchor.get_text(strip=True)),
                      'class': anchor.get('class'),
                      'id': anchor.get('id'),
                      'parent': str(anchor.parent),  # Full HTML of the parent element
