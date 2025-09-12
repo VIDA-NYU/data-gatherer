@@ -394,7 +394,7 @@ class PDFParser(LLMParser):
         static_prompt = self.prompt_manager.load_prompt(prompt_name)
         n_tokens_static_prompt = self.count_tokens(static_prompt, model)
 
-        if 'gpt-4o' in model:
+        if 'gpt' in model:
             while self.tokens_over_limit(content, model, allowance_static_prompt=n_tokens_static_prompt):
                 content = content[:-2000]
         self.logger.info(f"Content length: {len(content)}")
@@ -425,7 +425,7 @@ class PDFParser(LLMParser):
 
         if self.use_cached_responses and cached_response:
             self.logger.info(f"Using cached response {type(cached_response)} from model: {model}")
-            if type(cached_response) == str and 'gpt-4o' in model:
+            if type(cached_response) == str and 'gpt' in model:
                 resps = [json.loads(cached_response)]
             if type(cached_response) == str:
                 resps = cached_response.split("\n")
@@ -463,23 +463,43 @@ class PDFParser(LLMParser):
                     self.logger.error("No candidates found in the response.")
 
 
-            elif model == 'gpt-4o-mini' or model == 'gpt-4o':
+            elif 'gpt-4' in model:
                 response = None
-                if self.full_document_read:
-                    response = self.client.chat.completions.create(
-                        model=model,
-                        messages=messages,
-                        temperature=temperature,
-                        response_format=response_format
-                    )
-                else:
-                    response = self.client.chat.completions.create(model=model, messages=messages,
-                                                                   temperature=temperature)
+                if 'gpt-4o' in model:
+                    if self.full_document_read:
+                        response = self.client.responses.create(
+                            model=model,
+                            input=messages,
+                            temperature=temperature,
+                            text={
+                                "format": response_format
+                            }
+                        )
+                    else:
+                        response = self.client.responses.create(
+                            model=model, 
+                            input=messages,
+                            temperature=temperature
+                        )
+                elif 'gpt-5' in model:
+                    if self.full_document_read:
+                        response = self.client.responses.create(
+                            model=model,
+                            input=messages,
+                            text={
+                                "format": response_format
+                            }
+                        )
+                    else:
+                        response = self.client.responses.create(
+                            model=model,
+                            input=messages,
+                        )
 
-                self.logger.info(f"GPT response: {response.choices[0].message.content}")
+                self.logger.info(f"GPT response: {response.output}")
 
                 if self.full_document_read:
-                    resps = self.safe_parse_json(response.choices[0].message.content)  # 'datasets' keyError?
+                    resps = self.safe_parse_json(response.output)  # 'datasets' keyError?
                     self.logger.info(f"Response is {type(resps)}: {resps}")
                     resps = resps.get("datasets", []) if resps is not None else []
                     resps = self.normalize_response_type(resps)
@@ -487,7 +507,7 @@ class PDFParser(LLMParser):
                     self.prompt_manager.save_response(prompt_id, resps) if self.save_responses_to_cache else None
                 else:
                     try:
-                        resps = self.safe_parse_json(response.choices[0].message.content)  # Ensure it's properly parsed
+                        resps = self.safe_parse_json(response.output)  # Ensure it's properly parsed
                         resps = self.normalize_response_type(resps)
                         self.logger.info(f"Response is {type(resps)}: {resps}")
                         if not isinstance(resps, list):  # Ensure it's a list

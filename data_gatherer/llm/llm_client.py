@@ -39,6 +39,15 @@ class LLMClient_dev:
         elif model == 'gpt-4o':
             self.client = OpenAI(api_key=GPT_API_KEY)
 
+        elif model == 'gpt-5-nano':
+            self.client = OpenAI(api_key=GPT_API_KEY)
+
+        elif model == 'gpt-5-mini':
+            self.client = OpenAI(api_key=GPT_API_KEY)
+
+        elif model == 'gpt-5':
+            self.client = OpenAI(api_key=GPT_API_KEY)
+
         elif model == 'gemini-1.5-flash':
             if not self.use_portkey_for_gemini:
                 genai.configure(api_key=GEMINI_KEY)
@@ -89,13 +98,23 @@ class LLMClient_dev:
         self.logger.info(f"Calling OpenAI")
         if self.save_prompts:
             self.prompt_manager.save_prompt(prompt_id='abc', prompt_content=messages)
-        response = self.client.chat.completions.create(
-            model=self.model,
-            messages=messages,
-            temperature=temperature,
-            response_format=kwargs.get('response_format', {"type": "json_object"})
+        if 'gpt-5' in self.model:
+            response = self.client.responses.create(
+                model=self.model,
+                input=messages,
+                text={
+                    "format": kwargs.get('response_format', {"type": "json_object"})
+                }
+            )
+        elif 'gpt-4' in self.model:
+            response = self.client.responses.create(
+                model=self.model,
+                input=messages,
+                text={
+                "format": kwargs.get('response_format', {"type": "json_object"})
+            }
         )
-        return response.choices[0].message.content
+        return response.output
 
     def _call_gemini(self, messages, temperature=0.0, **kwargs):
         self.logger.info(f"Calling Gemini")
@@ -140,7 +159,7 @@ class LLMClient_dev:
         except Exception as e:
             raise RuntimeError(f"Portkey API call failed: {e}")
 
-    def get_datasets_from_content(self, messages, model=None, temperature=0.0, full_document_read=True):
+    def get_datasets_from_content(self, messages, model=None, temperature=0.0, full_document_read=True, **kwargs):
         """
         Handles the LLM API call for dataset extraction, given prepared messages.
         Returns the raw response from the LLM.
@@ -149,21 +168,38 @@ class LLMClient_dev:
         if model == 'gemma2:9b':
             response = self.client.chat(model=model, options={"temperature": temperature}, messages=messages)
             return response['message']['content']
-        elif model in ['gpt-4o-mini', 'gpt-4o']:
+        elif 'gpt-4' in model:
             if full_document_read:
-                response = self.client.chat.completions.create(
+                response = self.client.responses.create(
                     model=model,
-                    messages=messages,
+                    input=messages,
                     temperature=temperature,
-                    response_format={"type": "json_schema"}
+                    text={
+                        "format": kwargs.get('response_format', {"type": "json_object"})
+                    }
                 )
             else:
-                response = self.client.chat.completions.create(
+                response = self.client.responses.create(
                     model=model,
-                    messages=messages,
+                    input=messages,
                     temperature=temperature
                 )
-            return response.choices[0].message.content
+            return response.output
+        elif 'gpt-5' in model:
+            if full_document_read:
+                response = self.client.responses.create(
+                    model=model,
+                    input=messages,
+                    text={
+                        "format": kwargs.get('response_format', {"type": "json_object"})
+                    }
+                )
+            else:
+                response = self.client.responses.create(
+                    model=model,
+                    input=messages,
+                )
+            return response.output
         elif model.startswith('gemini'):
             if self.use_portkey_for_gemini:
                 portkey_payload = {
