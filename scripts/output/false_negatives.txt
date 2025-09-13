@@ -1,4 +1,10 @@
-{'syn18485175'}
-pmc11929800
-{'syn6131484'}
-pmc8565335
+{'6077-6129'}
+https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11320025/
+{'10.17632/bvdn865y9c.1', 'pdc000110', '10.17632/3wfxrz66w2.1'}
+https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11129317/
+{'id op_040'}
+https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11208500/
+{'egas00001000334'}
+https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8628860
+{'19q1', 'ccle2019', '18q3'}
+https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11061608
