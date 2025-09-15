@@ -40,12 +40,14 @@ class PDFParser(LLMParser):
     def extract_sections_from_text(self, pdf_content: str) -> list[dict]:
         """
         Heuristically extract section titles and texts from normalized PDF content.
+        Treat the 'References' section separately as a vocabulary, not as a regular section.
 
         Args:
             pdf_content: str — normalized plain-text PDF content.
 
         Returns:
-            List[dict] — list of sections with 'section_title' and 'text'
+            List[dict] — list of sections with 'section_title' and 'text'.
+            If a 'References' section is found, it is returned as a separate dict with key 'references'.
         """
         self.logger.info("Extracting sections using heuristics.")
 
@@ -53,16 +55,31 @@ class PDFParser(LLMParser):
         sections = []
         current_section = {"section_title": "Start", "text": ""}
         candidate_pattern = re.compile(r"^\s*(\d{1,2}(\.\d{1,2})*\.?\s*)?[A-Z][\w\s,\-:]{3,80}$")
+        references_section = None
+        in_references = False
 
         for i, line in enumerate(lines):
             line_stripped = line.strip()
+
+            # Detect start of References section
+            if re.match(r"^references$", line_stripped, re.IGNORECASE):
+                # Save previous section
+                if current_section["text"].strip():
+                    sections.append(current_section)
+                # Start collecting references
+                in_references = True
+                references_section = {"section_title": "references", "text": ""}
+                continue
+
+            if in_references:
+                references_section["text"] += line + "\n"
+                continue
 
             # Check if line is a candidate section heading
             if candidate_pattern.match(line_stripped) and not line_stripped.endswith('.'):
                 # Start new section
                 if current_section["text"].strip():
                     sections.append(current_section)
-
                 current_section = {
                     "section_title": line_stripped,
                     "text": ""
@@ -70,29 +87,61 @@ class PDFParser(LLMParser):
             else:
                 current_section["text"] += line + "\n"
 
-        # Append last section
-        if current_section["text"].strip():
+        if not in_references and current_section["text"].strip():
             sections.append(current_section)
 
-        self.logger.info(f"Extracted {len(sections)} sections.")
+        if references_section:
+            sections.extend(self.split_references(references_section['text']))
+        else:
+            self.logger.info("No References section found in the document.")
+
+        self.logger.info(f"Extracted {len(sections)} sections (including references if present).")
+        self.logger.info(f"sections: {sections}")
         return sections
 
+    def split_references(self, references_text):
+        """
+        Split a references section into individual references, robust to different bibstyles.
+        Uses heuristics: a new reference likely starts with a capitalized word (author) and a year (possibly with a/b/c),
+        and may span multiple lines.
+        Returns a list of dicts with 'section_title' and 'text'.
+        """
+        self.logger.info("Splitting references section into individual references (robust heuristic).")
+        # Pattern: line starts with capitalized word(s), then year (possibly in parentheses), then period or colon
+        # e.g. "Smith J. 2020.", "Smith J, Doe A. (2020).", "Smith J. 2020a:"
+        # Accepts: "Ahnesjö I. 1992a. ...", "Alonso-Alvarez C, Velando A. 2012. ..."
+        # Also allow for lines that start with a number (for numbered bibs)
+        ref_start = re.compile(r"^(\d+\.\s*)?([A-ZÅÄÖ][\w\-']+(\s+[A-Z][\w\-']+)*[\s,\.]+)+((\(|\s)?\d{4}[a-zA-Z]?\)?)[\.:\s]")
+        lines = references_text.strip().splitlines()
+        refs = []
+        current_ref = ''
+        for line in lines:
+            if ref_start.match(line.strip()):
+                if current_ref.strip():
+                    refs.append(current_ref.strip())
+                current_ref = line.strip()
+            else:
+                # Continuation of previous reference
+                current_ref += ' ' + line.strip()
+        if current_ref.strip():
+            refs.append(current_ref.strip())
+        # Save as dicts
+        refs = [{"section_title": f"Ref_{i + 1}", "text": ref} for i, ref in enumerate(refs) if ref]
+        self.logger.info(f"Split into {len(refs)} individual references.")
+        return refs
 
-    def extract_text_from_pdf(self, file_path, pdf_reader='pymupdf', start_page=0, end_page=None):
+    def extract_text_from_pdf(self, file_path, start_page=0, end_page=None):
         """
         Extracts plain text from a PDF file using PyMuPDF.
 
         Parameters:
             file_path (str): Path to the PDF file.
-            pdf_reader (str): Reader type; currently supports only 'pymupdf'.
             start_page (int): Page number to start from (0-indexed).
             end_page (int or None): Page number to end at (exclusive). If None, reads till the end.
 
         Returns:
             str: Extracted and normalized text content.
         """
-        if pdf_reader != 'pymupdf':
-            raise ValueError(f"Unsupported PDF reader: {pdf_reader}")
 
         self.logger.info(f"Extracting text from PDF using PyMuPDF: {file_path}")
         try:
@@ -164,7 +213,7 @@ class PDFParser(LLMParser):
         return markdown
 
     def normalize_extracted_text(self, text, top_n=10, bottom_n=10, repeat_thresh=0.5):
-        self.logger.info("Normalizing extracted text.")
+        self.logger.info("Normalizing extracted text. Initial length: " f"{len(text)} characters")
 
         # More flexible page splitting
         pages = re.split(r'\n{2,}', text)
@@ -194,13 +243,43 @@ class PDFParser(LLMParser):
 
         normalized_text = re.sub(r'\n?Page\s+\d+\s*\n?', '\n', normalized_text, flags=re.IGNORECASE)
 
-        self.logger.info(f"Normalized text length: {len(normalized_text)}")
-        return normalized_text
+        ret_text = self.merge_pdf_line_breaks(normalized_text)
+
+        self.logger.info(f"Normalized text length: {len(ret_text)}")
+        self.logger.debug(f"Normalized text: {ret_text}")
+        return ret_text
+
+    def merge_pdf_line_breaks(self, text):
+        """
+        Merge lines that are broken by hard PDF line breaks but do not end with sentence-ending punctuation.
+        Also fix broken words split by hyphen and newline.
+        Additionally, merge line breaks that occur within URLs (e.g., after 'http', 'https', 'www', or inside a domain).
+        Keep newlines if the next character is a capital letter (likely a heading or new section).
+        """
+        # Fix broken words: e.g. "wo-\nrd" -> "word"
+        text = re.sub(r'(\w+)-\n(\w+)', r'\1\2', text)
+
+        # Remove line breaks within URLs (e.g., after http, https, www, or inside a domain)
+        # This will join lines that are split in the middle of a URL
+        text = re.sub(r'(https?://[^\s\n]+)\n([^\s\n]+)', r'\1\2', text)
+        text = re.sub(r'(www\.[^\s\n]+)\n([^\s\n]+)', r'\1\2', text)
+        # Also handle line breaks after domain dots (e.g., dx.doi.\norg)
+        text = re.sub(r'(\.[a-z]{2,6})\n([a-zA-Z0-9])', r'\1\2', text)
+
+        # Protect double newlines (paragraph breaks)
+        text = text.replace('\n\n', '<PARA>')
+
+        # Merge single newlines not after . ! ? and not followed by a capital letter
+        text = re.sub(r'(?<![.!?])\n(?![A-Z])', ' ', text)
+
+        # Restore paragraph breaks
+        text = text.replace('<PARA>', '\n\n')
+        return text
 
     def parse_data(self, file_path, publisher=None, current_url_address=None, additional_data=None, raw_data_format='PDF',
                    file_path_is_temp=False, article_file_dir='tmp/raw_files/', process_DAS_links_separately=False,
                    prompt_name='retrieve_datasets_simple_JSON', use_portkey_for_gemini=True, semantic_retrieval=False,
-                   section_filter=None):
+                   top_k=2, section_filter=None, response_format=dataset_response_schema_gpt):
         """
         Parse the PDF file and extract metadata of the relevant datasets.
 
@@ -235,14 +314,15 @@ class PDFParser(LLMParser):
                                                                               self.open_data_repos_ontology['repos'],
                                                                               model=self.llm_name,
                                                                               temperature=0,
-                                                                              prompt_name=prompt_name)
+                                                                              prompt_name=prompt_name,
+                                                                              response_format=response_format)
 
             self.logger.info(f"Augmented dataset links: {augmented_dataset_links}")
 
-            dataset_links_w_target_pages = self.get_dataset_page(augmented_dataset_links)
+            # dataset_links_w_target_pages = self.get_dataset_page(augmented_dataset_links)
 
             # Create a DataFrame from the dataset links union supplementary material links
-            out_df = pd.concat([pd.DataFrame(dataset_links_w_target_pages)])
+            out_df = pd.concat([pd.DataFrame(augmented_dataset_links)])
 
         else:
             self.logger.info(f"Chunking the content for the parsing step.")
@@ -250,7 +330,7 @@ class PDFParser(LLMParser):
             if semantic_retrieval:
                 self.logger.info("Semantic retrieval is enabled, extracting sections from the preprocessed data.")
                 corpus = self.extract_sections_from_text(preprocessed_data)
-                top_k_sections = self.semantic_retrieve_from_corpus(corpus)
+                top_k_sections = self.semantic_retrieve_from_corpus(corpus, topk_docs_to_retrieve=top_k)
                 top_k_sections_text = [item['section_title'] + '\n' + item['text'] for item in top_k_sections]
                 data_availability_str = "\n".join(top_k_sections_text)
             else:
@@ -260,11 +340,12 @@ class PDFParser(LLMParser):
                                                                               self.open_data_repos_ontology['repos'],
                                                                               model=self.llm_name,
                                                                               temperature=0,
-                                                                              prompt_name=prompt_name)
+                                                                              prompt_name=prompt_name,
+                                                                              response_format=response_format)
 
-            dataset_links_w_target_pages = self.get_dataset_page(augmented_dataset_links)
+            # dataset_links_w_target_pages = self.get_dataset_page(augmented_dataset_links)
 
-            out_df = pd.concat([pd.DataFrame(dataset_links_w_target_pages)])
+            out_df = pd.concat([pd.DataFrame(augmented_dataset_links)])
 
         self.logger.info(f"Dataset Links type: {type(out_df)} of len {len(out_df)}, with cols: {out_df.columns}")
 
@@ -283,10 +364,351 @@ class PDFParser(LLMParser):
         out_df['source_url'] = current_url_address if current_url_address else ''
         out_df['source_file_path'] = file_path
         out_df['pub_title'] = self.extract_publication_title(preprocessed_data)
+        out_df['raw_data_format'] = raw_data_format
 
         self.remove_temp_file(file_path) if os.path.exists(file_path) and file_path_is_temp else None
 
         return out_df
+    def extract_datasets_info_from_content(self, content: str, repos: list, model: str = 'gpt-4o-mini',
+                                           temperature: float = 0.0,
+                                           prompt_name: str = 'retrieve_datasets_simple_JSON',
+                                           full_document_read=True,
+                                           response_format=dataset_response_schema_gpt) -> list:
+        """
+        Extract datasets from the given content using a specified LLM model.
+        Uses a static prompt template and dynamically injects the required content.
+        It also performs token counting and llm response normalization.
+
+        :param content: The content to be processed.
+
+        :param repos: List of repositories to be included in the prompt.
+
+        :param model: The LLM model to be used for processing.
+
+        :param temperature: The temperature setting for the model.
+
+        :return: List of datasets retrieved from the content.
+        """
+        self.logger.info(f"Function_call: extract_datasets_info_from_content(...)")
+        self.logger.debug(f"Loading prompt: {prompt_name} for model {model}")
+        static_prompt = self.prompt_manager.load_prompt(prompt_name)
+        n_tokens_static_prompt = self.count_tokens(static_prompt, model)
+
+        if 'gpt' in model:
+            while self.tokens_over_limit(content, model, allowance_static_prompt=n_tokens_static_prompt):
+                content = content[:-2000]
+        self.logger.info(f"Content length: {len(content)}")
+
+        self.logger.debug(f"static_prompt: {static_prompt}")
+
+        # Render the prompt with dynamic content
+        messages = self.prompt_manager.render_prompt(
+            static_prompt,
+            entire_doc=self.full_document_read,
+            content=content,
+            repos=', '.join(repos)
+        )
+        self.logger.info(f"Prompt messages total length: {self.count_tokens(messages, model)} tokens")
+        self.logger.debug(f"Prompt messages: {messages}")
+
+        # Generate the checksum for the prompt content
+        # Save the prompt and calculate checksum
+        prompt_id = f"{model}-{temperature}-{self.prompt_manager._calculate_checksum(str(messages))}"
+        self.logger.info(f"Prompt ID: {prompt_id}")
+        # Save the prompt using the PromptManager
+        if self.save_dynamic_prompts:
+            self.prompt_manager.save_prompt(prompt_id=prompt_id, prompt_content=messages)
+
+        if self.use_cached_responses:
+            # Check if the response exists
+            cached_response = self.prompt_manager.retrieve_response(prompt_id)
+
+        if self.use_cached_responses and cached_response:
+            self.logger.info(f"Using cached response {type(cached_response)} from model: {model}")
+            if type(cached_response) == str and 'gpt' in model:
+                resps = [json.loads(cached_response)]
+            if type(cached_response) == str:
+                resps = cached_response.split("\n")
+            elif type(cached_response) == list:
+                resps = cached_response
+        else:
+            # Make the request to the model
+            self.logger.info(
+                f"Requesting datasets from content using model: {model}, temperature: {temperature}, messages length: "
+                f"{self.count_tokens(messages, model)} tokens")
+            resps = []
+
+            if model == 'gemma2:9b':
+                response = self.client.chat(model=model, options={"temperature": temperature}, messages=messages)
+                self.logger.info(
+                    f"Response received from model: {response.get('message', {}).get('content', 'No content')}")
+                resps = response['message']['content'].split("\n")
+                # Save the response
+                self.prompt_manager.save_response(prompt_id, response['message'][
+                    'content']) if self.save_responses_to_cache else None
+                self.logger.info(f"Response saved to cache")
+
+            elif model == 'gemma3:1b' or model == 'gemma3:4b' or model == 'qwen:4b':
+                response = self.client.api_call(messages, response_format=response_format.model_json_schema())
+                candidates = self.safe_parse_json(response)
+                if candidates:
+                    self.logger.info(f"Found {len(candidates)} candidates in the response. Type {type(candidates)}")
+                    parsed_response = candidates
+                    if self.save_responses_to_cache:
+                        self.prompt_manager.save_response(prompt_id, parsed_response)
+                        self.logger.info(f"Response saved to cache")
+                    parsed_response_dedup = self.normalize_response_type(parsed_response)
+                    resps = parsed_response_dedup
+                else:
+                    self.logger.error("No candidates found in the response.")
+
+
+            elif 'gpt-4' in model:
+                response = None
+                if 'gpt-4o' in model:
+                    if self.full_document_read:
+                        response = self.client.responses.create(
+                            model=model,
+                            input=messages,
+                            temperature=temperature,
+                            text={
+                                "format": response_format
+                            }
+                        )
+                    else:
+                        response = self.client.responses.create(
+                            model=model, 
+                            input=messages,
+                            temperature=temperature
+                        )
+                elif 'gpt-5' in model:
+                    if self.full_document_read:
+                        response = self.client.responses.create(
+                            model=model,
+                            input=messages,
+                            text={
+                                "format": response_format
+                            }
+                        )
+                    else:
+                        response = self.client.responses.create(
+                            model=model,
+                            input=messages,
+                        )
+
+                self.logger.info(f"GPT response: {response.output}")
+
+                if self.full_document_read:
+                    resps = self.safe_parse_json(response.output)  # 'datasets' keyError?
+                    self.logger.info(f"Response is {type(resps)}: {resps}")
+                    resps = resps.get("datasets", []) if resps is not None else []
+                    resps = self.normalize_response_type(resps)
+                    self.logger.info(f"Response is {type(resps)}: {resps}")
+                    self.prompt_manager.save_response(prompt_id, resps) if self.save_responses_to_cache else None
+                else:
+                    try:
+                        resps = self.safe_parse_json(response.output)  # Ensure it's properly parsed
+                        resps = self.normalize_response_type(resps)
+                        self.logger.info(f"Response is {type(resps)}: {resps}")
+                        if not isinstance(resps, list):  # Ensure it's a list
+                            raise ValueError("Expected a list of datasets, but got something else.")
+
+                    except json.JSONDecodeError as e:
+                        self.logger.error(f"JSON decoding error: {e}")
+                        resps = []
+
+                    self.prompt_manager.save_response(prompt_id, resps) if self.save_responses_to_cache else None
+
+                # Save the response
+                self.logger.info(f"Response {type(resps)} saved to cache") if self.save_responses_to_cache else None
+
+            elif 'gemini' in model:
+                if self.use_portkey_for_gemini:
+                    # --- Portkey Gemini call ---
+                    portkey_payload = {
+                        "model": model,
+                        "messages": messages,
+                        "temperature": temperature,
+                    }
+                    try:
+                        response = self.portkey.chat.completions.create(
+                            api_key=PORTKEY_API_KEY,
+                            route=PORTKEY_ROUTE,
+                            **portkey_payload
+                        )
+                        self.logger.info(f"Portkey Gemini response: {response}")
+                        if self.full_document_read:
+                            resps = self.safe_parse_json(response)
+                            resps = self.normalize_response_type(resps)
+                            if isinstance(resps, dict):
+                                resps = resps.get("datasets", []) if resps is not None else []
+                        else:
+                            try:
+                                resps = self.safe_parse_json(response)
+                                resps = self.normalize_response_type(resps)
+                                if not isinstance(resps, list):
+                                    raise ValueError("Expected a list of datasets, but got something else.")
+                            except json.JSONDecodeError as e:
+                                self.logger.error(f"JSON decoding error: {e}")
+                                resps = []
+                        # Save response if needed
+                        if self.save_responses_to_cache:
+                            self.prompt_manager.save_response(prompt_id, resps)
+                    except Exception as e:
+                        self.logger.error(f"Portkey Gemini call failed: {e}")
+                        resps = []
+                else:
+                    if model == 'gemini-1.5-flash' or model == 'gemini-2.0-flash-exp' or model == 'gemini-2.0-flash':
+                        response = self.client.generate_content(
+                            messages,
+                            generation_config=genai.GenerationConfig(
+                                response_mime_type="application/json",
+                                response_schema=list[Dataset]
+                            )
+                        )
+                        self.logger.debug(f"Gemini response: {response}")
+
+                    elif model == 'gemini-1.5-pro':
+                        response = self.client.generate_content(
+                            messages,
+                            request_options={"timeout": 1200},
+                            generation_config=genai.GenerationConfig(
+                                response_mime_type="application/json",
+                                response_schema=list[Dataset]
+                            )
+                        )
+                        self.logger.debug(f"Gemini Pro response: {response}")
+
+                    try:
+                        candidates = response.candidates  # Get the list of candidates
+                        if candidates:
+                            self.logger.info(f"Found {len(candidates)} candidates in the response.")
+                            response_text = candidates[0].content.parts[0].text  # Access the first part's text
+                            self.logger.info(f"Gemini response text: {response_text}")
+                            parsed_response = json.loads(response_text)  # Parse the JSON response
+                            if self.save_responses_to_cache:
+                                self.prompt_manager.save_response(prompt_id, parsed_response)
+                                self.logger.info(f"Response saved to cache")
+                            parsed_response_dedup = self.normalize_response_type(parsed_response)
+                            resps = parsed_response_dedup
+                        else:
+                            self.logger.error("No candidates found in the response.")
+                    except Exception as e:
+                        self.logger.error(f"Error processing Gemini response: {e}")
+                        return None
+            else:
+                raise ValueError(f"Unsupported model: {model}. Please use a supported LLM model.")
+
+        #if not self.full_document_read:
+        #    return resps
+
+        # Process the response content
+        result = []
+        for dataset in resps:
+            self.logger.info(f"Processing dataset: {dataset}")
+            if type(dataset) == str:
+                self.logger.info(f"Dataset is a string")
+                # Skip short or invalid responses
+                if len(dataset) < 3 or dataset.split(",")[0].strip() == 'n/a' and dataset.split(",")[
+                    1].strip() == 'n/a':
+                    continue
+                if len(dataset.split(",")) < 2:
+                    continue
+                if re.match(r'\*\s+\*\*[\s\w]+:\*\*', dataset):
+                    dataset = re.sub(r'\*\s+\*\*[\s\w]+:\*\*', '', dataset)
+
+                dataset_id, data_repository = [x.strip() for x in dataset.split(",")[:2]]
+
+            elif type(dataset) == dict:
+                self.logger.info(f"Dataset is a dictionary")
+                dataset_id = 'n/a'
+                if 'dataset_id' in dataset:
+                    dataset_id = self.validate_dataset_id(dataset['dataset_id'])
+                elif 'dataset_identifier' in dataset:
+                    dataset_id = self.validate_dataset_id(dataset['dataset_identifier'])
+                else:
+                    self.logger.info(f"Candidate is missing 'dataset_id' or 'dataset_identifier', skipping dataset")
+
+                if 'data_repository' in dataset:
+                    data_repository = self.resolve_data_repository(dataset['data_repository'],
+                                                                   identifier=dataset_id,
+                                                                   dataset_page=dataset.get('dataset_webpage'))
+                elif 'repository_reference' in dataset:
+                    data_repository = self.resolve_data_repository(dataset['repository_reference'],
+                                                                   identifier=dataset_id,
+                                                                   dataset_page=dataset.get('dataset_webpage'))
+                else:
+                    self.logger.info(
+                        f"Candidate is missing 'data_repository' or 'repository_reference', skipping dataset")
+                    continue
+
+                if 'dataset_webpage' in dataset:
+                    dataset_webpage = self.validate_dataset_webpage(dataset['dataset_webpage'], data_repository)
+                else:
+                    dataset_webpage = 'n/a'
+
+                if dataset_id == 'n/a' and type(data_repository) == str and data_repository in \
+                        self.open_data_repos_ontology['repos']:
+                    self.logger.info(f"Dataset ID is 'n/a' and repository name from prompt")
+                    continue
+
+                elif data_repository == 'n/a':
+                    self.logger.info(f"Data repository is 'n/a', skipping dataset")
+                    continue
+
+            result.append({
+                "dataset_identifier": dataset_id,
+                "data_repository": data_repository,
+                "dataset_webpage": dataset_webpage if dataset_webpage is not None else 'n/a',
+            })
+
+            if 'decision_rationale' in dataset:
+                result[-1]['decision_rationale'] = dataset['decision_rationale']
+
+            if 'dataset-publication_relationship' in dataset:
+                result[-1]['dataset-publication_relationship'] = dataset['dataset-publication_relationship']
+
+            self.logger.debug(f"Extracted dataset: {result[-1]}")
+
+        self.logger.info(f"Final result: {result}")
+
+        return result
+
+    def validate_dataset_webpage(self, dataset_webpage_url, repo):
+        """
+        This function checks for hallucinations, i.e. if the dataset identifier is a known repository name.
+        """
+        if type(repo) != str:
+            self.logger.warning(f"Repository is not a string: {repo}, type: {type(repo)}")
+            return 'n/a'
+        self.logger.info(
+            f"Validating Dataset Page: {dataset_webpage_url}, type: {type(dataset_webpage_url)}, repo: {repo}")
+        if ',' in dataset_webpage_url:
+            self.logger.warning(
+                f"Dataset Page contains a comma: {dataset_webpage_url}. Same data may be in multiple repos.")
+            ret = []
+            for dp in dataset_webpage_url.split(','):
+                dp = dp.strip()
+                if dp in self.open_data_repos_ontology['repos']:
+                    ret.append(self.validate_dataset_webpage(dp, repo))
+            return ret
+        resolved_dataset_page = self.resolve_url(dataset_webpage_url)
+        if repo in self.open_data_repos_ontology['repos']:
+            if 'dataset_webpage_url_ptr' in self.open_data_repos_ontology['repos'][repo].keys():
+                dataset_webpage_url_ptr = self.open_data_repos_ontology['repos'][repo]['dataset_webpage_url_ptr']
+                pattern = re.sub('__ID__', '', dataset_webpage_url_ptr)
+                self.logger.info(f"Pattern: {pattern}")
+                if pattern.lower() in resolved_dataset_page.lower():
+                    self.logger.info(f"Link matches the pattern {pattern}")
+                    return resolved_dataset_page
+                else:
+                    self.logger.info(f"Link does not match the pattern {pattern}")
+                    return 'n/a'
+            else:
+                self.logger.info(f"No dataset_webpage_url_ptr found for {repo}")
+                return resolved_dataset_page
+        self.logger.info(f"Repository {repo} not found in ontology")
+        return 'n/a'
 
     def extract_publication_title(self, raw_data):
         """

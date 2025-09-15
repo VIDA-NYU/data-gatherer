@@ -21,10 +21,10 @@ tiktoken
 cloudscraper
 pyui
 pysdl2-dll
-pyarrow
 streamlit
 ipywidgets
 portkey-ai
 xlsxwriter
 sentence-transformers
 pymupdf
+json_repair

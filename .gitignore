@@ -122,10 +122,13 @@ nosetests.xml
 /scripts/ignore/getting_started_ignore.ipynb
 /scripts/ignore/**
 
-/data_gatherer/parser/grobid-0.8.2
+#grobid ignore
+data_gatherer/parser/grobid-0.8.2
+
+# input ignore
 /scripts/exp_input/SAGE_groundtruth.csv
 /scripts/exp_input/SAGE_input.txt
 /scripts/exp_input/SAGE_input_Nicole.txt
+/scripts/output/SAGE_GPT_FDR_FewShot_Synapse_output.csv
 scripts/exp_input/EXP_GT.xlsx
 scripts/exp_input/EXP.txt
-scripts/output/SAGE_GPT_FDR_FewShot_Synapse_output.csv
