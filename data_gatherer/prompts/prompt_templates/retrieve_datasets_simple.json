@@ -1,6 +1,6 @@
 [
             {
-                "role": "system",
+                "role": "developer",
                 "content": "You are a powerful computer that retrieves information from the provided content for each dataset reference, return the following comma-separated values:\n- dataset identifier(s) UIDs\n- data repository link\n- data repository name, which may also be one of the following: {repos}\nEither provide the requested information or a placeholder if not available."
             },
             {

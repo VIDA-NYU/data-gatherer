@@ -66,7 +66,7 @@ class DataFetcher(ABC):
         Extracts the root domain from a given URL.
         """
         self.logger.debug(f"Function call url_to_publisher_root: {url}")
-        match = re.match('https?://([\w\.]+)/', url, re.IGNORECASE)
+        match = re.match(r'https?://([\w\.]+)/', url, re.IGNORECASE)
         if match:
             root = match.group(1)
             self.logger.info(f"Root: {root}")
@@ -186,8 +186,8 @@ class DataFetcher(ABC):
         self.logger.info(f"EntrezFetcher instance: {isinstance(self, EntrezFetcher)}")
         self.logger.info(f"scraper_tool attribute: {hasattr(self,'scraper_tool')}")
 
-        self.logger.info("Initializing new selenium driver.")
-        driver = create_driver(self.driver_path, self.browser, self.headless, self.logger)
+        self.logger.info(f"Initializing new selenium driver {driver_path}, {browser}, {headless}.")
+        driver = create_driver(driver_path, browser, headless, self.logger)
         return WebScraper(driver, logger)
 
     def url_in_dataframe(self, url, raw_HTML_data_filepath):
@@ -268,7 +268,8 @@ class WebScraper(DataFetcher):
     """
     def __init__(self, scraper_tool, logger, retrieval_patterns_file=None, driver_path=None, browser='firefox',
                  headless=True, local_fetch_fp=None):
-        super().__init__(logger, src='WebScraper', raw_HTML_data_filepath=local_fetch_fp)
+        super().__init__(logger, src='WebScraper', raw_HTML_data_filepath=local_fetch_fp, driver_path=driver_path,
+                         browser=browser, headless=headless)
         self.scraper_tool = scraper_tool  # Inject your scraping tool (Selenium)
         self.driver_path = driver_path
         self.browser = browser
@@ -290,7 +291,9 @@ class WebScraper(DataFetcher):
         """
         # Use the scraper tool to fetch raw HTML from the URL
         self.raw_data_format = 'HTML'  # Default format for web scraping
+        self.logger.debug(f"Fetching data with function call: self.scraper_tool.get(url)")
         self.scraper_tool.get(url)
+        self.logger.debug(f"http get complete, now waiting {delay} seconds for page to load")
         self.simulate_user_scroll(delay)
         self.title = self.extract_publication_title()
         return self.scraper_tool.page_source
@@ -364,11 +367,13 @@ class WebScraper(DataFetcher):
         :return: The publication name as a string.
 
         """
+        self.logger.debug(f"Extracting publication title from page source")
         publication_name_pointer = self.scraper_tool.find_element(By.TAG_NAME, 'title')
+        self.logger.debug(f"Publication name pointer: {publication_name_pointer}")
         if publication_name_pointer is not None and publication_name_pointer.text:
             publication_name = publication_name_pointer.text
-            publication_name = re.sub("\n+", "", publication_name)
-            publication_name = re.sub("^\s+", "", publication_name)
+            publication_name = re.sub(r"\n+", "", publication_name)
+            publication_name = re.sub(r"^\s+", "", publication_name)
             self.logger.info(f"Paper name: {publication_name}")
             return publication_name
         else:
