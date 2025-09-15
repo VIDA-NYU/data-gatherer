@@ -24,41 +24,39 @@ class DataGatherer:
     """
     This class orchestrates the data gathering process by coordinating the data fetcher, parser, and classifier in a
     single workflow.
-	Initializes the DataGatherer with the given configuration file and sets up logging.
+	  Initializes the DataGatherer with the given configuration file and sets up logging.
 
-	:param llm_name: The LLM model to use for parsing and classification.
+    :param process_entire_document: Flag to indicate if the model processes the entire document.
 
-	:param process_entire_document: Flag to indicate if the model processes the entire document.
+    :param log_file_override: Optional log file path to override the default logging configuration.
 
-	:param log_file_override: Optional log file path to override the default logging configuration.
+    :param write_htmls_xmls: Flag to indicate if raw HTML/XML files should be saved.
 
-	:param write_htmls_xmls: Flag to indicate if raw HTML/XML files should be saved.
+    :param article_file_dir: Directory to save the raw HTML/XML/PDF files.
 
-	:param article_file_dir: Directory to save the raw HTML/XML/PDF files.
+    :param full_output_file: Path to the output file where results will be saved.
 
-	:param full_output_file: Path to the output file where results will be saved.
+    :param download_data_for_description_generation: Flag to indicate if data should be downloaded for description generation.
 
-	:param download_data_for_description_generation: Flag to indicate if data should be downloaded for description generation.
+    :param data_resource_preview: Flag to indicate if a preview of data resources should be generated.
 
-	:param data_resource_preview: Flag to indicate if a preview of data resources should be generated.
+    :param download_previewed_data_resources: Flag to indicate if previewed data resources should be downloaded.
 
-	:param download_previewed_data_resources: Flag to indicate if previewed data resources should be downloaded.
+    :param log_level: Logging level for the logger.
 
-	:param log_level: Logging level for the logger.
+    :param clear_previous_logs: Flag to clear previous logs before setting up logging.
 
-	:param clear_previous_logs: Flag to clear previous logs before setting up logging.
+    :param retrieval_patterns_file: Path to the JSON file containing retrieval patterns for classification.
 
-	:param retrieval_patterns_file: Path to the JSON file containing retrieval patterns for classification.
+    :param load_from_cache: Flag to indicate if results should be loaded from cache.
 
-	:param load_from_cache: Flag to indicate if results should be loaded from cache.
+    :param save_to_cache: Flag to indicate if results should be saved to cache.
 
-	:param save_to_cache: Flag to indicate if results should be saved to cache.
+    :param driver_path: Path to the WebDriver executable for the data fetcher (if applicable).
 
-	:param driver_path: Path to the WebDriver executable for the data fetcher (if applicable).
+    :param save_dynamic_prompts: Flag to indicate if dynamically generated prompts should be saved.
 
-	:param save_dynamic_prompts: Flag to indicate if dynamically generated prompts should be saved.
-
-	"""
+    """
 
     def __init__(self, llm_name='gpt-4o-mini', process_entire_document=False, log_file_override=None,
                  write_htmls_xmls=False, article_file_dir='tmp/raw_files/', full_output_file='output/result.csv',
