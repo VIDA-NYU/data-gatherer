@@ -24,6 +24,38 @@ class DataGatherer:
     """
     This class orchestrates the data gathering process by coordinating the data fetcher, parser, and classifier in a
     single workflow.
+	  Initializes the DataGatherer with the given configuration file and sets up logging.
+
+    :param process_entire_document: Flag to indicate if the model processes the entire document.
+
+    :param log_file_override: Optional log file path to override the default logging configuration.
+
+    :param write_htmls_xmls: Flag to indicate if raw HTML/XML files should be saved.
+
+    :param article_file_dir: Directory to save the raw HTML/XML/PDF files.
+
+    :param full_output_file: Path to the output file where results will be saved.
+
+    :param download_data_for_description_generation: Flag to indicate if data should be downloaded for description generation.
+
+    :param data_resource_preview: Flag to indicate if a preview of data resources should be generated.
+
+    :param download_previewed_data_resources: Flag to indicate if previewed data resources should be downloaded.
+
+    :param log_level: Logging level for the logger.
+
+    :param clear_previous_logs: Flag to clear previous logs before setting up logging.
+
+    :param retrieval_patterns_file: Path to the JSON file containing retrieval patterns for classification.
+
+    :param load_from_cache: Flag to indicate if results should be loaded from cache.
+
+    :param save_to_cache: Flag to indicate if results should be saved to cache.
+
+    :param driver_path: Path to the WebDriver executable for the data fetcher (if applicable).
+
+    :param save_dynamic_prompts: Flag to indicate if dynamically generated prompts should be saved.
+
     """
 
     def __init__(self, llm_name='gpt-4o-mini', process_entire_document=False, log_file_override=None,
@@ -33,44 +65,6 @@ class DataGatherer:
                  retrieval_patterns_file='retrieval_patterns.json', load_from_cache=False, save_to_cache=False,
                  driver_path=None, save_dynamic_prompts=False
                  ):
-        """
-        Initializes the DataGatherer with the given configuration file and sets up logging.
-
-        :param llm_name: The LLM model to use for parsing and classification.
-
-        :param process_entire_document: Flag to indicate if the model processes the entire document.
-
-        :param log_file_override: Optional log file path to override the default logging configuration.
-
-        :param write_htmls_xmls: Flag to indicate if raw HTML/XML files should be saved.
-
-        :param article_file_dir: Directory to save the raw HTML/XML/PDF files.
-
-        :param full_output_file: Path to the output file where results will be saved.
-
-        :param download_data_for_description_generation: Flag to indicate if data should be downloaded for description generation.
-
-        :param data_resource_preview: Flag to indicate if a preview of data resources should be generated.
-
-        :param download_previewed_data_resources: Flag to indicate if previewed data resources should be downloaded.
-
-        :param log_level: Logging level for the logger.
-
-        :param clear_previous_logs: Flag to clear previous logs before setting up logging.
-
-        :param retrieval_patterns_file: Path to the JSON file containing retrieval patterns for classification.
-
-        :param load_from_cache: Flag to indicate if results should be loaded from cache.
-
-        :param save_to_cache: Flag to indicate if results should be saved to cache.
-
-        :param driver_path: Path to the WebDriver executable for the data fetcher (if applicable).
-
-        Initializes the DataGatherer with the given configuration file and sets up logging.
-
-        :param save_dynamic_prompts: Flag to indicate if dynamically generated prompts should be saved.
-
-        """
 
         self.open_data_repos_ontology = load_config('open_bio_data_repos.json')
 
@@ -196,17 +190,23 @@ class DataGatherer:
 
         :param parsed_data_dir: Directory to save the parsed HTML/XML/PDF files.
 
+        :param grobid_for_pdf: Flag to indicate if Grobid should be used for PDF parsing. Read more on GROBID PDF Parser here: https://grobid.readthedocs.io/en/latest/
+
         :param process_DAS_links_separately: Flag to indicate if DAS links should be processed separately.
 
         :param full_document_read: Flag to indicate if the model processes the entire document.
 
         :param semantic_retrieval: Flag to indicate if semantic retrieval should be used.
 
+        :param top_k: Number of top relevant sections to retrieve if semantic retrieval is enabled.
+
         :param prompt_name: Name of the prompt to use for LLM parsing.
 
         :param use_portkey_for_gemini: Flag to use Portkey for Gemini LLM.
 
         :param section_filter: Optional filter to apply to the sections (supplementary_material', 'data_availability_statement').
+
+        :param response_format: The response schema to use for parsing the data.
 
         :return: Parsed data as a DataFrame or dictionary, depending on the parser used.
         """
