@@ -5,6 +5,8 @@ from data_gatherer.data_fetcher import *
 from data_gatherer.parser.html_parser import *
 from data_gatherer.parser.xml_parser import *
 from data_gatherer.parser.pdf_parser import *
+from data_gatherer.parser.grobid_pdf_parser import *
+from data_gatherer.llm.response_schema import *
 from data_gatherer.classifier import LLMClassifier
 from data_gatherer.env import CACHE_BASE_DIR
 import json
@@ -29,7 +31,7 @@ class DataGatherer:
                  download_data_for_description_generation=False, data_resource_preview=False,
                  download_previewed_data_resources=False, log_level=logging.ERROR, clear_previous_logs=True,
                  retrieval_patterns_file='retrieval_patterns.json', load_from_cache=False, save_to_cache=False,
-                 driver_path=None
+                 driver_path=None, save_dynamic_prompts=False
                  ):
         """
         Initializes the DataGatherer with the given configuration file and sets up logging.
@@ -66,6 +68,8 @@ class DataGatherer:
 
         Initializes the DataGatherer with the given configuration file and sets up logging.
 
+        :param save_dynamic_prompts: Flag to indicate if dynamically generated prompts should be saved.
+
         """
 
         self.open_data_repos_ontology = load_config('open_bio_data_repos.json')
@@ -79,17 +83,19 @@ class DataGatherer:
         self.parser = None
         self.raw_data_format = None
         self.setup_data_fetcher(driver_path=driver_path)
+        self.fetcher_driver_path = driver_path
         self.data_checker = DataCompletenessChecker(self.logger)
 
         self.write_htmls_xmls = write_htmls_xmls
         self.article_file_dir = article_file_dir
         self.load_from_cache = load_from_cache
         self.save_to_cache = save_to_cache
+        self.save_dynamic_prompts = save_dynamic_prompts
 
         self.download_data_for_description_generation = download_data_for_description_generation
 
         entire_document_models = ["gemini-1.5-flash", "gemini-1.5-pro", "gemini-2.0-flash-exp", "gemini-2.0-flash",
-                                  "gemini-2.5-flash", "gpt-4o", "gpt-4o-mini"]
+                                  "gemini-2.5-flash", "gpt-4o", "gpt-4o-mini", "gpt-5-nano", "gpt-5-mini", "gpt-5"]
         self.full_document_read = llm_name in entire_document_models and process_entire_document
         self.llm = llm_name
 
@@ -171,9 +177,10 @@ class DataGatherer:
         return raw_data
 
     def parse_data(self, raw_data, publisher=None, current_url_address=None, additional_data=None,
-                   raw_data_format='XML', parsed_data_dir='tmp/parsed_articles/',
-                   process_DAS_links_separately=False, full_document_read=False, semantic_retrieval=False,
-                   prompt_name='retrieve_datasets_simple_JSON', use_portkey_for_gemini=True, section_filter=None):
+                   raw_data_format='XML', parsed_data_dir='tmp/parsed_articles/', grobid_for_pdf=False,
+                   process_DAS_links_separately=False, full_document_read=False, semantic_retrieval=False, top_k=5,
+                   prompt_name='retrieve_datasets_simple_JSON', use_portkey_for_gemini=True, section_filter=None,
+                   response_format=dataset_response_schema_gpt):
         """
         Parses the raw data fetched from the source URL using the appropriate parser.
 
@@ -181,7 +188,7 @@ class DataGatherer:
 
         :param publisher: The publisher domain or identifier for the data source.
 
-        param current_url_address: The URL of the current data source being processed.
+        :param current_url_address: The URL of the current data source being processed.
 
         :param additional_data: Optional additional data to include in the parsing process, such as metadata or supplementary information.
 
@@ -205,17 +212,26 @@ class DataGatherer:
         """
         self.logger.info(f"Parsing data from URL: {current_url_address} with publisher: {publisher}")
 
-        if raw_data_format == "XML":
-            self.parser = XMLParser(self.open_data_repos_ontology, self.logger, full_document_read=full_document_read,
-                                    llm_name=self.llm, use_portkey_for_gemini=use_portkey_for_gemini)
+        if raw_data_format.upper() == "XML":
+            router = XMLRouter(self.open_data_repos_ontology, self.logger, full_document_read=full_document_read,
+                               llm_name=self.llm, use_portkey_for_gemini=use_portkey_for_gemini,
+                                     save_dynamic_prompts=self.save_dynamic_prompts)
+            self.parser = router.get_parser(raw_data)
 
-        elif raw_data_format == "HTML":
+        elif raw_data_format.upper() == "HTML":
             self.parser = HTMLParser(self.open_data_repos_ontology, self.logger, full_document_read=full_document_read,
-                                     llm_name=self.llm, use_portkey_for_gemini=use_portkey_for_gemini)
+                                     llm_name=self.llm, use_portkey_for_gemini=use_portkey_for_gemini,
+                                     save_dynamic_prompts=self.save_dynamic_prompts)
 
-        elif raw_data_format == "PDF":
+        elif raw_data_format.upper() == "PDF" and grobid_for_pdf:
+            self.parser = GrobidPDFParser(self.open_data_repos_ontology, self.logger, full_document_read=full_document_read,
+                                    llm_name=self.llm, use_portkey_for_gemini=use_portkey_for_gemini,
+                                     save_dynamic_prompts=self.save_dynamic_prompts)
+
+        elif raw_data_format.upper() == "PDF":
             self.parser = PDFParser(self.open_data_repos_ontology, self.logger, full_document_read=full_document_read,
-                                    llm_name=self.llm, use_portkey_for_gemini=use_portkey_for_gemini)
+                                    llm_name=self.llm, use_portkey_for_gemini=use_portkey_for_gemini,
+                                     save_dynamic_prompts=self.save_dynamic_prompts)
 
         else:
             raise ValueError(f"Unsupported raw data format: {raw_data_format}")
@@ -230,7 +246,7 @@ class DataGatherer:
         else:
             cont = raw_data
 
-        return self.parser.parse_data(cont,
+        ret = self.parser.parse_data(cont,
                                       publisher=publisher,
                                       current_url_address=current_url_address,
                                       raw_data_format=raw_data_format,
@@ -240,8 +256,14 @@ class DataGatherer:
                                       additional_data=additional_data,
                                       process_DAS_links_separately=process_DAS_links_separately,
                                       semantic_retrieval=semantic_retrieval,
-                                      section_filter=section_filter
+                                      top_k=top_k,
+                                      section_filter=section_filter,
+                                      response_format=response_format
                                       )
+
+        ret['raw_data_format'] = raw_data_format
+
+        return ret
 
     def setup_data_fetcher(self, search_method='url_list', driver_path='', browser='Firefox', headless=True,
                            raw_HTML_data_fp=None):
@@ -287,13 +309,6 @@ class DataGatherer:
         return self.data_fetcher.scraper_tool
 
     def PMCID_to_URL(self, pmcid):
-        """
-        Converts a PMCID to a URL.
-
-        :param pmcid: The PMCID to convert.
-
-        :return: The corresponding URL.
-        """
         pmcid = pmcid.strip().upper()
         if not pmcid.startswith("PMC"):
             raise ValueError("Invalid PMCID format. Must start with 'PMC'.")
@@ -322,21 +337,21 @@ class DataGatherer:
 
         4. Classifies the parsed data using the classifier (LLMClassifier).
 
-        param url: The URL to process.
+        :param url: The URL to process.
 
-        param save_staging_table: Flag to save the staging table.
+        :param save_staging_table: Flag to save the staging table.
 
-        param article_file_dir: Directory to save the raw HTML/XML/PDF files.
+        :param article_file_dir: Directory to save the raw HTML/XML/PDF files.
 
-        param use_portkey_for_gemini: Flag to use Portkey for Gemini LLM.
+        :param use_portkey_for_gemini: Flag to use Portkey for Gemini LLM.
 
-        param driver_path: Path to your local WebDriver executable (if applicable). When set to None, Webdriver manager will be used.
+        :param driver_path: Path to your local WebDriver executable (if applicable). When set to None, Webdriver manager will be used.
 
-        param browser: Browser to use for scraping (if applicable). Supported values are 'Firefox', 'Chrome'.
+        :param browser: Browser to use for scraping (if applicable). Supported values are 'Firefox', 'Chrome'.
 
-        param headless: Whether to run the browser in headless mode (if applicable).
+        :param headless: Whether to run the browser in headless mode (if applicable).
 
-        param prompt_name: Name of the prompt to use for LLM parsing.
+        :param prompt_name: Name of the prompt to use for LLM parsing.
 
         :param semantic_retrieval: Flag to indicate if semantic retrieval should be used.
 
@@ -412,15 +427,19 @@ class DataGatherer:
             else:
                 self.logger.info("Skipping raw HTML/XML saving.")
 
+            self.data_fetcher.quit() if hasattr(self.data_fetcher, 'scraper_tool') else None
+
             # Step 2: Use HTMLParser/XMLParser
             if self.raw_data_format == "XML" and raw_data is not None:
                 self.logger.info("Using XMLParser to parse data.")
                 self.parser = XMLParser(self.open_data_repos_ontology, self.logger,
                                         llm_name=self.llm,
                                         full_document_read=self.full_document_read,
-                                        use_portkey_for_gemini=use_portkey_for_gemini)
+                                        use_portkey_for_gemini=use_portkey_for_gemini,
+                                        save_dynamic_prompts=self.save_dynamic_prompts)
 
                 if additional_data is None:
+                    self.logger.info("No additional data provided. Parsing raw data only.")
                     parsed_data = self.parser.parse_data(raw_data, self.publisher, self.current_url,
                                                          prompt_name=prompt_name, semantic_retrieval=semantic_retrieval,
                                                          section_filter=section_filter)
@@ -440,7 +459,8 @@ class DataGatherer:
                 self.parser = HTMLParser(self.open_data_repos_ontology, self.logger,
                                          llm_name=self.llm,
                                          full_document_read=self.full_document_read,
-                                         use_portkey_for_gemini=use_portkey_for_gemini)
+                                         use_portkey_for_gemini=use_portkey_for_gemini,
+                                         save_dynamic_prompts=self.save_dynamic_prompts)
                 parsed_data = self.parser.parse_data(raw_data, self.publisher, self.current_url,
                                                      raw_data_format=self.raw_data_format, prompt_name=prompt_name,
                                                      semantic_retrieval=semantic_retrieval,
@@ -965,6 +985,7 @@ class DataGatherer:
         return article_id
 
     def save_func_output_to_cache(self, output, process_id, function_name):
+        self.logger.info(f"Saving results to cache with process_id: {process_id}")
         cache = {}
         if os.path.exists(os.path.join(CACHE_BASE_DIR, function_name + "_cache.json")):
             with open(os.path.join(CACHE_BASE_DIR, function_name + "_cache.json"), 'r') as f:
@@ -1011,7 +1032,7 @@ class DataGatherer:
 
             # Process each URL and return results as a dictionary like source_url: DataFrame_of_data_links
             results = self.process_articles(urls, semantic_retrieval=semantic_retrieval, section_filter=section_filter,
-                                            prompt_name=prompt_name,)
+                                            prompt_name=prompt_name, driver_path=self.fetcher_driver_path)
 
             # return the union of all the results
             combined_df = pd.DataFrame()

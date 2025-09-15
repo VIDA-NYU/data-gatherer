@@ -4,6 +4,7 @@ import logging
 import pandas as pd
 from ollama import Client
 from openai import OpenAI
+from openai.types.responses.response_reasoning_item import ResponseReasoningItem
 import google.generativeai as genai
 from portkey_ai import Portkey
 import typing_extensions as typing
@@ -14,139 +15,13 @@ from data_gatherer.prompts.prompt_manager import PromptManager
 import tiktoken
 from data_gatherer.resources_loader import load_config
 from data_gatherer.retriever.embeddings_retriever import EmbeddingsRetriever
-from data_gatherer.env import PORTKEY_GATEWAY_URL, PORTKEY_API_KEY, PORTKEY_ROUTE, PORTKEY_CONFIG, NYU_LLM_API, GPT_API_KEY, GEMINI_KEY, DATA_GATHERER_USER_NAME
+from data_gatherer.env import PORTKEY_GATEWAY_URL, PORTKEY_API_KEY, PORTKEY_ROUTE, PORTKEY_CONFIG, NYU_LLM_API, \
+    GPT_API_KEY, GEMINI_KEY, DATA_GATHERER_USER_NAME
 import requests
+from json_repair import repair_json
 
-dataset_response_schema_gpt = {
-    "type": "json_schema",
-        "json_schema": {
-        "name": "GPT_response_schema",
-        "schema": {
-            "type": "object",  # Root must be an object
-            "properties": {
-                "datasets": {  # Use a property to hold the array
-                "type": "array",
-                    "items": {
-                        "type": "object",
-                        "properties": {
-                            "dataset_id": {
-                                "type": "string",
-                                "description": "A unique identifier for the dataset."
-                            },
-                            "repository_reference": {
-                                "type": "string",
-                                "description": "A valid URI or string referring to the repository."
-                            },
-                            "decision_rationale": {
-                                "type": "string",
-                                "description": "Why did we select this dataset?"
-                            }
-                        },
-                        "required": ["dataset_id", "repository_reference"]
-                    },
-                    "minItems": 1,
-                    "uniqueItems": True
-                }
-            },
-            "required": ["datasets"]
-        }
-    }
-}
-
-dataset_metadata_response_schema_gpt = {
-    "type": "json_schema",
-    "json_schema": {
-        "name": "Dataset_metadata_response",
-        "schema": {
-            "type": "object",
-            "properties": {
-                "number_of_files": {
-                    "type": "string",
-                    "description": "Total number of files."
-                },
-                "sample_size": {
-                    "type": "string",
-                    "description": "How many samples are recorded in the dataset."
-                },
-                "file_size": {
-                    "type": "string",
-                    "description": "Cumulative file size or range."
-                },
-                "file_format": {
-                    "type": "string",
-                    "description": "Format of the file (e.g., CSV, FASTQ)."
-                },
-                "file_type": {
-                    "type": "string",
-                    "description": "Type or category of the file."
-                },
-                "dataset_description": {
-                    "type": "string",
-                    "description": "Short summary of the dataset contents, plus - if mentioned - the use in the research publication of interes."
-                },
-                "file_url": {
-                    "type": "string",
-                    "description": "Direct link to the file."
-                },
-                "file_name": {
-                    "type": "string",
-                    "description": "Filename or archive name."
-                },
-                "file_license": {
-                    "type": "string",
-                    "description": "License under which the file is distributed."
-                },
-                "request_access_needed": {
-                    "type": "string",
-                    "description": "[Yes or No] Whether access to the file requires a request."
-                },
-                "request_access_form_links": {
-                    "type": "array",
-                    "items": {
-                        "type": "string",
-                        "format": "uri",
-                        "description": "Links to forms or pages where access requests can be made."
-                    },
-                    "description": "Links to forms or pages where access requests can be made."
-                },
-                "dataset_id": {
-                    "type": "string",
-                    "description": "A unique identifier for the dataset."
-                },
-                "download_type": {
-                    "type": "string",
-                    "description": "Type of download (e.g., HTTP, FTP, API, ...)."
-                }
-            },
-            "required": [
-                "dataset_description"
-            ]
-        }
-    }
-}
-
-class Dataset(BaseModel):
-    dataset_id: str
-    repository_reference: str
-
-class Dataset_w_Description(typing.TypedDict):
-    dataset_id: str
-    repository_reference: str
-    rationale: str
-
-class Dataset_metadata(BaseModel):
-    number_of_files: int
-    file_size: str
-    file_format: str
-    file_type: str
-    dataset_description: str
-    file_url: str
-    file_name: str
-    file_license: str
-    request_access_needed: str
-    dataset_id: str
-    download_type: str
-
+from data_gatherer.llm.llm_client import LLMClient_dev
+from data_gatherer.llm.response_schema import *
 
 # Abstract base class for parsing data
 class LLMParser(ABC):
@@ -157,6 +32,7 @@ class LLMParser(ABC):
 
     - Retrieve Then Read (LLMs will only read a target section retrieved from the document)
     """
+
     def __init__(self, open_data_repos_ontology, logger, log_file_override=None, full_document_read=True,
                  prompt_dir="data_gatherer/prompts/prompt_templates",
                  llm_name=None, save_dynamic_prompts=False, save_responses_to_cache=False, use_cached_responses=False,
@@ -177,7 +53,7 @@ class LLMParser(ABC):
 
         self.llm_name = llm_name
         entire_document_models = ["gemini-1.5-flash", "gemini-1.5-pro", "gemini-2.0-flash-exp", "gemini-2.0-flash",
-                                  "gemini-2.5-flash", "gpt-4o", "gpt-4o-mini"]
+                                  "gemini-2.5-flash", "gpt-4o", "gpt-4o-mini", "gpt-5-nano", "gpt-5-mini", "gpt-5"]
 
         self.full_document_read = full_document_read and self.llm_name in entire_document_models
         self.title = None
@@ -192,8 +68,6 @@ class LLMParser(ABC):
         self.save_responses_to_cache = save_responses_to_cache
         self.use_cached_responses = use_cached_responses
 
-        self.full_document_read = full_document_read
-        self.llm_name = llm_name
         self.use_portkey_for_gemini = use_portkey_for_gemini
 
         if self.use_portkey_for_gemini and 'gemini' in llm_name:
@@ -205,6 +79,14 @@ class LLMParser(ABC):
                 metadata={"_user": DATA_GATHERER_USER_NAME}
             )
 
+        elif llm_name == 'gemma3:1b':
+            self.client = LLMClient_dev(model='gemma3:1b', logger=self.logger)
+
+        elif llm_name == 'gemma3:4b':
+            self.client = LLMClient_dev(model='gemma3:4b', logger=self.logger)
+
+        elif llm_name == 'qwen:4b':
+            self.client = LLMClient_dev(model='qwen:4b', logger=self.logger)
 
         elif llm_name == 'gemma2:9b':
             self.client = Client(host=NYU_LLM_API)  # env variable
@@ -213,6 +95,15 @@ class LLMParser(ABC):
             self.client = OpenAI(api_key=GPT_API_KEY)
 
         elif llm_name == 'gpt-4o':
+            self.client = OpenAI(api_key=GPT_API_KEY)
+
+        elif llm_name == 'gpt-5-nano':
+            self.client = OpenAI(api_key=GPT_API_KEY)
+
+        elif llm_name == 'gpt-5-mini':
+            self.client = OpenAI(api_key=GPT_API_KEY)
+
+        elif llm_name == 'gpt-5':
             self.client = OpenAI(api_key=GPT_API_KEY)
 
         elif 'gemini' in llm_name:
@@ -263,7 +154,6 @@ class LLMParser(ABC):
         self.logger.info(f"Consider migrating this function to the BaseRetriever class.")
         return self.retriever.load_target_sections_ptrs(section_name)
 
-
     def generate_dataset_description(self, data_file):
         # from data file
         # excel, csv, json, xml, etc.
@@ -271,12 +161,7 @@ class LLMParser(ABC):
         raise NotImplementedError("DDG not implemented yet")
 
     def reconstruct_download_link(self, href, content_type, current_url_address):
-        # https: // pmc.ncbi.nlm.nih.gov / articles / instance / 11252349 / bin / 41598_2024_67079_MOESM1_ESM.zip
-        # https://pmc.ncbi.nlm.nih.gov/articles/instance/PMC11252349/bin/41598_2024_67079_MOESM1_ESM.zip
-        # https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11252349/bin/41598_2024_67079_MOESM1_ESM.zip
         download_link = None
-        #repo = self.url_to_repo_domain(current_url_address)
-        # match the digits of the PMC ID (after PMC) in the URL
         self.logger.debug(f"Function_call: reconstruct_download_link({href}, {content_type}, {current_url_address})")
         if self.publisher == 'PMC':
             PMCID = re.search(r'PMC(\d+)', current_url_address, re.IGNORECASE).group(1)
@@ -295,13 +180,13 @@ class LLMParser(ABC):
 
         return download_link
 
-
     def union_additional_data(self, parsed_data, additional_data):
         self.logger.info(f"Merging additional data ({type(additional_data)}) with parsed data({type(parsed_data)}).")
         self.logger.info(f"Additional data\n{additional_data}")
         return pd.concat([parsed_data, additional_data], ignore_index=True)
 
-    def process_additional_data(self, additional_data, prompt_name='retrieve_datasets_simple_JSON'):
+    def process_additional_data(self, additional_data, prompt_name='retrieve_datasets_simple_JSON',
+                                response_format=dataset_response_schema_gpt):
         """
         Process the additional data from the webpage. This is the data matched from the HTML with the patterns in
         retrieval_patterns xpaths.
@@ -334,11 +219,16 @@ class LLMParser(ABC):
                 continue
 
             if (element['source_section'] in ['data availability', 'data_availability', 'data_availability_elements']
-                    or 'data availability' in cont) and len(cont) > 1:
+                or 'data availability' in cont) and len(cont) > 1:
                 self.logger.info(f"Processing data availability text")
                 # Call the generalized function
-                datasets = self.extract_datasets_info_from_content(cont, repos_elements, model=self.llm_name, temperature=0,
-                                                               prompt_name=prompt_name)
+                datasets = self.extract_datasets_info_from_content(
+                    cont, 
+                    repos_elements, model=self.llm_name,
+                    temperature=0,
+                    prompt_name=prompt_name,
+                    response_format=response_format
+                )
 
                 for dt in datasets:
                     dt['source_section'] = element['source_section']
@@ -353,7 +243,8 @@ class LLMParser(ABC):
         self.logger.debug(f"Final ret additional data: {ret}")
         return ret
 
-    def process_data_availability_text(self, DAS_content, prompt_name='retrieve_datasets_simple_JSON'):
+    def process_data_availability_text(self, DAS_content, prompt_name='retrieve_datasets_simple_JSON',
+                                       response_format=dataset_response_schema_gpt):
         """
         Process the data availability section from the webpage.
 
@@ -368,9 +259,10 @@ class LLMParser(ABC):
         datasets = []
         for element in DAS_content:
             datasets.extend(self.extract_datasets_info_from_content(element, repos_elements,
-                                                                model=self.llm_name,
-                                                                temperature=0,
-                                                                prompt_name=prompt_name))
+                                                                    model=self.llm_name,
+                                                                    temperature=0,
+                                                                    prompt_name=prompt_name,
+                                                                    response_format=response_format))
 
         # Add source_section information and return
         ret = []
@@ -387,9 +279,10 @@ class LLMParser(ABC):
         return ret
 
     def extract_datasets_info_from_content(self, content: str, repos: list, model: str = 'gpt-4o-mini',
-                                       temperature: float = 0.0,
-                                       prompt_name: str = 'retrieve_datasets_simple_JSON',
-                                       full_document_read=True) -> list:
+                                           temperature: float = 0.0,
+                                           prompt_name: str = 'retrieve_datasets_simple_JSON',
+                                           full_document_read=True,
+                                           response_format = dataset_response_schema_gpt) -> list:
         """
         Extract datasets from the given content using a specified LLM model.
         Uses a static prompt template and dynamically injects the required content.
@@ -410,10 +303,16 @@ class LLMParser(ABC):
         static_prompt = self.prompt_manager.load_prompt(prompt_name)
         n_tokens_static_prompt = self.count_tokens(static_prompt, model)
 
-        if 'gpt-4o' in model:
+        if 'gpt' in model:
             while self.tokens_over_limit(content, model, allowance_static_prompt=n_tokens_static_prompt):
                 content = content[:-2000]
         self.logger.info(f"Content length: {len(content)}")
+
+        if 'gemma' in model or 'qwen' in model:
+            if self.tokens_over_limit(content, model, allowance_static_prompt=n_tokens_static_prompt, limit=32000):
+                self.logger.warning(f"Content length {len(content)} exceeds the model's token limit. "
+                                    f"Truncating content to fit within the limit.")
+                content = content[:-2000]
 
         self.logger.debug(f"static_prompt: {static_prompt}")
 
@@ -424,7 +323,7 @@ class LLMParser(ABC):
             content=content,
             repos=', '.join(repos)
         )
-        self.logger.info(f"Prompt messages total length: {self.count_tokens(messages,model)} tokens")
+        self.logger.info(f"Prompt messages total length: {self.count_tokens(messages, model)} tokens")
         self.logger.debug(f"Prompt messages: {messages}")
 
         # Generate the checksum for the prompt content
@@ -441,7 +340,7 @@ class LLMParser(ABC):
 
         if self.use_cached_responses and cached_response:
             self.logger.info(f"Using cached response {type(cached_response)} from model: {model}")
-            if type(cached_response) == str and 'gpt-4o' in model:
+            if type(cached_response) == str and 'gpt' in model:
                 resps = [json.loads(cached_response)]
             if type(cached_response) == str:
                 resps = cached_response.split("\n")
@@ -451,7 +350,7 @@ class LLMParser(ABC):
             # Make the request to the model
             self.logger.info(
                 f"Requesting datasets from content using model: {model}, temperature: {temperature}, messages length: "
-                f"{self.count_tokens(messages, model)} tokens")
+                f"{self.count_tokens(messages, model)} tokens, schema: {response_format}")
             resps = []
 
             if model == 'gemma2:9b':
@@ -460,35 +359,71 @@ class LLMParser(ABC):
                     f"Response received from model: {response.get('message', {}).get('content', 'No content')}")
                 resps = response['message']['content'].split("\n")
                 # Save the response
-                self.prompt_manager.save_response(prompt_id, response['message']['content']) if self.save_responses_to_cache else None
+                self.prompt_manager.save_response(prompt_id, response['message'][
+                    'content']) if self.save_responses_to_cache else None
                 self.logger.info(f"Response saved to cache")
 
-            elif model == 'gpt-4o-mini' or model == 'gpt-4o':
-                response = None
-                if self.full_document_read:
-                    response = self.client.chat.completions.create(
-                        model=model,
-                        messages=messages,
-                        temperature=temperature,
-                        response_format=dataset_response_schema_gpt
-                    )
+            elif model == 'gemma3:1b' or model == 'gemma3:4b' or model == 'qwen:4b':
+                response = self.client.api_call(messages, response_format=response_format.model_json_schema())
+                parsed_resp = self.safe_parse_json(response)
+                candidates = parsed_resp['datasets'] if isinstance(parsed_resp, dict) and 'datasets' in parsed_resp else parsed_resp
+                if candidates:
+                    self.logger.info(f"Found {len(candidates)} candidates in the response. Type {type(candidates)}")
+                    if self.save_responses_to_cache:
+                        self.prompt_manager.save_response(prompt_id, candidates)
+                        self.logger.info(f"Response saved to cache")
+                    parsed_response_dedup = self.normalize_response_type(candidates)
+                    resps = parsed_response_dedup
                 else:
-                    response = self.client.chat.completions.create(model=model, messages=messages,
-                                                                   temperature=temperature)
+                    self.logger.error("No candidates found in the response.")
 
-                self.logger.info(f"GPT response: {response.choices[0].message.content}")
+            elif 'gpt' in model:
+                response = None
+                if 'gpt-5' in model:
+                    if self.full_document_read:
+                        response = self.client.responses.create(
+                            model=model,
+                            input=messages,
+                            text={
+                                "format": response_format
+                            }
+                        )
+                    else:
+                        response = self.client.responses.create(
+                            model=model, 
+                            input=messages,
+                        )
+
+                elif 'gpt-4o' in model: 
+                    if self.full_document_read:
+                        response = self.client.responses.create(
+                            model=model,
+                            input=messages,
+                            temperature=temperature,
+                            text={
+                                "format": response_format
+                            }
+                        )
+                    else:
+                        response = self.client.responses.create(
+                            model=model, 
+                            input=messages,
+                            temperature=temperature
+                        )
+
+                self.logger.info(f"GPT response: {response.output}")
 
                 if self.full_document_read:
-                    resps = self.safe_parse_json(response.choices[0].message.content)  # 'datasets' keyError?
+                    resps = self.safe_parse_json(response.output)  # 'datasets' keyError?
                     self.logger.info(f"Response is {type(resps)}: {resps}")
                     resps = resps.get("datasets", []) if resps is not None else []
-                    resps = self.deduplicate_response(resps)
+                    resps = self.normalize_response_type(resps)
                     self.logger.info(f"Response is {type(resps)}: {resps}")
                     self.prompt_manager.save_response(prompt_id, resps) if self.save_responses_to_cache else None
                 else:
                     try:
-                        resps = self.safe_parse_json(response.choices[0].message.content)  # Ensure it's properly parsed
-                        resps = self.deduplicate_response(resps)
+                        resps = self.safe_parse_json(response.output)  # Ensure it's properly parsed
+                        resps = self.normalize_response_type(resps)
                         self.logger.info(f"Response is {type(resps)}: {resps}")
                         if not isinstance(resps, list):  # Ensure it's a list
                             raise ValueError("Expected a list of datasets, but got something else.")
@@ -517,13 +452,13 @@ class LLMParser(ABC):
                         self.logger.info(f"Portkey Gemini response: {response}")
                         if self.full_document_read:
                             resps = self.safe_parse_json(response)
-                            resps = self.deduplicate_response(resps)
+                            resps = self.normalize_response_type(resps)
                             if isinstance(resps, dict):
                                 resps = resps.get("datasets", []) if resps is not None else []
                         else:
                             try:
                                 resps = self.safe_parse_json(response)
-                                resps = self.deduplicate_response(resps)
+                                resps = self.normalize_response_type(resps)
                                 if not isinstance(resps, list):
                                     raise ValueError("Expected a list of datasets, but got something else.")
                             except json.JSONDecodeError as e:
@@ -567,13 +502,15 @@ class LLMParser(ABC):
                             if self.save_responses_to_cache:
                                 self.prompt_manager.save_response(prompt_id, parsed_response)
                                 self.logger.info(f"Response saved to cache")
-                            parsed_response_dedup = self.deduplicate_response(parsed_response)
+                            parsed_response_dedup = self.normalize_response_type(parsed_response)
                             resps = parsed_response_dedup
                         else:
                             self.logger.error("No candidates found in the response.")
                     except Exception as e:
                         self.logger.error(f"Error processing Gemini response: {e}")
                         return None
+            else:
+                raise ValueError(f"Unsupported model: {model}. Please use a supported LLM model.")
 
         #if not self.full_document_read:
         #    return resps
@@ -597,43 +534,18 @@ class LLMParser(ABC):
 
             elif type(dataset) == dict:
                 self.logger.info(f"Dataset is a dictionary")
-                dataset_id = 'n/a'
-                if 'dataset_id' in dataset:
-                    dataset_id = self.validate_dataset_id(dataset['dataset_id'])
-                elif 'dataset_identifier' in dataset:
-                    dataset_id = self.validate_dataset_id(dataset['dataset_identifier'])
-                else:
-                    self.logger.info(f"Candidate is missing 'dataset_id' or 'dataset_identifier', skipping dataset")
 
-                if 'data_repository' in dataset:
-                    data_repository = self.resolve_data_repository(dataset['data_repository'],
-                                                                   identifier=dataset_id,
-                                                                   dataset_page=dataset.get('dataset_webpage'))
-                elif 'repository_reference' in dataset:
-                    data_repository = self.resolve_data_repository(dataset['repository_reference'],
-                                                                   identifier=dataset_id,
-                                                                   dataset_page=dataset.get('dataset_webpage'))
-                else:
-                    self.logger.info(f"Candidate is missing 'data_repository' or 'repository_reference', skipping dataset")
-                    continue
+                dataset_id, data_repository, dataset_webpage = self.schema_validation(dataset)
 
-                if 'dataset_webpage' in dataset:
-                    dataset_webpage = self.validate_dataset_webpage(dataset['dataset_webpage'], data_repository, dataset_id)
-                else:
-                    dataset_webpage = 'n/a'
-
-                if dataset_id == 'n/a' and data_repository in self.open_data_repos_ontology['repos']:
-                    self.logger.info(f"Dataset ID is 'n/a' and repository name from prompt")
-                    continue
-
-                elif data_repository == 'n/a':
-                    self.logger.info(f"Data repository is 'n/a', skipping dataset")
-                    continue
+            if (dataset_id is None or data_repository is None) and dataset_webpage is None:
+                self.logger.info(f"Skipping dataset due to missing ID, repository, dataset page: {dataset}")
+                continue
 
             result.append({
                 "dataset_identifier": dataset_id,
                 "data_repository": data_repository,
                 "dataset_webpage": dataset_webpage if dataset_webpage is not None else 'n/a',
+                "citation_type": dataset.get('citation_type', 'n/a')
             })
 
             if 'decision_rationale' in dataset:
@@ -648,7 +560,97 @@ class LLMParser(ABC):
 
         return result
 
-    def deduplicate_response(self, response):
+    def schema_validation(self, dataset):
+        """
+        Validate and extract dataset information based on the schema.
+
+        :param dataset: dict — dataset information to be validated.
+
+        :return: tuple — (dataset_id, data_repository, dataset_webpage) or (None, None, None) if invalid.
+        """
+        dataset_id, data_repository, dataset_webpage = None, None, None
+
+        for repo_key, repo_vals in self.open_data_repos_ontology['repos'].items():
+            for key, val in dataset.items():
+                if 'dataset_webpage_url_ptr' in repo_vals:
+                    ptr_search = re.sub('__ID__', '', repo_vals['dataset_webpage_url_ptr'])
+                    if re.search(ptr_search, val, re.IGNORECASE):
+                        self.logger.info(f"Matched dataset_webpage_url_ptr: {repo_vals['dataset_webpage_url_ptr']} to value: {val}")
+                        if dataset_webpage is None:
+                            self.logger.info(f"Candidate dataset_webpage: {val}")
+                            dataset_webpage = val
+                        if data_repository is None:
+                            self.logger.info(f"Candidate data_repository: {repo_key}")
+                            data_repository = self.resolve_data_repository(dataset.get('data_repository',
+                                                                        dataset.get('repository_reference', 'n/a')),
+                                                           identifier=dataset.get('dataset_identifier', dataset.get('dataset_id', 'n/a')),
+                                                           dataset_page=dataset_webpage,
+                                                           candidate_repo=repo_key)
+                                                           
+                if 'id_pattern' in repo_vals:
+                    if re.search(repo_vals['id_pattern'], val, re.IGNORECASE):
+                        self.logger.info(f"Matched id_pattern: {repo_vals['id_pattern']} to value: {val}")
+                        if val.startswith('http'):
+                            if dataset_webpage is None:
+                                self.logger.info(f"Setting dataset_webpage to value: {val}")
+                                dataset_webpage = val
+                            ptr_sub = f'\b({repo_vals["id_pattern"]})'
+                            self.logger.info(f"Using id_pattern to extract ID: {ptr_sub}")
+                            self.logger.info(f"Using id_pattern to extract ID: {ptr_sub}")
+                            match = re.search(ptr_sub, val, re.IGNORECASE)
+                            if match and dataset_id is None:
+                                self.logger.info(f"Setting dataset_id to value: {match.group(1)}")
+                                dataset_id = match.group(1)
+                            self.logger.info(f"Extracted ID: {dataset_id}")
+                        else:
+                            if val.startswith('10.') and dataset_webpage is None:
+                                self.logger.info(f"Setting dataset_webpage to DOI URL value: https://doi.org/{val}")
+                                dataset_webpage = f"https://doi.org/{val}"
+                            if dataset_id is None:
+                                self.logger.info(f"Setting dataset_id to value: {val}")
+                                dataset_id = val
+                            if data_repository is None:
+                                self.logger.info(f"Candidate data_repository: {repo_key}")
+                                data_repository = self.resolve_data_repository(dataset.get('data_repository',
+                                                                        dataset.get('repository_reference', 'n/a')),
+                                                           identifier=dataset.get('dataset_identifier', dataset.get('dataset_id', 'n/a')),
+                                                           dataset_page=dataset_webpage,
+                                                           candidate_repo=repo_key)
+
+        self.logger.info(f"Schema validation vals: {dataset_id}, {data_repository}, {dataset_webpage}")
+
+        if dataset_id is None:
+            dataset_id = self.validate_dataset_id(dataset.get('dataset_identifier', dataset.get('dataset_id', 'n/a')))
+        else:
+            self.logger.info(f"Dataset ID found via pattern matching: {dataset_id}")
+
+        if data_repository is None:
+            data_repository = self.resolve_data_repository(dataset.get('data_repository',
+                                                                        dataset.get('repository_reference', 'n/a')),
+                                                           identifier=dataset_id,
+                                                           dataset_page=dataset_webpage)
+        else:
+            self.logger.info(f"Data repository found via pattern matching: {data_repository}")
+
+        if dataset_webpage is None and 'dataset_webpage' in dataset:
+            dataset_webpage = self.validate_dataset_webpage(dataset['dataset_webpage'], data_repository,
+                                                            dataset_id, dataset)
+        elif dataset_webpage is None:
+            self.logger.info(f"Dataset webpage not extracted")
+        else:
+            self.logger.info(f"Dataset webpage found via pattern matching: {dataset_webpage}")
+
+        if dataset_id == 'n/a' and data_repository in self.open_data_repos_ontology['repos']:
+            self.logger.info(f"Dataset ID is 'n/a' and repository name from prompt")
+            return None, None, None
+
+        elif data_repository == 'n/a' and dataset_webpage == 'n/a':
+            self.logger.info(f"Data repository is 'n/a', skipping dataset")
+            return None, None, None
+
+        return dataset_id, data_repository, dataset_webpage
+
+    def normalize_response_type(self, response):
         """
         This function handles basic **postprocessing** of the LLM output.
         Normalize and deduplicate dataset responses by stripping DOI-style prefixes
@@ -659,13 +661,20 @@ class LLMParser(ABC):
         :return: List of deduplicated dataset responses.
 
         """
+        self.logger.info(f"Deduplicating response with {len(response)} items")
         seen = set()
         deduped = []
 
+        if not isinstance(response, list) and isinstance(response, dict):
+            response = [response]
+
         for item in response:
-            dataset_id = item.get("dataset_id", item.get("dataset_identifier", ""))
+            self.logger.debug(f"Processing item: {item}")
+            dataset_id = item.get("dataset_identifier", item.get("dataset_id", ""))
             if not dataset_id:
+                self.logger.warning(f"Skipping item with missing dataset_id: {item}")
                 continue
+            repo = item.get("data_repository", item.get("repository_reference", "n/a"))
 
             # Normalize: remove DOI prefix if it matches '10.x/PXD123456'
             clean_id = re.sub(r'10\.\d+/(\bPXD\d+\b)', r'\1', dataset_id)
@@ -673,11 +682,17 @@ class LLMParser(ABC):
             if clean_id not in seen:
                 # Update the dataset_id to the normalized version
                 item["dataset_id"] = clean_id
+                self.logger.info(f"Adding unique item: {clean_id}")
                 deduped.append(item)
                 seen.add(clean_id)
 
-        return deduped
+            elif clean_id == 'n/a' and repo != 'n/a':
+                deduped.append(item)
 
+            else:
+                self.logger.info(f"Duplicate found and skipped: {clean_id}")
+
+        return deduped
 
     def safe_parse_json(self, response_text):
         """
@@ -694,34 +709,46 @@ class LLMParser(ABC):
             try:
                 response_text = response_text.choices[0].message.content
             except Exception as e:
-                print(f"Could not extract content from response object: {e}")
+                self.logger.warning(f"Could not extract content from response object: {e}")
                 return None
+        elif isinstance(response_text, list):
+            self.logger.info(f"Response is a list of length: {len(response_text)}")
+            for response_item in response_text:
+                self.logger.info(f"List item type: {type(response_item)}")
+                if hasattr(response_item, "content"):
+                    self.logger.info(f"Item has content attribute, of type: {type(response_item.content)}")
+                    if isinstance(response_item.content, list) and len(response_item.content) > 0:
+                        response_text = response_item.content[0].text
+                else:
+                    response_text = str(response_item)
         elif isinstance(response_text, dict):
             try:
                 response_text = response_text["choices"][0]["message"]["content"]
             except Exception as e:
-                print(f"Could not extract content from response dict: {e}")
+                self.logger.warning(f"Could not extract content from response dict: {e}")
                 return None
 
+        response_text = response_text.strip()
+
+        # Remove markdown formatting
+        if response_text.startswith("```"):
+            response_text = re.sub(r"^```[a-zA-Z]*\n?", "", response_text)
+            response_text = re.sub(r"\n?```$", "", response_text)
+
         try:
-            response_text = response_text.strip()  # Remove extra spaces/newlines
-
-            # Remove markdown code block if present (e.g., ```json ... ```)
-            if response_text.startswith("```"):
-                response_text = re.sub(r"^```[a-zA-Z]*\n?", "", response_text)
-                response_text = re.sub(r"\n?```$", "", response_text)
-
-            # process dict-like list
-            if len(response_text) > 2 and "{" not in response_text[1:-1] and "[" in response_text[1:-1]:
-                response_text = (response_text[:1] +
-                                 response_text[1:-1].replace("[", "{").replace("]","}") + response_text[-1:])
-            # Attempt JSON parsing
+            # First try standard parsing
             return json.loads(response_text)
+        except json.JSONDecodeError:
+            self.logger.warning("Initial JSON parsing failed. Attempting json_repair...")
 
-        except json.JSONDecodeError as e:
-            print(f"JSONDecodeError: {e}")
-            print(f"Malformed JSON: {response_text[:500]}")  # Print first 500 chars for debugging
-            return None  # Return None to indicate failure
+            try:
+                repaired = repair_json(response_text)
+                repaired = re.sub(r',\s*\{\}\]', ']', repaired)  # Remove trailing empty objects in lists
+                return json.loads(repaired)
+            except Exception as e:
+                self.logger.warning(f"json_repair failed: {e}")
+                self.logger.info(f"Malformed JSON (after attempted repair): {repaired[:500]}")
+                return None
 
     def process_data_availability_links(self, dataset_links):
         """
@@ -737,7 +764,7 @@ class LLMParser(ABC):
         self.logger.debug(f"Text from data-availability: {dataset_links}")
 
         model = self.llm_name
-        temperature = 0.3
+        temperature = 0.0
 
         ret = []
         progress = 0
@@ -781,19 +808,28 @@ class LLMParser(ABC):
                 resp = []
 
                 if model == 'gemma2:9b':
-                    response = self.client.chat(model='gemma2:9b', options={"temperature": 0.5}, messages=messages)
+                    response = self.client.chat(model='gemma2:9b', options={"temperature": 0}, messages=messages)
                     self.logger.info(
                         f"Response received from gemma2:9b: {response.get('message', {}).get('content', 'No content')}")
                     resp = response['message']['content'].split("\n")
                     self.prompt_manager.save_response(prompt_id, response['message']['content'])
                     self.logger.info(f"Response saved to cache")
 
-                elif model == 'gpt-4o-mini':
-                    response = self.client.chat.completions.create(model='gpt-4o-mini', messages=messages,
-                                                                   temperature=0.5)
-                    self.logger.info(f"GPT response: {response.choices[0].message.content}")
-                    resp = response.choices[0].message.content.split("\n")
-                    self.prompt_manager.save_response(prompt_id, response.choices[0].message.content)
+                elif 'gpt' in model:
+                    if 'gpt-4o' in model:
+                        response = self.client.responses.create(
+                            model=model,
+                            input=messages,
+                            temperature=0
+                        )
+                    elif 'gpt-5' in model:
+                        response = self.client.responses.create(
+                            model=model,
+                            input=messages,
+                        )
+                    self.logger.info(f"GPT response: {response.output}")
+                    resp = response.output.split("\n")
+                    self.prompt_manager.save_response(prompt_id, response.output)
                     self.logger.info(f"Response saved to cache")
 
             # Process the response
@@ -815,7 +851,8 @@ class LLMParser(ABC):
                     append_item['dataset_identifier'] = append_item['dataset_identifier'].strip()
                     append_item['data_repository'] = append_item['data_repository'].strip()
                     append_item['source_section'] = link['source_section']
-                    append_item['retrieval_pattern'] = link['retrieval_pattern'] if 'retrieval_pattern' in link.keys() else None
+                    append_item['retrieval_pattern'] = link[
+                        'retrieval_pattern'] if 'retrieval_pattern' in link.keys() else None
                     ret.append(append_item)
                     self.logger.info(f"Response appended to df {append_item}")
                     progress += 1
@@ -828,13 +865,29 @@ class LLMParser(ABC):
                 ret_element['dataset_identifier'] = ret_element['dataset_identifier'].strip()
                 ret_element['data_repository'] = ret_element['data_repository'].strip()
                 ret_element['source_section'] = link['source_section']
-                ret_element['retrieval_pattern'] = link['retrieval_pattern'] if 'retrieval_pattern' in link.keys() else None
+                ret_element['retrieval_pattern'] = link[
+                    'retrieval_pattern'] if 'retrieval_pattern' in link.keys() else None
                 ret.append(ret_element)
                 progress += 1
 
         return ret
 
-    def dataset_webpage_url_check(self, url):
+    def brute_force_dataset_webpage_url_check(self, url):
+        """
+        Iterate over all the known data repositories and check if the URL matches any of their dataset webpage patterns.
+        """
+        result = None
+        self.logger.info(f"Brute-force checking if link points to dataset webpage: {url}")
+        for repo in self.open_data_repos_ontology['repos'].keys():
+            if 'dataset_webpage_url_ptr' in self.open_data_repos_ontology['repos'][repo]:
+                pattern = self.open_data_repos_ontology['repos'][repo]['dataset_webpage_url_ptr']
+                result = re.search(pattern, url, re.IGNORECASE)
+            if result is not None:
+                self.logger.info(f"Link {url} points to dataset webpage in repo {repo}")
+                return url
+        return None
+
+    def dataset_webpage_url_check(self, url, resolved_repo=None):
         """
         Check if the URL directly points to a dataset webpage.
 
@@ -844,17 +897,34 @@ class LLMParser(ABC):
         """
         ret = {}
         self.logger.info(f"Checking if link points to dataset webpage: {url}")
-        domain = self.url_to_repo_domain(url)
-        if (domain in self.open_data_repos_ontology['repos'].keys() and
-                'dataset_webpage_url_ptr' in self.open_data_repos_ontology['repos'][domain].keys()):
+        repo = self.resolve_data_repository(url) if resolved_repo is None else resolved_repo
+        self.logger.info(f"Extracted domain: {repo}")
+        if (repo in self.open_data_repos_ontology['repos'].keys() and
+                'dataset_webpage_url_ptr' in self.open_data_repos_ontology['repos'][repo].keys()):
             self.logger.info(f"Link {url} could point to dataset webpage")
-            pattern = self.open_data_repos_ontology['repos'][domain]['dataset_webpage_url_ptr']
+            pattern = self.open_data_repos_ontology['repos'][repo]['dataset_webpage_url_ptr']
             self.logger.debug(f"Pattern: {pattern}")
             match = re.match(pattern, url)
             # if the link matches the pattern, extract the dataset identifier and the data repository
             if match:
-                ret['data_repository'] = domain
+                self.logger.info(f"Match with pattern: {pattern}")
+                ret['data_repository'] = repo
                 ret['dataset_identifier'] = match.group(1)
+                ret['dataset_webpage'] = url
+                ret['link'] = url
+                return ret
+            elif re.search(re.sub(pattern, '__ID__', '', re.IGNORECASE), url):
+                self.logger.info(f"Link matches the pattern {pattern} with __ID__ replaced")
+                extracted_id = 'n/a'
+                ret['data_repository'] = repo
+                if 'id_pattern' in self.open_data_repos_ontology['repos'][repo].keys():
+                    ptr_sub = f'.*({self.open_data_repos_ontology["repos"][repo]["id_pattern"]}).*'
+                    self.logger.info(f"Using id_pattern to extract ID: {ptr_sub}")
+                    match = re.search(ptr_sub, url, re.IGNORECASE)
+                    if match:
+                        extracted_id = match.group(1)
+                    self.logger.info(f"Extracted ID: {extracted_id}")
+                ret['dataset_identifier'] = extracted_id
                 ret['dataset_webpage'] = url
                 ret['link'] = url
                 return ret
@@ -868,11 +938,11 @@ class LLMParser(ABC):
         cont = response['message']['content']
         self.logger.info(f"Normalizing {type(cont)} LLM output: {cont}")
         output = cont.split(",")
-        repo = re.sub("[\n\s]*", "", output.pop())
+        repo = re.sub(r"[\n\s]*", "", output.pop())
         self.logger.info(f"Repo: {repo}")
         ret = []
         for i in range(len(output)):
-            ret.append(re.sub("\s*and\s+", " ", output[i]) + "," + repo)
+            ret.append(re.sub(r"\s*and\s+", " ", output[i]) + "," + repo)
         return ret
 
     def url_to_repo_domain(self, url, dataset_webpage_url=None):
@@ -924,7 +994,7 @@ class LLMParser(ABC):
             else:
                 repo_mapping[k] = k
 
-        ret = {v:k for k,v in repo_mapping.items()}
+        ret = {v: k for k, v in repo_mapping.items()}
         self.logger.debug(f"Repo mapping: {ret}")
         return ret
 
@@ -936,43 +1006,64 @@ class LLMParser(ABC):
         if dataset_identifier.lower() in self.get_all_repo_names(uncased=True):
             self.logger.info(f"Accession ID {dataset_identifier} is a known repository --> invalid, returning 'n/a'")
             return 'n/a'
-        elif ' ' in dataset_identifier or dataset_identifier == 'n/a' or dataset_identifier.endswith('/'):
+        elif ' ' in dataset_identifier or dataset_identifier == 'n/a' or len(dataset_identifier) < 3:
             self.logger.info(f"Accession ID {dataset_identifier} is invalid")
             return 'n/a'
-        elif dataset_identifier.startswith('http'):
+        elif dataset_identifier.startswith('http') and 'doi.org' in dataset_identifier:
             dataset_identifier = re.sub(r'https?://doi\.org/', '', dataset_identifier, re.IGNORECASE)
+            dataset_identifier = re.sub(r'doi:', '', dataset_identifier, re.IGNORECASE)
             return dataset_identifier
+        elif dataset_identifier.startswith('http'):
+            new_metadata = self.dataset_webpage_url_check(dataset_identifier)
+            new_id = new_metadata['dataset_identifier'] if new_metadata is not None else 'n/a'
+            self.logger.info(f"Accession ID {new_id} is valid") if new_id != 'n/a' else self.logger.info(
+                f"Accession ID {dataset_identifier} is invalid")
+            return new_id
         else:
             self.logger.info(f"Accession ID {dataset_identifier} is valid")
             return dataset_identifier
 
-    def validate_dataset_webpage(self, dataset_webpage_url, repo, dataset_id):
+    def validate_dataset_webpage(self, dataset_webpage_url, resolved_repo, dataset_id, old_metadata=None):
         """
         This function checks for hallucinations, i.e. if the dataset identifier is a known repository name.
+        Input:
+        dataset_webpage_url: str - the URL to be validated
+        resolved_repo: str - the resolved repository name
+        dataset_id: str - the dataset identifier
+        old_metadata: dict - the old metadata dictionary (optional)
         """
-        self.logger.info(f"Validating Dataset Page: {dataset_webpage_url}, repo {repo}")
+        self.logger.info(f"Validating Dataset Page: {dataset_webpage_url}, resolved_repo {resolved_repo}")
         resolved_dataset_page = self.resolve_url(dataset_webpage_url)
-        if repo in self.open_data_repos_ontology['repos']:
-            if 'dataset_webpage_url_ptr' in self.open_data_repos_ontology['repos'][repo].keys():
-                dataset_webpage_url_ptr = self.open_data_repos_ontology['repos'][repo]['dataset_webpage_url_ptr']
+
+        if resolved_repo in self.open_data_repos_ontology['repos']:
+            if 'dataset_webpage_url_ptr' in self.open_data_repos_ontology['repos'][resolved_repo].keys():
+                dataset_webpage_url_ptr = self.open_data_repos_ontology['repos'][resolved_repo]['dataset_webpage_url_ptr']
                 pattern = re.sub('__ID__', '', dataset_webpage_url_ptr)
                 self.logger.info(f"Pattern: {pattern}")
-                if pattern.lower() in resolved_dataset_page.lower():
-                    self.logger.info(f"Link matches the pattern {pattern}")
+                if re.search(pattern, resolved_dataset_page, re.IGNORECASE):
+                    self.logger.info(f"Link matches the pattern {pattern} of resolved_dataset_page.")
                     return resolved_dataset_page
                 else:
-                    self.logger.info(f"Link does not match the pattern {pattern}")
+                    self.logger.info(f"Link does not match the pattern {pattern } of resolved_dataset_page.")
                     return 'n/a'
             else:
-                self.logger.info(f"No dataset_webpage_url_ptr found for {repo}")
+                self.logger.info(f"No dataset_webpage_url_ptr found for {resolved_repo}")
                 return resolved_dataset_page
         elif dataset_id in resolved_dataset_page:
             self.logger.info(f"Dataset ID {dataset_id} found in resolved dataset page {resolved_dataset_page}")
             return resolved_dataset_page
-        self.logger.info(f"Repository {repo} not found in ontology")
+        elif old_metadata is not None:
+            for k,v in old_metadata.items():
+                self.logger.info(f"Brute-force checking old metadata {k}: {v}")
+                checked_url = self.brute_force_dataset_webpage_url_check(v)
+                if checked_url is not None:
+                    self.logger.info(f"Found valid dataset webpage in old metadata {k}: {checked_url}")
+                    return checked_url
+
+        self.logger.info(f"Repository {resolved_repo} not found in ontology")
         return 'n/a'
 
-    def resolve_url(self,url):
+    def resolve_url(self, url):
         try:
             response = requests.get(url, allow_redirects=True, timeout=5)
             self.logger.info(f"Resolved URL: {response.url}")
@@ -996,7 +1087,7 @@ class LLMParser(ABC):
                 return dataset_identifier.lower() + repo_config['default_id_suffix']
         return dataset_identifier
 
-    def resolve_data_repository(self, repo: str, identifier=None, dataset_page=None) -> str:
+    def resolve_data_repository(self, repo: str, identifier=None, dataset_page=None, candidate_repo=None) -> str:
         """
         Normalize the repository domain from a URL or text reference using config mappings in ontology.
 
@@ -1004,10 +1095,10 @@ class LLMParser(ABC):
 
         :return: str — the normalized repository name.
         """
-        self.logger.info(f"Resolving data repository for candidate: {repo}, identifier: {identifier}")
+        self.logger.info(f"Resolving data repository for candidate: {repo}, identifier: {identifier}, dataset_page: {dataset_page}")
 
-        if repo is None or repo == 'n/a':
-            self.logger.warning(f"Repository is None or 'n/a', returning 'n/a'")
+        if repo is None:
+            self.logger.warning(f"Repository is None")
             return 'n/a'
 
         if ',' in repo and ',' in identifier:
@@ -1016,15 +1107,30 @@ class LLMParser(ABC):
             for r in repo.split(','):
                 r = r.strip()
                 if r in self.open_data_repos_ontology['repos']:
-                    ret.append(self.resolve_data_repository(r))
+                    ret.append(self.resolve_data_repository(r).lower())
             return ret
+
+        if isinstance(repo, list):
+            self.logger.warning(f"Repository is a list: {repo}. Same data may be in multiple repos.")
+            ret = []
+            for r in repo:
+                r = r.strip()
+                if r in self.open_data_repos_ontology['repos']:
+                    ret.append(self.resolve_data_repository(r).lower())
+            return ret
+
+        if repo.startswith('http'):
+            check_url = self.brute_force_dataset_webpage_url_check(repo)
+            if check_url:
+                self.logger.info(f"Repository {repo} is a dataset webpage {check_url}")
+                return check_url
 
         resolved_to_known_repo = False
 
         for k, v in self.open_data_repos_ontology['repos'].items():
             self.logger.debug(f"Checking if {repo} == {k}. Repo vals: {v.keys()}")
-            repo = re.sub("\(", " ", repo)
-            repo = re.sub("\)", " ", repo)
+            repo = re.sub(r"\(", " ", repo)
+            repo = re.sub(r"\)", " ", repo)
             # match where repo_link has been extracted
             if k.lower() == repo.lower():
                 self.logger.info(f"Exact - case insensitive - match found for repo: {repo}")
@@ -1045,7 +1151,7 @@ class LLMParser(ABC):
                     resolved_to_known_repo = True
                     break
 
-            if not resolved_to_known_repo and identifier is not None and 'id_pattern' in v.keys():
+            if not resolved_to_known_repo and identifier is not None and identifier != 'n/a' and 'id_pattern' in v.keys():
                 self.logger.info(f"Checking id_pattern {v['id_pattern']} match with identifier {identifier} for {repo}")
                 if re.match(v['id_pattern'], identifier, re.IGNORECASE):
                     self.logger.info(f"Found id_pattern match for {repo} in {v['id_pattern']}")
@@ -1057,12 +1163,18 @@ class LLMParser(ABC):
             repo = self.url_to_repo_domain(repo, dataset_page)
             self.logger.info(f"data_repository not resolved, using domain")
 
-        if repo in self.open_data_repos_ontology['repos'] and 'repo_mapping' in self.open_data_repos_ontology['repos'][repo]:
+        if repo in self.open_data_repos_ontology['repos'] and 'repo_mapping' in self.open_data_repos_ontology['repos'][
+            repo]:
             repo = self.open_data_repos_ontology['repos'][repo]['repo_mapping']
             self.logger.info(f"Resolved data repository: {repo}")
-            return repo.lower()
+        
+        if candidate_repo is not None and candidate_repo in self.open_data_repos_ontology['repos'] and \
+            'repo_root' in self.open_data_repos_ontology['repos'][candidate_repo] and \
+            self.open_data_repos_ontology['repos'][candidate_repo]['repo_root'] == repo:
+            self.logger.info(f"Using candidate repo {candidate_repo} as it matches the resolved repo config.")
+            return candidate_repo.lower()
 
-        return repo  # fallback
+        return repo.lower()  # fallback
 
     def get_dataset_page(self, datasets):
         """
@@ -1099,13 +1211,21 @@ class LLMParser(ABC):
 
             if 'data_repository' in item.keys():
                 original_repo = item['data_repository']
-                repo = self.resolve_data_repository(original_repo, identifier=accession_id).lower()
+                repo = self.resolve_data_repository(original_repo, identifier=accession_id)
             elif 'repository_reference' in item.keys():
                 original_repo = item['repository_reference']
-                repo = self.resolve_data_repository(original_repo, identifier=accession_id).lower()
+                repo = self.resolve_data_repository(original_repo, identifier=accession_id)
             else:
                 self.logger.error(f"Error extracting data repository for item: {item}")
                 continue
+
+            if isinstance(repo, list):
+                if len(repo) > 0:
+                    self.logger.info(f"Repository is a list: {repo}. Resolving accession ID for each element.")
+                    repo = repo[0]
+                else:
+                    self.logger.warning("Repository list is empty. Skipping this dataset.")
+                    continue  # or `return None`, depending on context
 
             accession_id = self.resolve_accession_id_for_repository(accession_id, repo)
 
@@ -1125,14 +1245,15 @@ class LLMParser(ABC):
                         '__ID__',
                         accession_id,
                         self.open_data_repos_ontology['repos'][repo]['url_concat_string'])
-                    )
+                                       )
 
                 elif ('dataset_webpage' in item.keys()):
                     self.logger.debug(f"Skipping dataset {1 + i}: already has dataset_webpage")
                     continue
 
                 else:
-                    self.logger.warning(f"No dataset_webpage_url_ptr or url_concat_string found for {repo}. Maybe lost in refactoring 21 April 2025")
+                    self.logger.warning(
+                        f"No dataset_webpage_url_ptr or url_concat_string found for {repo}. Maybe lost in refactoring 21 April 2025")
                     dataset_webpage = 'na'
 
                 self.logger.info(f"Dataset page: {dataset_webpage}")
@@ -1171,14 +1292,18 @@ class LLMParser(ABC):
             """
         raise NotImplementedError("This method should be implemented in a subclass.")
 
-
-    def tokens_over_limit(self, html_cont : str, model="gpt-4", limit=128000, allowance_static_prompt=200):
-        # Load the appropriate encoding for the model
-        encoding = tiktoken.encoding_for_model(model)
-        # Encode the prompt and count tokens
-        tokens = encoding.encode(html_cont)
-        self.logger.info(f"Number of tokens: {len(tokens)}")
-        return len(tokens)+int(allowance_static_prompt*1.25)>limit
+    def tokens_over_limit(self, html_cont: str, model="gpt-4", limit=128000, allowance_static_prompt=200):
+        # Use tiktoken only for OpenAI models, fallback to rough estimate for others
+        if 'gpt-4' in model:
+            encoding = tiktoken.encoding_for_model(model)
+            tokens = encoding.encode(html_cont)
+            self.logger.info(f"Number of tokens: {len(tokens)}")
+            return len(tokens) + int(allowance_static_prompt * 1.25) > limit
+        else:
+            # Rough estimate: 1 token ≈ 4 characters
+            n_tokens = len(html_cont) // 4
+            self.logger.info(f"Estimated number of tokens for model '{model}': {n_tokens}")
+            return n_tokens + int(allowance_static_prompt * 1.25) > limit
 
     def count_tokens(self, prompt, model="gpt-4o-mini") -> int:
         """
@@ -1207,9 +1332,9 @@ class LLMParser(ABC):
             encoding = tiktoken.encoding_for_model(model)
             n_tokens = len(encoding.encode(prompt))
 
-        elif 'gemini' in model:
+        elif 'gemini' in model or 'gemma' in model:
             try:
-                n_tokens = len(prompt)//4  # Adjust based on the response structure
+                n_tokens = len(prompt) // 4  # Adjust based on the response structure
                 self.logger.debug(f"Rough estimate of token count for Gemini model '{model}': {n_tokens}")
             except Exception as e:
                 self.logger.error(f"Error counting tokens for Gemini model '{model}': {e}")
@@ -1218,7 +1343,7 @@ class LLMParser(ABC):
         return n_tokens
 
     def parse_datasets_metadata(self, metadata: str, model='gemini-2.0-flash', use_portkey_for_gemini=True,
-                       prompt_name='gpt_metadata_extract') -> dict:
+                                prompt_name='gpt_metadata_extract') -> dict:
         """
         Given the metadata, extract the dataset information using the LLM.
 
@@ -1312,6 +1437,8 @@ class LLMParser(ABC):
         # "Explicitly identify all database accession codes, repository names, and links to deposited datasets or ...
         # ...supplementary data mentioned in this paper."
         # "Deposited data will be available in the repository XYZ, with accession code ABC123."
+        # """Data availability statement, dataset reference, digital repository name, dataset identifier,
+        #         dataset accession code, dataset doi, dataset page"""
 
         result = retriever.search(
             query=query,
@@ -1320,8 +1447,9 @@ class LLMParser(ABC):
 
         return result
 
+
 class LLMClient:
-    def __init__(self, model:str, logger=None, save_prompts:bool=False, use_portkey_for_gemini=True):
+    def __init__(self, model: str, logger=None, save_prompts: bool = False, use_portkey_for_gemini=True):
         self.model = model
         self.logger = logger or logging.getLogger(__name__)
         self.logger.info(f"Initializing LLMClient with model: {self.model}")
@@ -1346,11 +1474,15 @@ class LLMClient:
                 metadata={"_user": DATA_GATHERER_USER_NAME}
             )
             self.client = self.portkey
+
+        elif model.startswith('gemma'):
+            self.client = Client(host="http://localhost:11434")
+
         else:
             self.client = None
         self.logger.info(f"Client initialized: {self.client}")
 
-    def api_call(self, content, subdir=''):
+    def api_call(self, content, subdir='', **kwargs):
         self.logger.info(f"Calling {self.model} with prompt length {len(content)}, subdir: {subdir}")
         if self.model.startswith('gpt'):
             return self._call_openai(content, subdir=subdir)
@@ -1362,10 +1494,10 @@ class LLMClient:
         else:
             raise ValueError(f"Unsupported model: {self.model}")
 
-    def _call_openai(self, content, temperature=0.0, subdir=''):
+    def _call_openai(self, content, temperature=0.0, subdir='', **kwargs):
         self.logger.info(f"Calling OpenAI with content length {len(content)}, subdir: {subdir}")
         messages = self.prompt_manager.render_prompt(
-            self.prompt_manager.load_prompt("gpt_metadata_extract",subdir=subdir),
+            self.prompt_manager.load_prompt("gpt_metadata_extract", subdir=subdir),
             entire_doc=True,
             content=content,
         )
@@ -1373,18 +1505,20 @@ class LLMClient:
         if self.save_prompts:
             self.prompt_manager.save_prompt(prompt_id='abc', prompt_content=messages)
 
-        response = self.client.chat.completions.create(
+        response = self.client.responses.create(
             model=self.model,
-            messages=messages,
+            input=messages,
             temperature=temperature,
-            response_format={"type": "json_object"}
+            text={
+                "format": kwargs.get('response_format', {"type": "json_object"})
+            }
         )
-        return response.choices[0].message.content
+        return response.output
 
     def _call_gemini(self, content, temperature=0.0, subdir=''):
         self.logger.info(f"Calling Gemini with content length {len(content)}, subdir: {subdir}")
         messages = self.prompt_manager.render_prompt(
-            self.prompt_manager.load_prompt("gemini_metadata_extract",subdir=subdir),
+            self.prompt_manager.load_prompt("gemini_metadata_extract", subdir=subdir),
             entire_doc=True,
             content=content,
         )
