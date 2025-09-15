@@ -1,6 +1,6 @@
 [
   {
-    "role": "system",
+    "role": "developer",
     "content": "You are a powerful computer that retrieves information from the data availability \nsection of scientific papers. In this section you will find one of the following:\n - links to datasets\n- dataset identifiers and the link to a data repository\n- a reference to a data repository"
   },
   {
