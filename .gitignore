@@ -126,3 +126,6 @@ nosetests.xml
 /scripts/exp_input/SAGE_groundtruth.csv
 /scripts/exp_input/SAGE_input.txt
 /scripts/exp_input/SAGE_input_Nicole.txt
+scripts/exp_input/EXP_GT.xlsx
+scripts/exp_input/EXP.txt
+scripts/output/SAGE_GPT_FDR_FewShot_Synapse_output.csv
