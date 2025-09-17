@@ -12,7 +12,9 @@ from bs4 import BeautifulSoup
 from urllib.parse import urlparse
 import pandas as pd
 from data_gatherer.retriever.xml_retriever import xmlRetriever
+from data_gatherer.retriever.html_retriever import htmlRetriever
 import tempfile
+from data_gatherer.env import NCBI_API_KEY
 
 # Abstract base class for fetching data
 class DataFetcher(ABC):
@@ -142,8 +144,7 @@ class DataFetcher(ABC):
     def update_DataFetcher_settings(self, url, entire_doc_model, logger, HTML_fallback=False, driver_path=None,
                                     browser='firefox', headless=True, raw_HTML_data_filepath=None):
         """
-        Sets up either a web scraper or API client based on the URL domain.
-        Also used to avoid re_instantiating another selenium webdriver.
+        setting data fetcher to get source text from Local DataFrame (Priority 1), EntrezFetcher (Priority 2), or WebScraper (Priority 3).
 
         :param url: The URL to fetch data from.
 
@@ -181,6 +182,10 @@ class DataFetcher(ABC):
         if self.url_is_pdf(url):
             self.logger.info(f"URL {url} is a PDF. Using PdfFetcher.")
             return PdfFetcher(logger)
+
+        if type(HTML_fallback) == str and HTML_fallback == 'HTTPGetRequest':
+            self.logger.info(f"Falling back to HttpGetRequest for URL: {url}")
+            return HttpGetRequest(logger, raw_HTML_data_filepath=self.raw_HTML_data_filepath)
 
         self.logger.info(f"WebScraper instance: {isinstance(self, WebScraper)}")
         self.logger.info(f"EntrezFetcher instance: {isinstance(self, EntrezFetcher)}")
@@ -260,6 +265,113 @@ class DataFetcher(ABC):
 
         return path
 
+class HttpGetRequest(DataFetcher):
+    "class for fetching data via HTTP GET requests using the requests library."
+    def __init__(self, logger, raw_HTML_data_filepath=None):
+        super().__init__(logger, src='HttpGetRequest', raw_HTML_data_filepath=raw_HTML_data_filepath)
+        self.session = requests.Session()
+        self.logger.debug("HttpGetRequest initialized.")
+
+    def fetch_data(self, url, retries=3, delay=0.2):
+        """
+        Fetches data from the given URL using HTTP GET requests.
+
+        :param url: The URL to fetch data from.
+
+        :param retries: Number of retries in case of failure.
+
+        :param delay: Delay time between retries.
+
+        :return: The raw content of the page.
+        """
+        attempt = 0
+        while attempt < retries:
+            time.sleep(delay/2)
+            try:
+                self.logger.info(f"Fetching data from {url}, attempt {attempt + 1} of {retries}")
+                response = self.session.get(url, headers={"User-Agent": "Mozilla/5.0"})
+                response.raise_for_status()  # Raise an error for bad responses
+                self.raw_data_format = 'HTML' if 'text/html' in response.headers.get('Content-Type', '') else 'Other'
+                return response.text
+            except requests.RequestException as e:
+                self.logger.warning(f"Attempt {attempt + 1} failed: {e}")
+                attempt += 1
+                time.sleep(delay*2)
+        raise RuntimeError(f"Failed to fetch data from {url} after {retries} attempts.")
+
+    
+    def html_page_source_download(self, directory, url, fetched_data):
+        """
+        Downloads the HTML page source as html file in the specified directory.
+
+        :param directory: The directory where the HTML file will be saved.
+
+        """
+        if os.path.exists(directory):
+            logging.info(f"Dir {directory} exists")
+        else:
+            os.makedirs(directory, exist_ok=True)
+
+        if hasattr(self, 'extract_publication_title'):
+            pub_name = self.extract_publication_title(fetched_data)
+
+        else:
+            pub_name = url.split("/")[-1] if url.split("/")[-1] != '' else url.split("/")[-2]
+        pub_name = re.sub(r'[\\/:*?"<>|]', '_', pub_name)  # Replace invalid characters in filename
+        pub_name = re.sub(r'[\s-]+PMC\s*$', '', pub_name)
+
+        if directory[-1] != '/':
+            directory += '/'
+
+        pmcid = self.url_to_pmcid(url)
+
+        fn = directory + f"{pmcid}__{pub_name}.html"
+        self.logger.info(f"Downloading HTML page source to {fn}")
+
+        with open(fn, 'w', encoding='utf-8') as f:
+            f.write(self.fetch_data(url))
+        
+    def extract_publication_title(self, html=None):
+        """
+        Extracts the publication name from the HTML content (not Selenium).
+        :param html: The HTML content as a string.
+        :return: The publication name as a string.
+        """
+        self.logger.debug("Extracting publication title from HTML (HttpGetRequest)")
+        try:
+            if html is None:
+                self.logger.warning("No HTML provided to extract_publication_title.")
+                return "No title found"
+
+            soup = BeautifulSoup(html, "html.parser")
+
+            # Try <title> tag first
+            title_tag = soup.find("title")
+            if title_tag and title_tag.text.strip():
+                publication_name = title_tag.text.strip()
+                self.logger.info(f"Paper name (from <title> tag): {publication_name}")
+                return publication_name
+
+            # Fallback: <meta name="citation_title">
+            meta_title = soup.find("meta", attrs={"name": "citation_title"})
+            if meta_title and meta_title.get("content"):
+                publication_name = meta_title["content"].strip()
+                self.logger.info(f"Paper name (from meta citation_title): {publication_name}")
+                return publication_name
+
+            # Fallback: <h1 class="article-title">
+            h1 = soup.find("h1", class_="article-title")
+            if h1:
+                publication_name = h1.get_text(strip=True)
+                self.logger.info(f"Paper name (from h1.article-title): {publication_name}")
+                return publication_name
+
+            self.logger.warning("Publication name not found in the HTML.")
+            return "No title found"
+        except Exception as e:
+            self.logger.error(f"Error extracting publication title: {e}")
+            return "No title found"
+
 
 # Implementation for fetching data via web scraping
 class WebScraper(DataFetcher):
@@ -329,11 +441,13 @@ class WebScraper(DataFetcher):
                 break
             last_height = new_height
 
-    def html_page_source_download(self, directory):
+    def html_page_source_download(self, directory, pub_link):
         """
         Downloads the HTML page source as html file in the specified directory.
 
         :param directory: The directory where the HTML file will be saved.
+
+        :param pub_link: The URL of the publication page.
 
         """
         if os.path.exists(directory):

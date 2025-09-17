@@ -24,7 +24,7 @@ class DataGatherer:
     """
     This class orchestrates the data gathering process by coordinating the data fetcher, parser, and classifier in a
     single workflow.
-	  Initializes the DataGatherer with the given configuration file and sets up logging.
+	Initializes the DataGatherer with the given configuration file and sets up logging.
 
     :param process_entire_document: Flag to indicate if the model processes the entire document.
 
@@ -137,38 +137,63 @@ class DataGatherer:
         if isinstance(urls, str):
             urls = [urls]
 
-        raw_data = {}
+        complete_publication_fetches = {}
+        i = None
+        HTML_fallback_priority_list = ['HTTPGetRequest', 'Selenium']
 
-        for src_url in urls:
-            self.current_url = src_url
-            self.logger.info(f"Setting target URL to: {src_url}")
-            self.data_fetcher = self.data_fetcher.update_DataFetcher_settings(src_url,
-                                                                              self.full_document_read,
-                                                                              self.logger,
-                                                                              HTML_fallback=HTML_fallback,
-                                                                              driver_path=driver_path,
-                                                                              browser=browser,
-                                                                              headless=headless,
-                                                                              raw_HTML_data_filepath=local_fetch_file)
-            self.logger.info(f"Fetching data from URL: {src_url}")
-            raw_data[src_url] = self.data_fetcher.fetch_data(src_url, )
+        while len(complete_publication_fetches) < len(urls):
+            HTML_fallback = False if i is None else HTML_fallback_priority_list[i]
+            i = 0 if i is None else i + 1
+            for pub_link in urls:
+                self.logger.info(f"length of complete fetches < urls: {len(complete_publication_fetches)} < {len(urls)}")
+                if pub_link in complete_publication_fetches:
+                    continue
 
-            if write_htmls_xmls and not isinstance(self.data_fetcher, DatabaseFetcher):
-                self.publisher = self.data_fetcher.url_to_publisher_domain(self.current_url)
-                directory = article_file_dir + self.publisher + '/'
-                self.logger.info(f"Raw Data is {self.data_fetcher.raw_data_format}.")
-                if self.data_fetcher.raw_data_format == "HTML":
-                    self.data_fetcher.html_page_source_download(directory)
-                elif self.data_fetcher.raw_data_format == "XML":
-                    self.data_fetcher.download_xml(directory, raw_data[src_url])
-                elif self.data_fetcher.raw_data_format == "PDF":
-                    self.data_fetcher.download_pdf(directory, raw_data[src_url], src_url)
+                # Update fetcher settings for this method and publication
+                self.data_fetcher = self.data_fetcher.update_DataFetcher_settings(
+                    pub_link,
+                    self.full_document_read,
+                    self.logger,
+                    HTML_fallback=HTML_fallback,
+                    driver_path=driver_path,
+                    browser=browser,
+                    headless=headless,
+                    raw_HTML_data_filepath=local_fetch_file
+                )
+
+                # Fetch data
+                fetched_data = self.data_fetcher.fetch_data(pub_link)
+                completeness_check = self.data_checker.is_fulltext_complete(fetched_data, pub_link, self.data_fetcher.raw_data_format)
+
+                if completeness_check:
+                    self.logger.info(f"Fetched complete {self.data_fetcher.raw_data_format} data from {pub_link}.")
+                    complete_publication_fetches[pub_link] = fetched_data
+                elif HTML_fallback == 'Selenium':
+                    self.logger.info(f"Selenium fetch the final fulltext {pub_link}.")
+                    complete_publication_fetches[pub_link] = fetched_data
                 else:
-                    self.logger.warning(f"Unsupported raw data format: {self.data_fetcher.raw_data_format}.")
+                    self.logger.info(f"{self.data_fetcher.raw_data_format} Data from {pub_link} is incomplete.")
 
-        self.data_fetcher.scraper_tool.quit() if hasattr(self.data_fetcher, 'scraper_tool') else None
+                # Optionally save HTML/XMLs if requested
+                if write_htmls_xmls:
+                    publisher = self.data_fetcher.url_to_publisher_domain(pub_link)
+                    directory = os.path.join(article_file_dir, publisher)
+                    if HTML_fallback == 'Selenium':
+                        self.data_fetcher.html_page_source_download(directory, pub_link)
+                    elif self.data_fetcher.raw_data_format == "HTML" and completeness_check:
+                        self.data_fetcher.html_page_source_download(directory, pub_link, fetched_data)
+                    elif self.data_fetcher.raw_data_format == "XML" and completeness_check:
+                        self.data_fetcher.download_xml(directory, fetched_data, pub_link)
+                    elif self.data_fetcher.raw_data_format == "PDF":
+                        self.data_fetcher.download_pdf(directory, fetched_data, pub_link)
+                    else:
+                        self.logger.warning(f"Unsupported raw data format: {self.data_fetcher.raw_data_format}.")
 
-        return raw_data
+        # Clean up driver if needed
+        if hasattr(self.data_fetcher, 'scraper_tool'):
+            self.data_fetcher.scraper_tool.quit()
+
+        return complete_publication_fetches
 
     def parse_data(self, raw_data, publisher=None, current_url_address=None, additional_data=None,
                    raw_data_format='XML', parsed_data_dir='tmp/parsed_articles/', grobid_for_pdf=False,
