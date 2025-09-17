@@ -803,3 +803,44 @@ class DataCompletenessChecker:
         :return: True if all required sections are present, False otherwise.
         """
         return self.retriever.is_xml_data_complete(raw_data, url, required_sections)
+
+    def is_html_data_complete(self, raw_data, url,
+                              required_sections=["data_availability_sections", "supplementary_data_sections"]) -> bool:
+        """
+        Check if required sections are present in the raw_data.
+        Return True if all required sections are present.
+
+        :param raw_data: Raw HTML data.
+
+        :param url: The URL of the article.
+
+        :param required_sections: List of required sections to check.
+
+        :return: True if all required sections are present, False otherwise.
+        """
+        self.retriever = htmlRetriever(self.logger)
+        return self.retriever.is_html_data_complete(raw_data, url, required_sections)
+
+    def is_fulltext_complete(self, raw_data, url, raw_data_format,
+                            required_sections=["data_availability_sections", "supplementary_data_sections"]) -> bool:
+            """
+            Check if required sections are present in the raw_data.
+            Return True if all required sections are present.
+    
+            :param raw_data: Raw data (XML or HTML).
+    
+            :param url: The URL of the article.
+    
+            :param raw_data_format: Format of the raw data ('XML' or 'HTML').
+    
+            :param required_sections: List of required sections to check.
+    
+            :return: True if all required sections are present, False otherwise.
+            """
+            if raw_data_format == 'XML':
+                return self.is_xml_data_complete(raw_data, url, required_sections)
+            elif raw_data_format == 'HTML':
+                return self.is_html_data_complete(raw_data, url, required_sections)
+            else:
+                self.logger.error(f"Unsupported raw data format: {raw_data_format}")
+                return False
