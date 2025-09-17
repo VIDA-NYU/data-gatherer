@@ -461,8 +461,14 @@ class WebScraper(DataFetcher):
         else:
             raise Exception("Pubblication name extraction is only supported for WebScraper instances.")
         pub_name = re.sub(r'[\\/:*?"<>|]', '_', pub_name)  # Replace invalid characters in filename
+        pub_name = re.sub(r'[\s-]+PMC\s*$', '', pub_name)
 
-        fn = directory + pub_name + '.html'
+        if directory[-1] != '/':
+            directory += '/'
+
+        pmcid = self.url_to_pmcid(pub_link)
+
+        fn = directory + f"{pmcid}__{pub_name}.html"
         self.logger.info(f"Downloading HTML page source to {fn}")
 
         self.logger.debug(f"scraper_tool: {self.scraper_tool}, page_source: {getattr(self.scraper_tool, 'page_source', None)}")
@@ -475,23 +481,46 @@ class WebScraper(DataFetcher):
 
     def extract_publication_title(self):
         """
-        Extracts the publication name from the WebDriver's current page title. **Remark**: this should be called after
-        scraper_tool.get(url) to ensure the page is loaded.
+        Extracts the publication name from the WebDriver's current page title or meta tags.
+        Should be called after scraper_tool.get(url) to ensure the page is loaded.
 
         :return: The publication name as a string.
-
         """
-        self.logger.debug(f"Extracting publication title from page source")
-        publication_name_pointer = self.scraper_tool.find_element(By.TAG_NAME, 'title')
-        self.logger.debug(f"Publication name pointer: {publication_name_pointer}")
-        if publication_name_pointer is not None and publication_name_pointer.text:
-            publication_name = publication_name_pointer.text
-            publication_name = re.sub(r"\n+", "", publication_name)
-            publication_name = re.sub(r"^\s+", "", publication_name)
-            self.logger.info(f"Paper name: {publication_name}")
-            return publication_name
-        else:
-            self.logger.warning("Publication name not found in the page title.")
+        self.logger.debug("Extracting publication title from page source")
+        try:
+            # Try Selenium's title property first (most robust)
+            page_title = self.scraper_tool.title
+            if page_title and page_title.strip():
+                publication_name = page_title.strip()
+                self.logger.info(f"Paper name (from Selenium .title): {publication_name}")
+                return publication_name
+
+            # Fallback: Try to find <title> tag via Selenium
+            publication_name_pointer = self.scraper_tool.find_element(By.TAG_NAME, 'title')
+            if publication_name_pointer is not None and publication_name_pointer.text:
+                publication_name = publication_name_pointer.text.strip()
+                self.logger.info(f"Paper name (from <title> tag): {publication_name}")
+                return publication_name
+
+            # Fallback: Parse page source for <meta name="citation_title">
+            soup = BeautifulSoup(self.scraper_tool.page_source, "html.parser")
+            meta_title = soup.find("meta", attrs={"name": "citation_title"})
+            if meta_title and meta_title.get("content"):
+                publication_name = meta_title["content"].strip()
+                self.logger.info(f"Paper name (from meta citation_title): {publication_name}")
+                return publication_name
+
+            # Fallback: Try <h1> with class "article-title"
+            h1 = soup.find("h1", class_="article-title")
+            if h1:
+                publication_name = h1.get_text(strip=True)
+                self.logger.info(f"Paper name (from h1.article-title): {publication_name}")
+                return publication_name
+
+            self.logger.warning("Publication name not found in the page title or meta tags.")
+            return "No title found"
+        except Exception as e:
+            self.logger.error(f"Error extracting publication title: {e}")
             return "No title found"
 
     def get_PMCID_from_pubmed_html(self, html):
@@ -630,7 +659,7 @@ class EntrezFetcher(DataFetcher):
         super().__init__(logger, src='EntrezFetcher', raw_HTML_data_filepath=local_fetch_fp)
         self.api_client = api_client.Session()
         self.raw_data_format = 'XML'
-        self.base = 'https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pmc&id=__PMCID__&retmode=xml'
+        self.base = 'https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pmc&id=__PMCID__&retmode=xml&api_key=' + NCBI_API_KEY
         self.publisher = 'PMC'
         self.logger.debug("EntrezFetcher initialized.")
 
@@ -690,7 +719,7 @@ class EntrezFetcher(DataFetcher):
             self.logger.error(f"Error fetching data for {article_id}: {e}")
             return None
 
-    def download_xml(self, directory, api_data):
+    def download_xml(self, directory, api_data, pub_link):
         """
         Downloads the XML data to a specified directory.
 
@@ -701,12 +730,19 @@ class EntrezFetcher(DataFetcher):
 
         os.makedirs(directory, exist_ok=True)  # Ensure directory exists
         # Construct the file path
-        fn = os.path.join(directory, f"{self.extract_publication_title(api_data)}.xml")
+        pmcid = self.url_to_pmcid(pub_link)
+        title = self.extract_publication_title(api_data)
+        title = re.sub(r'[\\/:*?"<>|]', '_', title)  # Replace invalid characters in filename
+
+        fn = os.path.join(directory, f"{pmcid}__{title}.xml")
 
         # Check if the file already exists
         if os.path.exists(fn):
             self.logger.info(f"File already exists: {fn}. Skipping download.")
             return
+        else:
+            self.logger.info(f"Downloading XML data to {fn}")
+            os.makedirs(os.path.dirname(fn), exist_ok=True)
 
         # Write the XML data to the file
         ET.ElementTree(api_data).write(fn, pretty_print=True, xml_declaration=True, encoding="UTF-8")
@@ -715,14 +751,23 @@ class EntrezFetcher(DataFetcher):
     def extract_publication_title(self, xml_data):
         """
         Extracts the publication title from the XML data.
-
-        :param xml_data: The XML data to extract the title from.
-
+        :param xml_data: The XML data as a string or ElementTree.
         :return: The publication title as a string.
         """
-        # Use XPath to find the title element
+        # Parse if xml_data is a string
+        if isinstance(xml_data, str):
+            try:
+                xml_data = ET.fromstring(xml_data)
+            except Exception as e:
+                self.logger.warning(f"Could not parse XML: {e}")
+                return "No Title Found"
+        
+        else:
+            self.logger.warning(f"xml_data is not a string. Type: {type(xml_data)}")
+
+        # Now xml_data is an Element
         title_element = xml_data.find('.//article-title')
-        if title_element is not None:
+        if title_element is not None and title_element.text:
             return title_element.text.strip()
         else:
             self.logger.warning("No article title found in XML data.")

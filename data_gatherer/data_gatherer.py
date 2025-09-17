@@ -442,10 +442,10 @@ class DataGatherer:
                 directory = article_file_dir + self.publisher + '/'
                 self.logger.info(f"Raw Data is {self.raw_data_format}.")
                 if isinstance(self.data_fetcher, WebScraper):
-                    self.data_fetcher.html_page_source_download(directory)
+                    self.data_fetcher.html_page_source_download(directory, url)
                     self.logger.info(f"Raw HTML saved to: {directory}")
                 elif isinstance(self.data_fetcher, EntrezFetcher):
-                    self.data_fetcher.download_xml(directory, raw_data)
+                    self.data_fetcher.download_xml(directory, raw_data, url)
                     self.logger.info(f"Raw XML saved in {directory} directory")
                 else:
                     self.logger.warning(f"Unsupported raw data format: {self.raw_data_format}.")
@@ -455,7 +455,7 @@ class DataGatherer:
             self.data_fetcher.quit() if hasattr(self.data_fetcher, 'scraper_tool') else None
 
             # Step 2: Use HTMLParser/XMLParser
-            if self.raw_data_format == "XML" and raw_data is not None:
+            if self.raw_data_format.upper() == "XML" and raw_data is not None:
                 self.logger.info("Using XMLParser to parse data.")
                 self.parser = XMLParser(self.open_data_repos_ontology, self.logger,
                                         llm_name=self.llm,
@@ -479,7 +479,7 @@ class DataGatherer:
 
                     parsed_data = pd.concat([parsed_data, add_data], ignore_index=True).drop_duplicates()
 
-            elif self.raw_data_format == 'HTML':
+            elif self.raw_data_format.upper() == 'HTML':
                 self.logger.info("Using HTMLParser to parse data.")
                 self.parser = HTMLParser(self.open_data_repos_ontology, self.logger,
                                          llm_name=self.llm,
@@ -503,10 +503,10 @@ class DataGatherer:
 
             # Step 3: Use Classifier to classify Parsed data
             if parsed_data is not None:
-                if self.raw_data_format == "XML":
+                if self.raw_data_format.upper() == "XML":
                     self.logger.info("XML element classification not needed. Using parsed_data.")
                     classified_links = parsed_data
-                elif 'HTML' in self.raw_data_format:
+                elif 'HTML' in self.raw_data_format.upper():
                     classified_links = parsed_data
                     self.logger.info("HTML element classification not supported. Using parsed_data.")
                 else:
