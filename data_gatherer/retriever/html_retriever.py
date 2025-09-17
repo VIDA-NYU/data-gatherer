@@ -122,64 +122,7 @@ class htmlRetriever(BaseRetriever):
         soup = BeautifulSoup(preprocessed_html, "html.parser")
         data_availability_elements = []
 
-        for selector in self.css_selectors.get('data_availability', []):
-            self.logger.info(f"Using selector: {selector}")
-            matches = soup.select(selector)
-            for match in matches:
-                if match.name in ['h2', 'h3']:  # headings usually don't contain content directly
-                    container = match.find_parent('section') or match.find_next_sibling()
-                    if container:
-                        children = container.find_all(['p', 'li', 'a', 'div'], recursive=True)
-                    else:
-                        children = []
-                else:
-                    children = match.find_all(['p', 'li', 'a', 'div'], recursive=True)
-
-                text_val, html_val = '', ''
-                for child in children:
-                    if not child.get_text(strip=True):
-                        continue
-                    text_val += child.get_text(strip=True) + " \n"
-                    html_val += str(child) + " \n"
-
-                element_info = {
-                    'retrieval_pattern': selector,
-                    'text': text_val,
-                    'html': html_val
-                }
-                data_availability_elements.append(element_info)
-
-                # fallback if nothing found
-                if not children:
-                    data_availability_elements.append({
-                        'retrieval_pattern': selector,
-                        'tag': match.name,
-                        'text': match.get_text(strip=True),
-                        'html': str(match)
-                    })
-                    data_availability_elements.append(element_info)
-
-                self.logger.debug(f"Extracted data availability element: {element_info}")
-
-        self.logger.info(f"Found {len(data_availability_elements)} data availability elements from HTML.")
-        return data_availability_elements
-
-    def get_data_availability_elements_from_webpage(self, preprocessed_html, publisher='PMC'):
-        """
-        Given the preprocessed HTML, extract paragraphs or links under data availability sections.
-        """
-        self.retrieval_patterns = load_config('retrieval_patterns.json')
-        self.logger.info("Extracting data availability elements from HTML")
-
-        # Merge general + publisher-specific selectors
-        self.css_selectors = self.retrieval_patterns.get('general', {}).get('css_selectors', {})
-        publisher_selectors = self.retrieval_patterns.get(publisher, {}).get('css_selectors', {})
-        self.css_selectors.update(publisher_selectors)
-
-        soup = BeautifulSoup(preprocessed_html, "html.parser")
-        data_availability_elements = []
-
-        for selector in self.css_selectors.get('data_availability', []):
+        for selector in self.css_selectors.get('data_availability_sections', []):
             self.logger.info(f"Using selector: {selector}")
             matches = soup.select(selector)
             for match in matches:
@@ -239,3 +182,81 @@ class htmlRetriever(BaseRetriever):
         else:
             self.logger.warning("No publication title found in the HTML data.")
             return "No title found"
+    
+    def load_target_sections_ptrs(self, section_name) -> dict:
+        """
+        Load the HTML selectors (CSS and XPath) for the specified section name. Publisher-specific.
+        """
+        self.logger.info(f"Loading target selectors for section name: {section_name}")
+        selectors = {
+            "css": self.css_selectors.get(section_name, []),
+            "xpath": self.xpaths.get(section_name, [])
+        }
+        if not selectors["css"] and not selectors["xpath"]:
+            self.logger.error(
+                f"Invalid section name or no selectors found: {section_name}. Available: {list(self.css_selectors.keys()) + list(self.xpaths.keys())}")
+            raise ValueError(f"Invalid section name: {section_name}")
+        return selectors
+
+    def has_target_section(self, raw_data, section_name: str) -> bool:
+        """
+        Check if the target section (data availability or supplementary data) exists in the raw HTML data.
+
+        :param raw_data: Raw HTML data (str).
+        :param section_name: Name of the section to check.
+        :return: True if the section is found, False otherwise.
+        """
+        if raw_data is None:
+            self.logger.info("No raw data to check for sections.")
+            return False
+
+        self.logger.info(f"Checking for {section_name} section in raw HTML data.")
+        selectors = self.load_target_sections_ptrs(section_name)
+        found = False
+
+        # Check CSS selectors
+        if selectors["css"]:
+            soup = BeautifulSoup(raw_data, "html.parser")
+            for selector in selectors["css"]:
+                matches = soup.select(selector)
+                if matches:
+                    self.logger.info(f"Found section with CSS selector: {selector}")
+                    found = True
+                    break
+
+        # Check XPaths if not found by CSS
+        if not found and selectors["xpath"]:
+            try:
+                tree = html.fromstring(raw_data)
+                for xpath_expr in selectors["xpath"]:
+                    matches = tree.xpath(xpath_expr)
+                    if matches:
+                        self.logger.info(f"Found section with XPath: {xpath_expr}")
+                        found = True
+                        break
+            except Exception as e:
+                self.logger.warning(f"Error parsing HTML for XPath: {e}")
+
+        if not found:
+            self.logger.info(f"No section found for {section_name}.")
+        return found
+
+    def is_html_data_complete(self, raw_data, url,
+                             required_sections=("data_availability_sections", "supplementary_data_sections")) -> bool:
+        """
+        Check if the HTML data is complete by looking for key sections.
+
+        :param raw_data: str — raw HTML content.
+
+        :return: bool — True if data is considered complete, False otherwise.
+
+        """
+        self.logger.info("Checking if HTML data is complete")
+
+        for section in required_sections:
+            if not self.has_target_section(raw_data, section):
+                self.logger.info(f"Missing section in HTML: {section}")
+                return False
+
+        self.logger.info("HTML data contains all required sections.")
+        return True
