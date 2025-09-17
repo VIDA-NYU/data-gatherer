@@ -46,6 +46,7 @@ def test_process_url_with_mocks(monkeypatch, get_test_data_path):
     monkeypatch.setenv("PORTKEY_ROUTE", "gemini-vertexai-test-key")
     monkeypatch.setenv("PORTKEY_CONFIG", "test-portkey-config")
     monkeypatch.setenv("PORTKEY_GATEWAY_URL", "https://test-portkey-gateway-url.com")
+    monkeypatch.setenv("NCBI_API_KEY", "test-ncbi-key")
 
     url = 'https://pmc.ncbi.nlm.nih.gov/articles/PMC11129317/'
     result = orchestrator.process_url(url)
