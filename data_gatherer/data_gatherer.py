@@ -157,8 +157,7 @@ class DataGatherer:
                     HTML_fallback=HTML_fallback,
                     driver_path=driver_path,
                     browser=browser,
-                    headless=headless,
-                    raw_HTML_data_filepath=local_fetch_file
+                    headless=headless
                 )
 
                 # Fetch data
@@ -315,16 +314,16 @@ class DataGatherer:
 
         elif self.search_method == 'url_list':
             self.data_fetcher = WebScraper(None, self.logger, driver_path=driver_path, browser=browser,
-                                           headless=headless, local_fetch_fp=raw_HTML_data_fp)
+                                           headless=headless)
 
         elif self.search_method == 'cloudscraper':
             driver = cloudscraper.create_scraper()
-            self.data_fetcher = WebScraper(driver, self.logger, local_fetch_fp=raw_HTML_data_fp)
+            self.data_fetcher = WebScraper(driver, self.logger)
 
         elif self.search_method == 'google_scholar':
             driver = create_driver(driver_path, browser, headless, self.logger)
             self.data_fetcher = WebScraper(driver, self.logger, driver_path=driver_path, browser=browser,
-                                           headless=headless, local_fetch_fp=raw_HTML_data_fp)
+                                           headless=headless)
 
         else:
             raise ValueError(f"Invalid search method: {self.search_method}")

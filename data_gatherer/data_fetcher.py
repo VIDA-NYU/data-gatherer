@@ -17,17 +17,23 @@ import tempfile
 
 # Abstract base class for fetching data
 class DataFetcher(ABC):
-    def __init__(self, logger, src='WebScraper', driver_path=None, browser='firefox', headless=True,
-                 raw_HTML_data_filepath=None):
+    def __init__(self, logger, src='WebScraper', driver_path=None, browser='firefox', headless=True):
         self.dataframe_fetch = True  # Flag to indicate dataframe fetch supported or not
-        self.raw_HTML_data_filepath = raw_HTML_data_filepath
+        self.raw_HTML_data_filepath = 'scripts/exp_input/Local_fetched_data_1.parquet'
         self.logger = logger
-        self.logger.warning(
-            "DataFetcher raw_HTML_data_filepath set no None") if raw_HTML_data_filepath is None else None
         self.logger.debug("DataFetcher initialized.")
         self.driver_path = driver_path
         self.browser = browser
         self.headless = headless
+        self.pub_in_local_df = set()
+        if self.raw_HTML_data_filepath and os.path.exists(self.raw_HTML_data_filepath):
+            df = pd.read_parquet(self.raw_HTML_data_filepath)
+            # Assume 'publication' column contains the IDs
+            self.pub_in_local_df = set(df['publication'].str.lower())
+            self.logger.info(f"Loaded {len(self.pub_in_local_df)} publications from local DataFrame.")
+        else:
+            self.logger.warning(
+                "DataFetcher raw_HTML_data_filepath set to None") if self.raw_HTML_data_filepath is None else None
 
     @abstractmethod
     def fetch_data(self, url, retries=3, delay=2):
@@ -141,7 +147,7 @@ class DataFetcher(ABC):
         return f"https://www.ncbi.nlm.nih.gov/pmc/articles/{PMCID}"
 
     def update_DataFetcher_settings(self, url, entire_doc_model, logger, HTML_fallback=False, driver_path=None,
-                                    browser='firefox', headless=True, raw_HTML_data_filepath=None):
+                                    browser='firefox', headless=True):
         """
         setting data fetcher to get source text from Local DataFrame (Priority 1), EntrezFetcher (Priority 2), or WebScraper (Priority 3).
 
@@ -150,8 +156,6 @@ class DataFetcher(ABC):
         :param entire_doc_model: Flag to indicate if the entire document model is being used.
 
         :param logger: The logger instance for logging messages.
-
-        :param HTML_fallback: Flag to indicate if HTML fallback is needed.
 
         :return: An instance of the appropriate data fetcher (WebScraper or EntrezFetcher).
         """
@@ -162,29 +166,38 @@ class DataFetcher(ABC):
         if not HTML_fallback:
             API = self.url_to_api_root(url)
 
-        self.raw_HTML_data_filepath = raw_HTML_data_filepath if raw_HTML_data_filepath else self.raw_HTML_data_filepath
-        self.logger.info(f"raw_HTML_data_filepath: {self.raw_HTML_data_filepath}")
-
-        if self.raw_HTML_data_filepath and self.dataframe_fetch and self.url_in_dataframe(url, self.raw_HTML_data_filepath):
+        if self.raw_HTML_data_filepath and self.dataframe_fetch and self.url_in_dataframe(url):
             self.logger.info(f"URL {url} found in DataFrame. Using DatabaseFetcher.")
-            return DatabaseFetcher(logger, self.raw_HTML_data_filepath)
+            if isinstance(self, DatabaseFetcher):
+                self.logger.info(f"Reusing existing DatabaseFetcher instance.")
+                return self  # Reuse current instance
+            return DatabaseFetcher(logger)
 
         if API == 'PMC':
+            if isinstance(self, EntrezFetcher):
+                self.logger.info(f"Reusing existing EntrezFetcher instance.")
+                return self  # Reuse current instance
             self.logger.info(f"Initializing EntrezFetcher({'requests', 'self.config'})")
             return EntrezFetcher(requests, logger)
 
         # Reuse existing driver if we already have one
         if isinstance(self, WebScraper) and self.scraper_tool is not None:
             self.logger.info(f"Reusing existing WebScraper driver: {self.scraper_tool}")
-            return self  # Reuse current instance
+            return self
 
         if self.url_is_pdf(url):
             self.logger.info(f"URL {url} is a PDF. Using PdfFetcher.")
+            if isinstance(self, PdfFetcher):
+                self.logger.info(f"Reusing existing PdfFetcher instance.")
+                return self  # Reuse current instance
             return PdfFetcher(logger)
 
         if type(HTML_fallback) == str and HTML_fallback == 'HTTPGetRequest':
             self.logger.info(f"Falling back to HttpGetRequest for URL: {url}")
-            return HttpGetRequest(logger, raw_HTML_data_filepath=self.raw_HTML_data_filepath)
+            if isinstance(self, HttpGetRequest):
+                self.logger.info(f"Reusing existing HttpGetRequest instance.")
+                return self  # Reuse current instance
+            return HttpGetRequest(logger)
 
         self.logger.info(f"WebScraper instance: {isinstance(self, WebScraper)}")
         self.logger.info(f"EntrezFetcher instance: {isinstance(self, EntrezFetcher)}")
@@ -194,7 +207,7 @@ class DataFetcher(ABC):
         driver = create_driver(driver_path, browser, headless, self.logger)
         return WebScraper(driver, logger)
 
-    def url_in_dataframe(self, url, raw_HTML_data_filepath):
+    def url_in_dataframe(self, url):
         """
         Checks if the given doi / pmcid is present in the DataFrame.
 
@@ -203,11 +216,8 @@ class DataFetcher(ABC):
         :return: True if the URL is found, False otherwise.
         """
         pmcid = re.search(r'PMC\d+', url, re.IGNORECASE)
-        pmcid = pmcid.group(0) if pmcid else None
-
-        df_fetch = pd.read_parquet(raw_HTML_data_filepath)
-
-        return True if pmcid and pmcid.lower() in df_fetch['publication'].values else False
+        pmcid = pmcid.group(0).lower() if pmcid else None
+        return pmcid in self.pub_in_local_df if pmcid else False
 
     def url_to_api_root(self, url):
 
@@ -266,8 +276,8 @@ class DataFetcher(ABC):
 
 class HttpGetRequest(DataFetcher):
     "class for fetching data via HTTP GET requests using the requests library."
-    def __init__(self, logger, raw_HTML_data_filepath=None):
-        super().__init__(logger, src='HttpGetRequest', raw_HTML_data_filepath=raw_HTML_data_filepath)
+    def __init__(self, logger):
+        super().__init__(logger, src='HttpGetRequest')
         self.session = requests.Session()
         self.logger.debug("HttpGetRequest initialized.")
 
@@ -378,9 +388,8 @@ class WebScraper(DataFetcher):
     Class for fetching data from web pages using Selenium.
     """
     def __init__(self, scraper_tool, logger, retrieval_patterns_file=None, driver_path=None, browser='firefox',
-                 headless=True, local_fetch_fp=None):
-        super().__init__(logger, src='WebScraper', raw_HTML_data_filepath=local_fetch_fp, driver_path=driver_path,
-                         browser=browser, headless=headless)
+                 headless=True):
+        super().__init__(logger, src='WebScraper', driver_path=driver_path, browser=browser, headless=headless)
         self.scraper_tool = scraper_tool  # Inject your scraping tool (Selenium)
         self.driver_path = driver_path
         self.browser = browser
@@ -605,8 +614,10 @@ class DatabaseFetcher(DataFetcher):
     """
     Class for fetching data from a DataFrame.
     """
-    def __init__(self, logger, raw_HTML_data_filepath):
-        super().__init__(logger, src='DatabaseFetcher', raw_HTML_data_filepath=raw_HTML_data_filepath)
+    def __init__(self, logger):
+        super().__init__(logger, src='DatabaseFetcher')
+        if not self.raw_HTML_data_filepath or not os.path.exists(self.raw_HTML_data_filepath):
+            raise ValueError("DatabaseFetcher requires a valid raw_HTML_data_filepath.")
         self.dataframe = pd.read_parquet(self.raw_HTML_data_filepath)
         self.logger.debug("DatabaseFetcher initialized.")
 
@@ -643,7 +654,7 @@ class EntrezFetcher(DataFetcher):
     """
     Class for fetching data from an API using the requests library for ncbi e-utilities API.
     """
-    def __init__(self, api_client, logger, local_fetch_fp=None):
+    def __init__(self, api_client, logger):
         """
         Initializes the EntrezFetcher with the specified API client.
 
@@ -652,7 +663,7 @@ class EntrezFetcher(DataFetcher):
         :param logger: The logger instance for logging messages.
 
         """
-        super().__init__(logger, src='EntrezFetcher', raw_HTML_data_filepath=local_fetch_fp)
+        super().__init__(logger, src='EntrezFetcher')
         self.api_client = api_client.Session()
         self.raw_data_format = 'XML'
         # Read the API key at runtime, fallback to empty string if not set
