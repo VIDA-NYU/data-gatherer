@@ -14,7 +14,6 @@ import pandas as pd
 from data_gatherer.retriever.xml_retriever import xmlRetriever
 from data_gatherer.retriever.html_retriever import htmlRetriever
 import tempfile
-from data_gatherer.env import NCBI_API_KEY
 
 # Abstract base class for fetching data
 class DataFetcher(ABC):
@@ -650,15 +649,14 @@ class EntrezFetcher(DataFetcher):
 
         :param api_client: The API client to use (e.g., requests).
 
-        :param API: The API to use (e.g., PMC).
-
-
         :param logger: The logger instance for logging messages.
 
         """
         super().__init__(logger, src='EntrezFetcher', raw_HTML_data_filepath=local_fetch_fp)
         self.api_client = api_client.Session()
         self.raw_data_format = 'XML'
+        # Read the API key at runtime, fallback to empty string if not set
+        NCBI_API_KEY = os.environ.get('NCBI_API_KEY', '')
         self.base = 'https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pmc&id=__PMCID__&retmode=xml&api_key=' + NCBI_API_KEY
         self.publisher = 'PMC'
         self.logger.debug("EntrezFetcher initialized.")
