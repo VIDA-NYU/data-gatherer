@@ -626,6 +626,65 @@ class DataGatherer:
                     df.rename(columns={'repository_reference': 'data_repository'}, inplace=True)
         return results
 
+    def DRAFT_prepare_prompts_batch(
+        self,
+        fname,
+        fetched_data,
+        raw_data_format,
+        prompt,
+        FDR,
+        semantic_retrieval=False,
+        section_filter=None
+    ):
+        """
+        Prepares a JSONL batch for API requests.
+        Each line contains a dict with a unique custom_id and a body with API parameters.
+        Returns a list of dicts (ready to be written as JSONL).
+        """
+        jsonl_cont = []
+
+        for url, data in fetched_data.items():
+            # Compose custom_id
+            article_id = self.url_to_article_id(url)
+            custom_id = f"{self.llm}|{article_id}|FDR={FDR}|{raw_data_format}"
+
+            if raw_data_format.upper() == 'XML':
+                prepare_input = self.parser.normalize_xml(data['fetched_data'])
+            elif raw_data_format.upper() == 'HTML':
+                prepare_input = self.parser.normalize_html(data['fetched_data'])
+            else:
+                raise ValueError(f"Unsupported raw data format: {raw_data_format}")
+
+            prompt = self.parser.prompt_manager.render_prompt(
+                prompt_name=prompt,
+                raw_data_format=raw_data_format,
+                full_document_read=self.full_document_read,
+                input_text=prepare_input,
+                url=url,
+                section_filter=section_filter
+            )
+
+            # Prepare body (parameters for the API)
+            body = {
+                "raw_data_format": data['raw_data_format'],
+                "prompt": prompt,
+                "FDR": FDR,
+                "semantic_retrieval": semantic_retrieval,
+                "section_filter": section_filter,
+                "url": url
+            }
+
+            jsonl_cont.append({
+                "custom_id": custom_id,
+                "body": body,
+            })
+
+        with open(fname, 'w') as f:
+            for entry in jsonl_cont:
+                f.write(json.dumps(entry) + '\n')
+
+        return jsonl_cont
+
     def summarize_result(self, df):
         """
         Summarizes the result of 1 processed URL.
