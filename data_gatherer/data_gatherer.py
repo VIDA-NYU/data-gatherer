@@ -105,7 +105,8 @@ class DataGatherer:
         os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
     def fetch_data(self, urls, search_method='url_list', driver_path=None, browser=None, headless=True,
-                   HTML_fallback=False, local_fetch_file=None, write_htmls_xmls=False, article_file_dir='tmp/raw_files/'):
+                   HTML_fallback=False, local_fetch_file=None, write_htmls_xmls=False, article_file_dir='tmp/raw_files/',
+                   write_to_df_path=False):
         """
         Fetches data from the given URL using the configured data fetcher (WebScraper or EntrezFetcher).
 
@@ -166,10 +167,16 @@ class DataGatherer:
 
                 if completeness_check:
                     self.logger.info(f"Fetched complete {self.data_fetcher.raw_data_format} data from {pub_link}.")
-                    complete_publication_fetches[pub_link] = fetched_data
+                    complete_publication_fetches[pub_link] = {
+                        'fetched_data': fetched_data,
+                        'raw_data_format': self.data_fetcher.raw_data_format
+                    }
                 elif HTML_fallback == 'Selenium':
                     self.logger.info(f"Selenium fetch the final fulltext {pub_link}.")
-                    complete_publication_fetches[pub_link] = fetched_data
+                    complete_publication_fetches[pub_link] = {
+                        'fetched_data': fetched_data, 
+                        'raw_data_format': self.data_fetcher.raw_data_format
+                        }
                 else:
                     self.logger.info(f"{self.data_fetcher.raw_data_format} Data from {pub_link} is incomplete.")
 
@@ -191,6 +198,10 @@ class DataGatherer:
         # Clean up driver if needed
         if hasattr(self.data_fetcher, 'scraper_tool'):
             self.data_fetcher.scraper_tool.quit()
+
+        if write_to_df_path and write_to_df_path.endswith('.parquet'):
+            df = pd.DataFrame.from_dict(complete_publication_fetches, orient='index')
+            df.to_parquet(write_to_df_path, index=True)
 
         return complete_publication_fetches
 
