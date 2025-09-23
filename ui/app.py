@@ -6,6 +6,20 @@ import altair as alt
 import os
 import io
 import xlsxwriter
+import uuid
+import threading
+import time
+import json
+from collections import defaultdict
+from datetime import datetime
+import re
+
+# Configure for better multi-user support
+st.set_page_config(
+    page_title="Data Gatherer", 
+    layout="wide",
+    initial_sidebar_state="expanded"
+)
 
 linux = os.path.exists('/.dockerenv')
 
