@@ -1237,15 +1237,13 @@ class LLMParser(ABC):
             if repo in self.open_data_repos_ontology['repos'].keys():
 
                 if "dataset_webpage_url_ptr" in self.open_data_repos_ontology['repos'][repo]:
-                    dataset_webpage = re.sub('__ID__', accession_id,
-                                             self.open_data_repos_ontology['repos'][repo]['dataset_webpage_url_ptr'])
-
-                elif 'url_concat_string' in self.open_data_repos_ontology['repos'][repo]:
-                    dataset_webpage = ('https://' + repo + re.sub(
-                        '__ID__',
-                        accession_id,
-                        self.open_data_repos_ontology['repos'][repo]['url_concat_string'])
-                                       )
+                    dataset_page_ptr = self.open_data_repos_ontology['repos'][repo]['dataset_webpage_url_ptr']
+                    if dataset_page and re.search(dataset_page_ptr.replace('__ID__', ''), dataset_page, re.IGNORECASE):
+                        self.logger.info(f"Dataset page {dataset_page} already matches pattern for {repo}")
+                        dataset_webpage = dataset_page
+                    else:
+                        self.logger.info(f"Using pattern {dataset_page_ptr} to construct dataset page for {repo}")
+                        dataset_webpage = re.sub('__ID__', accession_id, dataset_page_ptr)
 
                 elif ('dataset_webpage' in item.keys()):
                     self.logger.debug(f"Skipping dataset {1 + i}: already has dataset_webpage")
@@ -1253,7 +1251,7 @@ class LLMParser(ABC):
 
                 else:
                     self.logger.warning(
-                        f"No dataset_webpage_url_ptr or url_concat_string found for {repo}. Maybe lost in refactoring 21 April 2025")
+                        f"No dataset_webpage_url_ptr found for {repo}. Maybe lost in refactoring 21 April 2025")
                     dataset_webpage = 'na'
 
                 self.logger.info(f"Dataset page: {dataset_webpage}")
