@@ -114,7 +114,7 @@
       "access_mode": "Complex download or application to access"
     },
     "doi.org": {
-      "dataset_webpage_url_ptr": "https://doi.org/__ID__",
+      "dataset_webpage_url_ptr": "https://doi.\\w+\\.*\\w*/__ID__",
       "id_pattern": "10\\.\\d{4,9}/[^\\s,]+",
       "javascript_load_required": true
     },
