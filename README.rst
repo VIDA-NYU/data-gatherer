@@ -22,6 +22,9 @@ What It Does
 - Outputs structured results in JSON format.
 - Includes support for known repositories (e.g., GEO, PRIDE, MassIVE) via a configurable ontology.
 
+.. image:: docs/H_Flowchart.png
+   :alt: Flowchart illustrating the main passages in the process_url function.
+
 Use Cases
 ---------
 
