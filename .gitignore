@@ -138,3 +138,5 @@ scripts/exp_input/Local_fetched_data_1.parquet
 scripts/output/gold/SAGE_groundtruth.csv
 feedback/*
 ui/*log*
+ui/portkey-secret.yaml
+ui/deployment.yaml
