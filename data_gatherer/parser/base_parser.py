@@ -541,6 +541,10 @@ class LLMParser(ABC):
                 self.logger.info(f"Skipping dataset due to missing ID, repository, dataset page: {dataset}")
                 continue
 
+            if (dataset_id == 'n/a' or data_repository =='n/a') and dataset_webpage == 'n/a':
+                self.logger.info(f"Skipping dataset due to missing ID, repository, dataset page: {dataset}")
+                continue
+
             result.append({
                 "dataset_identifier": dataset_id,
                 "data_repository": data_repository,
@@ -596,16 +600,16 @@ class LLMParser(ABC):
                                 dataset_webpage = val
                             ptr_sub = f'\b({repo_vals["id_pattern"]})'
                             self.logger.info(f"Using id_pattern to extract ID: {ptr_sub}")
-                            self.logger.info(f"Using id_pattern to extract ID: {ptr_sub}")
                             match = re.search(ptr_sub, val, re.IGNORECASE)
                             if match and dataset_id is None:
                                 self.logger.info(f"Setting dataset_id to value: {match.group(1)}")
                                 dataset_id = match.group(1)
                             self.logger.info(f"Extracted ID: {dataset_id}")
                         else:
-                            if val.startswith('10.') and dataset_webpage is None:
+                            if (val.startswith('10.') or val.startswith('doi:10.')) and dataset_webpage is None:
                                 self.logger.info(f"Setting dataset_webpage to DOI URL value: https://doi.org/{val}")
                                 dataset_webpage = f"https://doi.org/{val}"
+                                dataset_id = val
                             if dataset_id is None:
                                 self.logger.info(f"Setting dataset_id to value: {val}")
                                 dataset_id = val
@@ -639,6 +643,9 @@ class LLMParser(ABC):
             self.logger.info(f"Dataset webpage not extracted")
         else:
             self.logger.info(f"Dataset webpage found via pattern matching: {dataset_webpage}")
+            dataset_webpage = self.validate_dataset_webpage(dataset_webpage, data_repository,
+                                                            dataset_id, dataset)
+        self.logger.info(f"Final schema validation vals: {dataset_id}, {data_repository}, {dataset_webpage}")
 
         if dataset_id == 'n/a' and data_repository in self.open_data_repos_ontology['repos']:
             self.logger.info(f"Dataset ID is 'n/a' and repository name from prompt")
@@ -946,9 +953,9 @@ class LLMParser(ABC):
         return ret
 
     def url_to_repo_domain(self, url, dataset_webpage_url=None):
-        """
 
-        """
+        self.logger.info(f"Function call: url_to_repo_domain({url},{dataset_webpage_url})")
+
         if dataset_webpage_url is not None:
             url = dataset_webpage_url
 
@@ -1032,15 +1039,15 @@ class LLMParser(ABC):
         dataset_id: str - the dataset identifier
         old_metadata: dict - the old metadata dictionary (optional)
         """
-        self.logger.info(f"Validating Dataset Page: {dataset_webpage_url}, resolved_repo {resolved_repo}")
+        self.logger.info(f"Validating Dataset Page: {dataset_webpage_url}, resolved_repo {resolved_repo}, dataset_id {dataset_id}")
         resolved_dataset_page = self.resolve_url(dataset_webpage_url)
 
         if resolved_repo in self.open_data_repos_ontology['repos']:
             if 'dataset_webpage_url_ptr' in self.open_data_repos_ontology['repos'][resolved_repo].keys():
                 dataset_webpage_url_ptr = self.open_data_repos_ontology['repos'][resolved_repo]['dataset_webpage_url_ptr']
-                pattern = re.sub('__ID__', '', dataset_webpage_url_ptr)
-                self.logger.info(f"Pattern: {pattern}")
-                if re.search(pattern, resolved_dataset_page, re.IGNORECASE):
+                pattern = re.sub(r'__ID__', '', dataset_webpage_url_ptr)
+                self.logger.info(f"Pattern: {pattern}, resolved_dataset_page: {resolved_dataset_page}")
+                if re.search(pattern, resolved_dataset_page, re.IGNORECASE) or pattern in resolved_dataset_page:
                     self.logger.info(f"Link matches the pattern {pattern} of resolved_dataset_page.")
                     return resolved_dataset_page
                 else:
@@ -1072,19 +1079,33 @@ class LLMParser(ABC):
             self.logger.warning(f"Error resolving URL {url}: {e}")
             return url
 
-    def resolve_accession_id_for_repository(self, dataset_identifier, data_repository):
+    def resolve_accession_id_for_repository(self, dataset_identifier, data_repository, resolved_dataset_page=None):
         """
         This function resolves the accession ID for a given dataset identifier and data repository.
         It checks if the dataset identifier matches the expected pattern for the given repository (from ontology)
         """
-        self.logger.info(f"Resolving accession ID for {dataset_identifier} in {data_repository}")
+        self.logger.info(f"Resolving accession ID for {dataset_identifier} in {data_repository}, resolved page: {resolved_dataset_page}")
         if data_repository in self.open_data_repos_ontology['repos']:
             repo_config = self.open_data_repos_ontology['repos'][data_repository]
             pattern = repo_config.get('id_pattern')
-            if pattern and not re.match(pattern, dataset_identifier):
+            if pattern and not re.match(pattern, dataset_identifier, re.IGNORECASE):
                 self.logger.warning(f"Identifier {dataset_identifier} does not match pattern for {data_repository}")
+            else:
+                self.logger.warning(f"id_pattern not defined for {data_repository} in ontology. Add definition to improve validation.")
+
+            if pattern and resolved_dataset_page is not None:
+                self.logger.info(f"Extracting ID from dataset page {resolved_dataset_page} using pattern {pattern}")
+                match = re.search(f"({pattern})", resolved_dataset_page, re.IGNORECASE)
+                if match:
+                    dataset_identifier = match.group(1)
+                    self.logger.info(f"Extracted ID: {dataset_identifier}")
+
             if 'default_id_suffix' in repo_config and not dataset_identifier.endswith(repo_config['default_id_suffix']):
                 return dataset_identifier.lower() + repo_config['default_id_suffix']
+
+        else:
+            self.logger.warning(f"Repository {data_repository} not found in ontology")
+    
         return dataset_identifier
 
     def resolve_data_repository(self, repo: str, identifier=None, dataset_page=None, candidate_repo=None) -> str:
@@ -1227,7 +1248,9 @@ class LLMParser(ABC):
                     self.logger.warning("Repository list is empty. Skipping this dataset.")
                     continue  # or `return None`, depending on context
 
-            accession_id = self.resolve_accession_id_for_repository(accession_id, repo)
+            dataset_page = item.get('dataset_webpage', item.get('dataset_page', None))
+
+            accession_id = self.resolve_accession_id_for_repository(accession_id, repo, dataset_page)
 
             self.logger.info(f"Processing dataset {1 + i} with repo: {repo} and accession_id: {accession_id}")
             self.logger.debug(f"Processing dataset {1 + i} with keys: {item.keys()}")
@@ -1237,15 +1260,13 @@ class LLMParser(ABC):
             if repo in self.open_data_repos_ontology['repos'].keys():
 
                 if "dataset_webpage_url_ptr" in self.open_data_repos_ontology['repos'][repo]:
-                    dataset_webpage = re.sub('__ID__', accession_id,
-                                             self.open_data_repos_ontology['repos'][repo]['dataset_webpage_url_ptr'])
-
-                elif 'url_concat_string' in self.open_data_repos_ontology['repos'][repo]:
-                    dataset_webpage = ('https://' + repo + re.sub(
-                        '__ID__',
-                        accession_id,
-                        self.open_data_repos_ontology['repos'][repo]['url_concat_string'])
-                                       )
+                    dataset_page_ptr = self.open_data_repos_ontology['repos'][repo]['dataset_webpage_url_ptr']
+                    if dataset_page and re.search(dataset_page_ptr.replace('__ID__', ''), dataset_page, re.IGNORECASE):
+                        self.logger.info(f"Dataset page {dataset_page} already matches pattern for {repo}")
+                        dataset_webpage = dataset_page
+                    else:
+                        self.logger.info(f"Using pattern {dataset_page_ptr} to construct dataset page for {repo}")
+                        dataset_webpage = re.sub('__ID__', accession_id, dataset_page_ptr)
 
                 elif ('dataset_webpage' in item.keys()):
                     self.logger.debug(f"Skipping dataset {1 + i}: already has dataset_webpage")
@@ -1253,7 +1274,7 @@ class LLMParser(ABC):
 
                 else:
                     self.logger.warning(
-                        f"No dataset_webpage_url_ptr or url_concat_string found for {repo}. Maybe lost in refactoring 21 April 2025")
+                        f"No dataset_webpage_url_ptr found for {repo}. Maybe lost in refactoring 21 April 2025")
                     dataset_webpage = 'na'
 
                 self.logger.info(f"Dataset page: {dataset_webpage}")
