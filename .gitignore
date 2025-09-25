@@ -132,3 +132,11 @@ data_gatherer/parser/grobid-0.8.2
 /scripts/output/SAGE_GPT_FDR_FewShot_Synapse_output.csv
 scripts/exp_input/EXP_GT.xlsx
 scripts/exp_input/EXP.txt
+scripts/tmp/**
+scripts/exp_input/europe_pmc_synapse_id_mining.txt
+scripts/exp_input/Local_fetched_data_1.parquet
+scripts/output/gold/SAGE_groundtruth.csv
+feedback/*
+ui/*log*
+ui/portkey-secret.yaml
+ui/deployment.yaml

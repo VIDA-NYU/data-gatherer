@@ -18,6 +18,8 @@ from data_gatherer.resources_loader import load_config
 import ipywidgets as widgets
 from IPython.display import display, clear_output
 import textwrap
+import threading
+import time
 
 
 class DataGatherer:
@@ -97,6 +99,9 @@ class DataGatherer:
 
         self.full_output_file = full_output_file
 
+        self._processing_semaphore = threading.Semaphore(2)  # Max 2 concurrent operations per instance
+        self._last_request_time = 0
+        self._min_delay = 1.0  # Minimum 1 second between requests
         self.data_resource_preview = data_resource_preview
         self.download_previewed_data_resources = download_previewed_data_resources
         self.downloadables = []
@@ -501,6 +506,42 @@ class DataGatherer:
             self.logger.error(f"Error processing URL {url}: {e}", exc_info=True)
             return None
 
+    def app_process_url(self, url, save_staging_table=False, article_file_dir='tmp/raw_files/', 
+                       use_portkey_for_gemini=True, driver_path=None, browser='Firefox', headless=True, 
+                       prompt_name='retrieve_datasets_simple_JSON', semantic_retrieval=False, section_filter=None):
+        """
+        Application wrapper for process_url with concurrent user support.
+        This method handles rate limiting and resource management for multi-user scenarios.
+        """
+        with self._processing_semaphore:
+            # Simple rate limiting
+            now = time.time()
+            elapsed = now - self._last_request_time
+            if elapsed < self._min_delay:
+                wait_time = self._min_delay - elapsed
+                self.logger.info(f"Rate limiting: waiting {wait_time:.1f}s")
+                time.sleep(wait_time)
+            
+            self._last_request_time = time.time()
+            
+            try:
+                # Call the original process_url method unchanged
+                return self.process_url(
+                    url=url,
+                    save_staging_table=save_staging_table,
+                    article_file_dir=article_file_dir,
+                    use_portkey_for_gemini=use_portkey_for_gemini,
+                    driver_path=driver_path,
+                    browser=browser,
+                    headless=headless,
+                    prompt_name=prompt_name,
+                    semantic_retrieval=semantic_retrieval,
+                    section_filter=section_filter
+                )
+            except Exception as e:
+                self.logger.error(f"Error in app_process_url wrapper: {e}")
+                raise
+
     def deduplicate_links(self, classified_links):
         """
         Deduplicates the classified links based on the link / download_link itself. If two entry share the same link
@@ -674,6 +715,8 @@ class DataGatherer:
         :return: If return_metadata is True, returns a list of metadata dictionaries. Otherwise, displays the data preview.
         """
 
+        self.logger.info(f"Processing metadata for preview to display metadata preview in {display_type} format.")
+
         self.already_previewed = []
         self.metadata_parser = HTMLParser(self.open_data_repos_ontology, self.logger, full_document_read=True,
                                           llm_name=self.llm, use_portkey_for_gemini=use_portkey_for_gemini)
@@ -682,11 +725,13 @@ class DataGatherer:
                                                                           self.full_document_read,
                                                                           self.logger,
                                                                           driver_path=None,
-                                                                          browser=None,
+                                                                          browser='Firefox',
                                                                           headless=True)
 
         if isinstance(self.data_fetcher, WebScraper):
             self.logger.info("Found WebScraper to fetch data.")
+        else:
+            raise TypeError(f"DataFetcher must be an instance of WebScraper to fetch dataset webpages. Found {type(self.data_fetcher).__name__} instead.")
 
         if return_metadata:
             ret_list = []
@@ -985,20 +1030,36 @@ class DataGatherer:
         return article_id
 
     def save_func_output_to_cache(self, output, process_id, function_name):
+        """
+        Save output to cache file in a thread/process-safe and atomic way.
+        Uses filelock for locking and atomic write via .tmp file and os.replace.
+        """
+        from filelock import FileLock
+        cache_file = os.path.join(CACHE_BASE_DIR, function_name + "_cache.json")
+        lock_file = cache_file + ".lock"
+        tmp_file = cache_file + ".tmp"
         self.logger.info(f"Saving results to cache with process_id: {process_id}")
-        cache = {}
-        if os.path.exists(os.path.join(CACHE_BASE_DIR, function_name + "_cache.json")):
-            with open(os.path.join(CACHE_BASE_DIR, function_name + "_cache.json"), 'r') as f:
-                cache = json.load(f)
-        else:
-            os.makedirs(CACHE_BASE_DIR, exist_ok=True)
-        if process_id not in cache:
-            self.logger.info(f"Saving results to cache with process_id: {process_id}")
-            cache[process_id] = output
-            with open(os.path.join(CACHE_BASE_DIR, function_name + "_cache.json"), 'w') as f:
-                json.dump(cache, f, indent=4)
-        else:
-            self.logger.debug(f"Process ID {process_id} already exists in cache. Skipping save.")
+        os.makedirs(CACHE_BASE_DIR, exist_ok=True)
+        with FileLock(lock_file):
+            cache = {}
+            if os.path.exists(cache_file):
+                try:
+                    with open(cache_file, 'r') as f:
+                        cache = json.load(f)
+                except Exception as e:
+                    self.logger.warning(f"Could not read cache file {cache_file}: {e}. Overwriting.")
+                    cache = {}
+            if process_id not in cache:
+                self.logger.info(f"Saving results to cache with process_id: {process_id}")
+                cache[process_id] = output
+                try:
+                    with open(tmp_file, 'w') as f:
+                        json.dump(cache, f, indent=4)
+                    os.replace(tmp_file, cache_file)  # atomic move
+                except Exception as e:
+                    self.logger.error(f"Error writing cache file {cache_file}: {e}")
+            else:
+                self.logger.debug(f"Process ID {process_id} already exists in cache. Skipping save.")
 
     def run(self, input_file='input/test_input.txt', semantic_retrieval=False, section_filter=None,
             prompt_name='retrieve_datasets_simple_JSON'):
