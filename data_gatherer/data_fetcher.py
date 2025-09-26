@@ -668,7 +668,11 @@ class EntrezFetcher(DataFetcher):
         self.raw_data_format = 'XML'
         # Read the API key at runtime, fallback to empty string if not set
         NCBI_API_KEY = os.environ.get('NCBI_API_KEY', '')
-        self.base = 'https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pmc&id=__PMCID__&retmode=xml&api_key=' + NCBI_API_KEY
+        if not NCBI_API_KEY:
+            self.base = 'https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pmc&id=__PMCID__&retmode=xml'
+            self.logger.warning("NCBI_API_KEY not set. Proceeding without an API key may lead to rate limiting. https://www.ncbi.nlm.nih.gov/books/NBK25497/")
+        else:
+            self.base = 'https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pmc&id=__PMCID__&retmode=xml&api_key=' + NCBI_API_KEY
         self.publisher = 'PMC'
         self.logger.debug("EntrezFetcher initialized.")
 
@@ -703,9 +707,13 @@ class EntrezFetcher(DataFetcher):
 
                 # Handle common issues
                 elif response.status_code == 400:
-                    self.logger.error(f"400 Bad Request for {PMCID}: {response.text}")
-                    time.sleep(delay)
-                    #break  # Stop retrying if it's a client-side error (bad request)
+                    if "API key invalid" in str(response.text):
+                        self.logger.error(f"Invalid NCBI API key provided. https://support.nlm.nih.gov/kbArticle/?pn=KA-05317")
+                        return None
+                    else:
+                        self.logger.error(f"400 Bad Request for {PMCID}: {response.text}")
+                        time.sleep(delay)
+                        #break  # Stop retrying if it's a client-side error (bad request)
 
                 # Log and retry for 5xx server-side errors or 429 (rate limit)
                 elif response.status_code in [500, 502, 503, 504, 429]:
