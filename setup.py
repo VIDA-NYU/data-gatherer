@@ -12,7 +12,7 @@ long_description = read_readme()
 
 setup(
     name='data_gatherer',
-    version='0.1.3',
+    version='0.1.4',
     packages=find_packages(),
     include_package_data=True,
     install_requires=requirements,
