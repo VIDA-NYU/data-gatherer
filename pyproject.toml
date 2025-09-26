@@ -1,0 +1,76 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "data_gatherer"
+version = "0.1.4"
+description = "DataGatherer Library"
+readme = "README.rst"
+requires-python = ">=3.11"
+keywords = ["Information Extraction", "NYU"]
+authors = [
+    {name = "Pietro Marini", email = "pgm7072@nyu.edu"},
+]
+maintainers = [
+    {name = "Pietro Marini", email = "pgm7072@nyu.edu"},
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Information Analysis",
+]
+dependencies = [
+    "beautifulsoup4>=4.12.3",
+    "bs4",
+    "lxml",
+    "numpy==1.26",
+    "ollama",
+    "openai",
+    "pandas",
+    "pydantic",
+    "pydantic_core",
+    "python-dotenv",
+    "PyYAML",
+    "regex",
+    "requests",
+    "selenium>=4.28.0",
+    "tokenizers",
+    "transformers",
+    "typing_extensions",
+    "webdriver-manager",
+    "google-generativeai",
+    "tiktoken",
+    "cloudscraper",
+    "pyui",
+    "pysdl2-dll",
+    "streamlit",
+    "ipywidgets",
+    "portkey-ai",
+    "xlsxwriter",
+    "sentence-transformers",
+    "pymupdf",
+    "json-repair",
+]
+
+[project.urls]
+Homepage = "https://github.com/VIDA-NYU/data-gatherer"
+Repository = "https://github.com/VIDA-NYU/data-gatherer"
+Issues = "https://github.com/VIDA-NYU/data-gatherer/issues"
+
+[tool.setuptools]
+packages = ["data_gatherer", "data_gatherer.llm", "data_gatherer.parser", "data_gatherer.retriever", "data_gatherer.prompts", "data_gatherer.config", "data_gatherer.prompts.prompt_templates", "data_gatherer.prompts.prompt_templates.metadata_prompts"]
+include-package-data = true
+
+[tool.setuptools.package-data]
+data_gatherer = [
+    "config/*.json",
+    "prompts/*.json",
+    "prompts/prompt_templates/*.json",
+    "prompts/prompt_templates/metadata_prompts/*.json",
+]
