@@ -4,9 +4,10 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "data_gatherer"
-version = "0.1.4"
+version = "0.1.4.1"
 description = "DataGatherer Library"
 readme = "README.rst"
+license = {text = "MIT"}
 requires-python = ">=3.11"
 keywords = ["Information Extraction", "NYU"]
 authors = [
@@ -18,7 +19,6 @@ maintainers = [
 classifiers = [
     "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
-    "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.11",
