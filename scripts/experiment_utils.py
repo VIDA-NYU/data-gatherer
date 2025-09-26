@@ -16,31 +16,56 @@ def load_pmc_files_from_html_xml_dir_to_dataframe_fetch_file(src_dir,raw_HTML_da
     files_df = []
     for root, dirs, file_names in os.walk(src_dir):
         for file_name in file_names:
-            format = None
+            file_format = None
+            pmcid = None
+            basename = os.path.basename(file_name)
+
+            if not(basename.startswith('PMC')):
+                print(f"Filename does not start with 'PMC': {basename}. Skipping this file.")
+                
+            if '__' in basename:
+                pmcid = basename.split('__')[0]
+                pub_title = basename.split('__')[1]
+            else:
+                print(f"Basename does not contain '__': {basename}")
+
             if file_name.endswith('.xml'):
-                format = 'xml'
-                basename = os.path.basename(file_name)
+                file_format = 'xml'
                 content = open(os.path.join(root, file_name), 'r', encoding='utf-8').read()
-                pmcid_match = re.search('pmc">\d+', content)
-                pmcid = pmcid_match.group(0).replace('">', '') if pmcid_match else None
             elif file_name.endswith('.html'):
-                format = 'html'
-                basename = os.path.basename(file_name)
+                file_format = 'html'
                 content = open(os.path.join(root, file_name), 'r', encoding='utf-8').read()
-                pmcid_match = re.search(r'PMC\d+', content)
-                pmcid = pmcid_match.group(0) if pmcid_match else None
+            else:
+                print(f"Skipping unsupported file format: {file_name}")
+                continue
+
+            if not pmcid:
+                print(f"PMCID not found in filename: {file_name}. Skipping this file. PMCID was {pmcid}")
 
             files_df.append({
-                'file_name': basename,
+                'pub_title': pub_title,
+                'file_name': file_name,
                 'raw_cont': content,
-                'format': format,
+                'format': file_format,
                 'length': len(content),
                 'path': os.path.join(root, file_name),
                 'publication': pmcid.lower() if pmcid else None,
             })
 
     files_df = pd.DataFrame(files_df)
-    files_df.to_parquet("../" + raw_HTML_data_filepath, index=False)
+    print(f"Loaded {len(files_df)} files from {src_dir}")
+
+    if os.path.exists(raw_HTML_data_filepath):
+        print(f"File {raw_HTML_data_filepath} already exists. Loading existing DataFrame.")
+        old_data = pd.read_parquet(raw_HTML_data_filepath)
+        union_df = pd.concat([old_data, files_df]).drop_duplicates(subset=['file_name']).reset_index(drop=True).drop_duplicates()
+        print(f"Combined DataFrame has {len(union_df)} unique entries after merging.")
+    else:
+        union_df = files_df
+        print(f"No existing file found. Using loaded DataFrame with {len(union_df)} entries.")
+
+    print(f"Saving DataFrame to {raw_HTML_data_filepath}")
+    union_df.to_parquet(raw_HTML_data_filepath, index=False)
 
 def PMID_to_doi(pmid,pmid_doi_mapping):
     if pmid in pmid_doi_mapping:

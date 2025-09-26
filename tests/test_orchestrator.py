@@ -7,10 +7,11 @@ import pandas as pd
 from data_gatherer.data_gatherer import DataGatherer
 from data_gatherer.data_fetcher import EntrezFetcher
 from data_gatherer.parser.xml_parser import XMLParser
+import lxml.etree as LET  # Add this import
 
 def load_mock_xml(get_test_data_path, filename="test_2.xml"):
-    with open(get_test_data_path(filename), "r", encoding="utf-8") as f:
-        return ET.fromstring(f.read())
+    with open(get_test_data_path(filename), "rb") as f:  # Open in binary mode
+        return LET.fromstring(f.read())  # Pass bytes to fromstring
 
 
 def mock_datasets_info(self, *args, **kwargs):
@@ -31,14 +32,14 @@ def mock_datasets_info(self, *args, **kwargs):
 
 
 def test_process_url_with_mocks(monkeypatch, get_test_data_path):
+    # Monkeypatch the fetcher BEFORE creating the orchestrator!
+    monkeypatch.setattr(
+        "data_gatherer.data_fetcher.EntrezFetcher.fetch_data",
+        lambda self, *args, **kwargs: load_mock_xml(get_test_data_path)
+    )
     # Setup
     orchestrator = DataGatherer(log_level="INFO", llm_name="gemini-2.0-flash")
 
-    if orchestrator.data_fetcher is None:
-        orchestrator.data_fetcher = EntrezFetcher(requests, logger=logging.getLogger("data_gatherer"))
-
-    # Monkeypatch fetch_data
-    orchestrator.data_fetcher.fetch_data = lambda *args, **kwargs: open(get_test_data_path("test_2.xml"), "r", encoding="utf-8").read()
     # Monkeypatch extract_datasets_info_from_content
     monkeypatch.setattr(XMLParser, "extract_datasets_info_from_content", mock_datasets_info)
     monkeypatch.setenv("OPENAI_API_KEY", "test-gpt-key")
@@ -46,6 +47,7 @@ def test_process_url_with_mocks(monkeypatch, get_test_data_path):
     monkeypatch.setenv("PORTKEY_ROUTE", "gemini-vertexai-test-key")
     monkeypatch.setenv("PORTKEY_CONFIG", "test-portkey-config")
     monkeypatch.setenv("PORTKEY_GATEWAY_URL", "https://test-portkey-gateway-url.com")
+    monkeypatch.setenv("NCBI_API_KEY", "test-ncbi-key")
 
     url = 'https://pmc.ncbi.nlm.nih.gov/articles/PMC11129317/'
     result = orchestrator.process_url(url)

@@ -24,7 +24,7 @@ class DataGatherer:
     """
     This class orchestrates the data gathering process by coordinating the data fetcher, parser, and classifier in a
     single workflow.
-	  Initializes the DataGatherer with the given configuration file and sets up logging.
+	Initializes the DataGatherer with the given configuration file and sets up logging.
 
     :param process_entire_document: Flag to indicate if the model processes the entire document.
 
@@ -105,7 +105,8 @@ class DataGatherer:
         os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
     def fetch_data(self, urls, search_method='url_list', driver_path=None, browser=None, headless=True,
-                   HTML_fallback=False, local_fetch_file=None, write_htmls_xmls=False, article_file_dir='tmp/raw_files/'):
+                   HTML_fallback=False, local_fetch_file=None, write_htmls_xmls=False, article_file_dir='tmp/raw_files/',
+                   write_to_df_path=False):
         """
         Fetches data from the given URL using the configured data fetcher (WebScraper or EntrezFetcher).
 
@@ -137,38 +138,72 @@ class DataGatherer:
         if isinstance(urls, str):
             urls = [urls]
 
-        raw_data = {}
+        complete_publication_fetches = {}
+        i = None
+        HTML_fallback_priority_list = ['HTTPGetRequest', 'Selenium']
 
-        for src_url in urls:
-            self.current_url = src_url
-            self.logger.info(f"Setting target URL to: {src_url}")
-            self.data_fetcher = self.data_fetcher.update_DataFetcher_settings(src_url,
-                                                                              self.full_document_read,
-                                                                              self.logger,
-                                                                              HTML_fallback=HTML_fallback,
-                                                                              driver_path=driver_path,
-                                                                              browser=browser,
-                                                                              headless=headless,
-                                                                              raw_HTML_data_filepath=local_fetch_file)
-            self.logger.info(f"Fetching data from URL: {src_url}")
-            raw_data[src_url] = self.data_fetcher.fetch_data(src_url, )
+        while len(complete_publication_fetches) < len(urls):
+            HTML_fallback = False if i is None else HTML_fallback_priority_list[i]
+            i = 0 if i is None else i + 1
+            for pub_link in urls:
+                self.logger.info(f"length of complete fetches < urls: {len(complete_publication_fetches)} < {len(urls)}")
+                if pub_link in complete_publication_fetches:
+                    continue
 
-            if write_htmls_xmls and not isinstance(self.data_fetcher, DatabaseFetcher):
-                self.publisher = self.data_fetcher.url_to_publisher_domain(self.current_url)
-                directory = article_file_dir + self.publisher + '/'
-                self.logger.info(f"Raw Data is {self.data_fetcher.raw_data_format}.")
-                if self.data_fetcher.raw_data_format == "HTML":
-                    self.data_fetcher.html_page_source_download(directory)
-                elif self.data_fetcher.raw_data_format == "XML":
-                    self.data_fetcher.download_xml(directory, raw_data[src_url])
-                elif self.data_fetcher.raw_data_format == "PDF":
-                    self.data_fetcher.download_pdf(directory, raw_data[src_url], src_url)
+                # Update fetcher settings for this method and publication
+                self.data_fetcher = self.data_fetcher.update_DataFetcher_settings(
+                    pub_link,
+                    self.full_document_read,
+                    self.logger,
+                    HTML_fallback=HTML_fallback,
+                    driver_path=driver_path,
+                    browser=browser,
+                    headless=headless
+                )
+
+                # Fetch data
+                fetched_data = self.data_fetcher.fetch_data(pub_link)
+                completeness_check = self.data_checker.is_fulltext_complete(fetched_data, pub_link, self.data_fetcher.raw_data_format)
+
+                if completeness_check:
+                    self.logger.info(f"Fetched complete {self.data_fetcher.raw_data_format} data from {pub_link}.")
+                    complete_publication_fetches[pub_link] = {
+                        'fetched_data': fetched_data,
+                        'raw_data_format': self.data_fetcher.raw_data_format
+                    }
+                elif HTML_fallback == 'Selenium':
+                    self.logger.info(f"Selenium fetch the final fulltext {pub_link}.")
+                    complete_publication_fetches[pub_link] = {
+                        'fetched_data': fetched_data, 
+                        'raw_data_format': self.data_fetcher.raw_data_format
+                        }
                 else:
-                    self.logger.warning(f"Unsupported raw data format: {self.data_fetcher.raw_data_format}.")
+                    self.logger.info(f"{self.data_fetcher.raw_data_format} Data from {pub_link} is incomplete.")
 
-        self.data_fetcher.scraper_tool.quit() if hasattr(self.data_fetcher, 'scraper_tool') else None
+                # Optionally save HTML/XMLs if requested
+                if write_htmls_xmls:
+                    publisher = self.data_fetcher.url_to_publisher_domain(pub_link)
+                    directory = os.path.join(article_file_dir, publisher)
+                    if HTML_fallback == 'Selenium':
+                        self.data_fetcher.html_page_source_download(directory, pub_link)
+                    elif self.data_fetcher.raw_data_format == "HTML" and completeness_check:
+                        self.data_fetcher.html_page_source_download(directory, pub_link, fetched_data)
+                    elif self.data_fetcher.raw_data_format == "XML" and completeness_check:
+                        self.data_fetcher.download_xml(directory, fetched_data, pub_link)
+                    elif self.data_fetcher.raw_data_format == "PDF":
+                        self.data_fetcher.download_pdf(directory, fetched_data, pub_link)
+                    else:
+                        self.logger.warning(f"Unsupported raw data format: {self.data_fetcher.raw_data_format}.")
 
-        return raw_data
+        # Clean up driver if needed
+        if hasattr(self.data_fetcher, 'scraper_tool'):
+            self.data_fetcher.scraper_tool.quit()
+
+        if write_to_df_path and write_to_df_path.endswith('.parquet'):
+            df = pd.DataFrame.from_dict(complete_publication_fetches, orient='index')
+            df.to_parquet(write_to_df_path, index=True)
+
+        return complete_publication_fetches
 
     def parse_data(self, raw_data, publisher=None, current_url_address=None, additional_data=None,
                    raw_data_format='XML', parsed_data_dir='tmp/parsed_articles/', grobid_for_pdf=False,
@@ -290,16 +325,16 @@ class DataGatherer:
 
         elif self.search_method == 'url_list':
             self.data_fetcher = WebScraper(None, self.logger, driver_path=driver_path, browser=browser,
-                                           headless=headless, local_fetch_fp=raw_HTML_data_fp)
+                                           headless=headless)
 
         elif self.search_method == 'cloudscraper':
             driver = cloudscraper.create_scraper()
-            self.data_fetcher = WebScraper(driver, self.logger, local_fetch_fp=raw_HTML_data_fp)
+            self.data_fetcher = WebScraper(driver, self.logger)
 
         elif self.search_method == 'google_scholar':
             driver = create_driver(driver_path, browser, headless, self.logger)
             self.data_fetcher = WebScraper(driver, self.logger, driver_path=driver_path, browser=browser,
-                                           headless=headless, local_fetch_fp=raw_HTML_data_fp)
+                                           headless=headless)
 
         else:
             raise ValueError(f"Invalid search method: {self.search_method}")
@@ -417,10 +452,10 @@ class DataGatherer:
                 directory = article_file_dir + self.publisher + '/'
                 self.logger.info(f"Raw Data is {self.raw_data_format}.")
                 if isinstance(self.data_fetcher, WebScraper):
-                    self.data_fetcher.html_page_source_download(directory)
+                    self.data_fetcher.html_page_source_download(directory, url)
                     self.logger.info(f"Raw HTML saved to: {directory}")
                 elif isinstance(self.data_fetcher, EntrezFetcher):
-                    self.data_fetcher.download_xml(directory, raw_data)
+                    self.data_fetcher.download_xml(directory, raw_data, url)
                     self.logger.info(f"Raw XML saved in {directory} directory")
                 else:
                     self.logger.warning(f"Unsupported raw data format: {self.raw_data_format}.")
@@ -430,7 +465,7 @@ class DataGatherer:
             self.data_fetcher.quit() if hasattr(self.data_fetcher, 'scraper_tool') else None
 
             # Step 2: Use HTMLParser/XMLParser
-            if self.raw_data_format == "XML" and raw_data is not None:
+            if self.raw_data_format.upper() == "XML" and raw_data is not None:
                 self.logger.info("Using XMLParser to parse data.")
                 self.parser = XMLParser(self.open_data_repos_ontology, self.logger,
                                         llm_name=self.llm,
@@ -454,7 +489,7 @@ class DataGatherer:
 
                     parsed_data = pd.concat([parsed_data, add_data], ignore_index=True).drop_duplicates()
 
-            elif self.raw_data_format == 'HTML':
+            elif self.raw_data_format.upper() == 'HTML':
                 self.logger.info("Using HTMLParser to parse data.")
                 self.parser = HTMLParser(self.open_data_repos_ontology, self.logger,
                                          llm_name=self.llm,
@@ -478,10 +513,10 @@ class DataGatherer:
 
             # Step 3: Use Classifier to classify Parsed data
             if parsed_data is not None:
-                if self.raw_data_format == "XML":
+                if self.raw_data_format.upper() == "XML":
                     self.logger.info("XML element classification not needed. Using parsed_data.")
                     classified_links = parsed_data
-                elif 'HTML' in self.raw_data_format:
+                elif 'HTML' in self.raw_data_format.upper():
                     classified_links = parsed_data
                     self.logger.info("HTML element classification not supported. Using parsed_data.")
                 else:
@@ -590,6 +625,65 @@ class DataGatherer:
                 if 'repository_reference' in df.columns:
                     df.rename(columns={'repository_reference': 'data_repository'}, inplace=True)
         return results
+
+    def DRAFT_prepare_prompts_batch(
+        self,
+        fname,
+        fetched_data,
+        raw_data_format,
+        prompt,
+        FDR,
+        semantic_retrieval=False,
+        section_filter=None
+    ):
+        """
+        Prepares a JSONL batch for API requests.
+        Each line contains a dict with a unique custom_id and a body with API parameters.
+        Returns a list of dicts (ready to be written as JSONL).
+        """
+        jsonl_cont = []
+
+        for url, data in fetched_data.items():
+            # Compose custom_id
+            article_id = self.url_to_article_id(url)
+            custom_id = f"{self.llm}|{article_id}|FDR={FDR}|{raw_data_format}"
+
+            if raw_data_format.upper() == 'XML':
+                prepare_input = self.parser.normalize_xml(data['fetched_data'])
+            elif raw_data_format.upper() == 'HTML':
+                prepare_input = self.parser.normalize_html(data['fetched_data'])
+            else:
+                raise ValueError(f"Unsupported raw data format: {raw_data_format}")
+
+            prompt = self.parser.prompt_manager.render_prompt(
+                prompt_name=prompt,
+                raw_data_format=raw_data_format,
+                full_document_read=self.full_document_read,
+                input_text=prepare_input,
+                url=url,
+                section_filter=section_filter
+            )
+
+            # Prepare body (parameters for the API)
+            body = {
+                "raw_data_format": data['raw_data_format'],
+                "prompt": prompt,
+                "FDR": FDR,
+                "semantic_retrieval": semantic_retrieval,
+                "section_filter": section_filter,
+                "url": url
+            }
+
+            jsonl_cont.append({
+                "custom_id": custom_id,
+                "body": body,
+            })
+
+        with open(fname, 'w') as f:
+            for entry in jsonl_cont:
+                f.write(json.dumps(entry) + '\n')
+
+        return jsonl_cont
 
     def summarize_result(self, df):
         """
