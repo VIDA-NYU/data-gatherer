@@ -49,26 +49,36 @@
   },
   "PMC": {
     "css_selectors": {
-      "data_availability": {
+      "data_availability_sections": {
         "section.data-availability-statement": "dataset",
         "section.associated-data": "dataset",
         "h2.pmc_sec_title:-soup-contains('Data Availability')": "dataset",
-        "h3.pmc_sec_title:-soup-contains('Data Availability')": "dataset",
+        "h3.pmc_sec_title:-soup-contains('Data Availability')": "dataset"
+      },
+      "supplementary_data_sections": {
+        "h2.pmc_sec_title:-soup-contains('Extended Data')": "dataset",
+        "h3.pmc_sec_title:-soup-contains('Clinical Data')": "dataset",
         "h2.pmc_sec_title:-soup-contains('Associated Data')": "dataset",
         "h2.pmc_sec_title:-soup-contains('Footnotes')": "dataset"
+      },
+      "supplementary_material_sections": {
+        "section.supplementary-material": "supplementary",
+        "h2.pmc_sec_title:-soup-contains('Supplementary Material')": "supplementary"
       }
     },
     "xpaths": {
-      "data_availability": {
+      "data_availability_sections": {
         "//section[h2[contains(text(), 'Data Availability')]]": "dataset",
         "//section[h3[contains(text(), 'Data Availability')]]": "dataset",
         "following-sibling::p[1]" : "dataset",
         "//section[h2[contains(text(), 'Footnotes')]]": "dataset"
       },
-      "supplementary_data": {
+      "supplementary_data_sections": {
         "//section[h2[contains(text(), 'Supplementary Material')]]": "supplementary",
         "//section[h2[contains(text(), 'Extended Data')]]": "supplementary",
-        "//section[h3[contains(text(), 'Clinical Data')]]": "supplementary"
+        "//section[h3[contains(text(), 'Clinical Data')]]": "supplementary",
+        "//section[h3[contains(text(), 'Associated Data')]]": "supplementary",
+        "//section[h2[contains(text(), 'Footnotes')]]": "supplementary"
       }
     },
     "xml_tags": {
