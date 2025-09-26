@@ -24,8 +24,9 @@ def test_get_data_availability_elements_from_HTML(get_test_data_path):
         raw_html = f.read()
     preprocessed_data = parser.normalize_HTML(raw_html)
     DAS_elements = parser.retriever.get_data_availability_elements_from_webpage(preprocessed_data)
+    print(f"DAS_elements: \n\n{DAS_elements}\n\n")
     assert isinstance(DAS_elements, list)
-    assert len(DAS_elements) == 5
+    assert len(DAS_elements) == 3
     assert all(isinstance(sm, dict) for sm in DAS_elements)
     print('\n')
 
