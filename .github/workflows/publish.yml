@@ -13,9 +13,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
-          python-version: "3.x"
+          python-version: "3.11"
       - name: Install build dependencies
         run: |
           python -m pip install --upgrade pip setuptools wheel
@@ -25,9 +25,28 @@ jobs:
           rm -rf dist/ build/ *.egg-info/
       - name: Build package
         run: |
-          python -m build
-      - name: Check package
+          python -m build --sdist --wheel --outdir dist/
+      - name: Check package metadata
         run: |
           python -m twine check dist/*
+          ls -la dist/
+      - name: Display wheel metadata
+        run: |
+          python -c "
+          import zipfile
+          import os
+          for f in os.listdir('dist'):
+              if f.endswith('.whl'):
+                  print(f'Checking {f}')
+                  with zipfile.ZipFile(f'dist/{f}', 'r') as z:
+                      for name in z.namelist():
+                          if 'METADATA' in name:
+                              print(f'Found metadata file: {name}')
+                              with z.open(name) as metadata:
+                                  content = metadata.read().decode('utf-8')
+                                  lines = content.split('\n')[:20]  # First 20 lines
+                                  print('\n'.join(lines))
+                              break
+          "
       - name: Publish package distributions to PyPI
-        uses: pypa/gh-action-pypi-publish@v1.8.8
+        uses: pypa/gh-action-pypi-publish@v1.12.2
