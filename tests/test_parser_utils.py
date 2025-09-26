@@ -312,10 +312,10 @@ def test_schema_validation(get_test_data_path):
         {'dataset_identifier': 'M27187', 'repository_reference': 'https://www.ncbi.nlm.nih.gov/nuccore/M27187', 'dataset_id': 'M27187'}
     ]
     ret_cases = [  # change these when adding support for new repos
-        {'dataset_identifier': '10.1594/PANGAEA.964081', 'repository_reference': 'doi.org', 'dataset_webpage': 'https://doi.org/10.1594/PANGAEA.964081'}, 
-        {'dataset_identifier': '10.17632/xtb4mkvf8f.1', 'repository_reference': 'data.mendeley.com', 'dataset_webpage': 'https://doi.org/10.17632/xtb4mkvf8f.1'},
+        {'dataset_identifier': '10.1594/PANGAEA.964081', 'repository_reference': 'doi.org', 'dataset_webpage': 'https://doi.pangaea.de/10.1594/PANGAEA.964081'}, 
+        {'dataset_identifier': '10.17632/xtb4mkvf8f.1', 'repository_reference': 'data.mendeley.com', 'dataset_webpage': 'https://data.mendeley.com/datasets/xtb4mkvf8f/1'},
         {'dataset_identifier': 'MSV000081006', 'repository_reference': 'massive.ucsd.edu'},
-        {'dataset_identifier': '10.7937/tcia.2019.30ilqfcl', 'repository_reference': 'cancerimagingarchive.net', 'dataset_webpage': 'https://doi.org/10.7937/tcia.2019.30ilqfcl'},
+        {'dataset_identifier': '10.7937/tcia.2019.30ilqfcl', 'repository_reference': 'cancerimagingarchive.net', 'dataset_webpage': 'https://www.cancerimagingarchive.net/collection/acrin-nsclc-fdg-pet/'},
         {'dataset_identifier': 'syn9702085', 'repository_reference': 'synapse.org', 'dataset_webpage': 'https://www.synapse.org/#!Synapse:syn9702085'},
         {'dataset_identifier': 'M27187', 'repository_reference': 'nuccore', 'dataset_webpage': 'https://www.ncbi.nlm.nih.gov/nuccore/M27187'}
     ]

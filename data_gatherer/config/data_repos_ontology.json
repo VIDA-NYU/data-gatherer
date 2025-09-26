@@ -2,43 +2,44 @@
   "repos": {
     "bigd.big.ac.cn": {
       "repo_name": "BIGD",
-      "url_concat_string": "/browse/__ID__",
+      "dataset_webpage_url_ptr": "https://bigd.big.ac.cn/browse/__ID__",
       "download_root": "https://download.cncb.ac.cn/gsa/__ID__"
     },
     "ega-archive.org": {
       "repo_name": "European Genome-Phenome Archive",
-      "url_concat_string": "/studies/__ID__",
+      "dataset_webpage_url_ptr": "https://ega-archive.org/studies/__ID__",
       "download_root": "https://download.cncb.ac.cn/gsa/__ID__",
       "access_mode": "Contact to access"
     },
     "massive.ucsd.edu": {
       "repo_name": "MassIVE",
-      "url_concat_string": "/ProteoSAFe/dataset.jsp?accession=__ID__",
+      "dataset_webpage_url_ptr": "https://massive.ucsd.edu/ProteoSAFe/dataset.jsp?accession=__ID__",
+      "ID_pattern": "MSV\\d+",
       "download_root": "ftp://massive.ucsd.edu/v06/__ID__/",
       "access_mode": "Complex download"
     },
     "www.ebi.ac.uk": {
       "repo_name": "PRIDE",
       "javascript_load_required": true,
-      "url_concat_string": "/pride/archive/projects/__ID__",
+      "dataset_webpage_url_ptr": "https://www.ebi.ac.uk/pride/archive/projects/__ID__",
       "download_root": "https://ftp.pride.ebi.ac.uk/pride/data/archive/2024/07/__ID__/",
       "access_mode": "Complex download"
     },
     "www.iprox.cn": {
       "repo_name": "iProX",
-      "url_concat_string": "/page/project.html?id=__ID__",
+      "dataset_webpage_url_ptr": "https://www.iprox.cn/page/project.html?id=__ID__",
       "download_root": "",
       "access_mode": "Complex download"
     },
     "proteomecentral.proteomexchange.org": {
       "repo_name": "ProteomeCentral",
-      "url_concat_string": "/cgi/GetDataset?ID=__ID__",
+      "dataset_webpage_url_ptr": "https://proteomecentral.proteomexchange.org/cgi/GetDataset?ID=__ID__",
       "download_root": "",
       "access_mode": "Complex download"
     },
     "www.proteomexchange.org": {
       "repo_name": "ProteomeXchange",
-      "url_concat_string": "/cgi/GetDataset?ID=__ID__",
+      "dataset_webpage_url_ptr": "https://www.proteomexchange.org/cgi/GetDataset?ID=__ID__",
       "repo_mapping" : "proteomecentral.proteomexchange.org",
       "download_root": "", 
       "access_mode": "Complex download"
@@ -46,7 +47,6 @@
     "pdc.cancer.gov": {
       "repo_name": "Proteomic Data Commons",
       "javascript_load_required": true,
-      "url_concat_string": "/pdc/study/__ID__",
       "dataset_webpage_url_ptr": "https://proteomic.datacommons.cancer.gov/pdc/study/__ID__",
       "id_pattern": "PDC[0-9]+",
       "access_mode": "Complex download or Application to access"
@@ -68,7 +68,7 @@
     },
     "repository.jpostdb.org": {
       "repo_name": "JPOST",
-      "url_concat_string": "/entry/__ID__",
+      "dataset_webpage_url_ptr": "https://repository.jpostdb.org/entry/__ID__",
       "download_root": "https://repository.jpostdb.org/entry/__ID__",
       "access_mode": "Complex download"
     },
