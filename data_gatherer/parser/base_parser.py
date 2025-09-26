@@ -710,11 +710,13 @@ class LLMParser(ABC):
         :return: dict or None — parsed JSON object or None if parsing fails.
         """
         # Handle Portkey Gemini response object or OpenAI-like object
+        self.logger.info(f"Function_call: safe_parse_json(response_text {type(response_text)})")
         # Accept both dict and objects with .choices attribute
         if hasattr(response_text, "choices"):
             # Likely an OpenAI/Portkey object, extract content
             try:
                 response_text = response_text.choices[0].message.content
+                self.logger.debug(f"Extracted content from response object, type: {type(response_text)}")
             except Exception as e:
                 self.logger.warning(f"Could not extract content from response object: {e}")
                 return None
@@ -741,6 +743,8 @@ class LLMParser(ABC):
         if response_text.startswith("```"):
             response_text = re.sub(r"^```[a-zA-Z]*\n?", "", response_text)
             response_text = re.sub(r"\n?```$", "", response_text)
+        
+        self.logger.debug(f"Cleaned response text for JSON parsing: {response_text[:500]}")
 
         try:
             # First try standard parsing
