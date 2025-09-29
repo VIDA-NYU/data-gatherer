@@ -141,6 +141,104 @@ dataset_metadata_response_schema_gpt = {
     }
 }
 
+# Simplified schema focused on dataset provenance and reuse enablement
+dataset_response_schema_with_use_description = {
+    "type": "json_schema",
+    "name": "PaperMiner_dataset_provenance_schema",
+    "schema": {
+        "type": "object",
+        "properties": {
+            "datasets": {
+                "type": "array",
+                "items": {
+                    "type": "object",
+                    "properties": {
+                        "dataset_identifier": {
+                            "type": "string",
+                            "description": "A unique identifier or accession code for the dataset."
+                        },
+                        "repository_reference": {
+                            "type": "string",
+                            "description": "A valid URI or string referring to the repository where the dataset can be found."
+                        },
+                        "dataset_context_from_paper": {
+                            "type": "string",
+                            "description": "Relevant text passages from the paper that either describe this dataset and provide context of its use or refer to it more implicitly."
+                        },
+                        "citation_type": {
+                            "type": "string",
+                            "description": "Type of citation used for this dataset. It can be either Primary (firsthand information collected by the researcher for a specific purpose) or Secondary (pre-existing information collected by someone else and then used by another researcher)."
+                        }
+                    },
+                    "additionalProperties": False,
+                    "required": ["dataset_identifier", "repository_reference", "dataset_context_from_paper", "citation_type"]
+                },
+                "minItems": 1,
+                "additionalProperties": False
+            }
+        },
+        "additionalProperties": False,
+        "required": ["datasets"]
+    }
+}
+
+# Enhanced JSON schema for GPT responses with context
+dataset_response_schema_with_context = {
+    "type": "json_schema",
+    "name": "GPT_dataset_context_schema",
+    "schema": {
+        "type": "object",
+        "properties": {
+            "datasets": {
+                "type": "array",
+                "items": {
+                    "type": "object",
+                    "properties": {
+                        "dataset_identifier": {
+                            "type": "string",
+                            "description": "A unique identifier or accession code for the dataset."
+                        },
+                        "repository_reference": {
+                            "type": "string",
+                            "description": "A valid URI or string referring to the repository."
+                        },
+                        "dataset_usage_role": {
+                            "type": "string",
+                            "enum": ["training_data", "validation_data", "comparison_baseline", "reference_standard", "supplementary_data", "replication_data", "meta_analysis_source", "other"],
+                            "description": "The primary role of this dataset in the research study."
+                        },
+                        "usage_description": {
+                            "type": "string",
+                            "description": "A brief, specific description of how this dataset was used in the study."
+                        },
+                        "results_relationship": {
+                            "type": "string",
+                            "enum": ["supports_main_findings", "contradicts_previous_work", "provides_context", "enables_methodology", "validates_approach", "other"],
+                            "description": "How this dataset relates to the study's findings and conclusions."
+                        },
+                        "decision_rationale": {
+                            "type": "string",
+                            "description": "Chain of thought reasoning explaining why this dataset was selected and its significance."
+                        },
+                        "dataset_scope": {
+                            "type": "string",
+                            "enum": ["primary_analysis", "secondary_analysis", "background_context", "methodology_development", "comparative_study", "other"],
+                            "description": "The analytical scope where this dataset fits in the research."
+                        }
+                    },
+                    "additionalProperties": False,
+                    "required": ["dataset_identifier", "repository_reference", "dataset_usage_role", "usage_description", "results_relationship", "decision_rationale", "dataset_scope"]
+                },
+                "minItems": 1,
+                "additionalProperties": False
+            }
+        },
+        "additionalProperties": False,
+        "required": ["datasets"]
+    }
+}
+
+
 class Dataset(BaseModel):
     dataset_identifier: str
     repository_reference: str
@@ -175,3 +273,20 @@ class Dataset_metadata(BaseModel):
     request_access_needed: str
     dataset_identifier: str
     download_type: str
+
+class Dataset_w_Use_Description(BaseModel):
+    dataset_identifier: str
+    repository_reference: str
+    dataset_context_from_paper: str  # Rich description of how this dataset was used in the paper - enables data reuse
+
+
+
+class Dataset_w_Context(BaseModel):
+    dataset_identifier: str
+    repository_reference: str
+    dataset_usage_role: str  # How the dataset is used: "training_data", "validation_data", "comparison_baseline", "reference_standard", "supplementary_data", "replication_data", "meta_analysis_source", "other"
+    usage_description: str  # Brief description of how this dataset was used in the study
+    results_relationship: str  # How it relates to findings: "supports_main_findings", "contradicts_previous_work", "provides_context", "enables_methodology", "validates_approach", "other"
+    decision_rationale: str  # Why this dataset was selected and its significance
+    dataset_scope: str  # Scope of the dataset: "primary_analysis", "secondary_analysis", "background_context", "methodology_development", "comparative_study", "other"
+

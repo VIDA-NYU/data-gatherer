@@ -141,3 +141,11 @@ ui/*log*
 ui/portkey-secret.yaml
 ui/deployment.yaml
 
+data_gatherer/prompts/prompt_templates/old
+data_gatherer/config/repos.txt
+scripts/exp_input/bdf_paper_pdfs/**
+scripts/output/gold/datacatalog_export-2025-10-02.json
+scripts/output/bdf_parsed_data**
+scripts/exp_input/Local_fetched_data_SAGE.parquet
+scripts/output/gold/dryad_datasets_preview.xlsx
+scripts/output/gold/dryad_datasets.parquet

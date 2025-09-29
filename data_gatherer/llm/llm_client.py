@@ -4,21 +4,21 @@ from openai import OpenAI
 import google.generativeai as genai
 from portkey_ai import Portkey
 from data_gatherer.prompts.prompt_manager import PromptManager
-from data_gatherer.env import PORTKEY_GATEWAY_URL, PORTKEY_API_KEY, PORTKEY_ROUTE, PORTKEY_CONFIG, NYU_LLM_API, GPT_API_KEY, GEMINI_KEY, DATA_GATHERER_USER_NAME
+from data_gatherer.env import PORTKEY_GATEWAY_URL, PORTKEY_API_KEY, PORTKEY_ROUTE, PORTKEY_CONFIG, OLLAMA_CLIENT, GPT_API_KEY, GEMINI_KEY, DATA_GATHERER_USER_NAME
 from data_gatherer.llm.response_schema import *
 
 class LLMClient_dev:
-    def __init__(self, model: str, logger=None, save_prompts: bool = False, use_portkey_for_gemini: bool = True):
+    def __init__(self, model: str, logger=None, save_prompts: bool = False, use_portkey: bool = True):
         self.model = model
         self.logger = logger or logging.getLogger(__name__)
         self.logger.info(f"Initializing LLMClient with model: {self.model}")
-        self.use_portkey_for_gemini = use_portkey_for_gemini
+        self.use_portkey = use_portkey
         self._initialize_client(model)
         self.save_prompts = save_prompts
         self.prompt_manager = PromptManager("data_gatherer/prompts/prompt_templates/metadata_prompts", self.logger)
 
     def _initialize_client(self, model):
-        if self.use_portkey_for_gemini and 'gemini' in model:
+        if self.use_portkey and 'gemini' in model:
             self.portkey = Portkey(
                 api_key=PORTKEY_API_KEY,
                 virtual_key=PORTKEY_ROUTE,
@@ -31,7 +31,7 @@ class LLMClient_dev:
             self.client = Client(host="http://localhost:11434")
 
         elif model == 'gemma2:9b':
-            self.client = Client(host=NYU_LLM_API)  # env variable
+            self.client = Client(host=OLLAMA_CLIENT)  # env variable
 
         elif model == 'gpt-4o-mini':
             self.client = OpenAI(api_key=GPT_API_KEY)
@@ -49,28 +49,28 @@ class LLMClient_dev:
             self.client = OpenAI(api_key=GPT_API_KEY)
 
         elif model == 'gemini-1.5-flash':
-            if not self.use_portkey_for_gemini:
+            if not self.use_portkey:
                 genai.configure(api_key=GEMINI_KEY)
                 self.client = genai.GenerativeModel('gemini-1.5-flash')
             else:
                 self.client = None
 
         elif model == 'gemini-2.0-flash-exp':
-            if not self.use_portkey_for_gemini:
+            if not self.use_portkey:
                 genai.configure(api_key=GEMINI_KEY)
                 self.client = genai.GenerativeModel('gemini-2.0-flash-exp')
             else:
                 self.client = None
 
         elif model == 'gemini-2.0-flash':
-            if not self.use_portkey_for_gemini:
+            if not self.use_portkey:
                 genai.configure(api_key=GEMINI_KEY)
                 self.client = genai.GenerativeModel('gemini-2.0-flash')
             else:
                 self.client = None
 
         elif model == 'gemini-1.5-pro':
-            if not self.use_portkey_for_gemini:
+            if not self.use_portkey:
                 genai.configure(api_key=GEMINI_KEY)
                 self.client = genai.GenerativeModel('gemini-1.5-pro')
             else:
@@ -85,7 +85,7 @@ class LLMClient_dev:
         if self.model.startswith('gpt'):
             return self._call_openai(content, **kwargs)
         elif self.model.startswith('gemini'):
-            if self.use_portkey_for_gemini:
+            if self.use_portkey:
                 return self._call_portkey_gemini(content, **kwargs)
             else:
                 return self._call_gemini(content, **kwargs)
@@ -201,7 +201,7 @@ class LLMClient_dev:
                 )
             return response.output
         elif model.startswith('gemini'):
-            if self.use_portkey_for_gemini:
+            if self.use_portkey:
                 portkey_payload = {
                     "model": model,
                     "messages": messages,

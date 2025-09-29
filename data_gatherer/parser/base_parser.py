@@ -15,7 +15,7 @@ from data_gatherer.prompts.prompt_manager import PromptManager
 import tiktoken
 from data_gatherer.resources_loader import load_config
 from data_gatherer.retriever.embeddings_retriever import EmbeddingsRetriever
-from data_gatherer.env import PORTKEY_GATEWAY_URL, PORTKEY_API_KEY, PORTKEY_ROUTE, PORTKEY_CONFIG, NYU_LLM_API, \
+from data_gatherer.env import PORTKEY_GATEWAY_URL, PORTKEY_API_KEY, PORTKEY_ROUTE, PORTKEY_CONFIG, OLLAMA_CLIENT, \
     GPT_API_KEY, GEMINI_KEY, DATA_GATHERER_USER_NAME
 import requests
 from json_repair import repair_json
@@ -36,7 +36,7 @@ class LLMParser(ABC):
     def __init__(self, open_data_repos_ontology, logger, log_file_override=None, full_document_read=True,
                  prompt_dir="data_gatherer/prompts/prompt_templates",
                  llm_name=None, save_dynamic_prompts=False, save_responses_to_cache=False, use_cached_responses=False,
-                 use_portkey_for_gemini=True):
+                 use_portkey=True):
         """
         Initialize the LLMParser with configuration, logger, and optional log file override.
 
@@ -68,9 +68,9 @@ class LLMParser(ABC):
         self.save_responses_to_cache = save_responses_to_cache
         self.use_cached_responses = use_cached_responses
 
-        self.use_portkey_for_gemini = use_portkey_for_gemini
+        self.use_portkey = use_portkey
 
-        if self.use_portkey_for_gemini and 'gemini' in llm_name:
+        if self.use_portkey and 'gemini' in llm_name:
             self.portkey = Portkey(
                 api_key=PORTKEY_API_KEY,
                 virtual_key=PORTKEY_ROUTE,
@@ -89,7 +89,7 @@ class LLMParser(ABC):
             self.client = LLMClient_dev(model='qwen:4b', logger=self.logger)
 
         elif llm_name == 'gemma2:9b':
-            self.client = Client(host=NYU_LLM_API)  # env variable
+            self.client = Client(host=OLLAMA_CLIENT)  # env variable
 
         elif llm_name == 'gpt-4o-mini':
             self.client = OpenAI(api_key=GPT_API_KEY)
@@ -107,7 +107,7 @@ class LLMParser(ABC):
             self.client = OpenAI(api_key=GPT_API_KEY)
 
         elif 'gemini' in llm_name:
-            if not self.use_portkey_for_gemini:
+            if not self.use_portkey:
                 genai.configure(api_key=GEMINI_KEY)
                 self.client = genai.GenerativeModel(llm_name)
             else:
@@ -438,7 +438,7 @@ class LLMParser(ABC):
                 self.logger.info(f"Response {type(resps)} saved to cache") if self.save_responses_to_cache else None
 
             elif 'gemini' in model:
-                if self.use_portkey_for_gemini:
+                if self.use_portkey:
                     # --- Portkey Gemini call ---
                     portkey_payload = {
                         "model": model,
@@ -515,6 +515,19 @@ class LLMParser(ABC):
         #if not self.full_document_read:
         #    return resps
 
+        # Process the response content using extracted method
+        result = self.process_datasets_response(resps)
+
+        return result
+
+    def process_datasets_response(self, resps):
+        """
+        Process the LLM response containing datasets and extract structured dataset information.
+        This method handles different response formats (lists, strings, dicts) and performs validation.
+        
+        :param resps: LLM response containing datasets (can be list, string, or dict)
+        :return: List of processed dataset dictionaries
+        """
         # Process the response content
         result = []
         for dataset in resps:
@@ -561,10 +574,9 @@ class LLMParser(ABC):
             self.logger.info(f"Extracted dataset: {result[-1]}")
 
         self.logger.debug(f"Final result: {result}")
-
         return result
 
-    def schema_validation(self, dataset):
+    def schema_validation(self, dataset, req_timeout=0.5):
         """
         Validate and extract dataset information based on the schema.
 
@@ -572,6 +584,7 @@ class LLMParser(ABC):
 
         :return: tuple — (dataset_id, data_repository, dataset_webpage) or (None, None, None) if invalid.
         """
+        self.logger.info(f"Schema validation called with dataset: {dataset}")
         dataset_id, data_repository, dataset_webpage = None, None, None
 
         for repo_key, repo_vals in self.open_data_repos_ontology['repos'].items():
@@ -638,13 +651,13 @@ class LLMParser(ABC):
 
         if dataset_webpage is None and 'dataset_webpage' in dataset:
             dataset_webpage = self.validate_dataset_webpage(dataset['dataset_webpage'], data_repository,
-                                                            dataset_id, dataset)
+                                                            dataset_id, dataset, req_timeout=req_timeout)
         elif dataset_webpage is None:
             self.logger.info(f"Dataset webpage not extracted")
         else:
             self.logger.info(f"Dataset webpage found via pattern matching: {dataset_webpage}")
             dataset_webpage = self.validate_dataset_webpage(dataset_webpage, data_repository,
-                                                            dataset_id, dataset)
+                                                            dataset_id, dataset, req_timeout=req_timeout)
         self.logger.info(f"Final schema validation vals: {dataset_id}, {data_repository}, {dataset_webpage}")
 
         if dataset_id == 'n/a' and data_repository in self.open_data_repos_ontology['repos']:
@@ -1034,7 +1047,7 @@ class LLMParser(ABC):
             self.logger.info(f"Accession ID {dataset_identifier} is valid")
             return dataset_identifier
 
-    def validate_dataset_webpage(self, dataset_webpage_url, resolved_repo, dataset_id, old_metadata=None):
+    def validate_dataset_webpage(self, dataset_webpage_url, resolved_repo, dataset_id, old_metadata=None, req_timeout=0.5):
         """
         This function checks for hallucinations, i.e. if the dataset identifier is a known repository name.
         Input:
@@ -1044,7 +1057,7 @@ class LLMParser(ABC):
         old_metadata: dict - the old metadata dictionary (optional)
         """
         self.logger.info(f"Validating Dataset Page: {dataset_webpage_url}, resolved_repo {resolved_repo}, dataset_id {dataset_id}")
-        resolved_dataset_page = self.resolve_url(dataset_webpage_url)
+        resolved_dataset_page = self.resolve_url(dataset_webpage_url, req_timeout=req_timeout)
 
         if resolved_repo in self.open_data_repos_ontology['repos']:
             if 'dataset_webpage_url_ptr' in self.open_data_repos_ontology['repos'][resolved_repo].keys():
@@ -1074,9 +1087,11 @@ class LLMParser(ABC):
         self.logger.info(f"Repository {resolved_repo} not found in ontology")
         return 'n/a'
 
-    def resolve_url(self, url):
+    def resolve_url(self, url, req_timeout=0.5):
+        if req_timeout is None:
+            return url
         try:
-            response = requests.get(url, allow_redirects=True, timeout=5)
+            response = requests.get(url, allow_redirects=True, timeout=req_timeout)
             self.logger.info(f"Resolved URL: {response.url}")
             return response.url
         except requests.RequestException as e:
@@ -1367,7 +1382,7 @@ class LLMParser(ABC):
 
         return n_tokens
 
-    def parse_datasets_metadata(self, metadata: str, model='gemini-2.0-flash', use_portkey_for_gemini=True,
+    def parse_datasets_metadata(self, metadata: str, model='gemini-2.0-flash', use_portkey=True,
                                 prompt_name='gpt_metadata_extract') -> dict:
         """
         Given the metadata, extract the dataset information using the LLM.
@@ -1381,7 +1396,7 @@ class LLMParser(ABC):
         #metadata = self.normalize_full_DOM(metadata)
         self.logger.info(f"Parsing metadata len: {len(metadata)}")
         dataset_info = self.extract_dataset_info(metadata, subdir='metadata_prompts',
-                                                 use_portkey_for_gemini=use_portkey_for_gemini,
+                                                 use_portkey=use_portkey,
                                                  prompt_name=prompt_name)
         return dataset_info
 
@@ -1405,7 +1420,7 @@ class LLMParser(ABC):
                 items.append((new_key, v))
         return dict(items)
 
-    def extract_dataset_info(self, metadata, subdir='', model=None, use_portkey_for_gemini=True,
+    def extract_dataset_info(self, metadata, subdir='', model=None, use_portkey=True,
                              prompt_name='gpt_metadata_extract'):
         """
         Given the metadata, extract the dataset information using the LLM.
@@ -1425,7 +1440,7 @@ class LLMParser(ABC):
             model=model if model else self.llm_name,
             logger=self.logger,
             save_prompts=self.save_dynamic_prompts,
-            use_portkey_for_gemini=use_portkey_for_gemini
+            use_portkey=use_portkey
         )
         response = llm.api_call(metadata, subdir=subdir)
 
@@ -1435,7 +1450,7 @@ class LLMParser(ABC):
         return dataset_info
 
     def semantic_retrieve_from_corpus(self, corpus, model_name='sentence-transformers/all-MiniLM-L6-v2',
-                                      topk_docs_to_retrieve=5):
+                                      topk_docs_to_retrieve=5, query=None):
         """
         Given a corpus of text, retrieve the most relevant documents using semantic search.
 
@@ -1448,8 +1463,9 @@ class LLMParser(ABC):
         :return: list of dict — the most relevant documents from the corpus.
         """
 
-        query = """Explicitly identify all the datasets by their database accession codes, repository names, and links
-         to deposited datasets mentioned in this paper."""
+        if query is None:
+            query = """Explicitly identify all the datasets by their database accession codes, repository names, and links
+                    to deposited datasets mentioned in this paper."""
 
         retriever = EmbeddingsRetriever(
             corpus=corpus,
@@ -1474,11 +1490,11 @@ class LLMParser(ABC):
 
 
 class LLMClient:
-    def __init__(self, model: str, logger=None, save_prompts: bool = False, use_portkey_for_gemini=True):
+    def __init__(self, model: str, logger=None, save_prompts: bool = False, use_portkey=True):
         self.model = model
         self.logger = logger or logging.getLogger(__name__)
         self.logger.info(f"Initializing LLMClient with model: {self.model}")
-        self.use_portkey_for_gemini = use_portkey_for_gemini
+        self.use_portkey = use_portkey
         self._initialize_client(model)
         self.save_prompts = save_prompts
         self.prompt_manager = PromptManager("data_gatherer/prompts/prompt_templates/metadata_prompts",
@@ -1487,10 +1503,10 @@ class LLMClient:
     def _initialize_client(self, model):
         if model.startswith('gpt'):
             self.client = OpenAI(api_key=GPT_API_KEY)
-        elif model.startswith('gemini') and not self.use_portkey_for_gemini:
+        elif model.startswith('gemini') and not self.use_portkey:
             genai.configure(api_key=GEMINI_KEY)
             self.client = genai.GenerativeModel(model)
-        elif model.startswith('gemini') and self.use_portkey_for_gemini:
+        elif model.startswith('gemini') and self.use_portkey:
             self.portkey = Portkey(
                 api_key=PORTKEY_API_KEY,
                 virtual_key=PORTKEY_ROUTE,
@@ -1512,7 +1528,7 @@ class LLMClient:
         if self.model.startswith('gpt'):
             return self._call_openai(content, subdir=subdir)
         elif self.model.startswith('gemini'):
-            if self.use_portkey_for_gemini:
+            if self.use_portkey:
                 return self._call_portkey_gemini(content, subdir=subdir)
             else:
                 return self._call_gemini(content, subdir=subdir)

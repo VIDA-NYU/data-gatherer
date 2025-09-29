@@ -35,6 +35,16 @@ class DataFetcher(ABC):
             self.logger.warning(
                 "DataFetcher raw_HTML_data_filepath set to None") if self.raw_HTML_data_filepath is None else None
 
+    def remove_cookie_patterns(self, html: str):
+        pattern = r'<img\s+alt=""\s+src="https://www\.ncbi\.nlm\.nih\.gov/stat\?.*?"\s*>'
+
+        if re.search(pattern, html):
+            self.logger.info("Removing cookie pattern 1 from HTML")
+            html = re.sub(pattern, 'img_alt_subst', html)
+        else:
+            self.logger.info("No cookie pattern 1 found in HTML")
+        return html
+
     @abstractmethod
     def fetch_data(self, url, retries=3, delay=2):
         """
@@ -251,7 +261,7 @@ class DataFetcher(ABC):
             return True
         return False
 
-    def download_file_from_url(self, url, output_root="output/suppl_files", paper_id=None):
+    def download_file_from_url(self, url, output_root="scripts/downloads/suppl_files", paper_id=None):
         output_dir = os.path.join(output_root, paper_id)
         os.makedirs(output_dir, exist_ok=True)
         filename = url.split("/")[-1]
@@ -273,6 +283,16 @@ class DataFetcher(ABC):
             self.logger.info(f"Downloaded {filename} to {path}")
 
         return path
+
+    def remove_cookie_patterns(self, html: str):
+        pattern = r'<img\s+alt=""\s+src="https://www\.ncbi\.nlm\.nih\.gov/stat\?.*?"\s*>'
+
+        if re.search(pattern, html):
+            self.logger.info("Removing cookie pattern 1 from HTML")
+            html = re.sub(pattern, 'img_alt_subst', html)
+        else:
+            self.logger.info("No cookie pattern 1 found in HTML")
+        return html
 
 class HttpGetRequest(DataFetcher):
     "class for fetching data via HTTP GET requests using the requests library."
@@ -639,15 +659,7 @@ class DatabaseFetcher(DataFetcher):
             self.raw_data_format = row['format']
             return row['raw_cont']
 
-    def remove_cookie_patterns(self, html: str):
-        pattern = r'<img\s+alt=""\s+src="https://www\.ncbi\.nlm\.nih\.gov/stat\?.*?"\s*>'
-
-        if re.search(pattern, html):
-            self.logger.info("Removing cookie pattern 1 from HTML")
-            html = re.sub(pattern, 'img_alt_subst', html)
-        else:
-            self.logger.info("No cookie pattern 1 found in HTML")
-        return html
+    
 
 # Implementation for fetching data from an API
 class EntrezFetcher(DataFetcher):

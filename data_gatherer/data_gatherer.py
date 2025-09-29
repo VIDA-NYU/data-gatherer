@@ -1,5 +1,14 @@
 import os.path
 import os
+import re
+import json
+import time
+import threading
+import pandas as pd
+import ipywidgets as widgets
+import textwrap
+import cloudscraper
+from typing import Dict, Any
 from data_gatherer.logger_setup import setup_logging
 from data_gatherer.data_fetcher import *
 from data_gatherer.parser.html_parser import *
@@ -9,17 +18,9 @@ from data_gatherer.parser.grobid_pdf_parser import *
 from data_gatherer.llm.response_schema import *
 from data_gatherer.classifier import LLMClassifier
 from data_gatherer.env import CACHE_BASE_DIR
-import json
 from data_gatherer.selenium_setup import create_driver
-import pandas as pd
-import cloudscraper
-import time
 from data_gatherer.resources_loader import load_config
-import ipywidgets as widgets
 from IPython.display import display, clear_output
-import textwrap
-import threading
-import time
 
 
 class DataGatherer:
@@ -133,15 +134,19 @@ class DataGatherer:
 
         :param article_file_dir: Directory to save the raw HTML/XML/PDF files. Overwrites the default setting.
 
+        :param write_to_df_path: Optional path to save the fetched data as a DataFrame in Parquet format.
+
         :return: Dictionary with URLs as keys and raw data as values.
 
         """
+        single_article = False
 
         if not isinstance(urls, str) and not isinstance(urls, list):
             raise ValueError("URL must be a string or a list of strings.")
 
         if isinstance(urls, str):
             urls = [urls]
+            single_article = True
 
         complete_publication_fetches = {}
         i = None
@@ -149,6 +154,7 @@ class DataGatherer:
 
         while len(complete_publication_fetches) < len(urls):
             HTML_fallback = False if i is None else HTML_fallback_priority_list[i]
+            self.logger.info(f"Fetch attempt with HTML_fallback={HTML_fallback}...")
             i = 0 if i is None else i + 1
             for pub_link in urls:
                 self.logger.info(f"length of complete fetches < urls: {len(complete_publication_fetches)} < {len(urls)}")
@@ -160,6 +166,7 @@ class DataGatherer:
                     pub_link,
                     self.full_document_read,
                     self.logger,
+                    local_fetch_file=local_fetch_file,
                     HTML_fallback=HTML_fallback,
                     driver_path=driver_path,
                     browser=browser,
@@ -168,20 +175,23 @@ class DataGatherer:
 
                 # Fetch data
                 fetched_data = self.data_fetcher.fetch_data(pub_link)
+                self.logger.info(f"Raw_data_format: {self.data_fetcher.raw_data_format}, Type of fetched data: {type(fetched_data)}")
                 completeness_check = self.data_checker.is_fulltext_complete(fetched_data, pub_link, self.data_fetcher.raw_data_format)
 
                 if completeness_check:
-                    self.logger.info(f"Fetched complete {self.data_fetcher.raw_data_format} data from {pub_link}.")
+                    self.logger.info(f"Fetch complete {self.data_fetcher.raw_data_format} data from {pub_link}.")
                     complete_publication_fetches[pub_link] = {
                         'fetched_data': fetched_data,
                         'raw_data_format': self.data_fetcher.raw_data_format
                     }
+                    continue
                 elif HTML_fallback == 'Selenium':
                     self.logger.info(f"Selenium fetch the final fulltext {pub_link}.")
                     complete_publication_fetches[pub_link] = {
                         'fetched_data': fetched_data, 
                         'raw_data_format': self.data_fetcher.raw_data_format
                         }
+                    continue
                 else:
                     self.logger.info(f"{self.data_fetcher.raw_data_format} Data from {pub_link} is incomplete.")
 
@@ -208,12 +218,39 @@ class DataGatherer:
             df = pd.DataFrame.from_dict(complete_publication_fetches, orient='index')
             df.to_parquet(write_to_df_path, index=True)
 
+        if single_article:
+            return complete_publication_fetches[urls[0]]['fetched_data']
+
         return complete_publication_fetches
+
+    def init_parser_by_input_type(self, raw_data_format, raw_data=None):
+        if raw_data_format.upper() == "XML":
+            if raw_data is not None:
+                router = XMLRouter(self.open_data_repos_ontology, self.logger, full_document_read=self.full_document_read,
+                                llm_name=self.llm, save_dynamic_prompts=self.save_dynamic_prompts)
+                self.parser = router.get_parser(raw_data)
+            else:
+                self.parser = XMLParser(self.open_data_repos_ontology, self.logger, full_document_read=self.full_document_read,
+                                llm_name=self.llm, save_dynamic_prompts=self.save_dynamic_prompts)
+
+        elif raw_data_format.upper() == "HTML":
+            self.parser = HTMLParser(self.open_data_repos_ontology, self.logger, full_document_read=self.full_document_read,
+                               llm_name=self.llm, save_dynamic_prompts=self.save_dynamic_prompts)
+
+        elif raw_data_format.upper() == "PDF" and grobid_for_pdf:
+            self.parser = GrobidPDFParser(self.open_data_repos_ontology, self.logger, full_document_read=self.full_document_read,
+                               llm_name=self.llm, save_dynamic_prompts=self.save_dynamic_prompts)
+
+        elif raw_data_format.upper() == "PDF":
+            self.parser = PDFParser(self.open_data_repos_ontology, self.logger, full_document_read=self.full_document_read,
+                               llm_name=self.llm, save_dynamic_prompts=self.save_dynamic_prompts)
+        else:
+            raise ValueError(f"Unsupported raw data format: {raw_data_format}")
 
     def parse_data(self, raw_data, publisher=None, current_url_address=None, additional_data=None,
                    raw_data_format='XML', parsed_data_dir='tmp/parsed_articles/', grobid_for_pdf=False,
                    process_DAS_links_separately=False, full_document_read=False, semantic_retrieval=False, top_k=5,
-                   prompt_name='retrieve_datasets_simple_JSON', use_portkey_for_gemini=True, section_filter=None,
+                   prompt_name='GPT_FewShot', use_portkey=True, section_filter=None,
                    response_format=dataset_response_schema_gpt):
         """
         Parses the raw data fetched from the source URL using the appropriate parser.
@@ -242,7 +279,7 @@ class DataGatherer:
 
         :param prompt_name: Name of the prompt to use for LLM parsing.
 
-        :param use_portkey_for_gemini: Flag to use Portkey for Gemini LLM.
+        :param use_portkey: Flag to use Portkey for Gemini LLM.
 
         :param section_filter: Optional filter to apply to the sections (supplementary_material', 'data_availability_statement').
 
@@ -254,23 +291,23 @@ class DataGatherer:
 
         if raw_data_format.upper() == "XML":
             router = XMLRouter(self.open_data_repos_ontology, self.logger, full_document_read=full_document_read,
-                               llm_name=self.llm, use_portkey_for_gemini=use_portkey_for_gemini,
+                               llm_name=self.llm, use_portkey=use_portkey,
                                      save_dynamic_prompts=self.save_dynamic_prompts)
             self.parser = router.get_parser(raw_data)
 
         elif raw_data_format.upper() == "HTML":
             self.parser = HTMLParser(self.open_data_repos_ontology, self.logger, full_document_read=full_document_read,
-                                     llm_name=self.llm, use_portkey_for_gemini=use_portkey_for_gemini,
+                                     llm_name=self.llm, use_portkey=use_portkey,
                                      save_dynamic_prompts=self.save_dynamic_prompts)
 
         elif raw_data_format.upper() == "PDF" and grobid_for_pdf:
             self.parser = GrobidPDFParser(self.open_data_repos_ontology, self.logger, full_document_read=full_document_read,
-                                    llm_name=self.llm, use_portkey_for_gemini=use_portkey_for_gemini,
+                                    llm_name=self.llm, use_portkey=use_portkey,
                                      save_dynamic_prompts=self.save_dynamic_prompts)
 
         elif raw_data_format.upper() == "PDF":
             self.parser = PDFParser(self.open_data_repos_ontology, self.logger, full_document_read=full_document_read,
-                                    llm_name=self.llm, use_portkey_for_gemini=use_portkey_for_gemini,
+                                    llm_name=self.llm, use_portkey=use_portkey,
                                      save_dynamic_prompts=self.save_dynamic_prompts)
 
         else:
@@ -291,7 +328,7 @@ class DataGatherer:
                                       current_url_address=current_url_address,
                                       raw_data_format=raw_data_format,
                                       prompt_name=prompt_name,
-                                      use_portkey_for_gemini=use_portkey_for_gemini,
+                                      use_portkey=use_portkey,
                                       article_file_dir=parsed_data_dir,
                                       additional_data=additional_data,
                                       process_DAS_links_separately=process_DAS_links_separately,
@@ -323,10 +360,6 @@ class DataGatherer:
                 self.logger.info("Previous driver quit.")
             except Exception as e:
                 self.logger.warning(f"Failed to quit previous driver: {e}")
-
-        #if self.config['search_method'] == 'url_list' and self.config['dataframe_fetch']:
-        #    self.data_fetcher = DatabaseFetcher(self.config, self.logger)
-        #    return
 
         elif self.search_method == 'url_list':
             self.data_fetcher = WebScraper(None, self.logger, driver_path=driver_path, browser=browser,
@@ -360,12 +393,15 @@ class DataGatherer:
             return self.PMCID_to_URL(url)
         elif url.lower().startswith("https://"):
             return url
+        elif os.path.isfile(url):
+            return url
         else:
             raise ValueError(f"Invalid URL format: {url}. Must start with 'PMC' or 'https://'.")
 
-    def process_url(self, url, save_staging_table=False, article_file_dir='tmp/raw_files/', use_portkey_for_gemini=True,
-                    driver_path=None, browser='Firefox', headless=True, prompt_name='retrieve_datasets_simple_JSON',
-                    semantic_retrieval=False, section_filter=None):
+    def process_url(self, url, save_staging_table=False, article_file_dir='tmp/raw_files/', use_portkey=True,
+                    driver_path=None, browser='Firefox', headless=True, prompt_name='GPT_FewShot',
+                    semantic_retrieval=False, section_filter=None, response_format=dataset_response_schema_gpt,
+                    HTML_fallback=False, grobid_for_pdf=False, write_htmls_xmls=False):
         """
         Orchestrates the process for a single given source URL (publication).
 
@@ -383,7 +419,7 @@ class DataGatherer:
 
         :param article_file_dir: Directory to save the raw HTML/XML/PDF files.
 
-        :param use_portkey_for_gemini: Flag to use Portkey for Gemini LLM.
+        :param use_portkey: Flag to use Portkey for Gemini LLM.
 
         :param driver_path: Path to your local WebDriver executable (if applicable). When set to None, Webdriver manager will be used.
 
@@ -397,15 +433,24 @@ class DataGatherer:
 
         :param section_filter: Optional filter to apply to the sections (supplementary_material', 'data_availability_statement').
 
+        :param response_format: The response schema to use for parsing the data.
+
+        :param HTML_fallback: Flag to indicate if HTML fallback should be used when fetching data. This will override any other fetching resource (i.e. API).
+
+        :param grobid_for_pdf: Flag to indicate if GROBID should be used for PDF processing.
+
+        :param write_htmls_xmls: Flag to indicate if raw HTML/XML files should be saved. Overwrites the default setting.
+
         :return: DataFrame of classified links or None if an error occurs.
         """
         self.logger.info(f"Processing URL: {url}")
         self.current_url = url
+        self.write_htmls_xmls = write_htmls_xmls or self.write_htmls_xmls
         self.publisher = self.data_fetcher.url_to_publisher_domain(url)
 
         self.data_fetcher = self.data_fetcher.update_DataFetcher_settings(url, self.full_document_read, self.logger,
                                                                           driver_path=driver_path, browser=browser,
-                                                                          headless=headless)
+                                                                          headless=headless, HTML_fallback=HTML_fallback)
         self.logger.info(f"Type of data_fetcher {self.data_fetcher.__class__.__name__}")
 
         article_id = self.url_to_article_id(url)
@@ -421,21 +466,24 @@ class DataGatherer:
             raw_data = None
             parsed_data = None
             additional_data = None
+            filepath = None
 
-            # if model processes the entire document, fetch the entire document and go to the parsing step
-            if self.full_document_read:
-                raw_data = self.data_fetcher.fetch_data(url)
-                self.raw_data_format = self.data_fetcher.raw_data_format
+            if os.path.isfile(url):
+                filepath = url
+                self.raw_data_format = str.split(filepath, '.')[-1].lower()
+                raw_data = filepath if self.raw_data_format.upper() == 'PDF' else open(filepath, 'r', encoding='utf-8').read()
+                self.logger.info(f"Local file {filepath} detected. Using it as raw data.")
 
-            # if model processes selected parts of the document, fetch the relevant sections and go to the parsing step
             else:
-
                 raw_data = self.data_fetcher.fetch_data(url)
                 self.raw_data_format = self.data_fetcher.raw_data_format
+            
+            if filepath is None:
 
-            if self.raw_data_format == "XML":
-                if not self.data_checker.is_xml_data_complete(raw_data, url):
-                    self.logger.info(f"Fallback to HTML data fetcher for {url}.")
+                if not self.data_checker.is_fulltext_complete(raw_data, url, self.raw_data_format) and not (
+                    self.data_fetcher.__class__.__name__ == "WebScraper"
+                ):
+                    self.logger.info(f"Fallback to Selenium WebScraper data fetcher.")
                     self.raw_data_format = "HTML"
                     self.data_fetcher = self.data_fetcher.update_DataFetcher_settings(url,
                                                                                         self.full_document_read,
@@ -447,49 +495,53 @@ class DataGatherer:
                     raw_data = self.data_fetcher.fetch_data(url)
 
                 else:
-                    self.logger.info(f"XML data is complete for {url}.")
+                    self.logger.info(f"{self.raw_data_format} data is complete for {url}.")
 
-            raw_data = self.data_fetcher.remove_cookie_patterns(raw_data) if self.raw_data_format == "HTML" else raw_data
+                raw_data = self.data_fetcher.remove_cookie_patterns(raw_data) if self.raw_data_format == "HTML" else raw_data
 
-            self.logger.info(f"Raw {self.raw_data_format} data fetched from {url} is ready for parsing.")
+                self.logger.info(f"Raw {self.raw_data_format} data fetched from {url} is ready for parsing.")
 
-            if self.write_htmls_xmls and not isinstance(self.data_fetcher, DatabaseFetcher):
-                directory = article_file_dir + self.publisher + '/'
-                self.logger.info(f"Raw Data is {self.raw_data_format}.")
-                if isinstance(self.data_fetcher, WebScraper):
-                    self.data_fetcher.html_page_source_download(directory, url)
-                    self.logger.info(f"Raw HTML saved to: {directory}")
-                elif isinstance(self.data_fetcher, EntrezFetcher):
-                    self.data_fetcher.download_xml(directory, raw_data, url)
-                    self.logger.info(f"Raw XML saved in {directory} directory")
+                if self.write_htmls_xmls and not isinstance(self.data_fetcher, DatabaseFetcher):
+                    directory = article_file_dir + self.publisher + '/'
+                    self.logger.info(f"Raw Data is {self.raw_data_format}.")
+                    if isinstance(self.data_fetcher, WebScraper):
+                        self.data_fetcher.html_page_source_download(directory, url)
+                        self.logger.info(f"Raw HTML saved to: {directory}")
+                    elif isinstance(self.data_fetcher, EntrezFetcher):
+                        self.data_fetcher.download_xml(directory, raw_data, url)
+                        self.logger.info(f"Raw XML saved in {directory} directory")
+                    elif self.raw_data_format.upper() == 'PDF':
+                        # For PDF, raw_data should already be a file path, just log the location
+                        self.logger.info(f"Raw PDF file location: {raw_data}")
+                    else:
+                        self.logger.warning(f"Unsupported raw data format: {self.raw_data_format}.")
                 else:
-                    self.logger.warning(f"Unsupported raw data format: {self.raw_data_format}.")
-            else:
-                self.logger.info("Skipping raw HTML/XML saving.")
+                    self.logger.info(f"Skipping raw HTML/XML/PDF saving. Param write_htmls_xmls set to {self.write_htmls_xmls}.")
 
-            self.data_fetcher.quit() if hasattr(self.data_fetcher, 'scraper_tool') else None
+                self.data_fetcher.quit() if hasattr(self.data_fetcher, 'scraper_tool') else None
 
             # Step 2: Use HTMLParser/XMLParser
+            self.logger.info("Parsing Raw content from format: " + self.raw_data_format)
             if self.raw_data_format.upper() == "XML" and raw_data is not None:
                 self.logger.info("Using XMLParser to parse data.")
                 self.parser = XMLParser(self.open_data_repos_ontology, self.logger,
                                         llm_name=self.llm,
                                         full_document_read=self.full_document_read,
-                                        use_portkey_for_gemini=use_portkey_for_gemini,
+                                        use_portkey=use_portkey,
                                         save_dynamic_prompts=self.save_dynamic_prompts)
 
                 if additional_data is None:
                     self.logger.info("No additional data provided. Parsing raw data only.")
                     parsed_data = self.parser.parse_data(raw_data, self.publisher, self.current_url,
                                                          prompt_name=prompt_name, semantic_retrieval=semantic_retrieval,
-                                                         section_filter=section_filter)
+                                                         section_filter=section_filter, response_format=response_format)
 
                 else:
                     self.logger.info(f"Processing additional data. # of items: {len(additional_data)}")
                     add_data = self.parser.parse_data(raw_data, self.publisher, self.current_url,
                                                       additional_data=additional_data, prompt_name=prompt_name,
                                                       semantic_retrieval=semantic_retrieval,
-                                                      section_filter=section_filter)
+                                                      section_filter=section_filter, response_format=response_format)
                     self.logger.debug(f"Type of additional data{type(add_data)}")
 
                     parsed_data = pd.concat([parsed_data, add_data], ignore_index=True).drop_duplicates()
@@ -499,15 +551,42 @@ class DataGatherer:
                 self.parser = HTMLParser(self.open_data_repos_ontology, self.logger,
                                          llm_name=self.llm,
                                          full_document_read=self.full_document_read,
-                                         use_portkey_for_gemini=use_portkey_for_gemini,
+                                         use_portkey=use_portkey,
                                          save_dynamic_prompts=self.save_dynamic_prompts)
                 parsed_data = self.parser.parse_data(raw_data, self.publisher, self.current_url,
                                                      raw_data_format=self.raw_data_format, prompt_name=prompt_name,
                                                      semantic_retrieval=semantic_retrieval,
-                                                     section_filter=section_filter)
+                                                     section_filter=section_filter, response_format=response_format)
                 parsed_data['source_url'] = url
                 parsed_data['pub_title'] = self.parser.extract_publication_title(raw_data)
                 self.logger.info(f"Parsed data extraction completed. Elements collected: {len(parsed_data)}")
+            
+            elif self.raw_data_format.upper() == 'PDF':
+                self.logger.info("Using PDFParser to parse data.")
+                if grobid_for_pdf:
+                    self.logger.info("GROBID PDF parsing enabled.")
+                    self.parser = GrobidPDFParser(self.open_data_repos_ontology, self.logger,
+                                                 llm_name=self.llm,
+                                                 full_document_read=self.full_document_read,
+                                                 use_portkey=use_portkey,
+                                                 save_dynamic_prompts=self.save_dynamic_prompts,
+                                                 write_XML=write_htmls_xmls)
+                else:
+                    self.parser = PDFParser(self.open_data_repos_ontology, self.logger,
+                                            llm_name=self.llm,
+                                            full_document_read=self.full_document_read,
+                                            use_portkey=use_portkey,
+                                            save_dynamic_prompts=self.save_dynamic_prompts)
+                # For PDF, raw_data should be the file path
+                parsed_data = self.parser.parse_data(raw_data, 
+                                                     publisher=self.publisher, 
+                                                     current_url_address=self.current_url,
+                                                     raw_data_format=self.raw_data_format, 
+                                                     prompt_name=prompt_name,
+                                                     semantic_retrieval=semantic_retrieval,
+                                                     section_filter=section_filter,
+                                                     response_format=response_format)
+                self.logger.info(f"PDF parsing completed. Elements collected: {len(parsed_data)}")
 
             else:
                 self.logger.error(f"Unsupported raw data format: {self.raw_data_format}. Cannot parse data.")
@@ -524,6 +603,9 @@ class DataGatherer:
                 elif 'HTML' in self.raw_data_format.upper():
                     classified_links = parsed_data
                     self.logger.info("HTML element classification not supported. Using parsed_data.")
+                elif self.raw_data_format.upper() == 'PDF':
+                    classified_links = parsed_data
+                    self.logger.info("PDF element classification not needed. Using parsed_data.")
                 else:
                     self.logger.error(f"Unsupported raw data format and parser mode combination.")
                     return None
@@ -542,8 +624,8 @@ class DataGatherer:
             return None
 
     def app_process_url(self, url, save_staging_table=False, article_file_dir='tmp/raw_files/', 
-                       use_portkey_for_gemini=True, driver_path=None, browser='Firefox', headless=True, 
-                       prompt_name='retrieve_datasets_simple_JSON', semantic_retrieval=False, section_filter=None):
+                       use_portkey=True, driver_path=None, browser='Firefox', headless=True, 
+                       prompt_name='GPT_FewShot', semantic_retrieval=False, section_filter=None):
         """
         Application wrapper for process_url with concurrent user support.
         This method handles rate limiting and resource management for multi-user scenarios.
@@ -565,7 +647,7 @@ class DataGatherer:
                     url=url,
                     save_staging_table=save_staging_table,
                     article_file_dir=article_file_dir,
-                    use_portkey_for_gemini=use_portkey_for_gemini,
+                    use_portkey=use_portkey,
                     driver_path=driver_path,
                     browser=browser,
                     headless=headless,
@@ -595,8 +677,8 @@ class DataGatherer:
         return classified_links
 
     def process_articles(self, url_list, log_modulo=10, save_staging_table=False, article_file_dir='tmp/raw_files/',
-                         driver_path=None, browser='Firefox', headless=True, use_portkey_for_gemini=True,
-                         prompt_name='retrieve_datasets_simple_JSON', semantic_retrieval=False, section_filter=None):
+                         driver_path=None, browser='Firefox', headless=True, use_portkey=True, response_format=dataset_response_schema_gpt,
+                         prompt_name='GPT_FewShot', semantic_retrieval=False, section_filter=None, grobid_for_pdf=False, write_htmls_xmls=False):
         """
         Processes a list of article URLs and returns parsed data.
 
@@ -614,13 +696,17 @@ class DataGatherer:
 
         :param headless: Whether to run the browser in headless mode (if applicable).
 
-        :param use_portkey_for_gemini: Flag to use Portkey for Gemini LLM.
+        :param use_portkey: Flag to use Portkey for Gemini LLM.
+
+        :param response_format: The response schema to use for parsing the data.
 
         :param prompt_name: Name of the prompt to use for LLM parsing.
 
         :param semantic_retrieval: Flag to indicate if semantic retrieval should be used.
 
         :param section_filter: Optional filter to apply to the sections (supplementary_material', 'data_availability_statement').
+
+        :param grobid_for_pdf: Flag to indicate if GROBID should be used for PDF processing.
 
         :return: Dictionary with URLs as keys and DataFrames of classified data as values.
         """
@@ -632,7 +718,7 @@ class DataGatherer:
 
         for iteration, url in enumerate(url_list):
             url = self.preprocess_url(url)
-            self.logger.info(f"{iteration}th function call: self.process_url({url})")
+            self.logger.info(f"#{iteration} function call: self.process_url({url})")
 
             results[url] = self.process_url(
                 url,
@@ -641,10 +727,13 @@ class DataGatherer:
                 driver_path=driver_path,
                 browser=browser,
                 headless=headless,
-                use_portkey_for_gemini=use_portkey_for_gemini,
+                use_portkey=use_portkey,
                 prompt_name=prompt_name,
                 semantic_retrieval=semantic_retrieval,
-                section_filter=section_filter
+                section_filter=section_filter,
+                response_format=response_format,
+                grobid_for_pdf=grobid_for_pdf,
+                write_htmls_xmls=write_htmls_xmls
             )
 
             if iteration % log_modulo == 0:
@@ -666,65 +755,7 @@ class DataGatherer:
                 if 'repository_reference' in df.columns:
                     df.rename(columns={'repository_reference': 'data_repository'}, inplace=True)
         return results
-
-    def DRAFT_prepare_prompts_batch(
-        self,
-        fname,
-        fetched_data,
-        raw_data_format,
-        prompt,
-        FDR,
-        semantic_retrieval=False,
-        section_filter=None
-    ):
-        """
-        Prepares a JSONL batch for API requests.
-        Each line contains a dict with a unique custom_id and a body with API parameters.
-        Returns a list of dicts (ready to be written as JSONL).
-        """
-        jsonl_cont = []
-
-        for url, data in fetched_data.items():
-            # Compose custom_id
-            article_id = self.url_to_article_id(url)
-            custom_id = f"{self.llm}|{article_id}|FDR={FDR}|{raw_data_format}"
-
-            if raw_data_format.upper() == 'XML':
-                prepare_input = self.parser.normalize_xml(data['fetched_data'])
-            elif raw_data_format.upper() == 'HTML':
-                prepare_input = self.parser.normalize_html(data['fetched_data'])
-            else:
-                raise ValueError(f"Unsupported raw data format: {raw_data_format}")
-
-            prompt = self.parser.prompt_manager.render_prompt(
-                prompt_name=prompt,
-                raw_data_format=raw_data_format,
-                full_document_read=self.full_document_read,
-                input_text=prepare_input,
-                url=url,
-                section_filter=section_filter
-            )
-
-            # Prepare body (parameters for the API)
-            body = {
-                "raw_data_format": data['raw_data_format'],
-                "prompt": prompt,
-                "FDR": FDR,
-                "semantic_retrieval": semantic_retrieval,
-                "section_filter": section_filter,
-                "url": url
-            }
-
-            jsonl_cont.append({
-                "custom_id": custom_id,
-                "body": body,
-            })
-
-        with open(fname, 'w') as f:
-            for entry in jsonl_cont:
-                f.write(json.dumps(entry) + '\n')
-
-        return jsonl_cont
+    
 
     def summarize_result(self, df):
         """
@@ -768,7 +799,7 @@ class DataGatherer:
         :return: List of URLs loaded from the file.
         """
         self.logger.debug(f"Loading URLs from file: {input_file}")
-        if not os.path.exists(input_file):
+        if not os.path.exists(str(input_file)):
             if isinstance(input_file, str):
                 return [input_file.strip()]
             elif isinstance(input_file, list):
@@ -783,7 +814,7 @@ class DataGatherer:
             raise FileNotFoundError(f"Create file with input links! File not found: {input_file}\n\n{e}\n")
 
     def process_metadata(self, combined_df, display_type='console', interactive=True, return_metadata=False,
-                         write_raw_metadata=False, article_file_dir='tmp/raw_files/', use_portkey_for_gemini=True,
+                         write_raw_metadata=False, article_file_dir='tmp/raw_files/', use_portkey=True,
                          prompt_name='gpt_metadata_extract', timeout=1):
         """
         This method iterates through the combined_df DataFrame, checks for dataset webpages or download links,
@@ -800,7 +831,7 @@ class DataGatherer:
 
         :param article_file_dir: Directory to save raw HTML/XML files if write_raw_metadata is True.
 
-        :param use_portkey_for_gemini: If True, uses Portkey for Gemini LLM.
+        :param use_portkey: If True, uses Portkey for Gemini LLM.
 
         :param prompt_name: Name of the prompt to use for LLM parsing.
 
@@ -813,7 +844,7 @@ class DataGatherer:
 
         self.already_previewed = []
         self.metadata_parser = HTMLParser(self.open_data_repos_ontology, self.logger, full_document_read=True,
-                                          llm_name=self.llm, use_portkey_for_gemini=use_portkey_for_gemini)
+                                          llm_name=self.llm, use_portkey=use_portkey)
 
         self.data_fetcher = self.data_fetcher.update_DataFetcher_settings('any_url',
                                                                           self.full_document_read,
@@ -868,7 +899,7 @@ class DataGatherer:
                     if self.download_data_for_description_generation:
                         split_source_url = hardscraped_metadata.get('source_url').split('/')
                         paper_id = split_source_url[-1] if len(split_source_url[-1]) > 0 else split_source_url[-2]
-                        self.data_fetcher.download_file_from_url(download_link, "output/suppl_files", paper_id)
+                        self.data_fetcher.download_file_from_url(download_link, "scripts/downloads/suppl_files", paper_id)
                         hardscraped_metadata[
                             'data_description_generated'] = self.metadata_parser.generate_dataset_description(
                             download_link)
@@ -912,7 +943,7 @@ class DataGatherer:
 
                 if not skip:
                     metadata = self.metadata_parser.parse_datasets_metadata(html,
-                                                                            use_portkey_for_gemini=use_portkey_for_gemini,
+                                                                            use_portkey=use_portkey,
                                                                             prompt_name=prompt_name)
                     metadata['source_url_for_metadata'] = row['dataset_webpage']
                     metadata['access_mode'] = row.get('access_mode', None)
@@ -1026,7 +1057,7 @@ class DataGatherer:
                     rows.append({'Field': key, 'Value': val_str})
 
             if not rows:
-                print("No usable metadata found.")
+                self.logger.info("No usable metadata found.")
                 return
 
             # Display metadata table
@@ -1045,10 +1076,10 @@ class DataGatherer:
                     if checkbox.value:
                         self.downloadables.append(metadata)
                         self.logger.info("User confirmed download. Dataset queued.")
-                        print("Queued for download.")
+                        self.logger.info("Queued for download.")
                     else:
                         self.logger.info("User declined download.")
-                        print("Skipped.")
+                        self.logger.info("Skipped.")
 
             confirm_button.on_click(lambda _: confirm_handler())
 
@@ -1061,7 +1092,7 @@ class DataGatherer:
             self.logger.warning(f"Unsupported display type: {display_type}. Cannot display metadata preview.")
             return
 
-    def download_data_resources(self, output_root="output/suppl_files"):
+    def download_data_resources(self, output_root="scripts/downloads/suppl_files"):
         """
         Function to download all the files that were previewed and confirmed for download.
 
@@ -1156,7 +1187,7 @@ class DataGatherer:
                 self.logger.debug(f"Process ID {process_id} already exists in cache. Skipping save.")
 
     def run(self, input_file='input/test_input.txt', semantic_retrieval=False, section_filter=None,
-            prompt_name='retrieve_datasets_simple_JSON'):
+            prompt_name='GPT_FewShot'):
         """
         This method orchestrates the entire data gathering process by performing the following steps:
 
@@ -1228,3 +1259,414 @@ class DataGatherer:
             if isinstance(self.data_fetcher, EntrezFetcher):
                 self.logger.info("Closing the EntrezFetcher.")
                 self.data_fetcher.api_client.close()
+
+    def run_integrated_batch_processing(
+        self,
+        url_list,
+        batch_file_path,
+        output_file_path=None,
+        api_provider='openai',
+        prompt_name='GPT_FewShot',
+        response_format=None,
+        temperature=0.0,
+        semantic_retrieval=False,
+        section_filter=None,
+        submit_immediately=True,
+        wait_for_completion=False,
+        poll_interval=60,
+        batch_description=None,
+        grobid_for_pdf=False,
+        use_portkey=True):
+        """
+        Complete integrated batch processing using LLMClient batch functionality.
+        
+        This method leverages the new LLMClient batch processing capabilities for
+        improved performance and proper separation of concerns.
+        
+        :param url_list: List of URLs/PMCIDs to process
+        :param batch_file_path: Path for the batch JSONL file
+        :param output_file_path: Path for the results file (auto-generated if None)
+        :param api_provider: 'openai' or 'portkey'
+        :param prompt_name: Name of the prompt template
+        :param response_format: Response schema
+        :param temperature: Model temperature
+        :param semantic_retrieval: Enable semantic retrieval
+        :param section_filter: Section filter
+        :param submit_immediately: Whether to submit the batch job immediately
+        :param wait_for_completion: Whether to wait for batch completion
+        :param poll_interval: Seconds between status checks
+        :param batch_description: Optional description for the batch job
+        :return: Dictionary with batch information and results
+        """
+
+        self.logger.info(f"Starting integrated batch processing for {len(url_list)} URLs")
+        
+        try:
+            # Step 1: Fetch data
+            self.logger.info("Step 1: Fetching data...")
+            fetched_data = self.fetch_data(url_list)
+            
+            # Count raw_data_format frequencies and store URLs for parser reuse optimization
+            format_counts = {}
+            for url, data in fetched_data.items():
+                if data and 'raw_data_format' in data:
+                    fmt = data['raw_data_format']
+                    if fmt not in format_counts:
+                        format_counts[fmt] = {'count': 0, 'urls': []}
+                    format_counts[fmt]['count'] += 1
+                    format_counts[fmt]['urls'].append(url)
+            
+            # Log format frequencies (counts only for readability)
+            frequency_summary = {fmt: info['count'] for fmt, info in format_counts.items()}
+            self.logger.info(f"Fetched {len(fetched_data)} Papers. Format frequencies: {frequency_summary}")
+            self.logger.debug(f"Detailed fetched data: {fetched_data}")
+            
+            # Step 2: Prepare batch requests for LLMClient (parser per URL)
+            
+            batch_requests, cnt, last_url_raw_data_format = [], 0, False
+            for url_raw_data_format, vals in format_counts.items():
+                for url in vals['urls']:
+                    try:                        
+                        if cnt != 0 and url_raw_data_format == last_url_raw_data_format:
+                            self.logger,info(f"Reusing existing parser of name: {self.parser.__class__.__name__}")
+                        else:
+                            if url_raw_data_format.upper() == "XML":
+                                self.logger.info("Initializing XMLParser to parse data.")
+                                self.parser = XMLParser(
+                                    self.open_data_repos_ontology,
+                                    self.logger,
+                                    llm_name=self.llm,
+                                    full_document_read=self.full_document_read,
+                                    use_portkey=use_portkey,
+                                    save_dynamic_prompts=self.save_dynamic_prompts
+                                    )
+
+                            elif url_raw_data_format.upper() == 'HTML':
+                                self.logger.info("Initializing HTMLParser to parse data.")
+                                self.parser = HTMLParser(
+                                    self.open_data_repos_ontology, 
+                                    self.logger,
+                                    llm_name=self.llm,
+                                    full_document_read=self.full_document_read,
+                                    use_portkey=use_portkey,
+                                    save_dynamic_prompts=self.save_dynamic_prompts
+                                    )
+
+                            elif url_raw_data_format.upper() == 'PDF':
+                                self.logger.info("Using PDFParser to parse data.")
+                                if grobid_for_pdf:
+                                    self.logger.info("GROBID PDF parsing enabled.")
+                                    self.parser = GrobidPDFParser(
+                                        self.open_data_repos_ontology,
+                                        self.logger,
+                                        llm_name=self.llm,
+                                        full_document_read=self.full_document_read,
+                                        use_portkey=use_portkey,
+                                        save_dynamic_prompts=self.save_dynamic_prompts,
+                                        write_XML=write_htmls_xmls
+                                        )
+                                else:
+                                    self.parser = PDFParser(
+                                        self.open_data_repos_ontology, 
+                                        self.logger,
+                                        llm_name=self.llm,
+                                        full_document_read=self.full_document_read,
+                                        use_portkey=use_portkey,
+                                        save_dynamic_prompts=self.save_dynamic_prompts
+                                        )
+                                         
+                        data = fetched_data[url]
+                        
+                        # Generate unique custom_id
+                        article_id = self.url_to_article_id(url)
+                        timestamp = int(time.time() * 1000)
+                        custom_id = f"{self.llm}_{article_id}_{timestamp}"
+                        custom_id = re.sub(r'[^a-zA-Z0-9_-]', '_', custom_id)[:64]
+                        
+                        # Normalize input data based on actual format
+                        if url_raw_data_format.upper() == 'XML':
+                            normalized_input = (self.parser.normalize_XML(data['fetched_data']) 
+                                            if hasattr(self.parser, 'normalize_XML') 
+                                            else data['fetched_data'])
+                        elif url_raw_data_format.upper() == 'HTML':
+                            normalized_input = (self.parser.normalize_HTML(data['fetched_data']) 
+                                            if hasattr(self.parser, 'normalize_HTML') 
+                                            else data['fetched_data'])
+                        elif url_raw_data_format.upper() == 'PDF':
+                            normalized_input = data['fetched_data']
+                        else:
+                            raise ValueError(f"Unsupported raw data format: {url_raw_data_format}")
+                        
+                        # Render prompt using the correct parser
+                        static_prompt = self.parser.prompt_manager.load_prompt(prompt_name)
+                        messages = self.parser.prompt_manager.render_prompt(
+                            static_prompt,
+                            entire_doc=self.full_document_read,
+                            content=normalized_input,
+                            repos=', '.join(self.parser.repo_names) if hasattr(self.parser, 'repo_names') else '',
+                            url=url,
+                            section_filter=section_filter
+                        )
+                        
+                        # Create batch request for LLMClient
+                        batch_request = {
+                            'custom_id': custom_id,
+                            'messages': messages,
+                            'metadata': {
+                                'url': url,
+                                'article_id': article_id,
+                                'raw_data_format': url_raw_data_format
+                            }
+                        }
+                        
+                        batch_requests.append(batch_request)
+                        
+                    except Exception as e:
+                        self.logger.error(f"Error preparing request for {url}: {e}")
+                        continue
+
+                    last_data_format = url_raw_data_format
+                    cnt+=1
+            
+            self.logger.info(f"Prepared {len(batch_requests)} batch requests")
+            
+            # Step 3: Use LLMClient to handle batch processing
+            self.logger.info("Step 3: Creating batch file using LLMClient...")
+            
+            # Use LLMClient's batch processing capabilities
+            batch_result = self.parser.llm_client._handle_batch_mode(
+                batch_requests=batch_requests,
+                batch_file_path=batch_file_path,
+                temperature=temperature,
+                response_format=response_format,
+                api_provider=api_provider
+            )
+            
+            result = {
+                'batch_file_created': batch_result,
+                'fetched_data_count': len(fetched_data),
+                'processed_requests': len(batch_requests),
+                'api_provider': api_provider,
+                'model': self.llm
+            }
+            
+            # Step 4: Submit batch job if requested
+            if submit_immediately:
+                self.logger.info("Step 4: Submitting batch job...")
+                
+                submission_result = self.parser.llm_client.submit_batch_job(
+                    batch_file_path=batch_file_path,
+                    api_provider=api_provider,
+                    batch_description=batch_description
+                )
+                
+                result['batch_submission'] = submission_result
+                batch_id = submission_result['batch_id']
+                
+                self.logger.info(f"Batch job submitted successfully. ID: {batch_id}")
+                
+                # Step 5: Wait for completion if requested
+                if wait_for_completion:
+                    self.logger.info(f"Step 5: Waiting for batch completion (polling every {poll_interval}s)...")
+                    
+                    while True:
+                        status_info = self.parser.llm_client.check_batch_status(
+                            batch_id=batch_id,
+                            api_provider=api_provider
+                        )
+                        
+                        status = status_info['status']
+                        self.logger.info(f"Batch status: {status}")
+                        
+                        if status == 'completed':
+                            # Download results
+                            if not output_file_path:
+                                output_file_path = batch_file_path.replace('.jsonl', '_results.jsonl')
+                            
+                            download_result = self.parser.llm_client.download_batch_results(
+                                batch_id=batch_id,
+                                output_file_path=output_file_path,
+                                api_provider=api_provider
+                            )
+                            
+                            result['batch_results'] = download_result
+                            result['output_file_path'] = output_file_path
+                            
+                            self.logger.info(f"Batch processing completed successfully. Results saved to: {output_file_path}")
+                            break
+                            
+                        elif status in ['failed', 'expired', 'cancelled']:
+                            self.logger.error(f"Batch job failed with status: {status}")
+                            result['error'] = f"Batch job failed with status: {status}"
+                            break
+                            
+                        else:
+                            # Still processing, wait and check again
+                            time.sleep(poll_interval)
+                    
+                    result['final_status'] = status_info
+            
+            return result
+            
+        except Exception as e:
+            self.logger.error(f"Error in integrated batch processing: {e}", exc_info=True)
+            raise
+
+    def split_jsonl_and_submit(self, 
+                              batch_file_path: str,
+                              max_file_size_mb: float = 200.0,
+                              api_provider: str = 'openai',
+                              wait_between_submissions: int = 30,
+                              batch_description: str = None) -> Dict[str, Any]:
+        """
+        Simple function to chunk large JSONL files and submit them sequentially.
+        
+        This function ONLY handles chunking and submission - no monitoring or result combination.
+        Use llm_client methods for monitoring batch completion and combining results.
+        
+        :param batch_file_path: Path to the large JSONL batch file
+        :param max_file_size_mb: Maximum size per chunk in MB (default: 200MB for OpenAI)
+        :param api_provider: API provider ('openai' or 'portkey')
+        :param wait_between_submissions: Seconds to wait between chunk submissions
+        :param batch_description: Description for the batch jobs
+        :return: Dictionary with submission results
+        """
+        from data_gatherer.llm.batch_storage import BatchStorageManager
+        
+        self.logger.info(f"Starting split_jsonl_and_submit for file: {batch_file_path}")
+        
+        # Initialize batch storage manager
+        batch_manager = BatchStorageManager(logger=self.logger)
+        
+        # Check if file exists and get size
+        if not os.path.exists(batch_file_path):
+            raise FileNotFoundError(f"Batch file not found: {batch_file_path}")
+        
+        file_size_mb = os.path.getsize(batch_file_path) / 1024 / 1024
+        self.logger.info(f"Batch file size: {file_size_mb:.2f} MB")
+        
+        # Chunk
+        self.logger.info("Chunking and submitting batches...")
+        batches_chunked = batch_manager.chunk_batch_file(
+            large_batch_file_path=batch_file_path,
+            max_file_size_mb=max_file_size_mb,
+        )
+
+        if self.parser is None:
+            self.parser = XMLParser(self.open_data_repos_ontology, self.logger, llm_name=self.llm)
+
+        submission_results = []
+        # Submit
+        for batch in batches_chunked:
+            chunk_info = batch['chunk_info']
+            submission_results.append(
+                self.parser.llm_client.submit_batch_job(
+                    chunk_info['chunk_file_path'], 
+                    api_provider=api_provider,
+                    batch_description= f'''
+                    chunk_number: {chunk_info['chunk_number']}, 
+                    total_chunks: {chunk_info['total_chunks']},
+                    chunk_file_path: {chunk_info['chunk_file_path']},
+                    requests_in_chunk: {chunk_info['requests_in_chunk']},
+                    chunk_size_mb: {chunk_info['chunk_size_mb']}
+                    '''
+                    )
+                )
+            1/0
+        
+        # Prepare result
+        successful_submissions = [r for r in submission_results if 'batch_id' in r]
+        failed_submissions = [r for r in submission_results if 'error' in r]
+        
+        result = {
+            'original_file': batch_file_path,
+            'original_size_mb': file_size_mb,
+            'chunks_created': len(submission_results),
+            'chunks_submitted': len(successful_submissions),
+            'chunks_failed': len(failed_submissions),
+            'submission_results': submission_results,
+            'metadata_file': f"{os.path.splitext(batch_file_path)[0]}_chunking_metadata.json",
+            'batch_ids': [r['batch_id'] for r in successful_submissions]
+        }
+        
+        # Log submission summary
+        self.logger.info(f"Chunking and submission complete:")
+        self.logger.info(f"  Created {result['chunks_created']} chunks")
+        self.logger.info(f"  Successfully submitted {result['chunks_submitted']} batches")
+        self.logger.info(f"  Failed submissions: {result['chunks_failed']}")
+        
+        for i, sub_result in enumerate(successful_submissions):
+            chunk_info = sub_result.get('chunk_info', {})
+            self.logger.info(f"  Chunk {i+1}: Batch ID {sub_result['batch_id']} "
+                           f"({chunk_info.get('requests_in_chunk', 'N/A')} requests)")
+        
+        return result
+
+    def from_batch_resp_file_to_df(self, batch_results_file: str):
+        """
+        Convert a batch response JSONL file to a pandas DataFrame.
+        This method processes batch API results and converts them to the standard DataFrame format.
+
+        :param batch_results_file: Path to the JSONL batch results file.
+        :return: DataFrame containing the processed dataset information.
+        """
+        self.logger.info(f"Converting batch response file to DataFrame: {batch_results_file}")
+        
+        try:
+            # Step 1: Process batch responses using LLMClient
+            batch_raw_resps = self.parser.llm_client.process_batch_responses(
+                batch_results_file=batch_results_file,
+                expected_key="datasets"
+            )
+            
+            # Step 2: Process each response using the parser's post-processing logic
+            processed_datasets = []
+            
+            for batch_item in batch_raw_resps['processed_results']:
+                self.logger.debug(f"Processing batch item: {batch_item.keys()}")
+                
+                # Extract metadata
+                custom_id = batch_item.get('custom_id', 'N/A')
+                status = batch_item.get('status', 'unknown')
+                
+                if status != 'success':
+                    self.logger.warning(f"Skipping failed batch item {custom_id}: {batch_item.get('error', 'Unknown error')}")
+                    continue
+                
+                # Process the LLM response using parser's post-processing method
+                processed_response = batch_item.get('processed_response', [])
+                datasets = self.parser.process_datasets_response(processed_response)
+                
+                # Enhance each dataset with metadata
+                for dataset in datasets:
+                    # Add custom_id to track source
+                    dataset['custom_id'] = custom_id
+                    
+                    # Reconstruct source URL if it's a PMC article
+                    if re.search(r'_PMC\d+', custom_id, re.IGNORECASE):
+                        pmc_match = re.search(r'PMC(\d+)', custom_id, re.IGNORECASE)
+                        if pmc_match:
+                            dataset['source_url'] = f'https://www.ncbi.nlm.nih.gov/pmc/articles/PMC{pmc_match.group(1)}/'
+                    
+                    processed_datasets.append(dataset)
+            
+            # Step 3: Convert to DataFrame
+            if processed_datasets:
+                df = pd.DataFrame(processed_datasets)
+                self.logger.info(f"Successfully converted batch results to DataFrame with {len(df)} rows")
+                
+                # Standardize column names (ensure compatibility with existing pipeline)
+                if 'dataset_id' in df.columns:
+                    df.rename(columns={'dataset_id': 'dataset_identifier'}, inplace=True)
+                if 'repository_reference' in df.columns:
+                    df.rename(columns={'repository_reference': 'data_repository'}, inplace=True)
+                
+                return df
+            else:
+                self.logger.warning("No valid datasets found in batch results")
+                return pd.DataFrame()
+                
+        except Exception as e:
+            self.logger.error(f"Error converting batch response file to DataFrame: {e}", exc_info=True)
+            raise
+        

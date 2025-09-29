@@ -126,7 +126,7 @@ MODEL_OPTIONS = [
 ]
 PROMPT_MODEL_OPTIONS = {
     'FDR': 'GPT_from_full_input_Examples',
-    'RTR': 'retrieve_datasets_simple_JSON',
+    'RTR': 'GPT_FewShot',
 }
 metadata_prompt_name = 'portkey_gemini_metadata_extract'
 model_name = st.sidebar.selectbox("Model", MODEL_OPTIONS, index=MODEL_OPTIONS.index('gemini-2.0-flash'))
@@ -199,7 +199,7 @@ if st.button("🚀 Run Extraction", type="primary"):
                         result = app_process_url(
                             orch, url, 
                             driver_path=driver_path, 
-                            use_portkey_for_gemini=use_portkey, 
+                            use_portkey=use_portkey, 
                             prompt_name=prompt_name,
                             semantic_retrieval=True
                         )
@@ -429,7 +429,7 @@ if st.session_state.get("results_ready", False):
                                 preview_result = orch_display.process_metadata(
                                     data_item, interactive=False, return_metadata=True,
                                     write_raw_metadata=False,
-                                    use_portkey_for_gemini=use_portkey,
+                                    use_portkey=use_portkey,
                                     prompt_name=metadata_prompt_name,
                                     timeout=15
                                 )
