@@ -31,7 +31,7 @@ class PDFParser(LLMParser):
         try:
             if os.path.exists(file_path):
                 os.remove(file_path)
-                self.logger.info(f"Temporary file {file_path} removed successfully.")
+                print(f"Temporary file {file_path} removed successfully.")
             else:
                 self.logger.warning(f"Temporary file {file_path} does not exist.")
         except Exception as e:
@@ -49,7 +49,7 @@ class PDFParser(LLMParser):
             List[dict] — list of sections with 'section_title' and 'text'.
             If a 'References' section is found, it is returned as a separate dict with key 'references'.
         """
-        self.logger.info("Extracting sections using heuristics.")
+        print("Extracting sections using heuristics.")
 
         lines = pdf_content.splitlines()
         sections = []
@@ -93,10 +93,10 @@ class PDFParser(LLMParser):
         if references_section:
             sections.extend(self.split_references(references_section['text']))
         else:
-            self.logger.info("No References section found in the document.")
+            print("No References section found in the document.")
 
-        self.logger.info(f"Extracted {len(sections)} sections (including references if present).")
-        self.logger.info(f"sections: {sections}")
+        print(f"Extracted {len(sections)} sections (including references if present).")
+        print(f"sections: {sections}")
         return sections
 
     def split_references(self, references_text):
@@ -106,7 +106,7 @@ class PDFParser(LLMParser):
         and may span multiple lines.
         Returns a list of dicts with 'section_title' and 'text'.
         """
-        self.logger.info("Splitting references section into individual references (robust heuristic).")
+        print("Splitting references section into individual references (robust heuristic).")
         # Pattern: line starts with capitalized word(s), then year (possibly in parentheses), then period or colon
         # e.g. "Smith J. 2020.", "Smith J, Doe A. (2020).", "Smith J. 2020a:"
         # Accepts: "Ahnesjö I. 1992a. ...", "Alonso-Alvarez C, Velando A. 2012. ..."
@@ -127,7 +127,7 @@ class PDFParser(LLMParser):
             refs.append(current_ref.strip())
         # Save as dicts
         refs = [{"section_title": f"Ref_{i + 1}", "text": ref} for i, ref in enumerate(refs) if ref]
-        self.logger.info(f"Split into {len(refs)} individual references.")
+        print(f"Split into {len(refs)} individual references.")
         return refs
 
     def extract_text_from_pdf(self, file_path, start_page=0, end_page=None):
@@ -143,7 +143,7 @@ class PDFParser(LLMParser):
             str: Extracted and normalized text content.
         """
 
-        self.logger.info(f"Extracting text from PDF using PyMuPDF: {file_path}")
+        print(f"Extracting text from PDF using PyMuPDF: {file_path}")
         try:
             doc = fitz.open(file_path)
             num_pages = len(doc)
@@ -213,11 +213,11 @@ class PDFParser(LLMParser):
         return markdown
 
     def normalize_extracted_text(self, text, top_n=10, bottom_n=10, repeat_thresh=0.5):
-        self.logger.info("Normalizing extracted text. Initial length: " f"{len(text)} characters")
+        print("Normalizing extracted text. Initial length: " f"{len(text)} characters")
 
         # More flexible page splitting
         pages = re.split(r'\n{2,}', text)
-        self.logger.info(f"Number of pages detected: {len(pages)}")
+        print(f"Number of pages detected: {len(pages)}")
 
         header_footer_lines = []
 
@@ -232,7 +232,7 @@ class PDFParser(LLMParser):
 
         lines_to_remove = {line for line, count in counts.items() if count >= threshold}
         for line in lines_to_remove:
-            self.logger.info(f"Removing frequent header/footer: '{line}'")
+            print(f"Removing frequent header/footer: '{line}'")
 
         cleaned_lines = []
         for line in text.splitlines():
@@ -245,7 +245,7 @@ class PDFParser(LLMParser):
 
         ret_text = self.merge_pdf_line_breaks(normalized_text)
 
-        self.logger.info(f"Normalized text length: {len(ret_text)}")
+        print(f"Normalized text length: {len(ret_text)}")
         self.logger.debug(f"Normalized text: {ret_text}")
         return ret_text
 
@@ -298,7 +298,7 @@ class PDFParser(LLMParser):
         """
         out_df = None
         # Check if api_data is a string, and convert to XML if needed
-        self.logger.info(f"Function call: parse_data({file_path}, {current_url_address}, "
+        print(f"Function call: parse_data({file_path}, {current_url_address}, "
                          f"additional_data, {raw_data_format})")
 
         text_from_pdf = self.extract_text_from_pdf(file_path)
@@ -307,7 +307,7 @@ class PDFParser(LLMParser):
         self.logger.debug(f"Preprocessed data: {preprocessed_data}")
 
         if self.full_document_read:
-            self.logger.info(f"Extracting links from full content.")
+            print(f"Extracting links from full content.")
 
             # Extract dataset links from the entire text
             augmented_dataset_links = self.extract_datasets_info_from_content(preprocessed_data,
@@ -317,7 +317,7 @@ class PDFParser(LLMParser):
                                                                               prompt_name=prompt_name,
                                                                               response_format=response_format)
 
-            self.logger.info(f"Augmented dataset links: {augmented_dataset_links}")
+            print(f"Augmented dataset links: {augmented_dataset_links}")
 
             # dataset_links_w_target_pages = self.get_dataset_page(augmented_dataset_links)
 
@@ -325,10 +325,10 @@ class PDFParser(LLMParser):
             out_df = pd.concat([pd.DataFrame(augmented_dataset_links)])
 
         else:
-            self.logger.info(f"Chunking the content for the parsing step.")
+            print(f"Chunking the content for the parsing step.")
 
             if semantic_retrieval:
-                self.logger.info("Semantic retrieval is enabled, extracting sections from the preprocessed data.")
+                print("Semantic retrieval is enabled, extracting sections from the preprocessed data.")
                 corpus = self.extract_sections_from_text(preprocessed_data)
                 top_k_sections = self.semantic_retrieve_from_corpus(corpus, topk_docs_to_retrieve=top_k)
                 top_k_sections_text = [item['section_title'] + '\n' + item['text'] for item in top_k_sections]
@@ -347,7 +347,7 @@ class PDFParser(LLMParser):
 
             out_df = pd.concat([pd.DataFrame(augmented_dataset_links)])
 
-        self.logger.info(f"Dataset Links type: {type(out_df)} of len {len(out_df)}, with cols: {out_df.columns}")
+        print(f"Dataset Links type: {type(out_df)} of len {len(out_df)}, with cols: {out_df.columns}")
 
         # Extract file extensions from download links if possible, and add to the dataframe out_df as column
         if 'download_link' in out_df.columns:
@@ -389,7 +389,7 @@ class PDFParser(LLMParser):
 
         :return: List of datasets retrieved from the content.
         """
-        self.logger.info(f"Function_call: extract_datasets_info_from_content(...)")
+        print(f"Function_call: extract_datasets_info_from_content(...)")
         self.logger.debug(f"Loading prompt: {prompt_name} for model {model}")
         static_prompt = self.prompt_manager.load_prompt(prompt_name)
         n_tokens_static_prompt = self.count_tokens(static_prompt, model)
@@ -397,7 +397,7 @@ class PDFParser(LLMParser):
         if 'gpt' in model:
             while self.tokens_over_limit(content, model, allowance_static_prompt=n_tokens_static_prompt):
                 content = content[:-2000]
-        self.logger.info(f"Content length: {len(content)}")
+        print(f"Content length: {len(content)}")
 
         self.logger.debug(f"static_prompt: {static_prompt}")
 
@@ -408,13 +408,13 @@ class PDFParser(LLMParser):
             content=content,
             repos=', '.join(repos)
         )
-        self.logger.info(f"Prompt messages total length: {self.count_tokens(messages, model)} tokens")
+        print(f"Prompt messages total length: {self.count_tokens(messages, model)} tokens")
         self.logger.debug(f"Prompt messages: {messages}")
 
         # Generate the checksum for the prompt content
         # Save the prompt and calculate checksum
         prompt_id = f"{model}-{temperature}-{self.prompt_manager._calculate_checksum(str(messages))}"
-        self.logger.info(f"Prompt ID: {prompt_id}")
+        print(f"Prompt ID: {prompt_id}")
         # Save the prompt using the PromptManager
         if self.save_dynamic_prompts:
             self.prompt_manager.save_prompt(prompt_id=prompt_id, prompt_content=messages)
@@ -424,7 +424,7 @@ class PDFParser(LLMParser):
             cached_response = self.prompt_manager.retrieve_response(prompt_id)
 
         if self.use_cached_responses and cached_response:
-            self.logger.info(f"Using cached response {type(cached_response)} from model: {model}")
+            print(f"Using cached response {type(cached_response)} from model: {model}")
             if type(cached_response) == str and 'gpt' in model:
                 resps = [json.loads(cached_response)]
             if type(cached_response) == str:
@@ -433,30 +433,30 @@ class PDFParser(LLMParser):
                 resps = cached_response
         else:
             # Make the request to the model
-            self.logger.info(
+            print(
                 f"Requesting datasets from content using model: {model}, temperature: {temperature}, messages length: "
                 f"{self.count_tokens(messages, model)} tokens")
             resps = []
 
             if model == 'gemma2:9b':
                 response = self.client.chat(model=model, options={"temperature": temperature}, messages=messages)
-                self.logger.info(
+                print(
                     f"Response received from model: {response.get('message', {}).get('content', 'No content')}")
                 resps = response['message']['content'].split("\n")
                 # Save the response
                 self.prompt_manager.save_response(prompt_id, response['message'][
                     'content']) if self.save_responses_to_cache else None
-                self.logger.info(f"Response saved to cache")
+                print(f"Response saved to cache")
 
             elif model == 'gemma3:1b' or model == 'gemma3:4b' or model == 'qwen:4b':
                 response = self.client.api_call(messages, response_format=response_format.model_json_schema())
                 candidates = self.safe_parse_json(response)
                 if candidates:
-                    self.logger.info(f"Found {len(candidates)} candidates in the response. Type {type(candidates)}")
+                    print(f"Found {len(candidates)} candidates in the response. Type {type(candidates)}")
                     parsed_response = candidates
                     if self.save_responses_to_cache:
                         self.prompt_manager.save_response(prompt_id, parsed_response)
-                        self.logger.info(f"Response saved to cache")
+                        print(f"Response saved to cache")
                     parsed_response_dedup = self.normalize_response_type(parsed_response)
                     resps = parsed_response_dedup
                 else:
@@ -496,20 +496,20 @@ class PDFParser(LLMParser):
                             input=messages,
                         )
 
-                self.logger.info(f"GPT response: {response.output}")
+                print(f"GPT response: {response.output}")
 
                 if self.full_document_read:
                     resps = self.safe_parse_json(response.output)  # 'datasets' keyError?
-                    self.logger.info(f"Response is {type(resps)}: {resps}")
+                    print(f"Response is {type(resps)}: {resps}")
                     resps = resps.get("datasets", []) if resps is not None else []
                     resps = self.normalize_response_type(resps)
-                    self.logger.info(f"Response is {type(resps)}: {resps}")
+                    print(f"Response is {type(resps)}: {resps}")
                     self.prompt_manager.save_response(prompt_id, resps) if self.save_responses_to_cache else None
                 else:
                     try:
                         resps = self.safe_parse_json(response.output)  # Ensure it's properly parsed
                         resps = self.normalize_response_type(resps)
-                        self.logger.info(f"Response is {type(resps)}: {resps}")
+                        print(f"Response is {type(resps)}: {resps}")
                         if not isinstance(resps, list):  # Ensure it's a list
                             raise ValueError("Expected a list of datasets, but got something else.")
 
@@ -520,7 +520,7 @@ class PDFParser(LLMParser):
                     self.prompt_manager.save_response(prompt_id, resps) if self.save_responses_to_cache else None
 
                 # Save the response
-                self.logger.info(f"Response {type(resps)} saved to cache") if self.save_responses_to_cache else None
+                print(f"Response {type(resps)} saved to cache") if self.save_responses_to_cache else None
 
             elif 'gemini' in model:
                 if self.use_portkey:
@@ -536,7 +536,7 @@ class PDFParser(LLMParser):
                             route=PORTKEY_ROUTE,
                             **portkey_payload
                         )
-                        self.logger.info(f"Portkey Gemini response: {response}")
+                        print(f"Portkey Gemini response: {response}")
                         if self.full_document_read:
                             resps = self.safe_parse_json(response)
                             resps = self.normalize_response_type(resps)
@@ -582,13 +582,13 @@ class PDFParser(LLMParser):
                     try:
                         candidates = response.candidates  # Get the list of candidates
                         if candidates:
-                            self.logger.info(f"Found {len(candidates)} candidates in the response.")
+                            print(f"Found {len(candidates)} candidates in the response.")
                             response_text = candidates[0].content.parts[0].text  # Access the first part's text
-                            self.logger.info(f"Gemini response text: {response_text}")
+                            print(f"Gemini response text: {response_text}")
                             parsed_response = json.loads(response_text)  # Parse the JSON response
                             if self.save_responses_to_cache:
                                 self.prompt_manager.save_response(prompt_id, parsed_response)
-                                self.logger.info(f"Response saved to cache")
+                                print(f"Response saved to cache")
                             parsed_response_dedup = self.normalize_response_type(parsed_response)
                             resps = parsed_response_dedup
                         else:
@@ -605,9 +605,9 @@ class PDFParser(LLMParser):
         # Process the response content
         result = []
         for dataset in resps:
-            self.logger.info(f"Processing dataset: {dataset}")
+            print(f"Processing dataset: {dataset}")
             if type(dataset) == str:
-                self.logger.info(f"Dataset is a string")
+                print(f"Dataset is a string")
                 # Skip short or invalid responses
                 if len(dataset) < 3 or dataset.split(",")[0].strip() == 'n/a' and dataset.split(",")[
                     1].strip() == 'n/a':
@@ -620,14 +620,14 @@ class PDFParser(LLMParser):
                 dataset_id, data_repository = [x.strip() for x in dataset.split(",")[:2]]
 
             elif type(dataset) == dict:
-                self.logger.info(f"Dataset is a dictionary")
+                print(f"Dataset is a dictionary")
                 dataset_id = 'n/a'
                 if 'dataset_id' in dataset:
                     dataset_id = self.validate_dataset_id(dataset['dataset_id'])
                 elif 'dataset_identifier' in dataset:
                     dataset_id = self.validate_dataset_id(dataset['dataset_identifier'])
                 else:
-                    self.logger.info(f"Candidate is missing 'dataset_id' or 'dataset_identifier', skipping dataset")
+                    print(f"Candidate is missing 'dataset_id' or 'dataset_identifier', skipping dataset")
 
                 if 'data_repository' in dataset:
                     data_repository = self.resolve_data_repository(dataset['data_repository'],
@@ -638,7 +638,7 @@ class PDFParser(LLMParser):
                                                                    identifier=dataset_id,
                                                                    dataset_page=dataset.get('dataset_webpage'))
                 else:
-                    self.logger.info(
+                    print(
                         f"Candidate is missing 'data_repository' or 'repository_reference', skipping dataset")
                     continue
 
@@ -649,11 +649,11 @@ class PDFParser(LLMParser):
 
                 if dataset_id == 'n/a' and type(data_repository) == str and data_repository in \
                         self.open_data_repos_ontology['repos']:
-                    self.logger.info(f"Dataset ID is 'n/a' and repository name from prompt")
+                    print(f"Dataset ID is 'n/a' and repository name from prompt")
                     continue
 
                 elif data_repository == 'n/a':
-                    self.logger.info(f"Data repository is 'n/a', skipping dataset")
+                    print(f"Data repository is 'n/a', skipping dataset")
                     continue
 
             result.append({
@@ -670,7 +670,7 @@ class PDFParser(LLMParser):
 
             self.logger.debug(f"Extracted dataset: {result[-1]}")
 
-        self.logger.info(f"Final result: {result}")
+        print(f"Final result: {result}")
 
         return result
 
@@ -681,7 +681,7 @@ class PDFParser(LLMParser):
         if type(repo) != str:
             self.logger.warning(f"Repository is not a string: {repo}, type: {type(repo)}")
             return 'n/a'
-        self.logger.info(
+        print(
             f"Validating Dataset Page: {dataset_webpage_url}, type: {type(dataset_webpage_url)}, repo: {repo}")
         if ',' in dataset_webpage_url:
             self.logger.warning(
@@ -697,17 +697,17 @@ class PDFParser(LLMParser):
             if 'dataset_webpage_url_ptr' in self.open_data_repos_ontology['repos'][repo].keys():
                 dataset_webpage_url_ptr = self.open_data_repos_ontology['repos'][repo]['dataset_webpage_url_ptr']
                 pattern = re.sub('__ID__', '', dataset_webpage_url_ptr)
-                self.logger.info(f"Pattern: {pattern}")
+                print(f"Pattern: {pattern}")
                 if pattern.lower() in resolved_dataset_page.lower():
-                    self.logger.info(f"Link matches the pattern {pattern}")
+                    print(f"Link matches the pattern {pattern}")
                     return resolved_dataset_page
                 else:
-                    self.logger.info(f"Link does not match the pattern {pattern}")
+                    print(f"Link does not match the pattern {pattern}")
                     return 'n/a'
             else:
-                self.logger.info(f"No dataset_webpage_url_ptr found for {repo}")
+                print(f"No dataset_webpage_url_ptr found for {repo}")
                 return resolved_dataset_page
-        self.logger.info(f"Repository {repo} not found in ontology")
+        print(f"Repository {repo} not found in ontology")
         return 'n/a'
 
     def extract_publication_title(self, raw_data):
@@ -716,7 +716,7 @@ class PDFParser(LLMParser):
 
         :return: str — the publication title.
         """
-        self.logger.info("Extracting publication title from PDF")
+        print("Extracting publication title from PDF")
 
         # simple heuristic to extract title or GROBID
 

@@ -21,7 +21,7 @@ class XMLParser(LLMParser):
                          )
 
         self.logger = logger
-        self.logger.info("Initializing xmlRetriever")
+        print("Initializing xmlRetriever")
         self.retriever = xmlRetriever(self.logger, publisher='PMC')
 
     def extract_paragraphs_from_xml(self, xml_root) -> list[dict]:
@@ -67,7 +67,7 @@ class XMLParser(LLMParser):
             List of dicts with 'section_title' and 'sec_type'.
         """
         sections = []
-        self.logger.info(f"Function_call: extract_sections_from_xml(xml_root) with type {type(xml_root)}")
+        print(f"Function_call: extract_sections_from_xml(xml_root) with type {type(xml_root)}")
 
         if not isinstance(xml_root, etree._Element):
             raise TypeError(f"Invalid XML root type: {type(xml_root)}. Expected lxml.etree.Element.")
@@ -100,7 +100,7 @@ class XMLParser(LLMParser):
                 "sec_txt_clean": section_text_from_paragraphs
             })
 
-        self.logger.info(f"Extracted {len(sections)} sections from XML.")
+        print(f"Extracted {len(sections)} sections from XML.")
         return sections
 
     def extract_publication_title(self, api_data):
@@ -144,7 +144,7 @@ class XMLParser(LLMParser):
         """
         out_df = None
         # Check if api_data is a string, and convert to XML if needed
-        self.logger.info(f"Function call: parse_data(api_data({type(api_data)}), {publisher}, {current_url_address}, "
+        print(f"Function call: parse_data(api_data({type(api_data)}), {publisher}, {current_url_address}, "
                          f"additional_data, {raw_data_format})")
         self.publisher = publisher
 
@@ -159,7 +159,7 @@ class XMLParser(LLMParser):
                         api_data = etree.fromstring(api_data.encode('utf-8'))
                     else:
                         api_data = etree.fromstring(api_data)
-                self.logger.info("api_data converted to lxml element")
+                print("api_data converted to lxml element")
             except Exception as e:
                 self.logger.error(f"Error parsing API data: {e}")
                 return None
@@ -184,14 +184,14 @@ class XMLParser(LLMParser):
                     # Extract dataset links
                     dataset_links = self.extract_href_from_data_availability(api_data)
                     dataset_links.extend(self.extract_xrefs_from_data_availability(api_data, current_url_address))
-                    self.logger.info(f"dataset_links: {dataset_links}")
+                    print(f"dataset_links: {dataset_links}")
 
                     augmented_dataset_links = self.process_data_availability_links(dataset_links)
-                    self.logger.info(f"Len of augmented_dataset_links: {len(augmented_dataset_links)}")
+                    print(f"Len of augmented_dataset_links: {len(augmented_dataset_links)}")
 
                     self.logger.debug(f"Additional data: {(additional_data)}")
                     if additional_data is not None and len(additional_data) > 0:
-                        self.logger.info(f"Additional data ({type(additional_data), len(additional_data)} items) "
+                        print(f"Additional data ({type(additional_data), len(additional_data)} items) "
                                          f"and Parsed data ({type(augmented_dataset_links), len(augmented_dataset_links)} items).")
                         # extend the dataset links with additional data
                         augmented_dataset_links = augmented_dataset_links + self.process_additional_data(
@@ -206,7 +206,7 @@ class XMLParser(LLMParser):
                     data_availability_cont = self.get_data_availability_text(api_data)
 
                     if semantic_retrieval:
-                        self.logger.info(f"Using semantic retrieval for data availability sections.")
+                        print(f"Using semantic retrieval for data availability sections.")
                         corpus = self.extract_sections_from_xml(api_data)
                         top_k_sections = self.semantic_retrieve_from_corpus(corpus, topk_docs_to_retrieve=top_k)
                         top_k_sections_text = [item['text'] for item in top_k_sections]
@@ -217,7 +217,7 @@ class XMLParser(LLMParser):
                                                                                   response_format=response_format)
 
                     if additional_data is not None and len(additional_data) > 0:
-                        self.logger.info(f"Additional data ({type(additional_data), len(additional_data)} items) "
+                        print(f"Additional data ({type(additional_data), len(additional_data)} items) "
                                          f"and Parsed data ({type(augmented_dataset_links), len(augmented_dataset_links)} items).")
                         # extend the dataset links with additional data
                         augmented_dataset_links = augmented_dataset_links + self.process_additional_data(
@@ -229,7 +229,7 @@ class XMLParser(LLMParser):
                     dataset_links_w_target_pages = self.get_dataset_page(augmented_dataset_links)
 
                 else:
-                    self.logger.info(
+                    print(
                         f"Skipping data availability statement extraction as per section_filter: {section_filter}")
                     dataset_links_w_target_pages = []
 
@@ -237,7 +237,7 @@ class XMLParser(LLMParser):
                 out_df = pd.concat([pd.DataFrame(dataset_links_w_target_pages).rename(
                     columns={'dataset_id': 'dataset_identifier', 'repository_reference': 'data_repository'}),
                     supplementary_material_metadata])  # check index error here
-                self.logger.info(
+                print(
                     f"Dataset Links type: {type(out_df)} of len {len(out_df)}, with cols: {out_df.columns}")
                 self.logger.debug(f"Datasets: {out_df}")
 
@@ -260,7 +260,7 @@ class XMLParser(LLMParser):
             else:
                 # Extract links from entire webpage
                 if self.full_document_read and (filter_das is None or filter_das):
-                    self.logger.info(f"Extracting links from full XML content.")
+                    print(f"Extracting links from full XML content.")
 
                     preprocessed_data = self.normalize_XML(api_data)
 
@@ -275,7 +275,7 @@ class XMLParser(LLMParser):
                                                                                       prompt_name=prompt_name,
                                                                                       response_format=response_format)
 
-                    self.logger.info(f"Augmented dataset links: {augmented_dataset_links}")
+                    print(f"Augmented dataset links: {augmented_dataset_links}")
 
                     dataset_links_w_target_pages = self.get_dataset_page(augmented_dataset_links)
 
@@ -284,7 +284,7 @@ class XMLParser(LLMParser):
                 else:
                     out_df = supplementary_material_metadata
 
-                self.logger.info(
+                print(
                     f"Dataset Links type: {type(out_df)} of len {len(out_df)}, with cols: {out_df.columns}")
 
                 # Extract file extensions from download links if possible, and add to the dataframe out_df as column
@@ -349,7 +349,7 @@ class XMLParser(LLMParser):
 
         """
         # Namespace dictionary - adjust 'ns0' to match the XML if necessary
-        self.logger.info(f"Function_call: extract_href_from_data_availability(api_xml)")
+        print(f"Function_call: extract_href_from_data_availability(api_xml)")
         namespaces = {'ns0': 'http://www.w3.org/1999/xlink'}
 
         # Find all sections with "data-availability"
@@ -357,7 +357,7 @@ class XMLParser(LLMParser):
         for ptr in self.load_patterns_for_tgt_section('data_availability_sections'):
             cont = api_xml.findall(ptr)
             if cont is not None:
-                self.logger.info(f"Found {len(cont)} data availability sections. cont: {cont}")
+                print(f"Found {len(cont)} data availability sections. cont: {cont}")
                 data_availability_sections.append({"ptr": ptr, "cont": cont})
 
         hrefs = []
@@ -372,7 +372,7 @@ class XMLParser(LLMParser):
                 if uris is not None:
                     ext_links.extend(uris)
 
-                self.logger.info(f"Retrieved {len(ext_links)} ext-links in data availability section pattern {ptr}.")
+                print(f"Retrieved {len(ext_links)} ext-links in data availability section pattern {ptr}.")
 
                 for link in ext_links:
                     # Extract href attribute
@@ -393,7 +393,7 @@ class XMLParser(LLMParser):
                             'source_section': 'data availability',
                             'retrieval_pattern': pattern
                         })
-                        self.logger.info(f"Extracted item: {json.dumps(hrefs[-1], indent=4)}")
+                        print(f"Extracted item: {json.dumps(hrefs[-1], indent=4)}")
 
         return hrefs
 
@@ -408,15 +408,15 @@ class XMLParser(LLMParser):
         :return: List of dictionaries containing xrefs and their context.
 
         """
-        self.logger.info(f"Function_call: extract_xrefs_from_data_availability(api_xml, current_url_address)")
+        print(f"Function_call: extract_xrefs_from_data_availability(api_xml, current_url_address)")
 
         # Find all sections with "data-availability"
         data_availability_sections = []
         for ptr in self.load_patterns_for_tgt_section('data_availability_sections'):
-            self.logger.info(f"Searching for data availability sections using XPath: {ptr}")
+            print(f"Searching for data availability sections using XPath: {ptr}")
             cont = api_xml.findall(ptr)
             if cont is not None:
-                self.logger.info(f"Found {len(cont)} data availability sections. cont: {cont}")
+                print(f"Found {len(cont)} data availability sections. cont: {cont}")
                 data_availability_sections.append({"ptr": ptr, "cont": cont})
 
         xrefs = []
@@ -427,7 +427,7 @@ class XMLParser(LLMParser):
                 # Find all <xref> elements in the section
                 xref_elements = section.findall(".//xref")
 
-                self.logger.info(f"Found {len(xref_elements)} xref elements in data availability section.")
+                print(f"Found {len(xref_elements)} xref elements in data availability section.")
 
                 for xref in xref_elements:
                     # Extract cross-reference details
@@ -447,7 +447,7 @@ class XMLParser(LLMParser):
                         'source_section': 'data availability',
                         'retrieval_pattern': pattern
                     })
-                    self.logger.info(f"Extracted xref item: {json.dumps(xrefs[-1], indent=4)}")
+                    print(f"Extracted xref item: {json.dumps(xrefs[-1], indent=4)}")
 
         return xrefs
 
@@ -463,7 +463,7 @@ class XMLParser(LLMParser):
 
         """
 
-        self.logger.info(f"Function_call: extract_href_from_supplementary_material(api_xml, current_url_address)")
+        print(f"Function_call: extract_href_from_supplementary_material(api_xml, current_url_address)")
 
         # Namespace dictionary for xlink
         namespaces = {'xlink': 'http://www.w3.org/1999/xlink'}
@@ -474,7 +474,7 @@ class XMLParser(LLMParser):
             self.logger.debug(f"Searching for supplementary material sections using XPath: {ptr}")
             cont = api_xml.findall(ptr)
             if cont is not None and len(cont) != 0:
-                self.logger.info(f"Found {len(cont)} supplementary material sections {ptr}. cont: {cont}")
+                print(f"Found {len(cont)} supplementary material sections {ptr}. cont: {cont}")
                 supplementary_material_sections.append({"ptr": ptr, "cont": cont})
 
         self.logger.debug(f"Found {len(supplementary_material_sections)} supplementary-material sections.")
@@ -482,7 +482,7 @@ class XMLParser(LLMParser):
         hrefs = []
 
         for section_element in supplementary_material_sections:
-            self.logger.info(f"Processing section: {section_element}")
+            print(f"Processing section: {section_element}")
             sections = section_element['cont']
             pattern = section_element['ptr']
             for section in sections:
@@ -571,7 +571,7 @@ class XMLParser(LLMParser):
         """
         Extract metadata from xrefs to supplementary material ids in the XML.
         """
-        self.logger.info(f"Function_call: extract_supplementary_material_refs(api_xml, supplementary_material_links)")
+        print(f"Function_call: extract_supplementary_material_refs(api_xml, supplementary_material_links)")
         for i, row in supplementary_material_links.iterrows():
             # Find the <href> elements that reference the supplementary material <a href="#id">
             context_descr = ""
@@ -587,7 +587,7 @@ class XMLParser(LLMParser):
                 if text_segment not in context_descr:
                     context_descr += text_segment + "\n"
             # Add the context description to the supplementary material links DataFrame
-            self.logger.info(f"Extracted context_descr for xref {href_id}: {context_descr}")
+            print(f"Extracted context_descr for xref {href_id}: {context_descr}")
             supplementary_material_links.at[i, 'context_description'] = context_descr.strip()
         return supplementary_material_links
 
@@ -737,7 +737,7 @@ class XMLParser(LLMParser):
             if ptr.startswith('.//'):
                 supplementary_data_sections.extend(api_xml.findall(ptr))
 
-        self.logger.info(f"Found {len(supplementary_data_sections)} supplementary data sections")
+        print(f"Found {len(supplementary_data_sections)} supplementary data sections")
 
         for sect in supplementary_data_sections:
             # check if section contains data availability statement
@@ -756,12 +756,12 @@ class XMLParser(LLMParser):
             key_resources_table.extend(api_xml.xpath(ptr))
 
         for sect in key_resources_table:
-            self.logger.info(f"Found key resources table: {sect}.")
+            print(f"Found key resources table: {sect}.")
             table_text = self.table_to_text(sect)
             self.logger.debug(f"Table text: {table_text}")
             data_availability_cont.append(table_text)
 
-        self.logger.info(f"Data Availability len: {len(data_availability_cont)}, type: {type(data_availability_cont)}")
+        print(f"Data Availability len: {len(data_availability_cont)}, type: {type(data_availability_cont)}")
         self.logger.debug(f"Found data availability content: {data_availability_cont}")
 
         return data_availability_cont
@@ -824,7 +824,7 @@ class TEI_XMLParser(XMLParser):
     """
 
     def extract_sections_from_xml(self, tei_xml):
-        self.logger.info(f"Extracting sections from TEI XML. Type: {type(tei_xml)}")
+        print(f"Extracting sections from TEI XML. Type: {type(tei_xml)}")
         # Accept both str and etree.Element
         if isinstance(tei_xml, str):
             root = etree.fromstring(tei_xml.encode('utf-8'))
@@ -860,7 +860,7 @@ class TEI_XMLParser(XMLParser):
                     "sec_type": sec_type,
                     "sec_txt_clean": section_text_from_paragraphs
                 })
-        self.logger.info(f"Extracted {len(sections)} sections from TEI XML.")
+        print(f"Extracted {len(sections)} sections from TEI XML.")
         return sections
 
     def extract_reference_content(self, ref_id, tei_xml):
@@ -909,7 +909,7 @@ class TEI_XMLParser(XMLParser):
         return ref_id
 
     def extract_paragraphs(self, tei_xml, ref_substitutions=False):
-        self.logger.info(f"Extracting paragraphs from TEI XML. Type: {type(tei_xml)}")
+        print(f"Extracting paragraphs from TEI XML. Type: {type(tei_xml)}")
         root = etree.fromstring(tei_xml.encode('utf-8'))
         ns = {'tei': 'http://www.tei-c.org/ns/1.0'}
         paragraphs = []
@@ -947,11 +947,11 @@ class TEI_XMLParser(XMLParser):
                     "section_title": section_title,
                     "text": para_text,
                 })
-        self.logger.info(f"Extracted {len(paragraphs)} paragraphs from TEI XML.")
+        print(f"Extracted {len(paragraphs)} paragraphs from TEI XML.")
         return paragraphs
 
     def extract_text(self, tei_xml):
-        self.logger.info(f"Extracting text from TEI XML. Type: {type(tei_xml)}")
+        print(f"Extracting text from TEI XML. Type: {type(tei_xml)}")
         paragraphs = self.extract_paragraphs(tei_xml, ref_substitutions=True)
         return "\n".join(paragraphs['text'] for paragraphs in paragraphs if 'text' in paragraphs)
 
@@ -988,7 +988,7 @@ class TEI_XMLParser(XMLParser):
         """
         out_df = None
         # Check if api_data is a string, and convert to XML if needed
-        self.logger.info(f"Function call: parse_data(api_data({type(api_data)}), {publisher}, {current_url_address}, "
+        print(f"Function call: parse_data(api_data({type(api_data)}), {publisher}, {current_url_address}, "
                          f"additional_data, {raw_data_format})")
         self.publisher = publisher
 
@@ -1003,7 +1003,7 @@ class TEI_XMLParser(XMLParser):
                         api_data = etree.fromstring(api_data.encode('utf-8'))
                     else:
                         api_data = etree.fromstring(api_data)
-                self.logger.info("api_data converted to lxml element")
+                print("api_data converted to lxml element")
             except Exception as e:
                 self.logger.error(f"Error parsing API data: {e}")
                 return None
@@ -1028,14 +1028,14 @@ class TEI_XMLParser(XMLParser):
                     # Extract dataset links
                     dataset_links = self.extract_href_from_data_availability(api_data)
                     dataset_links.extend(self.extract_xrefs_from_data_availability(api_data, current_url_address))
-                    self.logger.info(f"dataset_links: {dataset_links}")
+                    print(f"dataset_links: {dataset_links}")
 
                     augmented_dataset_links = self.process_data_availability_links(dataset_links)
-                    self.logger.info(f"Len of augmented_dataset_links: {len(augmented_dataset_links)}")
+                    print(f"Len of augmented_dataset_links: {len(augmented_dataset_links)}")
 
                     self.logger.debug(f"Additional data: {(additional_data)}")
                     if additional_data is not None and len(additional_data) > 0:
-                        self.logger.info(f"Additional data ({type(additional_data), len(additional_data)} items) "
+                        print(f"Additional data ({type(additional_data), len(additional_data)} items) "
                                          f"and Parsed data ({type(augmented_dataset_links), len(augmented_dataset_links)} items).")
                         # extend the dataset links with additional data
                         augmented_dataset_links = augmented_dataset_links + self.process_additional_data(
@@ -1050,7 +1050,7 @@ class TEI_XMLParser(XMLParser):
                     data_availability_cont = self.get_data_availability_text(api_data)
 
                     if semantic_retrieval:
-                        self.logger.info(f"Using semantic retrieval for data availability sections.")
+                        print(f"Using semantic retrieval for data availability sections.")
                         corpus = self.extract_sections_from_xml(api_data)
                         top_k_sections = self.semantic_retrieve_from_corpus(corpus, topk_docs_to_retrieve=top_k)
                         top_k_sections_text = [item['text'] for item in top_k_sections]
@@ -1061,7 +1061,7 @@ class TEI_XMLParser(XMLParser):
                                                                                   response_format=response_format)
 
                     if additional_data is not None and len(additional_data) > 0:
-                        self.logger.info(f"Additional data ({type(additional_data), len(additional_data)} items) "
+                        print(f"Additional data ({type(additional_data), len(additional_data)} items) "
                                          f"and Parsed data ({type(augmented_dataset_links), len(augmented_dataset_links)} items).")
                         # extend the dataset links with additional data
                         augmented_dataset_links = augmented_dataset_links + self.process_additional_data(
@@ -1073,7 +1073,7 @@ class TEI_XMLParser(XMLParser):
                     dataset_links_w_target_pages = self.get_dataset_page(augmented_dataset_links)
 
                 else:
-                    self.logger.info(
+                    print(
                         f"Skipping data availability statement extraction as per section_filter: {section_filter}")
                     dataset_links_w_target_pages = []
 
@@ -1081,7 +1081,7 @@ class TEI_XMLParser(XMLParser):
                 out_df = pd.concat([pd.DataFrame(dataset_links_w_target_pages).rename(
                     columns={'dataset_id': 'dataset_identifier', 'repository_reference': 'data_repository'}),
                     supplementary_material_metadata])  # check index error here
-                self.logger.info(
+                print(
                     f"Dataset Links type: {type(out_df)} of len {len(out_df)}, with cols: {out_df.columns}")
                 self.logger.debug(f"Datasets: {out_df}")
 
@@ -1102,7 +1102,7 @@ class TEI_XMLParser(XMLParser):
             else:
                 # Extract links from entire webpage
                 if self.full_document_read and (filter_das is None or filter_das):
-                    self.logger.info(f"Extracting links from full XML content.")
+                    print(f"Extracting links from full XML content.")
 
                     preprocessed_data = self.normalize_XML(api_data)
 
@@ -1117,7 +1117,7 @@ class TEI_XMLParser(XMLParser):
                                                                                       prompt_name=prompt_name,
                                                                                       response_format=response_format)
 
-                    self.logger.info(f"Augmented dataset links: {augmented_dataset_links}")
+                    print(f"Augmented dataset links: {augmented_dataset_links}")
 
                     dataset_links_w_target_pages = self.get_dataset_page(augmented_dataset_links)
 
@@ -1126,7 +1126,7 @@ class TEI_XMLParser(XMLParser):
                 else:
                     out_df = supplementary_material_metadata
 
-                self.logger.info(
+                print(
                     f"Dataset Links type: {type(out_df)} of len {len(out_df)}, with cols: {out_df.columns}")
 
                 # Extract file extensions from download links if possible, and add to the dataframe out_df as column
@@ -1163,23 +1163,23 @@ class XMLRouter:
         Returns an instance of the appropriate parser (TEI_XMLParser or XMLParser)
         based on the XML content.
         """
-        self.logger.info(f"Function_call: get_parser(xml_root) with type {type(xml_root)}")
+        print(f"Function_call: get_parser(xml_root) with type {type(xml_root)}")
         if not isinstance(xml_root, etree._Element) and isinstance(xml_root, str):
             if os.path.exists(xml_root):
-                self.logger.info(f"Loading XML from file: {xml_root}")
+                print(f"Loading XML from file: {xml_root}")
                 with open(xml_root, 'r', encoding='utf-8') as f:
                     xml_root = f.read()
             else:
-                self.logger.info(f"Parsing XML string: {xml_root[:100]}...")
+                print(f"Parsing XML string: {xml_root[:100]}...")
             try:
                 xml_root = etree.fromstring(xml_root.encode('utf-8'))
             except etree.XMLSyntaxError as e:
                 self.logger.error(f"Failed to parse XML root: {e}")
                 raise ValueError("Invalid XML root provided.")
-        self.logger.info(f"Function_call: is_tei_xml_static(xml_root) with type {type(xml_root)}")
+        print(f"Function_call: is_tei_xml_static(xml_root) with type {type(xml_root)}")
         if XMLParser.is_tei_xml_static(xml_root):
-            self.logger.info("Detected TEI XML. Using TEI_XMLParser.")
+            print("Detected TEI XML. Using TEI_XMLParser.")
             return TEI_XMLParser(self.open_data_repos_ontology, self.logger, **self.parser_kwargs)
         else:
-            self.logger.info("Detected non-TEI XML. Using XMLParser.")
+            print("Detected non-TEI XML. Using XMLParser.")
             return XMLParser(self.open_data_repos_ontology, self.logger, **self.parser_kwargs)

@@ -56,17 +56,17 @@ class xmlRetriever(BaseRetriever):
 
         for section in required_sections:
             if not self.has_target_section(raw_data, section):
-                self.logger.info(f"Missing section in XML: {section}")
+                print(f"Missing section in XML: {section}")
                 return False
 
-        self.logger.info("XML data contains all required sections.")
+        print("XML data contains all required sections.")
         return True
 
     def load_target_sections_ptrs(self, section_name) -> list:
         """
         Load the XML tags for the specified section name. Publisher-specific.
         """
-        self.logger.info(f"Loading target sections for section name: {section_name}")
+        print(f"Loading target sections for section name: {section_name}")
         target_sections = self.xml_tags
         if section_name not in target_sections:
             self.logger.error(
@@ -103,7 +103,7 @@ class xmlRetriever(BaseRetriever):
         match = re.match(r'^https?://(?:\w+\.)?([\w\-]+)\.\w+', url)
         if match:
             domain = match.group(1)
-            self.logger.info(f"Publisher: {domain}")
+            print(f"Publisher: {domain}")
             return domain
         else:
             return 'Unknown Publisher'
@@ -120,7 +120,7 @@ class xmlRetriever(BaseRetriever):
         """
 
         self.publisher = publisher
-        self.logger.info(f"Loading patterns for section '{section_name}' for publisher '{self.publisher}'.")
+        print(f"Loading patterns for section '{section_name}' for publisher '{self.publisher}'.")
 
         if self.publisher in self.retrieval_patterns:
             if 'xml_tags' not in self.retrieval_patterns[self.publisher]:
@@ -128,13 +128,13 @@ class xmlRetriever(BaseRetriever):
                 return None
             else:
                 section_xml_tags_patterns = self.retrieval_patterns[self.publisher]['xml_tags']
-                self.logger.info(
+                print(
                     f"Section pattern keys for publisher {self.publisher}: {section_xml_tags_patterns.keys()}")
-                self.logger.info(f"Section name: {section_name}")
+                print(f"Section name: {section_name}")
                 if section_name in section_xml_tags_patterns.keys():
-                    self.logger.info(f"Found section '{section_name}' in patterns for publisher '{self.publisher}'.")
+                    print(f"Found section '{section_name}' in patterns for publisher '{self.publisher}'.")
                     ret = section_xml_tags_patterns[section_name]
-                    self.logger.info(f"Loaded patterns for section '{section_name}': {ret}")
+                    print(f"Loaded patterns for section '{section_name}': {ret}")
                     return ret
 
                 else:
@@ -155,7 +155,7 @@ class xmlRetriever(BaseRetriever):
 
         """
         # Namespace dictionary - adjust 'ns0' to match the XML if necessary
-        self.logger.info(f"Function_call: extract_href_from_data_availability(api_xml)")
+        print(f"Function_call: extract_href_from_data_availability(api_xml)")
         namespaces = {'ns0': 'http://www.w3.org/1999/xlink'}
 
         title = self.extract_publication_title(api_xml)
@@ -165,7 +165,7 @@ class xmlRetriever(BaseRetriever):
         for ptr in self.load_patterns_for_tgt_section('data_availability_sections'):
             cont = api_xml.findall(ptr)
             if cont is not None:
-                self.logger.info(f"Found {len(cont)} data availability sections. cont: {cont}")
+                print(f"Found {len(cont)} data availability sections. cont: {cont}")
                 data_availability_sections.append({"ptr": ptr, "cont": cont})
 
         hrefs = []
@@ -180,7 +180,7 @@ class xmlRetriever(BaseRetriever):
                 if uris is not None:
                     ext_links.extend(uris)
 
-                self.logger.info(
+                print(
                     f"Retrieved {len(ext_links)} ext-links in data availability section pattern {pattern}.")
 
                 for link in ext_links:
@@ -202,7 +202,7 @@ class xmlRetriever(BaseRetriever):
                             'source_section': 'data availability',
                             'retrieval_pattern': pattern
                         })
-                        self.logger.info(f"Extracted item: {json.dumps(hrefs[-1], indent=4)}")
+                        print(f"Extracted item: {json.dumps(hrefs[-1], indent=4)}")
 
         return hrefs
 
@@ -217,15 +217,15 @@ class xmlRetriever(BaseRetriever):
         :return: List of dictionaries containing xrefs and their context.
 
         """
-        self.logger.info(f"Function_call: extract_xrefs_from_data_availability(api_xml, current_url_address)")
+        print(f"Function_call: extract_xrefs_from_data_availability(api_xml, current_url_address)")
 
         # Find all sections with "data-availability"
         data_availability_sections = []
         for ptr in self.load_patterns_for_tgt_section('data_availability_sections'):
-            self.logger.info(f"Searching for data availability sections using XPath: {ptr}")
+            print(f"Searching for data availability sections using XPath: {ptr}")
             cont = api_xml.findall(ptr)
             if cont is not None:
-                self.logger.info(f"Found {len(cont)} data availability sections. cont: {cont}")
+                print(f"Found {len(cont)} data availability sections. cont: {cont}")
                 data_availability_sections.append({"ptr": ptr, "cont": cont})
 
         xrefs = []
@@ -236,7 +236,7 @@ class xmlRetriever(BaseRetriever):
                 # Find all <xref> elements in the section
                 xref_elements = section.findall(".//xref")
 
-                self.logger.info(f"Found {len(xref_elements)} xref elements in data availability section.")
+                print(f"Found {len(xref_elements)} xref elements in data availability section.")
 
                 for xref in xref_elements:
                     # Extract cross-reference details
@@ -256,7 +256,7 @@ class xmlRetriever(BaseRetriever):
                         'source_section': 'data availability',
                         'retrieval_pattern': pattern
                     })
-                    self.logger.info(f"Extracted xref item: {json.dumps(xrefs[-1], indent=4)}")
+                    print(f"Extracted xref item: {json.dumps(xrefs[-1], indent=4)}")
 
         return xrefs
 
@@ -272,7 +272,7 @@ class xmlRetriever(BaseRetriever):
 
         """
 
-        self.logger.info(f"Function_call: extract_href_from_supplementary_material(api_xml, current_url_address)")
+        print(f"Function_call: extract_href_from_supplementary_material(api_xml, current_url_address)")
 
         # Namespace dictionary for xlink
         namespaces = {'xlink': 'http://www.w3.org/1999/xlink'}
@@ -283,7 +283,7 @@ class xmlRetriever(BaseRetriever):
             self.logger.debug(f"Searching for supplementary material sections using XPath: {ptr}")
             cont = api_xml.findall(ptr)
             if cont is not None and len(cont) != 0:
-                self.logger.info(f"Found {len(cont)} supplementary material sections {ptr}. cont: {cont}")
+                print(f"Found {len(cont)} supplementary material sections {ptr}. cont: {cont}")
                 supplementary_material_sections.append({"ptr": ptr, "cont": cont})
 
         self.logger.debug(f"Found {len(supplementary_material_sections)} supplementary-material sections.")
@@ -291,7 +291,7 @@ class xmlRetriever(BaseRetriever):
         hrefs = []
 
         for section_element in supplementary_material_sections:
-            self.logger.info(f"Processing section: {section_element}")
+            print(f"Processing section: {section_element}")
             sections = section_element['cont']
             pattern = section_element['ptr']
             for section in sections:
@@ -438,12 +438,12 @@ class xmlRetriever(BaseRetriever):
         """
 
         if raw_data is None:
-            self.logger.info("No raw data to check for sections.")
+            print("No raw data to check for sections.")
             return False
 
         self.logger.debug(f"type of raw_data: {type(raw_data)}, raw_data: {raw_data}")
 
-        self.logger.info(f"----Checking for {section_name} section in raw data.")
+        print(f"----Checking for {section_name} section in raw data.")
         section_patterns = self.load_target_sections_ptrs(section_name)
         self.logger.debug(f"Section patterns: {section_patterns}")
         namespaces = self.extract_namespaces(raw_data)
@@ -454,7 +454,7 @@ class xmlRetriever(BaseRetriever):
             sections = raw_data.findall(pattern, namespaces=namespaces)
             if sections:
                 for section in sections:
-                    self.logger.info(f"----Found section: {ET.tostring(section, encoding='unicode')[:100]}...")
+                    print(f"----Found section: {ET.tostring(section, encoding='unicode')[:100]}...")
                     if self.has_links_in_section(section, namespaces):
                         return True
                     else:
@@ -471,11 +471,11 @@ class xmlRetriever(BaseRetriever):
 
         :return: str — publication title or 'No title found'.
         """
-        self.logger.info("Extracting publication title from XML data.")
+        print("Extracting publication title from XML data.")
         title_element = xml_data.find(".//article-title")
         if title_element is not None and title_element.text:
             title = title_element.text.strip()
-            self.logger.info(f"Publication title found: {title}")
+            print(f"Publication title found: {title}")
             return title
         else:
             self.logger.warning("No publication title found in the XML data.")

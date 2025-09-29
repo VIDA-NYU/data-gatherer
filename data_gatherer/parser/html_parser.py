@@ -79,7 +79,7 @@ class HTMLParser(LLMParser):
                          )
 
         self.logger = logger
-        self.logger.info("Initializing htmlRetriever")
+        print("Initializing htmlRetriever")
         self.retriever = htmlRetriever(logger, 'general', retrieval_patterns_file='retrieval_patterns.json',
                                        headers=None)
 
@@ -101,7 +101,7 @@ class HTMLParser(LLMParser):
             # 1. Remove script, style, and meta tags
             for tag in ["script", "style", 'img', 'iframe', 'noscript', 'svg', 'button', 'form', 'input']:
                 if keep_tags and tag in keep_tags:
-                    self.logger.info(f"Keeping tag: {tag}")
+                    print(f"Keeping tag: {tag}")
                     continue
                 for element in soup.find_all(tag):
                     element.decompose()
@@ -161,11 +161,11 @@ class HTMLParser(LLMParser):
             self.logger.debug(f"Found Links: {links}")
             for link in links:
                 rule_based_matches[link] = self.retriever.css_selectors[css_selector]
-        self.logger.info(f"Rule-based matches from css_selectors: {rule_based_matches}")
+        print(f"Rule-based matches from css_selectors: {rule_based_matches}")
 
         # Collect links using XPath
         for xpath in self.retriever.xpaths:
-            self.logger.info(f"Checking path: {xpath}")
+            print(f"Checking path: {xpath}")
             try:
                 child_element = html_tree.xpath(xpath)
                 section_element = child_element.xpath("./ancestor::section")
@@ -250,7 +250,7 @@ class HTMLParser(LLMParser):
     def extract_all_hrefs(self, source_html, publisher, current_url_address, raw_data_format='HTML'):
         # initialize output
         links_on_webpage = []
-        self.logger.info("Function call: extract_all_hrefs")
+        print("Function call: extract_all_hrefs")
         normalized_html = self.normalize_HTML(source_html)
         soup = BeautifulSoup(normalized_html, "html.parser")
         compressed_HTML = self.convert_HTML_to_text(normalized_html)
@@ -292,7 +292,7 @@ class HTMLParser(LLMParser):
                 count += 1
 
         df_output = pd.DataFrame.from_dict(links_on_webpage)
-        self.logger.info(f"Found {count} links on the webpage")
+        print(f"Found {count} links on the webpage")
         return df_output
 
     def reconstruct_link(self, link, publisher, todo=True):
@@ -347,7 +347,7 @@ class HTMLParser(LLMParser):
 
         """
         out_df = None
-        self.logger.info(f"Function call: parse_data(html_str, {publisher}, {current_url_address}, "
+        print(f"Function call: parse_data(html_str, {publisher}, {current_url_address}, "
                          f"additional_data, {raw_data_format})")
         self.publisher = publisher
 
@@ -365,7 +365,7 @@ class HTMLParser(LLMParser):
         self.logger.debug(f"Preprocessed data: {preprocessed_data}")
 
         if self.full_document_read and (filter_das is None or filter_das is True):
-            self.logger.info(f"Extracting links from full HTML content.")
+            print(f"Extracting links from full HTML content.")
 
             # Extract dataset links from the entire text
             augmented_dataset_links = self.extract_datasets_info_from_content(preprocessed_data,
@@ -375,7 +375,7 @@ class HTMLParser(LLMParser):
                                                                               prompt_name=prompt_name,
                                                                               response_format=response_format)
 
-            self.logger.info(f"Augmented dataset links: {augmented_dataset_links}")
+            print(f"Augmented dataset links: {augmented_dataset_links}")
 
             dataset_links_w_target_pages = self.get_dataset_page(augmented_dataset_links)
 
@@ -383,7 +383,7 @@ class HTMLParser(LLMParser):
             out_df = pd.concat([pd.DataFrame(dataset_links_w_target_pages), supplementary_material_metadata])
 
         elif filter_das is None or filter_das is True:
-            self.logger.info(f"Chunking the HTML content for the parsing step.")
+            print(f"Chunking the HTML content for the parsing step.")
 
             # Extract dataset links from the entire text
             data_availability_elements = self.retriever.get_data_availability_elements_from_webpage(preprocessed_data)
@@ -411,7 +411,7 @@ class HTMLParser(LLMParser):
         else:
             out_df = supplementary_material_metadata
 
-        self.logger.info(f"Dataset Links type: {type(out_df)} of len {len(out_df)}, with cols: {out_df.columns}")
+        print(f"Dataset Links type: {type(out_df)} of len {len(out_df)}, with cols: {out_df.columns}")
 
         # Extract file extensions from download links if possible, and add to the dataframe out_df as column
         if 'download_link' in out_df.columns:
@@ -445,7 +445,7 @@ class HTMLParser(LLMParser):
         :return: DataFrame containing extracted links and their context.
 
         """
-        self.logger.info(f"Function_call: extract_href_from_supplementary_material(tree, {current_url_address})")
+        print(f"Function_call: extract_href_from_supplementary_material(tree, {current_url_address})")
 
         tree = html.fromstring(raw_html)
 
@@ -547,7 +547,7 @@ class HTMLParser(LLMParser):
 
         # Drop duplicates based on link
         df_supp = df_supp.drop_duplicates(subset=['link'])
-        self.logger.info(f"Extracted {len(df_supp)} unique supplementary material links from HTML.")
+        print(f"Extracted {len(df_supp)} unique supplementary material links from HTML.")
 
         return df_supp
 
@@ -557,7 +557,7 @@ class HTMLParser(LLMParser):
         For each supplementary material link, find <a href="#id"> and extract a short context sentence.
         Adds a 'context_description' column to the DataFrame.
         """
-        self.logger.info("Function_call: extract_supplementary_material_refs(raw_html, supplementary_material_links)")
+        print("Function_call: extract_supplementary_material_refs(raw_html, supplementary_material_links)")
         tree = html.fromstring(raw_html)
 
         for i, row in supplementary_material_links.iterrows():
@@ -568,7 +568,7 @@ class HTMLParser(LLMParser):
                 continue
 
             a_elements = tree.xpath(f".//a[@href='#{href_id}']")
-            self.logger.info(f"Found {len(a_elements)} <a> elements with href='#{href_id}'.")
+            print(f"Found {len(a_elements)} <a> elements with href='#{href_id}'.")
 
             for ref in a_elements:
                 surrounding_text = self.get_surrounding_text(ref)
@@ -576,7 +576,7 @@ class HTMLParser(LLMParser):
                 if text_segment not in context_descr:
                     context_descr += text_segment + "\n"
 
-            self.logger.info(f"Extracted context description (len: {len(context_descr)}) for {href_id}: "
+            print(f"Extracted context description (len: {len(context_descr)}) for {href_id}: "
                              f"{context_descr.strip()}")
             supplementary_material_links.at[i, 'context_description'] = context_descr.strip()
 
@@ -640,7 +640,7 @@ class HTMLParser(LLMParser):
 
         :return: str — the publication title.
         """
-        self.logger.info("Extracting publication title from HTML")
+        print("Extracting publication title from HTML")
         soup = BeautifulSoup(raw_data, "html.parser")
         title_tag = soup.find('title')
 
