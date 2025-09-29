@@ -38,7 +38,7 @@ class GrobidPDFParser(PDFParser):
                 f"Please install GROBID or update the path <grobid_home> parameter."
             )
 
-        self.logger.info(f"Using GROBID home directory: {self.grobid_home}")
+        print(f"Using GROBID home directory: {self.grobid_home}")
         self.grobid_port = grobid_port
         self.grobid_process = None
         self._check_prerequisites()
@@ -58,14 +58,14 @@ class GrobidPDFParser(PDFParser):
 
     def _start_grobid_server(self):
         try:
-            self.logger.info(f"Checking if GROBID server is already running on port {self.grobid_port}...")
+            print(f"Checking if GROBID server is already running on port {self.grobid_port}...")
             r = requests.get(f"http://localhost:{self.grobid_port}/api/isalive", timeout=2)
             if r.status_code == 200:
                 self.logger.info("GROBID server is already running.")
                 return
         except Exception:
             pass
-        self.logger.info("Starting GROBID server...")
+        print("Starting GROBID server...")
         gradlew_path = os.path.join(self.grobid_home, 'gradlew')
         cmd = [gradlew_path, 'run']
         self.grobid_process = subprocess.Popen(cmd, cwd=self.grobid_home, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -110,13 +110,13 @@ class GrobidPDFParser(PDFParser):
         Parse the PDF file and extract metadata of the relevant datasets.
         """
         out_df = None
-        self.logger.info(f"Function call: parse_data({file_path}, {current_url_address}, "
+        print(f"Function call: parse_data({file_path}, {current_url_address}, "
                          f"additional_data, {raw_data_format})")
 
         try:
             # 1. Extract TEI XML from PDF
             full_cont_xml = self.extract_full_text_xml(file_path)
-            self.logger.info(f"Parsing full text TEI XML from GROBID response.")
+            print(f"Parsing full text TEI XML from GROBID response.")
 
             # 2. Parse TEI XML using XMLRouter (which will use TEI_XMLParser)
             xml_root = etree.fromstring(full_cont_xml.encode('utf-8'))
@@ -158,7 +158,7 @@ class GrobidPDFParser(PDFParser):
 
         except Exception as e:
             self.logger.error(f"GROBID failed on {file_path}: {e}")
-            self.logger.info("Attempting fallback with PyMuPDF parser...")
+            print("Attempting fallback with PyMuPDF parser...")
 
             try:
                 from .pdf_parser import PDFParser

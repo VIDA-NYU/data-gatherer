@@ -11,7 +11,6 @@ from lxml import etree
 import requests
 import pytest
 import os
-import logging
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -238,25 +237,23 @@ def test_extract_title_from_html_nature(get_test_data_path):
     print('\n')
 
 def test_semantic_retrieve_from_corpus(get_test_data_path):
-    logger = setup_logging("test_logger", log_file="../logs/scraper.log", level=logging.INFO)
+    logger = setup_logging("test_logger", log_file="../logs/scraper.log")
     parser = HTMLParser("open_bio_data_repos.json", logger, llm_name='gemini-2.0-flash')
     with open(get_test_data_path('Webscraper_fetch_1.html'), 'rb') as f:
         raw_html = f.read()
     corpus = parser.extract_sections_from_html(raw_html)
-    query = "Available data, accession code, data repository, deposited data, obtained data"
-    top_k_sections = parser.semantic_retrieve_from_corpus(corpus, topk_docs_to_retrieve=5, query=query)
+    top_k_sections = parser.semantic_retrieve_from_corpus(corpus, topk_docs_to_retrieve=3)
     accession_ids = ['GSE269782', 'GSE31210', 'GSE106765', 'GSE60189', 'GSE59239', 'GSE122005', 'GSE38121', 'GSE71587',
                      'GSE37699', 'PXD051771']
-    #print(f"top_k_sections: {[sect['L2_distance'] for sect in top_k_sections]}")
-    scores = [1.2540757656097412, 1.4350833892822266, 1.4540908336639404, 1.461714744567871, 1.496106505393982]
+    scores = [ 0.9393497109413147, 1.3575516939163208, 1.4186346530914307]
     DAS_text = ".\n".join([item['text'] for item in top_k_sections])
     assert isinstance(top_k_sections, list)
-    assert len(top_k_sections) == 5
+    assert len(top_k_sections) == 3
     assert all(isinstance(res, dict) for res in top_k_sections)
     for acc_id in accession_ids:
-        assert acc_id.lower() in str.lower(DAS_text)
+        assert acc_id in DAS_text
     for sect_i, sect in enumerate(top_k_sections):
-        assert abs(sect['L2_distance'] - scores[sect_i]) < 0.05
+        assert abs(sect['L2_distance'] - scores[sect_i]) < 0.02
     print('\n')
 
 def test_normalize_text_from_pdf(get_test_data_path):
@@ -277,7 +274,7 @@ def test_safe_parse_json(get_test_data_path):
     malformed_json = """
     {"datasets":[{"dataset_identifier":"GSE39582","repository_reference":"https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE39582"},{"dataset_identifier":"GSE13067","repository_reference":"https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE13067"},{"dataset_identifier":"GSE13294","repository_reference":"https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE13294"},{"dataset_identifier":"GSE14333","repository_reference":"https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE14333"},{"dataset_identifier":"GSE17536","repository_reference":"https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE17536"},{"dataset_identifier":"GSE33113","repository_reference":"https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE33113"},{"dataset_identifier":"GSE37892","repository_reference":"https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE37892"},{"dataset_identifier":"GSE38832","repository_reference":"https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE38832"},{"dataset_identifier":"PRJEB23709","repository_reference":"https://www.ncbi.nlm.nih.gov/bioproject/PRJEB23709"},{"dataset_identifier":"GSE103479","repository_reference":"https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE103479"},{"
     """
-    parsed_data = parser.llm_client.safe_parse_json(malformed_json)
+    parsed_data = parser.client.safe_parse_json(malformed_json)
     dada = parsed_data["datasets"]
 
     print(f"parsed_data:\nType:{type(parsed_data)}\nLen:{len(dada)},Cont: {parsed_data}\n")
@@ -323,7 +320,7 @@ def test_schema_validation(get_test_data_path):
         {'dataset_identifier': 'M27187', 'repository_reference': 'nuccore', 'dataset_webpage': 'https://www.ncbi.nlm.nih.gov/nuccore/M27187'}
     ]
     for obj,ret in zip(test_cases, ret_cases):
-        dataset_id_val, data_repo_val, dataset_webpage_val = parser.schema_validation(obj, req_timeout=5)
+        dataset_id_val, data_repo_val, dataset_webpage_val = parser.schema_validation(obj)
         print(f"Testing dataset_id_val: {dataset_id_val}, data_repo_val: {data_repo_val}, dataset_webpage_val: {dataset_webpage_val}\n")
         assert isinstance(dataset_id_val, str)
         assert isinstance(data_repo_val, str)

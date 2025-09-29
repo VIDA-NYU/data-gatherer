@@ -37,7 +37,7 @@ class htmlRetriever(BaseRetriever):
         :return: DataFrame containing extracted links and their context.
 
         """
-        self.logger.info(f"Function_call: extract_href_from_supplementary_material(tree, {current_url_address})")
+        print(f"Function_call: extract_href_from_supplementary_material(tree, {current_url_address})")
 
         tree = html.fromstring(raw_html)
 
@@ -103,7 +103,7 @@ class htmlRetriever(BaseRetriever):
 
         # Drop duplicates based on link
         df_supp = df_supp.drop_duplicates(subset=['link'])
-        self.logger.info(f"Extracted {len(df_supp)} unique supplementary material links from HTML.")
+        print(f"Extracted {len(df_supp)} unique supplementary material links from HTML.")
 
         return df_supp
 
@@ -112,7 +112,7 @@ class htmlRetriever(BaseRetriever):
         Given the preprocessed HTML, extract paragraphs or links under data availability sections.
         """
         self.retrieval_patterns = load_config('retrieval_patterns.json')
-        self.logger.info("Extracting data availability elements from HTML")
+        print("Extracting data availability elements from HTML")
 
         # Merge general + publisher-specific selectors
         self.css_selectors = self.retrieval_patterns.get('general', {}).get('css_selectors', {})
@@ -123,7 +123,7 @@ class htmlRetriever(BaseRetriever):
         data_availability_elements = []
 
         for selector in self.css_selectors.get('data_availability_sections', []):
-            self.logger.info(f"Using selector: {selector}")
+            print(f"Using selector: {selector}")
             matches = soup.select(selector)
             for match in matches:
                 if match.name in ['h2', 'h3']:  # headings usually don't contain content directly
@@ -161,7 +161,7 @@ class htmlRetriever(BaseRetriever):
 
                 self.logger.debug(f"Extracted data availability element: {element_info}")
 
-        self.logger.info(f"Found {len(data_availability_elements)} data availability elements from HTML.")
+        print(f"Found {len(data_availability_elements)} data availability elements from HTML.")
         return data_availability_elements
 
     def extract_publication_title(self, raw_data):
@@ -170,7 +170,7 @@ class htmlRetriever(BaseRetriever):
 
         :return: str — the publication title.
         """
-        self.logger.info("Extracting publication title from HTML")
+        print("Extracting publication title from HTML")
         soup = BeautifulSoup(raw_data, "html.parser")
         title_tag = soup.find('article-title')
 
@@ -187,7 +187,7 @@ class htmlRetriever(BaseRetriever):
         """
         Load the HTML selectors (CSS and XPath) for the specified section name. Publisher-specific.
         """
-        self.logger.info(f"Loading target selectors for section name: {section_name}")
+        print(f"Loading target selectors for section name: {section_name}")
         selectors = {
             "css": self.css_selectors.get(section_name, []),
             "xpath": self.xpaths.get(section_name, [])
@@ -207,10 +207,10 @@ class htmlRetriever(BaseRetriever):
         :return: True if the section is found, False otherwise.
         """
         if raw_data is None:
-            self.logger.info("No raw data to check for sections.")
+            print("No raw data to check for sections.")
             return False
 
-        self.logger.info(f"Checking for {section_name} section in raw HTML data.")
+        print(f"Checking for {section_name} section in raw HTML data.")
         selectors = self.load_target_sections_ptrs(section_name)
         found = False
 
@@ -220,7 +220,7 @@ class htmlRetriever(BaseRetriever):
             for selector in selectors["css"]:
                 matches = soup.select(selector)
                 if matches:
-                    self.logger.info(f"Found section with CSS selector: {selector}")
+                    print(f"Found section with CSS selector: {selector}")
                     found = True
                     break
 
@@ -231,14 +231,14 @@ class htmlRetriever(BaseRetriever):
                 for xpath_expr in selectors["xpath"]:
                     matches = tree.xpath(xpath_expr)
                     if matches:
-                        self.logger.info(f"Found section with XPath: {xpath_expr}")
+                        print(f"Found section with XPath: {xpath_expr}")
                         found = True
                         break
             except Exception as e:
                 self.logger.warning(f"Error parsing HTML for XPath: {e}")
 
         if not found:
-            self.logger.info(f"No section found for {section_name}.")
+            print(f"No section found for {section_name}.")
         return found
 
     def is_html_data_complete(self, raw_data, url,
@@ -251,12 +251,12 @@ class htmlRetriever(BaseRetriever):
         :return: bool — True if data is considered complete, False otherwise.
 
         """
-        self.logger.info("Checking if HTML data is complete")
+        print("Checking if HTML data is complete")
 
         for section in required_sections:
             if not self.has_target_section(raw_data, section):
-                self.logger.info(f"Missing section in HTML: {section}")
+                print(f"Missing section in HTML: {section}")
                 return False
 
-        self.logger.info("HTML data contains all required sections.")
+        print("HTML data contains all required sections.")
         return True
