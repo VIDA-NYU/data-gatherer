@@ -105,7 +105,7 @@ class DataGatherer:
         self.data_resource_preview = data_resource_preview
         self.download_previewed_data_resources = download_previewed_data_resources
         self.downloadables = []
-        print(f"DataGatherer orchestrator initialized. Extraction Model: {llm_name}")
+        self.logger.info(f"DataGatherer orchestrator initialized. Extraction Model: {llm_name}")
 
         os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
@@ -151,7 +151,7 @@ class DataGatherer:
             HTML_fallback = False if i is None else HTML_fallback_priority_list[i]
             i = 0 if i is None else i + 1
             for pub_link in urls:
-                print(f"length of complete fetches < urls: {len(complete_publication_fetches)} < {len(urls)}")
+                self.logger.info(f"length of complete fetches < urls: {len(complete_publication_fetches)} < {len(urls)}")
                 if pub_link in complete_publication_fetches:
                     continue
 
@@ -171,19 +171,19 @@ class DataGatherer:
                 completeness_check = self.data_checker.is_fulltext_complete(fetched_data, pub_link, self.data_fetcher.raw_data_format)
 
                 if completeness_check:
-                    print(f"Fetched complete {self.data_fetcher.raw_data_format} data from {pub_link}.")
+                    self.logger.info(f"Fetched complete {self.data_fetcher.raw_data_format} data from {pub_link}.")
                     complete_publication_fetches[pub_link] = {
                         'fetched_data': fetched_data,
                         'raw_data_format': self.data_fetcher.raw_data_format
                     }
                 elif HTML_fallback == 'Selenium':
-                    print(f"Selenium fetch the final fulltext {pub_link}.")
+                    self.logger.info(f"Selenium fetch the final fulltext {pub_link}.")
                     complete_publication_fetches[pub_link] = {
                         'fetched_data': fetched_data, 
                         'raw_data_format': self.data_fetcher.raw_data_format
                         }
                 else:
-                    print(f"{self.data_fetcher.raw_data_format} Data from {pub_link} is incomplete.")
+                    self.logger.info(f"{self.data_fetcher.raw_data_format} Data from {pub_link} is incomplete.")
 
                 # Optionally save HTML/XMLs if requested
                 if write_htmls_xmls:
@@ -250,7 +250,7 @@ class DataGatherer:
 
         :return: Parsed data as a DataFrame or dictionary, depending on the parser used.
         """
-        print(f"Parsing data from URL: {current_url_address} with publisher: {publisher}")
+        self.logger.info(f"Parsing data from URL: {current_url_address} with publisher: {publisher}")
 
         if raw_data_format.upper() == "XML":
             router = XMLRouter(self.open_data_repos_ontology, self.logger, full_document_read=full_document_read,
@@ -314,13 +314,13 @@ class DataGatherer:
         if search_method is not None:
             self.search_method = search_method
 
-        print("Setting up data fetcher...")
+        self.logger.info("Setting up data fetcher...")
 
         # Close previous driver if exists
         if hasattr(self, 'data_fetcher') and hasattr(self.data_fetcher, 'scraper_tool'):
             try:
                 self.data_fetcher.scraper_tool.quit()
-                print("Previous driver quit.")
+                self.logger.info("Previous driver quit.")
             except Exception as e:
                 self.logger.warning(f"Failed to quit previous driver: {e}")
 
@@ -344,7 +344,7 @@ class DataGatherer:
         else:
             raise ValueError(f"Invalid search method: {self.search_method}")
 
-        print("Data fetcher setup completed.")
+        self.logger.info("Data fetcher setup completed.")
 
         return self.data_fetcher.scraper_tool
 
@@ -399,21 +399,21 @@ class DataGatherer:
 
         :return: DataFrame of classified links or None if an error occurs.
         """
-        print(f"Processing URL: {url}")
+        self.logger.info(f"Processing URL: {url}")
         self.current_url = url
         self.publisher = self.data_fetcher.url_to_publisher_domain(url)
 
         self.data_fetcher = self.data_fetcher.update_DataFetcher_settings(url, self.full_document_read, self.logger,
                                                                           driver_path=driver_path, browser=browser,
                                                                           headless=headless)
-        print(f"Type of data_fetcher {self.data_fetcher.__class__.__name__}")
+        self.logger.info(f"Type of data_fetcher {self.data_fetcher.__class__.__name__}")
 
         article_id = self.url_to_article_id(url)
         process_id = self.llm + "-FDR-" + article_id if self.full_document_read else self.llm + "-RTR-" + article_id
         if os.path.exists(os.path.join(CACHE_BASE_DIR, "process_url_cache.json")) and self.load_from_cache:
             cache = json.load(open(os.path.join(CACHE_BASE_DIR, "process_url_cache.json"), 'r'))
             if process_id in cache:
-                print(f"Loading results from cache for process ID: {process_id}")
+                self.logger.info(f"Loading results from cache for process ID: {process_id}")
                 return pd.DataFrame(cache[process_id])
 
         try:
@@ -435,7 +435,7 @@ class DataGatherer:
 
             if self.raw_data_format == "XML":
                 if not self.data_checker.is_xml_data_complete(raw_data, url):
-                    print(f"Fallback to HTML data fetcher for {url}.")
+                    self.logger.info(f"Fallback to HTML data fetcher for {url}.")
                     self.raw_data_format = "HTML"
                     self.data_fetcher = self.data_fetcher.update_DataFetcher_settings(url,
                                                                                         self.full_document_read,
@@ -447,31 +447,31 @@ class DataGatherer:
                     raw_data = self.data_fetcher.fetch_data(url)
 
                 else:
-                    print(f"XML data is complete for {url}.")
+                    self.logger.info(f"XML data is complete for {url}.")
 
             raw_data = self.data_fetcher.remove_cookie_patterns(raw_data) if self.raw_data_format == "HTML" else raw_data
 
-            print(f"Raw {self.raw_data_format} data fetched from {url} is ready for parsing.")
+            self.logger.info(f"Raw {self.raw_data_format} data fetched from {url} is ready for parsing.")
 
             if self.write_htmls_xmls and not isinstance(self.data_fetcher, DatabaseFetcher):
                 directory = article_file_dir + self.publisher + '/'
-                print(f"Raw Data is {self.raw_data_format}.")
+                self.logger.info(f"Raw Data is {self.raw_data_format}.")
                 if isinstance(self.data_fetcher, WebScraper):
                     self.data_fetcher.html_page_source_download(directory, url)
-                    print(f"Raw HTML saved to: {directory}")
+                    self.logger.info(f"Raw HTML saved to: {directory}")
                 elif isinstance(self.data_fetcher, EntrezFetcher):
                     self.data_fetcher.download_xml(directory, raw_data, url)
-                    print(f"Raw XML saved in {directory} directory")
+                    self.logger.info(f"Raw XML saved in {directory} directory")
                 else:
                     self.logger.warning(f"Unsupported raw data format: {self.raw_data_format}.")
             else:
-                print("Skipping raw HTML/XML saving.")
+                self.logger.info("Skipping raw HTML/XML saving.")
 
             self.data_fetcher.quit() if hasattr(self.data_fetcher, 'scraper_tool') else None
 
             # Step 2: Use HTMLParser/XMLParser
             if self.raw_data_format.upper() == "XML" and raw_data is not None:
-                print("Using XMLParser to parse data.")
+                self.logger.info("Using XMLParser to parse data.")
                 self.parser = XMLParser(self.open_data_repos_ontology, self.logger,
                                         llm_name=self.llm,
                                         full_document_read=self.full_document_read,
@@ -479,13 +479,13 @@ class DataGatherer:
                                         save_dynamic_prompts=self.save_dynamic_prompts)
 
                 if additional_data is None:
-                    print("No additional data provided. Parsing raw data only.")
+                    self.logger.info("No additional data provided. Parsing raw data only.")
                     parsed_data = self.parser.parse_data(raw_data, self.publisher, self.current_url,
                                                          prompt_name=prompt_name, semantic_retrieval=semantic_retrieval,
                                                          section_filter=section_filter)
 
                 else:
-                    print(f"Processing additional data. # of items: {len(additional_data)}")
+                    self.logger.info(f"Processing additional data. # of items: {len(additional_data)}")
                     add_data = self.parser.parse_data(raw_data, self.publisher, self.current_url,
                                                       additional_data=additional_data, prompt_name=prompt_name,
                                                       semantic_retrieval=semantic_retrieval,
@@ -495,7 +495,7 @@ class DataGatherer:
                     parsed_data = pd.concat([parsed_data, add_data], ignore_index=True).drop_duplicates()
 
             elif self.raw_data_format.upper() == 'HTML':
-                print("Using HTMLParser to parse data.")
+                self.logger.info("Using HTMLParser to parse data.")
                 self.parser = HTMLParser(self.open_data_repos_ontology, self.logger,
                                          llm_name=self.llm,
                                          full_document_read=self.full_document_read,
@@ -507,23 +507,23 @@ class DataGatherer:
                                                      section_filter=section_filter)
                 parsed_data['source_url'] = url
                 parsed_data['pub_title'] = self.parser.extract_publication_title(raw_data)
-                print(f"Parsed data extraction completed. Elements collected: {len(parsed_data)}")
+                self.logger.info(f"Parsed data extraction completed. Elements collected: {len(parsed_data)}")
 
             else:
                 self.logger.error(f"Unsupported raw data format: {self.raw_data_format}. Cannot parse data.")
                 return None
 
-            print("Raw Data parsing completed.")
+            self.logger.info("Raw Data parsing completed.")
             parsed_data.to_csv('staging_table/parsed_data.csv', index=False) if save_staging_table else None
 
             # Step 3: Use Classifier to classify Parsed data
             if parsed_data is not None:
                 if self.raw_data_format.upper() == "XML":
-                    print("XML element classification not needed. Using parsed_data.")
+                    self.logger.info("XML element classification not needed. Using parsed_data.")
                     classified_links = parsed_data
                 elif 'HTML' in self.raw_data_format.upper():
                     classified_links = parsed_data
-                    print("HTML element classification not supported. Using parsed_data.")
+                    self.logger.info("HTML element classification not supported. Using parsed_data.")
                 else:
                     self.logger.error(f"Unsupported raw data format and parser mode combination.")
                     return None
@@ -554,7 +554,7 @@ class DataGatherer:
             elapsed = now - self._last_request_time
             if elapsed < self._min_delay:
                 wait_time = self._min_delay - elapsed
-                print(f"Rate limiting: waiting {wait_time:.1f}s")
+                self.logger.info(f"Rate limiting: waiting {wait_time:.1f}s")
                 time.sleep(wait_time)
             
             self._last_request_time = time.time()
@@ -584,14 +584,14 @@ class DataGatherer:
 
         :param classified_links: DataFrame of classified links.
         """
-        print(f"Deduplicating {len(classified_links)} classified links.")
+        self.logger.info(f"Deduplicating {len(classified_links)} classified links.")
         classified_links['link'] = classified_links['link'].str.strip()
         classified_links['download_link'] = classified_links['download_link'].str.strip()
 
         # Deduplicate based on link column
         #classified_links = classified_links.drop_duplicates(subset=['link', 'download_link'], keep='last')
 
-        print(f"Deduplication completed. {len(classified_links)} unique links found.")
+        self.logger.info(f"Deduplication completed. {len(classified_links)} unique links found.")
         return classified_links
 
     def process_articles(self, url_list, log_modulo=10, save_staging_table=False, article_file_dir='tmp/raw_files/',
@@ -632,7 +632,7 @@ class DataGatherer:
 
         for iteration, url in enumerate(url_list):
             url = self.preprocess_url(url)
-            print(f"{iteration}th function call: self.process_url({url})")
+            self.logger.info(f"{iteration}th function call: self.process_url({url})")
 
             results[url] = self.process_url(
                 url,
@@ -652,7 +652,7 @@ class DataGatherer:
                 avg_time_per_iter = elapsed / (iteration + 1)  # Average time per iteration
                 remaining_iters = total_iters - (iteration + 1)
                 estimated_remaining = avg_time_per_iter * remaining_iters  # Estimated time remaining
-                print(
+                self.logger.info(
                     f"\nProgress: {iteration + 1}/{total_iters} ({(iteration + 1) / total_iters * 100:.2f}%) "
                     f"| Elapsed: {time.strftime('%H:%M:%S', time.gmtime(elapsed))} "
                     f"| ETA: {time.strftime('%H:%M:%S', time.gmtime(estimated_remaining))}\n"
@@ -734,7 +734,7 @@ class DataGatherer:
 
         :return: Summary dict with URL, number of classified links, and additional metadata.
         """
-        print(f"Summarizing results...{df.columns}")
+        self.logger.info(f"Summarizing results...{df.columns}")
         if df is not None and not df.empty:
             if 'file_extension' in df.columns:
                 file_ext_counts = df['file_extension'].dropna().value_counts().to_dict()
@@ -776,7 +776,7 @@ class DataGatherer:
         try:
             with open(input_file, 'r') as file:
                 url_list = [line.strip() for line in file]
-            print(f"Loaded {len(url_list)} URLs from file.")
+            self.logger.info(f"Loaded {len(url_list)} URLs from file.")
             self.url_list = url_list
             return url_list
         except FileNotFoundError as e:
@@ -809,7 +809,7 @@ class DataGatherer:
         :return: If return_metadata is True, returns a list of metadata dictionaries. Otherwise, displays the data preview.
         """
 
-        print(f"Processing metadata for preview to display metadata preview in {display_type} format.")
+        self.logger.info(f"Processing metadata for preview to display metadata preview in {display_type} format.")
 
         self.already_previewed = []
         self.metadata_parser = HTMLParser(self.open_data_repos_ontology, self.logger, full_document_read=True,
@@ -823,7 +823,7 @@ class DataGatherer:
                                                                           headless=True)
 
         if isinstance(self.data_fetcher, WebScraper):
-            print("Found WebScraper to fetch data.")
+            self.logger.info("Found WebScraper to fetch data.")
         else:
             raise TypeError(f"DataFetcher must be an instance of WebScraper to fetch dataset webpages. Found {type(self.data_fetcher).__name__} instead.")
 
@@ -834,7 +834,7 @@ class DataGatherer:
             combined_df = combined_df.to_frame().T
 
         for i, row in combined_df.iterrows():
-            print(f"Row # {i}")
+            self.logger.info(f"Row # {i}")
             self.logger.debug(f"Row keys: {row}")
 
             dataset_webpage = row.get('dataset_webpage', None)
@@ -842,13 +842,13 @@ class DataGatherer:
             dataset_webpage_id = self.url_to_article_id(dataset_webpage) if dataset_webpage is not None else None
 
             if dataset_webpage is None and download_link is None:
-                print(f"Row {i} does not contain 'dataset_webpage' or 'download_link'. Skipping...")
+                self.logger.info(f"Row {i} does not contain 'dataset_webpage' or 'download_link'. Skipping...")
                 continue
 
             # skip if already added
             if (dataset_webpage is not None and dataset_webpage in self.already_previewed) or (
                     download_link is not None and download_link in self.already_previewed):
-                print(f"Duplicate dataset. Skipping...")
+                self.logger.info(f"Duplicate dataset. Skipping...")
                 continue
 
             # identify those that may be datasets
@@ -856,11 +856,11 @@ class DataGatherer:
                 if (row.get('file_extension', None) is not None and 'data' not in row['source_section'] and row[
                     'file_extension'] not
                         in ['xlsx', 'csv', 'json', 'xml', 'zip']):
-                    print(
+                    self.logger.info(
                         f"Skipping row {i} as it does not contain a valid dataset webpage or file extension.")
                     continue
                 else:
-                    print(f"Potentially a valid dataset, displaying hardscraped metadata")
+                    self.logger.info(f"Potentially a valid dataset, displaying hardscraped metadata")
                     #metadata = self.metadata_parser.parse_datasets_metadata(row['source_section'])
                     hardscraped_metadata = {k: v for k, v in row.items() if
                                             v is not None and v not in ['nan', 'None', '', 'n/a', np.nan, 'NaN', 'na']}
@@ -876,7 +876,7 @@ class DataGatherer:
                     continue
 
             else:
-                print(f"LLM scraped metadata")
+                self.logger.info(f"LLM scraped metadata")
                 repo_mapping_key = row['repository_reference'].lower() if 'repository_reference' in row else row[
                     'data_repository'].lower()
                 resolved_key = self.metadata_parser.resolve_data_repository(repo_mapping_key)
@@ -890,7 +890,7 @@ class DataGatherer:
                         metadata, skip = cache[process_id], True
 
                 if ('javascript_load_required' in self.open_data_repos_ontology['repos'][resolved_key]) and not skip:
-                    print(
+                    self.logger.info(
                         f"JavaScript load required for {repo_mapping_key} dataset webpage. Using WebScraper.")
                     html = self.data_fetcher.fetch_data(row['dataset_webpage'], delay=5)
                     if "informative_html_metadata_tags" in self.open_data_repos_ontology['repos'][resolved_key]:
@@ -899,7 +899,7 @@ class DataGatherer:
                     else:
                         html = self.metadata_parser.normalize_HTML(html)
                     if write_raw_metadata:
-                        print(f"Saving raw metadata to: {article_file_dir + 'raw_metadata/'}")
+                        self.logger.info(f"Saving raw metadata to: {article_file_dir + 'raw_metadata/'}")
                         self.data_fetcher.html_page_source_download(article_file_dir + 'raw_metadata/')
                 elif not skip:
                     if 'informative_html_metadata_tags' in self.open_data_repos_ontology['repos'][resolved_key]:
@@ -963,14 +963,14 @@ class DataGatherer:
 
         :param interactive: If True, allows user interaction for displaying data previews.
         """
-        print("Displaying metadata preview")
+        self.logger.info("Displaying metadata preview")
 
         if not isinstance(metadata, dict):
             self.logger.warning("Metadata is not a dictionary. Cannot display properly.")
             return
 
         if not interactive:
-            print("Skipping interactive preview. Change the interactive flag to True to enable.")
+            self.logger.info("Skipping interactive preview. Change the interactive flag to True to enable.")
             return
 
         if display_type == 'console':
@@ -1011,10 +1011,10 @@ class DataGatherer:
             ).strip().lower()
 
             if user_input not in ["y", "yes"]:
-                print("User declined to download the dataset.")
+                self.logger.info("User declined to download the dataset.")
             else:
                 self.downloadables.append(metadata)
-                print("User confirmed download. Proceeding...")
+                self.logger.info("User confirmed download. Proceeding...")
 
         elif display_type == 'ipynb':
 
@@ -1026,7 +1026,7 @@ class DataGatherer:
                     rows.append({'Field': key, 'Value': val_str})
 
             if not rows:
-                print("No usable metadata found.")
+                self.logger.info("No usable metadata found.")
                 return
 
             # Display metadata table
@@ -1044,11 +1044,11 @@ class DataGatherer:
                     clear_output()
                     if checkbox.value:
                         self.downloadables.append(metadata)
-                        print("User confirmed download. Dataset queued.")
-                        print("Queued for download.")
+                        self.logger.info("User confirmed download. Dataset queued.")
+                        self.logger.info("Queued for download.")
                     else:
-                        print("User declined download.")
-                        print("Skipped.")
+                        self.logger.info("User declined download.")
+                        self.logger.info("Skipped.")
 
             confirm_button.on_click(lambda _: confirm_handler())
 
@@ -1069,7 +1069,7 @@ class DataGatherer:
 
         """
 
-        print(f"Downloading {len(self.downloadables)} previewed data resources.")
+        self.logger.info(f"Downloading {len(self.downloadables)} previewed data resources.")
         for metadata in self.downloadables:
             download_link = metadata.get('download_link', None)
             if download_link is not None:
@@ -1087,7 +1087,7 @@ class DataGatherer:
 
         :return: Internal ID of the dataset if found, otherwise None.
         """
-        print(f"Getting internal ID for {metadata}")
+        self.logger.info(f"Getting internal ID for {metadata}")
         if 'source_url_for_metadata' in metadata and metadata['source_url_for_metadata'] is not None and metadata[
             'source_url_for_metadata'] not in ['nan', 'None', '', np.nan]:
             return metadata['source_url_for_metadata']
@@ -1132,7 +1132,7 @@ class DataGatherer:
         cache_file = os.path.join(CACHE_BASE_DIR, function_name + "_cache.json")
         lock_file = cache_file + ".lock"
         tmp_file = cache_file + ".tmp"
-        print(f"Saving results to cache with process_id: {process_id}")
+        self.logger.info(f"Saving results to cache with process_id: {process_id}")
         os.makedirs(CACHE_BASE_DIR, exist_ok=True)
         with FileLock(lock_file):
             cache = {}
@@ -1144,7 +1144,7 @@ class DataGatherer:
                     self.logger.warning(f"Could not read cache file {cache_file}: {e}. Overwriting.")
                     cache = {}
             if process_id not in cache:
-                print(f"Saving results to cache with process_id: {process_id}")
+                self.logger.info(f"Saving results to cache with process_id: {process_id}")
                 cache[process_id] = output
                 try:
                     with open(tmp_file, 'w') as f:
@@ -1196,7 +1196,7 @@ class DataGatherer:
 
             # evaluate the performance if ground_truth is provided
             #if 'ground_truth' in self.config:
-            # print("Evaluating performance...")
+            # self.logger.info("Evaluating performance...")
             # self.classifier.evaluate_performance(combined_df, self.config['ground_truth'])
 
             if self.data_resource_preview:
@@ -1207,9 +1207,9 @@ class DataGatherer:
 
             combined_df.to_csv(self.full_output_file, index=False)
 
-            print(f"Output written to file: {self.full_output_file}")
+            self.logger.info(f"Output written to file: {self.full_output_file}")
 
-            print(f"File Download Schedule: {self.downloadables}")
+            self.logger.info(f"File Download Schedule: {self.downloadables}")
 
             self.logger.debug("DataGatherer run completed.")
 
@@ -1222,9 +1222,9 @@ class DataGatherer:
         finally:
             # Quit the driver to close the browser and free up resources
             if isinstance(self.data_fetcher, WebScraper):
-                print("Quitting the WebDriver.")
+                self.logger.info("Quitting the WebDriver.")
                 self.data_fetcher.scraper_tool.quit()
 
             if isinstance(self.data_fetcher, EntrezFetcher):
-                print("Closing the EntrezFetcher.")
+                self.logger.info("Closing the EntrezFetcher.")
                 self.data_fetcher.api_client.close()

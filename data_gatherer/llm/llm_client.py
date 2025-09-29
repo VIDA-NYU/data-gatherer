@@ -16,7 +16,7 @@ class LLMClient_dev:
                  use_cached_responses: bool = False, prompt_dir: str = "data_gatherer/prompts/prompt_templates"):
         self.model = model
         self.logger = logger or logging.getLogger(__name__)
-        print(f"Initializing LLMClient with model: {self.model}")
+        self.logger.info(f"Initializing LLMClient with model: {self.model}")
         self.use_portkey = use_portkey
         self.save_prompts = save_prompts
         self.save_dynamic_prompts = save_dynamic_prompts
@@ -35,10 +35,10 @@ class LLMClient_dev:
                                             use_cached_responses=use_cached_responses)
 
     def _initialize_client(self, model):
-        print(f"[DEBUG] _initialize_client called with model={model}, use_portkey={self.use_portkey}")
+        self.logger.info(f"[DEBUG] _initialize_client called with model={model}, use_portkey={self.use_portkey}")
         
         if self.use_portkey and 'gemini' in model:
-            print(f"[DEBUG] Initializing Portkey client for Gemini model: {model}")
+            self.logger.info(f"[DEBUG] Initializing Portkey client for Gemini model: {model}")
             self.portkey = Portkey(
                 api_key=PORTKEY_API_KEY,
                 virtual_key=PORTKEY_ROUTE,
@@ -47,33 +47,33 @@ class LLMClient_dev:
                 metadata={"_user": DATA_GATHERER_USER_NAME}
             )
             self.client = None  # For Portkey, we use self.portkey instead of self.client
-            print(f"[DEBUG] Portkey client initialized: {self.portkey}")
+            self.logger.info(f"[DEBUG] Portkey client initialized: {self.portkey}")
 
         elif model.startswith('gemma3') or model.startswith('qwen'):
-            print(f"[DEBUG] Initializing Ollama client for model: {model}")
+            self.logger.info(f"[DEBUG] Initializing Ollama client for model: {model}")
             self.client = Client(host="http://localhost:11434")
 
         elif model == 'gemma2:9b':
-            print(f"[DEBUG] Initializing Ollama client for gemma2:9b")
+            self.logger.info(f"[DEBUG] Initializing Ollama client for gemma2:9b")
             self.client = Client(host=OLLAMA_CLIENT)  # env variable
 
         elif model.startswith('gpt'):
-            print(f"[DEBUG] Initializing OpenAI client for model: {model}")
+            self.logger.info(f"[DEBUG] Initializing OpenAI client for model: {model}")
             self.client = OpenAI(api_key=GPT_API_KEY)
 
         elif model.startswith('gemini') and not self.use_portkey:
-            print(f"[DEBUG] Initializing direct Gemini client for model: {model}")
+            self.logger.info(f"[DEBUG] Initializing direct Gemini client for model: {model}")
             genai.configure(api_key=GEMINI_KEY)
             self.client = genai.GenerativeModel(model)
             
         else:
-            print(f"[DEBUG] Unsupported model: {model}")
+            self.logger.info(f"[DEBUG] Unsupported model: {model}")
             raise ValueError(f"Unsupported LLM name: {model}.")
 
-        print(f"[DEBUG] Client initialization complete. self.client: {self.client}, self.portkey: {getattr(self, 'portkey', 'Not set')}")
+        self.logger.info(f"[DEBUG] Client initialization complete. self.client: {self.client}, self.portkey: {getattr(self, 'portkey', 'Not set')}")
 
     def api_call(self, content, response_format, temperature=0.0, **kwargs):
-        print(f"Calling {self.model} with prompt length {len(content)}")
+        self.logger.info(f"Calling {self.model} with prompt length {len(content)}")
         if self.model.startswith('gpt'):
             return self._call_openai(content, **kwargs)
         elif self.model.startswith('gemini'):
@@ -87,7 +87,7 @@ class LLMClient_dev:
             raise ValueError(f"Unsupported model: {self.model}")
 
     def _call_openai(self, messages, temperature=0.0, **kwargs):
-        print(f"Calling OpenAI")
+        self.logger.info(f"Calling OpenAI")
         if self.save_prompts:
             self.prompt_manager.save_prompt(prompt_id='abc', prompt_content=messages)
         if 'gpt-5' in self.model:
@@ -109,7 +109,7 @@ class LLMClient_dev:
         return response.output
 
     def _call_gemini(self, messages, temperature=0.0, **kwargs):
-        print(f"Calling Gemini")
+        self.logger.info(f"Calling Gemini")
         if self.save_prompts:
             self.prompt_manager.save_prompt(prompt_id='abc', prompt_content=messages)
         response = self.client.generate_content(
@@ -122,16 +122,16 @@ class LLMClient_dev:
         return response.text
 
     def _call_ollama(self, messages, response_format, temperature=0.0):
-        print(f"Calling Ollama with messages: {messages}")
+        self.logger.info(f"Calling Ollama with messages: {messages}")
         if self.save_prompts:
             self.prompt_manager.save_prompt(prompt_id='abc', prompt_content=messages)
         response = self.client.chat(model=self.model, options={"temperature": temperature}, messages=messages,
                                     format=response_format)
-        print(f"Ollama response: {response['message']['content']}")
+        self.logger.info(f"Ollama response: {response['message']['content']}")
         return response['message']['content']
 
     def _call_portkey_gemini(self, messages, temperature=0.0, **kwargs):
-        print(f"Calling Gemini via Portkey")
+        self.logger.info(f"Calling Gemini via Portkey")
         if self.save_prompts:
             self.prompt_manager.save_prompt(prompt_id='abc', prompt_content=messages)
         portkey_payload = {
@@ -165,11 +165,11 @@ class LLMClient_dev:
         if full_document_read is None:
             full_document_read = self.full_document_read
             
-        print(f"Making LLM call with model: {self.model}, temperature: {temperature}")
+        self.logger.info(f"Making LLM call with model: {self.model}, temperature: {temperature}")
         
         if self.model == 'gemma2:9b':
             response = self.client.chat(model=self.model, options={"temperature": temperature}, messages=messages)
-            print(f"Response received from model: {response.get('message', {}).get('content', 'No content')}")
+            self.logger.info(f"Response received from model: {response.get('message', {}).get('content', 'No content')}")
             return response['message']['content']
             
         elif self.model in ['gemma3:1b', 'gemma3:4b', 'qwen:4b']:
@@ -207,7 +207,7 @@ class LLMClient_dev:
                         temperature=temperature
                     )
             
-            print(f"GPT response: {response.output}")
+            self.logger.info(f"GPT response: {response.output}")
             return response.output
                 
         elif 'gemini' in self.model:
@@ -220,7 +220,7 @@ class LLMClient_dev:
                 }
                 try:
                     response = self.portkey.chat.completions.create(**portkey_payload)
-                    print(f"Portkey Gemini response: {response}")
+                    self.logger.info(f"Portkey Gemini response: {response}")
                     return response
                 except Exception as e:
                     self.logger.error(f"Portkey Gemini call failed: {e}")
@@ -248,9 +248,9 @@ class LLMClient_dev:
                 try:
                     candidates = response.candidates
                     if candidates:
-                        print(f"Found {len(candidates)} candidates in the response.")
+                        self.logger.info(f"Found {len(candidates)} candidates in the response.")
                         response_text = candidates[0].content.parts[0].text
-                        print(f"Gemini response text: {response_text}")
+                        self.logger.info(f"Gemini response text: {response_text}")
                         return response_text
                     else:
                         self.logger.error("No candidates found in the response.")
@@ -271,73 +271,73 @@ class LLMClient_dev:
         :param expected_key: Expected key in JSON response (e.g., 'datasets')
         :return: Processed and normalized response
         """
-        print(f"[DEBUG] process_llm_response called with model: {self.model}")
-        print(f"[DEBUG] raw_response type: {type(raw_response)}, length: {len(str(raw_response))}")
-        print(f"[DEBUG] response_format: {response_format}")
-        print(f"[DEBUG] expected_key: {expected_key}")
-        print(f"[DEBUG] raw_response content (first 500 chars): {str(raw_response)[:500]}")
+        self.logger.info(f"[DEBUG] process_llm_response called with model: {self.model}")
+        self.logger.info(f"[DEBUG] raw_response type: {type(raw_response)}, length: {len(str(raw_response))}")
+        self.logger.info(f"[DEBUG] response_format: {response_format}")
+        self.logger.info(f"[DEBUG] expected_key: {expected_key}")
+        self.logger.info(f"[DEBUG] raw_response content (first 500 chars): {str(raw_response)[:500]}")
         
         if self.model == 'gemma2:9b':
-            print(f"[DEBUG] Processing gemma2:9b response")
+            self.logger.info(f"[DEBUG] Processing gemma2:9b response")
             # Split by newlines for this model
             result = raw_response.split("\n")
-            print(f"[DEBUG] gemma2:9b result: {result}")
+            self.logger.info(f"[DEBUG] gemma2:9b result: {result}")
             return result
             
         elif self.model in ['gemma3:1b', 'gemma3:4b', 'qwen:4b']:
-            print(f"[DEBUG] Processing {self.model} response")
+            self.logger.info(f"[DEBUG] Processing {self.model} response")
             parsed_resp = self.safe_parse_json(raw_response)
-            print(f"[DEBUG] Parsed JSON response: {parsed_resp}")
+            self.logger.info(f"[DEBUG] Parsed JSON response: {parsed_resp}")
             if isinstance(parsed_resp, dict) and expected_key and expected_key in parsed_resp:
-                print(f"[DEBUG] Found expected key '{expected_key}' in parsed response")
+                self.logger.info(f"[DEBUG] Found expected key '{expected_key}' in parsed response")
                 result = self.normalize_response_format(parsed_resp[expected_key])
             else:
-                print(f"[DEBUG] Expected key '{expected_key}' not found or not dict, using full response")
+                self.logger.info(f"[DEBUG] Expected key '{expected_key}' not found or not dict, using full response")
                 result = self.normalize_response_format(parsed_resp)
-            print(f"[DEBUG] Final result for {self.model}: {result}")
+            self.logger.info(f"[DEBUG] Final result for {self.model}: {result}")
             return result
                 
         elif 'gpt' in self.model:
-            print(f"[DEBUG] Processing GPT model response")
+            self.logger.info(f"[DEBUG] Processing GPT model response")
             parsed_response = self.safe_parse_json(raw_response)
-            print(f"[DEBUG] GPT parsed response: {parsed_response}, type: {type(parsed_response)}")
+            self.logger.info(f"[DEBUG] GPT parsed response: {parsed_response}, type: {type(parsed_response)}")
             if self.full_document_read and isinstance(parsed_response, dict):
                 result = parsed_response.get(expected_key, []) if expected_key else parsed_response
-                print(f"[DEBUG] GPT full_document_read=True, extracted result: {result}")
+                self.logger.info(f"[DEBUG] GPT full_document_read=True, extracted result: {result}")
             else:
                 result = parsed_response or []
-                print(f"[DEBUG] GPT full_document_read=False, result: {result}")
+                self.logger.info(f"[DEBUG] GPT full_document_read=False, result: {result}")
             final_result = self.normalize_response_format(result)
-            print(f"[DEBUG] GPT final normalized result: {final_result}")
+            self.logger.info(f"[DEBUG] GPT final normalized result: {final_result}")
             return final_result
             
         elif 'gemini' in self.model:
-            print(f"[DEBUG] Processing Gemini model response, use_portkey: {self.use_portkey}")
+            self.logger.info(f"[DEBUG] Processing Gemini model response, use_portkey: {self.use_portkey}")
             if self.use_portkey:
                 # For Portkey, raw_response is already the response object
                 parsed_response = self.safe_parse_json(raw_response)
-                print(f"[DEBUG] Gemini Portkey parsed response: {parsed_response}")
+                self.logger.info(f"[DEBUG] Gemini Portkey parsed response: {parsed_response}")
                 if self.full_document_read and isinstance(parsed_response, dict):
                     result = parsed_response.get(expected_key, []) if expected_key else parsed_response
                 else:
                     result = parsed_response if isinstance(parsed_response, list) else []
-                print(f"[DEBUG] Gemini Portkey result: {result}")
+                self.logger.info(f"[DEBUG] Gemini Portkey result: {result}")
                 return self.normalize_response_format(result)
             else:
                 # For direct Gemini, raw_response is the text content
-                print(f"[DEBUG] Gemini direct response processing")
+                self.logger.info(f"[DEBUG] Gemini direct response processing")
                 try:
                     parsed_response = json.loads(raw_response)
-                    print(f"[DEBUG] Gemini direct parsed response: {parsed_response}")
+                    self.logger.info(f"[DEBUG] Gemini direct parsed response: {parsed_response}")
                     result = self.normalize_response_format(parsed_response)
-                    print(f"[DEBUG] Gemini direct final result: {result}")
+                    self.logger.info(f"[DEBUG] Gemini direct final result: {result}")
                     return result
                 except json.JSONDecodeError as e:
-                    print(f"[DEBUG] Gemini JSON decoding error: {e}")
+                    self.logger.info(f"[DEBUG] Gemini JSON decoding error: {e}")
                     self.logger.error(f"JSON decoding error: {e}")
                     return []
         else:
-            print(f"[DEBUG] Unsupported model: {self.model}")
+            self.logger.info(f"[DEBUG] Unsupported model: {self.model}")
             raise ValueError(f"Unsupported model: {self.model}. Please use a supported LLM model.")
     
     def normalize_response_format(self, response):
@@ -345,35 +345,35 @@ class LLMClient_dev:
         Task-agnostic response normalization and deduplication.
         Handles basic post-processing of LLM responses.
         """
-        print(f"[DEBUG] normalize_response_format called with response type: {type(response)}")
-        print(f"[DEBUG] normalize_response_format input: {response}")
+        self.logger.info(f"[DEBUG] normalize_response_format called with response type: {type(response)}")
+        self.logger.info(f"[DEBUG] normalize_response_format input: {response}")
         
         if not response:
-            print(f"[DEBUG] Empty response, returning empty list")
+            self.logger.info(f"[DEBUG] Empty response, returning empty list")
             return []
             
         if not isinstance(response, list):
             if isinstance(response, dict):
-                print(f"[DEBUG] Converting dict to list: {response}")
+                self.logger.info(f"[DEBUG] Converting dict to list: {response}")
                 response = [response]
             else:
-                print(f"[DEBUG] Non-list, non-dict response, returning as-is: {response}")
+                self.logger.info(f"[DEBUG] Non-list, non-dict response, returning as-is: {response}")
                 return response
                 
         # Basic normalization - remove empty or invalid items
         normalized = []
         for i, item in enumerate(response):
-            print(f"[DEBUG] Processing item {i}: {item} (type: {type(item)})")
+            self.logger.info(f"[DEBUG] Processing item {i}: {item} (type: {type(item)})")
             if isinstance(item, str) and len(item.strip()) < 3:
-                print(f"[DEBUG] Skipping short string: {item}")
+                self.logger.info(f"[DEBUG] Skipping short string: {item}")
                 continue
             if isinstance(item, dict) and not any(item.values()):
-                print(f"[DEBUG] Skipping empty dict: {item}")
+                self.logger.info(f"[DEBUG] Skipping empty dict: {item}")
                 continue
-            print(f"[DEBUG] Adding item to normalized: {item}")
+            self.logger.info(f"[DEBUG] Adding item to normalized: {item}")
             normalized.append(item)
             
-        print(f"[DEBUG] normalize_response_format final result: {normalized}")
+        self.logger.info(f"[DEBUG] normalize_response_format final result: {normalized}")
         return normalized
     
     def safe_parse_json(self, response_text):
@@ -381,10 +381,10 @@ class LLMClient_dev:
         Task-agnostic JSON parsing with error handling.
         This can be used by any task that needs to parse JSON from LLM responses.
         """
-        print(f"[DEBUG] safe_parse_json called with type: {type(response_text)}")
-        print(f"[DEBUG] safe_parse_json input (first 300 chars): {str(response_text)[:300]}")
+        self.logger.info(f"[DEBUG] safe_parse_json called with type: {type(response_text)}")
+        self.logger.info(f"[DEBUG] safe_parse_json input (first 300 chars): {str(response_text)[:300]}")
         result = self._safe_parse_json_internal(response_text)
-        print(f"[DEBUG] safe_parse_json result: {result}")
+        self.logger.info(f"[DEBUG] safe_parse_json result: {result}")
         return result
     
     def generate_prompt_id(self, messages, temperature: float = 0.0):
@@ -397,7 +397,7 @@ class LLMClient_dev:
     
     def _safe_parse_json_internal(self, response_text):
         """Internal JSON parsing with error handling."""
-        print(f"Function_call: _safe_parse_json_internal(response_text {type(response_text)})")
+        self.logger.info(f"Function_call: _safe_parse_json_internal(response_text {type(response_text)})")
         
         # Handle different response object types
         if hasattr(response_text, "choices"):
@@ -408,11 +408,11 @@ class LLMClient_dev:
                 self.logger.warning(f"Could not extract content from response object: {e}")
                 return None
         elif isinstance(response_text, list):
-            print(f"Response is a list of length: {len(response_text)}")
+            self.logger.info(f"Response is a list of length: {len(response_text)}")
             for response_item in response_text:
-                print(f"List item type: {type(response_item)}")
+                self.logger.info(f"List item type: {type(response_item)}")
                 if hasattr(response_item, "content"):
-                    print(f"Item has content attribute, of type: {type(response_item.content)}")
+                    self.logger.info(f"Item has content attribute, of type: {type(response_item.content)}")
                     if isinstance(response_item.content, list) and len(response_item.content) > 0:
                         response_text = response_item.content[0].text
                 else:
