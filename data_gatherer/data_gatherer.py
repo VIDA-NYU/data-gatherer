@@ -213,7 +213,7 @@ class DataGatherer:
     def parse_data(self, raw_data, publisher=None, current_url_address=None, additional_data=None,
                    raw_data_format='XML', parsed_data_dir='tmp/parsed_articles/', grobid_for_pdf=False,
                    process_DAS_links_separately=False, full_document_read=False, semantic_retrieval=False, top_k=5,
-                   prompt_name='retrieve_datasets_simple_JSON', use_portkey_for_gemini=True, section_filter=None,
+                   prompt_name='retrieve_datasets_simple_JSON', use_portkey=True, section_filter=None,
                    response_format=dataset_response_schema_gpt):
         """
         Parses the raw data fetched from the source URL using the appropriate parser.
@@ -242,7 +242,7 @@ class DataGatherer:
 
         :param prompt_name: Name of the prompt to use for LLM parsing.
 
-        :param use_portkey_for_gemini: Flag to use Portkey for Gemini LLM.
+        :param use_portkey: Flag to use Portkey for Gemini LLM.
 
         :param section_filter: Optional filter to apply to the sections (supplementary_material', 'data_availability_statement').
 
@@ -254,23 +254,23 @@ class DataGatherer:
 
         if raw_data_format.upper() == "XML":
             router = XMLRouter(self.open_data_repos_ontology, self.logger, full_document_read=full_document_read,
-                               llm_name=self.llm, use_portkey_for_gemini=use_portkey_for_gemini,
+                               llm_name=self.llm, use_portkey=use_portkey,
                                      save_dynamic_prompts=self.save_dynamic_prompts)
             self.parser = router.get_parser(raw_data)
 
         elif raw_data_format.upper() == "HTML":
             self.parser = HTMLParser(self.open_data_repos_ontology, self.logger, full_document_read=full_document_read,
-                                     llm_name=self.llm, use_portkey_for_gemini=use_portkey_for_gemini,
+                                     llm_name=self.llm, use_portkey=use_portkey,
                                      save_dynamic_prompts=self.save_dynamic_prompts)
 
         elif raw_data_format.upper() == "PDF" and grobid_for_pdf:
             self.parser = GrobidPDFParser(self.open_data_repos_ontology, self.logger, full_document_read=full_document_read,
-                                    llm_name=self.llm, use_portkey_for_gemini=use_portkey_for_gemini,
+                                    llm_name=self.llm, use_portkey=use_portkey,
                                      save_dynamic_prompts=self.save_dynamic_prompts)
 
         elif raw_data_format.upper() == "PDF":
             self.parser = PDFParser(self.open_data_repos_ontology, self.logger, full_document_read=full_document_read,
-                                    llm_name=self.llm, use_portkey_for_gemini=use_portkey_for_gemini,
+                                    llm_name=self.llm, use_portkey=use_portkey,
                                      save_dynamic_prompts=self.save_dynamic_prompts)
 
         else:
@@ -291,7 +291,7 @@ class DataGatherer:
                                       current_url_address=current_url_address,
                                       raw_data_format=raw_data_format,
                                       prompt_name=prompt_name,
-                                      use_portkey_for_gemini=use_portkey_for_gemini,
+                                      use_portkey=use_portkey,
                                       article_file_dir=parsed_data_dir,
                                       additional_data=additional_data,
                                       process_DAS_links_separately=process_DAS_links_separately,
@@ -363,7 +363,7 @@ class DataGatherer:
         else:
             raise ValueError(f"Invalid URL format: {url}. Must start with 'PMC' or 'https://'.")
 
-    def process_url(self, url, save_staging_table=False, article_file_dir='tmp/raw_files/', use_portkey_for_gemini=True,
+    def process_url(self, url, save_staging_table=False, article_file_dir='tmp/raw_files/', use_portkey=True,
                     driver_path=None, browser='Firefox', headless=True, prompt_name='retrieve_datasets_simple_JSON',
                     semantic_retrieval=False, section_filter=None):
         """
@@ -383,7 +383,7 @@ class DataGatherer:
 
         :param article_file_dir: Directory to save the raw HTML/XML/PDF files.
 
-        :param use_portkey_for_gemini: Flag to use Portkey for Gemini LLM.
+        :param use_portkey: Flag to use Portkey for Gemini LLM.
 
         :param driver_path: Path to your local WebDriver executable (if applicable). When set to None, Webdriver manager will be used.
 
@@ -475,7 +475,7 @@ class DataGatherer:
                 self.parser = XMLParser(self.open_data_repos_ontology, self.logger,
                                         llm_name=self.llm,
                                         full_document_read=self.full_document_read,
-                                        use_portkey_for_gemini=use_portkey_for_gemini,
+                                        use_portkey=use_portkey,
                                         save_dynamic_prompts=self.save_dynamic_prompts)
 
                 if additional_data is None:
@@ -499,7 +499,7 @@ class DataGatherer:
                 self.parser = HTMLParser(self.open_data_repos_ontology, self.logger,
                                          llm_name=self.llm,
                                          full_document_read=self.full_document_read,
-                                         use_portkey_for_gemini=use_portkey_for_gemini,
+                                         use_portkey=use_portkey,
                                          save_dynamic_prompts=self.save_dynamic_prompts)
                 parsed_data = self.parser.parse_data(raw_data, self.publisher, self.current_url,
                                                      raw_data_format=self.raw_data_format, prompt_name=prompt_name,
@@ -542,7 +542,7 @@ class DataGatherer:
             return None
 
     def app_process_url(self, url, save_staging_table=False, article_file_dir='tmp/raw_files/', 
-                       use_portkey_for_gemini=True, driver_path=None, browser='Firefox', headless=True, 
+                       use_portkey=True, driver_path=None, browser='Firefox', headless=True, 
                        prompt_name='retrieve_datasets_simple_JSON', semantic_retrieval=False, section_filter=None):
         """
         Application wrapper for process_url with concurrent user support.
@@ -565,7 +565,7 @@ class DataGatherer:
                     url=url,
                     save_staging_table=save_staging_table,
                     article_file_dir=article_file_dir,
-                    use_portkey_for_gemini=use_portkey_for_gemini,
+                    use_portkey=use_portkey,
                     driver_path=driver_path,
                     browser=browser,
                     headless=headless,
@@ -595,7 +595,7 @@ class DataGatherer:
         return classified_links
 
     def process_articles(self, url_list, log_modulo=10, save_staging_table=False, article_file_dir='tmp/raw_files/',
-                         driver_path=None, browser='Firefox', headless=True, use_portkey_for_gemini=True,
+                         driver_path=None, browser='Firefox', headless=True, use_portkey=True,
                          prompt_name='retrieve_datasets_simple_JSON', semantic_retrieval=False, section_filter=None):
         """
         Processes a list of article URLs and returns parsed data.
@@ -614,7 +614,7 @@ class DataGatherer:
 
         :param headless: Whether to run the browser in headless mode (if applicable).
 
-        :param use_portkey_for_gemini: Flag to use Portkey for Gemini LLM.
+        :param use_portkey: Flag to use Portkey for Gemini LLM.
 
         :param prompt_name: Name of the prompt to use for LLM parsing.
 
@@ -641,7 +641,7 @@ class DataGatherer:
                 driver_path=driver_path,
                 browser=browser,
                 headless=headless,
-                use_portkey_for_gemini=use_portkey_for_gemini,
+                use_portkey=use_portkey,
                 prompt_name=prompt_name,
                 semantic_retrieval=semantic_retrieval,
                 section_filter=section_filter
@@ -783,7 +783,7 @@ class DataGatherer:
             raise FileNotFoundError(f"Create file with input links! File not found: {input_file}\n\n{e}\n")
 
     def process_metadata(self, combined_df, display_type='console', interactive=True, return_metadata=False,
-                         write_raw_metadata=False, article_file_dir='tmp/raw_files/', use_portkey_for_gemini=True,
+                         write_raw_metadata=False, article_file_dir='tmp/raw_files/', use_portkey=True,
                          prompt_name='gpt_metadata_extract', timeout=1):
         """
         This method iterates through the combined_df DataFrame, checks for dataset webpages or download links,
@@ -800,7 +800,7 @@ class DataGatherer:
 
         :param article_file_dir: Directory to save raw HTML/XML files if write_raw_metadata is True.
 
-        :param use_portkey_for_gemini: If True, uses Portkey for Gemini LLM.
+        :param use_portkey: If True, uses Portkey for Gemini LLM.
 
         :param prompt_name: Name of the prompt to use for LLM parsing.
 
@@ -813,7 +813,7 @@ class DataGatherer:
 
         self.already_previewed = []
         self.metadata_parser = HTMLParser(self.open_data_repos_ontology, self.logger, full_document_read=True,
-                                          llm_name=self.llm, use_portkey_for_gemini=use_portkey_for_gemini)
+                                          llm_name=self.llm, use_portkey=use_portkey)
 
         self.data_fetcher = self.data_fetcher.update_DataFetcher_settings('any_url',
                                                                           self.full_document_read,
@@ -912,7 +912,7 @@ class DataGatherer:
 
                 if not skip:
                     metadata = self.metadata_parser.parse_datasets_metadata(html,
-                                                                            use_portkey_for_gemini=use_portkey_for_gemini,
+                                                                            use_portkey=use_portkey,
                                                                             prompt_name=prompt_name)
                     metadata['source_url_for_metadata'] = row['dataset_webpage']
                     metadata['access_mode'] = row.get('access_mode', None)

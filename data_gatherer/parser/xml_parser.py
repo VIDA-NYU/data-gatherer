@@ -11,13 +11,13 @@ class XMLParser(LLMParser):
     def __init__(self, open_data_repos_ontology, logger, log_file_override=None, full_document_read=True,
                  prompt_dir="data_gatherer/prompts/prompt_templates",
                  llm_name=None, save_dynamic_prompts=False, save_responses_to_cache=False, use_cached_responses=False,
-                 use_portkey_for_gemini=True):
+                 use_portkey=True):
 
         super().__init__(open_data_repos_ontology, logger, log_file_override=log_file_override,
                          full_document_read=full_document_read, prompt_dir=prompt_dir,
                          llm_name=llm_name, save_dynamic_prompts=save_dynamic_prompts,
                          save_responses_to_cache=save_responses_to_cache,
-                         use_cached_responses=use_cached_responses, use_portkey_for_gemini=use_portkey_for_gemini
+                         use_cached_responses=use_cached_responses, use_portkey=use_portkey
                          )
 
         self.logger = logger
@@ -124,7 +124,7 @@ class XMLParser(LLMParser):
     def parse_data(self, api_data, publisher=None, current_url_address=None, additional_data=None,
                    raw_data_format='XML',
                    article_file_dir='tmp/raw_files/', process_DAS_links_separately=False, section_filter=None,
-                   prompt_name='retrieve_datasets_simple_JSON', use_portkey_for_gemini=True, semantic_retrieval=False,
+                   prompt_name='retrieve_datasets_simple_JSON', use_portkey=True, semantic_retrieval=False,
                    top_k=2, response_format=dataset_response_schema_gpt):
         """
         Parse the API data and extract relevant links and metadata.
@@ -968,7 +968,7 @@ class TEI_XMLParser(XMLParser):
     def parse_data(self, api_data, publisher=None, current_url_address=None, additional_data=None,
                    raw_data_format='XML',
                    article_file_dir='tmp/raw_files/', process_DAS_links_separately=False, section_filter=None,
-                   prompt_name='retrieve_datasets_simple_JSON', use_portkey_for_gemini=True, semantic_retrieval=False,
+                   prompt_name='retrieve_datasets_simple_JSON', use_portkey=True, semantic_retrieval=False,
                    top_k=2, response_format=dataset_response_schema_gpt):
         """
         Parse the API data and extract relevant links and metadata.
