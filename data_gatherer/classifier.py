@@ -28,7 +28,7 @@ class LLMClassifier:
         skip_patterns = self.retrieval_patterns['general']['skip_llm_classification_patterns']
         for pattern,classified in skip_patterns.items():
             if re.search(pattern, element['download_link']):
-                print(f"Skipping LLM classification for {element['reconstructed_link']}")
+                self.logger.info(f"Skipping LLM classification for {element['reconstructed_link']}")
                 return classified
 
         labels_used = ["Tabular Data", "Supplementary Material", "External Navigation Link", "Related Works",
@@ -72,7 +72,7 @@ class LLMClassifier:
                       - link:  {element['reconstructed_link']}
                       - past labels:  {labels_used}
                       """
-            print(msg)
+            self.logger.info(msg)
 
         return output_class
 
@@ -83,7 +83,7 @@ class LLMClassifier:
         parsed_data['classification'] = parsed_data.apply(self.classify_element, axis=1)
 
         if self.show_classify_stats:
-            print(f"Classification Stats: {parsed_data['classification'].value_counts()}")
+            self.logger.info(f"Classification Stats: {parsed_data['classification'].value_counts()}")
 
         return parsed_data
 
@@ -103,7 +103,7 @@ class LLMClassifier:
                 self.logger.warning(f"Skipping non-DataFrame entry for URL: {publication_url}")
                 continue
 
-            print(f"Processing DataFrame for URL: {publication_url}")
+            self.logger.info(f"Processing DataFrame for URL: {publication_url}")
             df['publication_url'] = publication_url  # Assign publication_url to all rows
             resources.append(df)
 

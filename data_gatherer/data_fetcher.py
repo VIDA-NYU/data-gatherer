@@ -30,7 +30,7 @@ class DataFetcher(ABC):
             df = pd.read_parquet(self.raw_HTML_data_filepath)
             # Assume 'publication' column contains the IDs
             self.pub_in_local_df = set(df['publication'].str.lower())
-            print(f"Loaded {len(self.pub_in_local_df)} publications from local DataFrame.")
+            self.logger.info(f"Loaded {len(self.pub_in_local_df)} publications from local DataFrame.")
         else:
             self.logger.warning(
                 "DataFetcher raw_HTML_data_filepath set to None") if self.raw_HTML_data_filepath is None else None
@@ -58,12 +58,12 @@ class DataFetcher(ABC):
         if re.match(r'^https?://www\.ncbi\.nlm\.nih\.gov/pmc', url) or re.match(r'^https?://pmc\.ncbi\.nlm\.nih\.gov/', url):
             return 'PMC'
         if re.match(r'^https?://pubmed\.ncbi\.nlm\.nih\.gov/[\d]+', url):
-            print("Publisher: pubmed")
+            self.logger.info("Publisher: pubmed")
             return 'pubmed'
         match = re.match(r'^https?://(?:\w+\.)?([\w\d\-]+)\.\w+', url)
         if match:
             domain = match.group(1)
-            print(f"Publisher: {domain}")
+            self.logger.info(f"Publisher: {domain}")
             return domain
         else:
             return self.url_to_publisher_root(url)
@@ -76,7 +76,7 @@ class DataFetcher(ABC):
         match = re.match(r'https?://([\w\.]+)/', url, re.IGNORECASE)
         if match:
             root = match.group(1)
-            print(f"Root: {root}")
+            self.logger.info(f"Root: {root}")
             return root
         else:
             self.logger.warning("No valid root extracted from URL. This may cause issues with data gathering.")
@@ -93,7 +93,7 @@ class DataFetcher(ABC):
         match = re.search(r'PMC(\d+)', url)
         if match:
             pmcid = f"PMC{match.group(1)}"
-            print(f"Extracted PMC ID: {pmcid}")
+            self.logger.info(f"Extracted PMC ID: {pmcid}")
             return pmcid
         else:
             self.logger.warning(f"No PMC ID found in URL: {url}")
@@ -110,7 +110,7 @@ class DataFetcher(ABC):
 
         if match:
             doi = match.group(1)
-            print(f"DOI: {doi}")
+            self.logger.info(f"DOI: {doi}")
             return doi
 
         elif candidate_pmcid is not None:
@@ -133,7 +133,7 @@ class DataFetcher(ABC):
                 doi = id['doi']
                 return doi
         else:
-            print(f"Failed to fetch DOI for PMCID {pmid}. Status code: {response.status_code}")
+            self.logger.info(f"Failed to fetch DOI for PMCID {pmid}. Status code: {response.status_code}")
             return None
 
     def url_to_filename(self, url):
@@ -167,43 +167,43 @@ class DataFetcher(ABC):
             API = self.url_to_api_root(url)
 
         if self.raw_HTML_data_filepath and self.dataframe_fetch and self.url_in_dataframe(url):
-            print(f"URL {url} found in DataFrame. Using DatabaseFetcher.")
+            self.logger.info(f"URL {url} found in DataFrame. Using DatabaseFetcher.")
             if isinstance(self, DatabaseFetcher):
-                print(f"Reusing existing DatabaseFetcher instance.")
+                self.logger.info(f"Reusing existing DatabaseFetcher instance.")
                 return self  # Reuse current instance
             return DatabaseFetcher(logger)
 
         if API == 'PMC':
             if isinstance(self, EntrezFetcher):
-                print(f"Reusing existing EntrezFetcher instance.")
+                self.logger.info(f"Reusing existing EntrezFetcher instance.")
                 return self  # Reuse current instance
-            print(f"Initializing EntrezFetcher({'requests', 'self.config'})")
+            self.logger.info(f"Initializing EntrezFetcher({'requests', 'self.config'})")
             return EntrezFetcher(requests, logger)
 
         # Reuse existing driver if we already have one
         if isinstance(self, WebScraper) and self.scraper_tool is not None:
-            print(f"Reusing existing WebScraper driver: {self.scraper_tool}")
+            self.logger.info(f"Reusing existing WebScraper driver: {self.scraper_tool}")
             return self
 
         if self.url_is_pdf(url):
-            print(f"URL {url} is a PDF. Using PdfFetcher.")
+            self.logger.info(f"URL {url} is a PDF. Using PdfFetcher.")
             if isinstance(self, PdfFetcher):
-                print(f"Reusing existing PdfFetcher instance.")
+                self.logger.info(f"Reusing existing PdfFetcher instance.")
                 return self  # Reuse current instance
             return PdfFetcher(logger)
 
         if type(HTML_fallback) == str and HTML_fallback == 'HTTPGetRequest':
-            print(f"Falling back to HttpGetRequest for URL: {url}")
+            self.logger.info(f"Falling back to HttpGetRequest for URL: {url}")
             if isinstance(self, HttpGetRequest):
-                print(f"Reusing existing HttpGetRequest instance.")
+                self.logger.info(f"Reusing existing HttpGetRequest instance.")
                 return self  # Reuse current instance
             return HttpGetRequest(logger)
 
-        print(f"WebScraper instance: {isinstance(self, WebScraper)}")
-        print(f"EntrezFetcher instance: {isinstance(self, EntrezFetcher)}")
-        print(f"scraper_tool attribute: {hasattr(self,'scraper_tool')}")
+        self.logger.info(f"WebScraper instance: {isinstance(self, WebScraper)}")
+        self.logger.info(f"EntrezFetcher instance: {isinstance(self, EntrezFetcher)}")
+        self.logger.info(f"scraper_tool attribute: {hasattr(self,'scraper_tool')}")
 
-        print(f"Initializing new selenium driver {driver_path}, {browser}, {headless}.")
+        self.logger.info(f"Initializing new selenium driver {driver_path}, {browser}, {headless}.")
         driver = create_driver(driver_path, browser, headless, self.logger)
         return WebScraper(driver, logger)
 
@@ -245,7 +245,7 @@ class DataFetcher(ABC):
         """
         self.logger.debug(f"Checking if URL is a PDF: {url}")
         if url.lower().endswith('.pdf'):
-            print(f"URL {url} ends with .pdf")
+            self.logger.info(f"URL {url} ends with .pdf")
             return True
         elif re.search(r'arxiv\.org/pdf/', url, re.IGNORECASE):
             return True
@@ -270,7 +270,7 @@ class DataFetcher(ABC):
         with open(path, "wb") as f:
             for chunk in r.iter_content(chunk_size=8192):
                 f.write(chunk)
-            print(f"Downloaded {filename} to {path}")
+            self.logger.info(f"Downloaded {filename} to {path}")
 
         return path
 
@@ -297,7 +297,7 @@ class HttpGetRequest(DataFetcher):
         while attempt < retries:
             time.sleep(delay/2)
             try:
-                print(f"Fetching data from {url}, attempt {attempt + 1} of {retries}")
+                self.logger.info(f"Fetching data from {url}, attempt {attempt + 1} of {retries}")
                 response = self.session.get(url, headers={"User-Agent": "Mozilla/5.0"})
                 response.raise_for_status()  # Raise an error for bad responses
                 self.raw_data_format = 'HTML' if 'text/html' in response.headers.get('Content-Type', '') else 'Other'
@@ -335,7 +335,7 @@ class HttpGetRequest(DataFetcher):
         pmcid = self.url_to_pmcid(url)
 
         fn = directory + f"{pmcid}__{pub_name}.html"
-        print(f"Downloading HTML page source to {fn}")
+        self.logger.info(f"Downloading HTML page source to {fn}")
 
         with open(fn, 'w', encoding='utf-8') as f:
             f.write(self.fetch_data(url))
@@ -358,21 +358,21 @@ class HttpGetRequest(DataFetcher):
             title_tag = soup.find("title")
             if title_tag and title_tag.text.strip():
                 publication_name = title_tag.text.strip()
-                print(f"Paper name (from <title> tag): {publication_name}")
+                self.logger.info(f"Paper name (from <title> tag): {publication_name}")
                 return publication_name
 
             # Fallback: <meta name="citation_title">
             meta_title = soup.find("meta", attrs={"name": "citation_title"})
             if meta_title and meta_title.get("content"):
                 publication_name = meta_title["content"].strip()
-                print(f"Paper name (from meta citation_title): {publication_name}")
+                self.logger.info(f"Paper name (from meta citation_title): {publication_name}")
                 return publication_name
 
             # Fallback: <h1 class="article-title">
             h1 = soup.find("h1", class_="article-title")
             if h1:
                 publication_name = h1.get_text(strip=True)
-                print(f"Paper name (from h1.article-title): {publication_name}")
+                self.logger.info(f"Paper name (from h1.article-title): {publication_name}")
                 return publication_name
 
             self.logger.warning("Publication name not found in the HTML.")
@@ -427,10 +427,10 @@ class WebScraper(DataFetcher):
         # CBBA47A4F74F305BBA400333DB8BA.m_1 & amp;
 
         if re.search(pattern, html):
-            print("Removing cookie pattern 1 from HTML")
+            self.logger.info("Removing cookie pattern 1 from HTML")
             html = re.sub(pattern, 'img_alt_subst', html)
         else:
-            print("No cookie pattern 1 found in HTML")
+            self.logger.info("No cookie pattern 1 found in HTML")
         return html
 
     def simulate_user_scroll(self, delay=2, scroll_wait=0.5):
@@ -477,7 +477,7 @@ class WebScraper(DataFetcher):
         pmcid = self.url_to_pmcid(pub_link)
 
         fn = directory + f"{pmcid}__{pub_name}.html"
-        print(f"Downloading HTML page source to {fn}")
+        self.logger.info(f"Downloading HTML page source to {fn}")
 
         self.logger.debug(f"scraper_tool: {self.scraper_tool}, page_source: {getattr(self.scraper_tool, 'page_source', None)}")
 
@@ -500,14 +500,14 @@ class WebScraper(DataFetcher):
             page_title = self.scraper_tool.title
             if page_title and page_title.strip():
                 publication_name = page_title.strip()
-                print(f"Paper name (from Selenium .title): {publication_name}")
+                self.logger.info(f"Paper name (from Selenium .title): {publication_name}")
                 return publication_name
 
             # Fallback: Try to find <title> tag via Selenium
             publication_name_pointer = self.scraper_tool.find_element(By.TAG_NAME, 'title')
             if publication_name_pointer is not None and publication_name_pointer.text:
                 publication_name = publication_name_pointer.text.strip()
-                print(f"Paper name (from <title> tag): {publication_name}")
+                self.logger.info(f"Paper name (from <title> tag): {publication_name}")
                 return publication_name
 
             # Fallback: Parse page source for <meta name="citation_title">
@@ -515,14 +515,14 @@ class WebScraper(DataFetcher):
             meta_title = soup.find("meta", attrs={"name": "citation_title"})
             if meta_title and meta_title.get("content"):
                 publication_name = meta_title["content"].strip()
-                print(f"Paper name (from meta citation_title): {publication_name}")
+                self.logger.info(f"Paper name (from meta citation_title): {publication_name}")
                 return publication_name
 
             # Fallback: Try <h1> with class "article-title"
             h1 = soup.find("h1", class_="article-title")
             if h1:
                 publication_name = h1.get_text(strip=True)
-                print(f"Paper name (from h1.article-title): {publication_name}")
+                self.logger.info(f"Paper name (from h1.article-title): {publication_name}")
                 return publication_name
 
             self.logger.warning("Publication name not found in the page title or meta tags.")
@@ -536,7 +536,7 @@ class WebScraper(DataFetcher):
         # Extract PMC ID
         pmc_tag = soup.find("a", {"data-ga-action": "PMCID"})
         pmc_id = pmc_tag.text.strip() if pmc_tag else None  # Extract text safely
-        print(f"PMCID: {pmc_id}")
+        self.logger.info(f"PMCID: {pmc_id}")
         return pmc_id
 
     def get_doi_from_pubmed_html(self, html):
@@ -544,7 +544,7 @@ class WebScraper(DataFetcher):
         # Extract DOI
         doi_tag = soup.find("a", {"data-ga-action": "DOI"})
         doi = doi_tag.text.strip() if doi_tag else None  # Extract text safely
-        print(f"DOI: {doi}")
+        self.logger.info(f"DOI: {doi}")
         return doi
 
     def get_opendata_from_pubmed_id(self, pmid):
@@ -557,7 +557,7 @@ class WebScraper(DataFetcher):
 
         """
         url = self.pmid_to_url(pmid)
-        print(f"Reconstructed URL: {url}")
+        self.logger.info(f"Reconstructed URL: {url}")
 
         html = self.fetch_data(url)
         # Parse PMC ID and DOI from the HTML content
@@ -576,7 +576,7 @@ class WebScraper(DataFetcher):
         match = re.search(r'(10\.\d{4,9}/[-._;()/:A-Z0-9]+)', url, re.IGNORECASE)
         if match:
             doi = match.group(1)
-            print(f"DOI: {doi}")
+            self.logger.info(f"DOI: {doi}")
             return doi
         else:
             return None
@@ -594,7 +594,7 @@ class WebScraper(DataFetcher):
         """
 
         # Set download dir in profile beforehand when you create the driver
-        print(f"Using Selenium to fetch download: {url}")
+        self.logger.info(f"Using Selenium to fetch download: {url}")
 
         driver = create_driver(self.driver_path, self.browser,
                                self.headless, self.logger,
@@ -607,7 +607,7 @@ class WebScraper(DataFetcher):
     def quit(self):
         if self.scraper_tool:
             self.scraper_tool.quit()
-            print("WebScraper driver quit.")
+            self.logger.info("WebScraper driver quit.")
 
 
 class DatabaseFetcher(DataFetcher):
@@ -631,10 +631,10 @@ class DatabaseFetcher(DataFetcher):
         """
         split_source_url = url_key.split('/')
         key = (split_source_url[-1] if len(split_source_url[-1]) > 0 else split_source_url[-2]).lower()
-        print(f"Fetching data for {key}")
+        self.logger.info(f"Fetching data for {key}")
         self.logger.debug(f"Data file: {self.dataframe.columns}")
         self.logger.debug(f"Data file: {self.dataframe[self.dataframe['publication'] == key]}")
-        print(f"Fetching data from {self.raw_HTML_data_filepath}")
+        self.logger.info(f"Fetching data from {self.raw_HTML_data_filepath}")
         for i, row in self.dataframe[self.dataframe['publication'] == key].iterrows():
             self.raw_data_format = row['format']
             return row['raw_cont']
@@ -643,10 +643,10 @@ class DatabaseFetcher(DataFetcher):
         pattern = r'<img\s+alt=""\s+src="https://www\.ncbi\.nlm\.nih\.gov/stat\?.*?"\s*>'
 
         if re.search(pattern, html):
-            print("Removing cookie pattern 1 from HTML")
+            self.logger.info("Removing cookie pattern 1 from HTML")
             html = re.sub(pattern, 'img_alt_subst', html)
         else:
-            print("No cookie pattern 1 found in HTML")
+            self.logger.info("No cookie pattern 1 found in HTML")
         return html
 
 # Implementation for fetching data from an API
@@ -691,7 +691,7 @@ class EntrezFetcher(DataFetcher):
 
             # Construct the API call using the PMC ID
             api_call = re.sub('__PMCID__', PMCID, self.base)
-            print(f"Fetching data from request: {api_call}")
+            self.logger.info(f"Fetching data from request: {api_call}")
 
             # Retry logic for API calls
             for attempt in range(retries):
@@ -755,15 +755,15 @@ class EntrezFetcher(DataFetcher):
 
         # Check if the file already exists
         if os.path.exists(fn):
-            print(f"File already exists: {fn}. Skipping download.")
+            self.logger.info(f"File already exists: {fn}. Skipping download.")
             return
         else:
-            print(f"Downloading XML data to {fn}")
+            self.logger.info(f"Downloading XML data to {fn}")
             os.makedirs(os.path.dirname(fn), exist_ok=True)
 
         # Write the XML data to the file
         ET.ElementTree(api_data).write(fn, pretty_print=True, xml_declaration=True, encoding="UTF-8")
-        print(f"Downloaded XML file: {fn}")
+        self.logger.info(f"Downloaded XML file: {fn}")
 
     def extract_publication_title(self, xml_data):
         """
@@ -807,14 +807,14 @@ class PdfFetcher(DataFetcher):
         :return: The raw content of the PDF file.
         """
         self.raw_data_format = 'PDF'
-        print(f"Fetching PDF data from {url}")
+        self.logger.info(f"Fetching PDF data from {url}")
         response = requests.get(url)
         if response.status_code == 200:
             if return_temp:
                 # Write the PDF content to a temporary file
                 with tempfile.NamedTemporaryFile(delete=False, suffix='.pdf') as temp_file:
                     temp_file.write(response.content)
-                    print(f"PDF data written to temporary file: {temp_file.name}")
+                    self.logger.info(f"PDF data written to temporary file: {temp_file.name}")
                     return temp_file.name
             else:
                 return response.content
@@ -828,10 +828,10 @@ class PdfFetcher(DataFetcher):
         """
         fn = os.path.join(directory, f"{self.url_to_filename(src_url)}.pdf")
 
-        print(f"Downloading PDF from {src_url}")
+        self.logger.info(f"Downloading PDF from {src_url}")
         with open(fn, 'wb') as file:
             file.write(raw_data)
-            print(f"PDF data written to file: {file}")
+            self.logger.info(f"PDF data written to file: {file}")
 
 class DataCompletenessChecker:
     """

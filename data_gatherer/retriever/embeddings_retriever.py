@@ -16,7 +16,7 @@ class EmbeddingsRetriever(BaseRetriever):
         """
         self.logger = logger
         self.corpus = corpus
-        print(f"Initializing EmbeddingsRetriever with: {model_name} on corpus: {len(corpus), type(corpus)}")
+        self.logger.info(f"Initializing EmbeddingsRetriever with: {model_name} on corpus: {len(corpus), type(corpus)}")
         self.model = SentenceTransformer(model_name, device=device)
         self.embeddings = self.model.encode(corpus, show_progress_bar=True, convert_to_numpy=True)
 
@@ -31,7 +31,7 @@ class EmbeddingsRetriever(BaseRetriever):
             distances (np.ndarray): L2 distances of top-k nearest neighbors.
         """
         # Compute squared L2 distances
-        print("Computing L2 distances using numpy.")
+        self.logger.info("Computing L2 distances using numpy.")
         dists = np.sum((self.embeddings - query_emb) ** 2, axis=1)
         idxs = np.argpartition(dists, k)[:k]
         # Sort the top-k indices by distance
@@ -49,7 +49,7 @@ class EmbeddingsRetriever(BaseRetriever):
         Returns:
             List[Tuple[str, float]]: List of (passage, score) tuples.
         """
-        print(f"Searching for top-{k} passages similar to the query by embeddings.")
+        self.logger.info(f"Searching for top-{k} passages similar to the query by embeddings.")
         if k > len(self.corpus):
             raise ValueError(f"top-k k-parameter ({k}) is greated than the corpus size {len(self.corpus)}. Please set k "
                              f"to a smaller value.")

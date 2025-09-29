@@ -26,11 +26,11 @@ class PromptManager:
         with open(prompt_file, 'w') as f:
             json.dump(prompt_content, f)
 
-        print(f"Prompt saved to {prompt_file}")
+        self.logger.info(f"Prompt saved to {prompt_file}")
 
     def load_prompt(self, prompt_name, user_prompt_dir=None, subdir=""):
         """Load a static prompt template."""
-        print(f"Loading prompt: {prompt_name} from user_prompt_dir: {user_prompt_dir}, subdir: {subdir}")
+        self.logger.info(f"Loading prompt: {prompt_name} from user_prompt_dir: {user_prompt_dir}, subdir: {subdir}")
         return load_prompt(prompt_name, user_prompt_dir=user_prompt_dir, subdir=subdir)
 
     def render_prompt(self, static_prompt, entire_doc, **dynamic_parts):
@@ -96,7 +96,7 @@ class PromptManager:
 
     def save_response(self, prompt_id, response):
         """Save the response with prompt_id as the key. Skip if prompt_id is already responded."""
-        print(f"Saving response for prompt_id: {prompt_id}")
+        self.logger.info(f"Saving response for prompt_id: {prompt_id}")
 
         # Load existing responses safely
         with open(self.response_file, 'r') as f:
@@ -104,7 +104,7 @@ class PromptManager:
 
         # Skip if the prompt_id already has a response
         if prompt_id in responses:
-            print(f"Prompt already responded: {prompt_id}")
+            self.logger.info(f"Prompt already responded: {prompt_id}")
             return
 
         # Add new response
