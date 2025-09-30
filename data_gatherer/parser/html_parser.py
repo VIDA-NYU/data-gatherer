@@ -317,7 +317,7 @@ class HTMLParser(LLMParser):
         self.logger.debug(f"compress HTML. Original len: {len(source_html)}")
         # Parse the HTML content with BeautifulSoup
         soup = MyBeautifulSoup(source_html, "html.parser")
-        text = re.sub("\s+", " ", soup.getText())
+        text = re.sub(r"\s+", " ", soup.getText())
         self.logger.debug(f"compress HTML. Final len: {len(text)}")
         return text
 
