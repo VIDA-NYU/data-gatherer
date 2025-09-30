@@ -372,9 +372,9 @@ class LLMParser(ABC):
                                 "dataset_webpage": dataset_webpage if dataset_webpage is not None else 'n/a',
                                 "citation_type": valid_dataset.get('citation_type', 'n/a')
                             }
-                            # Preserve dataset_use_description field if present (for PaperMiner enhanced schema)
-                            if 'dataset_use_description' in valid_dataset:
-                                dataset_result['dataset_use_description'] = valid_dataset['dataset_use_description']
+                            # Preserve dataset_context_from_paper field if present (for PaperMiner enhanced schema)
+                            if 'dataset_context_from_paper' in valid_dataset:
+                                dataset_result['dataset_context_from_paper'] = valid_dataset['dataset_context_from_paper']
                             result.append(dataset_result)
                             self.logger.info(f"Successfully processed dataset from list: {result[-1]}")
                     except Exception as e:
@@ -424,9 +424,9 @@ class LLMParser(ABC):
             if 'dataset-publication_relationship' in dataset:
                 result[-1]['dataset-publication_relationship'] = dataset['dataset-publication_relationship']
 
-            # Preserve dataset_use_description field if present (for PaperMiner enhanced schema)
-            if 'dataset_use_description' in dataset:
-                result[-1]['dataset_use_description'] = dataset['dataset_use_description']
+            # Preserve dataset_context_from_paper field if present (for PaperMiner enhanced schema)
+            if 'dataset_context_from_paper' in dataset:
+                result[-1]['dataset_context_from_paper'] = dataset['dataset_context_from_paper']
 
             self.logger.info(f"Extracted dataset: {result[-1]}")
 

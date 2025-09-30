@@ -515,9 +515,9 @@ class PDFParser(LLMParser):
                 if 'dataset-publication_relationship' in dataset:
                     result[-1]['dataset-publication_relationship'] = dataset['dataset-publication_relationship']
 
-                # Preserve dataset_use_description field if present (for PaperMiner enhanced schema)
-                if 'dataset_use_description' in dataset:
-                    result[-1]['dataset_use_description'] = dataset['dataset_use_description']
+                # Preserve dataset_context_from_paper field if present (for PaperMiner enhanced schema)
+                if 'dataset_context_from_paper' in dataset:
+                    result[-1]['dataset_context_from_paper'] = dataset['dataset_context_from_paper']
 
             self.logger.debug(f"Extracted dataset: {result[-1]}")
 
