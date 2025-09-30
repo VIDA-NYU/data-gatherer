@@ -18,7 +18,7 @@ class LLMClassifier:
         Initialize the client for LLM classification.
         """
         if llm_name == 'gemma2:9b':
-            self.client = Client(host=os.environ['NYU_LLM_API'])  # env variable
+            self.client = Client(host=os.environ['OLLAMA_CLIENT'])  # env variable
 
     def classify_element(self, element):
         """
@@ -59,7 +59,7 @@ class LLMClassifier:
         ])
 
         system_message = response['message']['content']
-        # print(system_message)
+        # self.logger.info(system_message)
         output_class = " ".join(system_message.split())
 
         if output_class == 'Non relevant':

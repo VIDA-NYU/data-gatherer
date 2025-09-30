@@ -2,11 +2,6 @@ from abc import ABC, abstractmethod
 import re
 import logging
 import pandas as pd
-from ollama import Client
-from openai import OpenAI
-from openai.types.responses.response_reasoning_item import ResponseReasoningItem
-import google.generativeai as genai
-from portkey_ai import Portkey
 import typing_extensions as typing
 from pydantic import BaseModel
 import os
@@ -15,8 +10,6 @@ from data_gatherer.prompts.prompt_manager import PromptManager
 import tiktoken
 from data_gatherer.resources_loader import load_config
 from data_gatherer.retriever.embeddings_retriever import EmbeddingsRetriever
-from data_gatherer.env import PORTKEY_GATEWAY_URL, PORTKEY_API_KEY, PORTKEY_ROUTE, PORTKEY_CONFIG, NYU_LLM_API, \
-    GPT_API_KEY, GEMINI_KEY, DATA_GATHERER_USER_NAME
 import requests
 from json_repair import repair_json
 
@@ -36,7 +29,7 @@ class LLMParser(ABC):
     def __init__(self, open_data_repos_ontology, logger, log_file_override=None, full_document_read=True,
                  prompt_dir="data_gatherer/prompts/prompt_templates",
                  llm_name=None, save_dynamic_prompts=False, save_responses_to_cache=False, use_cached_responses=False,
-                 use_portkey_for_gemini=True):
+                 use_portkey=True):
         """
         Initialize the LLMParser with configuration, logger, and optional log file override.
 
@@ -68,54 +61,18 @@ class LLMParser(ABC):
         self.save_responses_to_cache = save_responses_to_cache
         self.use_cached_responses = use_cached_responses
 
-        self.use_portkey_for_gemini = use_portkey_for_gemini
-
-        if self.use_portkey_for_gemini and 'gemini' in llm_name:
-            self.portkey = Portkey(
-                api_key=PORTKEY_API_KEY,
-                virtual_key=PORTKEY_ROUTE,
-                base_url=PORTKEY_GATEWAY_URL,
-                config=PORTKEY_CONFIG,
-                metadata={"_user": DATA_GATHERER_USER_NAME}
-            )
-
-        elif llm_name == 'gemma3:1b':
-            self.client = LLMClient_dev(model='gemma3:1b', logger=self.logger)
-
-        elif llm_name == 'gemma3:4b':
-            self.client = LLMClient_dev(model='gemma3:4b', logger=self.logger)
-
-        elif llm_name == 'qwen:4b':
-            self.client = LLMClient_dev(model='qwen:4b', logger=self.logger)
-
-        elif llm_name == 'gemma2:9b':
-            self.client = Client(host=NYU_LLM_API)  # env variable
-
-        elif llm_name == 'gpt-4o-mini':
-            self.client = OpenAI(api_key=GPT_API_KEY)
-
-        elif llm_name == 'gpt-4o':
-            self.client = OpenAI(api_key=GPT_API_KEY)
-
-        elif llm_name == 'gpt-5-nano':
-            self.client = OpenAI(api_key=GPT_API_KEY)
-
-        elif llm_name == 'gpt-5-mini':
-            self.client = OpenAI(api_key=GPT_API_KEY)
-
-        elif llm_name == 'gpt-5':
-            self.client = OpenAI(api_key=GPT_API_KEY)
-
-        elif 'gemini' in llm_name:
-            if not self.use_portkey_for_gemini:
-                genai.configure(api_key=GEMINI_KEY)
-                self.client = genai.GenerativeModel(llm_name)
-            else:
-                self.client = None
-
-        else:
-            raise ValueError(f"Unsupported LLM model: {llm_name}. Supported models are: "
-                             f"{', '.join(entire_document_models)} and 'gemma2:9b'.")
+        self.use_portkey = use_portkey
+        
+        # Initialize unified LLM client for all models
+        self.client = LLMClient_dev(
+            model=llm_name,
+            logger=self.logger,
+            use_portkey=use_portkey,
+            save_dynamic_prompts=save_dynamic_prompts,
+            save_responses_to_cache=save_responses_to_cache,
+            use_cached_responses=use_cached_responses,
+            prompt_dir=prompt_dir
+        )
 
     # create abstract method for subclasses to implement parse_data
     @abstractmethod
@@ -338,187 +295,88 @@ class LLMParser(ABC):
             # Check if the response exists
             cached_response = self.prompt_manager.retrieve_response(prompt_id)
 
-        if self.use_cached_responses and cached_response:
+        # Check for cached response
+        cached_response = self.prompt_manager.retrieve_response(prompt_id) if self.use_cached_responses else None
+
+        if cached_response:
             self.logger.info(f"Using cached response {type(cached_response)} from model: {model}")
-            if type(cached_response) == str and 'gpt' in model:
+            if isinstance(cached_response, str) and 'gpt' in model:
                 resps = [json.loads(cached_response)]
-            if type(cached_response) == str:
+            elif isinstance(cached_response, str):
                 resps = cached_response.split("\n")
-            elif type(cached_response) == list:
+            elif isinstance(cached_response, list):
+                resps = cached_response
+            else:
                 resps = cached_response
         else:
-            # Make the request to the model
+            # Make the request using the unified LLM client
             self.logger.info(
-                f"Requesting datasets from content using model: {model}, temperature: {temperature}, messages length: "
-                f"{self.count_tokens(messages, model)} tokens, schema: {response_format}")
-            resps = []
-
-            if model == 'gemma2:9b':
-                response = self.client.chat(model=model, options={"temperature": temperature}, messages=messages)
-                self.logger.info(
-                    f"Response received from model: {response.get('message', {}).get('content', 'No content')}")
-                resps = response['message']['content'].split("\n")
-                # Save the response
-                self.prompt_manager.save_response(prompt_id, response['message'][
-                    'content']) if self.save_responses_to_cache else None
-                self.logger.info(f"Response saved to cache")
-
-            elif model == 'gemma3:1b' or model == 'gemma3:4b' or model == 'qwen:4b':
-                response = self.client.api_call(messages, response_format=response_format.model_json_schema())
-                parsed_resp = self.safe_parse_json(response)
-                candidates = parsed_resp['datasets'] if isinstance(parsed_resp, dict) and 'datasets' in parsed_resp else parsed_resp
-                if candidates:
-                    self.logger.info(f"Found {len(candidates)} candidates in the response. Type {type(candidates)}")
-                    if self.save_responses_to_cache:
-                        self.prompt_manager.save_response(prompt_id, candidates)
-                        self.logger.info(f"Response saved to cache")
-                    parsed_response_dedup = self.normalize_response_type(candidates)
-                    resps = parsed_response_dedup
-                else:
-                    self.logger.error("No candidates found in the response.")
-
-            elif 'gpt' in model:
-                response = None
-                if 'gpt-5' in model:
-                    if self.full_document_read:
-                        response = self.client.responses.create(
-                            model=model,
-                            input=messages,
-                            text={
-                                "format": response_format
-                            }
-                        )
-                    else:
-                        response = self.client.responses.create(
-                            model=model, 
-                            input=messages,
-                        )
-
-                elif 'gpt-4o' in model: 
-                    if self.full_document_read:
-                        response = self.client.responses.create(
-                            model=model,
-                            input=messages,
-                            temperature=temperature,
-                            text={
-                                "format": response_format
-                            }
-                        )
-                    else:
-                        response = self.client.responses.create(
-                            model=model, 
-                            input=messages,
-                            temperature=temperature
-                        )
-
-                self.logger.info(f"GPT response: {response.output}")
-
-                if self.full_document_read:
-                    resps = self.safe_parse_json(response.output)  # 'datasets' keyError?
-                    self.logger.info(f"Response is {type(resps)}: {resps}")
-                    resps = resps.get("datasets", []) if resps is not None else []
-                    resps = self.normalize_response_type(resps)
-                    self.logger.info(f"Response is {type(resps)}: {resps}")
-                    self.prompt_manager.save_response(prompt_id, resps) if self.save_responses_to_cache else None
-                else:
-                    try:
-                        resps = self.safe_parse_json(response.output)  # Ensure it's properly parsed
-                        resps = self.normalize_response_type(resps)
-                        self.logger.info(f"Response is {type(resps)}: {resps}")
-                        if not isinstance(resps, list):  # Ensure it's a list
-                            raise ValueError("Expected a list of datasets, but got something else.")
-
-                    except json.JSONDecodeError as e:
-                        self.logger.error(f"JSON decoding error: {e}")
-                        resps = []
-
-                    self.prompt_manager.save_response(prompt_id, resps) if self.save_responses_to_cache else None
-
-                # Save the response
-                self.logger.info(f"Response {type(resps)} saved to cache") if self.save_responses_to_cache else None
-
-            elif 'gemini' in model:
-                if self.use_portkey_for_gemini:
-                    # --- Portkey Gemini call ---
-                    portkey_payload = {
-                        "model": model,
-                        "messages": messages,
-                        "temperature": temperature,
-                    }
-                    try:
-                        response = self.portkey.chat.completions.create(
-                            **portkey_payload
-                        )
-                        self.logger.info(f"Portkey Gemini response: {response}")
-                        if self.full_document_read:
-                            resps = self.safe_parse_json(response)
-                            resps = self.normalize_response_type(resps)
-                            if isinstance(resps, dict):
-                                resps = resps.get("datasets", []) if resps is not None else []
-                        else:
-                            try:
-                                resps = self.safe_parse_json(response)
-                                resps = self.normalize_response_type(resps)
-                                if not isinstance(resps, list):
-                                    raise ValueError("Expected a list of datasets, but got something else.")
-                            except json.JSONDecodeError as e:
-                                self.logger.error(f"JSON decoding error: {e}")
-                                resps = []
-                        # Save response if needed
-                        if self.save_responses_to_cache:
-                            self.prompt_manager.save_response(prompt_id, resps)
-                    except Exception as e:
-                        self.logger.error(f"Portkey Gemini call failed: {e}")
-                        resps = []
-                else:
-                    if 'gemini' in model and 'flash' in model:
-                        response = self.client.generate_content(
-                            messages,
-                            generation_config=genai.GenerationConfig(
-                                response_mime_type="application/json",
-                                response_schema=list[Dataset]
-                            )
-                        )
-                        self.logger.debug(f"Gemini response: {response}")
-
-                    elif model == 'gemini-1.5-pro':
-                        response = self.client.generate_content(
-                            messages,
-                            request_options={"timeout": 1200},
-                            generation_config=genai.GenerationConfig(
-                                response_mime_type="application/json",
-                                response_schema=list[Dataset]
-                            )
-                        )
-                        self.logger.debug(f"Gemini Pro response: {response}")
-
-                    try:
-                        candidates = response.candidates  # Get the list of candidates
-                        if candidates:
-                            self.logger.info(f"Found {len(candidates)} candidates in the response.")
-                            response_text = candidates[0].content.parts[0].text  # Access the first part's text
-                            self.logger.info(f"Gemini response text: {response_text}")
-                            parsed_response = json.loads(response_text)  # Parse the JSON response
-                            if self.save_responses_to_cache:
-                                self.prompt_manager.save_response(prompt_id, parsed_response)
-                                self.logger.info(f"Response saved to cache")
-                            parsed_response_dedup = self.normalize_response_type(parsed_response)
-                            resps = parsed_response_dedup
-                        else:
-                            self.logger.error("No candidates found in the response.")
-                    except Exception as e:
-                        self.logger.error(f"Error processing Gemini response: {e}")
-                        return None
-            else:
-                raise ValueError(f"Unsupported model: {model}. Please use a supported LLM model.")
-
-        #if not self.full_document_read:
-        #    return resps
+                f"Requesting datasets from content using model: {model}, temperature: {temperature}, "
+                f"messages length: {self.count_tokens(messages, model)} tokens, schema: {response_format}")
+            
+            # Use the generic make_llm_call method
+            raw_response = self.client.make_llm_call(
+                messages=messages, 
+                temperature=temperature, 
+                response_format=response_format,
+                full_document_read=self.full_document_read
+            )
+            
+            # Use the unified response processing method
+            self.logger.info(f"[DEBUG] Calling process_llm_response with raw_response type: {type(raw_response)}")
+            resps = self.client.process_llm_response(
+                raw_response=raw_response,
+                response_format=response_format,
+                expected_key="datasets"
+            )
+            self.logger.info(f"[DEBUG] process_llm_response returned: {resps} (type: {type(resps)})")
+            
+            # Apply task-specific deduplication
+            self.logger.info(f"[DEBUG] Applying normalize_response_type to: {resps}")
+            resps = self.normalize_response_type(resps)
+            self.logger.info(f"[DEBUG] normalize_response_type returned: {resps} (type: {type(resps)})")
+            
+            # Save the processed response to cache
+            if self.save_responses_to_cache:
+                self.logger.info(f"[DEBUG] Saving response to cache with prompt_id: {prompt_id}")
+                self.prompt_manager.save_response(prompt_id, resps)
 
         # Process the response content
         result = []
         for dataset in resps:
             self.logger.info(f"Processing dataset: {dataset}")
+            
+            # Initialize variables to avoid UnboundLocalError
+            dataset_id = None
+            data_repository = None
+            dataset_webpage = None
+            
+            # Handle malformed responses that create nested lists or unexpected structures
+            if isinstance(dataset, list):
+                self.logger.warning(f"Dataset is a list - likely malformed LLM response. Attempting to extract valid dictionaries...")
+                # Try to extract valid dictionary items from the list
+                valid_datasets = []
+                for item in dataset:
+                    if isinstance(item, dict) and any(key in item for key in ['dataset_identifier', 'dataset_id', 'data_repository']):
+                        valid_datasets.append(item)
+                        self.logger.info(f"Found valid dataset in list: {item}")
+                
+                # Process each valid dataset found in the list
+                for valid_dataset in valid_datasets:
+                    try:
+                        dataset_id, data_repository, dataset_webpage = self.schema_validation(valid_dataset)
+                        if dataset_id and data_repository:
+                            result.append({
+                                "dataset_identifier": dataset_id,
+                                "data_repository": data_repository,
+                                "dataset_webpage": dataset_webpage if dataset_webpage is not None else 'n/a',
+                                "citation_type": valid_dataset.get('citation_type', 'n/a')
+                            })
+                            self.logger.info(f"Successfully processed dataset from list: {result[-1]}")
+                    except Exception as e:
+                        self.logger.warning(f"Failed to process dataset from list: {e}")
+                continue
+            
             if type(dataset) == str:
                 self.logger.info(f"Dataset is a string")
                 # Skip short or invalid responses
@@ -536,6 +394,10 @@ class LLMParser(ABC):
                 self.logger.info(f"Dataset is a dictionary")
 
                 dataset_id, data_repository, dataset_webpage = self.schema_validation(dataset)
+                
+            else:
+                self.logger.warning(f"Dataset is unexpected type {type(dataset)}, skipping: {dataset}")
+                continue
 
             if (dataset_id is None or data_repository is None) and dataset_webpage is None:
                 self.logger.info(f"Skipping dataset due to missing ID, repository, dataset page: {dataset}")
@@ -668,94 +530,73 @@ class LLMParser(ABC):
         :return: List of deduplicated dataset responses.
 
         """
+        self.logger.info(f"[DEBUG] normalize_response_type called with response type: {type(response)}, length: {len(response) if hasattr(response, '__len__') else 'N/A'}")
+        self.logger.info(f"[DEBUG] normalize_response_type input: {response}")
+        
         self.logger.info(f"Deduplicating response with {len(response)} items")
         seen = set()
         deduped = []
 
         if not isinstance(response, list) and isinstance(response, dict):
+            self.logger.info(f"[DEBUG] Converting single dict to list")
             response = [response]
+        elif not isinstance(response, list):
+            self.logger.info(f"[DEBUG] Response is not a list or dict, type: {type(response)}")
+            return response
 
-        for item in response:
+        for i, item in enumerate(response):
+            self.logger.info(f"[DEBUG] Processing item {i}: {item} (type: {type(item)})")
             self.logger.debug(f"Processing item: {item}")
+            
+            if isinstance(item, str):
+                self.logger.info(f"[DEBUG] Item is a string, skipping deduplication logic")
+                deduped.append(item)
+                continue
+                
+            if not isinstance(item, dict):
+                self.logger.info(f"[DEBUG] Item is not a dict, type: {type(item)}, appending as-is")
+                deduped.append(item)
+                continue
+            
             dataset_id = item.get("dataset_identifier", item.get("dataset_id", ""))
+            self.logger.info(f"[DEBUG] Extracted dataset_id: {dataset_id}")
             if not dataset_id:
+                self.logger.info(f"[DEBUG] Skipping item with missing dataset_id: {item}")
                 self.logger.warning(f"Skipping item with missing dataset_id: {item}")
                 continue
             repo = item.get("data_repository", item.get("repository_reference", "n/a"))
+            self.logger.info(f"[DEBUG] Extracted repo: {repo}")
 
             # Normalize: remove DOI prefix if it matches '10.x/PXD123456'
             clean_id = re.sub(r'10\.\d+/(\bPXD\d+\b)', r'\1', dataset_id)
+            self.logger.info(f"[DEBUG] Normalized clean_id: {clean_id}")
 
             if clean_id not in seen:
                 # Update the dataset_id to the normalized version
                 item["dataset_id"] = clean_id
+                self.logger.info(f"[DEBUG] Adding unique item: {clean_id}")
                 self.logger.info(f"Adding unique item: {clean_id}")
                 deduped.append(item)
                 seen.add(clean_id)
 
             elif clean_id == 'n/a' and repo != 'n/a':
+                self.logger.info(f"[DEBUG] Adding n/a dataset_id with valid repo: {repo}")
                 deduped.append(item)
 
             else:
+                self.logger.info(f"[DEBUG] Duplicate found and skipped: {clean_id}")
                 self.logger.info(f"Duplicate found and skipped: {clean_id}")
 
+        self.logger.info(f"[DEBUG] normalize_response_type final result: {deduped}")
         return deduped
 
     def safe_parse_json(self, response_text):
         """
-        Cleans and safely parses JSON from an LLM response, fixing common issues.
-
-        :param response_text: str or dict — the JSON string or Portkey response object to be parsed.
-
-        :return: dict or None — parsed JSON object or None if parsing fails.
+        Wrapper method for backward compatibility.
+        Delegates to the LLMClient's safe_parse_json method.
         """
-        # Handle Portkey Gemini response object or OpenAI-like object
-        # Accept both dict and objects with .choices attribute
-        if hasattr(response_text, "choices"):
-            # Likely an OpenAI/Portkey object, extract content
-            try:
-                response_text = response_text.choices[0].message.content
-            except Exception as e:
-                self.logger.warning(f"Could not extract content from response object: {e}")
-                return None
-        elif isinstance(response_text, list):
-            self.logger.info(f"Response is a list of length: {len(response_text)}")
-            for response_item in response_text:
-                self.logger.info(f"List item type: {type(response_item)}")
-                if hasattr(response_item, "content"):
-                    self.logger.info(f"Item has content attribute, of type: {type(response_item.content)}")
-                    if isinstance(response_item.content, list) and len(response_item.content) > 0:
-                        response_text = response_item.content[0].text
-                else:
-                    response_text = str(response_item)
-        elif isinstance(response_text, dict):
-            try:
-                response_text = response_text["choices"][0]["message"]["content"]
-            except Exception as e:
-                self.logger.warning(f"Could not extract content from response dict: {e}")
-                return None
-
-        response_text = response_text.strip()
-
-        # Remove markdown formatting
-        if response_text.startswith("```"):
-            response_text = re.sub(r"^```[a-zA-Z]*\n?", "", response_text)
-            response_text = re.sub(r"\n?```$", "", response_text)
-
-        try:
-            # First try standard parsing
-            return json.loads(response_text)
-        except json.JSONDecodeError:
-            self.logger.warning("Initial JSON parsing failed. Attempting json_repair...")
-
-            try:
-                repaired = repair_json(response_text)
-                repaired = re.sub(r',\s*\{\}\]', ']', repaired)  # Remove trailing empty objects in lists
-                return json.loads(repaired)
-            except Exception as e:
-                self.logger.warning(f"json_repair failed: {e}")
-                self.logger.info(f"Malformed JSON (after attempted repair): {repaired[:500]}")
-                return None
+        self.logger.info(f"[DEBUG] Parser safe_parse_json wrapper called, delegating to client")
+        return self.client.safe_parse_json(response_text)
 
     def process_data_availability_links(self, dataset_links):
         """
@@ -805,39 +646,26 @@ class LLMParser(ABC):
             self.logger.info(f"Prompt ID: {prompt_id}")
 
             # Check if the response exists
-            cached_response = self.prompt_manager.retrieve_response(prompt_id)
+            cached_response = self.prompt_manager.retrieve_response(prompt_id) if self.use_cached_responses else None
             if cached_response:
                 self.logger.info("Using cached response.")
-                resp = cached_response.split("\n")
+                resp = cached_response.split("\n") if isinstance(cached_response, str) else cached_response
             else:
-                # Make the request to the LLM model
+                # Make the request using the unified LLM client
                 self.logger.info(f"Requesting datasets using model: {model}, messages: {messages}")
-                resp = []
-
-                if model == 'gemma2:9b':
-                    response = self.client.chat(model='gemma2:9b', options={"temperature": 0}, messages=messages)
-                    self.logger.info(
-                        f"Response received from gemma2:9b: {response.get('message', {}).get('content', 'No content')}")
-                    resp = response['message']['content'].split("\n")
-                    self.prompt_manager.save_response(prompt_id, response['message']['content'])
-                    self.logger.info(f"Response saved to cache")
-
-                elif 'gpt' in model:
-                    if 'gpt-4o' in model:
-                        response = self.client.responses.create(
-                            model=model,
-                            input=messages,
-                            temperature=0
-                        )
-                    elif 'gpt-5' in model:
-                        response = self.client.responses.create(
-                            model=model,
-                            input=messages,
-                        )
-                    self.logger.info(f"GPT response: {response.output}")
-                    resp = response.output.split("\n")
-                    self.prompt_manager.save_response(prompt_id, response.output)
-                    self.logger.info(f"Response saved to cache")
+                
+                # Use the generic make_llm_call method
+                raw_response = self.client.make_llm_call(
+                    messages=messages, 
+                    temperature=0.0, 
+                    full_document_read=False
+                )
+                
+                # Process response and save to cache
+                resp = raw_response.split("\n") if isinstance(raw_response, str) else [raw_response]
+                if self.save_responses_to_cache:
+                    self.prompt_manager.save_response(prompt_id, raw_response)
+                self.logger.info(f"Response saved to cache")
 
             # Process the response
             ret_element['link'] = link['href']
@@ -1363,7 +1191,7 @@ class LLMParser(ABC):
 
         return n_tokens
 
-    def parse_datasets_metadata(self, metadata: str, model='gemini-2.0-flash', use_portkey_for_gemini=True,
+    def parse_datasets_metadata(self, metadata: str, model='gemini-2.0-flash', use_portkey=True,
                                 prompt_name='gpt_metadata_extract') -> dict:
         """
         Given the metadata, extract the dataset information using the LLM.
@@ -1377,7 +1205,7 @@ class LLMParser(ABC):
         #metadata = self.normalize_full_DOM(metadata)
         self.logger.info(f"Parsing metadata len: {len(metadata)}")
         dataset_info = self.extract_dataset_info(metadata, subdir='metadata_prompts',
-                                                 use_portkey_for_gemini=use_portkey_for_gemini,
+                                                 use_portkey=use_portkey,
                                                  prompt_name=prompt_name)
         return dataset_info
 
@@ -1401,7 +1229,7 @@ class LLMParser(ABC):
                 items.append((new_key, v))
         return dict(items)
 
-    def extract_dataset_info(self, metadata, subdir='', model=None, use_portkey_for_gemini=True,
+    def extract_dataset_info(self, metadata, subdir='', model=None, use_portkey=True,
                              prompt_name='gpt_metadata_extract'):
         """
         Given the metadata, extract the dataset information using the LLM.
@@ -1417,13 +1245,19 @@ class LLMParser(ABC):
         """
         self.logger.info(f"Extracting dataset information from metadata. Prompt from subdir: {subdir}")
 
-        llm = LLMClient(
+        llm = LLMClient_dev(
             model=model if model else self.llm_name,
             logger=self.logger,
-            save_prompts=self.save_dynamic_prompts,
-            use_portkey_for_gemini=use_portkey_for_gemini
+            save_dynamic_prompts=self.save_dynamic_prompts,
+            use_portkey=use_portkey
         )
-        response = llm.api_call(metadata, subdir=subdir)
+        
+        # Load and render the prompt using the unified client
+        static_prompt = llm.prompt_manager.load_prompt("gpt_metadata_extract", subdir=subdir)
+        messages = llm.prompt_manager.render_prompt(static_prompt, entire_doc=True, content=metadata)
+        
+        # Make the LLM call using the unified interface
+        response = llm.make_llm_call(messages=messages, temperature=0.0)
 
         # Post-process response into structured dict
         dataset_info = self.safe_parse_json(response)
@@ -1467,124 +1301,3 @@ class LLMParser(ABC):
         )
 
         return result
-
-
-class LLMClient:
-    def __init__(self, model: str, logger=None, save_prompts: bool = False, use_portkey_for_gemini=True):
-        self.model = model
-        self.logger = logger or logging.getLogger(__name__)
-        self.logger.info(f"Initializing LLMClient with model: {self.model}")
-        self.use_portkey_for_gemini = use_portkey_for_gemini
-        self._initialize_client(model)
-        self.save_prompts = save_prompts
-        self.prompt_manager = PromptManager("data_gatherer/prompts/prompt_templates/metadata_prompts",
-                                            self.logger)
-
-    def _initialize_client(self, model):
-        if model.startswith('gpt'):
-            self.client = OpenAI(api_key=GPT_API_KEY)
-        elif model.startswith('gemini') and not self.use_portkey_for_gemini:
-            genai.configure(api_key=GEMINI_KEY)
-            self.client = genai.GenerativeModel(model)
-        elif model.startswith('gemini') and self.use_portkey_for_gemini:
-            self.portkey = Portkey(
-                api_key=PORTKEY_API_KEY,
-                virtual_key=PORTKEY_ROUTE,
-                base_url=PORTKEY_GATEWAY_URL,
-                config=PORTKEY_CONFIG,
-                metadata={"_user": DATA_GATHERER_USER_NAME}
-            )
-            self.client = self.portkey
-
-        elif model.startswith('gemma'):
-            self.client = Client(host="http://localhost:11434")
-
-        else:
-            self.client = None
-        self.logger.info(f"Client initialized: {self.client}")
-
-    def api_call(self, content, subdir='', **kwargs):
-        self.logger.info(f"Calling {self.model} with prompt length {len(content)}, subdir: {subdir}")
-        if self.model.startswith('gpt'):
-            return self._call_openai(content, subdir=subdir)
-        elif self.model.startswith('gemini'):
-            if self.use_portkey_for_gemini:
-                return self._call_portkey_gemini(content, subdir=subdir)
-            else:
-                return self._call_gemini(content, subdir=subdir)
-        else:
-            raise ValueError(f"Unsupported model: {self.model}")
-
-    def _call_openai(self, content, temperature=0.0, subdir='', **kwargs):
-        self.logger.info(f"Calling OpenAI with content length {len(content)}, subdir: {subdir}")
-        messages = self.prompt_manager.render_prompt(
-            self.prompt_manager.load_prompt("gpt_metadata_extract", subdir=subdir),
-            entire_doc=True,
-            content=content,
-        )
-        # save prompt_eval
-        if self.save_prompts:
-            self.prompt_manager.save_prompt(prompt_id='abc', prompt_content=messages)
-
-        response = self.client.responses.create(
-            model=self.model,
-            input=messages,
-            temperature=temperature,
-            text={
-                "format": kwargs.get('response_format', {"type": "json_object"})
-            }
-        )
-        return response.output
-
-    def _call_gemini(self, content, temperature=0.0, subdir=''):
-        self.logger.info(f"Calling Gemini with content length {len(content)}, subdir: {subdir}")
-        messages = self.prompt_manager.render_prompt(
-            self.prompt_manager.load_prompt("gemini_metadata_extract", subdir=subdir),
-            entire_doc=True,
-            content=content,
-        )
-
-        # save prompt_eval
-        if self.save_prompts:
-            self.prompt_manager.save_prompt(prompt_id='abc', prompt_content=messages)
-
-        response = self.client.generate_content(
-            messages,
-            generation_config=genai.GenerationConfig(
-                response_mime_type="application/json",
-                temperature=temperature,
-            )
-        )
-        return response.text
-
-    def _call_portkey_gemini(self, content, temperature=0.0, subdir=''):
-        self.logger.info(f"Calling Gemini via Portkey with content length {len(content)}, subdir: {subdir}")
-        # Render the prompt (should be a single message with 'parts')
-        messages = self.prompt_manager.render_prompt(
-            self.prompt_manager.load_prompt("portkey_gemini_metadata_extract", subdir=subdir),
-            entire_doc=True,
-            content=content,
-        )
-        if self.save_prompts:
-            self.prompt_manager.save_prompt(prompt_id='abc', prompt_content=messages)
-
-        portkey_payload = {
-            "model": self.model,
-            "messages": messages,
-            "temperature": temperature,
-        }
-
-        self.logger.debug(f"Portkey payload: {portkey_payload}")
-
-        try:
-            response = self.portkey.chat.completions.create(
-                api_key=PORTKEY_API_KEY,
-                route=PORTKEY_ROUTE,
-                headers={"Content-Type": "application/json"},
-                **portkey_payload
-            )
-
-            return response
-
-        except Exception as e:
-            raise RuntimeError(f"Portkey API call failed: {e}")
