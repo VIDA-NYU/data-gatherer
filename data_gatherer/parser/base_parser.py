@@ -345,6 +345,38 @@ class LLMParser(ABC):
         result = []
         for dataset in resps:
             self.logger.info(f"Processing dataset: {dataset}")
+            
+            # Initialize variables to avoid UnboundLocalError
+            dataset_id = None
+            data_repository = None
+            dataset_webpage = None
+            
+            # Handle malformed responses that create nested lists or unexpected structures
+            if isinstance(dataset, list):
+                self.logger.warning(f"Dataset is a list - likely malformed LLM response. Attempting to extract valid dictionaries...")
+                # Try to extract valid dictionary items from the list
+                valid_datasets = []
+                for item in dataset:
+                    if isinstance(item, dict) and any(key in item for key in ['dataset_identifier', 'dataset_id', 'data_repository']):
+                        valid_datasets.append(item)
+                        self.logger.info(f"Found valid dataset in list: {item}")
+                
+                # Process each valid dataset found in the list
+                for valid_dataset in valid_datasets:
+                    try:
+                        dataset_id, data_repository, dataset_webpage = self.schema_validation(valid_dataset)
+                        if dataset_id and data_repository:
+                            result.append({
+                                "dataset_identifier": dataset_id,
+                                "data_repository": data_repository,
+                                "dataset_webpage": dataset_webpage if dataset_webpage is not None else 'n/a',
+                                "citation_type": valid_dataset.get('citation_type', 'n/a')
+                            })
+                            self.logger.info(f"Successfully processed dataset from list: {result[-1]}")
+                    except Exception as e:
+                        self.logger.warning(f"Failed to process dataset from list: {e}")
+                continue
+            
             if type(dataset) == str:
                 self.logger.info(f"Dataset is a string")
                 # Skip short or invalid responses
@@ -362,6 +394,10 @@ class LLMParser(ABC):
                 self.logger.info(f"Dataset is a dictionary")
 
                 dataset_id, data_repository, dataset_webpage = self.schema_validation(dataset)
+                
+            else:
+                self.logger.warning(f"Dataset is unexpected type {type(dataset)}, skipping: {dataset}")
+                continue
 
             if (dataset_id is None or data_repository is None) and dataset_webpage is None:
                 self.logger.info(f"Skipping dataset due to missing ID, repository, dataset page: {dataset}")
