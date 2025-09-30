@@ -323,22 +323,22 @@ class LLMParser(ABC):
             )
             
             # Use the unified response processing method
-            self.logger.info(f"[DEBUG] Calling process_llm_response with raw_response type: {type(raw_response)}")
+            self.logger.debug(f"Calling process_llm_response with raw_response type: {type(raw_response)}")
             resps = self.client.process_llm_response(
                 raw_response=raw_response,
                 response_format=response_format,
                 expected_key="datasets"
             )
-            self.logger.info(f"[DEBUG] process_llm_response returned: {resps} (type: {type(resps)})")
+            self.logger.debug(f"process_llm_response returned: {resps} (type: {type(resps)})")
             
             # Apply task-specific deduplication
-            self.logger.info(f"[DEBUG] Applying normalize_response_type to: {resps}")
+            self.logger.debug(f"Applying normalize_response_type to: {resps}")
             resps = self.normalize_response_type(resps)
-            self.logger.info(f"[DEBUG] normalize_response_type returned: {resps} (type: {type(resps)})")
+            self.logger.debug(f"normalize_response_type returned: {resps} (type: {type(resps)})")
             
             # Save the processed response to cache
             if self.save_responses_to_cache:
-                self.logger.info(f"[DEBUG] Saving response to cache with prompt_id: {prompt_id}")
+                self.logger.debug(f"Saving response to cache with prompt_id: {prompt_id}")
                 self.prompt_manager.save_response(prompt_id, resps)
 
         # Process the response content
@@ -530,64 +530,64 @@ class LLMParser(ABC):
         :return: List of deduplicated dataset responses.
 
         """
-        self.logger.info(f"[DEBUG] normalize_response_type called with response type: {type(response)}, length: {len(response) if hasattr(response, '__len__') else 'N/A'}")
-        self.logger.info(f"[DEBUG] normalize_response_type input: {response}")
+        self.logger.debug(f"normalize_response_type called with response type: {type(response)}, length: {len(response) if hasattr(response, '__len__') else 'N/A'}")
+        self.logger.debug(f"normalize_response_type input: {response}")
         
         self.logger.info(f"Deduplicating response with {len(response)} items")
         seen = set()
         deduped = []
 
         if not isinstance(response, list) and isinstance(response, dict):
-            self.logger.info(f"[DEBUG] Converting single dict to list")
+            self.logger.debug(f"Converting single dict to list")
             response = [response]
         elif not isinstance(response, list):
-            self.logger.info(f"[DEBUG] Response is not a list or dict, type: {type(response)}")
+            self.logger.debug(f"Response is not a list or dict, type: {type(response)}")
             return response
 
         for i, item in enumerate(response):
-            self.logger.info(f"[DEBUG] Processing item {i}: {item} (type: {type(item)})")
+            self.logger.debug(f"Processing item {i}: {item} (type: {type(item)})")
             self.logger.debug(f"Processing item: {item}")
             
             if isinstance(item, str):
-                self.logger.info(f"[DEBUG] Item is a string, skipping deduplication logic")
+                self.logger.debug(f"Item is a string, skipping deduplication logic")
                 deduped.append(item)
                 continue
                 
             if not isinstance(item, dict):
-                self.logger.info(f"[DEBUG] Item is not a dict, type: {type(item)}, appending as-is")
+                self.logger.debug(f"Item is not a dict, type: {type(item)}, appending as-is")
                 deduped.append(item)
                 continue
             
             dataset_id = item.get("dataset_identifier", item.get("dataset_id", ""))
-            self.logger.info(f"[DEBUG] Extracted dataset_id: {dataset_id}")
+            self.logger.debug(f"Extracted dataset_id: {dataset_id}")
             if not dataset_id:
-                self.logger.info(f"[DEBUG] Skipping item with missing dataset_id: {item}")
+                self.logger.debug(f"Skipping item with missing dataset_id: {item}")
                 self.logger.warning(f"Skipping item with missing dataset_id: {item}")
                 continue
             repo = item.get("data_repository", item.get("repository_reference", "n/a"))
-            self.logger.info(f"[DEBUG] Extracted repo: {repo}")
+            self.logger.debug(f"Extracted repo: {repo}")
 
             # Normalize: remove DOI prefix if it matches '10.x/PXD123456'
             clean_id = re.sub(r'10\.\d+/(\bPXD\d+\b)', r'\1', dataset_id)
-            self.logger.info(f"[DEBUG] Normalized clean_id: {clean_id}")
+            self.logger.debug(f"Normalized clean_id: {clean_id}")
 
             if clean_id not in seen:
                 # Update the dataset_id to the normalized version
                 item["dataset_id"] = clean_id
-                self.logger.info(f"[DEBUG] Adding unique item: {clean_id}")
+                self.logger.debug(f"Adding unique item: {clean_id}")
                 self.logger.info(f"Adding unique item: {clean_id}")
                 deduped.append(item)
                 seen.add(clean_id)
 
             elif clean_id == 'n/a' and repo != 'n/a':
-                self.logger.info(f"[DEBUG] Adding n/a dataset_id with valid repo: {repo}")
+                self.logger.debug(f"Adding n/a dataset_id with valid repo: {repo}")
                 deduped.append(item)
 
             else:
-                self.logger.info(f"[DEBUG] Duplicate found and skipped: {clean_id}")
+                self.logger.debug(f"Duplicate found and skipped: {clean_id}")
                 self.logger.info(f"Duplicate found and skipped: {clean_id}")
 
-        self.logger.info(f"[DEBUG] normalize_response_type final result: {deduped}")
+        self.logger.debug(f"normalize_response_type final result: {deduped}")
         return deduped
 
     def safe_parse_json(self, response_text):
@@ -595,7 +595,7 @@ class LLMParser(ABC):
         Wrapper method for backward compatibility.
         Delegates to the LLMClient's safe_parse_json method.
         """
-        self.logger.info(f"[DEBUG] Parser safe_parse_json wrapper called, delegating to client")
+        self.logger.debug(f"Parser safe_parse_json wrapper called, delegating to client")
         return self.client.safe_parse_json(response_text)
 
     def process_data_availability_links(self, dataset_links):
@@ -1001,7 +1001,7 @@ class LLMParser(ABC):
                     break
 
             if not resolved_to_known_repo and identifier is not None and identifier != 'n/a' and 'id_pattern' in v.keys():
-                self.logger.info(f"Checking id_pattern {v['id_pattern']} match with identifier {identifier} for {repo}")
+                self.logger.debug(f"Checking id_pattern {v['id_pattern']} match with identifier {identifier} for {repo}")
                 if re.match(v['id_pattern'], identifier, re.IGNORECASE):
                     self.logger.info(f"Found id_pattern match for {repo} in {v['id_pattern']}")
                     repo = k

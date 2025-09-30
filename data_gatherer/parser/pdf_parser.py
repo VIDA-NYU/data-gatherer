@@ -447,18 +447,18 @@ class PDFParser(LLMParser):
             )
             
             # Use the unified response processing method
-            self.logger.info(f"[DEBUG] Calling process_llm_response with raw_response type: {type(raw_response)}")
+            self.logger.debug(f"Calling process_llm_response with raw_response type: {type(raw_response)}")
             resps = self.client.process_llm_response(
                 raw_response=raw_response,
                 response_format=response_format,
                 expected_key="datasets"
             )
-            self.logger.info(f"[DEBUG] process_llm_response returned: {resps} (type: {type(resps)})")
+            self.logger.debug(f"process_llm_response returned: {resps} (type: {type(resps)})")
             
             # Apply task-specific deduplication
-            self.logger.info(f"[DEBUG] Applying normalize_response_type to: {resps}")
+            self.logger.debug(f"Applying normalize_response_type to: {resps}")
             resps = self.normalize_response_type(resps)
-            self.logger.info(f"[DEBUG] normalize_response_type returned: {resps} (type: {type(resps)})")
+            self.logger.debug(f"normalize_response_type returned: {resps} (type: {type(resps)})")
             
             # Save the processed response to cache
             if self.save_responses_to_cache:
