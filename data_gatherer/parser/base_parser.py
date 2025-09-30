@@ -366,12 +366,16 @@ class LLMParser(ABC):
                     try:
                         dataset_id, data_repository, dataset_webpage = self.schema_validation(valid_dataset)
                         if dataset_id and data_repository:
-                            result.append({
+                            dataset_result = {
                                 "dataset_identifier": dataset_id,
                                 "data_repository": data_repository,
                                 "dataset_webpage": dataset_webpage if dataset_webpage is not None else 'n/a',
                                 "citation_type": valid_dataset.get('citation_type', 'n/a')
-                            })
+                            }
+                            # Preserve dataset_use_description field if present (for PaperMiner enhanced schema)
+                            if 'dataset_use_description' in valid_dataset:
+                                dataset_result['dataset_use_description'] = valid_dataset['dataset_use_description']
+                            result.append(dataset_result)
                             self.logger.info(f"Successfully processed dataset from list: {result[-1]}")
                     except Exception as e:
                         self.logger.warning(f"Failed to process dataset from list: {e}")
@@ -419,6 +423,10 @@ class LLMParser(ABC):
 
             if 'dataset-publication_relationship' in dataset:
                 result[-1]['dataset-publication_relationship'] = dataset['dataset-publication_relationship']
+
+            # Preserve dataset_use_description field if present (for PaperMiner enhanced schema)
+            if 'dataset_use_description' in dataset:
+                result[-1]['dataset_use_description'] = dataset['dataset_use_description']
 
             self.logger.info(f"Extracted dataset: {result[-1]}")
 
@@ -879,8 +887,19 @@ class LLMParser(ABC):
                     self.logger.info(f"Link matches the pattern {pattern} of resolved_dataset_page.")
                     return resolved_dataset_page
                 else:
-                    self.logger.info(f"Link does not match the pattern {pattern } of resolved_dataset_page.")
-                    return 'n/a'
+                    self.logger.warning(f"Link does not match expected pattern {pattern} but may still be valid after redirect.")
+                    # Check if the resolved URL contains the dataset_id as a fallback
+                    if dataset_id and dataset_id != 'n/a' and dataset_id in resolved_dataset_page:
+                        self.logger.info(f"Dataset ID {dataset_id} found in resolved URL, accepting as valid.")
+                        return resolved_dataset_page
+                    # Try brute-force checking if it matches any known repository patterns
+                    brute_force_result = self.brute_force_dataset_webpage_url_check(resolved_dataset_page)
+                    if brute_force_result is not None:
+                        self.logger.info(f"Brute-force validation found valid dataset webpage: {brute_force_result}")
+                        return resolved_dataset_page
+                    # As a last resort, return the resolved URL instead of 'n/a' to preserve information
+                    self.logger.warning(f"Pattern validation failed but returning resolved URL to preserve potential valid link.")
+                    return resolved_dataset_page
             else:
                 self.logger.info(f"No dataset_webpage_url_ptr found for {resolved_repo}")
                 return resolved_dataset_page
@@ -895,8 +914,16 @@ class LLMParser(ABC):
                     self.logger.info(f"Found valid dataset webpage in old metadata {k}: {checked_url}")
                     return checked_url
 
-        self.logger.info(f"Repository {resolved_repo} not found in ontology")
-        return 'n/a'
+        # Final fallback: if repository is not in ontology but URL seems valid, preserve it
+        if resolved_repo not in self.open_data_repos_ontology['repos']:
+            self.logger.warning(f"Repository {resolved_repo} not found in ontology, but preserving resolved URL.")
+            # Check if the resolved URL looks like a valid dataset page (contains common patterns)
+            if any(indicator in resolved_dataset_page.lower() for indicator in ['dataset', 'data', 'accession', 'id=']):
+                self.logger.info(f"Resolved URL appears to contain dataset-related content, preserving it.")
+                return resolved_dataset_page
+            
+        self.logger.warning(f"All validation methods failed, returning original URL to preserve information.")
+        return resolved_dataset_page
 
     def resolve_url(self, url):
         try:
