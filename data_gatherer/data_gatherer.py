@@ -377,7 +377,7 @@ class DataGatherer:
 
     def process_url(self, url, save_staging_table=False, article_file_dir='tmp/raw_files/', use_portkey=True,
                     driver_path=None, browser='Firefox', headless=True, prompt_name='GPT_FewShot',
-                    semantic_retrieval=False, section_filter=None):
+                    semantic_retrieval=False, section_filter=None, response_format=dataset_response_schema_gpt):
         """
         Orchestrates the process for a single given source URL (publication).
 
@@ -497,14 +497,14 @@ class DataGatherer:
                     self.logger.info("No additional data provided. Parsing raw data only.")
                     parsed_data = self.parser.parse_data(raw_data, self.publisher, self.current_url,
                                                          prompt_name=prompt_name, semantic_retrieval=semantic_retrieval,
-                                                         section_filter=section_filter)
+                                                         section_filter=section_filter, response_format=response_format)
 
                 else:
                     self.logger.info(f"Processing additional data. # of items: {len(additional_data)}")
                     add_data = self.parser.parse_data(raw_data, self.publisher, self.current_url,
                                                       additional_data=additional_data, prompt_name=prompt_name,
                                                       semantic_retrieval=semantic_retrieval,
-                                                      section_filter=section_filter)
+                                                      section_filter=section_filter, response_format=response_format)
                     self.logger.debug(f"Type of additional data{type(add_data)}")
 
                     parsed_data = pd.concat([parsed_data, add_data], ignore_index=True).drop_duplicates()
@@ -519,7 +519,7 @@ class DataGatherer:
                 parsed_data = self.parser.parse_data(raw_data, self.publisher, self.current_url,
                                                      raw_data_format=self.raw_data_format, prompt_name=prompt_name,
                                                      semantic_retrieval=semantic_retrieval,
-                                                     section_filter=section_filter)
+                                                     section_filter=section_filter, response_format=response_format)
                 parsed_data['source_url'] = url
                 parsed_data['pub_title'] = self.parser.extract_publication_title(raw_data)
                 self.logger.info(f"Parsed data extraction completed. Elements collected: {len(parsed_data)}")
@@ -538,7 +538,8 @@ class DataGatherer:
                                                      raw_data_format=self.raw_data_format, 
                                                      prompt_name=prompt_name,
                                                      semantic_retrieval=semantic_retrieval,
-                                                     section_filter=section_filter)
+                                                     section_filter=section_filter,
+                                                     response_format=response_format)
                 self.logger.info(f"PDF parsing completed. Elements collected: {len(parsed_data)}")
 
             else:

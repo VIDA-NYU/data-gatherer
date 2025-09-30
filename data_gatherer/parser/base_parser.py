@@ -1054,28 +1054,29 @@ class LLMParser(ABC):
 
     def get_dataset_page(self, datasets):
         """
-        Given a list of dataset dictionaries, reconstruct the dataset page, by using navigation patterns
-        from the ontology. The function will add a new key to the dataset dictionary with the webpage URL.
+        Enhance dataset dictionaries with missing dataset webpage URLs and access modes.
+        This function only acts on datasets that don't already have valid webpage URLs,
+        preserving existing good data from schema validation.
 
         :param datasets: list of dictionaries containing dataset information.
-
         :return: list of dictionaries with updated dataset information including dataset webpage URL.
         """
         if datasets is None:
             return None
 
-        self.logger.info(f"Fetching metadata for {len(datasets)} datasets")
+        self.logger.info(f"Enhancing dataset pages for {len(datasets)} datasets")
 
         for i, item in enumerate(datasets):
-
             if type(item) != dict:
-                self.logger.error(f"can't resolve dataset_webpage for non-dict item {1 + i}: {item}")
+                self.logger.error(f"Can't process non-dict item {1 + i}: {item}")
                 continue
 
-            self.logger.info(f"Processing dataset {1 + i} with keys: {item.keys()}")
-
-            if 'data_repository' not in item.keys() and 'repository_reference' not in item.keys():
-                self.logger.info(f"Skipping dataset {1 + i}: no data_repository for item")
+            # Skip if we already have a valid dataset webpage (preserve schema validation results)
+            existing_webpage = item.get('dataset_webpage', item.get('dataset_page', None))
+            if existing_webpage and existing_webpage != 'n/a' and existing_webpage != 'na':
+                self.logger.debug(f"Dataset {1 + i} already has valid webpage: {existing_webpage}")
+                # Still add access_mode if missing
+                self._add_access_mode_if_missing(item, i)
                 continue
 
             accession_id = item.get('dataset_identifier', item.get('dataset_id', 'n/a'))
