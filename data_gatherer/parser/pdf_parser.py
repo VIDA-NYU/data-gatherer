@@ -279,7 +279,7 @@ class PDFParser(LLMParser):
 
     def parse_data(self, file_path, publisher=None, current_url_address=None, additional_data=None, raw_data_format='PDF',
                    file_path_is_temp=False, article_file_dir='tmp/raw_files/', process_DAS_links_separately=False,
-                   prompt_name='retrieve_datasets_simple_JSON', use_portkey=True, semantic_retrieval=False,
+                   prompt_name='GPT_FewShot', use_portkey=True, semantic_retrieval=False,
                    top_k=2, section_filter=None, response_format=dataset_response_schema_gpt):
         """
         Parse the PDF file and extract metadata of the relevant datasets.
@@ -372,7 +372,7 @@ class PDFParser(LLMParser):
         return out_df
     def extract_datasets_info_from_content(self, content: str, repos: list, model: str = 'gpt-4o-mini',
                                            temperature: float = 0.0,
-                                           prompt_name: str = 'retrieve_datasets_simple_JSON',
+                                           prompt_name: str = 'GPT_FewShot',
                                            full_document_read=True,
                                            response_format=dataset_response_schema_gpt) -> list:
         """

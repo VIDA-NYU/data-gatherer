@@ -323,7 +323,7 @@ class HTMLParser(LLMParser):
 
     def parse_data(self, html_str, publisher=None, current_url_address=None, additional_data=None,
                    raw_data_format='HTML', article_file_dir='tmp/raw_files/', process_DAS_links_separately=False,
-                   section_filter=None, prompt_name='retrieve_datasets_simple_JSON', use_portkey=True,
+                   section_filter=None, prompt_name='GPT_FewShot', use_portkey=True,
                    semantic_retrieval=False, top_k=2, response_format=dataset_response_schema_gpt):
         """
         Parse the API data and extract relevant links and metadata.

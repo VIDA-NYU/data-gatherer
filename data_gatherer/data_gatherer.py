@@ -225,7 +225,7 @@ class DataGatherer:
     def parse_data(self, raw_data, publisher=None, current_url_address=None, additional_data=None,
                    raw_data_format='XML', parsed_data_dir='tmp/parsed_articles/', grobid_for_pdf=False,
                    process_DAS_links_separately=False, full_document_read=False, semantic_retrieval=False, top_k=5,
-                   prompt_name='retrieve_datasets_simple_JSON', use_portkey=True, section_filter=None,
+                   prompt_name='GPT_FewShot', use_portkey=True, section_filter=None,
                    response_format=dataset_response_schema_gpt):
         """
         Parses the raw data fetched from the source URL using the appropriate parser.
@@ -376,7 +376,7 @@ class DataGatherer:
             raise ValueError(f"Invalid URL format: {url}. Must start with 'PMC' or 'https://'.")
 
     def process_url(self, url, save_staging_table=False, article_file_dir='tmp/raw_files/', use_portkey=True,
-                    driver_path=None, browser='Firefox', headless=True, prompt_name='retrieve_datasets_simple_JSON',
+                    driver_path=None, browser='Firefox', headless=True, prompt_name='GPT_FewShot',
                     semantic_retrieval=False, section_filter=None):
         """
         Orchestrates the process for a single given source URL (publication).
@@ -578,7 +578,7 @@ class DataGatherer:
 
     def app_process_url(self, url, save_staging_table=False, article_file_dir='tmp/raw_files/', 
                        use_portkey=True, driver_path=None, browser='Firefox', headless=True, 
-                       prompt_name='retrieve_datasets_simple_JSON', semantic_retrieval=False, section_filter=None):
+                       prompt_name='GPT_FewShot', semantic_retrieval=False, section_filter=None):
         """
         Application wrapper for process_url with concurrent user support.
         This method handles rate limiting and resource management for multi-user scenarios.
@@ -631,7 +631,7 @@ class DataGatherer:
 
     def process_articles(self, url_list, log_modulo=10, save_staging_table=False, article_file_dir='tmp/raw_files/',
                          driver_path=None, browser='Firefox', headless=True, use_portkey=True,
-                         prompt_name='retrieve_datasets_simple_JSON', semantic_retrieval=False, section_filter=None):
+                         prompt_name='GPT_FewShot', semantic_retrieval=False, section_filter=None):
         """
         Processes a list of article URLs and returns parsed data.
 
@@ -1191,7 +1191,7 @@ class DataGatherer:
                 self.logger.debug(f"Process ID {process_id} already exists in cache. Skipping save.")
 
     def run(self, input_file='input/test_input.txt', semantic_retrieval=False, section_filter=None,
-            prompt_name='retrieve_datasets_simple_JSON'):
+            prompt_name='GPT_FewShot'):
         """
         This method orchestrates the entire data gathering process by performing the following steps:
 

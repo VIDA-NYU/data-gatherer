@@ -102,7 +102,7 @@ class GrobidPDFParser(PDFParser):
 
     def parse_data(self, file_path, publisher=None, current_url_address=None, additional_data=None, raw_data_format='PDF',
                    file_path_is_temp=False, article_file_dir='tmp/raw_files/', process_DAS_links_separately=False,
-                   prompt_name='retrieve_datasets_simple_JSON', use_portkey=True, semantic_retrieval=False,
+                   prompt_name='GPT_FewShot', use_portkey=True, semantic_retrieval=False,
                    top_k=2, section_filter=None):
         """
         Parse the PDF file and extract metadata of the relevant datasets.

@@ -142,7 +142,7 @@ class LLMParser(ABC):
         self.logger.info(f"Additional data\n{additional_data}")
         return pd.concat([parsed_data, additional_data], ignore_index=True)
 
-    def process_additional_data(self, additional_data, prompt_name='retrieve_datasets_simple_JSON',
+    def process_additional_data(self, additional_data, prompt_name='GPT_FewShot',
                                 response_format=dataset_response_schema_gpt):
         """
         Process the additional data from the webpage. This is the data matched from the HTML with the patterns in
@@ -200,7 +200,7 @@ class LLMParser(ABC):
         self.logger.debug(f"Final ret additional data: {ret}")
         return ret
 
-    def process_data_availability_text(self, DAS_content, prompt_name='retrieve_datasets_simple_JSON',
+    def process_data_availability_text(self, DAS_content, prompt_name='GPT_FewShot',
                                        response_format=dataset_response_schema_gpt):
         """
         Process the data availability section from the webpage.
@@ -237,7 +237,7 @@ class LLMParser(ABC):
 
     def extract_datasets_info_from_content(self, content: str, repos: list, model: str = 'gpt-4o-mini',
                                            temperature: float = 0.0,
-                                           prompt_name: str = 'retrieve_datasets_simple_JSON',
+                                           prompt_name: str = 'GPT_FewShot',
                                            full_document_read=True,
                                            response_format = dataset_response_schema_gpt) -> list:
         """
@@ -638,7 +638,7 @@ class LLMParser(ABC):
                 "href": link['href'],
                 "surrounding_text": link['surrounding_text']
             }
-            static_prompt = self.prompt_manager.load_prompt("retrieve_datasets_fromDAS")
+            static_prompt = self.prompt_manager.load_prompt("GEMINI_RTR_FewShot")
             messages = self.prompt_manager.render_prompt(static_prompt, self.full_document_read, **dynamic_content)
 
             # Generate a unique checksum for the prompt
