@@ -133,15 +133,19 @@ class DataGatherer:
 
         :param article_file_dir: Directory to save the raw HTML/XML/PDF files. Overwrites the default setting.
 
+        :param write_to_df_path: Optional path to save the fetched data as a DataFrame in Parquet format.
+
         :return: Dictionary with URLs as keys and raw data as values.
 
         """
+        single_article = False
 
         if not isinstance(urls, str) and not isinstance(urls, list):
             raise ValueError("URL must be a string or a list of strings.")
 
         if isinstance(urls, str):
             urls = [urls]
+            single_article = True
 
         complete_publication_fetches = {}
         i = None
@@ -149,6 +153,7 @@ class DataGatherer:
 
         while len(complete_publication_fetches) < len(urls):
             HTML_fallback = False if i is None else HTML_fallback_priority_list[i]
+            self.logger.info(f"Fetch attempt with HTML_fallback={HTML_fallback}...")
             i = 0 if i is None else i + 1
             for pub_link in urls:
                 self.logger.info(f"length of complete fetches < urls: {len(complete_publication_fetches)} < {len(urls)}")
@@ -160,6 +165,7 @@ class DataGatherer:
                     pub_link,
                     self.full_document_read,
                     self.logger,
+                    local_fetch_file=local_fetch_file,
                     HTML_fallback=HTML_fallback,
                     driver_path=driver_path,
                     browser=browser,
@@ -168,20 +174,23 @@ class DataGatherer:
 
                 # Fetch data
                 fetched_data = self.data_fetcher.fetch_data(pub_link)
+                self.logger.info(f"Raw_data_format: {self.data_fetcher.raw_data_format}, Type of fetched data: {type(fetched_data)}")
                 completeness_check = self.data_checker.is_fulltext_complete(fetched_data, pub_link, self.data_fetcher.raw_data_format)
 
                 if completeness_check:
-                    self.logger.info(f"Fetched complete {self.data_fetcher.raw_data_format} data from {pub_link}.")
+                    self.logger.info(f"Fetch complete {self.data_fetcher.raw_data_format} data from {pub_link}.")
                     complete_publication_fetches[pub_link] = {
                         'fetched_data': fetched_data,
                         'raw_data_format': self.data_fetcher.raw_data_format
                     }
+                    continue
                 elif HTML_fallback == 'Selenium':
                     self.logger.info(f"Selenium fetch the final fulltext {pub_link}.")
                     complete_publication_fetches[pub_link] = {
                         'fetched_data': fetched_data, 
                         'raw_data_format': self.data_fetcher.raw_data_format
                         }
+                    continue
                 else:
                     self.logger.info(f"{self.data_fetcher.raw_data_format} Data from {pub_link} is incomplete.")
 
@@ -207,6 +216,9 @@ class DataGatherer:
         if write_to_df_path and write_to_df_path.endswith('.parquet'):
             df = pd.DataFrame.from_dict(complete_publication_fetches, orient='index')
             df.to_parquet(write_to_df_path, index=True)
+
+        if single_article:
+            return complete_publication_fetches[urls[0]]['fetched_data']
 
         return complete_publication_fetches
 
