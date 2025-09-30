@@ -474,10 +474,13 @@ class DataGatherer:
                 elif isinstance(self.data_fetcher, EntrezFetcher):
                     self.data_fetcher.download_xml(directory, raw_data, url)
                     self.logger.info(f"Raw XML saved in {directory} directory")
+                elif self.raw_data_format.upper() == 'PDF':
+                    # For PDF, raw_data should already be a file path, just log the location
+                    self.logger.info(f"Raw PDF file location: {raw_data}")
                 else:
                     self.logger.warning(f"Unsupported raw data format: {self.raw_data_format}.")
             else:
-                self.logger.info("Skipping raw HTML/XML saving.")
+                self.logger.info("Skipping raw HTML/XML/PDF saving.")
 
             self.data_fetcher.quit() if hasattr(self.data_fetcher, 'scraper_tool') else None
 
@@ -520,6 +523,23 @@ class DataGatherer:
                 parsed_data['source_url'] = url
                 parsed_data['pub_title'] = self.parser.extract_publication_title(raw_data)
                 self.logger.info(f"Parsed data extraction completed. Elements collected: {len(parsed_data)}")
+            
+            elif self.raw_data_format.upper() == 'PDF':
+                self.logger.info("Using PDFParser to parse data.")
+                self.parser = PDFParser(self.open_data_repos_ontology, self.logger,
+                                        llm_name=self.llm,
+                                        full_document_read=self.full_document_read,
+                                        use_portkey=use_portkey,
+                                        save_dynamic_prompts=self.save_dynamic_prompts)
+                # For PDF, raw_data should be the file path
+                parsed_data = self.parser.parse_data(raw_data, 
+                                                     publisher=self.publisher, 
+                                                     current_url_address=self.current_url,
+                                                     raw_data_format=self.raw_data_format, 
+                                                     prompt_name=prompt_name,
+                                                     semantic_retrieval=semantic_retrieval,
+                                                     section_filter=section_filter)
+                self.logger.info(f"PDF parsing completed. Elements collected: {len(parsed_data)}")
 
             else:
                 self.logger.error(f"Unsupported raw data format: {self.raw_data_format}. Cannot parse data.")
@@ -536,6 +556,9 @@ class DataGatherer:
                 elif 'HTML' in self.raw_data_format.upper():
                     classified_links = parsed_data
                     self.logger.info("HTML element classification not supported. Using parsed_data.")
+                elif self.raw_data_format.upper() == 'PDF':
+                    classified_links = parsed_data
+                    self.logger.info("PDF element classification not needed. Using parsed_data.")
                 else:
                     self.logger.error(f"Unsupported raw data format and parser mode combination.")
                     return None
