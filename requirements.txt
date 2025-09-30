@@ -1,7 +1,7 @@
 beautifulsoup4>=4.12.3
 bs4
 lxml
-numpy>=1.26
+numpy==1.26
 ollama
 openai
 pandas

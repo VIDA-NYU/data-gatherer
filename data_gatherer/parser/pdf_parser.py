@@ -4,6 +4,7 @@ import pandas as pd
 import pymupdf, fitz
 import unicodedata
 from collections import Counter
+from data_gatherer.llm.llm_client import LLMClient_dev
 
 class PDFParser(LLMParser):
     """
@@ -13,13 +14,13 @@ class PDFParser(LLMParser):
     def __init__(self, open_data_repos_ontology, logger, log_file_override=None, full_document_read=True,
                  prompt_dir="data_gatherer/prompts/prompt_templates",
                  llm_name=None, save_dynamic_prompts=False, save_responses_to_cache=False, use_cached_responses=False,
-                 use_portkey_for_gemini=True):
+                 use_portkey=True):
 
         super().__init__(open_data_repos_ontology, logger, log_file_override=log_file_override,
                          full_document_read=full_document_read, prompt_dir=prompt_dir,
                          llm_name=llm_name, save_dynamic_prompts=save_dynamic_prompts,
                          save_responses_to_cache=save_responses_to_cache,
-                         use_cached_responses=use_cached_responses, use_portkey_for_gemini=use_portkey_for_gemini
+                         use_cached_responses=use_cached_responses, use_portkey=use_portkey
                          )
 
         self.logger = logger
@@ -278,7 +279,7 @@ class PDFParser(LLMParser):
 
     def parse_data(self, file_path, publisher=None, current_url_address=None, additional_data=None, raw_data_format='PDF',
                    file_path_is_temp=False, article_file_dir='tmp/raw_files/', process_DAS_links_separately=False,
-                   prompt_name='retrieve_datasets_simple_JSON', use_portkey_for_gemini=True, semantic_retrieval=False,
+                   prompt_name='retrieve_datasets_simple_JSON', use_portkey=True, semantic_retrieval=False,
                    top_k=2, section_filter=None, response_format=dataset_response_schema_gpt):
         """
         Parse the PDF file and extract metadata of the relevant datasets.
@@ -432,172 +433,39 @@ class PDFParser(LLMParser):
             elif type(cached_response) == list:
                 resps = cached_response
         else:
-            # Make the request to the model
+            # Make the request using the unified LLM client
             self.logger.info(
-                f"Requesting datasets from content using model: {model}, temperature: {temperature}, messages length: "
-                f"{self.count_tokens(messages, model)} tokens")
-            resps = []
-
-            if model == 'gemma2:9b':
-                response = self.client.chat(model=model, options={"temperature": temperature}, messages=messages)
-                self.logger.info(
-                    f"Response received from model: {response.get('message', {}).get('content', 'No content')}")
-                resps = response['message']['content'].split("\n")
-                # Save the response
-                self.prompt_manager.save_response(prompt_id, response['message'][
-                    'content']) if self.save_responses_to_cache else None
-                self.logger.info(f"Response saved to cache")
-
-            elif model == 'gemma3:1b' or model == 'gemma3:4b' or model == 'qwen:4b':
-                response = self.client.api_call(messages, response_format=response_format.model_json_schema())
-                candidates = self.safe_parse_json(response)
-                if candidates:
-                    self.logger.info(f"Found {len(candidates)} candidates in the response. Type {type(candidates)}")
-                    parsed_response = candidates
-                    if self.save_responses_to_cache:
-                        self.prompt_manager.save_response(prompt_id, parsed_response)
-                        self.logger.info(f"Response saved to cache")
-                    parsed_response_dedup = self.normalize_response_type(parsed_response)
-                    resps = parsed_response_dedup
-                else:
-                    self.logger.error("No candidates found in the response.")
-
-
-            elif 'gpt-4' in model:
-                response = None
-                if 'gpt-4o' in model:
-                    if self.full_document_read:
-                        response = self.client.responses.create(
-                            model=model,
-                            input=messages,
-                            temperature=temperature,
-                            text={
-                                "format": response_format
-                            }
-                        )
-                    else:
-                        response = self.client.responses.create(
-                            model=model, 
-                            input=messages,
-                            temperature=temperature
-                        )
-                elif 'gpt-5' in model:
-                    if self.full_document_read:
-                        response = self.client.responses.create(
-                            model=model,
-                            input=messages,
-                            text={
-                                "format": response_format
-                            }
-                        )
-                    else:
-                        response = self.client.responses.create(
-                            model=model,
-                            input=messages,
-                        )
-
-                self.logger.info(f"GPT response: {response.output}")
-
-                if self.full_document_read:
-                    resps = self.safe_parse_json(response.output)  # 'datasets' keyError?
-                    self.logger.info(f"Response is {type(resps)}: {resps}")
-                    resps = resps.get("datasets", []) if resps is not None else []
-                    resps = self.normalize_response_type(resps)
-                    self.logger.info(f"Response is {type(resps)}: {resps}")
-                    self.prompt_manager.save_response(prompt_id, resps) if self.save_responses_to_cache else None
-                else:
-                    try:
-                        resps = self.safe_parse_json(response.output)  # Ensure it's properly parsed
-                        resps = self.normalize_response_type(resps)
-                        self.logger.info(f"Response is {type(resps)}: {resps}")
-                        if not isinstance(resps, list):  # Ensure it's a list
-                            raise ValueError("Expected a list of datasets, but got something else.")
-
-                    except json.JSONDecodeError as e:
-                        self.logger.error(f"JSON decoding error: {e}")
-                        resps = []
-
-                    self.prompt_manager.save_response(prompt_id, resps) if self.save_responses_to_cache else None
-
-                # Save the response
-                self.logger.info(f"Response {type(resps)} saved to cache") if self.save_responses_to_cache else None
-
-            elif 'gemini' in model:
-                if self.use_portkey_for_gemini:
-                    # --- Portkey Gemini call ---
-                    portkey_payload = {
-                        "model": model,
-                        "messages": messages,
-                        "temperature": temperature,
-                    }
-                    try:
-                        response = self.portkey.chat.completions.create(
-                            api_key=PORTKEY_API_KEY,
-                            route=PORTKEY_ROUTE,
-                            **portkey_payload
-                        )
-                        self.logger.info(f"Portkey Gemini response: {response}")
-                        if self.full_document_read:
-                            resps = self.safe_parse_json(response)
-                            resps = self.normalize_response_type(resps)
-                            if isinstance(resps, dict):
-                                resps = resps.get("datasets", []) if resps is not None else []
-                        else:
-                            try:
-                                resps = self.safe_parse_json(response)
-                                resps = self.normalize_response_type(resps)
-                                if not isinstance(resps, list):
-                                    raise ValueError("Expected a list of datasets, but got something else.")
-                            except json.JSONDecodeError as e:
-                                self.logger.error(f"JSON decoding error: {e}")
-                                resps = []
-                        # Save response if needed
-                        if self.save_responses_to_cache:
-                            self.prompt_manager.save_response(prompt_id, resps)
-                    except Exception as e:
-                        self.logger.error(f"Portkey Gemini call failed: {e}")
-                        resps = []
-                else:
-                    if model == 'gemini-1.5-flash' or model == 'gemini-2.0-flash-exp' or model == 'gemini-2.0-flash':
-                        response = self.client.generate_content(
-                            messages,
-                            generation_config=genai.GenerationConfig(
-                                response_mime_type="application/json",
-                                response_schema=list[Dataset]
-                            )
-                        )
-                        self.logger.debug(f"Gemini response: {response}")
-
-                    elif model == 'gemini-1.5-pro':
-                        response = self.client.generate_content(
-                            messages,
-                            request_options={"timeout": 1200},
-                            generation_config=genai.GenerationConfig(
-                                response_mime_type="application/json",
-                                response_schema=list[Dataset]
-                            )
-                        )
-                        self.logger.debug(f"Gemini Pro response: {response}")
-
-                    try:
-                        candidates = response.candidates  # Get the list of candidates
-                        if candidates:
-                            self.logger.info(f"Found {len(candidates)} candidates in the response.")
-                            response_text = candidates[0].content.parts[0].text  # Access the first part's text
-                            self.logger.info(f"Gemini response text: {response_text}")
-                            parsed_response = json.loads(response_text)  # Parse the JSON response
-                            if self.save_responses_to_cache:
-                                self.prompt_manager.save_response(prompt_id, parsed_response)
-                                self.logger.info(f"Response saved to cache")
-                            parsed_response_dedup = self.normalize_response_type(parsed_response)
-                            resps = parsed_response_dedup
-                        else:
-                            self.logger.error("No candidates found in the response.")
-                    except Exception as e:
-                        self.logger.error(f"Error processing Gemini response: {e}")
-                        return None
+                f"Requesting datasets from content using model: {model}, temperature: {temperature}, "
+                f"messages length: {self.count_tokens(messages, model)} tokens, schema: {response_format}")
+            
+            # Use the generic make_llm_call method
+            raw_response = self.client.make_llm_call(
+                messages=messages, 
+                temperature=temperature, 
+                response_format=response_format,
+                full_document_read=self.full_document_read
+            )
+            
+            # Use the unified response processing method
+            self.logger.info(f"[DEBUG] Calling process_llm_response with raw_response type: {type(raw_response)}")
+            resps = self.client.process_llm_response(
+                raw_response=raw_response,
+                response_format=response_format,
+                expected_key="datasets"
+            )
+            self.logger.info(f"[DEBUG] process_llm_response returned: {resps} (type: {type(resps)})")
+            
+            # Apply task-specific deduplication
+            self.logger.info(f"[DEBUG] Applying normalize_response_type to: {resps}")
+            resps = self.normalize_response_type(resps)
+            self.logger.info(f"[DEBUG] normalize_response_type returned: {resps} (type: {type(resps)})")
+            
+            # Save the processed response to cache
+            if self.save_responses_to_cache:
+                self.prompt_manager.save_response(prompt_id, resps)
+                self.logger.info(f"Response {type(resps)} saved to cache")
             else:
-                raise ValueError(f"Unsupported model: {model}. Please use a supported LLM model.")
+                self.logger.info(f"Response {type(resps)} not saved (caching disabled)")
 
         #if not self.full_document_read:
         #    return resps

@@ -15,13 +15,13 @@ class GrobidPDFParser(PDFParser):
     def __init__(self, open_data_repos_ontology, logger, log_file_override=None, full_document_read=True,
                  prompt_dir="data_gatherer/prompts/prompt_templates",
                  llm_name=None, save_dynamic_prompts=False, save_responses_to_cache=False, use_cached_responses=False,
-                 use_portkey_for_gemini=True, grobid_home=None, grobid_port=8070):
+                 use_portkey=True, grobid_home=None, grobid_port=8070):
 
         super().__init__(open_data_repos_ontology, logger, log_file_override=log_file_override,
                          full_document_read=full_document_read, prompt_dir=prompt_dir,
                          llm_name=llm_name, save_dynamic_prompts=save_dynamic_prompts,
                          save_responses_to_cache=save_responses_to_cache,
-                         use_cached_responses=use_cached_responses, use_portkey_for_gemini=use_portkey_for_gemini
+                         use_cached_responses=use_cached_responses, use_portkey=use_portkey
                          )
 
         self.logger = logger
@@ -102,7 +102,7 @@ class GrobidPDFParser(PDFParser):
 
     def parse_data(self, file_path, publisher=None, current_url_address=None, additional_data=None, raw_data_format='PDF',
                    file_path_is_temp=False, article_file_dir='tmp/raw_files/', process_DAS_links_separately=False,
-                   prompt_name='retrieve_datasets_simple_JSON', use_portkey_for_gemini=True, semantic_retrieval=False,
+                   prompt_name='retrieve_datasets_simple_JSON', use_portkey=True, semantic_retrieval=False,
                    top_k=2, section_filter=None):
         """
         Parse the PDF file and extract metadata of the relevant datasets.
@@ -132,7 +132,7 @@ class GrobidPDFParser(PDFParser):
                 process_DAS_links_separately=process_DAS_links_separately,
                 section_filter=section_filter,
                 prompt_name=prompt_name,
-                use_portkey_for_gemini=use_portkey_for_gemini,
+                use_portkey=use_portkey,
                 semantic_retrieval=semantic_retrieval,
                 top_k=top_k
             )
@@ -150,7 +150,7 @@ class GrobidPDFParser(PDFParser):
                                             llm_name=self.llm_name, save_dynamic_prompts=self.save_dynamic_prompts,
                                             save_responses_to_cache=self.save_responses_to_cache,
                                             use_cached_responses=self.use_cached_responses,
-                                            use_portkey_for_gemini=self.use_portkey_for_gemini)
+                                            use_portkey=self.use_portkey)
 
                 return fallback_parser.parse_data(file_path, publisher=publisher,
                                                   current_url_address=current_url_address,
@@ -159,7 +159,7 @@ class GrobidPDFParser(PDFParser):
                                                   article_file_dir=article_file_dir,
                                                   process_DAS_links_separately=process_DAS_links_separately,
                                                   prompt_name=prompt_name,
-                                                  use_portkey_for_gemini=use_portkey_for_gemini,
+                                                  use_portkey=use_portkey,
                                                   semantic_retrieval=semantic_retrieval, top_k=top_k,
                                                   section_filter=section_filter)
 
