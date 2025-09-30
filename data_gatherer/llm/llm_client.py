@@ -39,15 +39,15 @@ class LLMClient_dev:
         
         if self.use_portkey and 'gemini' in model:
             self.logger.info(f"[DEBUG] Initializing Portkey client for Gemini model: {model}")
-            self.portkey = Portkey(
+            self.client = Portkey(
                 api_key=PORTKEY_API_KEY,
                 virtual_key=PORTKEY_ROUTE,
                 base_url=PORTKEY_GATEWAY_URL,
                 config=PORTKEY_CONFIG,
                 metadata={"_user": DATA_GATHERER_USER_NAME}
             )
-            self.client = None  # For Portkey, we use self.portkey instead of self.client
-            self.logger.info(f"[DEBUG] Portkey client initialized: {self.portkey}")
+            self.portkey = self.client  # Keep backward compatibility
+            self.logger.info(f"[DEBUG] Portkey client initialized: {self.client}")
 
         elif model.startswith('gemma3') or model.startswith('qwen'):
             self.logger.info(f"[DEBUG] Initializing Ollama client for model: {model}")
@@ -219,7 +219,7 @@ class LLMClient_dev:
                     "temperature": temperature,
                 }
                 try:
-                    response = self.portkey.chat.completions.create(**portkey_payload)
+                    response = self.client.chat.completions.create(**portkey_payload)
                     self.logger.info(f"Portkey Gemini response: {response}")
                     return response
                 except Exception as e:
@@ -272,10 +272,10 @@ class LLMClient_dev:
         :return: Processed and normalized response
         """
         self.logger.info(f"[DEBUG] process_llm_response called with model: {self.model}")
-        self.logger.info(f"[DEBUG] raw_response type: {type(raw_response)}, length: {len(str(raw_response))}")
+        #self.logger.info(f"[DEBUG] raw_response type: {type(raw_response)}, length: {len(str(raw_response))}")
         self.logger.info(f"[DEBUG] response_format: {response_format}")
         self.logger.info(f"[DEBUG] expected_key: {expected_key}")
-        self.logger.info(f"[DEBUG] raw_response content (first 500 chars): {str(raw_response)[:500]}")
+        #self.logger.info(f"[DEBUG] raw_response content (first 500 chars): {str(raw_response)[:500]}")
         
         if self.model == 'gemma2:9b':
             self.logger.info(f"[DEBUG] Processing gemma2:9b response")
@@ -382,7 +382,7 @@ class LLMClient_dev:
         This can be used by any task that needs to parse JSON from LLM responses.
         """
         self.logger.info(f"[DEBUG] safe_parse_json called with type: {type(response_text)}")
-        self.logger.info(f"[DEBUG] safe_parse_json input (first 300 chars): {str(response_text)[:300]}")
+        #self.logger.info(f"[DEBUG] safe_parse_json input (first 300 chars): {str(response_text)[:300]}")
         result = self._safe_parse_json_internal(response_text)
         self.logger.info(f"[DEBUG] safe_parse_json result: {result}")
         return result
@@ -440,13 +440,87 @@ class LLMClient_dev:
             # First try standard parsing
             return json.loads(response_text)
         except json.JSONDecodeError:
-            self.logger.warning("Initial JSON parsing failed. Attempting json_repair...")
+            self.logger.warning(f"Initial JSON parsing failed. Attempting json_repair on {response_text[:100]}...")
             try:
-                repaired = repair_json(response_text)
+                # Pre-process common malformed patterns before json_repair
+                repaired = response_text
+                
+                # Fix the specific pattern we're seeing: arrays using [ instead of { for objects
+                # Pattern: [ [ "key": "value", "key2": "value2", ... ], [...] ]
+                # Should be: [ { "key": "value", "key2": "value2", ... }, {...} ]
+                
+                # Replace array brackets with object braces when they contain key-value pairs
+                def fix_malformed_objects(match):
+                    content = match.group(1)
+                    # If content has key-value pairs, wrap in object braces
+                    if '"' in content and ':' in content:
+                        return '{' + content + '}'
+                    return '[' + content + ']'  # Keep as array if no key-value pairs
+                
+                # Find nested arrays that should be objects
+                repaired = re.sub(r'\[\s*([^[\]]*"[^"]*"\s*:\s*"[^"]*"[^[\]]*)\s*\]', fix_malformed_objects, repaired)
+                
+                self.logger.info(f"After malformed pattern fix: {repaired[:200]}...")
+                
+                # Use json_repair
+                repaired = repair_json(repaired)
+                
+                # Clean up artifacts
                 repaired = re.sub(r',\s*\{\}\]', ']', repaired)  # Remove trailing empty objects in lists
-                return json.loads(repaired)
+                
+                parsed = json.loads(repaired)
+                self.logger.info(f"Successfully parsed after repair: {type(parsed)} with {len(parsed) if hasattr(parsed, '__len__') else 'N/A'} items")
+                
+                # If we get a nested structure, try to flatten it
+                if isinstance(parsed, list) and len(parsed) == 1 and isinstance(parsed[0], list):
+                    self.logger.info("Detected nested list structure, attempting to flatten...")
+                    # Extract valid dictionaries from nested structure
+                    flattened = []
+                    for item in parsed[0]:
+                        if isinstance(item, dict):
+                            flattened.append(item)
+                    if flattened:
+                        return flattened
+                
+                return parsed
             except Exception as e:
                 self.logger.warning(f"json_repair failed: {e}")
+                # Last resort: try to extract individual JSON objects using regex
+                try:
+                    self.logger.info("Attempting regex extraction of JSON objects...")
+                    
+                    # Look for the specific malformed pattern in the raw response
+                    malformed_pattern = r'\[\s*"dataset_identifier"\s*:\s*"([^"]+)"\s*,\s*"data_repository"\s*:\s*"([^"]+)"\s*(?:,\s*"dataset_webpage"\s*:\s*"([^"]+)")?\s*\]'
+                    matches = re.findall(malformed_pattern, response_text)
+                    
+                    if matches:
+                        objects = []
+                        for match in matches:
+                            obj = {
+                                "dataset_identifier": match[0],
+                                "data_repository": match[1]
+                            }
+                            if match[2]:  # dataset_webpage is optional
+                                obj["dataset_webpage"] = match[2]
+                            objects.append(obj)
+                        self.logger.info(f"Extracted {len(objects)} objects using regex pattern matching")
+                        return objects
+                    
+                    # Fallback: look for any objects with dataset_identifier
+                    pattern = r'\{[^{}]*"dataset_identifier"[^{}]*\}'
+                    matches = re.findall(pattern, response_text)
+                    if matches:
+                        objects = []
+                        for match in matches:
+                            try:
+                                obj = json.loads(match)
+                                objects.append(obj)
+                            except:
+                                continue
+                        if objects:
+                            return objects
+                except Exception:
+                    pass
                 return None
 
 
