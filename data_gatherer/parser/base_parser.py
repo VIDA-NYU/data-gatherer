@@ -1079,80 +1079,86 @@ class LLMParser(ABC):
                 self._add_access_mode_if_missing(item, i)
                 continue
 
+            self.logger.info(f"Processing dataset {1 + i} - missing or invalid webpage")
+
+            # Get required fields
+            repo = item.get('data_repository', item.get('repository_reference', None))
             accession_id = item.get('dataset_identifier', item.get('dataset_id', 'n/a'))
-            if accession_id == 'n/a':
-                self.logger.info(f"Skipping dataset {1 + i}: no dataset_identifier for item")
-                continue
-            else:
-                self.logger.info(f"Raw accession ID: {accession_id}")
-
-            if 'data_repository' in item.keys():
-                original_repo = item['data_repository']
-                repo = self.resolve_data_repository(original_repo, identifier=accession_id)
-            elif 'repository_reference' in item.keys():
-                original_repo = item['repository_reference']
-                repo = self.resolve_data_repository(original_repo, identifier=accession_id)
-            else:
-                self.logger.error(f"Error extracting data repository for item: {item}")
+            
+            if repo is None or repo == 'n/a' or accession_id == 'n/a':
+                self.logger.info(f"Skipping dataset {1 + i}: missing repo ({repo}) or accession_id ({accession_id})")
                 continue
 
+            # Handle list repositories (shouldn't happen after schema validation, but be defensive)
             if isinstance(repo, list):
                 if len(repo) > 0:
-                    self.logger.info(f"Repository is a list: {repo}. Resolving accession ID for each element.")
+                    self.logger.warning(f"Repository is a list: {repo}. Using first element.")
                     repo = repo[0]
                 else:
-                    self.logger.warning("Repository list is empty. Skipping this dataset.")
-                    continue  # or `return None`, depending on context
-
-            dataset_page = item.get('dataset_webpage', item.get('dataset_page', None))
-
-            accession_id = self.resolve_accession_id_for_repository(accession_id, repo, dataset_page)
-
-            self.logger.info(f"Processing dataset {1 + i} with repo: {repo} and accession_id: {accession_id}")
-            self.logger.debug(f"Processing dataset {1 + i} with keys: {item.keys()}")
-
-            updated_dt = False
-
-            if repo in self.open_data_repos_ontology['repos'].keys():
-
-                if "dataset_webpage_url_ptr" in self.open_data_repos_ontology['repos'][repo]:
-                    dataset_page_ptr = self.open_data_repos_ontology['repos'][repo]['dataset_webpage_url_ptr']
-                    if dataset_page and re.search(dataset_page_ptr.replace('__ID__', ''), dataset_page, re.IGNORECASE):
-                        self.logger.info(f"Dataset page {dataset_page} already matches pattern for {repo}")
-                        dataset_webpage = dataset_page
-                    else:
-                        self.logger.info(f"Using pattern {dataset_page_ptr} to construct dataset page for {repo}")
-                        dataset_webpage = re.sub('__ID__', accession_id, dataset_page_ptr)
-
-                elif ('dataset_webpage' in item.keys()):
-                    self.logger.debug(f"Skipping dataset {1 + i}: already has dataset_webpage")
+                    self.logger.warning("Repository list is empty. Skipping dataset.")
                     continue
 
-                else:
-                    self.logger.warning(
-                        f"No dataset_webpage_url_ptr found for {repo}. Maybe lost in refactoring 21 April 2025")
-                    dataset_webpage = 'na'
+            # Resolve accession ID if needed
+            resolved_accession_id = self.resolve_accession_id_for_repository(accession_id, repo, existing_webpage)
 
-                self.logger.info(f"Dataset page: {dataset_webpage}")
+            # Try to construct dataset webpage URL
+            dataset_webpage = self._construct_dataset_webpage(repo, resolved_accession_id, existing_webpage)
+            
+            if dataset_webpage and dataset_webpage != 'n/a':
                 datasets[i]['dataset_webpage'] = dataset_webpage
-
-                # add access mode
-                if 'access_mode' in self.open_data_repos_ontology['repos'][repo]:
-                    access_mode = self.open_data_repos_ontology['repos'][repo]['access_mode']
-                    datasets[i]['access_mode'] = access_mode
-                    self.logger.info(f"Adding access mode for dataset {1 + i}: {access_mode}")
-
-            elif original_repo.startswith('http'):
-                datasets[i]['data_repository'] = repo
-                datasets[i]['dataset_webpage'] = original_repo
-
+                self.logger.info(f"Added dataset webpage for {1 + i}: {dataset_webpage}")
             else:
-                self.logger.warning(f"Repository {repo} unknown in Ontology. Skipping dataset page {1 + i}.")
+                self.logger.warning(f"Could not construct valid webpage for dataset {1 + i}")
                 datasets[i]['dataset_webpage'] = 'n/a'
-                continue
 
-        self.logger.info(f"Updated datasets len: {len(datasets)}")
+            # Add access mode
+            self._add_access_mode_if_missing(item, i)
+
+        self.logger.info(f"Dataset enhancement completed: {len(datasets)} datasets processed")
         return datasets
+
+    def _construct_dataset_webpage(self, repo, accession_id, existing_webpage):
+        """Helper method to construct dataset webpage URL using ontology patterns."""
+        if repo in self.open_data_repos_ontology['repos']:
+            repo_config = self.open_data_repos_ontology['repos'][repo]
+            
+            if "dataset_webpage_url_ptr" in repo_config:
+                dataset_page_ptr = repo_config['dataset_webpage_url_ptr']
+                
+                # Check if existing webpage already matches the pattern
+                if existing_webpage:
+                    pattern_base = dataset_page_ptr.replace('__ID__', '')
+                    if re.search(re.escape(pattern_base), existing_webpage, re.IGNORECASE):
+                        self.logger.debug(f"Existing webpage {existing_webpage} matches pattern")
+                        return existing_webpage
+                
+                # Construct new URL using pattern
+                constructed_url = re.sub('__ID__', accession_id, dataset_page_ptr)
+                self.logger.info(f"Constructed webpage URL: {constructed_url}")
+                return constructed_url
+            else:
+                self.logger.debug(f"No dataset_webpage_url_ptr found for repo: {repo}")
+                return existing_webpage
+        
+        elif repo.startswith('http'):
+            # Repository itself is a URL, use it as the dataset webpage
+            self.logger.info(f"Using repo URL as dataset webpage: {repo}")
+            return repo
+        
+        else:
+            self.logger.warning(f"Repository {repo} not found in ontology")
+            return None
+
+    def _add_access_mode_if_missing(self, item, index):
+        """Helper method to add access_mode if missing."""
+        if 'access_mode' not in item:
+            repo = item.get('data_repository', item.get('repository_reference', None))
+            if repo and repo in self.open_data_repos_ontology['repos']:
+                repo_config = self.open_data_repos_ontology['repos'][repo]
+                if 'access_mode' in repo_config:
+                    access_mode = repo_config['access_mode']
+                    item['access_mode'] = access_mode
+                    self.logger.info(f"Added access mode for dataset {index + 1}: {access_mode}")
 
     def get_NuExtract_template(self):
         """
