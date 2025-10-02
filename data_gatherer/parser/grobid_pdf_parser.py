@@ -60,6 +60,7 @@ class GrobidPDFParser(PDFParser):
             self.logger.info(f"Checking if GROBID server is already running on port {self.grobid_port}...")
             r = requests.get(f"http://localhost:{self.grobid_port}/api/isalive", timeout=2)
             if r.status_code == 200:
+                self.logger.info("GROBID server is already running.")
                 return
         except Exception:
             pass
@@ -103,7 +104,7 @@ class GrobidPDFParser(PDFParser):
     def parse_data(self, file_path, publisher=None, current_url_address=None, additional_data=None, raw_data_format='PDF',
                    file_path_is_temp=False, article_file_dir='tmp/raw_files/', process_DAS_links_separately=False,
                    prompt_name='GPT_FewShot', use_portkey=True, semantic_retrieval=False,
-                   top_k=2, section_filter=None):
+                   top_k=2, section_filter=None, response_format=None):
         """
         Parse the PDF file and extract metadata of the relevant datasets.
         """
@@ -118,7 +119,13 @@ class GrobidPDFParser(PDFParser):
 
             # 2. Parse TEI XML using XMLRouter (which will use TEI_XMLParser)
             xml_root = etree.fromstring(full_cont_xml.encode('utf-8'))
-            router = XMLRouter(self.open_data_repos_ontology, self.logger)
+            router = XMLRouter(self.open_data_repos_ontology, self.logger, 
+                             llm_name=self.llm_name, 
+                             full_document_read=self.full_document_read,
+                             use_portkey=use_portkey,
+                             save_dynamic_prompts=self.save_dynamic_prompts,
+                             save_responses_to_cache=self.save_responses_to_cache,
+                             use_cached_responses=self.use_cached_responses)
             xml_parser = router.get_parser(xml_root)
 
             # 3. Use the XML parser's parse_data method
@@ -134,7 +141,8 @@ class GrobidPDFParser(PDFParser):
                 prompt_name=prompt_name,
                 use_portkey=use_portkey,
                 semantic_retrieval=semantic_retrieval,
-                top_k=top_k
+                top_k=top_k,
+                response_format=response_format
             )
 
             return out_df
@@ -145,8 +153,9 @@ class GrobidPDFParser(PDFParser):
 
             try:
                 from .pdf_parser import PDFParser
-                fallback_parser = PDFParser(self.repo_ontology, self.logger, log_file_override=self.log_file_override,
-                                            full_document_read=self.full_document_read, prompt_dir=self.prompt_dir,
+                fallback_parser = PDFParser(self.open_data_repos_ontology, self.logger, 
+                                            full_document_read=self.full_document_read, 
+                                            prompt_dir=self.prompt_manager.prompt_dir,
                                             llm_name=self.llm_name, save_dynamic_prompts=self.save_dynamic_prompts,
                                             save_responses_to_cache=self.save_responses_to_cache,
                                             use_cached_responses=self.use_cached_responses,
@@ -161,7 +170,7 @@ class GrobidPDFParser(PDFParser):
                                                   prompt_name=prompt_name,
                                                   use_portkey=use_portkey,
                                                   semantic_retrieval=semantic_retrieval, top_k=top_k,
-                                                  section_filter=section_filter)
+                                                  section_filter=section_filter, response_format=response_format)
 
             except Exception as fallback_error:
                 self.logger.error(f"Fallback parser also failed: {fallback_error}")

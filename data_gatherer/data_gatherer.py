@@ -372,13 +372,15 @@ class DataGatherer:
             return self.PMCID_to_URL(url)
         elif url.lower().startswith("https://"):
             return url
+        elif os.path.isfile(url):
+            return url
         else:
             raise ValueError(f"Invalid URL format: {url}. Must start with 'PMC' or 'https://'.")
 
     def process_url(self, url, save_staging_table=False, article_file_dir='tmp/raw_files/', use_portkey=True,
                     driver_path=None, browser='Firefox', headless=True, prompt_name='GPT_FewShot',
                     semantic_retrieval=False, section_filter=None, response_format=dataset_response_schema_gpt,
-                    HTML_fallback=False):
+                    HTML_fallback=False, grobid_for_pdf=False):
         """
         Orchestrates the process for a single given source URL (publication).
 
@@ -410,6 +412,12 @@ class DataGatherer:
 
         :param section_filter: Optional filter to apply to the sections (supplementary_material', 'data_availability_statement').
 
+        :param response_format: The response schema to use for parsing the data.
+
+        :param HTML_fallback: Flag to indicate if HTML fallback should be used when fetching data. This will override any other fetching resource (i.e. API).
+
+        :param grobid_for_pdf: Flag to indicate if GROBID should be used for PDF processing.
+
         :return: DataFrame of classified links or None if an error occurs.
         """
         self.logger.info(f"Processing URL: {url}")
@@ -434,58 +442,62 @@ class DataGatherer:
             raw_data = None
             parsed_data = None
             additional_data = None
+            filepath = None
 
-            # if model processes the entire document, fetch the entire document and go to the parsing step
-            if self.full_document_read:
-                raw_data = self.data_fetcher.fetch_data(url)
-                self.raw_data_format = self.data_fetcher.raw_data_format
-
-            # if model processes selected parts of the document, fetch the relevant sections and go to the parsing step
-            else:
-                raw_data = self.data_fetcher.fetch_data(url)
-                self.raw_data_format = self.data_fetcher.raw_data_format
-
-            if not self.data_checker.is_fulltext_complete(raw_data, url, self.raw_data_format) and not (
-                self.data_fetcher.__class__.__name__ == "WebScraper"
-            ):
-                self.logger.info(f"Fallback to Selenium WebScraper data fetcher.")
-                self.raw_data_format = "HTML"
-                self.data_fetcher = self.data_fetcher.update_DataFetcher_settings(url,
-                                                                                    self.full_document_read,
-                                                                                    self.logger,
-                                                                                    HTML_fallback=True,
-                                                                                    driver_path=driver_path,
-                                                                                    browser=browser,
-                                                                                    headless=headless)
-                raw_data = self.data_fetcher.fetch_data(url)
+            if os.path.isfile(url):
+                filepath = url
+                self.raw_data_format = str.split(filepath, '.')[-1].lower()
+                raw_data = filepath if self.raw_data_format.upper() == 'PDF' else open(filepath, 'r', encoding='utf-8').read()
+                self.logger.info(f"Local file {filepath} detected. Using it as raw data.")
 
             else:
-                self.logger.info(f"{self.raw_data_format} data is complete for {url}.")
+                raw_data = self.data_fetcher.fetch_data(url)
+                self.raw_data_format = self.data_fetcher.raw_data_format
+            
+            if filepath is None:
 
-            raw_data = self.data_fetcher.remove_cookie_patterns(raw_data) if self.raw_data_format == "HTML" else raw_data
+                if not self.data_checker.is_fulltext_complete(raw_data, url, self.raw_data_format) and not (
+                    self.data_fetcher.__class__.__name__ == "WebScraper"
+                ):
+                    self.logger.info(f"Fallback to Selenium WebScraper data fetcher.")
+                    self.raw_data_format = "HTML"
+                    self.data_fetcher = self.data_fetcher.update_DataFetcher_settings(url,
+                                                                                        self.full_document_read,
+                                                                                        self.logger,
+                                                                                        HTML_fallback=True,
+                                                                                        driver_path=driver_path,
+                                                                                        browser=browser,
+                                                                                        headless=headless)
+                    raw_data = self.data_fetcher.fetch_data(url)
 
-            self.logger.info(f"Raw {self.raw_data_format} data fetched from {url} is ready for parsing.")
-
-            if self.write_htmls_xmls and not isinstance(self.data_fetcher, DatabaseFetcher):
-                directory = article_file_dir + self.publisher + '/'
-                self.logger.info(f"Raw Data is {self.raw_data_format}.")
-                if isinstance(self.data_fetcher, WebScraper):
-                    self.data_fetcher.html_page_source_download(directory, url)
-                    self.logger.info(f"Raw HTML saved to: {directory}")
-                elif isinstance(self.data_fetcher, EntrezFetcher):
-                    self.data_fetcher.download_xml(directory, raw_data, url)
-                    self.logger.info(f"Raw XML saved in {directory} directory")
-                elif self.raw_data_format.upper() == 'PDF':
-                    # For PDF, raw_data should already be a file path, just log the location
-                    self.logger.info(f"Raw PDF file location: {raw_data}")
                 else:
-                    self.logger.warning(f"Unsupported raw data format: {self.raw_data_format}.")
-            else:
-                self.logger.info("Skipping raw HTML/XML/PDF saving.")
+                    self.logger.info(f"{self.raw_data_format} data is complete for {url}.")
 
-            self.data_fetcher.quit() if hasattr(self.data_fetcher, 'scraper_tool') else None
+                raw_data = self.data_fetcher.remove_cookie_patterns(raw_data) if self.raw_data_format == "HTML" else raw_data
+
+                self.logger.info(f"Raw {self.raw_data_format} data fetched from {url} is ready for parsing.")
+
+                if self.write_htmls_xmls and not isinstance(self.data_fetcher, DatabaseFetcher):
+                    directory = article_file_dir + self.publisher + '/'
+                    self.logger.info(f"Raw Data is {self.raw_data_format}.")
+                    if isinstance(self.data_fetcher, WebScraper):
+                        self.data_fetcher.html_page_source_download(directory, url)
+                        self.logger.info(f"Raw HTML saved to: {directory}")
+                    elif isinstance(self.data_fetcher, EntrezFetcher):
+                        self.data_fetcher.download_xml(directory, raw_data, url)
+                        self.logger.info(f"Raw XML saved in {directory} directory")
+                    elif self.raw_data_format.upper() == 'PDF':
+                        # For PDF, raw_data should already be a file path, just log the location
+                        self.logger.info(f"Raw PDF file location: {raw_data}")
+                    else:
+                        self.logger.warning(f"Unsupported raw data format: {self.raw_data_format}.")
+                else:
+                    self.logger.info("Skipping raw HTML/XML/PDF saving.")
+
+                self.data_fetcher.quit() if hasattr(self.data_fetcher, 'scraper_tool') else None
 
             # Step 2: Use HTMLParser/XMLParser
+            self.logger.info("Parsing Raw content from format: " + self.raw_data_format)
             if self.raw_data_format.upper() == "XML" and raw_data is not None:
                 self.logger.info("Using XMLParser to parse data.")
                 self.parser = XMLParser(self.open_data_repos_ontology, self.logger,
@@ -527,11 +539,19 @@ class DataGatherer:
             
             elif self.raw_data_format.upper() == 'PDF':
                 self.logger.info("Using PDFParser to parse data.")
-                self.parser = PDFParser(self.open_data_repos_ontology, self.logger,
-                                        llm_name=self.llm,
-                                        full_document_read=self.full_document_read,
-                                        use_portkey=use_portkey,
-                                        save_dynamic_prompts=self.save_dynamic_prompts)
+                if grobid_for_pdf:
+                    self.logger.info("GROBID PDF parsing enabled.")
+                    self.parser = GrobidPDFParser(self.open_data_repos_ontology, self.logger,
+                                                 llm_name=self.llm,
+                                                 full_document_read=self.full_document_read,
+                                                 use_portkey=use_portkey,
+                                                 save_dynamic_prompts=self.save_dynamic_prompts)
+                else:
+                    self.parser = PDFParser(self.open_data_repos_ontology, self.logger,
+                                            llm_name=self.llm,
+                                            full_document_read=self.full_document_read,
+                                            use_portkey=use_portkey,
+                                            save_dynamic_prompts=self.save_dynamic_prompts)
                 # For PDF, raw_data should be the file path
                 parsed_data = self.parser.parse_data(raw_data, 
                                                      publisher=self.publisher, 
@@ -633,7 +653,7 @@ class DataGatherer:
 
     def process_articles(self, url_list, log_modulo=10, save_staging_table=False, article_file_dir='tmp/raw_files/',
                          driver_path=None, browser='Firefox', headless=True, use_portkey=True, response_format=dataset_response_schema_gpt,
-                         prompt_name='GPT_FewShot', semantic_retrieval=False, section_filter=None):
+                         prompt_name='GPT_FewShot', semantic_retrieval=False, section_filter=None, grobid_for_pdf=False):
         """
         Processes a list of article URLs and returns parsed data.
 
@@ -653,11 +673,15 @@ class DataGatherer:
 
         :param use_portkey: Flag to use Portkey for Gemini LLM.
 
+        :param response_format: The response schema to use for parsing the data.
+
         :param prompt_name: Name of the prompt to use for LLM parsing.
 
         :param semantic_retrieval: Flag to indicate if semantic retrieval should be used.
 
         :param section_filter: Optional filter to apply to the sections (supplementary_material', 'data_availability_statement').
+
+        :param grobid_for_pdf: Flag to indicate if GROBID should be used for PDF processing.
 
         :return: Dictionary with URLs as keys and DataFrames of classified data as values.
         """
@@ -669,7 +693,7 @@ class DataGatherer:
 
         for iteration, url in enumerate(url_list):
             url = self.preprocess_url(url)
-            self.logger.info(f"{iteration}th function call: self.process_url({url})")
+            self.logger.info(f"#{iteration} function call: self.process_url({url})")
 
             results[url] = self.process_url(
                 url,
@@ -682,7 +706,8 @@ class DataGatherer:
                 prompt_name=prompt_name,
                 semantic_retrieval=semantic_retrieval,
                 section_filter=section_filter,
-                response_format=response_format
+                response_format=response_format,
+                grobid_for_pdf=grobid_for_pdf
             )
 
             if iteration % log_modulo == 0:

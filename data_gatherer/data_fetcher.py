@@ -983,6 +983,11 @@ class PdfFetcher(DataFetcher):
         """
         self.raw_data_format = 'PDF'
         self.logger.info(f"Fetching PDF data from {url}")
+
+        if os.path.exists(url):
+            self.logger.info(f"URL is a local file path. Reading PDF from {url}")
+            return url
+
         response = requests.get(url)
         if response.status_code == 200:
             if return_temp:
