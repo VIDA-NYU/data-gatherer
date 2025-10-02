@@ -225,7 +225,7 @@ class DataGatherer:
     def parse_data(self, raw_data, publisher=None, current_url_address=None, additional_data=None,
                    raw_data_format='XML', parsed_data_dir='tmp/parsed_articles/', grobid_for_pdf=False,
                    process_DAS_links_separately=False, full_document_read=False, semantic_retrieval=False, top_k=5,
-                   prompt_name='retrieve_datasets_simple_JSON', use_portkey=True, section_filter=None,
+                   prompt_name='GPT_FewShot', use_portkey=True, section_filter=None,
                    response_format=dataset_response_schema_gpt):
         """
         Parses the raw data fetched from the source URL using the appropriate parser.
@@ -372,12 +372,15 @@ class DataGatherer:
             return self.PMCID_to_URL(url)
         elif url.lower().startswith("https://"):
             return url
+        elif os.path.isfile(url):
+            return url
         else:
             raise ValueError(f"Invalid URL format: {url}. Must start with 'PMC' or 'https://'.")
 
     def process_url(self, url, save_staging_table=False, article_file_dir='tmp/raw_files/', use_portkey=True,
-                    driver_path=None, browser='Firefox', headless=True, prompt_name='retrieve_datasets_simple_JSON',
-                    semantic_retrieval=False, section_filter=None):
+                    driver_path=None, browser='Firefox', headless=True, prompt_name='GPT_FewShot',
+                    semantic_retrieval=False, section_filter=None, response_format=dataset_response_schema_gpt,
+                    HTML_fallback=False, grobid_for_pdf=False):
         """
         Orchestrates the process for a single given source URL (publication).
 
@@ -409,6 +412,12 @@ class DataGatherer:
 
         :param section_filter: Optional filter to apply to the sections (supplementary_material', 'data_availability_statement').
 
+        :param response_format: The response schema to use for parsing the data.
+
+        :param HTML_fallback: Flag to indicate if HTML fallback should be used when fetching data. This will override any other fetching resource (i.e. API).
+
+        :param grobid_for_pdf: Flag to indicate if GROBID should be used for PDF processing.
+
         :return: DataFrame of classified links or None if an error occurs.
         """
         self.logger.info(f"Processing URL: {url}")
@@ -417,7 +426,7 @@ class DataGatherer:
 
         self.data_fetcher = self.data_fetcher.update_DataFetcher_settings(url, self.full_document_read, self.logger,
                                                                           driver_path=driver_path, browser=browser,
-                                                                          headless=headless)
+                                                                          headless=headless, HTML_fallback=HTML_fallback)
         self.logger.info(f"Type of data_fetcher {self.data_fetcher.__class__.__name__}")
 
         article_id = self.url_to_article_id(url)
@@ -433,21 +442,24 @@ class DataGatherer:
             raw_data = None
             parsed_data = None
             additional_data = None
+            filepath = None
 
-            # if model processes the entire document, fetch the entire document and go to the parsing step
-            if self.full_document_read:
-                raw_data = self.data_fetcher.fetch_data(url)
-                self.raw_data_format = self.data_fetcher.raw_data_format
+            if os.path.isfile(url):
+                filepath = url
+                self.raw_data_format = str.split(filepath, '.')[-1].lower()
+                raw_data = filepath if self.raw_data_format.upper() == 'PDF' else open(filepath, 'r', encoding='utf-8').read()
+                self.logger.info(f"Local file {filepath} detected. Using it as raw data.")
 
-            # if model processes selected parts of the document, fetch the relevant sections and go to the parsing step
             else:
-
                 raw_data = self.data_fetcher.fetch_data(url)
                 self.raw_data_format = self.data_fetcher.raw_data_format
+            
+            if filepath is None:
 
-            if self.raw_data_format == "XML":
-                if not self.data_checker.is_xml_data_complete(raw_data, url):
-                    self.logger.info(f"Fallback to HTML data fetcher for {url}.")
+                if not self.data_checker.is_fulltext_complete(raw_data, url, self.raw_data_format) and not (
+                    self.data_fetcher.__class__.__name__ == "WebScraper"
+                ):
+                    self.logger.info(f"Fallback to Selenium WebScraper data fetcher.")
                     self.raw_data_format = "HTML"
                     self.data_fetcher = self.data_fetcher.update_DataFetcher_settings(url,
                                                                                         self.full_document_read,
@@ -459,32 +471,33 @@ class DataGatherer:
                     raw_data = self.data_fetcher.fetch_data(url)
 
                 else:
-                    self.logger.info(f"XML data is complete for {url}.")
+                    self.logger.info(f"{self.raw_data_format} data is complete for {url}.")
 
-            raw_data = self.data_fetcher.remove_cookie_patterns(raw_data) if self.raw_data_format == "HTML" else raw_data
+                raw_data = self.data_fetcher.remove_cookie_patterns(raw_data) if self.raw_data_format == "HTML" else raw_data
 
-            self.logger.info(f"Raw {self.raw_data_format} data fetched from {url} is ready for parsing.")
+                self.logger.info(f"Raw {self.raw_data_format} data fetched from {url} is ready for parsing.")
 
-            if self.write_htmls_xmls and not isinstance(self.data_fetcher, DatabaseFetcher):
-                directory = article_file_dir + self.publisher + '/'
-                self.logger.info(f"Raw Data is {self.raw_data_format}.")
-                if isinstance(self.data_fetcher, WebScraper):
-                    self.data_fetcher.html_page_source_download(directory, url)
-                    self.logger.info(f"Raw HTML saved to: {directory}")
-                elif isinstance(self.data_fetcher, EntrezFetcher):
-                    self.data_fetcher.download_xml(directory, raw_data, url)
-                    self.logger.info(f"Raw XML saved in {directory} directory")
-                elif self.raw_data_format.upper() == 'PDF':
-                    # For PDF, raw_data should already be a file path, just log the location
-                    self.logger.info(f"Raw PDF file location: {raw_data}")
+                if self.write_htmls_xmls and not isinstance(self.data_fetcher, DatabaseFetcher):
+                    directory = article_file_dir + self.publisher + '/'
+                    self.logger.info(f"Raw Data is {self.raw_data_format}.")
+                    if isinstance(self.data_fetcher, WebScraper):
+                        self.data_fetcher.html_page_source_download(directory, url)
+                        self.logger.info(f"Raw HTML saved to: {directory}")
+                    elif isinstance(self.data_fetcher, EntrezFetcher):
+                        self.data_fetcher.download_xml(directory, raw_data, url)
+                        self.logger.info(f"Raw XML saved in {directory} directory")
+                    elif self.raw_data_format.upper() == 'PDF':
+                        # For PDF, raw_data should already be a file path, just log the location
+                        self.logger.info(f"Raw PDF file location: {raw_data}")
+                    else:
+                        self.logger.warning(f"Unsupported raw data format: {self.raw_data_format}.")
                 else:
-                    self.logger.warning(f"Unsupported raw data format: {self.raw_data_format}.")
-            else:
-                self.logger.info("Skipping raw HTML/XML/PDF saving.")
+                    self.logger.info("Skipping raw HTML/XML/PDF saving.")
 
-            self.data_fetcher.quit() if hasattr(self.data_fetcher, 'scraper_tool') else None
+                self.data_fetcher.quit() if hasattr(self.data_fetcher, 'scraper_tool') else None
 
             # Step 2: Use HTMLParser/XMLParser
+            self.logger.info("Parsing Raw content from format: " + self.raw_data_format)
             if self.raw_data_format.upper() == "XML" and raw_data is not None:
                 self.logger.info("Using XMLParser to parse data.")
                 self.parser = XMLParser(self.open_data_repos_ontology, self.logger,
@@ -497,14 +510,14 @@ class DataGatherer:
                     self.logger.info("No additional data provided. Parsing raw data only.")
                     parsed_data = self.parser.parse_data(raw_data, self.publisher, self.current_url,
                                                          prompt_name=prompt_name, semantic_retrieval=semantic_retrieval,
-                                                         section_filter=section_filter)
+                                                         section_filter=section_filter, response_format=response_format)
 
                 else:
                     self.logger.info(f"Processing additional data. # of items: {len(additional_data)}")
                     add_data = self.parser.parse_data(raw_data, self.publisher, self.current_url,
                                                       additional_data=additional_data, prompt_name=prompt_name,
                                                       semantic_retrieval=semantic_retrieval,
-                                                      section_filter=section_filter)
+                                                      section_filter=section_filter, response_format=response_format)
                     self.logger.debug(f"Type of additional data{type(add_data)}")
 
                     parsed_data = pd.concat([parsed_data, add_data], ignore_index=True).drop_duplicates()
@@ -519,18 +532,26 @@ class DataGatherer:
                 parsed_data = self.parser.parse_data(raw_data, self.publisher, self.current_url,
                                                      raw_data_format=self.raw_data_format, prompt_name=prompt_name,
                                                      semantic_retrieval=semantic_retrieval,
-                                                     section_filter=section_filter)
+                                                     section_filter=section_filter, response_format=response_format)
                 parsed_data['source_url'] = url
                 parsed_data['pub_title'] = self.parser.extract_publication_title(raw_data)
                 self.logger.info(f"Parsed data extraction completed. Elements collected: {len(parsed_data)}")
             
             elif self.raw_data_format.upper() == 'PDF':
                 self.logger.info("Using PDFParser to parse data.")
-                self.parser = PDFParser(self.open_data_repos_ontology, self.logger,
-                                        llm_name=self.llm,
-                                        full_document_read=self.full_document_read,
-                                        use_portkey=use_portkey,
-                                        save_dynamic_prompts=self.save_dynamic_prompts)
+                if grobid_for_pdf:
+                    self.logger.info("GROBID PDF parsing enabled.")
+                    self.parser = GrobidPDFParser(self.open_data_repos_ontology, self.logger,
+                                                 llm_name=self.llm,
+                                                 full_document_read=self.full_document_read,
+                                                 use_portkey=use_portkey,
+                                                 save_dynamic_prompts=self.save_dynamic_prompts)
+                else:
+                    self.parser = PDFParser(self.open_data_repos_ontology, self.logger,
+                                            llm_name=self.llm,
+                                            full_document_read=self.full_document_read,
+                                            use_portkey=use_portkey,
+                                            save_dynamic_prompts=self.save_dynamic_prompts)
                 # For PDF, raw_data should be the file path
                 parsed_data = self.parser.parse_data(raw_data, 
                                                      publisher=self.publisher, 
@@ -538,7 +559,8 @@ class DataGatherer:
                                                      raw_data_format=self.raw_data_format, 
                                                      prompt_name=prompt_name,
                                                      semantic_retrieval=semantic_retrieval,
-                                                     section_filter=section_filter)
+                                                     section_filter=section_filter,
+                                                     response_format=response_format)
                 self.logger.info(f"PDF parsing completed. Elements collected: {len(parsed_data)}")
 
             else:
@@ -578,7 +600,7 @@ class DataGatherer:
 
     def app_process_url(self, url, save_staging_table=False, article_file_dir='tmp/raw_files/', 
                        use_portkey=True, driver_path=None, browser='Firefox', headless=True, 
-                       prompt_name='retrieve_datasets_simple_JSON', semantic_retrieval=False, section_filter=None):
+                       prompt_name='GPT_FewShot', semantic_retrieval=False, section_filter=None):
         """
         Application wrapper for process_url with concurrent user support.
         This method handles rate limiting and resource management for multi-user scenarios.
@@ -630,8 +652,8 @@ class DataGatherer:
         return classified_links
 
     def process_articles(self, url_list, log_modulo=10, save_staging_table=False, article_file_dir='tmp/raw_files/',
-                         driver_path=None, browser='Firefox', headless=True, use_portkey=True,
-                         prompt_name='retrieve_datasets_simple_JSON', semantic_retrieval=False, section_filter=None):
+                         driver_path=None, browser='Firefox', headless=True, use_portkey=True, response_format=dataset_response_schema_gpt,
+                         prompt_name='GPT_FewShot', semantic_retrieval=False, section_filter=None, grobid_for_pdf=False):
         """
         Processes a list of article URLs and returns parsed data.
 
@@ -651,11 +673,15 @@ class DataGatherer:
 
         :param use_portkey: Flag to use Portkey for Gemini LLM.
 
+        :param response_format: The response schema to use for parsing the data.
+
         :param prompt_name: Name of the prompt to use for LLM parsing.
 
         :param semantic_retrieval: Flag to indicate if semantic retrieval should be used.
 
         :param section_filter: Optional filter to apply to the sections (supplementary_material', 'data_availability_statement').
+
+        :param grobid_for_pdf: Flag to indicate if GROBID should be used for PDF processing.
 
         :return: Dictionary with URLs as keys and DataFrames of classified data as values.
         """
@@ -667,7 +693,7 @@ class DataGatherer:
 
         for iteration, url in enumerate(url_list):
             url = self.preprocess_url(url)
-            self.logger.info(f"{iteration}th function call: self.process_url({url})")
+            self.logger.info(f"#{iteration} function call: self.process_url({url})")
 
             results[url] = self.process_url(
                 url,
@@ -679,7 +705,9 @@ class DataGatherer:
                 use_portkey=use_portkey,
                 prompt_name=prompt_name,
                 semantic_retrieval=semantic_retrieval,
-                section_filter=section_filter
+                section_filter=section_filter,
+                response_format=response_format,
+                grobid_for_pdf=grobid_for_pdf
             )
 
             if iteration % log_modulo == 0:
@@ -1191,7 +1219,7 @@ class DataGatherer:
                 self.logger.debug(f"Process ID {process_id} already exists in cache. Skipping save.")
 
     def run(self, input_file='input/test_input.txt', semantic_retrieval=False, section_filter=None,
-            prompt_name='retrieve_datasets_simple_JSON'):
+            prompt_name='GPT_FewShot'):
         """
         This method orchestrates the entire data gathering process by performing the following steps:
 

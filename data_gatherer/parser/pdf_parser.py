@@ -279,7 +279,7 @@ class PDFParser(LLMParser):
 
     def parse_data(self, file_path, publisher=None, current_url_address=None, additional_data=None, raw_data_format='PDF',
                    file_path_is_temp=False, article_file_dir='tmp/raw_files/', process_DAS_links_separately=False,
-                   prompt_name='retrieve_datasets_simple_JSON', use_portkey=True, semantic_retrieval=False,
+                   prompt_name='GPT_FewShot', use_portkey=True, semantic_retrieval=False,
                    top_k=2, section_filter=None, response_format=dataset_response_schema_gpt):
         """
         Parse the PDF file and extract metadata of the relevant datasets.
@@ -372,7 +372,7 @@ class PDFParser(LLMParser):
         return out_df
     def extract_datasets_info_from_content(self, content: str, repos: list, model: str = 'gpt-4o-mini',
                                            temperature: float = 0.0,
-                                           prompt_name: str = 'retrieve_datasets_simple_JSON',
+                                           prompt_name: str = 'GPT_FewShot',
                                            full_document_read=True,
                                            response_format=dataset_response_schema_gpt) -> list:
         """
@@ -447,18 +447,18 @@ class PDFParser(LLMParser):
             )
             
             # Use the unified response processing method
-            self.logger.info(f"[DEBUG] Calling process_llm_response with raw_response type: {type(raw_response)}")
+            self.logger.debug(f"Calling process_llm_response with raw_response type: {type(raw_response)}")
             resps = self.client.process_llm_response(
                 raw_response=raw_response,
                 response_format=response_format,
                 expected_key="datasets"
             )
-            self.logger.info(f"[DEBUG] process_llm_response returned: {resps} (type: {type(resps)})")
+            self.logger.debug(f"process_llm_response returned: {resps} (type: {type(resps)})")
             
             # Apply task-specific deduplication
-            self.logger.info(f"[DEBUG] Applying normalize_response_type to: {resps}")
+            self.logger.debug(f"Applying normalize_response_type to: {resps}")
             resps = self.normalize_response_type(resps)
-            self.logger.info(f"[DEBUG] normalize_response_type returned: {resps} (type: {type(resps)})")
+            self.logger.debug(f"normalize_response_type returned: {resps} (type: {type(resps)})")
             
             # Save the processed response to cache
             if self.save_responses_to_cache:
@@ -489,94 +489,41 @@ class PDFParser(LLMParser):
 
             elif type(dataset) == dict:
                 self.logger.info(f"Dataset is a dictionary")
-                dataset_id = 'n/a'
-                if 'dataset_id' in dataset:
-                    dataset_id = self.validate_dataset_id(dataset['dataset_id'])
-                elif 'dataset_identifier' in dataset:
-                    dataset_id = self.validate_dataset_id(dataset['dataset_identifier'])
-                else:
-                    self.logger.info(f"Candidate is missing 'dataset_id' or 'dataset_identifier', skipping dataset")
 
-                if 'data_repository' in dataset:
-                    data_repository = self.resolve_data_repository(dataset['data_repository'],
-                                                                   identifier=dataset_id,
-                                                                   dataset_page=dataset.get('dataset_webpage'))
-                elif 'repository_reference' in dataset:
-                    data_repository = self.resolve_data_repository(dataset['repository_reference'],
-                                                                   identifier=dataset_id,
-                                                                   dataset_page=dataset.get('dataset_webpage'))
-                else:
-                    self.logger.info(
-                        f"Candidate is missing 'data_repository' or 'repository_reference', skipping dataset")
+                # Use base parser's schema_validation method for consistency
+                dataset_id, data_repository, dataset_webpage = self.schema_validation(dataset)
+
+                if (dataset_id is None or data_repository is None) and dataset_webpage is None:
+                    self.logger.info(f"Skipping dataset due to missing ID, repository, dataset page: {dataset}")
                     continue
 
-                if 'dataset_webpage' in dataset:
-                    dataset_webpage = self.validate_dataset_webpage(dataset['dataset_webpage'], data_repository)
-                else:
-                    dataset_webpage = 'n/a'
-
-                if dataset_id == 'n/a' and type(data_repository) == str and data_repository in \
-                        self.open_data_repos_ontology['repos']:
-                    self.logger.info(f"Dataset ID is 'n/a' and repository name from prompt")
-                    continue
-
-                elif data_repository == 'n/a':
-                    self.logger.info(f"Data repository is 'n/a', skipping dataset")
+                if (dataset_id == 'n/a' or data_repository == 'n/a') and dataset_webpage == 'n/a':
+                    self.logger.info(f"Skipping dataset due to missing ID, repository, dataset page: {dataset}")
                     continue
 
             result.append({
                 "dataset_identifier": dataset_id,
                 "data_repository": data_repository,
                 "dataset_webpage": dataset_webpage if dataset_webpage is not None else 'n/a',
+                "citation_type": dataset.get('citation_type', 'n/a') if isinstance(dataset, dict) else 'n/a'
             })
 
-            if 'decision_rationale' in dataset:
-                result[-1]['decision_rationale'] = dataset['decision_rationale']
+            if isinstance(dataset, dict):
+                if 'decision_rationale' in dataset:
+                    result[-1]['decision_rationale'] = dataset['decision_rationale']
 
-            if 'dataset-publication_relationship' in dataset:
-                result[-1]['dataset-publication_relationship'] = dataset['dataset-publication_relationship']
+                if 'dataset-publication_relationship' in dataset:
+                    result[-1]['dataset-publication_relationship'] = dataset['dataset-publication_relationship']
+
+                # Preserve dataset_context_from_paper field if present (for PaperMiner enhanced schema)
+                if 'dataset_context_from_paper' in dataset:
+                    result[-1]['dataset_context_from_paper'] = dataset['dataset_context_from_paper']
 
             self.logger.debug(f"Extracted dataset: {result[-1]}")
 
         self.logger.info(f"Final result: {result}")
 
         return result
-
-    def validate_dataset_webpage(self, dataset_webpage_url, repo):
-        """
-        This function checks for hallucinations, i.e. if the dataset identifier is a known repository name.
-        """
-        if type(repo) != str:
-            self.logger.warning(f"Repository is not a string: {repo}, type: {type(repo)}")
-            return 'n/a'
-        self.logger.info(
-            f"Validating Dataset Page: {dataset_webpage_url}, type: {type(dataset_webpage_url)}, repo: {repo}")
-        if ',' in dataset_webpage_url:
-            self.logger.warning(
-                f"Dataset Page contains a comma: {dataset_webpage_url}. Same data may be in multiple repos.")
-            ret = []
-            for dp in dataset_webpage_url.split(','):
-                dp = dp.strip()
-                if dp in self.open_data_repos_ontology['repos']:
-                    ret.append(self.validate_dataset_webpage(dp, repo))
-            return ret
-        resolved_dataset_page = self.resolve_url(dataset_webpage_url)
-        if repo in self.open_data_repos_ontology['repos']:
-            if 'dataset_webpage_url_ptr' in self.open_data_repos_ontology['repos'][repo].keys():
-                dataset_webpage_url_ptr = self.open_data_repos_ontology['repos'][repo]['dataset_webpage_url_ptr']
-                pattern = re.sub('__ID__', '', dataset_webpage_url_ptr)
-                self.logger.info(f"Pattern: {pattern}")
-                if pattern.lower() in resolved_dataset_page.lower():
-                    self.logger.info(f"Link matches the pattern {pattern}")
-                    return resolved_dataset_page
-                else:
-                    self.logger.info(f"Link does not match the pattern {pattern}")
-                    return 'n/a'
-            else:
-                self.logger.info(f"No dataset_webpage_url_ptr found for {repo}")
-                return resolved_dataset_page
-        self.logger.info(f"Repository {repo} not found in ontology")
-        return 'n/a'
 
     def extract_publication_title(self, raw_data):
         """

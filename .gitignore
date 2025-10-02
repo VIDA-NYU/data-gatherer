@@ -147,3 +147,6 @@ ui/*log*
 ui/portkey-secret.yaml
 ui/deployment.yaml
 
+data_gatherer/prompts/prompt_templates/old
+data_gatherer/config/repos.txt
+scripts/exp_input/bdf_paper_pdfs/**
