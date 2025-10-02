@@ -397,6 +397,7 @@ class HttpGetRequest(DataFetcher):
         super().__init__(logger, src='HttpGetRequest')
         self.session = requests.Session()
         self.logger.debug("HttpGetRequest initialized.")
+        self.raw_data_format = 'HTML'
 
     def fetch_data(self, url, retries=3, delay=0.2):
         """
@@ -431,8 +432,7 @@ class HttpGetRequest(DataFetcher):
                 attempt += 1
                 time.sleep(delay*2)
         
-        # If all attempts failed and no backup, raise error
-        raise RuntimeError(f"Failed to fetch data from {url} after {retries} attempts and no backup data available.")
+        self.logger.error(f"Failed to fetch data from {url} after {retries} attempts and no backup data available.")
 
     
     def html_page_source_download(self, directory, url, fetched_data):
@@ -983,6 +983,11 @@ class PdfFetcher(DataFetcher):
         """
         self.raw_data_format = 'PDF'
         self.logger.info(f"Fetching PDF data from {url}")
+
+        if os.path.exists(url):
+            self.logger.info(f"URL is a local file path. Reading PDF from {url}")
+            return url
+
         response = requests.get(url)
         if response.status_code == 200:
             if return_temp:

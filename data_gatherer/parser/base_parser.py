@@ -142,7 +142,7 @@ class LLMParser(ABC):
         self.logger.info(f"Additional data\n{additional_data}")
         return pd.concat([parsed_data, additional_data], ignore_index=True)
 
-    def process_additional_data(self, additional_data, prompt_name='retrieve_datasets_simple_JSON',
+    def process_additional_data(self, additional_data, prompt_name='GPT_FewShot',
                                 response_format=dataset_response_schema_gpt):
         """
         Process the additional data from the webpage. This is the data matched from the HTML with the patterns in
@@ -200,7 +200,7 @@ class LLMParser(ABC):
         self.logger.debug(f"Final ret additional data: {ret}")
         return ret
 
-    def process_data_availability_text(self, DAS_content, prompt_name='retrieve_datasets_simple_JSON',
+    def process_data_availability_text(self, DAS_content, prompt_name='GPT_FewShot',
                                        response_format=dataset_response_schema_gpt):
         """
         Process the data availability section from the webpage.
@@ -237,7 +237,7 @@ class LLMParser(ABC):
 
     def extract_datasets_info_from_content(self, content: str, repos: list, model: str = 'gpt-4o-mini',
                                            temperature: float = 0.0,
-                                           prompt_name: str = 'retrieve_datasets_simple_JSON',
+                                           prompt_name: str = 'GPT_FewShot',
                                            full_document_read=True,
                                            response_format = dataset_response_schema_gpt) -> list:
         """
@@ -323,22 +323,22 @@ class LLMParser(ABC):
             )
             
             # Use the unified response processing method
-            self.logger.info(f"[DEBUG] Calling process_llm_response with raw_response type: {type(raw_response)}")
+            self.logger.debug(f"Calling process_llm_response with raw_response type: {type(raw_response)}")
             resps = self.client.process_llm_response(
                 raw_response=raw_response,
                 response_format=response_format,
                 expected_key="datasets"
             )
-            self.logger.info(f"[DEBUG] process_llm_response returned: {resps} (type: {type(resps)})")
+            self.logger.debug(f"process_llm_response returned: {resps} (type: {type(resps)})")
             
             # Apply task-specific deduplication
-            self.logger.info(f"[DEBUG] Applying normalize_response_type to: {resps}")
+            self.logger.debug(f"Applying normalize_response_type to: {resps}")
             resps = self.normalize_response_type(resps)
-            self.logger.info(f"[DEBUG] normalize_response_type returned: {resps} (type: {type(resps)})")
+            self.logger.debug(f"normalize_response_type returned: {resps} (type: {type(resps)})")
             
             # Save the processed response to cache
             if self.save_responses_to_cache:
-                self.logger.info(f"[DEBUG] Saving response to cache with prompt_id: {prompt_id}")
+                self.logger.debug(f"Saving response to cache with prompt_id: {prompt_id}")
                 self.prompt_manager.save_response(prompt_id, resps)
 
         # Process the response content
@@ -366,12 +366,16 @@ class LLMParser(ABC):
                     try:
                         dataset_id, data_repository, dataset_webpage = self.schema_validation(valid_dataset)
                         if dataset_id and data_repository:
-                            result.append({
+                            dataset_result = {
                                 "dataset_identifier": dataset_id,
                                 "data_repository": data_repository,
                                 "dataset_webpage": dataset_webpage if dataset_webpage is not None else 'n/a',
                                 "citation_type": valid_dataset.get('citation_type', 'n/a')
-                            })
+                            }
+                            # Preserve dataset_context_from_paper field if present (for PaperMiner enhanced schema)
+                            if 'dataset_context_from_paper' in valid_dataset:
+                                dataset_result['dataset_context_from_paper'] = valid_dataset['dataset_context_from_paper']
+                            result.append(dataset_result)
                             self.logger.info(f"Successfully processed dataset from list: {result[-1]}")
                     except Exception as e:
                         self.logger.warning(f"Failed to process dataset from list: {e}")
@@ -419,6 +423,10 @@ class LLMParser(ABC):
 
             if 'dataset-publication_relationship' in dataset:
                 result[-1]['dataset-publication_relationship'] = dataset['dataset-publication_relationship']
+
+            # Preserve dataset_context_from_paper field if present (for PaperMiner enhanced schema)
+            if 'dataset_context_from_paper' in dataset:
+                result[-1]['dataset_context_from_paper'] = dataset['dataset_context_from_paper']
 
             self.logger.info(f"Extracted dataset: {result[-1]}")
 
@@ -530,64 +538,64 @@ class LLMParser(ABC):
         :return: List of deduplicated dataset responses.
 
         """
-        self.logger.info(f"[DEBUG] normalize_response_type called with response type: {type(response)}, length: {len(response) if hasattr(response, '__len__') else 'N/A'}")
-        self.logger.info(f"[DEBUG] normalize_response_type input: {response}")
+        self.logger.debug(f"normalize_response_type called with response type: {type(response)}, length: {len(response) if hasattr(response, '__len__') else 'N/A'}")
+        self.logger.debug(f"normalize_response_type input: {response}")
         
         self.logger.info(f"Deduplicating response with {len(response)} items")
         seen = set()
         deduped = []
 
         if not isinstance(response, list) and isinstance(response, dict):
-            self.logger.info(f"[DEBUG] Converting single dict to list")
+            self.logger.debug(f"Converting single dict to list")
             response = [response]
         elif not isinstance(response, list):
-            self.logger.info(f"[DEBUG] Response is not a list or dict, type: {type(response)}")
+            self.logger.debug(f"Response is not a list or dict, type: {type(response)}")
             return response
 
         for i, item in enumerate(response):
-            self.logger.info(f"[DEBUG] Processing item {i}: {item} (type: {type(item)})")
+            self.logger.debug(f"Processing item {i}: {item} (type: {type(item)})")
             self.logger.debug(f"Processing item: {item}")
             
             if isinstance(item, str):
-                self.logger.info(f"[DEBUG] Item is a string, skipping deduplication logic")
+                self.logger.debug(f"Item is a string, skipping deduplication logic")
                 deduped.append(item)
                 continue
                 
             if not isinstance(item, dict):
-                self.logger.info(f"[DEBUG] Item is not a dict, type: {type(item)}, appending as-is")
+                self.logger.debug(f"Item is not a dict, type: {type(item)}, appending as-is")
                 deduped.append(item)
                 continue
             
             dataset_id = item.get("dataset_identifier", item.get("dataset_id", ""))
-            self.logger.info(f"[DEBUG] Extracted dataset_id: {dataset_id}")
+            self.logger.debug(f"Extracted dataset_id: {dataset_id}")
             if not dataset_id:
-                self.logger.info(f"[DEBUG] Skipping item with missing dataset_id: {item}")
+                self.logger.debug(f"Skipping item with missing dataset_id: {item}")
                 self.logger.warning(f"Skipping item with missing dataset_id: {item}")
                 continue
             repo = item.get("data_repository", item.get("repository_reference", "n/a"))
-            self.logger.info(f"[DEBUG] Extracted repo: {repo}")
+            self.logger.debug(f"Extracted repo: {repo}")
 
             # Normalize: remove DOI prefix if it matches '10.x/PXD123456'
             clean_id = re.sub(r'10\.\d+/(\bPXD\d+\b)', r'\1', dataset_id)
-            self.logger.info(f"[DEBUG] Normalized clean_id: {clean_id}")
+            self.logger.debug(f"Normalized clean_id: {clean_id}")
 
             if clean_id not in seen:
                 # Update the dataset_id to the normalized version
                 item["dataset_id"] = clean_id
-                self.logger.info(f"[DEBUG] Adding unique item: {clean_id}")
+                self.logger.debug(f"Adding unique item: {clean_id}")
                 self.logger.info(f"Adding unique item: {clean_id}")
                 deduped.append(item)
                 seen.add(clean_id)
 
             elif clean_id == 'n/a' and repo != 'n/a':
-                self.logger.info(f"[DEBUG] Adding n/a dataset_id with valid repo: {repo}")
+                self.logger.debug(f"Adding n/a dataset_id with valid repo: {repo}")
                 deduped.append(item)
 
             else:
-                self.logger.info(f"[DEBUG] Duplicate found and skipped: {clean_id}")
+                self.logger.debug(f"Duplicate found and skipped: {clean_id}")
                 self.logger.info(f"Duplicate found and skipped: {clean_id}")
 
-        self.logger.info(f"[DEBUG] normalize_response_type final result: {deduped}")
+        self.logger.debug(f"normalize_response_type final result: {deduped}")
         return deduped
 
     def safe_parse_json(self, response_text):
@@ -595,7 +603,7 @@ class LLMParser(ABC):
         Wrapper method for backward compatibility.
         Delegates to the LLMClient's safe_parse_json method.
         """
-        self.logger.info(f"[DEBUG] Parser safe_parse_json wrapper called, delegating to client")
+        self.logger.debug(f"Parser safe_parse_json wrapper called, delegating to client")
         return self.client.safe_parse_json(response_text)
 
     def process_data_availability_links(self, dataset_links):
@@ -638,7 +646,7 @@ class LLMParser(ABC):
                 "href": link['href'],
                 "surrounding_text": link['surrounding_text']
             }
-            static_prompt = self.prompt_manager.load_prompt("retrieve_datasets_fromDAS")
+            static_prompt = self.prompt_manager.load_prompt("GEMINI_RTR_FewShot")
             messages = self.prompt_manager.render_prompt(static_prompt, self.full_document_read, **dynamic_content)
 
             # Generate a unique checksum for the prompt
@@ -879,8 +887,19 @@ class LLMParser(ABC):
                     self.logger.info(f"Link matches the pattern {pattern} of resolved_dataset_page.")
                     return resolved_dataset_page
                 else:
-                    self.logger.info(f"Link does not match the pattern {pattern } of resolved_dataset_page.")
-                    return 'n/a'
+                    self.logger.warning(f"Link does not match expected pattern {pattern} but may still be valid after redirect.")
+                    # Check if the resolved URL contains the dataset_id as a fallback
+                    if dataset_id and dataset_id != 'n/a' and dataset_id in resolved_dataset_page:
+                        self.logger.info(f"Dataset ID {dataset_id} found in resolved URL, accepting as valid.")
+                        return resolved_dataset_page
+                    # Try brute-force checking if it matches any known repository patterns
+                    brute_force_result = self.brute_force_dataset_webpage_url_check(resolved_dataset_page)
+                    if brute_force_result is not None:
+                        self.logger.info(f"Brute-force validation found valid dataset webpage: {brute_force_result}")
+                        return resolved_dataset_page
+                    # As a last resort, return the resolved URL instead of 'n/a' to preserve information
+                    self.logger.warning(f"Pattern validation failed but returning resolved URL to preserve potential valid link.")
+                    return resolved_dataset_page
             else:
                 self.logger.info(f"No dataset_webpage_url_ptr found for {resolved_repo}")
                 return resolved_dataset_page
@@ -895,8 +914,16 @@ class LLMParser(ABC):
                     self.logger.info(f"Found valid dataset webpage in old metadata {k}: {checked_url}")
                     return checked_url
 
-        self.logger.info(f"Repository {resolved_repo} not found in ontology")
-        return 'n/a'
+        # Final fallback: if repository is not in ontology but URL seems valid, preserve it
+        if resolved_repo not in self.open_data_repos_ontology['repos']:
+            self.logger.warning(f"Repository {resolved_repo} not found in ontology, but preserving resolved URL.")
+            # Check if the resolved URL looks like a valid dataset page (contains common patterns)
+            if any(indicator in resolved_dataset_page.lower() for indicator in ['dataset', 'data', 'accession', 'id=']):
+                self.logger.info(f"Resolved URL appears to contain dataset-related content, preserving it.")
+                return resolved_dataset_page
+            
+        self.logger.warning(f"All validation methods failed, returning original URL to preserve information.")
+        return resolved_dataset_page
 
     def resolve_url(self, url):
         try:
@@ -1001,7 +1028,7 @@ class LLMParser(ABC):
                     break
 
             if not resolved_to_known_repo and identifier is not None and identifier != 'n/a' and 'id_pattern' in v.keys():
-                self.logger.info(f"Checking id_pattern {v['id_pattern']} match with identifier {identifier} for {repo}")
+                self.logger.debug(f"Checking id_pattern {v['id_pattern']} match with identifier {identifier} for {repo}")
                 if re.match(v['id_pattern'], identifier, re.IGNORECASE):
                     self.logger.info(f"Found id_pattern match for {repo} in {v['id_pattern']}")
                     repo = k
@@ -1027,104 +1054,111 @@ class LLMParser(ABC):
 
     def get_dataset_page(self, datasets):
         """
-        Given a list of dataset dictionaries, reconstruct the dataset page, by using navigation patterns
-        from the ontology. The function will add a new key to the dataset dictionary with the webpage URL.
+        Enhance dataset dictionaries with missing dataset webpage URLs and access modes.
+        This function only acts on datasets that don't already have valid webpage URLs,
+        preserving existing good data from schema validation.
 
         :param datasets: list of dictionaries containing dataset information.
-
         :return: list of dictionaries with updated dataset information including dataset webpage URL.
         """
         if datasets is None:
             return None
 
-        self.logger.info(f"Fetching metadata for {len(datasets)} datasets")
+        self.logger.info(f"Enhancing dataset pages for {len(datasets)} datasets")
 
         for i, item in enumerate(datasets):
-
             if type(item) != dict:
-                self.logger.error(f"can't resolve dataset_webpage for non-dict item {1 + i}: {item}")
+                self.logger.error(f"Can't process non-dict item {1 + i}: {item}")
                 continue
 
-            self.logger.info(f"Processing dataset {1 + i} with keys: {item.keys()}")
-
-            if 'data_repository' not in item.keys() and 'repository_reference' not in item.keys():
-                self.logger.info(f"Skipping dataset {1 + i}: no data_repository for item")
+            # Skip if we already have a valid dataset webpage (preserve schema validation results)
+            existing_webpage = item.get('dataset_webpage', item.get('dataset_page', None))
+            if existing_webpage and existing_webpage != 'n/a' and existing_webpage != 'na':
+                self.logger.debug(f"Dataset {1 + i} already has valid webpage: {existing_webpage}")
+                # Still add access_mode if missing
+                self._add_access_mode_if_missing(item, i)
                 continue
 
+            self.logger.info(f"Processing dataset {1 + i} - missing or invalid webpage")
+
+            # Get required fields
+            repo = item.get('data_repository', item.get('repository_reference', None))
             accession_id = item.get('dataset_identifier', item.get('dataset_id', 'n/a'))
-            if accession_id == 'n/a':
-                self.logger.info(f"Skipping dataset {1 + i}: no dataset_identifier for item")
-                continue
-            else:
-                self.logger.info(f"Raw accession ID: {accession_id}")
-
-            if 'data_repository' in item.keys():
-                original_repo = item['data_repository']
-                repo = self.resolve_data_repository(original_repo, identifier=accession_id)
-            elif 'repository_reference' in item.keys():
-                original_repo = item['repository_reference']
-                repo = self.resolve_data_repository(original_repo, identifier=accession_id)
-            else:
-                self.logger.error(f"Error extracting data repository for item: {item}")
+            
+            if repo is None or repo == 'n/a' or accession_id == 'n/a':
+                self.logger.info(f"Skipping dataset {1 + i}: missing repo ({repo}) or accession_id ({accession_id})")
                 continue
 
+            # Handle list repositories (shouldn't happen after schema validation, but be defensive)
             if isinstance(repo, list):
                 if len(repo) > 0:
-                    self.logger.info(f"Repository is a list: {repo}. Resolving accession ID for each element.")
+                    self.logger.warning(f"Repository is a list: {repo}. Using first element.")
                     repo = repo[0]
                 else:
-                    self.logger.warning("Repository list is empty. Skipping this dataset.")
-                    continue  # or `return None`, depending on context
-
-            dataset_page = item.get('dataset_webpage', item.get('dataset_page', None))
-
-            accession_id = self.resolve_accession_id_for_repository(accession_id, repo, dataset_page)
-
-            self.logger.info(f"Processing dataset {1 + i} with repo: {repo} and accession_id: {accession_id}")
-            self.logger.debug(f"Processing dataset {1 + i} with keys: {item.keys()}")
-
-            updated_dt = False
-
-            if repo in self.open_data_repos_ontology['repos'].keys():
-
-                if "dataset_webpage_url_ptr" in self.open_data_repos_ontology['repos'][repo]:
-                    dataset_page_ptr = self.open_data_repos_ontology['repos'][repo]['dataset_webpage_url_ptr']
-                    if dataset_page and re.search(dataset_page_ptr.replace('__ID__', ''), dataset_page, re.IGNORECASE):
-                        self.logger.info(f"Dataset page {dataset_page} already matches pattern for {repo}")
-                        dataset_webpage = dataset_page
-                    else:
-                        self.logger.info(f"Using pattern {dataset_page_ptr} to construct dataset page for {repo}")
-                        dataset_webpage = re.sub('__ID__', accession_id, dataset_page_ptr)
-
-                elif ('dataset_webpage' in item.keys()):
-                    self.logger.debug(f"Skipping dataset {1 + i}: already has dataset_webpage")
+                    self.logger.warning("Repository list is empty. Skipping dataset.")
                     continue
 
-                else:
-                    self.logger.warning(
-                        f"No dataset_webpage_url_ptr found for {repo}. Maybe lost in refactoring 21 April 2025")
-                    dataset_webpage = 'na'
+            # Resolve accession ID if needed
+            resolved_accession_id = self.resolve_accession_id_for_repository(accession_id, repo, existing_webpage)
 
-                self.logger.info(f"Dataset page: {dataset_webpage}")
+            # Try to construct dataset webpage URL
+            dataset_webpage = self._construct_dataset_webpage(repo, resolved_accession_id, existing_webpage)
+            
+            if dataset_webpage and dataset_webpage != 'n/a':
                 datasets[i]['dataset_webpage'] = dataset_webpage
-
-                # add access mode
-                if 'access_mode' in self.open_data_repos_ontology['repos'][repo]:
-                    access_mode = self.open_data_repos_ontology['repos'][repo]['access_mode']
-                    datasets[i]['access_mode'] = access_mode
-                    self.logger.info(f"Adding access mode for dataset {1 + i}: {access_mode}")
-
-            elif original_repo.startswith('http'):
-                datasets[i]['data_repository'] = repo
-                datasets[i]['dataset_webpage'] = original_repo
-
+                self.logger.info(f"Added dataset webpage for {1 + i}: {dataset_webpage}")
             else:
-                self.logger.warning(f"Repository {repo} unknown in Ontology. Skipping dataset page {1 + i}.")
+                self.logger.warning(f"Could not construct valid webpage for dataset {1 + i}")
                 datasets[i]['dataset_webpage'] = 'n/a'
-                continue
 
-        self.logger.info(f"Updated datasets len: {len(datasets)}")
+            # Add access mode
+            self._add_access_mode_if_missing(item, i)
+
+        self.logger.info(f"Dataset enhancement completed: {len(datasets)} datasets processed")
         return datasets
+
+    def _construct_dataset_webpage(self, repo, accession_id, existing_webpage):
+        """Helper method to construct dataset webpage URL using ontology patterns."""
+        if repo in self.open_data_repos_ontology['repos']:
+            repo_config = self.open_data_repos_ontology['repos'][repo]
+            
+            if "dataset_webpage_url_ptr" in repo_config:
+                dataset_page_ptr = repo_config['dataset_webpage_url_ptr']
+                
+                # Check if existing webpage already matches the pattern
+                if existing_webpage:
+                    pattern_base = dataset_page_ptr.replace('__ID__', '')
+                    if re.search(re.escape(pattern_base), existing_webpage, re.IGNORECASE):
+                        self.logger.debug(f"Existing webpage {existing_webpage} matches pattern")
+                        return existing_webpage
+                
+                # Construct new URL using pattern
+                constructed_url = re.sub('__ID__', accession_id, dataset_page_ptr)
+                self.logger.info(f"Constructed webpage URL: {constructed_url}")
+                return constructed_url
+            else:
+                self.logger.debug(f"No dataset_webpage_url_ptr found for repo: {repo}")
+                return existing_webpage
+        
+        elif repo.startswith('http'):
+            # Repository itself is a URL, use it as the dataset webpage
+            self.logger.info(f"Using repo URL as dataset webpage: {repo}")
+            return repo
+        
+        else:
+            self.logger.warning(f"Repository {repo} not found in ontology")
+            return None
+
+    def _add_access_mode_if_missing(self, item, index):
+        """Helper method to add access_mode if missing."""
+        if 'access_mode' not in item:
+            repo = item.get('data_repository', item.get('repository_reference', None))
+            if repo and repo in self.open_data_repos_ontology['repos']:
+                repo_config = self.open_data_repos_ontology['repos'][repo]
+                if 'access_mode' in repo_config:
+                    access_mode = repo_config['access_mode']
+                    item['access_mode'] = access_mode
+                    self.logger.info(f"Added access mode for dataset {index + 1}: {access_mode}")
 
     def get_NuExtract_template(self):
         """

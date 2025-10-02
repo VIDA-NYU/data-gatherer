@@ -124,7 +124,7 @@ class XMLParser(LLMParser):
     def parse_data(self, api_data, publisher=None, current_url_address=None, additional_data=None,
                    raw_data_format='XML',
                    article_file_dir='tmp/raw_files/', process_DAS_links_separately=False, section_filter=None,
-                   prompt_name='retrieve_datasets_simple_JSON', use_portkey=True, semantic_retrieval=False,
+                   prompt_name='GPT_FewShot', use_portkey=True, semantic_retrieval=False,
                    top_k=2, response_format=dataset_response_schema_gpt):
         """
         Parse the API data and extract relevant links and metadata.
@@ -968,7 +968,7 @@ class TEI_XMLParser(XMLParser):
     def parse_data(self, api_data, publisher=None, current_url_address=None, additional_data=None,
                    raw_data_format='XML',
                    article_file_dir='tmp/raw_files/', process_DAS_links_separately=False, section_filter=None,
-                   prompt_name='retrieve_datasets_simple_JSON', use_portkey=True, semantic_retrieval=False,
+                   prompt_name='GPT_FewShot', use_portkey=True, semantic_retrieval=False,
                    top_k=2, response_format=dataset_response_schema_gpt):
         """
         Parse the API data and extract relevant links and metadata.
