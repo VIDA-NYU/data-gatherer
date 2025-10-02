@@ -377,7 +377,8 @@ class DataGatherer:
 
     def process_url(self, url, save_staging_table=False, article_file_dir='tmp/raw_files/', use_portkey=True,
                     driver_path=None, browser='Firefox', headless=True, prompt_name='GPT_FewShot',
-                    semantic_retrieval=False, section_filter=None, response_format=dataset_response_schema_gpt):
+                    semantic_retrieval=False, section_filter=None, response_format=dataset_response_schema_gpt,
+                    HTML_fallback=False):
         """
         Orchestrates the process for a single given source URL (publication).
 
@@ -417,7 +418,7 @@ class DataGatherer:
 
         self.data_fetcher = self.data_fetcher.update_DataFetcher_settings(url, self.full_document_read, self.logger,
                                                                           driver_path=driver_path, browser=browser,
-                                                                          headless=headless)
+                                                                          headless=headless, HTML_fallback=HTML_fallback)
         self.logger.info(f"Type of data_fetcher {self.data_fetcher.__class__.__name__}")
 
         article_id = self.url_to_article_id(url)
@@ -441,25 +442,25 @@ class DataGatherer:
 
             # if model processes selected parts of the document, fetch the relevant sections and go to the parsing step
             else:
-
                 raw_data = self.data_fetcher.fetch_data(url)
                 self.raw_data_format = self.data_fetcher.raw_data_format
 
-            if self.raw_data_format == "XML":
-                if not self.data_checker.is_xml_data_complete(raw_data, url):
-                    self.logger.info(f"Fallback to HTML data fetcher for {url}.")
-                    self.raw_data_format = "HTML"
-                    self.data_fetcher = self.data_fetcher.update_DataFetcher_settings(url,
-                                                                                        self.full_document_read,
-                                                                                        self.logger,
-                                                                                        HTML_fallback=True,
-                                                                                        driver_path=driver_path,
-                                                                                        browser=browser,
-                                                                                        headless=headless)
-                    raw_data = self.data_fetcher.fetch_data(url)
+            if not self.data_checker.is_fulltext_complete(raw_data, url, self.raw_data_format) and not (
+                self.data_fetcher.__class__.__name__ == "WebScraper"
+            ):
+                self.logger.info(f"Fallback to Selenium WebScraper data fetcher.")
+                self.raw_data_format = "HTML"
+                self.data_fetcher = self.data_fetcher.update_DataFetcher_settings(url,
+                                                                                    self.full_document_read,
+                                                                                    self.logger,
+                                                                                    HTML_fallback=True,
+                                                                                    driver_path=driver_path,
+                                                                                    browser=browser,
+                                                                                    headless=headless)
+                raw_data = self.data_fetcher.fetch_data(url)
 
-                else:
-                    self.logger.info(f"XML data is complete for {url}.")
+            else:
+                self.logger.info(f"{self.raw_data_format} data is complete for {url}.")
 
             raw_data = self.data_fetcher.remove_cookie_patterns(raw_data) if self.raw_data_format == "HTML" else raw_data
 
@@ -631,7 +632,7 @@ class DataGatherer:
         return classified_links
 
     def process_articles(self, url_list, log_modulo=10, save_staging_table=False, article_file_dir='tmp/raw_files/',
-                         driver_path=None, browser='Firefox', headless=True, use_portkey=True,
+                         driver_path=None, browser='Firefox', headless=True, use_portkey=True, response_format=dataset_response_schema_gpt,
                          prompt_name='GPT_FewShot', semantic_retrieval=False, section_filter=None):
         """
         Processes a list of article URLs and returns parsed data.
@@ -680,7 +681,8 @@ class DataGatherer:
                 use_portkey=use_portkey,
                 prompt_name=prompt_name,
                 semantic_retrieval=semantic_retrieval,
-                section_filter=section_filter
+                section_filter=section_filter,
+                response_format=response_format
             )
 
             if iteration % log_modulo == 0:

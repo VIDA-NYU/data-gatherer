@@ -148,3 +148,4 @@ ui/portkey-secret.yaml
 ui/deployment.yaml
 
 data_gatherer/prompts/prompt_templates/old
+data_gatherer/config/repos.txt
