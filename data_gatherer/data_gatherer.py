@@ -380,7 +380,7 @@ class DataGatherer:
     def process_url(self, url, save_staging_table=False, article_file_dir='tmp/raw_files/', use_portkey=True,
                     driver_path=None, browser='Firefox', headless=True, prompt_name='GPT_FewShot',
                     semantic_retrieval=False, section_filter=None, response_format=dataset_response_schema_gpt,
-                    HTML_fallback=False, grobid_for_pdf=False):
+                    HTML_fallback=False, grobid_for_pdf=False, write_htmls_xmls=False):
         """
         Orchestrates the process for a single given source URL (publication).
 
@@ -418,10 +418,13 @@ class DataGatherer:
 
         :param grobid_for_pdf: Flag to indicate if GROBID should be used for PDF processing.
 
+        :param write_htmls_xmls: Flag to indicate if raw HTML/XML files should be saved. Overwrites the default setting.
+
         :return: DataFrame of classified links or None if an error occurs.
         """
         self.logger.info(f"Processing URL: {url}")
         self.current_url = url
+        self.write_htmls_xmls = write_htmls_xmls or self.write_htmls_xmls
         self.publisher = self.data_fetcher.url_to_publisher_domain(url)
 
         self.data_fetcher = self.data_fetcher.update_DataFetcher_settings(url, self.full_document_read, self.logger,
@@ -492,7 +495,7 @@ class DataGatherer:
                     else:
                         self.logger.warning(f"Unsupported raw data format: {self.raw_data_format}.")
                 else:
-                    self.logger.info("Skipping raw HTML/XML/PDF saving.")
+                    self.logger.info(f"Skipping raw HTML/XML/PDF saving. Param write_htmls_xmls set to {self.write_htmls_xmls}.")
 
                 self.data_fetcher.quit() if hasattr(self.data_fetcher, 'scraper_tool') else None
 
@@ -545,7 +548,8 @@ class DataGatherer:
                                                  llm_name=self.llm,
                                                  full_document_read=self.full_document_read,
                                                  use_portkey=use_portkey,
-                                                 save_dynamic_prompts=self.save_dynamic_prompts)
+                                                 save_dynamic_prompts=self.save_dynamic_prompts,
+                                                 write_XML=write_htmls_xmls)
                 else:
                     self.parser = PDFParser(self.open_data_repos_ontology, self.logger,
                                             llm_name=self.llm,
@@ -653,7 +657,7 @@ class DataGatherer:
 
     def process_articles(self, url_list, log_modulo=10, save_staging_table=False, article_file_dir='tmp/raw_files/',
                          driver_path=None, browser='Firefox', headless=True, use_portkey=True, response_format=dataset_response_schema_gpt,
-                         prompt_name='GPT_FewShot', semantic_retrieval=False, section_filter=None, grobid_for_pdf=False):
+                         prompt_name='GPT_FewShot', semantic_retrieval=False, section_filter=None, grobid_for_pdf=False, write_htmls_xmls=False):
         """
         Processes a list of article URLs and returns parsed data.
 
@@ -707,7 +711,8 @@ class DataGatherer:
                 semantic_retrieval=semantic_retrieval,
                 section_filter=section_filter,
                 response_format=response_format,
-                grobid_for_pdf=grobid_for_pdf
+                grobid_for_pdf=grobid_for_pdf,
+                write_htmls_xmls=write_htmls_xmls
             )
 
             if iteration % log_modulo == 0:
