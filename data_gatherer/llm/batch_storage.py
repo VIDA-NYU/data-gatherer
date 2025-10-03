@@ -247,6 +247,8 @@ class BatchRequestBuilder:
         :param response_format: Optional response format schema
         :return: Formatted batch request
         """
+
+        self.logger.info(f"Creating OpenAI request with custom_id: {custom_id}, model: {model}, format: {response_format}")
         
         request = {
             "custom_id": custom_id,
@@ -254,7 +256,8 @@ class BatchRequestBuilder:
             "url": "/v1/responses",
             "body": {
                 "model": model,
-                "input": messages
+                "input": messages,
+                "text": { "format": response_format }
             }
         }
         
