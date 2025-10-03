@@ -1,5 +1,13 @@
 import os.path
 import os
+import re
+import json
+import time
+import threading
+import pandas as pd
+import ipywidgets as widgets
+import textwrap
+import cloudscraper
 from data_gatherer.logger_setup import setup_logging
 from data_gatherer.data_fetcher import *
 from data_gatherer.parser.html_parser import *
@@ -9,17 +17,9 @@ from data_gatherer.parser.grobid_pdf_parser import *
 from data_gatherer.llm.response_schema import *
 from data_gatherer.classifier import LLMClassifier
 from data_gatherer.env import CACHE_BASE_DIR
-import json
 from data_gatherer.selenium_setup import create_driver
-import pandas as pd
-import cloudscraper
-import time
 from data_gatherer.resources_loader import load_config
-import ipywidgets as widgets
 from IPython.display import display, clear_output
-import textwrap
-import threading
-import time
 
 
 class DataGatherer:
@@ -734,65 +734,31 @@ class DataGatherer:
                 if 'repository_reference' in df.columns:
                     df.rename(columns={'repository_reference': 'data_repository'}, inplace=True)
         return results
-
-    def DRAFT_prepare_prompts_batch(
-        self,
-        fname,
-        fetched_data,
-        raw_data_format,
-        prompt,
-        FDR,
-        semantic_retrieval=False,
-        section_filter=None
-    ):
-        """
-        Prepares a JSONL batch for API requests.
-        Each line contains a dict with a unique custom_id and a body with API parameters.
-        Returns a list of dicts (ready to be written as JSONL).
-        """
-        jsonl_cont = []
-
-        for url, data in fetched_data.items():
-            # Compose custom_id
-            article_id = self.url_to_article_id(url)
-            custom_id = f"{self.llm}|{article_id}|FDR={FDR}|{raw_data_format}"
-
-            if raw_data_format.upper() == 'XML':
-                prepare_input = self.parser.normalize_xml(data['fetched_data'])
-            elif raw_data_format.upper() == 'HTML':
-                prepare_input = self.parser.normalize_html(data['fetched_data'])
-            else:
-                raise ValueError(f"Unsupported raw data format: {raw_data_format}")
-
-            prompt = self.parser.prompt_manager.render_prompt(
-                prompt_name=prompt,
-                raw_data_format=raw_data_format,
-                full_document_read=self.full_document_read,
-                input_text=prepare_input,
-                url=url,
-                section_filter=section_filter
-            )
-
-            # Prepare body (parameters for the API)
-            body = {
-                "raw_data_format": data['raw_data_format'],
-                "prompt": prompt,
-                "FDR": FDR,
-                "semantic_retrieval": semantic_retrieval,
-                "section_filter": section_filter,
-                "url": url
-            }
-
-            jsonl_cont.append({
-                "custom_id": custom_id,
-                "body": body,
-            })
-
-        with open(fname, 'w') as f:
-            for entry in jsonl_cont:
-                f.write(json.dumps(entry) + '\n')
-
-        return jsonl_cont
+    
+    def _initialize_parser_for_batch(self, raw_data_format):
+        """Initialize parser if not already done for batch processing."""
+        if raw_data_format.upper() == "XML":
+            from data_gatherer.parser.xml_parser import XMLRouter
+            router = XMLRouter(self.open_data_repos_ontology, self.logger, 
+                             full_document_read=self.full_document_read,
+                             llm_name=self.llm, save_dynamic_prompts=self.save_dynamic_prompts)
+            # For batch, we'll use a generic XMLParser since we don't have specific data yet
+            from data_gatherer.parser.xml_parser import XMLParser
+            self.parser = XMLParser(self.open_data_repos_ontology, self.logger,
+                                  full_document_read=self.full_document_read,
+                                  llm_name=self.llm, save_dynamic_prompts=self.save_dynamic_prompts)
+        elif raw_data_format.upper() == "HTML":
+            from data_gatherer.parser.html_parser import HTMLParser
+            self.parser = HTMLParser(self.open_data_repos_ontology, self.logger,
+                                   full_document_read=self.full_document_read,
+                                   llm_name=self.llm, save_dynamic_prompts=self.save_dynamic_prompts)
+        elif raw_data_format.upper() == "PDF":
+            from data_gatherer.parser.pdf_parser import PDFParser
+            self.parser = PDFParser(self.open_data_repos_ontology, self.logger,
+                                  full_document_read=self.full_document_read,
+                                  llm_name=self.llm, save_dynamic_prompts=self.save_dynamic_prompts)
+        else:
+            raise ValueError(f"Unsupported raw data format for batch processing: {raw_data_format}")
 
     def summarize_result(self, df):
         """
@@ -1296,3 +1262,200 @@ class DataGatherer:
             if isinstance(self.data_fetcher, EntrezFetcher):
                 self.logger.info("Closing the EntrezFetcher.")
                 self.data_fetcher.api_client.close()
+
+    def run_integrated_batch_processing(
+        self,
+        url_list,
+        batch_file_path,
+        output_file_path=None,
+        api_provider='openai',
+        prompt_name='GPT_FewShot',
+        response_format=None,
+        temperature=0.0,
+        semantic_retrieval=False,
+        section_filter=None,
+        submit_immediately=True,
+        wait_for_completion=False,
+        poll_interval=60,
+        batch_description=None
+    ):
+        """
+        Complete integrated batch processing using LLMClient batch functionality.
+        
+        This method leverages the new LLMClient batch processing capabilities for
+        improved performance and proper separation of concerns.
+        
+        :param url_list: List of URLs/PMCIDs to process
+        :param batch_file_path: Path for the batch JSONL file
+        :param output_file_path: Path for the results file (auto-generated if None)
+        :param api_provider: 'openai' or 'portkey'
+        :param prompt_name: Name of the prompt template
+        :param response_format: Response schema
+        :param temperature: Model temperature
+        :param semantic_retrieval: Enable semantic retrieval
+        :param section_filter: Section filter
+        :param submit_immediately: Whether to submit the batch job immediately
+        :param wait_for_completion: Whether to wait for batch completion
+        :param poll_interval: Seconds between status checks
+        :param batch_description: Optional description for the batch job
+        :return: Dictionary with batch information and results
+        """
+
+        self.logger.info(f"Starting integrated batch processing for {len(url_list)} URLs")
+        
+        try:
+            # Step 1: Fetch data
+            self.logger.info("Step 1: Fetching data...")
+            fetched_data = self.fetch_data(url_list)
+            
+            # Determine the raw data format from the first successful fetch
+            raw_data_format = None
+            for url, data in fetched_data.items():
+                if data and 'raw_data_format' in data:
+                    raw_data_format = data['raw_data_format']
+                    break
+            
+            if not raw_data_format:
+                raise ValueError("Could not determine raw data format from fetched data")
+            
+            self.logger.info(f"Detected raw data format: {raw_data_format}")
+            
+            # Step 2: Initialize parser and prepare batch requests for LLMClient
+            if self.parser is None:
+                self._initialize_parser_for_batch(raw_data_format)
+            
+            # Prepare batch requests in the format expected by LLMClient
+            batch_requests = []
+            for url, data in fetched_data.items():
+                try:
+                    # Generate unique custom_id
+                    article_id = self.url_to_article_id(url)
+                    timestamp = int(time.time() * 1000)
+                    custom_id = f"{self.llm}_{article_id}_{timestamp}"
+                    custom_id = re.sub(r'[^a-zA-Z0-9_-]', '_', custom_id)[:64]
+                    
+                    # Normalize input data
+                    if raw_data_format.upper() == 'XML':
+                        normalized_input = (self.parser.normalize_XML(data['fetched_data']) 
+                                          if hasattr(self.parser, 'normalize_XML') 
+                                          else data['fetched_data'])
+                    elif raw_data_format.upper() == 'HTML':
+                        normalized_input = (self.parser.normalize_HTML(data['fetched_data']) 
+                                          if hasattr(self.parser, 'normalize_HTML') 
+                                          else data['fetched_data'])
+                    elif raw_data_format.upper() == 'PDF':
+                        normalized_input = data['fetched_data']
+                    else:
+                        raise ValueError(f"Unsupported raw data format: {raw_data_format}")
+                    
+                    # Render prompt
+                    static_prompt = self.parser.prompt_manager.load_prompt(prompt_name)
+                    messages = self.parser.prompt_manager.render_prompt(
+                        static_prompt,
+                        entire_doc=self.full_document_read,
+                        content=normalized_input,
+                        repos=', '.join(self.parser.repo_names) if hasattr(self.parser, 'repo_names') else '',
+                        url=url,
+                        section_filter=section_filter
+                    )
+                    
+                    # Create batch request for LLMClient
+                    batch_request = {
+                        'custom_id': custom_id,
+                        'messages': messages,
+                        'metadata': {
+                            'url': url,
+                            'article_id': article_id,
+                            'raw_data_format': raw_data_format
+                        }
+                    }
+                    
+                    batch_requests.append(batch_request)
+                    
+                except Exception as e:
+                    self.logger.error(f"Error preparing request for {url}: {e}")
+                    continue
+            
+            self.logger.info(f"Prepared {len(batch_requests)} batch requests")
+            
+            # Step 3: Use LLMClient to handle batch processing
+            self.logger.info("Step 3: Creating batch file using LLMClient...")
+            
+            # Use LLMClient's batch processing capabilities
+            batch_result = self.parser.llm_client._handle_batch_mode(
+                batch_requests=batch_requests,
+                batch_file_path=batch_file_path,
+                temperature=temperature,
+                response_format=response_format,
+                api_provider=api_provider
+            )
+            
+            result = {
+                'batch_file_created': batch_result,
+                'fetched_data_count': len(fetched_data),
+                'processed_requests': len(batch_requests),
+                'api_provider': api_provider,
+                'model': self.llm
+            }
+            
+            # Step 4: Submit batch job if requested
+            if submit_immediately:
+                self.logger.info("Step 4: Submitting batch job...")
+                
+                submission_result = self.parser.llm_client.submit_batch_job(
+                    batch_file_path=batch_file_path,
+                    api_provider=api_provider,
+                    batch_description=batch_description
+                )
+                
+                result['batch_submission'] = submission_result
+                batch_id = submission_result['batch_id']
+                
+                self.logger.info(f"Batch job submitted successfully. ID: {batch_id}")
+                
+                # Step 5: Wait for completion if requested
+                if wait_for_completion:
+                    self.logger.info(f"Step 5: Waiting for batch completion (polling every {poll_interval}s)...")
+                    
+                    while True:
+                        status_info = self.parser.llm_client.check_batch_status(
+                            batch_id=batch_id,
+                            api_provider=api_provider
+                        )
+                        
+                        status = status_info['status']
+                        self.logger.info(f"Batch status: {status}")
+                        
+                        if status == 'completed':
+                            # Download results
+                            if not output_file_path:
+                                output_file_path = batch_file_path.replace('.jsonl', '_results.jsonl')
+                            
+                            download_result = self.parser.llm_client.download_batch_results(
+                                batch_id=batch_id,
+                                output_file_path=output_file_path,
+                                api_provider=api_provider
+                            )
+                            
+                            result['batch_results'] = download_result
+                            result['output_file_path'] = output_file_path
+                            
+                            self.logger.info(f"Batch processing completed successfully. Results saved to: {output_file_path}")
+                            break
+                            
+                        elif status in ['failed', 'expired', 'cancelled']:
+                            self.logger.error(f"Batch job failed with status: {status}")
+                            result['error'] = f"Batch job failed with status: {status}"
+                            break
+                            
+                        else:
+                            # Still processing, wait and check again
+                            time.sleep(poll_interval)
+                    
+                    result['final_status'] = status_info
+            
+            return result
+            
+        except Exception as e:
+            self.logger.error(f"Error in integrated batch processing: {e}", exc_info=True)
+            raise

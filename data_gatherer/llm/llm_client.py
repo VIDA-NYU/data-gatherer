@@ -1,6 +1,8 @@
 import logging
 import json
 import re
+import time
+from typing import Dict, List, Any, Optional, Union
 from ollama import Client
 from openai import OpenAI
 import google.generativeai as genai
@@ -9,6 +11,7 @@ from json_repair import repair_json
 from data_gatherer.prompts.prompt_manager import PromptManager
 from data_gatherer.env import PORTKEY_GATEWAY_URL, PORTKEY_API_KEY, PORTKEY_ROUTE, PORTKEY_CONFIG, OLLAMA_CLIENT, GPT_API_KEY, GEMINI_KEY, DATA_GATHERER_USER_NAME
 from data_gatherer.llm.response_schema import *
+from data_gatherer.llm.batch_storage import BatchStorageManager, BatchRequestBuilder
 
 class LLMClient_dev:
     def __init__(self, model: str, logger=None, save_prompts: bool = False, use_portkey: bool = True, 
@@ -33,6 +36,10 @@ class LLMClient_dev:
                                             save_dynamic_prompts=save_dynamic_prompts,
                                             save_responses_to_cache=save_responses_to_cache,
                                             use_cached_responses=use_cached_responses)
+        
+        # Initialize batch processing utilities
+        self.batch_storage = BatchStorageManager(self.logger)
+        self.batch_builder = BatchRequestBuilder(self.logger)
 
     def _initialize_client(self, model):
         self.logger.debug(f"_initialize_client called with model={model}, use_portkey={self.use_portkey}")
@@ -152,18 +159,35 @@ class LLMClient_dev:
             raise RuntimeError(f"Portkey API call failed: {e}")
 
     def make_llm_call(self, messages, temperature: float = 0.0, response_format=None, 
-                      full_document_read: bool = None) -> str:
+                      full_document_read: bool = None, batch_mode: bool = False, 
+                      batch_requests: Optional[List[Dict]] = None,
+                      batch_file_path: Optional[str] = None,
+                      api_provider: str = 'openai') -> Union[str, Dict[str, Any]]:
         """
         Generic method to make LLM API calls. This is task-agnostic and only handles the raw API interaction.
         
-        :param messages: The messages/prompt to send to the LLM
+        :param messages: The messages/prompt to send to the LLM (ignored in batch mode)
         :param temperature: Temperature setting for the model
         :param response_format: Optional response format schema
         :param full_document_read: Override for full document read capability
-        :return: Raw response from the LLM as string
+        :param batch_mode: If True, creates batch requests instead of immediate call
+        :param batch_requests: List of batch request data (required for batch mode)
+        :param batch_file_path: Path for saving batch JSONL file (required for batch mode)
+        :param api_provider: API provider for batch processing ('openai' or 'portkey')
+        :return: Raw response from the LLM as string, or batch info dict in batch mode
         """
         if full_document_read is None:
             full_document_read = self.full_document_read
+        
+        # Handle batch mode
+        if batch_mode:
+            return self._handle_batch_mode(
+                batch_requests=batch_requests,
+                batch_file_path=batch_file_path,
+                temperature=temperature,
+                response_format=response_format,
+                api_provider=api_provider
+            )
             
         self.logger.info(f"Making LLM call with model: {self.model}, temperature: {temperature}")
         
@@ -522,5 +546,285 @@ class LLMClient_dev:
                 except Exception:
                     pass
                 return None
+    
+    def _handle_batch_mode(self,
+                          batch_requests: List[Dict],
+                          batch_file_path: str,
+                          temperature: float = 0.0,
+                          response_format: Optional[Dict] = None,
+                          api_provider: str = 'openai') -> Dict[str, Any]:
+        """
+        Handle batch mode processing by creating JSONL file with properly formatted requests.
+        
+        :param batch_requests: List of batch request data
+        :param batch_file_path: Path for saving batch JSONL file
+        :param temperature: Temperature setting
+        :param response_format: Response format schema
+        :param api_provider: API provider ('openai' or 'portkey')
+        :return: Dictionary with batch file info and statistics
+        """
+        try:
+            self.logger.info(f"Processing {len(batch_requests)} requests for batch mode")
+            
+            # Convert batch requests to proper API format
+            formatted_requests = []
+            
+            for request_data in batch_requests:
+                custom_id = request_data.get('custom_id')
+                messages = request_data.get('messages')
+                
+                if not custom_id or not messages:
+                    self.logger.warning(f"Skipping invalid batch request: missing custom_id or messages")
+                    continue
+                
+                # Create properly formatted request based on API provider
+                if api_provider.lower() == 'openai':
+                    formatted_request = self.batch_builder.create_openai_request(
+                        custom_id=custom_id,
+                        messages=messages,
+                        model=self.model,
+                        temperature=temperature,
+                        response_format=response_format
+                    )
+                elif api_provider.lower() == 'portkey':
+                    formatted_request = self.batch_builder.create_portkey_request(
+                        custom_id=custom_id,
+                        messages=messages,
+                        model=self.model,
+                        temperature=temperature,
+                        response_format=response_format
+                    )
+                else:
+                    raise ValueError(f"Unsupported API provider: {api_provider}")
+                
+                formatted_requests.append(formatted_request)
+            
+            # Create JSONL file
+            file_stats = self.batch_storage.create_jsonl_batch_file(
+                requests=formatted_requests,
+                output_path=batch_file_path
+            )
+            
+            # Validate the created file
+            validation_result = self.batch_storage.validate_jsonl_format(batch_file_path)
+            
+            result = {
+                'batch_file_path': batch_file_path,
+                'total_requests': len(formatted_requests),
+                'skipped_requests': len(batch_requests) - len(formatted_requests),
+                'api_provider': api_provider,
+                'model': self.model,
+                'file_stats': file_stats,
+                'validation': validation_result,
+                'created_at': time.strftime('%Y-%m-%d %H:%M:%S')
+            }
+            
+            self.logger.info(f"Batch file created successfully: {batch_file_path} with {len(formatted_requests)} requests")
+            return result
+            
+        except Exception as e:
+            self.logger.error(f"Error in batch mode processing: {e}")
+            raise
+    
+    def submit_batch_job(self, 
+                        batch_file_path: str, 
+                        api_provider: str = 'openai',
+                        batch_description: Optional[str] = None) -> Dict[str, Any]:
+        """
+        Submit a batch job to the specified API provider.
+        
+        :param batch_file_path: Path to the JSONL batch file
+        :param api_provider: API provider ('openai' or 'portkey')
+        :param batch_description: Optional description for the batch job
+        :return: Batch job information
+        """
+        try:
+            if api_provider.lower() == 'openai':
+                return self._submit_openai_batch(batch_file_path, batch_description)
+            elif api_provider.lower() == 'portkey':
+                return self._submit_portkey_batch(batch_file_path, batch_description)
+            else:
+                raise ValueError(f"Unsupported API provider: {api_provider}")
+                
+        except Exception as e:
+            self.logger.error(f"Error submitting batch job: {e}")
+            raise
+    
+    def _submit_openai_batch(self, batch_file_path: str, batch_description: Optional[str]) -> Dict[str, Any]:
+        """Submit batch to OpenAI Batch API."""
+        # Upload the batch file
+        self.logger.info(f"Uploading batch file to OpenAI: {batch_file_path}")
+        with open(batch_file_path, 'rb') as file:
+            batch_input_file = self.client.files.create(
+                file=file,
+                purpose="batch"
+            )
+        
+        # Create the batch job
+        self.logger.info(f"Creating batch job with file ID: {batch_input_file.id}")
+        batch_job = self.client.batches.create(
+            input_file_id=batch_input_file.id,
+            endpoint="/v1/chat/completions",
+            completion_window="24h",
+            metadata={
+                "description": batch_description or f"LLMClient batch job - {time.strftime('%Y-%m-%d %H:%M:%S')}",
+                "model": self.model,
+                "created_by": "llm_client"
+            }
+        )
+        
+        self.logger.info(f"OpenAI batch job created. ID: {batch_job.id}, Status: {batch_job.status}")
+        
+        return {
+            'batch_id': batch_job.id,
+            'status': batch_job.status,
+            'input_file_id': batch_input_file.id,
+            'created_at': batch_job.created_at,
+            'api_provider': 'openai',
+            'endpoint': batch_job.endpoint,
+            'completion_window': batch_job.completion_window
+        }
+    
+    def _submit_portkey_batch(self, batch_file_path: str, batch_description: Optional[str]) -> Dict[str, Any]:
+        """Submit batch to Portkey Batch API."""
+        portkey = Portkey(
+            api_key=PORTKEY_API_KEY,
+            config=PORTKEY_CONFIG
+        )
+        
+        # Upload the batch file
+        self.logger.info(f"Uploading batch file to Portkey: {batch_file_path}")
+        with open(batch_file_path, 'rb') as file:
+            batch_input_file = portkey.files.create(
+                file=file,
+                purpose="batch"
+            )
+        
+        # Create the batch job
+        self.logger.info(f"Creating Portkey batch job with file ID: {batch_input_file.id}")
+        batch_job = portkey.batches.create(
+            input_file_id=batch_input_file.id,
+            endpoint="/chat/completions",
+            completion_window="24h",
+            metadata={
+                "description": batch_description or f"LLMClient Portkey batch - {time.strftime('%Y-%m-%d %H:%M:%S')}",
+                "model": self.model
+            }
+        )
+        
+        self.logger.info(f"Portkey batch job created. ID: {batch_job.id}, Status: {batch_job.status}")
+        
+        return {
+            'batch_id': batch_job.id,
+            'status': batch_job.status,
+            'input_file_id': batch_input_file.id,
+            'created_at': batch_job.created_at,
+            'api_provider': 'portkey',
+            'endpoint': batch_job.endpoint,
+            'completion_window': batch_job.completion_window
+        }
+    
+    def check_batch_status(self, batch_id: str, api_provider: str = 'openai') -> Dict[str, Any]:
+        """
+        Check the status of a batch job.
+        
+        :param batch_id: Batch job ID
+        :param api_provider: API provider ('openai' or 'portkey')
+        :return: Batch status information
+        """
+        try:
+            if api_provider.lower() == 'openai':
+                batch_job = self.client.batches.retrieve(batch_id)
+                
+                return {
+                    'batch_id': batch_job.id,
+                    'status': batch_job.status,
+                    'output_file_id': getattr(batch_job, 'output_file_id', None),
+                    'error_file_id': getattr(batch_job, 'error_file_id', None),
+                    'created_at': batch_job.created_at,
+                    'completed_at': getattr(batch_job, 'completed_at', None),
+                    'failed_at': getattr(batch_job, 'failed_at', None),
+                    'request_counts': getattr(batch_job, 'request_counts', {}),
+                    'api_provider': 'openai'
+                }
+                
+            elif api_provider.lower() == 'portkey':
+                portkey = Portkey(api_key=PORTKEY_API_KEY, config=PORTKEY_CONFIG)
+                batch_job = portkey.batches.retrieve(batch_id)
+                
+                return {
+                    'batch_id': batch_job.id,
+                    'status': batch_job.status,
+                    'output_file_id': getattr(batch_job, 'output_file_id', None),
+                    'error_file_id': getattr(batch_job, 'error_file_id', None),
+                    'created_at': batch_job.created_at,
+                    'completed_at': getattr(batch_job, 'completed_at', None),
+                    'request_counts': getattr(batch_job, 'request_counts', {}),
+                    'api_provider': 'portkey'
+                }
+            else:
+                raise ValueError(f"Unsupported API provider: {api_provider}")
+                
+        except Exception as e:
+            self.logger.error(f"Error checking batch status: {e}")
+            raise
+    
+    def download_batch_results(self, 
+                              batch_id: str, 
+                              output_file_path: str,
+                              api_provider: str = 'openai') -> Dict[str, Any]:
+        """
+        Download batch results when completed.
+        
+        :param batch_id: Batch job ID
+        :param output_file_path: Path to save the results
+        :param api_provider: API provider ('openai' or 'portkey')
+        :return: Download information and statistics
+        """
+        try:
+            # Check batch status first
+            status_info = self.check_batch_status(batch_id, api_provider)
+            
+            if status_info['status'] != 'completed':
+                raise ValueError(f"Batch {batch_id} is not completed. Status: {status_info['status']}")
+            
+            if not status_info.get('output_file_id'):
+                raise ValueError(f"No output file available for batch {batch_id}")
+            
+            # Download the results file
+            if api_provider.lower() == 'openai':
+                file_response = self.client.files.content(status_info['output_file_id'])
+                
+                with open(output_file_path, 'wb') as f:
+                    f.write(file_response.content)
+                    
+            elif api_provider.lower() == 'portkey':
+                portkey = Portkey(api_key=PORTKEY_API_KEY, config=PORTKEY_CONFIG)
+                file_response = portkey.files.content(status_info['output_file_id'])
+                
+                with open(output_file_path, 'wb') as f:
+                    f.write(file_response.content)
+            else:
+                raise ValueError(f"Unsupported API provider: {api_provider}")
+            
+            # Validate and get statistics from the downloaded file
+            validation_result = self.batch_storage.validate_jsonl_format(output_file_path)
+            file_info = self.batch_storage.get_file_info(output_file_path)
+            
+            result = {
+                'output_file_path': output_file_path,
+                'batch_id': batch_id,
+                'api_provider': api_provider,
+                'file_info': file_info,
+                'validation': validation_result,
+                'downloaded_at': time.strftime('%Y-%m-%d %H:%M:%S')
+            }
+            
+            self.logger.info(f"Batch results downloaded successfully: {output_file_path}")
+            return result
+            
+        except Exception as e:
+            self.logger.error(f"Error downloading batch results: {e}")
+            raise
 
 
