@@ -439,7 +439,7 @@ class PDFParser(LLMParser):
                 f"messages length: {self.count_tokens(messages, model)} tokens, schema: {response_format}")
             
             # Use the generic make_llm_call method
-            raw_response = self.client.make_llm_call(
+            raw_response = self.llm_client.make_llm_call(
                 messages=messages, 
                 temperature=temperature, 
                 response_format=response_format,
@@ -448,7 +448,7 @@ class PDFParser(LLMParser):
             
             # Use the unified response processing method
             self.logger.debug(f"Calling process_llm_response with raw_response type: {type(raw_response)}")
-            resps = self.client.process_llm_response(
+            resps = self.llm_client.process_llm_response(
                 raw_response=raw_response,
                 response_format=response_format,
                 expected_key="datasets"

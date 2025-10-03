@@ -46,32 +46,32 @@ class LLMClient_dev:
         
         if self.use_portkey and 'gemini' in model:
             self.logger.debug(f"Initializing Portkey client for Gemini model: {model}")
-            self.client = Portkey(
+            self.llm_client = Portkey(
                 api_key=PORTKEY_API_KEY,
                 virtual_key=PORTKEY_ROUTE,
                 base_url=PORTKEY_GATEWAY_URL,
                 config=PORTKEY_CONFIG,
                 metadata={"_user": DATA_GATHERER_USER_NAME}
             )
-            self.portkey = self.client  # Keep backward compatibility
-            self.logger.debug(f"Portkey client initialized: {self.client}")
+            self.portkey = self.llm_client  # Keep backward compatibility
+            self.logger.debug(f"Portkey client initialized: {self.llm_client}")
 
         elif model.startswith('gemma3') or model.startswith('qwen'):
             self.logger.debug(f"Initializing Ollama client for model: {model}")
-            self.client = Client(host="http://localhost:11434")
+            self.llm_client = Client(host="http://localhost:11434")
 
         elif model == 'gemma2:9b':
             self.logger.debug(f"Initializing Ollama client for gemma2:9b")
-            self.client = Client(host=OLLAMA_CLIENT)  # env variable
+            self.llm_client = Client(host=OLLAMA_CLIENT)  # env variable
 
         elif model.startswith('gpt'):
             self.logger.debug(f"Initializing OpenAI client for model: {model}")
-            self.client = OpenAI(api_key=GPT_API_KEY)
+            self.llm_client = OpenAI(api_key=GPT_API_KEY)
 
         elif model.startswith('gemini') and not self.use_portkey:
             self.logger.debug(f"Initializing direct Gemini client for model: {model}")
             genai.configure(api_key=GEMINI_KEY)
-            self.client = genai.GenerativeModel(model)
+            self.llm_client = genai.GenerativeModel(model)
             
         else:
             self.logger.debug(f"Unsupported model: {model}")
@@ -98,7 +98,7 @@ class LLMClient_dev:
         if self.save_prompts:
             self.prompt_manager.save_prompt(prompt_id='abc', prompt_content=messages)
         if 'gpt-5' in self.model:
-            response = self.client.responses.create(
+            response = self.llm_client.responses.create(
                 model=self.model,
                 input=messages,
                 text={
@@ -106,7 +106,7 @@ class LLMClient_dev:
                 }
             )
         elif 'gpt-4' in self.model:
-            response = self.client.responses.create(
+            response = self.llm_client.responses.create(
                 model=self.model,
                 input=messages,
                 text={
@@ -119,7 +119,7 @@ class LLMClient_dev:
         self.logger.info(f"Calling Gemini")
         if self.save_prompts:
             self.prompt_manager.save_prompt(prompt_id='abc', prompt_content=messages)
-        response = self.client.generate_content(
+        response = self.llm_client.generate_content(
             messages,
             generation_config=genai.GenerationConfig(
                 response_mime_type="application/json",
@@ -132,7 +132,7 @@ class LLMClient_dev:
         self.logger.info(f"Calling Ollama with messages: {messages}")
         if self.save_prompts:
             self.prompt_manager.save_prompt(prompt_id='abc', prompt_content=messages)
-        response = self.client.chat(model=self.model, options={"temperature": temperature}, messages=messages,
+        response = self.llm_client.chat(model=self.model, options={"temperature": temperature}, messages=messages,
                                     format=response_format)
         self.logger.info(f"Ollama response: {response['message']['content']}")
         return response['message']['content']
@@ -192,7 +192,7 @@ class LLMClient_dev:
         self.logger.info(f"Making LLM call with model: {self.model}, temperature: {temperature}")
         
         if self.model == 'gemma2:9b':
-            response = self.client.chat(model=self.model, options={"temperature": temperature}, messages=messages)
+            response = self.llm_client.chat(model=self.model, options={"temperature": temperature}, messages=messages)
             self.logger.info(f"Response received from model: {response.get('message', {}).get('content', 'No content')}")
             return response['message']['content']
             
@@ -206,26 +206,26 @@ class LLMClient_dev:
             response = None
             if 'gpt-5' in self.model:
                 if full_document_read and response_format:
-                    response = self.client.responses.create(
+                    response = self.llm_client.responses.create(
                         model=self.model,
                         input=messages,
                         text={"format": response_format}
                     )
                 else:
-                    response = self.client.responses.create(
+                    response = self.llm_client.responses.create(
                         model=self.model,
                         input=messages
                     )
             elif 'gpt-4o' in self.model:
                 if full_document_read and response_format:
-                    response = self.client.responses.create(
+                    response = self.llm_client.responses.create(
                         model=self.model,
                         input=messages,
                         temperature=temperature,
                         text={"format": response_format}
                     )
                 else:
-                    response = self.client.responses.create(
+                    response = self.llm_client.responses.create(
                         model=self.model,
                         input=messages,
                         temperature=temperature
@@ -243,7 +243,7 @@ class LLMClient_dev:
                     "temperature": temperature,
                 }
                 try:
-                    response = self.client.chat.completions.create(**portkey_payload)
+                    response = self.llm_client.chat.completions.create(**portkey_payload)
                     self.logger.info(f"Portkey Gemini response: {response}")
                     return response
                 except Exception as e:
@@ -252,7 +252,7 @@ class LLMClient_dev:
             else:
                 # Direct Gemini call
                 if 'gemini' in self.model and 'flash' in self.model:
-                    response = self.client.generate_content(
+                    response = self.llm_client.generate_content(
                         messages,
                         generation_config=genai.GenerationConfig(
                             response_mime_type="application/json",
@@ -260,7 +260,7 @@ class LLMClient_dev:
                         )
                     )
                 elif self.model == 'gemini-1.5-pro':
-                    response = self.client.generate_content(
+                    response = self.llm_client.generate_content(
                         messages,
                         request_options={"timeout": 1200},
                         generation_config=genai.GenerationConfig(
