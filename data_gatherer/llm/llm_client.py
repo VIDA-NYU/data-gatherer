@@ -77,7 +77,7 @@ class LLMClient_dev:
             self.logger.debug(f"Unsupported model: {model}")
             raise ValueError(f"Unsupported LLM name: {model}.")
 
-        self.logger.debug(f"Client initialization complete. self.client: {self.client}, self.portkey: {getattr(self, 'portkey', 'Not set')}")
+        self.logger.debug(f"Client initialization complete. self.llm_client: {self.llm_client}, self.portkey: {getattr(self, 'portkey', 'Not set')}")
 
     def api_call(self, content, response_format, temperature=0.0, **kwargs):
         self.logger.info(f"Calling {self.model} with prompt length {len(content)}")
@@ -579,10 +579,16 @@ class LLMClient_dev:
                 
                 # Create properly formatted request based on API provider
                 if api_provider.lower() == 'openai':
+                    # Use a compatible OpenAI model for batch processing
+                    batch_model = self.model
+                    if 'gemini' in self.model.lower():
+                        batch_model = 'gpt-4o-mini'  # Use OpenAI model for batch processing
+                        self.logger.info(f"Using OpenAI model {batch_model} for batch processing instead of {self.model}")
+                    
                     formatted_request = self.batch_builder.create_openai_request(
                         custom_id=custom_id,
                         messages=messages,
-                        model=self.model,
+                        model=batch_model,
                         temperature=temperature,
                         response_format=response_format
                     )
@@ -608,12 +614,17 @@ class LLMClient_dev:
             # Validate the created file
             validation_result = self.batch_storage.validate_jsonl_format(batch_file_path)
             
+            # Determine the actual model used for batch processing
+            actual_model = self.model
+            if api_provider.lower() == 'openai' and 'gemini' in self.model.lower():
+                actual_model = 'gpt-4o-mini'
+            
             result = {
                 'batch_file_path': batch_file_path,
                 'total_requests': len(formatted_requests),
                 'skipped_requests': len(batch_requests) - len(formatted_requests),
                 'api_provider': api_provider,
-                'model': self.model,
+                'model': actual_model,
                 'file_stats': file_stats,
                 'validation': validation_result,
                 'created_at': time.strftime('%Y-%m-%d %H:%M:%S')
@@ -652,19 +663,23 @@ class LLMClient_dev:
     
     def _submit_openai_batch(self, batch_file_path: str, batch_description: Optional[str]) -> Dict[str, Any]:
         """Submit batch to OpenAI Batch API."""
+        # Create a dedicated OpenAI client for batch operations
+        # This ensures we use the direct OpenAI API even if the main client uses Portkey
+        openai_client = OpenAI(api_key=GPT_API_KEY)
+        
         # Upload the batch file
         self.logger.info(f"Uploading batch file to OpenAI: {batch_file_path}")
         with open(batch_file_path, 'rb') as file:
-            batch_input_file = self.client.files.create(
+            batch_input_file = openai_client.files.create(
                 file=file,
                 purpose="batch"
             )
         
         # Create the batch job
         self.logger.info(f"Creating batch job with file ID: {batch_input_file.id}")
-        batch_job = self.client.batches.create(
+        batch_job = openai_client.batches.create(
             input_file_id=batch_input_file.id,
-            endpoint="/v1/chat/completions",
+            endpoint="/v1/responses",
             completion_window="24h",
             metadata={
                 "description": batch_description or f"LLMClient batch job - {time.strftime('%Y-%m-%d %H:%M:%S')}",
@@ -686,45 +701,9 @@ class LLMClient_dev:
         }
     
     def _submit_portkey_batch(self, batch_file_path: str, batch_description: Optional[str]) -> Dict[str, Any]:
-        """Submit batch to Portkey Batch API."""
-        portkey = Portkey(
-            api_key=PORTKEY_API_KEY,
-            config=PORTKEY_CONFIG
-        )
-        
-        # Upload the batch file
-        self.logger.info(f"Uploading batch file to Portkey: {batch_file_path}")
-        with open(batch_file_path, 'rb') as file:
-            batch_input_file = portkey.files.create(
-                file=file,
-                purpose="batch"
-            )
-        
-        # Create the batch job
-        self.logger.info(f"Creating Portkey batch job with file ID: {batch_input_file.id}")
-        batch_job = portkey.batches.create(
-            input_file_id=batch_input_file.id,
-            endpoint="/chat/completions",
-            completion_window="24h",
-            metadata={
-                "description": batch_description or f"LLMClient Portkey batch - {time.strftime('%Y-%m-%d %H:%M:%S')}",
-                "model": self.model
-            }
-        )
-        
-        self.logger.info(f"Portkey batch job created. ID: {batch_job.id}, Status: {batch_job.status}")
-        
-        return {
-            'batch_id': batch_job.id,
-            'status': batch_job.status,
-            'input_file_id': batch_input_file.id,
-            'created_at': batch_job.created_at,
-            'api_provider': 'portkey',
-            'endpoint': batch_job.endpoint,
-            'completion_window': batch_job.completion_window
-        }
+        raise NotImplementedError ("This method hasn't been implemented yet")
     
-    def check_batch_status(self, batch_id: str, api_provider: str = 'openai') -> Dict[str, Any]:
+    def check_batch_status(self, batch_id: str, api_provider: str = 'portkey') -> Dict[str, Any]:
         """
         Check the status of a batch job.
         
@@ -734,7 +713,9 @@ class LLMClient_dev:
         """
         try:
             if api_provider.lower() == 'openai':
-                batch_job = self.client.batches.retrieve(batch_id)
+                # Create a dedicated OpenAI client for batch operations
+                openai_client = OpenAI(api_key=GPT_API_KEY)
+                batch_job = openai_client.batches.retrieve(batch_id)
                 
                 return {
                     'batch_id': batch_job.id,
@@ -745,23 +726,12 @@ class LLMClient_dev:
                     'completed_at': getattr(batch_job, 'completed_at', None),
                     'failed_at': getattr(batch_job, 'failed_at', None),
                     'request_counts': getattr(batch_job, 'request_counts', {}),
-                    'api_provider': 'openai'
+                    'api_provider': api_provider
                 }
                 
             elif api_provider.lower() == 'portkey':
-                portkey = Portkey(api_key=PORTKEY_API_KEY, config=PORTKEY_CONFIG)
-                batch_job = portkey.batches.retrieve(batch_id)
-                
-                return {
-                    'batch_id': batch_job.id,
-                    'status': batch_job.status,
-                    'output_file_id': getattr(batch_job, 'output_file_id', None),
-                    'error_file_id': getattr(batch_job, 'error_file_id', None),
-                    'created_at': batch_job.created_at,
-                    'completed_at': getattr(batch_job, 'completed_at', None),
-                    'request_counts': getattr(batch_job, 'request_counts', {}),
-                    'api_provider': 'portkey'
-                }
+                raise NotImplementedError("This provider isn't supported yet")
+
             else:
                 raise ValueError(f"Unsupported API provider: {api_provider}")
                 
@@ -793,17 +763,16 @@ class LLMClient_dev:
             
             # Download the results file
             if api_provider.lower() == 'openai':
-                file_response = self.client.files.content(status_info['output_file_id'])
+                # Create a dedicated OpenAI client for batch operations
+                openai_client = OpenAI(api_key=GPT_API_KEY)
+                file_response = openai_client.files.content(status_info['output_file_id'])
                 
                 with open(output_file_path, 'wb') as f:
                     f.write(file_response.content)
                     
             elif api_provider.lower() == 'portkey':
-                portkey = Portkey(api_key=PORTKEY_API_KEY, config=PORTKEY_CONFIG)
-                file_response = portkey.files.content(status_info['output_file_id'])
-                
-                with open(output_file_path, 'wb') as f:
-                    f.write(file_response.content)
+                raise NotImplementedError ("This provider isn't supported yet")
+            
             else:
                 raise ValueError(f"Unsupported API provider: {api_provider}")
             
