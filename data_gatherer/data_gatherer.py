@@ -735,30 +735,6 @@ class DataGatherer:
                     df.rename(columns={'repository_reference': 'data_repository'}, inplace=True)
         return results
     
-    def _initialize_parser_for_batch(self, raw_data_format):
-        """Initialize parser if not already done for batch processing."""
-        if raw_data_format.upper() == "XML":
-            from data_gatherer.parser.xml_parser import XMLRouter
-            router = XMLRouter(self.open_data_repos_ontology, self.logger, 
-                             full_document_read=self.full_document_read,
-                             llm_name=self.llm, save_dynamic_prompts=self.save_dynamic_prompts)
-            # For batch, we'll use a generic XMLParser since we don't have specific data yet
-            from data_gatherer.parser.xml_parser import XMLParser
-            self.parser = XMLParser(self.open_data_repos_ontology, self.logger,
-                                  full_document_read=self.full_document_read,
-                                  llm_name=self.llm, save_dynamic_prompts=self.save_dynamic_prompts)
-        elif raw_data_format.upper() == "HTML":
-            from data_gatherer.parser.html_parser import HTMLParser
-            self.parser = HTMLParser(self.open_data_repos_ontology, self.logger,
-                                   full_document_read=self.full_document_read,
-                                   llm_name=self.llm, save_dynamic_prompts=self.save_dynamic_prompts)
-        elif raw_data_format.upper() == "PDF":
-            from data_gatherer.parser.pdf_parser import PDFParser
-            self.parser = PDFParser(self.open_data_repos_ontology, self.logger,
-                                  full_document_read=self.full_document_read,
-                                  llm_name=self.llm, save_dynamic_prompts=self.save_dynamic_prompts)
-        else:
-            raise ValueError(f"Unsupported raw data format for batch processing: {raw_data_format}")
 
     def summarize_result(self, df):
         """
@@ -1277,7 +1253,9 @@ class DataGatherer:
         submit_immediately=True,
         wait_for_completion=False,
         poll_interval=60,
-        batch_description=None
+        batch_description=None,
+        grobid_for_pdf=False,
+        use_portkey=True
     ):
         """
         Complete integrated batch processing using LLMClient batch functionality.
@@ -1308,73 +1286,127 @@ class DataGatherer:
             self.logger.info("Step 1: Fetching data...")
             fetched_data = self.fetch_data(url_list)
             
-            # Determine the raw data format from the first successful fetch
-            raw_data_format = None
+            # Count raw_data_format frequencies and store URLs for parser reuse optimization
+            format_counts = {}
             for url, data in fetched_data.items():
                 if data and 'raw_data_format' in data:
-                    raw_data_format = data['raw_data_format']
-                    break
+                    fmt = data['raw_data_format']
+                    if fmt not in format_counts:
+                        format_counts[fmt] = {'count': 0, 'urls': []}
+                    format_counts[fmt]['count'] += 1
+                    format_counts[fmt]['urls'].append(url)
             
-            if not raw_data_format:
-                raise ValueError("Could not determine raw data format from fetched data")
+            # Log format frequencies (counts only for readability)
+            frequency_summary = {fmt: info['count'] for fmt, info in format_counts.items()}
+            self.logger.info(f"Fetched {len(fetched_data)} Papers. Format frequencies: {frequency_summary}")
+            self.logger.debug(f"Detailed fetched data: {fetched_data}")
             
-            self.logger.info(f"Detected raw data format: {raw_data_format}")
+            # Step 2: Prepare batch requests for LLMClient (parser per URL)
             
-            # Step 2: Initialize parser and prepare batch requests for LLMClient
-            if self.parser is None:
-                self._initialize_parser_for_batch(raw_data_format)
-            
-            # Prepare batch requests in the format expected by LLMClient
-            batch_requests = []
-            for url, data in fetched_data.items():
-                try:
-                    # Generate unique custom_id
-                    article_id = self.url_to_article_id(url)
-                    timestamp = int(time.time() * 1000)
-                    custom_id = f"{self.llm}_{article_id}_{timestamp}"
-                    custom_id = re.sub(r'[^a-zA-Z0-9_-]', '_', custom_id)[:64]
-                    
-                    # Normalize input data
-                    if raw_data_format.upper() == 'XML':
-                        normalized_input = (self.parser.normalize_XML(data['fetched_data']) 
-                                          if hasattr(self.parser, 'normalize_XML') 
-                                          else data['fetched_data'])
-                    elif raw_data_format.upper() == 'HTML':
-                        normalized_input = (self.parser.normalize_HTML(data['fetched_data']) 
-                                          if hasattr(self.parser, 'normalize_HTML') 
-                                          else data['fetched_data'])
-                    elif raw_data_format.upper() == 'PDF':
-                        normalized_input = data['fetched_data']
-                    else:
-                        raise ValueError(f"Unsupported raw data format: {raw_data_format}")
-                    
-                    # Render prompt
-                    static_prompt = self.parser.prompt_manager.load_prompt(prompt_name)
-                    messages = self.parser.prompt_manager.render_prompt(
-                        static_prompt,
-                        entire_doc=self.full_document_read,
-                        content=normalized_input,
-                        repos=', '.join(self.parser.repo_names) if hasattr(self.parser, 'repo_names') else '',
-                        url=url,
-                        section_filter=section_filter
-                    )
-                    
-                    # Create batch request for LLMClient
-                    batch_request = {
-                        'custom_id': custom_id,
-                        'messages': messages,
-                        'metadata': {
-                            'url': url,
-                            'article_id': article_id,
-                            'raw_data_format': raw_data_format
+            batch_requests, cnt, last_url_raw_data_format = [], 0, False
+            for url_raw_data_format, vals in format_counts.items():
+                for url in vals['urls']:
+                    try:                        
+                        if cnt != 0 and url_raw_data_format == last_url_raw_data_format:
+                            self.logger,info(f"Reusing existing parser of name: {self.parser.__class__.__name__}")
+                        else:
+                            if url_raw_data_format.upper() == "XML":
+                                self.logger.info("Initializing XMLParser to parse data.")
+                                self.parser = XMLParser(
+                                    self.open_data_repos_ontology,
+                                    self.logger,
+                                    llm_name=self.llm,
+                                    full_document_read=self.full_document_read,
+                                    use_portkey=use_portkey,
+                                    save_dynamic_prompts=self.save_dynamic_prompts
+                                    )
+
+                            elif url_raw_data_format.upper() == 'HTML':
+                                self.logger.info("Initializing HTMLParser to parse data.")
+                                self.parser = HTMLParser(
+                                    self.open_data_repos_ontology, 
+                                    self.logger,
+                                    llm_name=self.llm,
+                                    full_document_read=self.full_document_read,
+                                    use_portkey=use_portkey,
+                                    save_dynamic_prompts=self.save_dynamic_prompts
+                                    )
+
+                            elif url_raw_data_format.upper() == 'PDF':
+                                self.logger.info("Using PDFParser to parse data.")
+                                if grobid_for_pdf:
+                                    self.logger.info("GROBID PDF parsing enabled.")
+                                    self.parser = GrobidPDFParser(
+                                        self.open_data_repos_ontology,
+                                        self.logger,
+                                        llm_name=self.llm,
+                                        full_document_read=self.full_document_read,
+                                        use_portkey=use_portkey,
+                                        save_dynamic_prompts=self.save_dynamic_prompts,
+                                        write_XML=write_htmls_xmls
+                                        )
+                                else:
+                                    self.parser = PDFParser(
+                                        self.open_data_repos_ontology, 
+                                        self.logger,
+                                        llm_name=self.llm,
+                                        full_document_read=self.full_document_read,
+                                        use_portkey=use_portkey,
+                                        save_dynamic_prompts=self.save_dynamic_prompts
+                                        )
+                                         
+                        data = fetched_data[url]
+                        
+                        # Generate unique custom_id
+                        article_id = self.url_to_article_id(url)
+                        timestamp = int(time.time() * 1000)
+                        custom_id = f"{self.llm}_{article_id}_{timestamp}"
+                        custom_id = re.sub(r'[^a-zA-Z0-9_-]', '_', custom_id)[:64]
+                        
+                        # Normalize input data based on actual format
+                        if url_raw_data_format.upper() == 'XML':
+                            normalized_input = (self.parser.normalize_XML(data['fetched_data']) 
+                                            if hasattr(self.parser, 'normalize_XML') 
+                                            else data['fetched_data'])
+                        elif url_raw_data_format.upper() == 'HTML':
+                            normalized_input = (self.parser.normalize_HTML(data['fetched_data']) 
+                                            if hasattr(self.parser, 'normalize_HTML') 
+                                            else data['fetched_data'])
+                        elif url_raw_data_format.upper() == 'PDF':
+                            normalized_input = data['fetched_data']
+                        else:
+                            raise ValueError(f"Unsupported raw data format: {url_raw_data_format}")
+                        
+                        # Render prompt using the correct parser
+                        static_prompt = self.parser.prompt_manager.load_prompt(prompt_name)
+                        messages = self.parser.prompt_manager.render_prompt(
+                            static_prompt,
+                            entire_doc=self.full_document_read,
+                            content=normalized_input,
+                            repos=', '.join(self.parser.repo_names) if hasattr(self.parser, 'repo_names') else '',
+                            url=url,
+                            section_filter=section_filter
+                        )
+                        
+                        # Create batch request for LLMClient
+                        batch_request = {
+                            'custom_id': custom_id,
+                            'messages': messages,
+                            'metadata': {
+                                'url': url,
+                                'article_id': article_id,
+                                'raw_data_format': url_raw_data_format
+                            }
                         }
-                    }
-                    
-                    batch_requests.append(batch_request)
-                    
-                except Exception as e:
-                    self.logger.error(f"Error preparing request for {url}: {e}")
-                    continue
+                        
+                        batch_requests.append(batch_request)
+                        
+                    except Exception as e:
+                        self.logger.error(f"Error preparing request for {url}: {e}")
+                        continue
+
+                    last_data_format = url_raw_data_format
+                    cnt+=1
             
             self.logger.info(f"Prepared {len(batch_requests)} batch requests")
             

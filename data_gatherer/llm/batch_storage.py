@@ -8,6 +8,7 @@ import os
 import time
 import tempfile
 from typing import Dict, List, Any, Optional, Union
+from data_gatherer.llm.response_schema import *
 import logging
 
 
@@ -235,28 +236,29 @@ class BatchRequestBuilder:
                              messages: List[Dict[str, str]], 
                              model: str,
                              temperature: float = 0.0,
-                             response_format: Optional[Dict] = None) -> Dict[str, Any]:
+                             response_format: Optional[Dict] = dataset_response_schema_with_use_description) -> Dict[str, Any]:
         """
-        Create a batch request in OpenAI format.
+        Create a batch request in OpenAI format for the responses endpoint.
         
         :param custom_id: Unique identifier for the request
-        :param messages: List of message dictionaries
+        :param messages: List of message dictionaries with roles (system, user, assistant)
         :param model: Model name
         :param temperature: Temperature setting
         :param response_format: Optional response format schema
         :return: Formatted batch request
         """
+        
         request = {
             "custom_id": custom_id,
             "method": "POST",
-            "url": "/v1/chat/completions",
+            "url": "/v1/responses",
             "body": {
                 "model": model,
-                "messages": messages,
-                "temperature": temperature
+                "input": messages
             }
         }
         
+        # Add response format for structured output if specified
         if response_format and 'gpt' in model.lower():
             request["body"]["response_format"] = response_format
             
@@ -278,26 +280,8 @@ class BatchRequestBuilder:
         :param response_format: Optional response format schema
         :return: Formatted batch request
         """
-        request = {
-            "custom_id": custom_id,
-            "method": "POST",
-            "url": "/chat/completions",
-            "body": {
-                "model": model,
-                "messages": messages,
-                "temperature": temperature
-            }
-        }
-        
-        if response_format:
-            if 'gpt' in model.lower():
-                request["body"]["response_format"] = response_format
-            elif 'gemini' in model.lower():
-                request["body"]["response_mime_type"] = "application/json"
-                if hasattr(response_format, 'model_json_schema'):
-                    request["body"]["response_schema"] = response_format.model_json_schema()
-                    
-        return request
+    
+        raise NotImplementedError("This method hasn't been implemented yet.")
     
     def generate_custom_id(self, 
                           model: str, 
