@@ -13,7 +13,7 @@ class GrobidPDFParser(PDFParser):
     PDFParser subclass that uses a local GROBID server to extract structured text and metadata from PDFs.
     """
     def __init__(self, open_data_repos_ontology, logger, log_file_override=None, full_document_read=True,
-                 prompt_dir="data_gatherer/prompts/prompt_templates",
+                 prompt_dir="data_gatherer/prompts/prompt_templates", write_XML=False,
                  llm_name=None, save_dynamic_prompts=False, save_responses_to_cache=False, use_cached_responses=False,
                  use_portkey=True, grobid_home=None, grobid_port=8070):
 
@@ -25,6 +25,7 @@ class GrobidPDFParser(PDFParser):
                          )
 
         self.logger = logger
+        self.write_XML = write_XML
 
         if grobid_home is None:
             BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -119,6 +120,14 @@ class GrobidPDFParser(PDFParser):
 
             # 2. Parse TEI XML using XMLRouter (which will use TEI_XMLParser)
             xml_root = etree.fromstring(full_cont_xml.encode('utf-8'))
+
+            if self.write_XML:
+                xml_output_path = os.path.join(article_file_dir, os.path.basename(file_path) + '.xml')
+                os.makedirs(article_file_dir, exist_ok=True)
+                with open(xml_output_path, 'wb') as xml_file:
+                    xml_file.write(full_cont_xml.encode('utf-8'))
+                self.logger.info(f"Saved TEI XML to {xml_output_path}")
+
             router = XMLRouter(self.open_data_repos_ontology, self.logger, 
                              llm_name=self.llm_name, 
                              full_document_read=self.full_document_read,
