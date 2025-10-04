@@ -69,7 +69,11 @@
     "xpaths": {
       "data_availability_sections": {
         "//section[h2[contains(text(), 'Data Availability')]]": "dataset",
+        "//section[h2[contains(text(), 'Data and Code Availability')]]": "dataset",
         "//section[h3[contains(text(), 'Data Availability')]]": "dataset",
+        "//section[h3[contains(text(), 'Data and Code Availability')]]": "dataset",
+        "//section[h4[contains(text(), 'Data Availability')]]": "dataset",
+        "//section[h4[contains(text(), 'Data and Code Availability')]]": "dataset",
         "following-sibling::p[1]" : "dataset",
         "//section[h2[contains(text(), 'Footnotes')]]": "dataset"
       },
