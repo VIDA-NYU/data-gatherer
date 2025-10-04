@@ -972,7 +972,10 @@ class LLMParser(ABC):
                     self.logger.info(f"Extracted ID: {dataset_identifier}")
 
             if 'default_id_suffix' in repo_config and not dataset_identifier.endswith(repo_config['default_id_suffix']):
-                return dataset_identifier.lower() + repo_config['default_id_suffix']
+                if re.search(repo_config['id_suffix_pattern'], dataset_identifier):
+                    self.logger.info(f"Identifier {dataset_identifier} matches suffix pattern for {data_repository}")
+                else:
+                    return dataset_identifier.lower() + repo_config['default_id_suffix']
 
         else:
             self.logger.warning(f"Repository {data_repository} not found in ontology")

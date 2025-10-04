@@ -80,6 +80,7 @@
       "dataset_webpage_url_ptr": "https://www.ncbi.nlm.nih.gov/projects/gap/cgi-bin/study.cgi?study_id=__ID__",
       "id_pattern": "phs[0-9]+\\.\\w+\\d+\\.\\w+\\d+",
       "default_id_suffix": ".v1.p1",
+      "id_suffix_pattern": "\\.v\\d+\\.p\\d+$",
       "access_mode": "Application to access"
     },
     "sra": {

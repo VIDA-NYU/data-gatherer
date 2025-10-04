@@ -489,8 +489,11 @@ class DataGatherer:
                 if self.write_htmls_xmls and not isinstance(self.data_fetcher, DatabaseFetcher):
                     directory = article_file_dir + self.publisher + '/'
                     self.logger.info(f"Raw Data is {self.raw_data_format}.")
-                    if self.raw_data_format.upper() == 'HTML':
+                    if HTML_fallback == 'Selenium':
                         self.data_fetcher.html_page_source_download(directory, url)
+                        self.logger.info(f"Raw HTML saved to: {directory}")
+                    elif self.raw_data_format.upper() == 'HTML':
+                        self.data_fetcher.html_page_source_download(directory, url, raw_data)
                         self.logger.info(f"Raw HTML saved to: {directory}")
                     elif isinstance(self.data_fetcher, EntrezFetcher):
                         self.data_fetcher.download_xml(directory, raw_data, url)
