@@ -62,12 +62,20 @@ class xmlRetriever(BaseRetriever):
         self.logger.info("XML data contains all required sections.")
         return True
 
-    def load_target_sections_ptrs(self, section_name) -> list:
+    def load_target_sections_ptrs(self, section_name, ptr_type='xml_tags') -> list:
         """
         Load the XML tags for the specified section name. Publisher-specific.
         """
         self.logger.info(f"Loading target sections for section name: {section_name}")
-        target_sections = self.xml_tags
+
+        if ptr_type == 'xml_tags':
+            target_sections = self.xml_tags
+        elif ptr_type == 'xpaths':
+            target_sections = self.xpaths
+        else:
+            self.logger.error(f"Invalid ptr_type: {ptr_type}. Must be 'xml_tags' or 'xpaths'.")
+            raise ValueError(f"Invalid ptr_type: {ptr_type}")
+
         if section_name not in target_sections:
             self.logger.error(
                 f"Invalid section name: {section_name}. Available sections: {list(target_sections.keys())}")
@@ -455,6 +463,18 @@ class xmlRetriever(BaseRetriever):
             if sections:
                 for section in sections:
                     self.logger.info(f"----Found section: {ET.tostring(section, encoding='unicode')[:100]}...")
+                    if self.has_links_in_section(section, namespaces):
+                        return True
+                    else:
+                        self.logger.warning("No links found in the section.")
+                        return True
+
+        for ptr in self.load_target_sections_ptrs(section_name, ptr_type='xpaths'):
+            self.logger.debug(f"Checking XPath: {ptr}")
+            sections = raw_data.xpath(ptr, namespaces=namespaces)
+            if sections:
+                for section in sections:
+                    self.logger.info(f"----Found section using XPath {ptr}: {ET.tostring(section, encoding='unicode')[:100]}...")
                     if self.has_links_in_section(section, namespaces):
                         return True
                     else:

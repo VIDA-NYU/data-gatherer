@@ -411,6 +411,19 @@ class LLMParser(ABC):
                 self.logger.info(f"Skipping dataset due to missing ID, repository, dataset page: {dataset}")
                 continue
 
+            if ',' in dataset_id and 'id_pattern' in self.open_data_repos_ontology['repos'].get(data_repository, {}):
+                self.logger.info(f"Multiple dataset IDs possibly found in dataset_id: {dataset_id}. Splitting and processing each.")
+                dataset_ids = [did.strip() for did in dataset_id.split(",") if did.strip() and re.search(
+                    self.open_data_repos_ontology['repos'][data_repository]['id_pattern'], did, re.IGNORECASE)]
+                for did in dataset_ids:
+                    result.append({
+                        "dataset_identifier": did,
+                        "data_repository": data_repository,
+                        "dataset_webpage": dataset_webpage if dataset_webpage is not None else 'n/a',
+                        "citation_type": dataset.get('citation_type', 'n/a')
+                    })
+                continue
+
             result.append({
                 "dataset_identifier": dataset_id,
                 "data_repository": data_repository,
@@ -475,6 +488,8 @@ class LLMParser(ABC):
                                 self.logger.info(f"Setting dataset_id to value: {match.group(1)}")
                                 dataset_id = match.group(1)
                             self.logger.info(f"Extracted ID: {dataset_id}")
+                        #elif val.startswith('ftp'):
+                        #    self.download_links.append(val,self.current_url)
                         else:
                             if (val.startswith('10.') or val.startswith('doi:10.')) and dataset_webpage is None:
                                 self.logger.info(f"Setting dataset_webpage to DOI URL value: https://doi.org/{val}")

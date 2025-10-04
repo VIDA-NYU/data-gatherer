@@ -462,7 +462,7 @@ class DataGatherer:
                 if not self.data_checker.is_fulltext_complete(raw_data, url, self.raw_data_format) and not (
                     self.data_fetcher.__class__.__name__ == "WebScraper"
                 ):
-                    self.logger.info(f"Fallback to Selenium WebScraper data fetcher.")
+                    self.logger.info(f"Fallback from {self.data_fetcher.__class__.__name__} to Selenium WebScraper data fetcher.")
                     self.raw_data_format = "HTML"
                     self.data_fetcher = self.data_fetcher.update_DataFetcher_settings(url,
                                                                                         self.full_document_read,
