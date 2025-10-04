@@ -260,10 +260,6 @@ class BatchRequestBuilder:
                 "text": { "format": response_format }
             }
         }
-        
-        # Add response format for structured output if specified
-        if response_format and 'gpt' in model.lower():
-            request["body"]["response_format"] = response_format
             
         return request
     
