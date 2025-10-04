@@ -287,7 +287,7 @@ class DataFetcher(ABC):
             return EntrezFetcher(requests, logger)
 
         # For HTTP GET requests (simpler, faster for static content)
-        if type(HTML_fallback) == str and HTML_fallback == 'HTTPGetRequest':
+        if type(HTML_fallback) == str and HTML_fallback == 'HttpGetRequest':
             self.logger.info(f"Using HttpGetRequest with backup support for URL: {url}")
             if isinstance(self, HttpGetRequest):
                 self.logger.info(f"Reusing existing HttpGetRequest instance.")

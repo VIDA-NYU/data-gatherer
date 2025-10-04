@@ -462,16 +462,22 @@ class DataGatherer:
                 if not self.data_checker.is_fulltext_complete(raw_data, url, self.raw_data_format) and not (
                     self.data_fetcher.__class__.__name__ == "WebScraper"
                 ):
-                    self.logger.info(f"Fallback from {self.data_fetcher.__class__.__name__} to Selenium WebScraper data fetcher.")
+                    self.logger.info(f"Fallback from {self.data_fetcher.__class__.__name__} to HTML Fetchers.")
                     self.raw_data_format = "HTML"
-                    self.data_fetcher = self.data_fetcher.update_DataFetcher_settings(url,
-                                                                                        self.full_document_read,
-                                                                                        self.logger,
-                                                                                        HTML_fallback=True,
-                                                                                        driver_path=driver_path,
-                                                                                        browser=browser,
-                                                                                        headless=headless)
-                    raw_data = self.data_fetcher.fetch_data(url)
+                    if self.data_fetcher.__class__.__name__ != "HttpGetRequest":
+                        return self.process_url(url, save_staging_table=save_staging_table, article_file_dir=article_file_dir,
+                                                use_portkey=use_portkey, driver_path=driver_path, browser=browser,
+                                                headless=headless, prompt_name=prompt_name,
+                                                semantic_retrieval=semantic_retrieval, section_filter=section_filter,
+                                                response_format=response_format, HTML_fallback='HttpGetRequest',
+                                                grobid_for_pdf=grobid_for_pdf, write_htmls_xmls=write_htmls_xmls)
+                    else:
+                        return self.process_url(url, save_staging_table=save_staging_table, article_file_dir=article_file_dir,
+                                                use_portkey=use_portkey, driver_path=driver_path, browser=browser,
+                                                headless=headless, prompt_name=prompt_name,
+                                                semantic_retrieval=semantic_retrieval, section_filter=section_filter,
+                                                response_format=response_format, HTML_fallback='Selenium',
+                                                grobid_for_pdf=grobid_for_pdf, write_htmls_xmls=write_htmls_xmls)
 
                 else:
                     self.logger.info(f"{self.raw_data_format} data is complete for {url}.")
@@ -483,7 +489,7 @@ class DataGatherer:
                 if self.write_htmls_xmls and not isinstance(self.data_fetcher, DatabaseFetcher):
                     directory = article_file_dir + self.publisher + '/'
                     self.logger.info(f"Raw Data is {self.raw_data_format}.")
-                    if isinstance(self.data_fetcher, WebScraper):
+                    if self.raw_data_format.upper() == 'HTML':
                         self.data_fetcher.html_page_source_download(directory, url)
                         self.logger.info(f"Raw HTML saved to: {directory}")
                     elif isinstance(self.data_fetcher, EntrezFetcher):
@@ -493,7 +499,7 @@ class DataGatherer:
                         # For PDF, raw_data should already be a file path, just log the location
                         self.logger.info(f"Raw PDF file location: {raw_data}")
                     else:
-                        self.logger.warning(f"Unsupported raw data format: {self.raw_data_format}.")
+                        self.logger.warning(f"Unsupported save file for raw data format: {self.raw_data_format}.")
                 else:
                     self.logger.info(f"Skipping raw HTML/XML/PDF saving. Param write_htmls_xmls set to {self.write_htmls_xmls}.")
 
