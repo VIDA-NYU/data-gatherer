@@ -420,7 +420,8 @@ class LLMParser(ABC):
                         "dataset_identifier": did,
                         "data_repository": data_repository,
                         "dataset_webpage": dataset_webpage if dataset_webpage is not None else 'n/a',
-                        "citation_type": dataset.get('citation_type', 'n/a')
+                        "citation_type": dataset.get('citation_type', 'n/a'),
+                        "dataset_context_from_paper": dataset.get('dataset_context_from_paper', 'n/a')
                     })
                 continue
 
