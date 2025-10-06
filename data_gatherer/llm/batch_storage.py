@@ -221,7 +221,32 @@ class BatchStorageManager:
         except Exception as e:
             self.logger.error(f"Error getting file info for {file_path}: {e}")
             return {'exists': False, 'error': str(e)}
-
+    
+    def read_and_parse_batch_results(self, results_file_path: str) -> List[Dict[str, Any]]:
+        """
+        Read batch results JSONL file and extract individual responses.
+        
+        :param results_file_path: Path to the batch results JSONL file
+        :return: List of parsed batch response objects
+        """
+        try:
+            batch_responses = []
+            with open(results_file_path, 'r', encoding='utf-8') as f:
+                for line_num, line in enumerate(f, 1):
+                    try:
+                        if line.strip():  # Skip empty lines
+                            batch_response = json.loads(line.strip())
+                            batch_responses.append(batch_response)
+                    except json.JSONDecodeError as e:
+                        self.logger.warning(f"Invalid JSON on line {line_num} in batch results: {e}")
+                        continue
+            
+            self.logger.info(f"Read {len(batch_responses)} batch responses from {results_file_path}")
+            return batch_responses
+            
+        except Exception as e:
+            self.logger.error(f"Error reading batch results file: {e}")
+            raise
 
 class BatchRequestBuilder:
     """

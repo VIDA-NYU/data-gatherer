@@ -795,5 +795,92 @@ class LLMClient_dev:
         except Exception as e:
             self.logger.error(f"Error downloading batch results: {e}")
             raise
+    
+    def process_batch_responses(self, 
+                              batch_results_file: str,
+                              response_format: Optional[Dict] = None,
+                              expected_key: Optional[str] = None):
+
+        """
+        Process batch API results using existing response processing logic.
+        Minimal processing since results will be passed to LLMParser for further processing.
+        
+        :param batch_results_file: Path to the batch results JSONL file
+        :param response_format: Expected response format schema
+        :param expected_key: Expected key in JSON responses (e.g., 'datasets')
+        :return: Processing results and statistics
+        """
+        try:
+            self.logger.info(f"Processing batch responses from: {batch_results_file}")
+            
+            # Read batch results using BatchStorageManager
+            batch_responses = self.batch_storage.read_and_parse_batch_results(batch_results_file)
+            
+            processed_results = []
+            successful_count = 0
+            error_count = 0
+            
+            for batch_response in batch_responses:
+                try:
+                    self.logger.info(f"Processing batch response of type: {type(batch_response)}, object: {batch_response}")
+                    custom_id = batch_response.get('custom_id', 'unknown')
+                    
+                    # Handle different batch response formats
+                    if 'response' in batch_response:
+                        # OpenAI batch format
+                        llm_responses = batch_response['response']['body']['output']
+                    elif 'body' in batch_response and 'output' in batch_response['body']:
+                        # Direct format
+                        llm_responses = batch_response['body']['output']
+                    else:
+                        # Fallback - assume the response is the batch_response itself
+                        llm_responses = batch_response
+
+                    for resp in llm_responses:
+                        cont = resp.get('content')[0]
+                        if cont:
+                            text = cont.get('text')
+                            if text:
+                                llm_response = text
+                        
+                                # Process using existing LLM response processing logic
+                                processed_response = self.process_llm_response(
+                                    raw_response=llm_response,
+                                    response_format=response_format,
+                                    expected_key=expected_key
+                                )
+                                
+                                processed_results.append({
+                                    'custom_id': custom_id,
+                                    'processed_response': processed_response,
+                                    'status': 'success'
+                                })
+                                successful_count += 1
+                    
+                except Exception as e:
+                    self.logger.warning(f"Error processing batch response {custom_id}: {e}")
+                    processed_results.append({
+                        'custom_id': custom_id,
+                        'error': str(e),
+                        'status': 'error'
+                    })
+                    error_count += 1
+            
+            # Prepare processing summary
+            processing_summary = {
+                'total_responses': len(batch_responses),
+                'successful_processed': successful_count,
+                'errors': error_count,
+                'processed_results': processed_results,
+                'batch_results_file': batch_results_file,
+                'processed_at': time.strftime('%Y-%m-%d %H:%M:%S')
+            }
+            
+            self.logger.info(f"Batch processing complete: {successful_count} successful, {error_count} errors")
+            return processing_summary
+            
+        except Exception as e:
+            self.logger.error(f"Error processing batch responses: {e}")
+            raise
 
 
