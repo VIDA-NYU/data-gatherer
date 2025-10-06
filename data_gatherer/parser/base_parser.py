@@ -341,6 +341,19 @@ class LLMParser(ABC):
                 self.logger.debug(f"Saving response to cache with prompt_id: {prompt_id}")
                 self.prompt_manager.save_response(prompt_id, resps)
 
+        # Process the response content using extracted method
+        result = self.process_datasets_response(resps)
+
+        return result
+
+    def process_datasets_response(self, resps):
+        """
+        Process the LLM response containing datasets and extract structured dataset information.
+        This method handles different response formats (lists, strings, dicts) and performs validation.
+        
+        :param resps: LLM response containing datasets (can be list, string, or dict)
+        :return: List of processed dataset dictionaries
+        """
         # Process the response content
         result = []
         for dataset in resps:
@@ -431,7 +444,6 @@ class LLMParser(ABC):
             self.logger.info(f"Extracted dataset: {result[-1]}")
 
         self.logger.debug(f"Final result: {result}")
-
         return result
 
     def schema_validation(self, dataset):

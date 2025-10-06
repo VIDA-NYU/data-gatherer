@@ -1255,8 +1255,7 @@ class DataGatherer:
         poll_interval=60,
         batch_description=None,
         grobid_for_pdf=False,
-        use_portkey=True
-    ):
+        use_portkey=True):
         """
         Complete integrated batch processing using LLMClient batch functionality.
         
@@ -1491,3 +1490,72 @@ class DataGatherer:
         except Exception as e:
             self.logger.error(f"Error in integrated batch processing: {e}", exc_info=True)
             raise
+
+    def from_batch_resp_file_to_df(self, batch_results_file: str):
+        """
+        Convert a batch response JSONL file to a pandas DataFrame.
+        This method processes batch API results and converts them to the standard DataFrame format.
+
+        :param batch_results_file: Path to the JSONL batch results file.
+        :return: DataFrame containing the processed dataset information.
+        """
+        self.logger.info(f"Converting batch response file to DataFrame: {batch_results_file}")
+        
+        try:
+            # Step 1: Process batch responses using LLMClient
+            batch_raw_resps = self.parser.llm_client.process_batch_responses(
+                batch_results_file=batch_results_file,
+                expected_key="datasets"
+            )
+            
+            # Step 2: Process each response using the parser's post-processing logic
+            processed_datasets = []
+            
+            for batch_item in batch_raw_resps['processed_results']:
+                self.logger.debug(f"Processing batch item: {batch_item.keys()}")
+                
+                # Extract metadata
+                custom_id = batch_item.get('custom_id', 'N/A')
+                status = batch_item.get('status', 'unknown')
+                
+                if status != 'success':
+                    self.logger.warning(f"Skipping failed batch item {custom_id}: {batch_item.get('error', 'Unknown error')}")
+                    continue
+                
+                # Process the LLM response using parser's post-processing method
+                processed_response = batch_item.get('processed_response', [])
+                datasets = self.parser.process_datasets_response(processed_response)
+                
+                # Enhance each dataset with metadata
+                for dataset in datasets:
+                    # Add custom_id to track source
+                    dataset['custom_id'] = custom_id
+                    
+                    # Reconstruct source URL if it's a PMC article
+                    if re.search(r'_PMC\d+', custom_id, re.IGNORECASE):
+                        pmc_match = re.search(r'PMC(\d+)', custom_id, re.IGNORECASE)
+                        if pmc_match:
+                            dataset['source_url'] = f'https://www.ncbi.nlm.nih.gov/pmc/articles/PMC{pmc_match.group(1)}/'
+                    
+                    processed_datasets.append(dataset)
+            
+            # Step 3: Convert to DataFrame
+            if processed_datasets:
+                df = pd.DataFrame(processed_datasets)
+                self.logger.info(f"Successfully converted batch results to DataFrame with {len(df)} rows")
+                
+                # Standardize column names (ensure compatibility with existing pipeline)
+                if 'dataset_id' in df.columns:
+                    df.rename(columns={'dataset_id': 'dataset_identifier'}, inplace=True)
+                if 'repository_reference' in df.columns:
+                    df.rename(columns={'repository_reference': 'data_repository'}, inplace=True)
+                
+                return df
+            else:
+                self.logger.warning("No valid datasets found in batch results")
+                return pd.DataFrame()
+                
+        except Exception as e:
+            self.logger.error(f"Error converting batch response file to DataFrame: {e}", exc_info=True)
+            raise
+        
