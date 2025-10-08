@@ -1,5 +1,7 @@
 # Dotenv files
 .env
+**/.env
+*.env
 **/*.env
 
 # Exclude non-core directories
