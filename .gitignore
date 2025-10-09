@@ -150,3 +150,5 @@ ui/deployment.yaml
 data_gatherer/prompts/prompt_templates/old
 data_gatherer/config/repos.txt
 scripts/exp_input/bdf_paper_pdfs/**
+scripts/output/gold/datacatalog_export-2025-10-02.json
+scripts/output/bdf_parsed_data**
