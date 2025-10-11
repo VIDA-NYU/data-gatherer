@@ -1299,7 +1299,7 @@ class LLMParser(ABC):
         return dataset_info
 
     def semantic_retrieve_from_corpus(self, corpus, model_name='sentence-transformers/all-MiniLM-L6-v2',
-                                      topk_docs_to_retrieve=5):
+                                      topk_docs_to_retrieve=5, query=None):
         """
         Given a corpus of text, retrieve the most relevant documents using semantic search.
 
