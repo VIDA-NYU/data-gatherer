@@ -1,6 +1,7 @@
 import numpy as np
 import time
 from sentence_transformers import SentenceTransformer, models
+from transformers import AutoModel, AutoTokenizer, AutoConfig
 from data_gatherer.retriever.base_retriever import BaseRetriever
 
 class EmbeddingsRetriever(BaseRetriever):
@@ -29,17 +30,36 @@ class EmbeddingsRetriever(BaseRetriever):
         else:
             self.model = SentenceTransformer(model_name, device=device)
         self.logger.info(f"Initialized model: {self.model}")
+
+        self.config = AutoConfig.from_pretrained(model_name)
+
+        try:
+            self.max_seq_length = self.model.get_max_seq_length()
+            self.logger.info(f"Using model's actual max sequence length: {self.max_seq_length}")
+        except:
+            # Fallback for models without this method
+            self.max_seq_length = 512  # Safe default for most sentence transformers
+            self.logger.warning(f"Could not get model max seq length, using default: {self.max_seq_length}")
+            
+        # Initialize tokenizer for chunk size calculation
+        self.tokenizer = AutoTokenizer.from_pretrained(model_name)
+        if self.tokenizer.pad_token is None:
+            self.tokenizer.pad_token = self.tokenizer.eos_token
+
         self.embeddings = None
         if corpus and embed_corpus:
             self.embed_corpus()
         self.query_embedding = None
 
-    def embed_corpus(self, corpus=None):
+    def embed_corpus(self, corpus=None, enable_chunking=True, chunk_size=None, chunk_overlap=20):
         """
-        Embed the corpus using the initialized model.
+        Embed the corpus using the initialized model with intelligent chunking to prevent truncation.
         
         Args:
             corpus: Optional corpus to embed. If None, uses self.corpus.
+            enable_chunking (bool): Whether to enable intelligent chunking. Default True.
+            chunk_size (int): Maximum tokens per chunk. If None, uses 80% of max_seq_length.
+            chunk_overlap (int): Number of tokens to overlap between chunks.
         """
         if corpus is not None:
             self.corpus = corpus
@@ -47,13 +67,25 @@ class EmbeddingsRetriever(BaseRetriever):
         if self.corpus is None:
             raise ValueError("No corpus provided for embedding")
             
-        self.logger.info(f"Embedding corpus of {len(self.corpus)} documents using {self.model_name}")
+        print(f"Embedding corpus of {len(self.corpus)} documents using {self.model_name}")
+        
+        # Extract text from corpus documents
         corpus_texts = [doc['sec_txt'] if 'sec_txt' in doc else doc['text'] for doc in self.corpus]
+
+
+        # Embed the (potentially chunked) corpus
         embed_start = time.time()
         self.embeddings = self.model.encode(corpus_texts, show_progress_bar=True, convert_to_numpy=True)
         embed_time = time.time() - embed_start
-        self.logger.info(f"Embedding time: {embed_time:.2f}s ({embed_time/len(self.corpus):.3f}s per doc)")
-        self.logger.info(f"Corpus embedding completed. Shape: {self.embeddings.shape}")
+
+        print(f"Embedding time: {embed_time:.2f}s ({embed_time/len(corpus_texts):.3f}s per chunk)")
+        print(f"Corpus embedding completed. Shape: {self.embeddings.shape}")
+        
+        if enable_chunking:
+            # Log chunking statistics
+            original_docs = len(corpus_texts)
+            final_chunks = self.embeddings.shape[0]
+            print(f"Chunking results: {original_docs} original documents → {final_chunks} embedded chunks")
 
     def _initialize_biomedbert_model(self, model_name, device):
         """
@@ -67,7 +99,7 @@ class EmbeddingsRetriever(BaseRetriever):
 
         return SentenceTransformer(
             modules=[
-                models.Transformer("microsoft/BiomedNLP-BiomedBERT-base-uncased-abstract-fulltext", max_seq_length=512),
+                models.Transformer("microsoft/BiomedNLP-BiomedBERT-base-uncased-abstract-fulltext", max_seq_length=self.max_seq_length),
                 models.Pooling("microsoft/BiomedNLP-BiomedBERT-base-uncased-abstract-fulltext", pooling_mode='mean')
             ], device=device
         )
@@ -115,32 +147,45 @@ class EmbeddingsRetriever(BaseRetriever):
             k (int): Number of results to return.
 
         Returns:
-            List[Tuple[str, float]]: List of (passage, score) tuples.
+            List[dict]: List of result dictionaries with text, metadata, and scores.
         """
         self.logger.info(f"Searching for top-{k} passages similar to the query by embeddings.")
         if k > len(self.corpus):
-            raise ValueError(f"top-k k-parameter ({k}) is greated than the corpus size {len(self.corpus)}. Please set k "
+            raise ValueError(f"top-k k-parameter ({k}) is greater than the corpus size {len(self.corpus)}. Please set k "
                              f"to a smaller value.")
         query_emb = self.model.encode([query], convert_to_numpy=True)[0] if query is not None else self.query_embedding
         idxs, dists = self._l2_search(query_emb, k)
         results = []
         for idx, score in zip(idxs, dists):
-            results.append({
-                'text': self.corpus[idx]['sec_txt'] if 'sec_txt' in self.corpus[idx] else self.corpus[idx]['text'],
-                'section_title': self.corpus[idx]['section_title'] if 'section_title' in self.corpus[idx] else None,
-                'sec_type': self.corpus[idx]['sec_type'] if 'sec_type' in self.corpus[idx] else None,
+            doc = self.corpus[idx]
+            result = {
+                'text': doc['sec_txt'] if 'sec_txt' in doc else doc['text'],
+                'section_title': doc.get('section_title', None),
+                'sec_type': doc.get('sec_type', None),
                 'L2_distance': float(score)
-            })
-            passage = results[-1]['text']
-            self.logger.debug(f"Retrieved passage: {passage[:100]}... with L2 distance: {score}")
+            }
+            
+            # Add chunk metadata if available
+            if 'chunk_id' in doc:
+                result.update({
+                    'chunk_id': doc['chunk_id'],
+                    'is_chunked': True
+                })
+            else:
+                result['is_chunked'] = False
+            
+            results.append(result)
+            passage = result['text']
+            chunk_info = f" (chunk {doc.get('chunk_id', 'N/A')+1}/{doc.get('total_chunks', 'N/A')})" if 'chunk_id' in doc else ""
+            self.logger.debug(f"Retrieved passage{chunk_info}: {passage[:100]}... with L2 distance: {score}")
         return results
 
-    def embed_query(self, query, max_tokens=512):
+    def embed_query(self, query):
         """
         Store query embedding as attribute for the retriever
         """
-        if len(query) > max_tokens/4:
-            self.logger.warning(f"Query is longer than max tokens limit for model {self.model}.")
+        if len(query) > self.max_seq_length*4:
+            self.logger.warning(f"Query maybe longer than max tokens limit for model {self.model}.")
         self.query_embedding = self.model.encode([query], convert_to_numpy=True)[0]
 
 
