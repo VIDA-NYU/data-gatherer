@@ -72,35 +72,73 @@ class XMLParser(LLMParser):
         if not isinstance(xml_root, etree._Element):
             raise TypeError(f"Invalid XML root type: {type(xml_root)}. Expected lxml.etree.Element.")
 
+        # Find all section-like elements (sec, notes, ack)
+        sec_elements = xml_root.findall(".//sec")
+        notes_elements = xml_root.findall(".//notes")
+        
+        all_sections = sec_elements + notes_elements
+        self.logger.debug(f"Found {len(sec_elements)} <sec> blocks, {len(notes_elements)} <notes> blocks")
+        self.logger.debug(f"Total {len(all_sections)} section-like blocks in XML")
+
         # Iterate over all section blocks
-        for sec in xml_root.findall(".//sec"):
-            sec_type = sec.get("sec-type", "unknown")
+        for sec_idx, sec in enumerate(all_sections):
+            self.logger.debug(f"Processing section {sec_idx + 1}/{len(all_sections)} (tag: {sec.tag})")
+            
+            # Handle different element types
+            if sec.tag == "sec":
+                sec_type = sec.get("sec-type", "unknown")
+            elif sec.tag == "notes":
+                sec_type = sec.get("notes-type", "notes")
+            else:
+                sec_type = sec.tag
+                
+            self.logger.debug(f"Section type: '{sec_type}'")
+            
             title_elem = sec.find("title")
             section_title = title_elem.text.strip() if title_elem is not None and title_elem.text else "No Title"
+            self.logger.debug(f"Section title: '{section_title}'")
 
             section_text_from_paragraphs = f'{section_title}\n'
             section_rawtxt_from_paragraphs = ''
 
-            for p in sec.findall(".//p"):
+            # Find all paragraphs in this section
+            paragraphs = sec.findall(".//p")
+            self.logger.debug(f"Found {len(paragraphs)} paragraphs in section '{section_title}'")
+
+            for p_idx, p in enumerate(paragraphs):
+                self.logger.debug(f"Processing paragraph {p_idx + 1}/{len(paragraphs)} in section '{section_title}'")
 
                 itertext = " ".join(p.itertext()).strip()
+                self.logger.debug(f"Paragraph itertext length: {len(itertext)} chars")
 
                 if len(itertext) >= 5:
                     section_text_from_paragraphs += "\n" + itertext + "\n"
+                    self.logger.debug(f"Added itertext to section_text_from_paragraphs (total clean text length now: {len(section_text_from_paragraphs)})")
+                else:
+                    self.logger.debug(f"Skipped itertext (too short: {len(itertext)} chars)")
 
                 para_text = etree.tostring(p, encoding="unicode", method="xml").strip()
+                self.logger.debug(f"Paragraph XML length: {len(para_text)} chars")
 
                 if len(para_text) >= 5:  # avoid tiny/junk paragraphs
                     section_rawtxt_from_paragraphs += "\n" + para_text + "\n"
+                    self.logger.debug(f"Added XML to section_rawtxt_from_paragraphs (total raw text length now: {len(section_rawtxt_from_paragraphs)})")
+                else:
+                    self.logger.debug(f"Skipped XML paragraph (too short: {len(para_text)} chars)")
 
-            sections.append({
+            # Create section dictionary
+            section_dict = {
                 "sec_txt": section_rawtxt_from_paragraphs,
                 "section_title": section_title,
                 "sec_type": sec_type,
                 "sec_txt_clean": section_text_from_paragraphs
-            })
+            }
+            
+            sections.append(section_dict)
+            self.logger.debug(f"Added section '{section_title}' (tag: {sec.tag}) to results. Final lengths - raw: {len(section_rawtxt_from_paragraphs)}, clean: {len(section_text_from_paragraphs)}")
 
         self.logger.info(f"Extracted {len(sections)} sections from XML.")
+        self.logger.debug(f"Section titles extracted: {[s['section_title'] for s in sections]}")
         return sections
 
     def extract_publication_title(self, api_data):
