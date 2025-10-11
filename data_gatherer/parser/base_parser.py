@@ -1312,8 +1312,9 @@ class LLMParser(ABC):
         :return: list of dict — the most relevant documents from the corpus.
         """
 
-        query = """Explicitly identify all the datasets by their database accession codes, repository names, and links
-         to deposited datasets mentioned in this paper."""
+        if query is None:
+            query = """Explicitly identify all the datasets by their database accession codes, repository names, and links
+                    to deposited datasets mentioned in this paper."""
 
         retriever = EmbeddingsRetriever(
             corpus=corpus,
