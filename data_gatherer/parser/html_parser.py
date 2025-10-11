@@ -226,28 +226,76 @@ class HTMLParser(LLMParser):
 
     def extract_sections_from_html(self, html_content: str) -> list[dict]:
         """
-        Extract sections from an HTML document.
+        Extract sections from an HTML document, following the XML parser pattern.
+        Only looks for <section> elements, just like XML parser looks for <sec> elements.
 
         Args:
             html_content: str — raw HTML content.
 
         Returns:
-            List of dicts with 'section_title' and 'sec_type'.
+            List of dicts with 'section_title', 'sec_type', 'sec_txt', and 'sec_txt_clean'.
         """
         soup = BeautifulSoup(html_content, "html.parser")
         sections = []
-        for section in soup.find_all(['section']):  # 'div'
-            if section.find(['section']):  # 'div'
-                continue
-            section_title = section.find(['h1', 'h2', 'h3', 'h4', 'h5', 'h6'])
-            section_title_text = section_title.get_text(strip=True) if section_title else "No Title"
-            sec_type = section.get('class', ['unknown'])[0] if section.has_attr('class') else "unknown"
-            section_text = section.get_text(separator="\n", strip=True)
-            sections.append({
-                "section_title": section_title_text,
+        self.logger.info(f"Function_call: extract_sections_from_html(html_content) with content length {len(html_content)}")
+
+        # Find all <section> elements (just like XML parser finds <sec> elements)
+        section_elements = soup.find_all('section')
+        self.logger.debug(f"Found {len(section_elements)} <section> blocks in HTML")
+
+        # Process each section (similar to XML parser)
+        for sec_idx, sec in enumerate(section_elements):
+            self.logger.debug(f"Processing section {sec_idx + 1}/{len(section_elements)} (tag: {sec.name})")
+            
+            # Determine section type from class attribute
+            sec_type = sec.get('class', ['unknown'])[0] if sec.has_attr('class') else "unknown"
+            self.logger.debug(f"Section type: '{sec_type}'")
+            
+            # Find section title from headers
+            title_elem = sec.find(['h1', 'h2', 'h3', 'h4', 'h5', 'h6'])
+            section_title = title_elem.get_text(strip=True) if title_elem else "No Title"
+            self.logger.debug(f"Section title: '{section_title}'")
+
+            # Initialize text containers (matching XML parser structure)
+            section_text_from_paragraphs = f'{section_title}\n'
+            section_rawtxt_from_paragraphs = ''
+
+            # Find all paragraphs in this section (like XML parser)
+            paragraphs = sec.find_all('p')
+            self.logger.debug(f"Found {len(paragraphs)} paragraphs in section '{section_title}'")
+
+            for p_idx, p in enumerate(paragraphs):
+                self.logger.debug(f"Processing paragraph {p_idx + 1}/{len(paragraphs)} in section '{section_title}'")
+
+                # Extract clean text (similar to itertext in XML)
+                para_clean_text = p.get_text(separator=" ", strip=True)
+                self.logger.debug(f"Paragraph clean text length: {len(para_clean_text)} chars")
+
+                if len(para_clean_text) >= 5:
+                    section_text_from_paragraphs += "\n" + para_clean_text + "\n"
+                    self.logger.debug(f"Added clean text to section (total clean length now: {len(section_text_from_paragraphs)})")
+
+                # Extract raw HTML (similar to tostring in XML)
+                para_raw_html = str(p).strip()
+                self.logger.debug(f"Paragraph HTML length: {len(para_raw_html)} chars")
+
+                if len(para_raw_html) >= 5:
+                    section_rawtxt_from_paragraphs += "\n" + para_raw_html + "\n"
+                    self.logger.debug(f"Added HTML to section (total raw length now: {len(section_rawtxt_from_paragraphs)})")
+
+            # Create section dictionary (matching XML parser structure)
+            section_dict = {
+                "sec_txt": section_rawtxt_from_paragraphs,
+                "section_title": section_title,
                 "sec_type": sec_type,
-                "sec_txt": section_text
-            })
+                "sec_txt_clean": section_text_from_paragraphs
+            }
+            
+            sections.append(section_dict)
+            self.logger.debug(f"Added section '{section_title}' (tag: {sec.name}) to results. Final lengths - raw: {len(section_rawtxt_from_paragraphs)}, clean: {len(section_text_from_paragraphs)}")
+
+        self.logger.info(f"Extracted {len(sections)} sections from HTML.")
+        self.logger.debug(f"Section titles extracted: {[s['section_title'] for s in sections]}")
         return sections
 
     def extract_all_hrefs(self, source_html, publisher, current_url_address, raw_data_format='HTML'):
