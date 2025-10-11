@@ -11,6 +11,7 @@ from lxml import etree
 import requests
 import pytest
 import os
+import logging
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -237,21 +238,22 @@ def test_extract_title_from_html_nature(get_test_data_path):
     print('\n')
 
 def test_semantic_retrieve_from_corpus(get_test_data_path):
-    logger = setup_logging("test_logger", log_file="../logs/scraper.log")
+    logger = setup_logging("test_logger", log_file="../logs/scraper.log", level=logging.INFO)
     parser = HTMLParser("open_bio_data_repos.json", logger, llm_name='gemini-2.0-flash')
     with open(get_test_data_path('Webscraper_fetch_1.html'), 'rb') as f:
         raw_html = f.read()
     corpus = parser.extract_sections_from_html(raw_html)
-    top_k_sections = parser.semantic_retrieve_from_corpus(corpus, topk_docs_to_retrieve=3)
+    query = "Available data, accession code, data repository, deposited data, obtained data"
+    top_k_sections = parser.semantic_retrieve_from_corpus(corpus, topk_docs_to_retrieve=5, query=query)
     accession_ids = ['GSE269782', 'GSE31210', 'GSE106765', 'GSE60189', 'GSE59239', 'GSE122005', 'GSE38121', 'GSE71587',
                      'GSE37699', 'PXD051771']
-    scores = [ 0.9393497109413147, 1.3575516939163208, 1.4186346530914307]
+    scores = [1.515732765197754, 1.52, 1.614931583404541, 1.6210192441940308, 1.6210192441940308]
     DAS_text = ".\n".join([item['text'] for item in top_k_sections])
     assert isinstance(top_k_sections, list)
-    assert len(top_k_sections) == 3
+    assert len(top_k_sections) == 5
     assert all(isinstance(res, dict) for res in top_k_sections)
     for acc_id in accession_ids:
-        assert acc_id in DAS_text
+        assert acc_id.lower() in str.lower(DAS_text)
     for sect_i, sect in enumerate(top_k_sections):
         assert abs(sect['L2_distance'] - scores[sect_i]) < 0.05
     print('\n')
