@@ -28,14 +28,16 @@ class BackupDataStore:
     _timestamp = None
     _ttl = 1800  # 30 minutes
     
-    def __new__(cls, filepath=None):
+    def __new__(cls, filepath=None, logger=None):
         if cls._instance is None:
             cls._instance = super().__new__(cls)
         return cls._instance
     
-    def __init__(self, filepath=None):
+    def __init__(self, filepath=None, logger=None):
+        self.logger = logger or logging.getLogger(__name__)
         if filepath and (self._filepath != filepath or not self._is_valid()):
             self._load_dataframe(filepath)
+            self.logger.info(f"BackupDataStore loaded from {filepath}, entries: {len(self._dataframe) if self._dataframe is not None else 0}")
     
     def _load_dataframe(self, filepath):
         """Load DataFrame from file with error handling."""
@@ -86,7 +88,7 @@ class BackupDataStore:
 # Abstract base class for fetching data
 class DataFetcher(ABC):
     def __init__(self, logger, src='WebScraper', driver_path=None, browser='firefox', headless=True, 
-                 backup_data_file='scripts/exp_input/Local_fetched_data.parquet'):
+                 backup_data_file='scripts/exp_input/Local_fetched_data_SAGE.parquet'):
         self.logger = logger
         self.logger.debug(f"DataFetcher ({src}) initialized.")
         self.driver_path = driver_path
@@ -97,7 +99,7 @@ class DataFetcher(ABC):
         # Initialize backup data store (lightweight, shared across all instances)
         self.backup_store = None
         if backup_data_file and os.path.exists(backup_data_file):
-            self.backup_store = BackupDataStore(backup_data_file)
+            self.backup_store = BackupDataStore(filepath=backup_data_file, logger=self.logger)
             stats = self.backup_store.get_stats()
             self.logger.info(f"Backup data store initialized: {stats['size']} publications, valid: {stats['valid']}")
         else:
@@ -261,7 +263,12 @@ class DataFetcher(ABC):
         self.logger.debug(f"update_DataFetcher_settings for URL: {url}")
 
         # Determine backup data file
-        backup_file = local_fetch_file or 'scripts/exp_input/Local_fetched_data.parquet'
+        backup_file = local_fetch_file or 'scripts/exp_input/Local_fetched_data_SAGE.parquet'
+
+        if self.backup_store._filepath != backup_file:
+            self.backup_store = BackupDataStore(filepath=backup_file, logger=self.logger)
+            stats = self.backup_store.get_stats()
+            self.logger.info(f"Backup data store re-initialized: {stats['size']} publications, valid: {stats['valid']}")
         
         # Check if it's a PDF first
         if self.url_is_pdf(url):

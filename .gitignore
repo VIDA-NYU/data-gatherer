@@ -136,7 +136,8 @@ scripts/tmp/**
 scripts/tmp/**
 scripts/exp_input/europe_pmc_synapse_id_mining.txt
 scripts/exp_input/Local_fetched_data_1.parquet
-scripts/exp_input/Local_fetched_data_1.parquet
+scripts/exp_input/Local_fetched_data_SAGE.parquet
+
 scripts/output/gold/SAGE_groundtruth.csv
 feedback/*
 ui/*log*
