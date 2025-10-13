@@ -288,6 +288,29 @@ class HTMLParser(LLMParser):
                     section_rawtxt_from_paragraphs += "\n" + para_raw_html + "\n"
                     self.logger.debug(f"Added HTML to section (total raw length now: {len(section_rawtxt_from_paragraphs)})")
 
+            # Find all tables in this section (important for dataset information)
+            tables = sec.find_all('table')
+            self.logger.debug(f"Found {len(tables)} tables in section '{section_title}'")
+
+            for table_idx, table in enumerate(tables):
+                self.logger.debug(f"Processing table {table_idx + 1}/{len(tables)} in section '{section_title}'")
+
+                # Extract clean text from table (similar to itertext in XML)
+                table_clean_text = table.get_text(separator=" ", strip=True)
+                self.logger.debug(f"Table clean text length: {len(table_clean_text)} chars")
+
+                if len(table_clean_text) >= 5:
+                    section_text_from_paragraphs += "\n" + table_clean_text + "\n"
+                    self.logger.debug(f"Added table clean text to section (total clean length now: {len(section_text_from_paragraphs)})")
+
+                # Extract raw HTML table (similar to tostring in XML)
+                table_raw_html = str(table).strip()
+                self.logger.debug(f"Table HTML length: {len(table_raw_html)} chars")
+
+                if len(table_raw_html) >= 5:
+                    section_rawtxt_from_paragraphs += "\n" + table_raw_html + "\n"
+                    self.logger.debug(f"Added table HTML to section (total raw length now: {len(section_rawtxt_from_paragraphs)})")
+
             # Create section dictionary (matching XML parser structure)
             section_dict = {
                 "sec_txt": section_rawtxt_from_paragraphs,
@@ -720,20 +743,20 @@ class HTMLParser(LLMParser):
                 self.logger.info(f"Skipping invalid section at index {i}")
                 continue
             
-            # Extract clean text from the section dictionary
-            section_text_clean = section_dict.get('sec_txt_clean', '')
+            # Extract raw text from the section dictionary
+            section_text_raw = section_dict.get('sec_txt', '')
             section_title = section_dict.get('section_title', '')
             doc = section_dict.copy()
             
-            self.logger.debug(f"Processing section '{section_title}' ({i}). Section text length: {len(section_text_clean)} chars")
+            self.logger.debug(f"Processing section '{section_title}' ({i}). Section text length: {len(section_text_raw)} chars")
 
-            if not section_text_clean:
+            if not section_text_raw:
                 self.logger.debug(f"Skipping empty section '{section_title}' ({i})")
                 continue
                 
             # Basic HTML-specific cleaning
             # Remove excessive whitespace and normalize text
-            normalized_section = re.sub(r'\s+', ' ', section_text_clean.strip())
+            normalized_section = re.sub(r'\s+', ' ', section_text_raw.strip())
             self.logger.debug(f"Normalized section length: {len(normalized_section)} chars")
             
             # Skip very short sections that are unlikely to contain useful information

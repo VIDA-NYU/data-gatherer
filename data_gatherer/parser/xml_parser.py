@@ -136,7 +136,8 @@ class XMLParser(LLMParser):
                 "sec_txt": section_rawtxt_from_paragraphs,
                 "section_title": section_title,
                 "sec_type": sec_type,
-                "sec_txt_clean": section_text_from_paragraphs
+                "sec_txt_clean": section_text_from_paragraphs,
+                "sec_txt_objs": paragraphs
             }
             
             sections.append(section_dict)
@@ -163,6 +164,188 @@ class XMLParser(LLMParser):
         except etree.XMLSyntaxError as e:
             self.logger.error(f"Error parsing XML: {e}")
             return None
+
+    def from_sections_to_corpus(self, sections):
+        """
+        Convert structured XML sections to a flat corpus of documents for embeddings retrieval.
+        This method takes the output from extract_sections_from_xml (list of dicts) and converts it
+        to a list of strings suitable for embeddings, with intelligent token-aware processing.
+        
+        :param sections: list of dict — the sections from extract_sections_from_xml
+        :return: list of dicts - same attributes as input but with 'sec_txt' chunked to fit token limits.
+        """
+        self.logger.info(f"Converting {len(sections)} XML sections to embeddings corpus")
+
+        # Get model token limits from the initialized retriever
+        max_tokens = None
+        try:
+            max_tokens = self.embeddings_retriever.model.get_max_seq_length()
+            self.logger.debug(f"Using model max sequence length: {max_tokens} tokens")
+        except Exception as e:
+            self.logger.warning(f"Could not get model token limit: {e}. Using default of 512")
+            max_tokens = 512
+        
+        # Reserve some tokens for the query and model overhead (typically 10-20% buffer)
+        effective_max_tokens = int(max_tokens * 0.95)  # 95% of max to be safe
+        self.logger.debug(f"Effective max tokens per section: {effective_max_tokens}")
+        
+        corpus_documents = []
+        for i, section_dict in enumerate(sections):
+            if not section_dict or not isinstance(section_dict, dict):
+                self.logger.info(f"Skipping invalid section at index {i}")
+                continue
+            
+            section_title = section_dict.get('section_title', 'n.a.')
+            section_paragraphs = section_dict.get('sec_txt_objs', [])
+            
+            self.logger.debug(f"Processing section '{section_title}' ({i}) with {len(section_paragraphs)} paragraphs")
+
+            if not section_paragraphs:
+                self.logger.debug(f"Skipping empty section '{section_title}' ({i})")
+                continue
+            
+            # Process paragraphs iteratively, building chunks that fit within token limits
+            current_chunk = ''
+            current_chunk_tokens = 0
+            chunk_paragraphs = []
+            chunks_created = []
+            
+            # Estimate initial tokens for section title
+            try:
+                title_tokens = len(self.embeddings_retriever.model.encode([current_chunk], convert_to_tensor=False)[0])
+                current_chunk_tokens = title_tokens
+            except Exception:
+                # Fallback: rough estimation (1 token ≈ 4 characters)
+                current_chunk_tokens = len(current_chunk) // 4
+            
+            for p_idx, paragraph in enumerate(section_paragraphs):
+                # Extract clean text from paragraph element
+                try:
+                    if hasattr(paragraph, 'itertext'):
+                        # It's an lxml element
+                        para_text = " ".join(paragraph.itertext()).strip()
+                    else:
+                        # It's already text
+                        para_text = str(paragraph).strip()
+                except Exception as e:
+                    self.logger.warning(f"Error extracting text from paragraph {p_idx}: {e}")
+                    continue
+                
+                if len(para_text) < 5:
+                    self.logger.debug(f"Skipping short paragraph {p_idx} in section '{section_title}'")
+                    continue
+                
+                # Clean and normalize paragraph text
+                normalized_para = re.sub(r'\s+', ' ', para_text.strip())
+                
+                # Check if adding this paragraph would exceed token limit
+                test_chunk = current_chunk + "\n" + normalized_para + "\n"
+                
+                try:
+                    # Get actual token count for test chunk
+                    test_tokens = len(self.embeddings_retriever.model.encode([test_chunk], convert_to_tensor=False)[0])
+                    
+                    if test_tokens <= effective_max_tokens:
+                        # Safe to add paragraph to current chunk
+                        current_chunk = test_chunk
+                        current_chunk_tokens = test_tokens
+                        chunk_paragraphs.append(normalized_para)
+                        self.logger.debug(f"Added paragraph {p_idx} to chunk (tokens: {test_tokens})")
+                    else:
+                        # Adding this paragraph would exceed limit, finalize current chunk
+                        if chunk_paragraphs:  # Only create chunk if it has content
+                            chunk_doc = section_dict.copy()
+                            chunk_doc['sec_txt'] = current_chunk
+                            chunk_doc['sec_txt_clean'] = current_chunk
+                            chunk_doc['text'] = current_chunk  # Add 'text' field for compatibility
+                            chunk_doc['chunk_id'] = len(chunks_created) + 1
+                            chunks_created.append(chunk_doc)
+                            self.logger.debug(f"Finalized chunk {len(chunks_created)} with {len(chunk_paragraphs)} paragraphs (tokens: {current_chunk_tokens})")
+                        
+                        # Start new chunk with current paragraph
+                        current_chunk = section_title + "\n" + normalized_para + "\n"
+                        try:
+                            current_chunk_tokens = len(self.embeddings_retriever.model.encode([current_chunk], convert_to_tensor=False)[0])
+                        except Exception:
+                            current_chunk_tokens = len(current_chunk) // 4
+                        chunk_paragraphs = [normalized_para]
+                        self.logger.debug(f"Started new chunk with paragraph {p_idx} (tokens: {current_chunk_tokens})")
+                        
+                except Exception as e:
+                    self.logger.warning(f"Error processing tokens for paragraph {p_idx}: {e}. Using character-based estimation")
+                    # Fallback: character-based estimation
+                    estimated_tokens = len(test_chunk) // 4
+                    
+                    if estimated_tokens <= effective_max_tokens:
+                        current_chunk = test_chunk
+                        current_chunk_tokens = estimated_tokens
+                        chunk_paragraphs.append(normalized_para)
+                        self.logger.debug(f"Added paragraph {p_idx} to chunk (estimated tokens: {estimated_tokens})")
+                    else:
+                        # Finalize current chunk and start new one
+                        if chunk_paragraphs:
+                            chunk_doc = section_dict.copy()
+                            chunk_doc['sec_txt'] = current_chunk
+                            chunk_doc['sec_txt_clean'] = current_chunk
+                            chunk_doc['text'] = current_chunk
+                            chunk_doc['chunk_id'] = len(chunks_created) + 1
+                            chunks_created.append(chunk_doc)
+                            self.logger.debug(f"Finalized chunk {len(chunks_created)} (fallback, estimated tokens: {current_chunk_tokens})")
+                        
+                        current_chunk = section_title + "\n" + normalized_para + "\n"
+                        current_chunk_tokens = len(current_chunk) // 4
+                        chunk_paragraphs = [normalized_para]
+                        self.logger.debug(f"Started new chunk (fallback, estimated tokens: {current_chunk_tokens})")
+            
+            # Add final chunk if it has content
+            if chunk_paragraphs:
+                chunk_doc = section_dict.copy()
+                chunk_doc['sec_txt'] = current_chunk
+                chunk_doc['sec_txt_clean'] = current_chunk
+                chunk_doc['text'] = current_chunk
+                chunk_doc['chunk_id'] = len(chunks_created) + 1
+                chunks_created.append(chunk_doc)
+                self.logger.debug(f"Added final chunk {len(chunks_created)} with {len(chunk_paragraphs)} paragraphs (tokens: {current_chunk_tokens})")
+            
+            # Add all chunks for this section to corpus
+            corpus_documents.extend(chunks_created)
+            self.logger.info(f"Section '{section_title}' split into {len(chunks_created)} chunks from {len(section_paragraphs)} paragraphs")
+        
+        # Remove duplicates based on normalized text content and merge section titles
+        self.logger.info(f"Pre-deduplication: {len(corpus_documents)} corpus documents")
+        
+        unique_documents = []
+        seen_texts = {}  # Changed to dict to track documents by text content
+        
+        for doc in corpus_documents:
+            # Use normalized text as the deduplication key
+            text_key = doc.get('text', '').strip().lower()
+            current_section_title = doc.get('section_title', '').strip()
+            
+            # Check if we've seen this exact text before
+            if text_key and text_key not in seen_texts:
+                seen_texts[text_key] = doc
+                unique_documents.append(doc)
+                self.logger.debug(f"Added new document with section title: '{current_section_title}'")
+            elif text_key:
+                # Found duplicate content - check if section title is different
+                existing_doc = seen_texts[text_key]
+                existing_section_title = existing_doc.get('section_title', '').strip()
+                
+                if current_section_title and current_section_title != existing_section_title:
+                    # Concatenate section titles if they are different
+                    if current_section_title not in existing_section_title:
+                        concatenated_title = f"{existing_section_title} | {current_section_title}"
+                        existing_doc['section_title'] = concatenated_title
+                        self.logger.debug(f"Merged section titles: '{existing_section_title}' + '{current_section_title}' → '{concatenated_title}'")
+                    else:
+                        self.logger.debug(f"Section title '{current_section_title}' already included in existing title")
+                else:
+                    self.logger.debug(f"Skipping duplicate content with same section title: '{text_key[:50]}...'")
+        
+        self.logger.info(f"XML sections converted: {len(sections)} sections → {len(unique_documents)} unique corpus documents (processed {len(corpus_documents) - len(unique_documents)} duplicates with title merging)")
+        return unique_documents
+
 
     def parse_data(self, api_data, publisher=None, current_url_address=None, additional_data=None,
                    raw_data_format='XML',
