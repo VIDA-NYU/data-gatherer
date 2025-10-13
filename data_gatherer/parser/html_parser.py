@@ -6,6 +6,7 @@ import logging
 import pandas as pd
 from bs4 import BeautifulSoup, Comment, NavigableString, CData
 from lxml import html
+from data_gatherer.retriever.embeddings_retriever import EmbeddingsRetriever
 
 
 class MyBeautifulSoup(BeautifulSoup):
@@ -82,6 +83,10 @@ class HTMLParser(LLMParser):
         self.logger.info("Initializing htmlRetriever")
         self.retriever = htmlRetriever(logger, 'general', retrieval_patterns_file='retrieval_patterns.json',
                                        headers=None)
+
+        self.embeddings_retriever = EmbeddingsRetriever(
+            logger=self.logger
+        )
 
     def normalize_HTML(self, html, keep_tags=None):
         """
@@ -699,7 +704,7 @@ class HTMLParser(LLMParser):
         # Get model token limits from the initialized retriever
         max_tokens = None
         try:
-            max_tokens = self.retriever.model.get_max_seq_length()
+            max_tokens = self.embeddings_retriever.model.get_max_seq_length()
             self.logger.debug(f"Using model max sequence length: {max_tokens} tokens")
         except Exception as e:
             self.logger.warning(f"Could not get model token limit: {e}. Using default of 512")
@@ -729,17 +734,17 @@ class HTMLParser(LLMParser):
             # Basic HTML-specific cleaning
             # Remove excessive whitespace and normalize text
             normalized_section = re.sub(r'\s+', ' ', section_text_clean.strip())
-            self.logger.info(f"  Normalized section length: {len(normalized_section)} chars")
+            self.logger.debug(f"Normalized section length: {len(normalized_section)} chars")
             
             # Skip very short sections that are unlikely to contain useful information
             if len(normalized_section) < 8:
-                self.logger.info(f"Skipping too short section '{section_title}' ({len(normalized_section)} chars)")
+                self.logger.debug(f"Skipping too short section '{section_title}' ({len(normalized_section)} chars)")
                 continue
             
             # Token-aware processing: check if section exceeds token limit
             try:
                 # Get actual token count for this section
-                section_tokens = self.retriever.model.encode([normalized_section], convert_to_tensor=False)[0]
+                section_tokens = self.embeddings_retriever.model.encode([normalized_section], convert_to_tensor=False)[0]
                 actual_token_count = len(section_tokens) if hasattr(section_tokens, '__len__') else 0
                 
                 if actual_token_count > effective_max_tokens:
@@ -752,6 +757,7 @@ class HTMLParser(LLMParser):
                     for j, chunk in enumerate(chunks):
                         chunk_doc = doc.copy()
                         chunk_doc['sec_txt_clean'] = chunk
+                        chunk_doc['sec_txt'] = chunk
                         chunk_doc['text'] = chunk  # Add 'text' field for compatibility
                         chunk_doc['chunk_id'] = j + 1
                         corpus_documents.append(chunk_doc)
@@ -777,6 +783,7 @@ class HTMLParser(LLMParser):
                     for j, chunk in enumerate(chunks):
                         chunk_doc = doc.copy()
                         chunk_doc['sec_txt_clean'] = chunk
+                        chunk_doc['sec_txt'] = chunk
                         chunk_doc['text'] = chunk  # Add 'text' field for compatibility
                         chunk_doc['chunk_id'] = j + 1
                         corpus_documents.append(chunk_doc)
@@ -799,7 +806,7 @@ class HTMLParser(LLMParser):
         :param max_tokens: int — the maximum number of tokens allowed per chunk
         :return: list of str — list of text chunks fitting within token limits
         """
-        self.logger.info(f"Input section length: {len(section_text)} chars")
+        self.logger.debug(f"Input section length: {len(section_text)} chars")
         
         # Simple sentence tokenizer (could be replaced with a more sophisticated one if needed)
         sentences = re.split(r'(?<=[.!?]) +', section_text)
@@ -809,7 +816,7 @@ class HTMLParser(LLMParser):
         current_chunk = ""
         
         for i, sentence in enumerate(sentences):
-            self.logger.debug(f"  Sentence {i+1}/{len(sentences)}: {len(sentence)} chars - '{sentence[:50]}...'")
+            self.logger.debug(f"Sentence {i+1}/{len(sentences)}: {len(sentence)} chars - '{sentence[:50]}...'")
             
             # Estimate token count for the current chunk + new sentence
             estimated_tokens = (len(current_chunk) + len(sentence)) // 4  # Rough estimate
@@ -824,7 +831,7 @@ class HTMLParser(LLMParser):
                 # Current chunk is full, save it and start a new one
                 if current_chunk:
                     chunks.append(current_chunk.strip())
-                    self.logger.info(f"Saved chunk #{len(chunks)} with {len(current_chunk)} chars")
+                    self.logger.debug(f"Saved chunk #{len(chunks)} with {len(current_chunk)} chars")
                 current_chunk = sentence  # Start new chunk with the current sentence
                 self.logger.debug(f"tarted new chunk with this sentence ({len(sentence)} chars)")
         
@@ -833,7 +840,7 @@ class HTMLParser(LLMParser):
             chunks.append(current_chunk.strip())
             self.logger.debug(f"Saved final chunk #{len(chunks)} with {len(current_chunk)} chars")
         
-        self.logger.info(f"Final result: {len(chunks)} chunks")
+        self.logger.debug(f"Final result: {len(chunks)} chunks")
         for i, chunk in enumerate(chunks):
             estimated_chunk_tokens = len(chunk) // 4
         

@@ -247,7 +247,7 @@ def test_semantic_retrieve_from_corpus(get_test_data_path):
     top_k_sections = parser.semantic_retrieve_from_corpus(corpus, topk_docs_to_retrieve=5, query=query)
     accession_ids = ['GSE269782', 'GSE31210', 'GSE106765', 'GSE60189', 'GSE59239', 'GSE122005', 'GSE38121', 'GSE71587',
                      'GSE37699', 'PXD051771']
-    scores = [1.515732765197754, 1.52, 1.614931583404541, 1.6210192441940308, 1.6210192441940308]
+    scores = [0.6780939698219299, 0.9763838052749634, 1.2033672332763672, 1.5262384414672852, 1.579963207244873]
     DAS_text = ".\n".join([item['text'] for item in top_k_sections])
     assert isinstance(top_k_sections, list)
     assert len(top_k_sections) == 5

@@ -1,5 +1,6 @@
 from data_gatherer.retriever.xml_retriever import xmlRetriever
 from data_gatherer.parser.base_parser import *
+from data_gatherer.retriever.embeddings_retriever import EmbeddingsRetriever
 from lxml import etree
 import os
 import pandas as pd
@@ -23,6 +24,10 @@ class XMLParser(LLMParser):
         self.logger = logger
         self.logger.info("Initializing xmlRetriever")
         self.retriever = xmlRetriever(self.logger, publisher='PMC')
+
+        self.embeddings_retriever = EmbeddingsRetriever(
+            logger=self.logger
+        )
 
     def extract_paragraphs_from_xml(self, xml_root) -> list[dict]:
         """

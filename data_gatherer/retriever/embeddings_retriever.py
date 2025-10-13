@@ -3,13 +3,14 @@ import time
 from sentence_transformers import SentenceTransformer, models
 from transformers import AutoModel, AutoTokenizer, AutoConfig
 from data_gatherer.retriever.base_retriever import BaseRetriever
+import torch
 
 class EmbeddingsRetriever(BaseRetriever):
     """
     Embeddings-based retriever for text passages, inspired by DSPy's approach.
     """
 
-    def __init__(self, model_name='sentence-transformers/all-MiniLM-L6-v2', corpus=None, device='cpu', logger=None, embed_corpus=True):
+    def __init__(self, model_name='sentence-transformers/all-MiniLM-L6-v2', corpus=None, device=None, logger=None, embed_corpus=True):
         """
         Initialize the EmbeddingsRetriever.
 
@@ -23,8 +24,23 @@ class EmbeddingsRetriever(BaseRetriever):
         super().__init__(publisher='general', retrieval_patterns_file='retrieval_patterns.json')
         self.logger = logger
         self.model_name = model_name
-        self.device = device
         self.corpus = corpus
+        
+        # Auto-detect best available device if not specified
+        if device is None:
+            if torch.cuda.is_available():
+                device = "cuda"
+                self.logger.info("CUDA available - using GPU acceleration")
+            elif hasattr(torch.backends, 'mps') and torch.backends.mps.is_available():
+                device = "mps"  # Metal Performance Shaders for Apple Silicon
+                self.logger.info("Metal Performance Shaders available - using Apple Silicon acceleration")
+            else:
+                device = "cpu"
+                self.logger.info("Using CPU - no GPU acceleration available")
+        
+        self.device = device
+
+
         if "BiomedBERT" in model_name or "biomedbert" in model_name.lower():
             self.model = self._initialize_biomedbert_model(model_name, device)
         else:
