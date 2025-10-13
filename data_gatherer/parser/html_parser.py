@@ -788,14 +788,46 @@ class HTMLParser(LLMParser):
                         chunk_doc['chunk_id'] = j + 1
                         corpus_documents.append(chunk_doc)
                     
-                    self.logger.debug(f" Section '{section_title}' split into {len(chunks)} chunks (fallback method)")
+                    self.logger.debug(f"Section '{section_title}' split into {len(chunks)} chunks (fallback method)")
                 else:
                     doc['text'] = normalized_section  # Add 'text' field for compatibility
                     corpus_documents.append(doc)
                     self.logger.debug(f"Section '{section_title}' ({i}) added to corpus (estimated: {estimated_tokens} tokens)")
         
-        self.logger.info(f"HTML sections converted: {len(sections)} sections → {len(corpus_documents)} corpus documents")
-        return corpus_documents
+        # Remove duplicates based on normalized text content and merge section titles
+        self.logger.info(f"Pre-deduplication: {len(corpus_documents)} corpus documents")
+        
+        unique_documents = []
+        seen_texts = {}  # Changed to dict to track documents by text content
+        
+        for doc in corpus_documents:
+            # Use normalized text as the deduplication key
+            text_key = doc.get('text', '').strip().lower()
+            current_section_title = doc.get('section_title', '').strip()
+            
+            # Check if we've seen this exact text before
+            if text_key and text_key not in seen_texts:
+                seen_texts[text_key] = doc
+                unique_documents.append(doc)
+                self.logger.debug(f"Added new document with section title: '{current_section_title}'")
+            elif text_key:
+                # Found duplicate content - check if section title is different
+                existing_doc = seen_texts[text_key]
+                existing_section_title = existing_doc.get('section_title', '').strip()
+                
+                if current_section_title and current_section_title != existing_section_title:
+                    # Concatenate section titles if they are different
+                    if current_section_title not in existing_section_title:
+                        concatenated_title = f"{existing_section_title} | {current_section_title}"
+                        existing_doc['section_title'] = concatenated_title
+                        self.logger.debug(f"Merged section titles: '{existing_section_title}' + '{current_section_title}' → '{concatenated_title}'")
+                    else:
+                        self.logger.debug(f"Section title '{current_section_title}' already included in existing title")
+                else:
+                    self.logger.debug(f"Skipping duplicate content with same section title: '{text_key[:50]}...'")
+        
+        self.logger.info(f"HTML sections converted: {len(sections)} sections → {len(unique_documents)} unique corpus documents (processed {len(corpus_documents) - len(unique_documents)} duplicates with title merging)")
+        return unique_documents
 
     def _intelligent_chunk_section(self, section_text, max_tokens):
         """
