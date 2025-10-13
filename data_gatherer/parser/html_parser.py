@@ -840,7 +840,7 @@ class HTMLParser(LLMParser):
         return chunks
 
     def semantic_retrieve_from_corpus(self, corpus, model_name='sentence-transformers/all-MiniLM-L6-v2',
-                                      topk_docs_to_retrieve=5, query=None):
+                                      topk_docs_to_retrieve=5, query=None, embedding_encode_batch_size=32):
         """
         Given a pre-extracted HTML corpus (list of sections), normalize for embeddings and retrieve relevant documents.
         This override provides HTML-specific corpus normalization before semantic search.
@@ -857,26 +857,15 @@ class HTMLParser(LLMParser):
             query = """Explicitly identify all the datasets by their database accession codes, repository names, and links
                     to deposited datasets mentioned in this paper."""
 
-        # Import here to avoid circular imports
-        from data_gatherer.retriever.embeddings_retriever import EmbeddingsRetriever
-
-        self.retriever = EmbeddingsRetriever(
-            model_name=model_name,
-            device="cpu",
-            logger=self.logger
-        )
-
-        self.logger.info(f"Using embedding model: {model_name}")
-
         # Convert structured sections to flat corpus for embeddings
-        self.retriever.corpus = self.from_sections_to_corpus(corpus)
+        self.embeddings_retriever.corpus = self.from_sections_to_corpus(corpus)
 
-        if not self.retriever.corpus:
+        if not self.embeddings_retriever.corpus:
             raise ValueError("Corpus is empty after converting sections to documents.")
         
-        self.embeddings = self.retriever.embed_corpus()
+        self.embeddings = self.embeddings_retriever.embed_corpus(batch_size=embedding_encode_batch_size)
 
-        result = self.retriever.search(
+        result = self.embeddings_retriever.search(
             query=query,
             k=topk_docs_to_retrieve
         )

@@ -51,7 +51,7 @@ class EmbeddingsRetriever(BaseRetriever):
             self.embed_corpus()
         self.query_embedding = None
 
-    def embed_corpus(self, corpus=None, enable_chunking=True, chunk_size=None, chunk_overlap=20):
+    def embed_corpus(self, corpus=None, enable_chunking=True, chunk_size=None, chunk_overlap=20, batch_size=32):
         """
         Embed the corpus using the initialized model with intelligent chunking to prevent truncation.
         
@@ -60,6 +60,7 @@ class EmbeddingsRetriever(BaseRetriever):
             enable_chunking (bool): Whether to enable intelligent chunking. Default True.
             chunk_size (int): Maximum tokens per chunk. If None, uses 80% of max_seq_length.
             chunk_overlap (int): Number of tokens to overlap between chunks.
+            batch_size (int): Batch size for encoding. Default 32. Larger batches may be faster but use more memory.
         """
         if corpus is not None:
             self.corpus = corpus
@@ -75,7 +76,7 @@ class EmbeddingsRetriever(BaseRetriever):
 
         # Embed the (potentially chunked) corpus
         embed_start = time.time()
-        self.embeddings = self.model.encode(corpus_texts, show_progress_bar=True, convert_to_numpy=True)
+        self.embeddings = self.model.encode(corpus_texts, show_progress_bar=True, convert_to_numpy=True, batch_size=batch_size)
         embed_time = time.time() - embed_start
 
         print(f"Embedding time: {embed_time:.2f}s ({embed_time/len(corpus_texts):.3f}s per chunk)")
