@@ -336,10 +336,6 @@ class DataGatherer:
             except Exception as e:
                 self.logger.warning(f"Failed to quit previous driver: {e}")
 
-        #if self.config['search_method'] == 'url_list' and self.config['dataframe_fetch']:
-        #    self.data_fetcher = DatabaseFetcher(self.config, self.logger)
-        #    return
-
         elif self.search_method == 'url_list':
             self.data_fetcher = WebScraper(None, self.logger, driver_path=driver_path, browser=browser,
                                            headless=headless)
@@ -836,7 +832,7 @@ class DataGatherer:
         :return: List of URLs loaded from the file.
         """
         self.logger.debug(f"Loading URLs from file: {input_file}")
-        if not os.path.exists(input_file):
+        if not os.path.exists(str(input_file)):
             if isinstance(input_file, str):
                 return [input_file.strip()]
             elif isinstance(input_file, list):
