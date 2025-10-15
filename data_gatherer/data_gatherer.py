@@ -8,6 +8,7 @@ import pandas as pd
 import ipywidgets as widgets
 import textwrap
 import cloudscraper
+from typing import Dict, Any
 from data_gatherer.logger_setup import setup_logging
 from data_gatherer.data_fetcher import *
 from data_gatherer.parser.html_parser import *
@@ -1490,6 +1491,96 @@ class DataGatherer:
         except Exception as e:
             self.logger.error(f"Error in integrated batch processing: {e}", exc_info=True)
             raise
+
+    def split_jsonl_and_submit(self, 
+                              batch_file_path: str,
+                              max_file_size_mb: float = 200.0,
+                              api_provider: str = 'openai',
+                              wait_between_submissions: int = 30,
+                              batch_description: str = None) -> Dict[str, Any]:
+        """
+        Simple function to chunk large JSONL files and submit them sequentially.
+        
+        This function ONLY handles chunking and submission - no monitoring or result combination.
+        Use llm_client methods for monitoring batch completion and combining results.
+        
+        :param batch_file_path: Path to the large JSONL batch file
+        :param max_file_size_mb: Maximum size per chunk in MB (default: 200MB for OpenAI)
+        :param api_provider: API provider ('openai' or 'portkey')
+        :param wait_between_submissions: Seconds to wait between chunk submissions
+        :param batch_description: Description for the batch jobs
+        :return: Dictionary with submission results
+        """
+        from data_gatherer.llm.batch_storage import BatchStorageManager
+        
+        self.logger.info(f"Starting split_jsonl_and_submit for file: {batch_file_path}")
+        
+        # Initialize batch storage manager
+        batch_manager = BatchStorageManager(logger=self.logger)
+        
+        # Check if file exists and get size
+        if not os.path.exists(batch_file_path):
+            raise FileNotFoundError(f"Batch file not found: {batch_file_path}")
+        
+        file_size_mb = os.path.getsize(batch_file_path) / 1024 / 1024
+        self.logger.info(f"Batch file size: {file_size_mb:.2f} MB")
+        
+        # Chunk
+        self.logger.info("Chunking and submitting batches...")
+        batches_chunked = batch_manager.chunk_batch_file(
+            large_batch_file_path=batch_file_path,
+            max_file_size_mb=max_file_size_mb,
+        )
+
+        if self.parser is None:
+            self.parser = XMLParser(self.open_data_repos_ontology, self.logger, llm_name=self.llm)
+
+        submission_results = []
+        # Submit
+        for batch in batches_chunked:
+            chunk_info = batch['chunk_info']
+            submission_results.append(
+                self.parser.llm_client.submit_batch_job(
+                    chunk_info['chunk_file_path'], 
+                    api_provider=api_provider,
+                    batch_description= f'''
+                    chunk_number: {chunk_info['chunk_number']}, 
+                    total_chunks: {chunk_info['total_chunks']},
+                    chunk_file_path: {chunk_info['chunk_file_path']},
+                    requests_in_chunk: {chunk_info['requests_in_chunk']},
+                    chunk_size_mb: {chunk_info['chunk_size_mb']}
+                    '''
+                    )
+                )
+            1/0
+        
+        # Prepare result
+        successful_submissions = [r for r in submission_results if 'batch_id' in r]
+        failed_submissions = [r for r in submission_results if 'error' in r]
+        
+        result = {
+            'original_file': batch_file_path,
+            'original_size_mb': file_size_mb,
+            'chunks_created': len(submission_results),
+            'chunks_submitted': len(successful_submissions),
+            'chunks_failed': len(failed_submissions),
+            'submission_results': submission_results,
+            'metadata_file': f"{os.path.splitext(batch_file_path)[0]}_chunking_metadata.json",
+            'batch_ids': [r['batch_id'] for r in successful_submissions]
+        }
+        
+        # Log submission summary
+        self.logger.info(f"Chunking and submission complete:")
+        self.logger.info(f"  Created {result['chunks_created']} chunks")
+        self.logger.info(f"  Successfully submitted {result['chunks_submitted']} batches")
+        self.logger.info(f"  Failed submissions: {result['chunks_failed']}")
+        
+        for i, sub_result in enumerate(successful_submissions):
+            chunk_info = sub_result.get('chunk_info', {})
+            self.logger.info(f"  Chunk {i+1}: Batch ID {sub_result['batch_id']} "
+                           f"({chunk_info.get('requests_in_chunk', 'N/A')} requests)")
+        
+        return result
 
     def from_batch_resp_file_to_df(self, batch_results_file: str):
         """

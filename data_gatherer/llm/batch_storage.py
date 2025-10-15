@@ -10,6 +10,7 @@ import tempfile
 from typing import Dict, List, Any, Optional, Union
 from data_gatherer.llm.response_schema import *
 import logging
+import math
 
 
 class BatchStorageManager:
@@ -246,6 +247,80 @@ class BatchStorageManager:
             
         except Exception as e:
             self.logger.error(f"Error reading batch results file: {e}")
+            raise
+    
+    def chunk_batch_file(self, large_batch_file_path: str, max_file_size_mb: float = 200.0) -> List[Dict[str, Any]]:
+        """
+        Chunk a large JSONL batch file into smaller files under the size limit and submit them sequentially.
+        
+        :param large_batch_file_path: Path to the large JSONL file to chunk
+        :param max_file_size_mb: Maximum size per chunk file in MB (default: 200MB for OpenAI limit)
+        :param wait_between_submissions: Seconds to wait between submissions
+        :param submit_kwargs: Additional keyword arguments to pass to the submit function
+        :return: List of submission results for each chunk
+        """
+        try:
+            max_file_size_bytes = max_file_size_mb * 1024 * 1024
+            
+            # Check if the file needs chunking
+            original_size = os.path.getsize(large_batch_file_path)
+            self.logger.info(f"Original batch file size: {original_size} bytes")
+            
+            if original_size <= max_file_size_bytes:
+                self.logger.info("File is already under the size limit, no chunking needed")
+                return [{'file_path': large_batch_file_path, 'size_mb': original_size / 1024 / 1024}]
+            
+            # Read all requests from the original file
+            requests = self.read_jsonl_batch_file(large_batch_file_path)
+            self.logger.info(f"Read {len(requests)} requests from original file")
+            
+            # Calculate approximate size per request for chunking
+            n_requests = math.ceil(original_size * 1.1 / max_file_size_bytes)
+            requests_per_chunk = math.floor(len(requests) / n_requests)
+            
+            # Create chunks
+            chunks = []
+            for i in range(0, len(requests), requests_per_chunk):
+                chunk_requests = requests[i:i + requests_per_chunk]
+                chunks.append(chunk_requests)
+            
+            self.logger.info(f"Split into {len(chunks)} chunks with ~{requests_per_chunk} requests each")
+            
+            # Create chunk files
+            base_path = os.path.splitext(large_batch_file_path)[0]
+            base_dir = os.path.dirname(base_path)
+            base_name = os.path.basename(base_path)
+            
+            chunked_batches = []
+            
+            for chunk_idx, chunk_requests in enumerate(chunks):
+                chunk_file_path = os.path.join(base_dir, f"{base_name}_chunk_{chunk_idx + 1:03d}.jsonl")
+                
+                # Create chunk file
+                chunk_stats = self.create_jsonl_batch_file(chunk_requests, chunk_file_path)
+                chunk_size_mb = chunk_stats['file_size_bytes'] / 1024 / 1024
+                
+                self.logger.info(f"Created chunk {chunk_idx + 1}/{len(chunks)}: {chunk_file_path} "
+                               f"({chunk_stats['total_requests']} requests, {chunk_size_mb:.2f} MB)")
+                
+                # Just return file info if no submit function
+                chunked_batches.append({
+                    'chunk_info': {
+                    'chunk_number': chunk_idx + 1,
+                    'total_chunks': len(chunks),
+                    'chunk_file_path': chunk_file_path,
+                    'requests_in_chunk': len(chunk_requests),
+                    'chunk_size_mb': chunk_size_mb
+                    }
+                })
+
+            self.logger.info(f"Chunking completed. Created {len(chunks)} chunks, "
+                           f"submitted {len([r for r in chunked_batches if 'batch_id' in r])} successfully")
+            
+            return chunked_batches
+            
+        except Exception as e:
+            self.logger.error(f"Error in chunking and submitting batch file: {e}")
             raise
 
 class BatchRequestBuilder:
