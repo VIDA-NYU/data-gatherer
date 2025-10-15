@@ -454,6 +454,7 @@ class LLMParser(ABC):
 
         :return: tuple — (dataset_id, data_repository, dataset_webpage) or (None, None, None) if invalid.
         """
+        self.logger.info(f"Schema validation called with dataset: {dataset}")
         dataset_id, data_repository, dataset_webpage = None, None, None
 
         for repo_key, repo_vals in self.open_data_repos_ontology['repos'].items():
@@ -937,9 +938,11 @@ class LLMParser(ABC):
         self.logger.warning(f"All validation methods failed, returning original URL to preserve information.")
         return resolved_dataset_page
 
-    def resolve_url(self, url):
+    def resolve_url(self, url, timeout=5):
+        if timeout is None:
+            return url
         try:
-            response = requests.get(url, allow_redirects=True, timeout=5)
+            response = requests.get(url, allow_redirects=True, timeout=timeout)
             self.logger.info(f"Resolved URL: {response.url}")
             return response.url
         except requests.RequestException as e:

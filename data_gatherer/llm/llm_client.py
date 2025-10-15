@@ -285,7 +285,7 @@ class LLMClient_dev:
         else:
             raise ValueError(f"Unsupported model: {self.model}. Please use a supported LLM model.")
     
-    def process_llm_response(self, raw_response, response_format=None, expected_key=None):
+    def process_llm_response(self, raw_response, response_format=None, expected_key=None, from_batch_mode=False):
         """
         Task-agnostic method to process LLM responses based on model type.
         Handles parsing, normalization, and basic post-processing.
@@ -295,7 +295,7 @@ class LLMClient_dev:
         :param expected_key: Expected key in JSON response (e.g., 'datasets')
         :return: Processed and normalized response
         """
-        self.logger.debug(f"process_llm_response called with model: {self.model}")
+        self.logger.info(f"process_llm_response called with model: {self.model}")
         #self.logger.debug(f"raw_response type: {type(raw_response)}, length: {len(str(raw_response))}")
         self.logger.debug(f"response_format: {response_format}")
         self.logger.debug(f"expected_key: {expected_key}")
@@ -323,16 +323,28 @@ class LLMClient_dev:
                 
         elif 'gpt' in self.model:
             self.logger.debug(f"Processing GPT model response")
+            self.logger.info(f"raw_response type: {type(raw_response)}, length: {len(str(raw_response))}, response: {raw_response}")
+            if from_batch_mode:
+                self.logger.info(f"From batch mode, raw_response type: {type(raw_response)}, length: {len(raw_response)}")
+                for item in raw_response:
+                    self.logger.info(f"Batch item type: {type(item)}, content (first 100 chars): {str(item)[:100]}")
+                    if item['type'] == 'reasoning':
+                        continue
+                    elif item['type'] == 'message':
+                        raw_response = item['content'][0]['text']
+                        self.logger.info(f"Using message content for processing: {raw_response[:100]}")
+                        break
+
             parsed_response = self.safe_parse_json(raw_response)
-            self.logger.debug(f"GPT parsed response: {parsed_response}, type: {type(parsed_response)}")
-            if self.full_document_read and isinstance(parsed_response, dict):
+            self.logger.info(f"GPT parsed response: {parsed_response}, type: {type(parsed_response)}")
+            if self.full_document_read and isinstance(parsed_response, dict) and expected_key in parsed_response:
                 result = parsed_response.get(expected_key, []) if expected_key else parsed_response
-                self.logger.debug(f"GPT full_document_read=True, extracted result: {result}")
+                self.logger.info(f"GPT full_document_read=True, extracted result: {result}")
             else:
                 result = parsed_response or []
-                self.logger.debug(f"GPT full_document_read=False, result: {result}")
+                self.logger.info(f"GPT full_document_read=False, result: {result}")
             final_result = self.normalize_response_format(result)
-            self.logger.debug(f"GPT final normalized result: {final_result}")
+            self.logger.info(f"GPT final normalized result: {final_result}")
             return final_result
             
         elif 'gemini' in self.model:
@@ -414,10 +426,6 @@ class LLMClient_dev:
     def generate_prompt_id(self, messages, temperature: float = 0.0):
         """Generate a unique prompt ID for caching."""
         return f"{self.model}-{temperature}-{self.prompt_manager._calculate_checksum(str(messages))}"
-    
-
-    
-
     
     def _safe_parse_json_internal(self, response_text):
         """Internal JSON parsing with error handling."""
@@ -822,7 +830,7 @@ class LLMClient_dev:
             
             for batch_response in batch_responses:
                 try:
-                    self.logger.info(f"Processing batch response of type: {type(batch_response)}, object: {batch_response}")
+                    self.logger.debug(f"Processing batch response of type: {type(batch_response)}, object: {batch_response}")
                     custom_id = batch_response.get('custom_id', 'unknown')
                     
                     # Handle different batch response formats
@@ -835,27 +843,20 @@ class LLMClient_dev:
                     else:
                         # Fallback - assume the response is the batch_response itself
                         llm_responses = batch_response
-
-                    for resp in llm_responses:
-                        cont = resp.get('content')[0]
-                        if cont:
-                            text = cont.get('text')
-                            if text:
-                                llm_response = text
-                        
-                                # Process using existing LLM response processing logic
-                                processed_response = self.process_llm_response(
-                                    raw_response=llm_response,
-                                    response_format=response_format,
-                                    expected_key=expected_key
-                                )
+                    
+                    processed_response = self.process_llm_response(
+                        raw_response=llm_responses,
+                        response_format=response_format,
+                        expected_key=expected_key,
+                        from_batch_mode=True
+                        )
                                 
-                                processed_results.append({
-                                    'custom_id': custom_id,
-                                    'processed_response': processed_response,
-                                    'status': 'success'
-                                })
-                                successful_count += 1
+                    processed_results.append({
+                        'custom_id': custom_id,
+                        'processed_response': processed_response,
+                        'status': 'success'
+                        })
+                    successful_count += 1
                     
                 except Exception as e:
                     self.logger.warning(f"Error processing batch response {custom_id}: {e}")
