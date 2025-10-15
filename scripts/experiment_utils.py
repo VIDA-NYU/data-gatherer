@@ -453,35 +453,24 @@ def extract_all_elements_with_UID(source_html, uid):
 
     return [None]  # No match found
 
-
-def evaluate_performance(predict_df, ground_truth, orchestrator, false_positives_file):
+def evaluate_performance(predict_df, ground_truth, orchestrator, false_positives_file, false_negatives_file=None,
+                         repo_return=False):
     """ Evaluates dataset extraction performance using precision, recall, and F1-score. """
 
-    recall_list, false_positives_output = [], []
+    recall_list, false_positives_output, false_negatives_output = [], [], []
     total_precision, total_recall, num_sources = 0, 0, 0
 
     for source_page in predict_df['source_url'].unique():
-        orchestrator.logger.info(f"\nStarting performance evaluation for source page: {source_page}")
-
-        gt_data = ground_truth[ground_truth['publication'].str.lower() == source_page.lower()]  # extract ground truth
+        pub_id = source_page.split('/')[-1].lower() if not source_page.endswith('/') else source_page.split('/')[-2]
+        
+        orchestrator.logger.info(f"Evaluating pub_id: {pub_id}")
+        gt_data = ground_truth[ground_truth['pmcid'].str.lower() == pub_id.lower()]  # extract ground truth
 
         gt_datasets = set()
-        for dataset_string in gt_data['dataset_uid'].dropna().str.lower():
+        for dataset_string in gt_data['identifier'].dropna().str.lower():
             gt_datasets.update(dataset_string.split(','))  # Convert CSV string into set of IDs
 
-        orchestrator.logger.info(f"Ground truth datasets: {gt_datasets}")
-        orchestrator.logger.info(f"# of elements in gt_data: {len(gt_data)}")
-
-        # Check if any dataset exists in raw HTML
-        present = any(
-            any(re.findall(re.escape(match_id.strip()), row['raw_html'], re.IGNORECASE))
-            for _, row in gt_data.iterrows()
-            for match_id in str(row['dataset_uid']).split(',') if pd.notna(row['dataset_uid'])
-        )
-
-        if not present:
-            orchestrator.logger.info(f"No datasets references in the raw_html for {source_page}")
-            continue
+        orchestrator.logger.info(f"# of elements in gt_data: {len(gt_data)}. Element IDs: {gt_datasets}")
 
         num_sources += 1
 
@@ -511,19 +500,23 @@ def evaluate_performance(predict_df, ground_truth, orchestrator, false_positives
 
         # Partial Matches (Aliased Identifiers)
         for eval_id in eval_datasets - matched_eval:
-            for gt_id in gt_datasets - matched_gt:
-                if eval_id in gt_id or gt_id in eval_id:  # Partial match or alias
+            for gt_id in gt_datasets:
+                orchestrator.logger.debug(f"Comparing eval_id='{eval_id}' with gt_id='{gt_id}'")
+                if eval_id in gt_id or gt_id in eval_id:
                     orchestrator.logger.info(f"Partial or alias match found: eval_id={eval_id}, gt_id={gt_id}")
                     matched_gt.add(gt_id)
                     matched_eval.add(eval_id)
-                    break  # Stop once matched
+                    break
+                else:
+                    orchestrator.logger.debug(f"No match: eval_id='{eval_id}' gt_id='{gt_id}'")
 
         # **False Positives (Unmatched extracted datasets)**
         FP = eval_datasets - matched_eval
-        false_positives_output.extend(FP)
+        false_positives_output.extend([false_p, eval_data[eval_data['dataset_identifier'].str.lower() == false_p]['data_repository'].values[0], pub_id] for false_p in FP)
 
         # **False Negatives (Unmatched ground truth datasets)**
         FN = gt_datasets - matched_gt
+        false_negatives_output.extend((FN, pub_id)) if len(FN) > 0 else None
 
         # **Precision and Recall Calculation**
         true_positives = len(matched_gt)
@@ -558,6 +551,11 @@ def evaluate_performance(predict_df, ground_truth, orchestrator, false_positives
     with open(false_positives_file, 'w') as f:
         for item in false_positives_output:
             f.write("%s\n" % item)
+
+    if false_negatives_file:
+        with open(false_negatives_file, 'w') as f:
+            for item in false_negatives_output:
+                f.write("%s\n" % item)
 
     return {
         "average_precision": average_precision,
