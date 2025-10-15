@@ -265,7 +265,7 @@ class DataFetcher(ABC):
         # Determine backup data file
         backup_file = local_fetch_file or 'scripts/exp_input/Local_fetched_data_SAGE.parquet'
 
-        if self.backup_store._filepath != backup_file:
+        if self.backup_store._filepath is None or self.backup_store._filepath != backup_file:
             self.backup_store = BackupDataStore(filepath=backup_file, logger=self.logger)
             stats = self.backup_store.get_stats()
             self.logger.info(f"Backup data store re-initialized: {stats['size']} publications, valid: {stats['valid']}")
