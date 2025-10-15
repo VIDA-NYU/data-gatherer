@@ -18,7 +18,7 @@ class LLMClassifier:
         Initialize the client for LLM classification.
         """
         if llm_name == 'gemma2:9b':
-            self.client = Client(host=os.environ['OLLAMA_CLIENT'])  # env variable
+            self.llm_client = Client(host=os.environ['OLLAMA_CLIENT'])  # env variable
 
     def classify_element(self, element):
         """
@@ -39,7 +39,7 @@ class LLMClassifier:
             rule_based_class = f" - Rule-based model classification - maybe incorrect - output: {element['rule_based_classification']}"
 
         # classify link based on its attributes
-        response = self.client.chat(model='gemma2:9b', messages=[
+        response = self.llm_client.chat(model='gemma2:9b', messages=[
             {
                 "role": "system",
                  "content": """You are an intelligent system that classifies HTML anchor elements with links. You will 

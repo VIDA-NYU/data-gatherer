@@ -136,7 +136,8 @@ scripts/tmp/**
 scripts/tmp/**
 scripts/exp_input/europe_pmc_synapse_id_mining.txt
 scripts/exp_input/Local_fetched_data_1.parquet
-scripts/exp_input/Local_fetched_data_1.parquet
+scripts/exp_input/Local_fetched_data_SAGE.parquet
+
 scripts/output/gold/SAGE_groundtruth.csv
 feedback/*
 ui/*log*
@@ -151,7 +152,11 @@ data_gatherer/prompts/prompt_templates/old
 data_gatherer/config/repos.txt
 scripts/exp_input/bdf_paper_pdfs/**
 scripts/output/gold/datacatalog_export-2025-10-02.json
-scripts/output/bdf_parsed_data**
 scripts/exp_input/Local_fetched_data_SAGE.parquet
 scripts/output/gold/dryad_datasets_preview.xlsx
 scripts/output/gold/dryad_datasets.parquet
+scripts/output/gold/datacatalog_export-2025-10-02.json
+scripts/output/bdf_parsed_data**
+scripts/output/dataset_association_rules.csv
+scripts/output/repo_false_positive_frequencies.csv
+scripts/output/combined_results.csv

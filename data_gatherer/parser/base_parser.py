@@ -64,7 +64,7 @@ class LLMParser(ABC):
         self.use_portkey = use_portkey
         
         # Initialize unified LLM client for all models
-        self.client = LLMClient_dev(
+        self.llm_client = LLMClient_dev(
             model=llm_name,
             logger=self.logger,
             use_portkey=use_portkey,
@@ -315,7 +315,7 @@ class LLMParser(ABC):
                 f"messages length: {self.count_tokens(messages, model)} tokens, schema: {response_format}")
             
             # Use the generic make_llm_call method
-            raw_response = self.client.make_llm_call(
+            raw_response = self.llm_client.make_llm_call(
                 messages=messages, 
                 temperature=temperature, 
                 response_format=response_format,
@@ -324,7 +324,7 @@ class LLMParser(ABC):
             
             # Use the unified response processing method
             self.logger.debug(f"Calling process_llm_response with raw_response type: {type(raw_response)}")
-            resps = self.client.process_llm_response(
+            resps = self.llm_client.process_llm_response(
                 raw_response=raw_response,
                 response_format=response_format,
                 expected_key="datasets"
@@ -341,6 +341,19 @@ class LLMParser(ABC):
                 self.logger.debug(f"Saving response to cache with prompt_id: {prompt_id}")
                 self.prompt_manager.save_response(prompt_id, resps)
 
+        # Process the response content using extracted method
+        result = self.process_datasets_response(resps)
+
+        return result
+
+    def process_datasets_response(self, resps):
+        """
+        Process the LLM response containing datasets and extract structured dataset information.
+        This method handles different response formats (lists, strings, dicts) and performs validation.
+        
+        :param resps: LLM response containing datasets (can be list, string, or dict)
+        :return: List of processed dataset dictionaries
+        """
         # Process the response content
         result = []
         for dataset in resps:
@@ -431,7 +444,6 @@ class LLMParser(ABC):
             self.logger.info(f"Extracted dataset: {result[-1]}")
 
         self.logger.debug(f"Final result: {result}")
-
         return result
 
     def schema_validation(self, dataset):
@@ -442,6 +454,7 @@ class LLMParser(ABC):
 
         :return: tuple — (dataset_id, data_repository, dataset_webpage) or (None, None, None) if invalid.
         """
+        self.logger.info(f"Schema validation called with dataset: {dataset}")
         dataset_id, data_repository, dataset_webpage = None, None, None
 
         for repo_key, repo_vals in self.open_data_repos_ontology['repos'].items():
@@ -604,7 +617,7 @@ class LLMParser(ABC):
         Delegates to the LLMClient's safe_parse_json method.
         """
         self.logger.debug(f"Parser safe_parse_json wrapper called, delegating to client")
-        return self.client.safe_parse_json(response_text)
+        return self.llm_client.safe_parse_json(response_text)
 
     def process_data_availability_links(self, dataset_links):
         """
@@ -663,7 +676,7 @@ class LLMParser(ABC):
                 self.logger.info(f"Requesting datasets using model: {model}, messages: {messages}")
                 
                 # Use the generic make_llm_call method
-                raw_response = self.client.make_llm_call(
+                raw_response = self.llm_client.make_llm_call(
                     messages=messages, 
                     temperature=0.0, 
                     full_document_read=False
@@ -925,9 +938,11 @@ class LLMParser(ABC):
         self.logger.warning(f"All validation methods failed, returning original URL to preserve information.")
         return resolved_dataset_page
 
-    def resolve_url(self, url):
+    def resolve_url(self, url, timeout=5):
+        if timeout is None:
+            return url
         try:
-            response = requests.get(url, allow_redirects=True, timeout=5)
+            response = requests.get(url, allow_redirects=True, timeout=timeout)
             self.logger.info(f"Resolved URL: {response.url}")
             return response.url
         except requests.RequestException as e:
