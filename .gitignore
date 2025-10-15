@@ -155,3 +155,6 @@ scripts/output/gold/datacatalog_export-2025-10-02.json
 scripts/output/bdf_parsed_data**
 scripts/output/gold/dryad_datasets.parquet
 scripts/output/gold/dryad_datasets_preview.xlsx
+scripts/output/dataset_association_rules.csv
+scripts/output/repo_false_positive_frequencies.csv
+scripts/output/combined_results.csv
