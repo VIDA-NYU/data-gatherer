@@ -160,3 +160,5 @@ scripts/output/bdf_parsed_data**
 scripts/output/dataset_association_rules.csv
 scripts/output/repo_false_positive_frequencies.csv
 scripts/output/combined_results.csv
+scripts/output/false_negatives.txt
+scripts/output/false_positives.txt

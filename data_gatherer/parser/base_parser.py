@@ -1351,3 +1351,27 @@ class LLMParser(ABC):
         )
 
         return result
+
+    def regex_match_id_patterns(self, document, id_patterns=None):
+        """
+        Extract dataset identifiers from document using regex patterns from ontology.
+        
+        :param document: str - the document content to search for patterns
+        :return: list - list of matches found using ontology patterns
+        """
+        self.logger.info(f"Extracting dataset IDs using regex patterns from document")
+        matches = []
+
+        if id_patterns is None:
+            id_patterns = [repo_config['id_pattern'] for repo_name, repo_config in self.open_data_repos_ontology['repos'].items() if 'id_pattern' in repo_config]
+
+        for pattern in id_patterns:
+            self.logger.debug(f"Checking pattern {pattern} for document")
+            found_matches = re.findall(pattern, document, re.IGNORECASE)
+            if found_matches:
+                self.logger.info(f"Found {len(found_matches)} matches for pattern {pattern}: {found_matches}")
+                matches.extend(found_matches)
+
+        self.logger.info(f"Total matches found: {len(matches)}")
+        return matches
+

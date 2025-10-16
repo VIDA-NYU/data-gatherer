@@ -223,6 +223,30 @@ class DataGatherer:
 
         return complete_publication_fetches
 
+    def init_parser_by_input_type(self, raw_data_format, raw_data=None):
+        if raw_data_format.upper() == "XML":
+            if raw_data is not None:
+                router = XMLRouter(self.open_data_repos_ontology, self.logger, full_document_read=self.full_document_read,
+                                llm_name=self.llm, save_dynamic_prompts=self.save_dynamic_prompts)
+                self.parser = router.get_parser(raw_data)
+            else:
+                self.parser = XMLParser(self.open_data_repos_ontology, self.logger, full_document_read=self.full_document_read,
+                                llm_name=self.llm, save_dynamic_prompts=self.save_dynamic_prompts)
+
+        elif raw_data_format.upper() == "HTML":
+            self.parser = HTMLParser(self.open_data_repos_ontology, self.logger, full_document_read=self.full_document_read,
+                               llm_name=self.llm, save_dynamic_prompts=self.save_dynamic_prompts)
+
+        elif raw_data_format.upper() == "PDF" and grobid_for_pdf:
+            self.parser = GrobidPDFParser(self.open_data_repos_ontology, self.logger, full_document_read=self.full_document_read,
+                               llm_name=self.llm, save_dynamic_prompts=self.save_dynamic_prompts)
+
+        elif raw_data_format.upper() == "PDF":
+            self.parser = PDFParser(self.open_data_repos_ontology, self.logger, full_document_read=self.full_document_read,
+                               llm_name=self.llm, save_dynamic_prompts=self.save_dynamic_prompts)
+        else:
+            raise ValueError(f"Unsupported raw data format: {raw_data_format}")
+
     def parse_data(self, raw_data, publisher=None, current_url_address=None, additional_data=None,
                    raw_data_format='XML', parsed_data_dir='tmp/parsed_articles/', grobid_for_pdf=False,
                    process_DAS_links_separately=False, full_document_read=False, semantic_retrieval=False, top_k=5,

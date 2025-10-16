@@ -1016,6 +1016,12 @@ class XMLParser(LLMParser):
         # Join rows with a newline to create the final table text
         return "\n".join(rows)
 
+    def regex_match_id_patterns(self, xml_element, id_patterns=None):
+        """XML-specific version that preserves structure if needed"""
+        # Extract specific XML sections first, then apply regex
+        text_content = etree.tostring(xml_element, encoding='unicode', method='text')
+        return super().regex_match_id_patterns(text_content, id_patterns)
+
     @staticmethod
     def is_tei_xml_static(xml_root):
         """
