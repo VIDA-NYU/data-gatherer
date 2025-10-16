@@ -446,7 +446,7 @@ class LLMParser(ABC):
         self.logger.debug(f"Final result: {result}")
         return result
 
-    def schema_validation(self, dataset):
+    def schema_validation(self, dataset, req_timeout=0.5):
         """
         Validate and extract dataset information based on the schema.
 
@@ -521,13 +521,13 @@ class LLMParser(ABC):
 
         if dataset_webpage is None and 'dataset_webpage' in dataset:
             dataset_webpage = self.validate_dataset_webpage(dataset['dataset_webpage'], data_repository,
-                                                            dataset_id, dataset)
+                                                            dataset_id, dataset, req_timeout=req_timeout)
         elif dataset_webpage is None:
             self.logger.info(f"Dataset webpage not extracted")
         else:
             self.logger.info(f"Dataset webpage found via pattern matching: {dataset_webpage}")
             dataset_webpage = self.validate_dataset_webpage(dataset_webpage, data_repository,
-                                                            dataset_id, dataset)
+                                                            dataset_id, dataset, req_timeout=req_timeout)
         self.logger.info(f"Final schema validation vals: {dataset_id}, {data_repository}, {dataset_webpage}")
 
         if dataset_id == 'n/a' and data_repository in self.open_data_repos_ontology['repos']:
@@ -879,7 +879,7 @@ class LLMParser(ABC):
             self.logger.info(f"Accession ID {dataset_identifier} is valid")
             return dataset_identifier
 
-    def validate_dataset_webpage(self, dataset_webpage_url, resolved_repo, dataset_id, old_metadata=None):
+    def validate_dataset_webpage(self, dataset_webpage_url, resolved_repo, dataset_id, old_metadata=None, req_timeout=0.5):
         """
         This function checks for hallucinations, i.e. if the dataset identifier is a known repository name.
         Input:
@@ -889,7 +889,7 @@ class LLMParser(ABC):
         old_metadata: dict - the old metadata dictionary (optional)
         """
         self.logger.info(f"Validating Dataset Page: {dataset_webpage_url}, resolved_repo {resolved_repo}, dataset_id {dataset_id}")
-        resolved_dataset_page = self.resolve_url(dataset_webpage_url)
+        resolved_dataset_page = self.resolve_url(dataset_webpage_url, req_timeout=req_timeout)
 
         if resolved_repo in self.open_data_repos_ontology['repos']:
             if 'dataset_webpage_url_ptr' in self.open_data_repos_ontology['repos'][resolved_repo].keys():
@@ -938,11 +938,11 @@ class LLMParser(ABC):
         self.logger.warning(f"All validation methods failed, returning original URL to preserve information.")
         return resolved_dataset_page
 
-    def resolve_url(self, url, timeout=5):
-        if timeout is None:
+    def resolve_url(self, url, req_timeout=0.5):
+        if req_timeout is None:
             return url
         try:
-            response = requests.get(url, allow_redirects=True, timeout=timeout)
+            response = requests.get(url, allow_redirects=True, timeout=req_timeout)
             self.logger.info(f"Resolved URL: {response.url}")
             return response.url
         except requests.RequestException as e:

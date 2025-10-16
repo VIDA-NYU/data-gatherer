@@ -323,7 +323,7 @@ def test_schema_validation(get_test_data_path):
         {'dataset_identifier': 'M27187', 'repository_reference': 'nuccore', 'dataset_webpage': 'https://www.ncbi.nlm.nih.gov/nuccore/M27187'}
     ]
     for obj,ret in zip(test_cases, ret_cases):
-        dataset_id_val, data_repo_val, dataset_webpage_val = parser.schema_validation(obj)
+        dataset_id_val, data_repo_val, dataset_webpage_val = parser.schema_validation(obj, req_timeout=5)
         print(f"Testing dataset_id_val: {dataset_id_val}, data_repo_val: {data_repo_val}, dataset_webpage_val: {dataset_webpage_val}\n")
         assert isinstance(dataset_id_val, str)
         assert isinstance(data_repo_val, str)

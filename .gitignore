@@ -162,3 +162,4 @@ scripts/output/repo_false_positive_frequencies.csv
 scripts/output/combined_results.csv
 scripts/output/false_negatives.txt
 scripts/output/false_positives.txt
+scripts/output/syn_data_results/result_gpt-5-mini_full-input.csv
