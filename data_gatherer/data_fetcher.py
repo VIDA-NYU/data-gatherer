@@ -385,7 +385,7 @@ class DataFetcher(ABC):
             return True
         return False
 
-    def download_file_from_url(self, url, output_root="output/suppl_files", paper_id=None):
+    def download_file_from_url(self, url, output_root="scripts/downloads/suppl_files", paper_id=None):
         output_dir = os.path.join(output_root, paper_id)
         os.makedirs(output_dir, exist_ok=True)
         filename = url.split("/")[-1]

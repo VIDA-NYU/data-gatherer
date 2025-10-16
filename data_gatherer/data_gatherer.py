@@ -899,7 +899,7 @@ class DataGatherer:
                     if self.download_data_for_description_generation:
                         split_source_url = hardscraped_metadata.get('source_url').split('/')
                         paper_id = split_source_url[-1] if len(split_source_url[-1]) > 0 else split_source_url[-2]
-                        self.data_fetcher.download_file_from_url(download_link, "output/suppl_files", paper_id)
+                        self.data_fetcher.download_file_from_url(download_link, "scripts/downloads/suppl_files", paper_id)
                         hardscraped_metadata[
                             'data_description_generated'] = self.metadata_parser.generate_dataset_description(
                             download_link)
@@ -1092,7 +1092,7 @@ class DataGatherer:
             self.logger.warning(f"Unsupported display type: {display_type}. Cannot display metadata preview.")
             return
 
-    def download_data_resources(self, output_root="output/suppl_files"):
+    def download_data_resources(self, output_root="scripts/downloads/suppl_files"):
         """
         Function to download all the files that were previewed and confirmed for download.
 

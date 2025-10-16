@@ -7,7 +7,7 @@ from selenium.webdriver.chrome.options import Options as ChromeOptions
 from webdriver_manager.firefox import GeckoDriverManager
 from webdriver_manager.chrome import ChromeDriverManager
 
-def create_driver(driver_path=None, browser="Firefox", headless=True, logger=None, download_dir="output/suppl_files"):
+def create_driver(driver_path=None, browser="Firefox", headless=True, logger=None, download_dir="scripts/downloads"):
     logger.info(f"Creating WebDriver for browser: {browser}, with driver located at driver_path: {driver_path}")
 
     if browser is None or browser.lower() == 'firefox':
