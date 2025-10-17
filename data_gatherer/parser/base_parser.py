@@ -2,11 +2,6 @@ from abc import ABC, abstractmethod
 import re
 import logging
 import pandas as pd
-from ollama import Client
-from openai import OpenAI
-from openai.types.responses.response_reasoning_item import ResponseReasoningItem
-import google.generativeai as genai
-from portkey_ai import Portkey
 import typing_extensions as typing
 from pydantic import BaseModel
 import os
@@ -15,8 +10,6 @@ from data_gatherer.prompts.prompt_manager import PromptManager
 import tiktoken
 from data_gatherer.resources_loader import load_config
 from data_gatherer.retriever.embeddings_retriever import EmbeddingsRetriever
-from data_gatherer.env import PORTKEY_GATEWAY_URL, PORTKEY_API_KEY, PORTKEY_ROUTE, PORTKEY_CONFIG, OLLAMA_CLIENT, \
-    GPT_API_KEY, GEMINI_KEY, DATA_GATHERER_USER_NAME
 import requests
 from json_repair import repair_json
 
@@ -69,53 +62,17 @@ class LLMParser(ABC):
         self.use_cached_responses = use_cached_responses
 
         self.use_portkey = use_portkey
-
-        if self.use_portkey and 'gemini' in llm_name:
-            self.portkey = Portkey(
-                api_key=PORTKEY_API_KEY,
-                virtual_key=PORTKEY_ROUTE,
-                base_url=PORTKEY_GATEWAY_URL,
-                config=PORTKEY_CONFIG,
-                metadata={"_user": DATA_GATHERER_USER_NAME}
-            )
-
-        elif llm_name == 'gemma3:1b':
-            self.client = LLMClient_dev(model='gemma3:1b', logger=self.logger)
-
-        elif llm_name == 'gemma3:4b':
-            self.client = LLMClient_dev(model='gemma3:4b', logger=self.logger)
-
-        elif llm_name == 'qwen:4b':
-            self.client = LLMClient_dev(model='qwen:4b', logger=self.logger)
-
-        elif llm_name == 'gemma2:9b':
-            self.client = Client(host=OLLAMA_CLIENT)  # env variable
-
-        elif llm_name == 'gpt-4o-mini':
-            self.client = OpenAI(api_key=GPT_API_KEY)
-
-        elif llm_name == 'gpt-4o':
-            self.client = OpenAI(api_key=GPT_API_KEY)
-
-        elif llm_name == 'gpt-5-nano':
-            self.client = OpenAI(api_key=GPT_API_KEY)
-
-        elif llm_name == 'gpt-5-mini':
-            self.client = OpenAI(api_key=GPT_API_KEY)
-
-        elif llm_name == 'gpt-5':
-            self.client = OpenAI(api_key=GPT_API_KEY)
-
-        elif 'gemini' in llm_name:
-            if not self.use_portkey:
-                genai.configure(api_key=GEMINI_KEY)
-                self.client = genai.GenerativeModel(llm_name)
-            else:
-                self.client = None
-
-        else:
-            raise ValueError(f"Unsupported LLM model: {llm_name}. Supported models are: "
-                             f"{', '.join(entire_document_models)} and 'gemma2:9b'.")
+        
+        # Initialize unified LLM client for all models
+        self.llm_client = LLMClient_dev(
+            model=llm_name,
+            logger=self.logger,
+            use_portkey=use_portkey,
+            save_dynamic_prompts=save_dynamic_prompts,
+            save_responses_to_cache=save_responses_to_cache,
+            use_cached_responses=use_cached_responses,
+            prompt_dir=prompt_dir
+        )
 
     # create abstract method for subclasses to implement parse_data
     @abstractmethod
@@ -185,7 +142,7 @@ class LLMParser(ABC):
         self.logger.info(f"Additional data\n{additional_data}")
         return pd.concat([parsed_data, additional_data], ignore_index=True)
 
-    def process_additional_data(self, additional_data, prompt_name='retrieve_datasets_simple_JSON',
+    def process_additional_data(self, additional_data, prompt_name='GPT_FewShot',
                                 response_format=dataset_response_schema_gpt):
         """
         Process the additional data from the webpage. This is the data matched from the HTML with the patterns in
@@ -243,7 +200,7 @@ class LLMParser(ABC):
         self.logger.debug(f"Final ret additional data: {ret}")
         return ret
 
-    def process_data_availability_text(self, DAS_content, prompt_name='retrieve_datasets_simple_JSON',
+    def process_data_availability_text(self, DAS_content, prompt_name='GPT_FewShot',
                                        response_format=dataset_response_schema_gpt):
         """
         Process the data availability section from the webpage.
@@ -280,7 +237,7 @@ class LLMParser(ABC):
 
     def extract_datasets_info_from_content(self, content: str, repos: list, model: str = 'gpt-4o-mini',
                                            temperature: float = 0.0,
-                                           prompt_name: str = 'retrieve_datasets_simple_JSON',
+                                           prompt_name: str = 'GPT_FewShot',
                                            full_document_read=True,
                                            response_format = dataset_response_schema_gpt) -> list:
         """
@@ -338,187 +295,105 @@ class LLMParser(ABC):
             # Check if the response exists
             cached_response = self.prompt_manager.retrieve_response(prompt_id)
 
-        if self.use_cached_responses and cached_response:
+        # Check for cached response
+        cached_response = self.prompt_manager.retrieve_response(prompt_id) if self.use_cached_responses else None
+
+        if cached_response:
             self.logger.info(f"Using cached response {type(cached_response)} from model: {model}")
-            if type(cached_response) == str and 'gpt' in model:
+            if isinstance(cached_response, str) and 'gpt' in model:
                 resps = [json.loads(cached_response)]
-            if type(cached_response) == str:
+            elif isinstance(cached_response, str):
                 resps = cached_response.split("\n")
-            elif type(cached_response) == list:
+            elif isinstance(cached_response, list):
+                resps = cached_response
+            else:
                 resps = cached_response
         else:
-            # Make the request to the model
+            # Make the request using the unified LLM client
             self.logger.info(
-                f"Requesting datasets from content using model: {model}, temperature: {temperature}, messages length: "
-                f"{self.count_tokens(messages, model)} tokens, schema: {response_format}")
-            resps = []
+                f"Requesting datasets from content using model: {model}, temperature: {temperature}, "
+                f"messages length: {self.count_tokens(messages, model)} tokens, schema: {response_format}")
+            
+            # Use the generic make_llm_call method
+            raw_response = self.llm_client.make_llm_call(
+                messages=messages, 
+                temperature=temperature, 
+                response_format=response_format,
+                full_document_read=self.full_document_read
+            )
+            
+            # Use the unified response processing method
+            self.logger.debug(f"Calling process_llm_response with raw_response type: {type(raw_response)}")
+            resps = self.llm_client.process_llm_response(
+                raw_response=raw_response,
+                response_format=response_format,
+                expected_key="datasets"
+            )
+            self.logger.debug(f"process_llm_response returned: {resps} (type: {type(resps)})")
+            
+            # Apply task-specific deduplication
+            self.logger.debug(f"Applying normalize_response_type to: {resps}")
+            resps = self.normalize_response_type(resps)
+            self.logger.debug(f"normalize_response_type returned: {resps} (type: {type(resps)})")
+            
+            # Save the processed response to cache
+            if self.save_responses_to_cache:
+                self.logger.debug(f"Saving response to cache with prompt_id: {prompt_id}")
+                self.prompt_manager.save_response(prompt_id, resps)
 
-            if model == 'gemma2:9b':
-                response = self.client.chat(model=model, options={"temperature": temperature}, messages=messages)
-                self.logger.info(
-                    f"Response received from model: {response.get('message', {}).get('content', 'No content')}")
-                resps = response['message']['content'].split("\n")
-                # Save the response
-                self.prompt_manager.save_response(prompt_id, response['message'][
-                    'content']) if self.save_responses_to_cache else None
-                self.logger.info(f"Response saved to cache")
+        # Process the response content using extracted method
+        result = self.process_datasets_response(resps)
 
-            elif model == 'gemma3:1b' or model == 'gemma3:4b' or model == 'qwen:4b':
-                response = self.client.api_call(messages, response_format=response_format.model_json_schema())
-                parsed_resp = self.safe_parse_json(response)
-                candidates = parsed_resp['datasets'] if isinstance(parsed_resp, dict) and 'datasets' in parsed_resp else parsed_resp
-                if candidates:
-                    self.logger.info(f"Found {len(candidates)} candidates in the response. Type {type(candidates)}")
-                    if self.save_responses_to_cache:
-                        self.prompt_manager.save_response(prompt_id, candidates)
-                        self.logger.info(f"Response saved to cache")
-                    parsed_response_dedup = self.normalize_response_type(candidates)
-                    resps = parsed_response_dedup
-                else:
-                    self.logger.error("No candidates found in the response.")
+        return result
 
-            elif 'gpt' in model:
-                response = None
-                if 'gpt-5' in model:
-                    if self.full_document_read:
-                        response = self.client.responses.create(
-                            model=model,
-                            input=messages,
-                            text={
-                                "format": response_format
-                            }
-                        )
-                    else:
-                        response = self.client.responses.create(
-                            model=model, 
-                            input=messages,
-                        )
-
-                elif 'gpt-4o' in model: 
-                    if self.full_document_read:
-                        response = self.client.responses.create(
-                            model=model,
-                            input=messages,
-                            temperature=temperature,
-                            text={
-                                "format": response_format
-                            }
-                        )
-                    else:
-                        response = self.client.responses.create(
-                            model=model, 
-                            input=messages,
-                            temperature=temperature
-                        )
-
-                self.logger.info(f"GPT response: {response.output}")
-
-                if self.full_document_read:
-                    resps = self.safe_parse_json(response.output)  # 'datasets' keyError?
-                    self.logger.info(f"Response is {type(resps)}: {resps}")
-                    resps = resps.get("datasets", []) if resps is not None else []
-                    resps = self.normalize_response_type(resps)
-                    self.logger.info(f"Response is {type(resps)}: {resps}")
-                    self.prompt_manager.save_response(prompt_id, resps) if self.save_responses_to_cache else None
-                else:
-                    try:
-                        resps = self.safe_parse_json(response.output)  # Ensure it's properly parsed
-                        resps = self.normalize_response_type(resps)
-                        self.logger.info(f"Response is {type(resps)}: {resps}")
-                        if not isinstance(resps, list):  # Ensure it's a list
-                            raise ValueError("Expected a list of datasets, but got something else.")
-
-                    except json.JSONDecodeError as e:
-                        self.logger.error(f"JSON decoding error: {e}")
-                        resps = []
-
-                    self.prompt_manager.save_response(prompt_id, resps) if self.save_responses_to_cache else None
-
-                # Save the response
-                self.logger.info(f"Response {type(resps)} saved to cache") if self.save_responses_to_cache else None
-
-            elif 'gemini' in model:
-                if self.use_portkey:
-                    # --- Portkey Gemini call ---
-                    portkey_payload = {
-                        "model": model,
-                        "messages": messages,
-                        "temperature": temperature,
-                    }
-                    try:
-                        response = self.portkey.chat.completions.create(
-                            **portkey_payload
-                        )
-                        self.logger.info(f"Portkey Gemini response: {response}")
-                        if self.full_document_read:
-                            resps = self.safe_parse_json(response)
-                            resps = self.normalize_response_type(resps)
-                            if isinstance(resps, dict):
-                                resps = resps.get("datasets", []) if resps is not None else []
-                        else:
-                            try:
-                                resps = self.safe_parse_json(response)
-                                resps = self.normalize_response_type(resps)
-                                if not isinstance(resps, list):
-                                    raise ValueError("Expected a list of datasets, but got something else.")
-                            except json.JSONDecodeError as e:
-                                self.logger.error(f"JSON decoding error: {e}")
-                                resps = []
-                        # Save response if needed
-                        if self.save_responses_to_cache:
-                            self.prompt_manager.save_response(prompt_id, resps)
-                    except Exception as e:
-                        self.logger.error(f"Portkey Gemini call failed: {e}")
-                        resps = []
-                else:
-                    if 'gemini' in model and 'flash' in model:
-                        response = self.client.generate_content(
-                            messages,
-                            generation_config=genai.GenerationConfig(
-                                response_mime_type="application/json",
-                                response_schema=list[Dataset]
-                            )
-                        )
-                        self.logger.debug(f"Gemini response: {response}")
-
-                    elif model == 'gemini-1.5-pro':
-                        response = self.client.generate_content(
-                            messages,
-                            request_options={"timeout": 1200},
-                            generation_config=genai.GenerationConfig(
-                                response_mime_type="application/json",
-                                response_schema=list[Dataset]
-                            )
-                        )
-                        self.logger.debug(f"Gemini Pro response: {response}")
-
-                    try:
-                        candidates = response.candidates  # Get the list of candidates
-                        if candidates:
-                            self.logger.info(f"Found {len(candidates)} candidates in the response.")
-                            response_text = candidates[0].content.parts[0].text  # Access the first part's text
-                            self.logger.info(f"Gemini response text: {response_text}")
-                            parsed_response = json.loads(response_text)  # Parse the JSON response
-                            if self.save_responses_to_cache:
-                                self.prompt_manager.save_response(prompt_id, parsed_response)
-                                self.logger.info(f"Response saved to cache")
-                            parsed_response_dedup = self.normalize_response_type(parsed_response)
-                            resps = parsed_response_dedup
-                        else:
-                            self.logger.error("No candidates found in the response.")
-                    except Exception as e:
-                        self.logger.error(f"Error processing Gemini response: {e}")
-                        return None
-            else:
-                raise ValueError(f"Unsupported model: {model}. Please use a supported LLM model.")
-
-        #if not self.full_document_read:
-        #    return resps
-
+    def process_datasets_response(self, resps):
+        """
+        Process the LLM response containing datasets and extract structured dataset information.
+        This method handles different response formats (lists, strings, dicts) and performs validation.
+        
+        :param resps: LLM response containing datasets (can be list, string, or dict)
+        :return: List of processed dataset dictionaries
+        """
         # Process the response content
         result = []
         for dataset in resps:
             self.logger.info(f"Processing dataset: {dataset}")
+            
+            # Initialize variables to avoid UnboundLocalError
+            dataset_id = None
+            data_repository = None
+            dataset_webpage = None
+            
+            # Handle malformed responses that create nested lists or unexpected structures
+            if isinstance(dataset, list):
+                self.logger.warning(f"Dataset is a list - likely malformed LLM response. Attempting to extract valid dictionaries...")
+                # Try to extract valid dictionary items from the list
+                valid_datasets = []
+                for item in dataset:
+                    if isinstance(item, dict) and any(key in item for key in ['dataset_identifier', 'dataset_id', 'data_repository']):
+                        valid_datasets.append(item)
+                        self.logger.info(f"Found valid dataset in list: {item}")
+                
+                # Process each valid dataset found in the list
+                for valid_dataset in valid_datasets:
+                    try:
+                        dataset_id, data_repository, dataset_webpage = self.schema_validation(valid_dataset)
+                        if dataset_id and data_repository:
+                            dataset_result = {
+                                "dataset_identifier": dataset_id,
+                                "data_repository": data_repository,
+                                "dataset_webpage": dataset_webpage if dataset_webpage is not None else 'n/a',
+                                "citation_type": valid_dataset.get('citation_type', 'n/a')
+                            }
+                            # Preserve dataset_context_from_paper field if present (for PaperMiner enhanced schema)
+                            if 'dataset_context_from_paper' in valid_dataset:
+                                dataset_result['dataset_context_from_paper'] = valid_dataset['dataset_context_from_paper']
+                            result.append(dataset_result)
+                            self.logger.info(f"Successfully processed dataset from list: {result[-1]}")
+                    except Exception as e:
+                        self.logger.warning(f"Failed to process dataset from list: {e}")
+                continue
+            
             if type(dataset) == str:
                 self.logger.info(f"Dataset is a string")
                 # Skip short or invalid responses
@@ -536,6 +411,10 @@ class LLMParser(ABC):
                 self.logger.info(f"Dataset is a dictionary")
 
                 dataset_id, data_repository, dataset_webpage = self.schema_validation(dataset)
+                
+            else:
+                self.logger.warning(f"Dataset is unexpected type {type(dataset)}, skipping: {dataset}")
+                continue
 
             if (dataset_id is None or data_repository is None) and dataset_webpage is None:
                 self.logger.info(f"Skipping dataset due to missing ID, repository, dataset page: {dataset}")
@@ -558,13 +437,16 @@ class LLMParser(ABC):
             if 'dataset-publication_relationship' in dataset:
                 result[-1]['dataset-publication_relationship'] = dataset['dataset-publication_relationship']
 
+            # Preserve dataset_context_from_paper field if present (for PaperMiner enhanced schema)
+            if 'dataset_context_from_paper' in dataset:
+                result[-1]['dataset_context_from_paper'] = dataset['dataset_context_from_paper']
+
             self.logger.info(f"Extracted dataset: {result[-1]}")
 
         self.logger.debug(f"Final result: {result}")
-
         return result
 
-    def schema_validation(self, dataset):
+    def schema_validation(self, dataset, req_timeout=0.5):
         """
         Validate and extract dataset information based on the schema.
 
@@ -572,6 +454,7 @@ class LLMParser(ABC):
 
         :return: tuple — (dataset_id, data_repository, dataset_webpage) or (None, None, None) if invalid.
         """
+        self.logger.info(f"Schema validation called with dataset: {dataset}")
         dataset_id, data_repository, dataset_webpage = None, None, None
 
         for repo_key, repo_vals in self.open_data_repos_ontology['repos'].items():
@@ -638,13 +521,13 @@ class LLMParser(ABC):
 
         if dataset_webpage is None and 'dataset_webpage' in dataset:
             dataset_webpage = self.validate_dataset_webpage(dataset['dataset_webpage'], data_repository,
-                                                            dataset_id, dataset)
+                                                            dataset_id, dataset, req_timeout=req_timeout)
         elif dataset_webpage is None:
             self.logger.info(f"Dataset webpage not extracted")
         else:
             self.logger.info(f"Dataset webpage found via pattern matching: {dataset_webpage}")
             dataset_webpage = self.validate_dataset_webpage(dataset_webpage, data_repository,
-                                                            dataset_id, dataset)
+                                                            dataset_id, dataset, req_timeout=req_timeout)
         self.logger.info(f"Final schema validation vals: {dataset_id}, {data_repository}, {dataset_webpage}")
 
         if dataset_id == 'n/a' and data_repository in self.open_data_repos_ontology['repos']:
@@ -668,98 +551,73 @@ class LLMParser(ABC):
         :return: List of deduplicated dataset responses.
 
         """
+        self.logger.debug(f"normalize_response_type called with response type: {type(response)}, length: {len(response) if hasattr(response, '__len__') else 'N/A'}")
+        self.logger.debug(f"normalize_response_type input: {response}")
+        
         self.logger.info(f"Deduplicating response with {len(response)} items")
         seen = set()
         deduped = []
 
         if not isinstance(response, list) and isinstance(response, dict):
+            self.logger.debug(f"Converting single dict to list")
             response = [response]
+        elif not isinstance(response, list):
+            self.logger.debug(f"Response is not a list or dict, type: {type(response)}")
+            return response
 
-        for item in response:
+        for i, item in enumerate(response):
+            self.logger.debug(f"Processing item {i}: {item} (type: {type(item)})")
             self.logger.debug(f"Processing item: {item}")
+            
+            if isinstance(item, str):
+                self.logger.debug(f"Item is a string, skipping deduplication logic")
+                deduped.append(item)
+                continue
+                
+            if not isinstance(item, dict):
+                self.logger.debug(f"Item is not a dict, type: {type(item)}, appending as-is")
+                deduped.append(item)
+                continue
+            
             dataset_id = item.get("dataset_identifier", item.get("dataset_id", ""))
+            self.logger.debug(f"Extracted dataset_id: {dataset_id}")
             if not dataset_id:
+                self.logger.debug(f"Skipping item with missing dataset_id: {item}")
                 self.logger.warning(f"Skipping item with missing dataset_id: {item}")
                 continue
             repo = item.get("data_repository", item.get("repository_reference", "n/a"))
+            self.logger.debug(f"Extracted repo: {repo}")
 
             # Normalize: remove DOI prefix if it matches '10.x/PXD123456'
             clean_id = re.sub(r'10\.\d+/(\bPXD\d+\b)', r'\1', dataset_id)
+            self.logger.debug(f"Normalized clean_id: {clean_id}")
 
             if clean_id not in seen:
                 # Update the dataset_id to the normalized version
                 item["dataset_id"] = clean_id
+                self.logger.debug(f"Adding unique item: {clean_id}")
                 self.logger.info(f"Adding unique item: {clean_id}")
                 deduped.append(item)
                 seen.add(clean_id)
 
             elif clean_id == 'n/a' and repo != 'n/a':
+                self.logger.debug(f"Adding n/a dataset_id with valid repo: {repo}")
                 deduped.append(item)
 
             else:
+                self.logger.debug(f"Duplicate found and skipped: {clean_id}")
                 self.logger.info(f"Duplicate found and skipped: {clean_id}")
 
+        self.logger.debug(f"normalize_response_type final result: {deduped}")
         return deduped
 
     def safe_parse_json(self, response_text):
         """
-        Cleans and safely parses JSON from an LLM response, fixing common issues.
-
-        :param response_text: str or dict — the JSON string or Portkey response object to be parsed.
-
-        :return: dict or None — parsed JSON object or None if parsing fails.
+        Wrapper method for backward compatibility.
+        Delegates to the LLMClient's safe_parse_json method.
         """
-        # Handle Portkey Gemini response object or OpenAI-like object
-        self.logger.info(f"Function_call: safe_parse_json(response_text {type(response_text)})")
-        # Accept both dict and objects with .choices attribute
-        if hasattr(response_text, "choices"):
-            # Likely an OpenAI/Portkey object, extract content
-            try:
-                response_text = response_text.choices[0].message.content
-                self.logger.debug(f"Extracted content from response object, type: {type(response_text)}")
-            except Exception as e:
-                self.logger.warning(f"Could not extract content from response object: {e}")
-                return None
-        elif isinstance(response_text, list):
-            self.logger.info(f"Response is a list of length: {len(response_text)}")
-            for response_item in response_text:
-                self.logger.info(f"List item type: {type(response_item)}")
-                if hasattr(response_item, "content"):
-                    self.logger.info(f"Item has content attribute, of type: {type(response_item.content)}")
-                    if isinstance(response_item.content, list) and len(response_item.content) > 0:
-                        response_text = response_item.content[0].text
-                else:
-                    response_text = str(response_item)
-        elif isinstance(response_text, dict):
-            try:
-                response_text = response_text["choices"][0]["message"]["content"]
-            except Exception as e:
-                self.logger.warning(f"Could not extract content from response dict: {e}")
-                return None
-
-        response_text = response_text.strip()
-
-        # Remove markdown formatting
-        if response_text.startswith("```"):
-            response_text = re.sub(r"^```[a-zA-Z]*\n?", "", response_text)
-            response_text = re.sub(r"\n?```$", "", response_text)
-        
-        self.logger.debug(f"Cleaned response text for JSON parsing: {response_text[:500]}")
-
-        try:
-            # First try standard parsing
-            return json.loads(response_text)
-        except json.JSONDecodeError:
-            self.logger.warning("Initial JSON parsing failed. Attempting json_repair...")
-
-            try:
-                repaired = repair_json(response_text)
-                repaired = re.sub(r',\s*\{\}\]', ']', repaired)  # Remove trailing empty objects in lists
-                return json.loads(repaired)
-            except Exception as e:
-                self.logger.warning(f"json_repair failed: {e}")
-                self.logger.info(f"Malformed JSON (after attempted repair): {repaired[:500]}")
-                return None
+        self.logger.debug(f"Parser safe_parse_json wrapper called, delegating to client")
+        return self.llm_client.safe_parse_json(response_text)
 
     def process_data_availability_links(self, dataset_links):
         """
@@ -801,7 +659,7 @@ class LLMParser(ABC):
                 "href": link['href'],
                 "surrounding_text": link['surrounding_text']
             }
-            static_prompt = self.prompt_manager.load_prompt("retrieve_datasets_fromDAS")
+            static_prompt = self.prompt_manager.load_prompt("GEMINI_RTR_FewShot")
             messages = self.prompt_manager.render_prompt(static_prompt, self.full_document_read, **dynamic_content)
 
             # Generate a unique checksum for the prompt
@@ -809,39 +667,26 @@ class LLMParser(ABC):
             self.logger.info(f"Prompt ID: {prompt_id}")
 
             # Check if the response exists
-            cached_response = self.prompt_manager.retrieve_response(prompt_id)
+            cached_response = self.prompt_manager.retrieve_response(prompt_id) if self.use_cached_responses else None
             if cached_response:
                 self.logger.info("Using cached response.")
-                resp = cached_response.split("\n")
+                resp = cached_response.split("\n") if isinstance(cached_response, str) else cached_response
             else:
-                # Make the request to the LLM model
+                # Make the request using the unified LLM client
                 self.logger.info(f"Requesting datasets using model: {model}, messages: {messages}")
-                resp = []
-
-                if model == 'gemma2:9b':
-                    response = self.client.chat(model='gemma2:9b', options={"temperature": 0}, messages=messages)
-                    self.logger.info(
-                        f"Response received from gemma2:9b: {response.get('message', {}).get('content', 'No content')}")
-                    resp = response['message']['content'].split("\n")
-                    self.prompt_manager.save_response(prompt_id, response['message']['content'])
-                    self.logger.info(f"Response saved to cache")
-
-                elif 'gpt' in model:
-                    if 'gpt-4o' in model:
-                        response = self.client.responses.create(
-                            model=model,
-                            input=messages,
-                            temperature=0
-                        )
-                    elif 'gpt-5' in model:
-                        response = self.client.responses.create(
-                            model=model,
-                            input=messages,
-                        )
-                    self.logger.info(f"GPT response: {response.output}")
-                    resp = response.output.split("\n")
-                    self.prompt_manager.save_response(prompt_id, response.output)
-                    self.logger.info(f"Response saved to cache")
+                
+                # Use the generic make_llm_call method
+                raw_response = self.llm_client.make_llm_call(
+                    messages=messages, 
+                    temperature=0.0, 
+                    full_document_read=False
+                )
+                
+                # Process response and save to cache
+                resp = raw_response.split("\n") if isinstance(raw_response, str) else [raw_response]
+                if self.save_responses_to_cache:
+                    self.prompt_manager.save_response(prompt_id, raw_response)
+                self.logger.info(f"Response saved to cache")
 
             # Process the response
             ret_element['link'] = link['href']
@@ -1034,7 +879,7 @@ class LLMParser(ABC):
             self.logger.info(f"Accession ID {dataset_identifier} is valid")
             return dataset_identifier
 
-    def validate_dataset_webpage(self, dataset_webpage_url, resolved_repo, dataset_id, old_metadata=None):
+    def validate_dataset_webpage(self, dataset_webpage_url, resolved_repo, dataset_id, old_metadata=None, req_timeout=0.5):
         """
         This function checks for hallucinations, i.e. if the dataset identifier is a known repository name.
         Input:
@@ -1044,7 +889,7 @@ class LLMParser(ABC):
         old_metadata: dict - the old metadata dictionary (optional)
         """
         self.logger.info(f"Validating Dataset Page: {dataset_webpage_url}, resolved_repo {resolved_repo}, dataset_id {dataset_id}")
-        resolved_dataset_page = self.resolve_url(dataset_webpage_url)
+        resolved_dataset_page = self.resolve_url(dataset_webpage_url, req_timeout=req_timeout)
 
         if resolved_repo in self.open_data_repos_ontology['repos']:
             if 'dataset_webpage_url_ptr' in self.open_data_repos_ontology['repos'][resolved_repo].keys():
@@ -1055,8 +900,19 @@ class LLMParser(ABC):
                     self.logger.info(f"Link matches the pattern {pattern} of resolved_dataset_page.")
                     return resolved_dataset_page
                 else:
-                    self.logger.info(f"Link does not match the pattern {pattern } of resolved_dataset_page.")
-                    return 'n/a'
+                    self.logger.warning(f"Link does not match expected pattern {pattern} but may still be valid after redirect.")
+                    # Check if the resolved URL contains the dataset_id as a fallback
+                    if dataset_id and dataset_id != 'n/a' and dataset_id in resolved_dataset_page:
+                        self.logger.info(f"Dataset ID {dataset_id} found in resolved URL, accepting as valid.")
+                        return resolved_dataset_page
+                    # Try brute-force checking if it matches any known repository patterns
+                    brute_force_result = self.brute_force_dataset_webpage_url_check(resolved_dataset_page)
+                    if brute_force_result is not None:
+                        self.logger.info(f"Brute-force validation found valid dataset webpage: {brute_force_result}")
+                        return resolved_dataset_page
+                    # As a last resort, return the resolved URL instead of 'n/a' to preserve information
+                    self.logger.warning(f"Pattern validation failed but returning resolved URL to preserve potential valid link.")
+                    return resolved_dataset_page
             else:
                 self.logger.info(f"No dataset_webpage_url_ptr found for {resolved_repo}")
                 return resolved_dataset_page
@@ -1071,12 +927,22 @@ class LLMParser(ABC):
                     self.logger.info(f"Found valid dataset webpage in old metadata {k}: {checked_url}")
                     return checked_url
 
-        self.logger.info(f"Repository {resolved_repo} not found in ontology")
-        return 'n/a'
+        # Final fallback: if repository is not in ontology but URL seems valid, preserve it
+        if resolved_repo not in self.open_data_repos_ontology['repos']:
+            self.logger.warning(f"Repository {resolved_repo} not found in ontology, but preserving resolved URL.")
+            # Check if the resolved URL looks like a valid dataset page (contains common patterns)
+            if any(indicator in resolved_dataset_page.lower() for indicator in ['dataset', 'data', 'accession', 'id=']):
+                self.logger.info(f"Resolved URL appears to contain dataset-related content, preserving it.")
+                return resolved_dataset_page
+            
+        self.logger.warning(f"All validation methods failed, returning original URL to preserve information.")
+        return resolved_dataset_page
 
-    def resolve_url(self, url):
+    def resolve_url(self, url, req_timeout=0.5):
+        if req_timeout is None:
+            return url
         try:
-            response = requests.get(url, allow_redirects=True, timeout=5)
+            response = requests.get(url, allow_redirects=True, timeout=req_timeout)
             self.logger.info(f"Resolved URL: {response.url}")
             return response.url
         except requests.RequestException as e:
@@ -1177,7 +1043,7 @@ class LLMParser(ABC):
                     break
 
             if not resolved_to_known_repo and identifier is not None and identifier != 'n/a' and 'id_pattern' in v.keys():
-                self.logger.info(f"Checking id_pattern {v['id_pattern']} match with identifier {identifier} for {repo}")
+                self.logger.debug(f"Checking id_pattern {v['id_pattern']} match with identifier {identifier} for {repo}")
                 if re.match(v['id_pattern'], identifier, re.IGNORECASE):
                     self.logger.info(f"Found id_pattern match for {repo} in {v['id_pattern']}")
                     repo = k
@@ -1203,104 +1069,111 @@ class LLMParser(ABC):
 
     def get_dataset_page(self, datasets):
         """
-        Given a list of dataset dictionaries, reconstruct the dataset page, by using navigation patterns
-        from the ontology. The function will add a new key to the dataset dictionary with the webpage URL.
+        Enhance dataset dictionaries with missing dataset webpage URLs and access modes.
+        This function only acts on datasets that don't already have valid webpage URLs,
+        preserving existing good data from schema validation.
 
         :param datasets: list of dictionaries containing dataset information.
-
         :return: list of dictionaries with updated dataset information including dataset webpage URL.
         """
         if datasets is None:
             return None
 
-        self.logger.info(f"Fetching metadata for {len(datasets)} datasets")
+        self.logger.info(f"Enhancing dataset pages for {len(datasets)} datasets")
 
         for i, item in enumerate(datasets):
-
             if type(item) != dict:
-                self.logger.error(f"can't resolve dataset_webpage for non-dict item {1 + i}: {item}")
+                self.logger.error(f"Can't process non-dict item {1 + i}: {item}")
                 continue
 
-            self.logger.info(f"Processing dataset {1 + i} with keys: {item.keys()}")
-
-            if 'data_repository' not in item.keys() and 'repository_reference' not in item.keys():
-                self.logger.info(f"Skipping dataset {1 + i}: no data_repository for item")
+            # Skip if we already have a valid dataset webpage (preserve schema validation results)
+            existing_webpage = item.get('dataset_webpage', item.get('dataset_page', None))
+            if existing_webpage and existing_webpage != 'n/a' and existing_webpage != 'na':
+                self.logger.debug(f"Dataset {1 + i} already has valid webpage: {existing_webpage}")
+                # Still add access_mode if missing
+                self._add_access_mode_if_missing(item, i)
                 continue
 
+            self.logger.info(f"Processing dataset {1 + i} - missing or invalid webpage")
+
+            # Get required fields
+            repo = item.get('data_repository', item.get('repository_reference', None))
             accession_id = item.get('dataset_identifier', item.get('dataset_id', 'n/a'))
-            if accession_id == 'n/a':
-                self.logger.info(f"Skipping dataset {1 + i}: no dataset_identifier for item")
-                continue
-            else:
-                self.logger.info(f"Raw accession ID: {accession_id}")
-
-            if 'data_repository' in item.keys():
-                original_repo = item['data_repository']
-                repo = self.resolve_data_repository(original_repo, identifier=accession_id)
-            elif 'repository_reference' in item.keys():
-                original_repo = item['repository_reference']
-                repo = self.resolve_data_repository(original_repo, identifier=accession_id)
-            else:
-                self.logger.error(f"Error extracting data repository for item: {item}")
+            
+            if repo is None or repo == 'n/a' or accession_id == 'n/a':
+                self.logger.info(f"Skipping dataset {1 + i}: missing repo ({repo}) or accession_id ({accession_id})")
                 continue
 
+            # Handle list repositories (shouldn't happen after schema validation, but be defensive)
             if isinstance(repo, list):
                 if len(repo) > 0:
-                    self.logger.info(f"Repository is a list: {repo}. Resolving accession ID for each element.")
+                    self.logger.warning(f"Repository is a list: {repo}. Using first element.")
                     repo = repo[0]
                 else:
-                    self.logger.warning("Repository list is empty. Skipping this dataset.")
-                    continue  # or `return None`, depending on context
-
-            dataset_page = item.get('dataset_webpage', item.get('dataset_page', None))
-
-            accession_id = self.resolve_accession_id_for_repository(accession_id, repo, dataset_page)
-
-            self.logger.info(f"Processing dataset {1 + i} with repo: {repo} and accession_id: {accession_id}")
-            self.logger.debug(f"Processing dataset {1 + i} with keys: {item.keys()}")
-
-            updated_dt = False
-
-            if repo in self.open_data_repos_ontology['repos'].keys():
-
-                if "dataset_webpage_url_ptr" in self.open_data_repos_ontology['repos'][repo]:
-                    dataset_page_ptr = self.open_data_repos_ontology['repos'][repo]['dataset_webpage_url_ptr']
-                    if dataset_page and re.search(dataset_page_ptr.replace('__ID__', ''), dataset_page, re.IGNORECASE):
-                        self.logger.info(f"Dataset page {dataset_page} already matches pattern for {repo}")
-                        dataset_webpage = dataset_page
-                    else:
-                        self.logger.info(f"Using pattern {dataset_page_ptr} to construct dataset page for {repo}")
-                        dataset_webpage = re.sub('__ID__', accession_id, dataset_page_ptr)
-
-                elif ('dataset_webpage' in item.keys()):
-                    self.logger.debug(f"Skipping dataset {1 + i}: already has dataset_webpage")
+                    self.logger.warning("Repository list is empty. Skipping dataset.")
                     continue
 
-                else:
-                    self.logger.warning(
-                        f"No dataset_webpage_url_ptr found for {repo}. Maybe lost in refactoring 21 April 2025")
-                    dataset_webpage = 'na'
+            # Resolve accession ID if needed
+            resolved_accession_id = self.resolve_accession_id_for_repository(accession_id, repo, existing_webpage)
 
-                self.logger.info(f"Dataset page: {dataset_webpage}")
+            # Try to construct dataset webpage URL
+            dataset_webpage = self._construct_dataset_webpage(repo, resolved_accession_id, existing_webpage)
+            
+            if dataset_webpage and dataset_webpage != 'n/a':
                 datasets[i]['dataset_webpage'] = dataset_webpage
-
-                # add access mode
-                if 'access_mode' in self.open_data_repos_ontology['repos'][repo]:
-                    access_mode = self.open_data_repos_ontology['repos'][repo]['access_mode']
-                    datasets[i]['access_mode'] = access_mode
-                    self.logger.info(f"Adding access mode for dataset {1 + i}: {access_mode}")
-
-            elif original_repo.startswith('http'):
-                datasets[i]['data_repository'] = repo
-                datasets[i]['dataset_webpage'] = original_repo
-
+                self.logger.info(f"Added dataset webpage for {1 + i}: {dataset_webpage}")
             else:
-                self.logger.warning(f"Repository {repo} unknown in Ontology. Skipping dataset page {1 + i}.")
+                self.logger.warning(f"Could not construct valid webpage for dataset {1 + i}")
                 datasets[i]['dataset_webpage'] = 'n/a'
-                continue
 
-        self.logger.info(f"Updated datasets len: {len(datasets)}")
+            # Add access mode
+            self._add_access_mode_if_missing(item, i)
+
+        self.logger.info(f"Dataset enhancement completed: {len(datasets)} datasets processed")
         return datasets
+
+    def _construct_dataset_webpage(self, repo, accession_id, existing_webpage):
+        """Helper method to construct dataset webpage URL using ontology patterns."""
+        if repo in self.open_data_repos_ontology['repos']:
+            repo_config = self.open_data_repos_ontology['repos'][repo]
+            
+            if "dataset_webpage_url_ptr" in repo_config:
+                dataset_page_ptr = repo_config['dataset_webpage_url_ptr']
+                
+                # Check if existing webpage already matches the pattern
+                if existing_webpage:
+                    pattern_base = dataset_page_ptr.replace('__ID__', '')
+                    if re.search(re.escape(pattern_base), existing_webpage, re.IGNORECASE):
+                        self.logger.debug(f"Existing webpage {existing_webpage} matches pattern")
+                        return existing_webpage
+                
+                # Construct new URL using pattern
+                constructed_url = re.sub('__ID__', accession_id, dataset_page_ptr)
+                self.logger.info(f"Constructed webpage URL: {constructed_url}")
+                return constructed_url
+            else:
+                self.logger.debug(f"No dataset_webpage_url_ptr found for repo: {repo}")
+                return existing_webpage
+        
+        elif repo.startswith('http'):
+            # Repository itself is a URL, use it as the dataset webpage
+            self.logger.info(f"Using repo URL as dataset webpage: {repo}")
+            return repo
+        
+        else:
+            self.logger.warning(f"Repository {repo} not found in ontology")
+            return None
+
+    def _add_access_mode_if_missing(self, item, index):
+        """Helper method to add access_mode if missing."""
+        if 'access_mode' not in item:
+            repo = item.get('data_repository', item.get('repository_reference', None))
+            if repo and repo in self.open_data_repos_ontology['repos']:
+                repo_config = self.open_data_repos_ontology['repos'][repo]
+                if 'access_mode' in repo_config:
+                    access_mode = repo_config['access_mode']
+                    item['access_mode'] = access_mode
+                    self.logger.info(f"Added access mode for dataset {index + 1}: {access_mode}")
 
     def get_NuExtract_template(self):
         """
@@ -1421,13 +1294,19 @@ class LLMParser(ABC):
         """
         self.logger.info(f"Extracting dataset information from metadata. Prompt from subdir: {subdir}")
 
-        llm = LLMClient(
+        llm = LLMClient_dev(
             model=model if model else self.llm_name,
             logger=self.logger,
-            save_prompts=self.save_dynamic_prompts,
+            save_dynamic_prompts=self.save_dynamic_prompts,
             use_portkey=use_portkey
         )
-        response = llm.api_call(metadata, subdir=subdir)
+        
+        # Load and render the prompt using the unified client
+        static_prompt = llm.prompt_manager.load_prompt("gpt_metadata_extract", subdir=subdir)
+        messages = llm.prompt_manager.render_prompt(static_prompt, entire_doc=True, content=metadata)
+        
+        # Make the LLM call using the unified interface
+        response = llm.make_llm_call(messages=messages, temperature=0.0)
 
         # Post-process response into structured dict
         dataset_info = self.safe_parse_json(response)
@@ -1435,7 +1314,7 @@ class LLMParser(ABC):
         return dataset_info
 
     def semantic_retrieve_from_corpus(self, corpus, model_name='sentence-transformers/all-MiniLM-L6-v2',
-                                      topk_docs_to_retrieve=5):
+                                      topk_docs_to_retrieve=5, query=None):
         """
         Given a corpus of text, retrieve the most relevant documents using semantic search.
 
@@ -1448,8 +1327,9 @@ class LLMParser(ABC):
         :return: list of dict — the most relevant documents from the corpus.
         """
 
-        query = """Explicitly identify all the datasets by their database accession codes, repository names, and links
-         to deposited datasets mentioned in this paper."""
+        if query is None:
+            query = """Explicitly identify all the datasets by their database accession codes, repository names, and links
+                    to deposited datasets mentioned in this paper."""
 
         retriever = EmbeddingsRetriever(
             corpus=corpus,
@@ -1472,123 +1352,26 @@ class LLMParser(ABC):
 
         return result
 
+    def regex_match_id_patterns(self, document, id_patterns=None):
+        """
+        Extract dataset identifiers from document using regex patterns from ontology.
+        
+        :param document: str - the document content to search for patterns
+        :return: list - list of matches found using ontology patterns
+        """
+        self.logger.info(f"Extracting dataset IDs using regex patterns from document")
+        matches = []
 
-class LLMClient:
-    def __init__(self, model: str, logger=None, save_prompts: bool = False, use_portkey=True):
-        self.model = model
-        self.logger = logger or logging.getLogger(__name__)
-        self.logger.info(f"Initializing LLMClient with model: {self.model}")
-        self.use_portkey = use_portkey
-        self._initialize_client(model)
-        self.save_prompts = save_prompts
-        self.prompt_manager = PromptManager("data_gatherer/prompts/prompt_templates/metadata_prompts",
-                                            self.logger)
+        if id_patterns is None:
+            id_patterns = [repo_config['id_pattern'] for repo_name, repo_config in self.open_data_repos_ontology['repos'].items() if 'id_pattern' in repo_config]
 
-    def _initialize_client(self, model):
-        if model.startswith('gpt'):
-            self.client = OpenAI(api_key=GPT_API_KEY)
-        elif model.startswith('gemini') and not self.use_portkey:
-            genai.configure(api_key=GEMINI_KEY)
-            self.client = genai.GenerativeModel(model)
-        elif model.startswith('gemini') and self.use_portkey:
-            self.portkey = Portkey(
-                api_key=PORTKEY_API_KEY,
-                virtual_key=PORTKEY_ROUTE,
-                base_url=PORTKEY_GATEWAY_URL,
-                config=PORTKEY_CONFIG,
-                metadata={"_user": DATA_GATHERER_USER_NAME}
-            )
-            self.client = self.portkey
+        for pattern in id_patterns:
+            self.logger.debug(f"Checking pattern {pattern} for document")
+            found_matches = re.findall(pattern, document, re.IGNORECASE)
+            if found_matches:
+                self.logger.info(f"Found {len(found_matches)} matches for pattern {pattern}: {found_matches}")
+                matches.extend(found_matches)
 
-        elif model.startswith('gemma'):
-            self.client = Client(host="http://localhost:11434")
+        self.logger.info(f"Total matches found: {len(matches)}")
+        return matches
 
-        else:
-            self.client = None
-        self.logger.info(f"Client initialized: {self.client}")
-
-    def api_call(self, content, subdir='', **kwargs):
-        self.logger.info(f"Calling {self.model} with prompt length {len(content)}, subdir: {subdir}")
-        if self.model.startswith('gpt'):
-            return self._call_openai(content, subdir=subdir)
-        elif self.model.startswith('gemini'):
-            if self.use_portkey:
-                return self._call_portkey_gemini(content, subdir=subdir)
-            else:
-                return self._call_gemini(content, subdir=subdir)
-        else:
-            raise ValueError(f"Unsupported model: {self.model}")
-
-    def _call_openai(self, content, temperature=0.0, subdir='', **kwargs):
-        self.logger.info(f"Calling OpenAI with content length {len(content)}, subdir: {subdir}")
-        messages = self.prompt_manager.render_prompt(
-            self.prompt_manager.load_prompt("gpt_metadata_extract", subdir=subdir),
-            entire_doc=True,
-            content=content,
-        )
-        # save prompt_eval
-        if self.save_prompts:
-            self.prompt_manager.save_prompt(prompt_id='abc', prompt_content=messages)
-
-        response = self.client.responses.create(
-            model=self.model,
-            input=messages,
-            temperature=temperature,
-            text={
-                "format": kwargs.get('response_format', {"type": "json_object"})
-            }
-        )
-        return response.output
-
-    def _call_gemini(self, content, temperature=0.0, subdir=''):
-        self.logger.info(f"Calling Gemini with content length {len(content)}, subdir: {subdir}")
-        messages = self.prompt_manager.render_prompt(
-            self.prompt_manager.load_prompt("gemini_metadata_extract", subdir=subdir),
-            entire_doc=True,
-            content=content,
-        )
-
-        # save prompt_eval
-        if self.save_prompts:
-            self.prompt_manager.save_prompt(prompt_id='abc', prompt_content=messages)
-
-        response = self.client.generate_content(
-            messages,
-            generation_config=genai.GenerationConfig(
-                response_mime_type="application/json",
-                temperature=temperature,
-            )
-        )
-        return response.text
-
-    def _call_portkey_gemini(self, content, temperature=0.0, subdir=''):
-        self.logger.info(f"Calling Gemini via Portkey with content length {len(content)}, subdir: {subdir}")
-        # Render the prompt (should be a single message with 'parts')
-        messages = self.prompt_manager.render_prompt(
-            self.prompt_manager.load_prompt("portkey_gemini_metadata_extract", subdir=subdir),
-            entire_doc=True,
-            content=content,
-        )
-        if self.save_prompts:
-            self.prompt_manager.save_prompt(prompt_id='abc', prompt_content=messages)
-
-        portkey_payload = {
-            "model": self.model,
-            "messages": messages,
-            "temperature": temperature,
-        }
-
-        self.logger.debug(f"Portkey payload: {portkey_payload}")
-
-        try:
-            response = self.portkey.chat.completions.create(
-                api_key=PORTKEY_API_KEY,
-                route=PORTKEY_ROUTE,
-                headers={"Content-Type": "application/json"},
-                **portkey_payload
-            )
-
-            return response
-
-        except Exception as e:
-            raise RuntimeError(f"Portkey API call failed: {e}")

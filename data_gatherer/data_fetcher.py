@@ -15,25 +15,138 @@ from data_gatherer.retriever.xml_retriever import xmlRetriever
 from data_gatherer.retriever.html_retriever import htmlRetriever
 import tempfile
 
+
+# Singleton backup data store for all fetchers
+class BackupDataStore:
+    """
+    Lightweight singleton that provides backup data access for all fetchers.
+    This acts as a supplementary layer, not a replacement for live fetching.
+    """
+    _instance = None
+    _dataframe = None
+    _filepath = None
+    _timestamp = None
+    _ttl = 1800  # 30 minutes
+    
+    def __new__(cls, filepath=None, logger=None):
+        if cls._instance is None:
+            cls._instance = super().__new__(cls)
+        return cls._instance
+    
+    def __init__(self, filepath=None, logger=None):
+        self.logger = logger or logging.getLogger(__name__)
+        if filepath and (self._filepath != filepath or not self._is_valid()):
+            self._load_dataframe(filepath)
+            self.logger.info(f"BackupDataStore loaded from {filepath}, entries: {len(self._dataframe) if self._dataframe is not None else 0}")
+    
+    def _load_dataframe(self, filepath):
+        """Load DataFrame from file with error handling."""
+        try:
+            self._dataframe = pd.read_parquet(filepath)
+            self._filepath = filepath
+            self._timestamp = time.time()
+            return True
+        except Exception:
+            self._dataframe = None
+            self._filepath = None
+            self._timestamp = None
+            return False
+    
+    def _is_valid(self):
+        """Check if cached data is still valid."""
+        return (self._dataframe is not None and 
+                self._timestamp is not None and
+                (time.time() - self._timestamp) < self._ttl)
+    
+    def has_publication(self, identifier):
+        """Check if publication exists in backup store."""
+        if not self._is_valid() or self._dataframe is None:
+            return False
+        return identifier.lower() in self._dataframe['publication'].str.lower().values
+    
+    def get_publication_data(self, identifier):
+        """Retrieve publication data if available."""
+        if not self.has_publication(identifier):
+            return None
+        row = self._dataframe[self._dataframe['publication'].str.lower() == identifier.lower()]
+        if len(row) > 0:
+            return {
+                'content': row.iloc[0]['raw_cont'],
+                'format': row.iloc[0]['format'].upper()  # Ensure format is uppercase (HTML/XML)
+            }
+        return None
+    
+    def get_stats(self):
+        """Get backup store statistics."""
+        return {
+            'valid': self._is_valid(),
+            'filepath': self._filepath,
+            'size': len(self._dataframe) if self._dataframe is not None else 0,
+            'age_seconds': time.time() - self._timestamp if self._timestamp else None
+        }
+
 # Abstract base class for fetching data
 class DataFetcher(ABC):
-    def __init__(self, logger, src='WebScraper', driver_path=None, browser='firefox', headless=True):
-        self.dataframe_fetch = True  # Flag to indicate dataframe fetch supported or not
-        self.raw_HTML_data_filepath = 'scripts/exp_input/Local_fetched_data_1.parquet'
+    def __init__(self, logger, src='WebScraper', driver_path=None, browser='firefox', headless=True, 
+                 backup_data_file='scripts/exp_input/Local_fetched_data_SAGE.parquet'):
         self.logger = logger
-        self.logger.debug("DataFetcher initialized.")
+        self.logger.debug(f"DataFetcher ({src}) initialized.")
         self.driver_path = driver_path
         self.browser = browser
         self.headless = headless
-        self.pub_in_local_df = set()
-        if self.raw_HTML_data_filepath and os.path.exists(self.raw_HTML_data_filepath):
-            df = pd.read_parquet(self.raw_HTML_data_filepath)
-            # Assume 'publication' column contains the IDs
-            self.pub_in_local_df = set(df['publication'].str.lower())
-            self.logger.info(f"Loaded {len(self.pub_in_local_df)} publications from local DataFrame.")
+        self.src = src
+        
+        # Initialize backup data store (lightweight, shared across all instances)
+        self.backup_store = None
+        if backup_data_file and os.path.exists(backup_data_file):
+            self.backup_store = BackupDataStore(filepath=backup_data_file, logger=self.logger)
+            stats = self.backup_store.get_stats()
+            self.logger.info(f"Backup data store initialized: {stats['size']} publications, valid: {stats['valid']}")
         else:
-            self.logger.warning(
-                "DataFetcher raw_HTML_data_filepath set to None") if self.raw_HTML_data_filepath is None else None
+            self.logger.info(f"No backup data available at {backup_data_file}")
+    
+    def try_backup_fetch(self, identifier):
+        """
+        Try to fetch data from backup store as fallback.
+        
+        :param identifier: Publication identifier (PMC ID, DOI, etc.)
+        :return: Raw data if found, None otherwise
+        """
+        if not self.backup_store:
+            return None
+            
+        data = self.backup_store.get_publication_data(identifier)
+        if data:
+            self.logger.info(f"Found {identifier} in backup data store (format: {data['format']})")
+            # Set the raw_data_format based on backup data
+            self.raw_data_format = data['format']
+            
+            # For XML data, parse it into lxml Element tree to match live fetching behavior
+            if data['format'].upper() == 'XML':
+                try:
+                    xml_content = data['content']
+                    if isinstance(xml_content, str):
+                        if xml_content.startswith('<?xml'):
+                            xml_content = xml_content.encode('utf-8') # Ensure bytes for parsing
+                    root = ET.fromstring(xml_content)
+                    self.logger.debug(f"Parsed backup XML data into Element tree for {identifier}")
+                    return root
+                except Exception as e:
+                    self.logger.warning(f"Failed to parse backup XML for {identifier}: {e}")
+                    return data['content']
+            else:
+                return data['content']
+        return None
+
+    def remove_cookie_patterns(self, html: str):
+        pattern = r'<img\s+alt=""\s+src="https://www\.ncbi\.nlm\.nih\.gov/stat\?.*?"\s*>'
+
+        if re.search(pattern, html):
+            self.logger.info("Removing cookie pattern 1 from HTML")
+            html = re.sub(pattern, 'img_alt_subst', html)
+        else:
+            self.logger.info("No cookie pattern 1 found in HTML")
+        return html
 
     @abstractmethod
     def fetch_data(self, url, retries=3, delay=2):
@@ -147,79 +260,100 @@ class DataFetcher(ABC):
         return f"https://www.ncbi.nlm.nih.gov/pmc/articles/{PMCID}"
 
     def update_DataFetcher_settings(self, url, entire_doc_model, logger, HTML_fallback=False, driver_path=None,
-                                    browser='firefox', headless=True):
+                                    browser='firefox', headless=True, local_fetch_file=None):
         """
-        setting data fetcher to get source text from Local DataFrame (Priority 1), EntrezFetcher (Priority 2), or WebScraper (Priority 3).
+        Creates appropriate data fetcher with BackupDataStore integration. 
+        All fetchers now automatically check backup data first, then fall back to live fetching.
 
         :param url: The URL to fetch data from.
-
         :param entire_doc_model: Flag to indicate if the entire document model is being used.
-
         :param logger: The logger instance for logging messages.
-
-        :return: An instance of the appropriate data fetcher (WebScraper or EntrezFetcher).
+        :return: An instance of the appropriate data fetcher with backup capability.
         """
-        self.logger.debug(f"update_DataFetcher_settings for current URL")
+        self.logger.debug(f"update_DataFetcher_settings for URL: {url}")
 
-        API = None
+        # Determine backup data file
+        backup_file = local_fetch_file or 'scripts/exp_input/Local_fetched_data_SAGE.parquet'
 
-        if not HTML_fallback:
-            API = self.url_to_api_root(url)
-
-        if self.raw_HTML_data_filepath and self.dataframe_fetch and self.url_in_dataframe(url):
-            self.logger.info(f"URL {url} found in DataFrame. Using DatabaseFetcher.")
-            if isinstance(self, DatabaseFetcher):
-                self.logger.info(f"Reusing existing DatabaseFetcher instance.")
-                return self  # Reuse current instance
-            return DatabaseFetcher(logger)
-
-        if API == 'PMC':
-            if isinstance(self, EntrezFetcher):
-                self.logger.info(f"Reusing existing EntrezFetcher instance.")
-                return self  # Reuse current instance
-            self.logger.info(f"Initializing EntrezFetcher({'requests', 'self.config'})")
-            return EntrezFetcher(requests, logger)
-
-        # Reuse existing driver if we already have one
-        if isinstance(self, WebScraper) and self.scraper_tool is not None:
-            self.logger.info(f"Reusing existing WebScraper driver: {self.scraper_tool}")
-            return self
-
+        if self.backup_store is None or self.backup_store._filepath != backup_file:
+            self.backup_store = BackupDataStore(filepath=backup_file, logger=self.logger)
+            stats = self.backup_store.get_stats()
+            self.logger.info(f"Backup data store re-initialized: {stats['size']} publications, valid: {stats['valid']}")
+        
+        # Check if it's a PDF first
         if self.url_is_pdf(url):
             self.logger.info(f"URL {url} is a PDF. Using PdfFetcher.")
             if isinstance(self, PdfFetcher):
                 self.logger.info(f"Reusing existing PdfFetcher instance.")
-                return self  # Reuse current instance
-            return PdfFetcher(logger)
+                return self
+            return PdfFetcher(logger, driver_path=driver_path, browser=browser, headless=headless)
 
+        # Detect API type for optimal fetcher selection
+        API = None
+        if not HTML_fallback:
+            API = self.url_to_api_root(url)
+        self.logger.info(f"API detected: {API}")
+
+        # Choose fetcher based on content type and availability, all with backup support
+        if API == 'PMC':
+            # For PMC content, use EntrezFetcher (XML) with backup fallback
+            if isinstance(self, EntrezFetcher):
+                self.logger.info(f"Reusing existing EntrezFetcher instance with backup support.")
+                return self
+            self.logger.info(f"Creating EntrezFetcher with backup support")
+            return EntrezFetcher(requests, logger)
+
+        # For HTTP GET requests (simpler, faster for static content)
         if type(HTML_fallback) == str and HTML_fallback == 'HTTPGetRequest':
-            self.logger.info(f"Falling back to HttpGetRequest for URL: {url}")
+            self.logger.info(f"Using HttpGetRequest with backup support for URL: {url}")
             if isinstance(self, HttpGetRequest):
                 self.logger.info(f"Reusing existing HttpGetRequest instance.")
-                return self  # Reuse current instance
+                return self
+            return HttpGetRequest(logger)
+        
+        # Default case: check if we need complex JS rendering or simple HTTP
+        if not HTML_fallback:
+            # Start with simple HTTP GET (faster, backup-first)
+            self.logger.info(f"Using HttpGetRequest (backup-first) for URL: {url}")
             return HttpGetRequest(logger)
 
-        self.logger.info(f"WebScraper instance: {isinstance(self, WebScraper)}")
-        self.logger.info(f"EntrezFetcher instance: {isinstance(self, EntrezFetcher)}")
-        self.logger.info(f"scraper_tool attribute: {hasattr(self,'scraper_tool')}")
+        # For complex dynamic content, use WebScraper with backup support
+        # Reuse existing driver if available
+        if isinstance(self, WebScraper) and hasattr(self, 'scraper_tool') and self.scraper_tool is not None:
+            self.logger.info(f"Reusing existing WebScraper driver with backup support")
+            return self
 
-        self.logger.info(f"Initializing new selenium driver {driver_path}, {browser}, {headless}.")
+        self.logger.info(f"Creating new WebScraper with backup support: {browser}, headless={headless}")
         driver = create_driver(driver_path, browser, headless, self.logger)
-        return WebScraper(driver, logger)
+        return WebScraper(driver, logger, driver_path=driver_path, browser=browser, headless=headless)
 
     def url_in_dataframe(self, url):
         """
-        Checks if the given doi / pmcid is present in the DataFrame.
+        Checks if the given doi / pmcid is present in the backup data store.
 
         :param url: The URL to check.
-
         :return: True if the URL is found, False otherwise.
         """
+        if not self.backup_store:
+            return False
+            
         pmcid = re.search(r'PMC\d+', url, re.IGNORECASE)
-        pmcid = pmcid.group(0).lower() if pmcid else None
-        return pmcid in self.pub_in_local_df if pmcid else False
-
+        if pmcid:
+            return self.backup_store.has_publication(pmcid.group(0))
+        return False
+    
     def url_to_api_root(self, url):
+
+        API_ptrs = {
+            r'PMC\d+': 'PMC'
+        }
+
+        if not url.startswith('http'):
+            for ptr, src in API_ptrs.items():
+                match = re.match(ptr, url, re.IGNORECASE)
+                if match:
+                    self.logger.info(f"URL detected as {src}.")
+                    return src
 
         API_supported_url_patterns = {
             'https://www.ncbi.nlm.nih.gov/pmc/articles/': 'PMC',
@@ -229,7 +363,7 @@ class DataFetcher(ABC):
         # Check if the URL corresponds to any API_supported_url_patterns
         for ptr, src in API_supported_url_patterns.items():
             self.logger.debug(f"Checking {src} with pattern {ptr}")
-            match = re.match(ptr, url)
+            match = re.match(ptr, url, re.IGNORECASE)
             if match:
                 self.logger.debug(f"URL detected as {src}.")
                 return src
@@ -251,7 +385,7 @@ class DataFetcher(ABC):
             return True
         return False
 
-    def download_file_from_url(self, url, output_root="output/suppl_files", paper_id=None):
+    def download_file_from_url(self, url, output_root="scripts/downloads/suppl_files", paper_id=None):
         output_dir = os.path.join(output_root, paper_id)
         os.makedirs(output_dir, exist_ok=True)
         filename = url.split("/")[-1]
@@ -274,30 +408,48 @@ class DataFetcher(ABC):
 
         return path
 
+    def remove_cookie_patterns(self, html: str):
+        pattern = r'<img\s+alt=""\s+src="https://www\.ncbi\.nlm\.nih\.gov/stat\?.*?"\s*>'
+
+        if re.search(pattern, html):
+            self.logger.info("Removing cookie pattern 1 from HTML")
+            html = re.sub(pattern, 'img_alt_subst', html)
+        else:
+            self.logger.info("No cookie pattern 1 found in HTML")
+        return html
+
 class HttpGetRequest(DataFetcher):
     "class for fetching data via HTTP GET requests using the requests library."
     def __init__(self, logger):
         super().__init__(logger, src='HttpGetRequest')
         self.session = requests.Session()
         self.logger.debug("HttpGetRequest initialized.")
+        self.raw_data_format = 'HTML'
 
     def fetch_data(self, url, retries=3, delay=0.2):
         """
-        Fetches data from the given URL using HTTP GET requests.
+        Fetches data from the given URL. First tries backup data (fast), then HTTP GET if needed.
 
         :param url: The URL to fetch data from.
-
         :param retries: Number of retries in case of failure.
-
         :param delay: Delay time between retries.
-
         :return: The raw content of the page.
         """
+        # Try backup data FIRST (microsecond lookup)
+        pmcid = re.search(r'PMC\d+', url, re.IGNORECASE)
+        if pmcid:
+            backup_data = self.try_backup_fetch(pmcid.group(0))
+            if backup_data:
+                self.logger.info(f"Found {pmcid.group(0)} in local backup data (fast path, format: {self.raw_data_format})")
+                return backup_data
+        
+        # Fallback to live HTTP fetch (slow path)
+        self.logger.info(f"Local data not found, fetching live from {url}")
         attempt = 0
         while attempt < retries:
             time.sleep(delay/2)
             try:
-                self.logger.info(f"Fetching data from {url}, attempt {attempt + 1} of {retries}")
+                self.logger.info(f"HTTP GET attempt {attempt + 1} of {retries}")
                 response = self.session.get(url, headers={"User-Agent": "Mozilla/5.0"})
                 response.raise_for_status()  # Raise an error for bad responses
                 self.raw_data_format = 'HTML' if 'text/html' in response.headers.get('Content-Type', '') else 'Other'
@@ -306,7 +458,8 @@ class HttpGetRequest(DataFetcher):
                 self.logger.warning(f"Attempt {attempt + 1} failed: {e}")
                 attempt += 1
                 time.sleep(delay*2)
-        raise RuntimeError(f"Failed to fetch data from {url} after {retries} attempts.")
+        
+        self.logger.error(f"Failed to fetch data from {url} after {retries} attempts and no backup data available.")
 
     
     def html_page_source_download(self, directory, url, fetched_data):
@@ -380,6 +533,21 @@ class HttpGetRequest(DataFetcher):
         except Exception as e:
             self.logger.error(f"Error extracting publication title: {e}")
             return "No title found"
+    
+    def remove_cookie_patterns(self, html: str):
+        pattern = r'<img\s+alt=""\s+src="https://www\.ncbi\.nlm\.nih\.gov/stat\?.*?"\s*>'
+        # the patterns that change every time you visit the page and are not relevant to data-gatherer
+        # ;cookieSize = 93 & amp;
+        # ;jsperf_basePage = 17 & amp;
+        # ;ncbi_phid = 993
+        # CBBA47A4F74F305BBA400333DB8BA.m_1 & amp;
+
+        if re.search(pattern, html):
+            self.logger.info("Removing cookie pattern 1 from HTML")
+            html = re.sub(pattern, 'img_alt_subst', html)
+        else:
+            self.logger.info("No cookie pattern 1 found in HTML")
+        return html
 
 
 # Implementation for fetching data via web scraping
@@ -398,25 +566,36 @@ class WebScraper(DataFetcher):
 
     def fetch_data(self, url, retries=3, delay=2):
         """
-        Fetches data from the given URL, by simulating user scroll, waiting some delay time and doing multiple retries
-        to allow for page load and then get the source html
+        Fetches data from the given URL. First tries backup data (fast), then live web scraping if needed.
 
         :param url: The URL to fetch data from.
-
         :param retries: Number of retries in case of failure.
-
         :param delay: Delay time between retries.
-
         :return: The raw HTML content of the page.
         """
-        # Use the scraper tool to fetch raw HTML from the URL
         self.raw_data_format = 'HTML'  # Default format for web scraping
-        self.logger.debug(f"Fetching data with function call: self.scraper_tool.get(url)")
-        self.scraper_tool.get(url)
-        self.logger.debug(f"http get complete, now waiting {delay} seconds for page to load")
-        self.simulate_user_scroll(delay)
-        self.title = self.extract_publication_title()
-        return self.scraper_tool.page_source
+        
+        # Try backup data FIRST (microsecond lookup)
+        pmcid = re.search(r'PMC\d+', url, re.IGNORECASE)
+        if pmcid:
+            backup_data = self.try_backup_fetch(pmcid.group(0))
+            if backup_data:
+                self.logger.info(f"Found {pmcid.group(0)} in local backup data (fast path, format: {self.raw_data_format})")
+                return backup_data
+        
+        # Fallback to live web scraping (slow path)
+        self.logger.info(f"Local data not found, fetching live from {url}")
+        try:
+            self.logger.debug(f"Fetching data with function call: self.scraper_tool.get(url)")
+            self.scraper_tool.get(url)
+            self.logger.debug(f"http get complete, now waiting {delay} seconds for page to load")
+            self.simulate_user_scroll(delay)
+            self.title = self.extract_publication_title()
+            return self.scraper_tool.page_source
+        
+        except Exception as e:
+            self.logger.error(f"Live web scraping failed for {url}: {e}")
+            raise e
 
     def remove_cookie_patterns(self, html: str):
         pattern = r'<img\s+alt=""\s+src="https://www\.ncbi\.nlm\.nih\.gov/stat\?.*?"\s*>'
@@ -612,42 +791,45 @@ class WebScraper(DataFetcher):
 
 class DatabaseFetcher(DataFetcher):
     """
-    Class for fetching data from a DataFrame.
+    Simplified class for fetching data from a DataFrame. 
+    Now just a direct interface to the BackupDataStore.
     """
-    def __init__(self, logger):
-        super().__init__(logger, src='DatabaseFetcher')
-        if not self.raw_HTML_data_filepath or not os.path.exists(self.raw_HTML_data_filepath):
+    def __init__(self, logger, raw_HTML_data_filepath=None):
+        # Call parent with backup_data_file parameter
+        super().__init__(logger, src='DatabaseFetcher', backup_data_file=raw_HTML_data_filepath)
+        
+        if not raw_HTML_data_filepath or not os.path.exists(raw_HTML_data_filepath):
             raise ValueError("DatabaseFetcher requires a valid raw_HTML_data_filepath.")
-        self.dataframe = pd.read_parquet(self.raw_HTML_data_filepath)
-        self.logger.debug("DatabaseFetcher initialized.")
+        
+        if not self.backup_store:
+            raise RuntimeError(f"Failed to initialize backup data store from {raw_HTML_data_filepath}")
+        
+        stats = self.backup_store.get_stats()
+        self.logger.debug(f"DatabaseFetcher initialized with {stats['size']} publications (valid: {stats['valid']}).")
 
-    def fetch_data(self, url_key, retries=3, delay=2):
+    def fetch_data(self, url_key, retries=3, delay=2, local_fetch_file=None):
         """
-        Fetches data from a local file or database.
+        Fetches data from the backup data store.
 
         :param url_key: The key to identify the data in the database.
-
         :returns: The raw HTML content of the page.
         """
         split_source_url = url_key.split('/')
         key = (split_source_url[-1] if len(split_source_url[-1]) > 0 else split_source_url[-2]).lower()
+        
         self.logger.info(f"Fetching data for {key}")
-        self.logger.debug(f"Data file: {self.dataframe.columns}")
-        self.logger.debug(f"Data file: {self.dataframe[self.dataframe['publication'] == key]}")
-        self.logger.info(f"Fetching data from {self.raw_HTML_data_filepath}")
-        for i, row in self.dataframe[self.dataframe['publication'] == key].iterrows():
-            self.raw_data_format = row['format']
-            return row['raw_cont']
+        
+        # Use the backup store directly
+        data = self.backup_store.get_publication_data(key)
+        if data:
+            # Try to determine format - this is a simplification
+            self.raw_data_format = 'HTML'  # Default assumption
+            return data
+        
+        self.logger.warning(f"No data found for key: {key}")
+        return None
 
-    def remove_cookie_patterns(self, html: str):
-        pattern = r'<img\s+alt=""\s+src="https://www\.ncbi\.nlm\.nih\.gov/stat\?.*?"\s*>'
-
-        if re.search(pattern, html):
-            self.logger.info("Removing cookie pattern 1 from HTML")
-            html = re.sub(pattern, 'img_alt_subst', html)
-        else:
-            self.logger.info("No cookie pattern 1 found in HTML")
-        return html
+    
 
 # Implementation for fetching data from an API
 class EntrezFetcher(DataFetcher):
@@ -666,6 +848,7 @@ class EntrezFetcher(DataFetcher):
         super().__init__(logger, src='EntrezFetcher')
         self.api_client = api_client.Session()
         self.raw_data_format = 'XML'
+        self.logger.info(f"Raw_data_format: {self.raw_data_format}")
         # Read the API key at runtime, fallback to empty string if not set
         NCBI_API_KEY = os.environ.get('NCBI_API_KEY', '')
         if not NCBI_API_KEY:
@@ -679,27 +862,43 @@ class EntrezFetcher(DataFetcher):
 
     def fetch_data(self, article_id, retries=3, delay=2):
         """
-        Fetches data from the API using the provided article URL.
+        Fetches data from the API. First tries backup data (fast), then live API call if needed.
 
         :param article_id: The URL of the article to fetch data for.
-
         """
         try:
             # Extract the PMC ID from the article URL, ignore case
             PMCID = re.search(r'PMC\d+', article_id, re.IGNORECASE).group(0)
             self.PMCID = PMCID
+            
+            # Try backup data FIRST (microsecond lookup)
+            backup_data = self.try_backup_fetch(PMCID)
+            if backup_data:
+                self.logger.info(f"Found {PMCID} in local backup data (fast path, format: {self.raw_data_format})")
+                return backup_data
 
-            # Construct the API call using the PMC ID
-            api_call = re.sub('__PMCID__', PMCID, self.base)
-            self.logger.info(f"Fetching data from request: {api_call}")
+            # Fallback to live API call (slow path)
+            self.logger.info(f"Local data not found, fetching live from API for {PMCID}")
+            return self._fetch_live_api_data(PMCID, retries, delay)
 
-            # Retry logic for API calls
-            for attempt in range(retries):
+        except Exception as e:
+            # Log any exceptions and return None (backup already tried at start)
+            self.logger.error(f"Error fetching data for {article_id}: {e}")
+            return None
+
+    def _fetch_live_api_data(self, pmcid, retries, delay):
+        """Helper method to fetch data from live NCBI API."""
+        api_call = re.sub('__PMCID__', pmcid, self.base)
+        self.logger.info(f"API request: {api_call}")
+
+        # Retry logic for API calls
+        for attempt in range(retries):
+            try:
                 response = self.api_client.get(api_call)
 
                 # Check if request was successful
                 if response.status_code == 200:
-                    self.logger.debug(f"Successfully fetched data for {PMCID}")
+                    self.logger.debug(f"Successfully fetched data for {pmcid}")
                     # Parse and return XML response
                     xml_content = response.content
                     root = ET.fromstring(xml_content)
@@ -709,32 +908,27 @@ class EntrezFetcher(DataFetcher):
                 elif response.status_code == 400:
                     if "API key invalid" in str(response.text):
                         self.logger.error(f"Invalid NCBI API key provided. https://support.nlm.nih.gov/kbArticle/?pn=KA-05317")
-                        return None
+                        return None  # Stop retrying for API key errors
                     else:
-                        self.logger.error(f"400 Bad Request for {PMCID}: {response.text}")
+                        self.logger.error(f"400 Bad Request for {pmcid}: {response.text}")
                         time.sleep(delay)
-                        #break  # Stop retrying if it's a client-side error (bad request)
 
                 # Log and retry for 5xx server-side errors or 429 (rate limit)
                 elif response.status_code in [500, 502, 503, 504, 429]:
-                    self.logger.warning(f"Server error {response.status_code} for {PMCID}, retrying in {delay} seconds...")
+                    self.logger.warning(f"Server error {response.status_code} for {pmcid}, retrying in {delay} seconds...")
                     time.sleep(delay)
                 else:
-                    self.logger.error(f"Failed to fetch data for {PMCID}, Status code: {response.status_code}")
-                    return None
+                    self.logger.error(f"Failed to fetch data for {pmcid}, Status code: {response.status_code}")
+                    return None  # Stop retrying for other client errors
 
-            # If retries exhausted and request still failed
-            self.logger.error(f"Exhausted retries. Failed to fetch data for {PMCID} after {retries} attempts.")
-            return None
-
-        except requests.exceptions.RequestException as req_err:
-            # Catch all request-related errors (timeouts, network errors, etc.)
-            self.logger.error(f"Network error fetching data for {article_id}: {req_err}")
-            return None
-        except Exception as e:
-            # Log any other exceptions
-            self.logger.error(f"Error fetching data for {article_id}: {e}")
-            return None
+            except requests.exceptions.RequestException as req_err:
+                self.logger.error(f"Network error on attempt {attempt + 1} for {pmcid}: {req_err}")
+                if attempt < retries - 1:
+                    time.sleep(delay)
+                
+        # If all retries exhausted
+        self.logger.error(f"Live API fetch failed for {pmcid} after {retries} attempts")
+        return None
 
     def download_xml(self, directory, api_data, pub_link):
         """
@@ -808,6 +1002,11 @@ class PdfFetcher(DataFetcher):
         """
         self.raw_data_format = 'PDF'
         self.logger.info(f"Fetching PDF data from {url}")
+
+        if os.path.exists(url):
+            self.logger.info(f"URL is a local file path. Reading PDF from {url}")
+            return url
+
         response = requests.get(url)
         if response.status_code == 200:
             if return_temp:
@@ -837,7 +1036,7 @@ class DataCompletenessChecker:
     """
     Class to check the completeness of data sections in API responses.
     """
-    def __init__(self, logger, publisher='PMC', retrieval_patterns_file='retrieval_patterns.json'):
+    def __init__(self, logger, publisher='PMC', retrieval_patterns_file='retrieval_patterns.json', raw_data_format='XML'):
         """
         Initializes the DataCompletenessChecker with the specified logger.
 
@@ -847,7 +1046,12 @@ class DataCompletenessChecker:
 
         """
         self.logger = logger
-        self.retriever = xmlRetriever(logger, publisher, retrieval_patterns_file)
+        if raw_data_format.upper() == 'XML':
+            self.retriever = xmlRetriever(logger, publisher, retrieval_patterns_file)
+        elif raw_data_format.upper() == 'HTML':
+            self.retriever = htmlRetriever(logger, publisher, retrieval_patterns_file)
+        else:
+            raise ValueError(f"Unsupported raw data format: {raw_data_format}")
         self.logger.debug("DataCompletenessChecker initialized.")
 
     def is_xml_data_complete(self, raw_data, url,
@@ -864,6 +1068,7 @@ class DataCompletenessChecker:
 
         :return: True if all required sections are present, False otherwise.
         """
+        self.retriever = xmlRetriever(self.logger)
         return self.retriever.is_xml_data_complete(raw_data, url, required_sections)
 
     def is_html_data_complete(self, raw_data, url,
@@ -899,9 +1104,9 @@ class DataCompletenessChecker:
     
             :return: True if all required sections are present, False otherwise.
             """
-            if raw_data_format == 'XML':
+            if raw_data_format.upper() == 'XML':
                 return self.is_xml_data_complete(raw_data, url, required_sections)
-            elif raw_data_format == 'HTML':
+            elif raw_data_format.upper() == 'HTML':
                 return self.is_html_data_complete(raw_data, url, required_sections)
             else:
                 self.logger.error(f"Unsupported raw data format: {raw_data_format}")

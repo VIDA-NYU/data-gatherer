@@ -126,7 +126,7 @@ MODEL_OPTIONS = [
 ]
 PROMPT_MODEL_OPTIONS = {
     'FDR': 'GPT_from_full_input_Examples',
-    'RTR': 'retrieve_datasets_simple_JSON',
+    'RTR': 'GPT_FewShot',
 }
 metadata_prompt_name = 'portkey_gemini_metadata_extract'
 model_name = st.sidebar.selectbox("Model", MODEL_OPTIONS, index=MODEL_OPTIONS.index('gemini-2.0-flash'))
