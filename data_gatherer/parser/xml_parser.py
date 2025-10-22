@@ -405,6 +405,8 @@ class XMLParser(LLMParser):
                 supplementary_material_metadata = pd.DataFrame()
             self.logger.debug(f"supplementary_material_metadata: {supplementary_material_metadata}")
 
+            self.logger.warning(f"Semantic Retrieval Enabled, but not needed for full-document-read method") if semantic_retrieval and self.full_document_read else None
+
             if not self.full_document_read:
                 if process_DAS_links_separately and (filter_das is None or filter_das):
                     # Extract dataset links
@@ -1254,6 +1256,8 @@ class TEI_XMLParser(XMLParser):
             else:
                 supplementary_material_metadata = pd.DataFrame()
             self.logger.debug(f"supplementary_material_metadata: {supplementary_material_metadata}")
+
+            self.logger.warning(f"Semantic Retrieval Enabled, but not needed for full-document-read method") if semantic_retrieval and self.full_document_read else None
 
             if not self.full_document_read:
                 if process_DAS_links_separately and (filter_das is None or filter_das):

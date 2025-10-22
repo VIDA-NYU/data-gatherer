@@ -148,6 +148,16 @@ class DataFetcher(ABC):
             self.logger.info("No cookie pattern 1 found in HTML")
         return html
 
+    def remove_cookie_patterns(self, html: str):
+        pattern = r'<img\s+alt=""\s+src="https://www\.ncbi\.nlm\.nih\.gov/stat\?.*?"\s*>'
+
+        if re.search(pattern, html):
+            self.logger.info("Removing cookie pattern 1 from HTML")
+            html = re.sub(pattern, 'img_alt_subst', html)
+        else:
+            self.logger.info("No cookie pattern 1 found in HTML")
+        return html
+
     @abstractmethod
     def fetch_data(self, url, retries=3, delay=2):
         """

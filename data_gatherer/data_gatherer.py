@@ -399,9 +399,9 @@ class DataGatherer:
             raise ValueError(f"Invalid URL format: {url}. Must start with 'PMC' or 'https://'.")
 
     def process_url(self, url, save_staging_table=False, article_file_dir='tmp/raw_files/', use_portkey=True,
-                    driver_path=None, browser='Firefox', headless=True, prompt_name='GPT_FewShot',
+                    driver_path=None, browser='Firefox', headless=True, prompt_name='GPT_FewShot', top_k=5,
                     semantic_retrieval=False, section_filter=None, response_format=dataset_response_schema_gpt,
-                    HTML_fallback=False, grobid_for_pdf=False, write_htmls_xmls=False):
+                    HTML_fallback=False, grobid_for_pdf=False, write_htmls_xmls=False, full_document_read=False):
         """
         Orchestrates the process for a single given source URL (publication).
 
@@ -431,6 +431,8 @@ class DataGatherer:
 
         :param semantic_retrieval: Flag to indicate if semantic retrieval should be used.
 
+        :param top_k: The number of top results to return for semantic retrieval (embeddings similarity).
+
         :param section_filter: Optional filter to apply to the sections (supplementary_material', 'data_availability_statement').
 
         :param response_format: The response schema to use for parsing the data.
@@ -441,12 +443,15 @@ class DataGatherer:
 
         :param write_htmls_xmls: Flag to indicate if raw HTML/XML files should be saved. Overwrites the default setting.
 
+        :param full_document_read: Flag to indicate if the model processes the entire document.
+
         :return: DataFrame of classified links or None if an error occurs.
         """
         self.logger.info(f"Processing URL: {url}")
         self.current_url = url
         self.write_htmls_xmls = write_htmls_xmls or self.write_htmls_xmls
         self.publisher = self.data_fetcher.url_to_publisher_domain(url)
+        self.full_document_read = full_document_read or self.full_document_read or (self.parser is not None and self.parser.full_document_read)
 
         self.data_fetcher = self.data_fetcher.update_DataFetcher_settings(url, self.full_document_read, self.logger,
                                                                           driver_path=driver_path, browser=browser,
@@ -532,13 +537,13 @@ class DataGatherer:
 
                 if additional_data is None:
                     self.logger.info("No additional data provided. Parsing raw data only.")
-                    parsed_data = self.parser.parse_data(raw_data, self.publisher, self.current_url,
+                    parsed_data = self.parser.parse_data(raw_data, self.publisher, self.current_url, top_k=top_k,
                                                          prompt_name=prompt_name, semantic_retrieval=semantic_retrieval,
                                                          section_filter=section_filter, response_format=response_format)
 
                 else:
                     self.logger.info(f"Processing additional data. # of items: {len(additional_data)}")
-                    add_data = self.parser.parse_data(raw_data, self.publisher, self.current_url,
+                    add_data = self.parser.parse_data(raw_data, self.publisher, self.current_url, top_k=top_k,
                                                       additional_data=additional_data, prompt_name=prompt_name,
                                                       semantic_retrieval=semantic_retrieval,
                                                       section_filter=section_filter, response_format=response_format)
@@ -553,9 +558,9 @@ class DataGatherer:
                                          full_document_read=self.full_document_read,
                                          use_portkey=use_portkey,
                                          save_dynamic_prompts=self.save_dynamic_prompts)
-                parsed_data = self.parser.parse_data(raw_data, self.publisher, self.current_url,
+                parsed_data = self.parser.parse_data(raw_data, self.publisher, self.current_url, 
                                                      raw_data_format=self.raw_data_format, prompt_name=prompt_name,
-                                                     semantic_retrieval=semantic_retrieval,
+                                                     semantic_retrieval=semantic_retrieval, top_k=top_k,
                                                      section_filter=section_filter, response_format=response_format)
                 parsed_data['source_url'] = url
                 parsed_data['pub_title'] = self.parser.extract_publication_title(raw_data)
@@ -584,6 +589,7 @@ class DataGatherer:
                                                      raw_data_format=self.raw_data_format, 
                                                      prompt_name=prompt_name,
                                                      semantic_retrieval=semantic_retrieval,
+                                                     top_k=top_k,
                                                      section_filter=section_filter,
                                                      response_format=response_format)
                 self.logger.info(f"PDF parsing completed. Elements collected: {len(parsed_data)}")
