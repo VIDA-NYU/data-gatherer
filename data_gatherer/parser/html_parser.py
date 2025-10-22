@@ -440,6 +440,8 @@ class HTMLParser(LLMParser):
         else:
             supplementary_material_metadata = pd.DataFrame()
 
+        self.logger.warning(f"Semantic Retrieval Enabled, but not needed for full-document-read method") if semantic_retrieval and self.full_document_read else None
+
         preprocessed_data = self.normalize_HTML(html_str)
         self.logger.debug(f"Preprocessed data: {preprocessed_data}")
 

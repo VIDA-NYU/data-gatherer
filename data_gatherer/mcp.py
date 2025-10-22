@@ -31,7 +31,8 @@ async def process_url_mcp(
     response_format: Any = None,
     HTML_fallback: bool = False,
     grobid_for_pdf: bool = False,
-    write_htmls_xmls: bool = False
+    write_htmls_xmls: bool = False,
+    full_document_read: bool = False
 ) -> Dict:
     """
     Orchestrates the process for a single given source URL (publication).
@@ -53,9 +54,17 @@ async def process_url_mcp(
     :param HTML_fallback: Flag to indicate if HTML fallback should be used when fetching data. This will override any other fetching resource (i.e. API). OPTIONAL.
     :param grobid_for_pdf: Flag to indicate if GROBID should be used for PDF processing. OPTIONAL.
     :param write_htmls_xmls: Flag to indicate if raw HTML/XML files should be saved. Overwrites the default setting. OPTIONAL.
+    :param full_document_read: Flag to indicate if the entire document should be read (useful for description generation). Overwrites the default setting. REQUIRED!
 
     :return: DataFrame of classified links or None if an error occurs.
     """
+
+    if type(response_format) == str:
+        if response_format in response_schema_options:
+            response_format = response_schema_options[response_format]
+        else:
+            raise ValueError(f"Unsupported response_format string: {response_format}. Supported values are: {list(response_schema_options.keys())}")
+
     df = dg.process_url(
         url,
         save_staging_table=save_staging_table,
@@ -70,7 +79,8 @@ async def process_url_mcp(
         response_format=response_format,
         HTML_fallback=HTML_fallback,
         grobid_for_pdf=grobid_for_pdf,
-        write_htmls_xmls=write_htmls_xmls
+        write_htmls_xmls=write_htmls_xmls,
+        full_document_read=full_document_read
     )
     return {"result": df.to_dict(orient="records")} if isinstance(df, pd.DataFrame) else {"result": df}
 
