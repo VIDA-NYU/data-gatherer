@@ -12,7 +12,7 @@ class XMLParser(LLMParser):
     def __init__(self, open_data_repos_ontology, logger, log_file_override=None, full_document_read=True,
                  prompt_dir="data_gatherer/prompts/prompt_templates",
                  llm_name=None, save_dynamic_prompts=False, save_responses_to_cache=False, use_cached_responses=False,
-                 use_portkey=True):
+                 use_portkey=True, embeddings_model_name=None):
 
         super().__init__(open_data_repos_ontology, logger, log_file_override=log_file_override,
                          full_document_read=full_document_read, prompt_dir=prompt_dir,
@@ -26,6 +26,7 @@ class XMLParser(LLMParser):
         self.retriever = xmlRetriever(self.logger, publisher='PMC')
 
         self.embeddings_retriever = EmbeddingsRetriever(
+            model_name=embeddings_model_name,
             logger=self.logger
         )
 
