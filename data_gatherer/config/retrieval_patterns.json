@@ -67,19 +67,20 @@
       }
     },
     "xpaths": {
-      "data_availability_sections": {
-        "//section[h2[contains(text(), 'Data Availability')]]": "dataset",
-        "//section[h3[contains(text(), 'Data Availability')]]": "dataset",
-        "following-sibling::p[1]" : "dataset",
-        "//section[h2[contains(text(), 'Footnotes')]]": "dataset"
-      },
-      "supplementary_data_sections": {
-        "//section[h2[contains(text(), 'Supplementary Material')]]": "supplementary",
-        "//section[h2[contains(text(), 'Extended Data')]]": "supplementary",
-        "//section[h3[contains(text(), 'Clinical Data')]]": "supplementary",
-        "//section[h3[contains(text(), 'Associated Data')]]": "supplementary",
-        "//section[h2[contains(text(), 'Footnotes')]]": "supplementary"
-      }
+      "data_availability_sections": [
+        "//section[h2[contains(text(), 'Data Availability')]]",
+        "//section[h3[contains(text(), 'Data Availability')]]",
+        "following-sibling::p[1]",
+        "//section[h2[contains(text(), 'Footnotes')]]",
+        "//sec[title[contains(translate(text(), 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'data availability')]]"
+      ],
+      "supplementary_data_sections": [
+        "//section[h2[contains(text(), 'Supplementary Material')]]",
+        "//section[h2[contains(text(), 'Extended Data')]]",
+        "//section[h3[contains(text(), 'Clinical Data')]]",
+        "//section[h3[contains(text(), 'Associated Data')]]",
+        "//section[h2[contains(text(), 'Footnotes')]]"
+      ]
     },
     "xml_tags": {
       "data_availability_sections": [

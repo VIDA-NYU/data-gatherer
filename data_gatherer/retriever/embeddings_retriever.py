@@ -25,7 +25,7 @@ class EmbeddingsRetriever(BaseRetriever):
         self.logger = logger
         if model_name is None:
             model_name = 'sentence-transformers/all-MiniLM-L6-v2'
-            self.logger.warning(f"No model_name provided. Defaulting to {model_name}")
+            self.logger.warning(f"No embeddings model name provided under parameter 'model_name'. Defaulting to {model_name}")
         self.model_name = model_name
         self.corpus = corpus
         

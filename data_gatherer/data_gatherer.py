@@ -338,6 +338,9 @@ class DataGatherer:
                                       response_format=response_format
                                       )
 
+        if isinstance(ret, pd.DataFrame):
+            ret = ret.drop_duplicates()
+
         ret['raw_data_format'] = raw_data_format
 
         return ret

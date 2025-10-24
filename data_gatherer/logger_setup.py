@@ -2,7 +2,7 @@ import logging
 import os
 import sys
 
-def setup_logging(logger_name, log_file=None, level=logging.ERROR, clear_previous_logs=False):
+def setup_logging(logger_name, log_file=None, level=logging.WARNING, clear_previous_logs=False):
     """
     Creates and returns a logger with the specified name.
     If `log_file` is None, only logs to console (used in testing).
