@@ -70,7 +70,7 @@ class HTMLParser(LLMParser):
     def __init__(self, open_data_repos_ontology, logger, log_file_override=None, full_document_read=True,
                  prompt_dir="data_gatherer/prompts/prompt_templates",
                  llm_name=None, save_dynamic_prompts=False, save_responses_to_cache=False, use_cached_responses=False,
-                 use_portkey=True):
+                 use_portkey=True, embeddings_model_name=None):
 
         super().__init__(open_data_repos_ontology, logger, log_file_override=log_file_override,
                          full_document_read=full_document_read, prompt_dir=prompt_dir,
@@ -85,6 +85,7 @@ class HTMLParser(LLMParser):
                                        headers=None)
 
         self.embeddings_retriever = EmbeddingsRetriever(
+            model_name=embeddings_model_name,
             logger=self.logger
         )
 
@@ -439,6 +440,8 @@ class HTMLParser(LLMParser):
                                                                                        supplementary_material_links)
         else:
             supplementary_material_metadata = pd.DataFrame()
+
+        self.logger.warning(f"Semantic Retrieval Enabled, but not needed for full-document-read method") if semantic_retrieval and self.full_document_read else None
 
         preprocessed_data = self.normalize_HTML(html_str)
         self.logger.debug(f"Preprocessed data: {preprocessed_data}")

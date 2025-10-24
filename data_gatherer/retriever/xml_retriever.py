@@ -55,7 +55,7 @@ class xmlRetriever(BaseRetriever):
         self.logger.debug(f"Checking XML completeness for {url}")
 
         for section in required_sections:
-            if not self.has_target_section(raw_data, section):
+            if not self.has_target_xml_tag(raw_data, section) and not self.has_target_xpath(raw_data, section):
                 self.logger.info(f"Missing section in XML: {section}")
                 return False
 
@@ -63,11 +63,24 @@ class xmlRetriever(BaseRetriever):
         return True
 
     def load_target_sections_ptrs(self, section_name) -> list:
+        return self.load_target_sections_xml_tags(section_name)
+
+    def load_target_sections_xml_tags(self, section_name) -> list:
         """
         Load the XML tags for the specified section name. Publisher-specific.
         """
         self.logger.info(f"Loading target sections for section name: {section_name}")
         target_sections = self.xml_tags
+        if section_name not in target_sections:
+            self.logger.error(
+                f"Invalid section name: {section_name}. Available sections: {list(target_sections.keys())}")
+            raise ValueError(f"Invalid section name: {section_name}")
+
+        return target_sections[section_name]
+
+    def load_target_sections_xpaths(self, section_name) -> dict:
+        self.logger.info(f"Loading target sections for section name: {section_name}")
+        target_sections = self.xpaths
         if section_name not in target_sections:
             self.logger.error(
                 f"Invalid section name: {section_name}. Available sections: {list(target_sections.keys())}")
@@ -426,7 +439,7 @@ class xmlRetriever(BaseRetriever):
             data_availability_sections.extend(api_xml.findall(ptr))
         return data_availability_sections
 
-    def has_target_section(self, raw_data, section_name: str) -> bool:
+    def has_target_xml_tag(self, raw_data, section_name: str) -> bool:
         """
         Check if the target section (data availability or supplementary data) exists in the raw data.
 
@@ -452,6 +465,48 @@ class xmlRetriever(BaseRetriever):
         for pattern in section_patterns:
             self.logger.debug(f"Checking pattern: {pattern}")
             sections = raw_data.findall(pattern, namespaces=namespaces)
+            if sections:
+                for section in sections:
+                    self.logger.info(f"----Found section: {ET.tostring(section, encoding='unicode')[:100]}...")
+                    if self.has_links_in_section(section, namespaces):
+                        return True
+                    else:
+                        self.logger.warning("No links found in the section.")
+                        return True
+
+        return False
+
+    def has_target_xpath(self, raw_data, section_name: str) -> bool:
+        """
+        Check if the target section (data availability or supplementary data) exists in the raw data.
+
+        :param raw_data: Raw XML data.
+
+        :param section_name: Name of the section to check.
+
+        :return: True if the section is found with relevant links, False otherwise.
+        """
+
+        if raw_data is None:
+            self.logger.info("No raw data to check for sections.")
+            return False
+
+        self.logger.debug(f"type of raw_data: {type(raw_data)}, raw_data: {raw_data}")
+
+        self.logger.info(f"----Checking for {section_name} section in raw data.")
+        section_patterns = self.load_target_sections_xpaths(section_name)
+        self.logger.debug(f"Section patterns: {section_patterns}")
+        namespaces = self.extract_namespaces(raw_data)
+        self.logger.debug(f"Namespaces: {namespaces}")
+
+        for pattern in section_patterns:
+            self.logger.debug(f"Checking pattern: {pattern}")
+            try:
+                sections = raw_data.getroottree().xpath(pattern, namespaces=namespaces)
+            except Exception as e:
+                self.logger.error(f"XPath error for pattern {pattern}: {e}")
+                continue
+
             if sections:
                 for section in sections:
                     self.logger.info(f"----Found section: {ET.tostring(section, encoding='unicode')[:100]}...")

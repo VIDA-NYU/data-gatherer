@@ -1331,7 +1331,7 @@ class LLMParser(ABC):
             query = """Explicitly identify all the datasets by their database accession codes, repository names, and links
                     to deposited datasets mentioned in this paper."""
 
-        retriever = EmbeddingsRetriever(
+        self.embeddings_retriever = EmbeddingsRetriever(
             corpus=corpus,
             model_name=model_name,  # or any other model you prefer
             device="cpu",
@@ -1345,7 +1345,7 @@ class LLMParser(ABC):
         # """Data availability statement, dataset reference, digital repository name, dataset identifier,
         #         dataset accession code, dataset doi, dataset page"""
 
-        result = retriever.search(
+        result = self.embeddings_retriever.search(
             query=query,
             k=topk_docs_to_retrieve
         )

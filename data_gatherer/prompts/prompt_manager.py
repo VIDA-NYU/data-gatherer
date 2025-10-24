@@ -6,7 +6,7 @@ from data_gatherer.env import CACHE_BASE_DIR
 
 class PromptManager:
     def __init__(self, prompt_dir, logger,
-                 save_dir="prompts/prompt_evals", save_dynamic_prompts=False, log_file_override=None,
+                 save_dir="data_gatherer/prompts/prompt_evals", save_dynamic_prompts=False, log_file_override=None,
                  save_responses_to_cache=False, use_cached_responses=False):
         self.prompt_dir = prompt_dir
         self.prompt_save_dir = save_dir

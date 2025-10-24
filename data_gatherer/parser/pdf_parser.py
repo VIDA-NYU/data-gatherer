@@ -307,6 +307,8 @@ class PDFParser(LLMParser):
 
         self.logger.debug(f"Preprocessed data: {preprocessed_data}")
 
+        self.logger.warning(f"Semantic Retrieval Enabled, but not needed for full-document-read method") if semantic_retrieval and self.full_document_read else None
+
         if self.full_document_read:
             self.logger.info(f"Extracting links from full content.")
 

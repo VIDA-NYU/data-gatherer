@@ -23,6 +23,9 @@ class EmbeddingsRetriever(BaseRetriever):
         """
         super().__init__(publisher='general', retrieval_patterns_file='retrieval_patterns.json')
         self.logger = logger
+        if model_name is None:
+            model_name = 'sentence-transformers/all-MiniLM-L6-v2'
+            self.logger.warning(f"No embeddings model name provided under parameter 'model_name'. Defaulting to {model_name}")
         self.model_name = model_name
         self.corpus = corpus
         
@@ -160,7 +163,7 @@ class EmbeddingsRetriever(BaseRetriever):
         Retrieve top-k most similar passages to the query.
 
         Args:
-            query (str): Query string.
+            query (str): Query string. Pass None to use pre-embedded query.
             k (int): Number of results to return.
 
         Returns:
