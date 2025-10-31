@@ -88,7 +88,7 @@ class BackupDataStore:
 # Abstract base class for fetching data
 class DataFetcher(ABC):
     def __init__(self, logger, src='WebScraper', driver_path=None, browser='firefox', headless=True, 
-                 backup_data_file='scripts/exp_input/Local_fetched_data_SAGE.parquet'):
+                 backup_data_file='scripts/exp_input/Local_fetched_data.parquet'):
         self.logger = logger
         self.logger.debug(f"DataFetcher ({src}) initialized.")
         self.driver_path = driver_path
@@ -120,6 +120,7 @@ class DataFetcher(ABC):
             self.logger.info(f"Found {identifier} in backup data store (format: {data['format']})")
             # Set the raw_data_format based on backup data
             self.raw_data_format = data['format']
+            self.local_data_used = True
             
             # For XML data, parse it into lxml Element tree to match live fetching behavior
             if data['format'].upper() == 'XML':
@@ -178,7 +179,9 @@ class DataFetcher(ABC):
         Extracts the publisher domain from a given URL.
         """
         self.logger.debug(f"URL: {url}")
-        if re.match(r'^https?://www\.ncbi\.nlm\.nih\.gov/pmc', url) or re.match(r'^https?://pmc\.ncbi\.nlm\.nih\.gov/', url):
+        if re.match(r'^https?://www\.ncbi\.nlm\.nih\.gov/pmc', url) or \
+            re.match(r'^https?://pmc\.ncbi\.nlm\.nih\.gov/', url) or \
+                re.match(r'^https?://ncbi\.nlm\.nih\.gov/pmc', url):
             return 'PMC'
         if re.match(r'^https?://pubmed\.ncbi\.nlm\.nih\.gov/[\d]+', url):
             self.logger.info("Publisher: pubmed")
@@ -283,7 +286,7 @@ class DataFetcher(ABC):
         self.logger.debug(f"update_DataFetcher_settings for URL: {url}")
 
         # Determine backup data file
-        backup_file = local_fetch_file or 'scripts/exp_input/Local_fetched_data_SAGE.parquet'
+        backup_file = local_fetch_file or 'scripts/exp_input/Local_fetched_data.parquet'
 
         if self.backup_store is None or self.backup_store._filepath != backup_file:
             self.backup_store = BackupDataStore(filepath=backup_file, logger=self.logger)
@@ -367,7 +370,8 @@ class DataFetcher(ABC):
 
         API_supported_url_patterns = {
             'https://www.ncbi.nlm.nih.gov/pmc/articles/': 'PMC',
-            'https://pmc.ncbi.nlm.nih.gov/': 'PMC'
+            'https://pmc.ncbi.nlm.nih.gov/': 'PMC',
+            'https://ncbi.nlm.nih.gov/pmc/': 'PMC',
         }
 
         # Check if the URL corresponds to any API_supported_url_patterns

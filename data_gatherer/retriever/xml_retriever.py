@@ -108,19 +108,6 @@ class xmlRetriever(BaseRetriever):
         self.logger.debug(f"Found {len(ext_links)} ext-links and {len(xlink_hrefs)} xlink:hrefs.")
         return bool(ext_links or xlink_hrefs)  # or uris)
 
-    def url_to_publisher_domain(self, url):
-        # Extract the domain name from the URL
-        if re.match(r'^https?://www\.ncbi\.nlm\.nih\.gov/pmc', url) or re.match(r'^https?://pmc\.ncbi\.nlm\.nih\.gov/',
-                                                                                url):
-            return 'PMC'
-        match = re.match(r'^https?://(?:\w+\.)?([\w\-]+)\.\w+', url)
-        if match:
-            domain = match.group(1)
-            self.logger.info(f"Publisher: {domain}")
-            return domain
-        else:
-            return 'Unknown Publisher'
-
     def load_patterns_for_tgt_section(self, section_name, publisher='PMC'):
         """
         Load the XML tag patterns for the target section from the configuration.

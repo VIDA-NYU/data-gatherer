@@ -102,16 +102,15 @@ class GrobidPDFParser(PDFParser):
         if self.grobid_process:
             self.grobid_process.terminate()
 
-    def parse_data(self, file_path, publisher=None, current_url_address=None, additional_data=None, raw_data_format='PDF',
-                   file_path_is_temp=False, article_file_dir='tmp/raw_files/', process_DAS_links_separately=False,
-                   prompt_name='GPT_FewShot', use_portkey=True, semantic_retrieval=False,
-                   top_k=2, section_filter=None, response_format=None):
+    def parse_data(self, file_path, publisher=None, current_url_address=None, raw_data_format='PDF',
+                   file_path_is_temp=False, article_file_dir='tmp/raw_files/', prompt_name='GPT_FewShot', use_portkey=True, 
+                   semantic_retrieval=False, top_k=2, section_filter=None, response_format=None):
         """
         Parse the PDF file and extract metadata of the relevant datasets.
         """
         out_df = None
         self.logger.info(f"Function call: parse_data({file_path}, {current_url_address}, "
-                         f"additional_data, {raw_data_format})")
+                         f"{raw_data_format})")
 
         try:
             # 1. Extract TEI XML from PDF
@@ -142,10 +141,8 @@ class GrobidPDFParser(PDFParser):
                 xml_root,
                 publisher=publisher,
                 current_url_address=current_url_address,
-                additional_data=additional_data,
                 raw_data_format='XML',
                 article_file_dir=article_file_dir,
-                process_DAS_links_separately=process_DAS_links_separately,
                 section_filter=section_filter,
                 prompt_name=prompt_name,
                 use_portkey=use_portkey,
@@ -172,10 +169,9 @@ class GrobidPDFParser(PDFParser):
 
                 return fallback_parser.parse_data(file_path, publisher=publisher,
                                                   current_url_address=current_url_address,
-                                                  additional_data=additional_data, raw_data_format=raw_data_format,
+                                                  raw_data_format=raw_data_format,
                                                   file_path_is_temp=file_path_is_temp,
                                                   article_file_dir=article_file_dir,
-                                                  process_DAS_links_separately=process_DAS_links_separately,
                                                   prompt_name=prompt_name,
                                                   use_portkey=use_portkey,
                                                   semantic_retrieval=semantic_retrieval, top_k=top_k,

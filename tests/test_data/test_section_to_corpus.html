@@ -1,0 +1,2618 @@
+
+<!DOCTYPE html>
+<html lang="en" >
+    <head >
+
+        <meta charset="UTF-8" />
+        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+        <meta name="HandheldFriendly" content="True" />
+        <meta name="MobileOptimized" content="320" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+        
+        
+
+        
+        
+  <link rel="stylesheet" href="/static/assets/style-8258669d.css" />
+<script type="module" crossorigin="" src="/static/assets/base_style-f4a99799.js"></script>
+
+  <link rel="stylesheet" href="/static/assets/style-ef962842.css" />
+<link rel="stylesheet" href="/static/assets/style-3ade8b5c.css" />
+<script type="module" crossorigin="" src="/static/assets/article_style-d757a0dd.js"></script>
+
+  
+  
+    <style>
+  
+  
+  @media screen and (min-width: 64em) {
+    div.pmc-wm {
+      background: repeat-y;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='350' xmlns:xlink='http://www.w3.org/1999/xlink'%3E%3Cdefs%3E%3Cfilter x='-.02' y='0' width='1.05' height='1' id='c'%3E%3CfeFlood flood-color='%23FFF'/%3E%3CfeComposite in='SourceGraphic'/%3E%3C/filter%3E%3Ctext id='b' font-family='Helvetica' font-size='11pt' style='opacity:1;fill:%23005ea2;stroke:none;text-anchor:middle' x='175' y='14'%3E%3C/text%3E%3Cpath id='a' style='fill:%23005ea2' d='M0 8h350v3H0z'/%3E%3C/defs%3E%3Cuse xlink:href='%23a' transform='rotate(90 10 10)'/%3E%3Cuse xlink:href='%23b' transform='rotate(90 10 10)' filter='url(%23c)'/%3E%3C/svg%3E");
+      padding-left: 3rem;
+    }
+  }
+</style>
+
+  
+
+
+
+        
+            <link rel="apple-touch-icon"
+                  sizes="180x180"
+                  href="/static/img/favicons/apple-touch-icon.png" />
+            <link rel="icon"
+                  type="image/png"
+                  sizes="48x48"
+                  href="/static/img/favicons/favicon-48x48.png" />
+            <link rel="icon"
+                  type="image/png"
+                  sizes="32x32"
+                  href="/static/img/favicons/favicon-32x32.png" />
+            <link rel="icon"
+                  type="image/png"
+                  sizes="16x16"
+                  href="/static/img/favicons/favicon-16x16.png" />
+            <link rel="manifest" href="/static/img/favicons/site.webmanifest" />
+            <link rel="mask-icon"
+                  href="/static/img/favicons/safari-pinned-tab.svg"
+                  color="#0071bc" />
+            <meta name="msapplication-config"
+                  content="/static/img/favicons/browserconfig.xml" />
+            <meta name="theme-color" content="#ffffff" />
+        
+
+        <title>
+            Open source machine-learning algorithms for the prediction of optimal cancer drug therapies - PMC
+        </title>
+
+        
+        
+  
+  <!-- Logging params: Pinger defaults -->
+<meta name="ncbi_app" content="cloudpmc-viewer" />
+<meta name="ncbi_db" content="pmc" />
+<meta name="ncbi_phid" content="ABCBBADD903D0DC328BADD0046E0E8C7.m_1" />
+<meta name="ncbi_pinger_stat_url" content="https://pmc.ncbi.nlm.nih.gov/stat" />
+<!-- Logging params: Pinger custom -->
+<meta name="ncbi_pdid" content="article" />
+  
+    <link rel="preconnect" href="https://www.google-analytics.com" />
+
+    
+        <link rel="preconnect" href="https://cdn.ncbi.nlm.nih.gov" />
+    
+
+    <!-- Include USWDS Init Script -->
+    <script src="/static/assets/uswds-init.js"></script>
+
+
+    <meta name="ncbi_domain" content="plosone">
+<meta name="ncbi_type" content="fulltext">
+<meta name="ncbi_pcid" content="journal">
+<meta name="ncbi_feature" content="associated_data">
+<link rel="canonical" href="https://pmc.ncbi.nlm.nih.gov/articles/PMC5658085/">
+<meta name="robots" content="INDEX,NOFOLLOW,NOARCHIVE">
+<meta name="citation_journal_title" content="PLoS ONE">
+<meta name="citation_title" content="Open source machine-learning algorithms for the prediction of optimal cancer drug therapies">
+<meta name="citation_author" content="Cai Huang">
+<meta name="citation_author_institution" content="School of Biological Sciences, Georgia Institute of Technology, Atlanta, Georgia, United States of America">
+<meta name="citation_author_institution" content="Parker H. Petit Institute for Bioengineering and Bioscience, Georgia Institute of Technology, Atlanta, Georgia, United States of America">
+<meta name="citation_author" content="Roman Mezencev">
+<meta name="citation_author_institution" content="School of Biological Sciences, Georgia Institute of Technology, Atlanta, Georgia, United States of America">
+<meta name="citation_author_institution" content="Parker H. Petit Institute for Bioengineering and Bioscience, Georgia Institute of Technology, Atlanta, Georgia, United States of America">
+<meta name="citation_author" content="John F McDonald">
+<meta name="citation_author_institution" content="School of Biological Sciences, Georgia Institute of Technology, Atlanta, Georgia, United States of America">
+<meta name="citation_author_institution" content="Parker H. Petit Institute for Bioengineering and Bioscience, Georgia Institute of Technology, Atlanta, Georgia, United States of America">
+<meta name="citation_author" content="Fredrik Vannberg">
+<meta name="citation_author_institution" content="School of Biological Sciences, Georgia Institute of Technology, Atlanta, Georgia, United States of America">
+<meta name="citation_author_institution" content="Parker H. Petit Institute for Bioengineering and Bioscience, Georgia Institute of Technology, Atlanta, Georgia, United States of America">
+<meta name="citation_publication_date" content="2017 Oct 26">
+<meta name="citation_volume" content="12">
+<meta name="citation_issue" content="10">
+<meta name="citation_firstpage" content="e0186906">
+<meta name="citation_doi" content="10.1371/journal.pone.0186906">
+<meta name="citation_pmid" content="29073279">
+<meta name="citation_abstract_html_url" content="https://pmc.ncbi.nlm.nih.gov/articles/PMC5658085/">
+<meta name="citation_fulltext_html_url" content="https://pmc.ncbi.nlm.nih.gov/articles/PMC5658085/">
+<meta name="citation_pdf_url" content="https://pmc.ncbi.nlm.nih.gov/articles/PMC5658085/pdf/pone.0186906.pdf">
+<meta name="description" content="Precision medicine is a rapidly growing area of modern medical science and open source machine-learning codes promise to be a critical component for the successful development of standardized and automated analysis of patient data. One important ...">
+<meta name="og:title" content="Open source machine-learning algorithms for the prediction of optimal cancer drug therapies">
+<meta name="og:type" content="article">
+<meta name="og:site_name" content="PubMed Central (PMC)">
+<meta name="og:description" content="Precision medicine is a rapidly growing area of modern medical science and open source machine-learning codes promise to be a critical component for the successful development of standardized and automated analysis of patient data. One important ...">
+<meta name="og:url" content="https://pmc.ncbi.nlm.nih.gov/articles/PMC5658085/">
+<meta name="og:image" content="https://cdn.ncbi.nlm.nih.gov/pmc/cms/images/pmc-card-share.jpg?_=0">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:site" content="@ncbi">
+    
+    
+
+    </head>
+    <body >
+        
+    <a class="usa-skipnav " href="#main-content">
+      Skip to main content
+    </a>
+
+
+        
+            
+
+<section class="usa-banner " aria-label="Official website of the United States government" >
+    <div class="usa-accordion">
+        <header class="usa-banner__header">
+            <div class="usa-banner__inner">
+                <div class="grid-col-auto">
+                    <img aria-hidden="true"
+                         class="usa-banner__header-flag"
+                         src="/static/img/us_flag.svg"
+                         alt="" />
+                </div>
+
+                <div class="grid-col-fill tablet:grid-col-auto" aria-hidden="true">
+                    <p class="usa-banner__header-text">
+                        An official website of the United States government
+                    </p>
+                    <span class="usa-banner__header-action">Here's how you know</span>
+                </div>
+
+                
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    
+        <button
+            type="button"
+        
+    
+    class="usa-accordion__button usa-banner__button
+           
+
+           
+               
+               
+               
+               
+            
+
+           
+           
+           
+           "
+    aria-expanded="false"
+    aria-controls="gov-banner-default"
+    
+    data-testid="storybook-django-banner"
+    
+    >
+    
+        
+
+        
+                    <span class="usa-banner__button-text">Here's how you know</span>
+                
+
+        
+    
+        
+            </button>
+        
+
+
+            </div>
+        </header>
+
+        <div class="usa-banner__content usa-accordion__content"
+             id="gov-banner-default"
+             hidden>
+            <div class="grid-row grid-gap-lg">
+                <div class="usa-banner__guidance tablet:grid-col-6">
+                    <img class="usa-banner__icon usa-media-block__img"
+                         src="/static/img/icon-dot-gov.svg"
+                         alt=""
+                         aria-hidden="true" />
+                    <div class="usa-media-block__body">
+                        <p>
+                            <strong>Official websites use .gov</strong>
+                            <br />
+                            A
+                            <strong>.gov</strong> website belongs to an official
+                            government organization in the United States.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="usa-banner__guidance tablet:grid-col-6">
+                    <img class="usa-banner__icon usa-media-block__img"
+                         src="/static/img/icon-https.svg"
+                         alt=""
+                         aria-hidden="true" />
+
+                    <div class="usa-media-block__body">
+                        <p>
+                            <strong>Secure .gov websites use HTTPS</strong>
+                            <br />
+                            A <strong>lock</strong> (
+                            <span class="icon-lock">
+                                <svg xmlns="http://www.w3.org/2000/svg"
+                                     width="52"
+                                     height="64"
+                                     viewBox="0 0 52 64"
+                                     class="usa-banner__lock-image"
+                                     role="graphics-symbol"
+                                     aria-labelledby="banner-lock-description"
+                                     focusable="false">
+                                    <title id="banner-lock-title">Lock</title>
+                                    <desc id="banner-lock-description">
+                                    Locked padlock icon
+                                    </desc>
+                                    <path fill="#000000"
+                                          fill-rule="evenodd"
+                                          d="M26 0c10.493 0 19 8.507 19 19v9h3a4 4 0 0 1 4 4v28a4 4 0 0 1-4 4H4a4 4 0 0 1-4-4V32a4 4 0 0 1 4-4h3v-9C7 8.507 15.507 0 26 0zm0 8c-5.979 0-10.843 4.77-10.996 10.712L15 19v9h22v-9c0-6.075-4.925-11-11-11z" />
+                                </svg>
+</span>) or <strong>https://</strong> means you've safely
+                                connected to the .gov website. Share sensitive
+                                information only on official, secure websites.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+        
+
+        
+    
+    
+    
+
+<div class="usa-overlay">
+</div>
+
+
+
+<header class="usa-header usa-header--extended usa-header--wide" data-header data-testid="header"    >
+    <div class="ncbi-header">
+        <div class="ncbi-header__container">
+            <a class="ncbi-header__logo-container"
+               href="https://www.ncbi.nlm.nih.gov/">
+                <img alt="NCBI home page"
+                     class="ncbi-header__logo-image"
+                     src="/static/img/ncbi-logos/nih-nlm-ncbi--white.svg"
+                     width="410"
+                     height="100" />
+            </a>
+
+            <!-- Mobile menu hamburger button -->
+            
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    
+        <button
+            type="button"
+        
+    
+    class="usa-menu-btn ncbi-header__hamburger-button
+           
+
+           
+               
+               
+               
+               
+            
+
+           
+           
+           
+           "
+    
+    
+    aria-label="Show menu"
+    data-testid="navMenuButton"
+    
+    >
+    
+        
+
+        
+                <svg aria-hidden="true"
+                     class="ncbi-hamburger-icon"
+                     fill="none"
+                     focusable="false"
+                     height="21"
+                     viewBox="0 0 31 21"
+                     width="31"
+                     xmlns="http://www.w3.org/2000/svg">
+                    <path clip-rule="evenodd"
+                          d="M0.125 20.75H30.875V17.3333H0.125V20.75ZM0.125 12.2083H30.875V8.79167H0.125V12.2083ZM0.125 0.25V3.66667H30.875V0.25H0.125Z"
+                          fill="#F1F1F1"
+                          fill-rule="evenodd" />
+                </svg>
+            
+
+        
+    
+        
+            </button>
+        
+
+
+
+            
+                <!-- Desktop buttons-->
+                <div class="ncbi-header__desktop-buttons">
+                    
+                        <!-- Desktop search button -->
+                        
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    
+        <button
+            type="button"
+        
+    
+    class="usa-button
+           
+
+           
+               
+               
+               
+               
+            
+
+           
+           
+           usa-button--unstyled ncbi-header__desktop-button
+           "
+    aria-expanded="false"
+    aria-controls="search-field-desktop-navigation"
+    aria-label="Show search overlay"
+    data-testid="toggleSearchPanelButton"
+    data-toggle-search-panel-button
+    >
+    
+        
+
+        
+                            
+
+
+
+    <svg class="usa-icon " role="graphics-symbol" aria-hidden="true" >
+        
+        <use xlink:href="/static/img/sprite.svg#search" />
+    </svg>
+
+
+                            Search
+                        
+
+        
+    
+        
+            </button>
+        
+
+
+                    
+
+                    <!-- Desktop login dropdown -->
+                    
+                        <div class="ncbi-header__login-dropdown">
+                            
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    
+        <button
+            type="button"
+        
+    
+    class="usa-button
+           
+
+           
+               
+               
+               
+               
+            
+
+           
+           
+           usa-button--unstyled ncbi-header__desktop-button ncbi-header__login-dropdown-button
+           "
+    aria-expanded="false"
+    aria-controls="login-dropdown-menu"
+    aria-label="Show login menu"
+    data-testid="toggleLoginMenuDropdown"
+    data-desktop-login-button
+    >
+    
+        
+
+        
+                                
+
+
+
+    <svg class="usa-icon " role="graphics-symbol" aria-hidden="true" >
+        
+        <use xlink:href="/static/img/sprite.svg#person" />
+    </svg>
+
+
+
+                                <span data-login-dropdown-text>Log in</span>
+
+                                <!-- Dropdown icon pointing up -->
+                                
+
+
+
+    <svg class="usa-icon ncbi-header__login-dropdown-icon ncbi-header__login-dropdown-icon--expand-less ncbi-header__login-dropdown-icon--hidden" role="graphics-symbol" aria-hidden="true" data-login-dropdown-up-arrow>
+        
+        <use xlink:href="/static/img/sprite.svg#expand_less" />
+    </svg>
+
+
+
+                                <!-- Dropdown icon pointing down -->
+                                
+
+
+
+    <svg class="usa-icon ncbi-header__login-dropdown-icon ncbi-header__login-dropdown-icon--expand-more ncbi-header__login-dropdown-icon--hidden" role="graphics-symbol" aria-hidden="true" data-login-dropdown-down-arrow>
+        
+        <use xlink:href="/static/img/sprite.svg#expand_more" />
+    </svg>
+
+
+                            
+
+        
+    
+        
+            </button>
+        
+
+
+
+                            <!-- Login dropdown menu -->
+                            <ul class="usa-nav__submenu ncbi-header__login-dropdown-menu"
+                                id="login-dropdown-menu"
+                                data-desktop-login-menu-dropdown
+                                hidden>
+                                
+                                    <li class="usa-nav__submenu-item">
+                                        <!-- Uses custom style overrides to render external and document links. -->
+                                        
+
+
+
+
+
+
+
+
+
+    <a href="https://www.ncbi.nlm.nih.gov/myncbi/" class="usa-link  "  >
+        
+
+        
+            Dashboard
+        
+
+        
+    </a>
+
+
+                                    </li>
+                                
+                                    <li class="usa-nav__submenu-item">
+                                        <!-- Uses custom style overrides to render external and document links. -->
+                                        
+
+
+
+
+
+
+
+
+
+    <a href="https://www.ncbi.nlm.nih.gov/myncbi/collections/bibliography/" class="usa-link  "  >
+        
+
+        
+            Publications
+        
+
+        
+    </a>
+
+
+                                    </li>
+                                
+                                    <li class="usa-nav__submenu-item">
+                                        <!-- Uses custom style overrides to render external and document links. -->
+                                        
+
+
+
+
+
+
+
+
+
+    <a href="https://www.ncbi.nlm.nih.gov/account/settings/" class="usa-link  "  >
+        
+
+        
+            Account settings
+        
+
+        
+    </a>
+
+
+                                    </li>
+                                
+                                <li class="usa-nav__submenu-item">
+                                    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    
+        <button
+            type="button"
+        
+    
+    class="usa-button
+           
+
+           
+               
+               
+               
+               
+            
+
+           
+           
+           usa-button--outline ncbi-header__login-dropdown-logout-button
+           "
+    
+    
+    
+    data-testid="desktopLogoutButton"
+    data-desktop-logout-button
+    >
+    
+        
+
+        Log out
+
+        
+    
+        
+            </button>
+        
+
+
+                                </li>
+                            </ul>
+                        </div>
+                    
+                </div>
+            
+        </div>
+    </div>
+
+    <!-- Search panel -->
+    
+        <div class="ncbi-search-panel ncbi--show-only-at-desktop"
+             data-header-search-panel
+             hidden>
+            <div class="ncbi-search-panel__container">
+                <form action="https://www.ncbi.nlm.nih.gov/search/all/"
+                      
+                      autocomplete="off"
+                      class="usa-search usa-search--big ncbi-search-panel__form"
+                      data-testid="desktop-navigation-search-form"
+                      method="GET"
+                      role="search">
+                    <label class="usa-sr-only" for="search-field-desktop-navigation">
+                        Search…
+                    </label>
+                    <input class="usa-input"
+                           id="search-field-desktop-navigation"
+                           name="term"
+                           
+                               placeholder="Search NCBI"
+                           
+                           type="search"
+                           value="" />
+                    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    
+        <button
+            type="submit"
+        
+    
+    class="usa-button
+           
+
+           
+               
+               
+               
+               
+            
+
+           
+           
+           
+           "
+    
+    
+    
+    
+    
+    >
+    
+        
+
+        
+                        <span class="usa-search__submit-text">
+                            Search NCBI
+                        </span>
+                    
+
+        
+    
+        
+            </button>
+        
+
+
+                </form>
+
+                
+            </div>
+        </div>
+    
+
+    <nav aria-label="Primary navigation" class="usa-nav">
+        <p class="usa-sr-only" id="primary-navigation-sr-only-title">
+            Primary site navigation
+        </p>
+
+        <!-- Mobile menu close button -->
+        
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    
+        <button
+            type="button"
+        
+    
+    class="usa-nav__close ncbi-nav__close-button
+           
+
+           
+               
+               
+               
+               
+            
+
+           
+           
+           
+           "
+    
+    
+    aria-label="Close navigation menu"
+    data-testid="navCloseButton"
+    
+    >
+    
+        
+
+        
+            <img src="/static/img/usa-icons/close.svg" alt="Close" />
+        
+
+        
+    
+        
+            </button>
+        
+
+
+
+        
+            <!-- Mobile search component -->
+            <form class="usa-search usa-search--small ncbi--hide-at-desktop margin-top-6"
+                  action="https://www.ncbi.nlm.nih.gov/search/all/"
+                  
+                  autocomplete="off"
+                  data-testid="mobile-navigation-search-form"
+                  method="GET"
+                  role="search">
+                <label class="usa-sr-only" for="search-field-mobile-navigation">
+                    Search
+                </label>
+
+                <input class="usa-input"
+                       id="search-field-mobile-navigation"
+                       type="search"
+                       
+                           placeholder="Search NCBI"
+                       
+                       name="term" />
+
+                
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    
+        <button
+            type="submit"
+        
+    
+    class="usa-button
+           
+
+           
+               
+               
+               
+               
+            
+
+           
+           
+           
+           "
+    
+    
+    
+    
+    
+    >
+    
+        
+
+        
+                    <!-- This SVG should be kept inline and not replaced with a link to the icon as otherwise it will render in the wrong color -->
+                    <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgd2lkdGg9IjI0Ij48cGF0aCBkPSJNMCAwaDI0djI0SDB6IiBmaWxsPSJub25lIi8+PHBhdGggZmlsbD0iI2ZmZiIgZD0iTTE1LjUgMTRoLS43OWwtLjI4LS4yN0E2LjQ3MSA2LjQ3MSAwIDAgMCAxNiA5LjUgNi41IDYuNSAwIDEgMCA5LjUgMTZjMS42MSAwIDMuMDktLjU5IDQuMjMtMS41N2wuMjcuMjh2Ljc5bDUgNC45OUwyMC40OSAxOWwtNC45OS01em0tNiAwQzcuMDEgMTQgNSAxMS45OSA1IDkuNVM3LjAxIDUgOS41IDUgMTQgNy4wMSAxNCA5LjUgMTEuOTkgMTQgOS41IDE0eiIvPjwvc3ZnPg=="
+                         class="usa-search__submit-icon"
+                         alt="Search" />
+                
+
+        
+    
+        
+            </button>
+        
+
+
+            </form>
+
+            
+        
+
+        <!-- Primary navigation menu items -->
+        <!-- This usa-nav__inner wrapper is required to correctly style the navigation items on Desktop -->
+        
+
+        
+            <div class="ncbi-nav__mobile-login-menu ncbi--hide-at-desktop"
+                 data-mobile-login-menu
+                 hidden>
+                <p class="ncbi-nav__mobile-login-menu-status">
+                    Logged in as:
+                    <strong class="ncbi-nav__mobile-login-menu-email"
+                            data-mobile-login-email-text></strong>
+                </p>
+                <ul class="usa-nav__primary usa-accordion">
+                    
+                        <li class="usa-nav__primary-item">
+                            
+
+
+
+
+
+
+
+
+
+    <a href="https://www.ncbi.nlm.nih.gov/myncbi/" class="usa-link  "  >
+        
+
+        
+            Dashboard
+        
+
+        
+    </a>
+
+
+                        </li>
+                    
+                        <li class="usa-nav__primary-item">
+                            
+
+
+
+
+
+
+
+
+
+    <a href="https://www.ncbi.nlm.nih.gov/myncbi/collections/bibliography/" class="usa-link  "  >
+        
+
+        
+            Publications
+        
+
+        
+    </a>
+
+
+                        </li>
+                    
+                        <li class="usa-nav__primary-item">
+                            
+
+
+
+
+
+
+
+
+
+    <a href="https://www.ncbi.nlm.nih.gov/account/settings/" class="usa-link  "  >
+        
+
+        
+            Account settings
+        
+
+        
+    </a>
+
+
+                        </li>
+                    
+                </ul>
+            </div>
+        
+
+        
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    
+        <button
+            type="button"
+        
+    
+    class="usa-button
+           
+
+           
+               
+               
+               
+               
+            
+
+           
+           
+           ncbi-nav__mobile-login-button ncbi--hide-at-desktop
+           "
+    
+    
+    
+    data-testid="mobileLoginButton"
+    data-mobile-login-button
+    >
+    
+        
+
+        Log in
+
+        
+    
+        
+            </button>
+        
+
+
+    </nav>
+</header>
+
+    
+    
+        
+
+<section class="pmc-header pmc-header--basic" aria-label="PMC Header with search box">
+    <div class="pmc-nav-container">
+        <div class="pmc-header__bar">
+           <div class="pmc-header__logo">
+               <a href="/" title="Home" aria-label="PMC Home"></a>
+           </div>
+            <button
+                    type="button"
+                    class="usa-button usa-button--unstyled pmc-header__search__button"
+                    aria-label="Open search"
+                    data-ga-category="search"
+                    data-ga-action="PMC"
+                    data-ga-label="pmc_search_panel_mobile"
+            >
+                <svg class="usa-icon width-4 height-4 pmc-icon__open" aria-hidden="true" focusable="false" role="img">
+                    <use xlink:href="/static/img/sprite.svg#search"></use>
+                </svg>
+                <svg class="usa-icon width-4 height-4 pmc-icon__close" aria-hidden="true" focusable="false" role="img">
+                    <use xlink:href="/static/img/sprite.svg#close"></use>
+                </svg>
+            </button>
+        </div>
+        <div class="pmc-header__search">
+            
+
+
+<form class="usa-search usa-search--extra usa-search--article-right-column  pmc-header__search__form" id="pmc-search-form" autocomplete="off" role="search">
+<label class="usa-sr-only" for="pmc-search">Search PMC Full-Text Archive</label>
+<span class="autoComplete_wrapper flex-1">
+<input class="usa-input width-full maxw-none" required="required" placeholder="Search PMC Full-Text Archive" id="pmc-search"  type="search" name="term" data-autocomplete-url="https://pmc.ncbi.nlm.nih.gov/autocomp/search/autocomp/"/>
+</span>
+<button
+class="usa-button"
+type="submit"
+formaction="https://pmc.ncbi.nlm.nih.gov/search/"
+data-ga-category="search"
+data-ga-action="PMC"
+data-ga-label="PMC_search_button"
+>
+<span class="usa-search__submit-text">Search in PMC</span>
+<img
+src="/static/img/usa-icons-bg/search--white.svg"
+class="usa-search__submit-icon"
+alt="Search"
+/>
+</button>
+</form>
+            <div class="display-flex flex-column tablet:flex-row tablet:flex-justify flex-justify-center flex-align-center width-full desktop:maxw-44">
+                <ul class="pmc-header__search__menu">
+                    <li>
+                        
+                            <a class="usa-link" href="/journals/" data-ga-action="featured_link" data-ga-label="journal list">
+                                Journal List
+                            </a>
+                        
+                    </li>
+                    <li>
+                        
+                            <a class="usa-link" href="/about/userguide/" data-ga-action="featured_link"
+                            data-ga-label="user guide">
+                                User Guide
+                            </a>
+                        
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</section>
+
+    
+
+
+        
+        
+
+       
+  <div class="usa-section padding-top-0 desktop:padding-top-6 pmc-article-section" data-article-db="pmc" data-article-id="5658085">
+
+    
+
+   
+
+
+
+<div class="grid-container pmc-actions-bar" aria-label="Actions bar" role="complementary">
+    <div class="grid-row">
+        <div class="grid-col-fill display-flex">
+             <div class="display-flex">
+                <ul class="usa-list usa-list--unstyled usa-list--horizontal">
+                    <li class="margin-right-2 mobile-lg:margin-right-4 display-flex mob">
+                        <button
+                                type="button"
+                                class="usa-button pmc-sidenav__container__open usa-button--unstyled width-auto display-flex"
+                                aria-label="Open resources"
+                                data-extra-class="is-visible-resources"
+                                data-ga-category="resources_accordion"
+                                data-ga-action="click"
+                                data-ga-label="mobile_icon"
+                        >
+                            <svg class="usa-icon width-4 height-4" aria-hidden="true" focusable="false" role="img">
+                                <use xlink:href="/static/img/sprite.svg#more_vert"></use>
+                            </svg>
+                        </button>
+                    </li>
+                    
+                    <li class="margin-right-2 mobile-lg:margin-right-4 display-flex mob">
+                        <a
+                                href="https://doi.org/10.1371/journal.pone.0186906"
+                                class="usa-link display-flex usa-tooltip"
+                                role="button"
+                                target="_blank"
+                                rel="noreferrer noopener"
+                                title="View on publisher site"
+                                data-position="bottom"
+                                aria-label="View on publisher site"
+                                data-ga-category="actions"
+                                data-ga-action="click"
+                                data-ga-label="publisher_link_mobile"
+                        >
+                                <svg class="usa-icon width-4 height-4" aria-hidden="true" focusable="false" role="img">
+                                    <use xlink:href="/static/img/sprite.svg#launch"></use>
+                                </svg>
+                        </a>
+                    </li>
+                    
+                    
+                        <li class="margin-right-2 mobile-lg:margin-right-4 display-flex">
+                             <a
+                                     href="pdf/pone.0186906.pdf"
+                                     class="usa-link display-flex usa-tooltip"
+                                     role="button"
+                                     title="Download PDF"
+                                     data-position="bottom"
+                                     aria-label="Download PDF"
+                                     data-ga-category="actions"
+                                     data-ga-action="click"
+                                     data-ga-label="pdf_download_mobile"
+                             >
+                                <svg class="usa-icon width-4 height-4" aria-hidden="true" focusable="false" role="img">
+                                    <use xlink:href="/static/img/sprite.svg#file_download"></use>
+                                </svg>
+                            </a>
+                        </li>
+                    
+                    <li class="margin-right-2 mobile-lg:margin-right-4 display-flex">
+                        <button
+                            class="usa-button usa-button--unstyled  usa-tooltip collections-dialog-trigger collections-button display-flex collections-button-empty"
+                            title="Add to Collections"
+                            data-position="bottom"
+                            aria-label="Save article in MyNCBI collections."
+                            data-ga-category="actions"
+                            data-ga-action="click"
+                            data-ga-label="collections_button_mobile"
+                            data-collections-open-dialog-enabled="false"
+                            data-collections-open-dialog-url="https://account.ncbi.nlm.nih.gov/?back_url=https%3A%2F%2Fpmc.ncbi.nlm.nih.gov%2Farticles%2FPMC5658085%2F%23open-collections-dialog"
+                            data-in-collections="false"
+                        >
+                            <svg class="usa-icon width-4 height-4 usa-icon--bookmark-full" aria-hidden="true" focusable="false" role="img" hidden>
+                                <use xlink:href="/static/img/action-bookmark-full.svg#icon"></use>
+                            </svg>
+                            <svg class="usa-icon width-4 height-4 usa-icon--bookmark-empty" aria-hidden="true" focusable="false" role="img" hidden>
+                                <use xlink:href="/static/img/action-bookmark-empty.svg#icon"></use>
+                            </svg>
+                        </button>
+                    </li>
+                    
+                    <li class="margin-right-2 mobile-lg:margin-right-4 display-flex">
+                        <button role="button" class="usa-button usa-button--unstyled usa-tooltip citation-dialog-trigger display-flex"
+                            aria-label="Open dialog with citation text in different styles"
+                            title="Cite"
+                            data-position="bottom"
+                            data-ga-category="actions"
+                            data-ga-action="open"
+                            data-ga-label="cite_mobile"
+                            data-all-citations-url="/resources/citations/5658085/"
+                            data-citation-style="nlm"
+                            data-download-format-link="/resources/citations/5658085/export/"
+                        >
+                            <svg class="usa-icon width-4 height-4 usa-icon--bookmark-empty" aria-hidden="true" focusable="false" role="img" hidden>
+                                <use xlink:href="/static/img/sprite.svg#format_quote"></use>
+                            </svg>
+                        </button>
+                    </li>
+                    
+                    <li class="pmc-permalink display-flex" >
+                         <button
+                                 type="button"
+                                 title="Permalink"
+                                 data-position="bottom"
+                                 class="usa-button usa-button--unstyled display-flex usa-tooltip"
+                                 aria-label="Show article permalink"
+                                 aria-expanded="false"
+                                 aria-haspopup="true"
+                                 data-ga-category="actions"
+                                 data-ga-action="open"
+                                 data-ga-label="permalink_mobile"
+                         >
+                            <svg class="usa-icon width-4 height-4" aria-hidden="true" focusable="false" role="img">
+                                <use xlink:href="/static/img/sprite.svg#share"></use>
+                            </svg>
+                        </button>
+                        
+
+<div class="pmc-permalink__dropdown" hidden>
+    <div class="pmc-permalink__dropdown__container">
+          <h2 class="usa-modal__heading margin-top-0 margin-bottom-2 text-uppercase font-sans-xs">PERMALINK</h2>
+          <div class="pmc-permalink__dropdown__content">
+              <input type="text" class="usa-input" value="https://pmc.ncbi.nlm.nih.gov/articles/PMC5658085/" aria-label="Article permalink">
+              <button class="usa-button display-inline-flex pmc-permalink__dropdown__copy__btn margin-right-0" title="Copy article permalink" data-ga-category="save_share" data-ga-action="link" data-ga-label="copy_link">
+                  <svg class="usa-icon" aria-hidden="true" focusable="false" role="img">
+                    <use xlink:href="/static/img/sprite.svg#content_copy"></use>
+                  </svg>
+                  <span class="margin-left-1">Copy</span>
+              </button>
+          </div>
+    </div>
+</div>
+                    </li>
+                </ul>
+            </div>
+            <button
+                    type="button"
+                    class="usa-button pmc-sidenav__container__open usa-button--unstyled width-auto display-flex"
+                    aria-label="Open article navigation"
+                    data-extra-class="is-visible-in-page"
+                    data-ga-category="actions"
+                    data-ga-action="open"
+                    data-ga-label="article_nav_mobile"
+            >
+                <svg class="usa-icon width-4 height-4" aria-hidden="true" focusable="false" role="img">
+                    <use xlink:href="/static/img/sprite.svg#list"></use>
+                </svg>
+            </button>
+        </div>
+    </div>
+</div>
+    <div class="grid-container desktop:padding-left-6">
+      <div id="article-container" class="grid-row grid-gap">
+        <div class="grid-col-12 desktop:grid-col-8 order-2 pmc-layout__content">
+            <div class="grid-container padding-left-0 padding-right-0">
+                <div class="grid-row desktop:margin-left-neg-6">
+                    <div class="grid-col-12">
+                        <div class="pmc-layout__disclaimer" role="complementary" aria-label="Disclaimer note">
+    As a library, NLM provides access to scientific literature. Inclusion in an NLM database does not imply endorsement of, or agreement with,
+    the contents by NLM or the National Institutes of Health.<br/>
+    Learn more:
+    <a class="usa-link" data-ga-category="Link click" data-ga-action="Disclaimer" data-ga-label="New disclaimer box" href="/about/disclaimer/">PMC Disclaimer</a>
+    |
+    <a class="usa-link" data-ga-category="Link click" data-ga-action="PMC Copyright Notice" data-ga-label="New disclaimer box" href="/about/copyright/">
+        PMC Copyright Notice
+    </a>
+</div>
+                    </div>
+                </div>
+                <div class="grid-row pmc-wm desktop:margin-left-neg-6">
+                    <!-- Main content -->
+                    <main
+                      id="main-content"
+                      class="usa-layout-docs__main usa-layout-docs grid-col-12 pmc-layout pmc-prose padding-0"
+                    >
+
+                      
+                        <section class="pmc-journal-banner text-center line-height-none" aria-label="Journal banner"><img src="https://cdn.ncbi.nlm.nih.gov/pmc/banners/logo-plosone.png" alt="PLOS One logo" usemap="#pmc-banner-imagemap" width="500" height="75"><map name="pmc-banner-imagemap"><area alt="Link to PLOS One" title="Link to PLOS One" shape="default" href="https://doi.org/10.1371/journal.pone.0186906" target="_blank" rel="noopener noreferrer"></map></section><article lang="en"><section aria-label="Article citation and metadata"><section class="pmc-layout__citation font-secondary font-xs"><div>
+<div class="display-inline-block"><button type="button" class="cursor-pointer text-no-underline bg-transparent border-0 padding-0 text-left margin-0 text-normal text-primary" aria-controls="journal_context_menu">PLoS One</button></div>. 2017 Oct 26;12(10):e0186906. doi: <a href="https://doi.org/10.1371/journal.pone.0186906" class="usa-link usa-link--external" data-ga-action="click_feat_suppl" target="_blank" rel="noopener noreferrer">10.1371/journal.pone.0186906</a>
+</div>
+<nav id="journal_context_menu" hidden="hidden"><ul class="menu-list font-family-ui" role="menu">
+<li role="presentation"><a href="https://pmc.ncbi.nlm.nih.gov/search/?term=%22PLoS%20One%22%5Bjour%5D" class="usa-link" role="menuitem">Search in PMC</a></li>
+<li role="presentation"><a href="https://pubmed.ncbi.nlm.nih.gov/?term=%22PLoS%20One%22%5Bjour%5D" lang="en" class="usa-link" role="menuitem">Search in PubMed</a></li>
+<li role="presentation"><a href="https://www.ncbi.nlm.nih.gov/nlmcatalog?term=%22PLoS%20One%22%5BTitle%20Abbreviation%5D" class="usa-link" role="menuitem">View in NLM Catalog</a></li>
+<li role="presentation"><a href="?term=%22PLoS%20One%22%5Bjour%5D" class="usa-link" role="menuitem" data-add-to-search="true">Add to search</a></li>
+</ul></nav></section><section class="front-matter"><div class="ameta p font-secondary font-xs">
+<hgroup><h1>Open source machine-learning algorithms for the prediction of optimal cancer drug therapies</h1></hgroup><div class="cg p">
+<a href="https://pubmed.ncbi.nlm.nih.gov/?term=%22Huang%20C%22%5BAuthor%5D" class="usa-link" aria-describedby="id1"><span class="name western">Cai Huang</span></a><div hidden="hidden" id="id1">
+<h3><span class="name western">Cai Huang</span></h3>
+<div class="p">
+<sup>1</sup>School of Biological Sciences, Georgia Institute of Technology, Atlanta, Georgia, United States of America</div>
+<div class="p">
+<sup>2</sup>Parker H. Petit Institute for Bioengineering and Bioscience, Georgia Institute of Technology, Atlanta, Georgia, United States of America</div>
+<div>Data curation, Formal analysis, Investigation, Methodology, Software, Validation, Visualization, Writing – original draft, Writing – review &amp; editing</div>
+<div class="p">Find articles by <a href="https://pubmed.ncbi.nlm.nih.gov/?term=%22Huang%20C%22%5BAuthor%5D" class="usa-link"><span class="name western">Cai Huang</span></a>
+</div>
+</div>
+<sup>1,</sup><sup>2</sup>, <a href="https://pubmed.ncbi.nlm.nih.gov/?term=%22Mezencev%20R%22%5BAuthor%5D" class="usa-link" aria-describedby="id2"><span class="name western">Roman Mezencev</span></a><div hidden="hidden" id="id2">
+<h3><span class="name western">Roman Mezencev</span></h3>
+<div class="p">
+<sup>1</sup>School of Biological Sciences, Georgia Institute of Technology, Atlanta, Georgia, United States of America</div>
+<div class="p">
+<sup>2</sup>Parker H. Petit Institute for Bioengineering and Bioscience, Georgia Institute of Technology, Atlanta, Georgia, United States of America</div>
+<div>Data curation, Formal analysis, Investigation, Methodology, Validation</div>
+<div class="p">Find articles by <a href="https://pubmed.ncbi.nlm.nih.gov/?term=%22Mezencev%20R%22%5BAuthor%5D" class="usa-link"><span class="name western">Roman Mezencev</span></a>
+</div>
+</div>
+<sup>1,</sup><sup>2</sup>, <a href="https://pubmed.ncbi.nlm.nih.gov/?term=%22McDonald%20JF%22%5BAuthor%5D" class="usa-link" aria-describedby="id3"><span class="name western">John F McDonald</span></a><div hidden="hidden" id="id3">
+<h3><span class="name western">John F McDonald</span></h3>
+<div class="p">
+<sup>1</sup>School of Biological Sciences, Georgia Institute of Technology, Atlanta, Georgia, United States of America</div>
+<div class="p">
+<sup>2</sup>Parker H. Petit Institute for Bioengineering and Bioscience, Georgia Institute of Technology, Atlanta, Georgia, United States of America</div>
+<div>Conceptualization, Formal analysis, Funding acquisition, Investigation, Methodology, Project administration, Resources, Supervision, Validation, Visualization, Writing – original draft, Writing – review &amp; editing</div>
+<div class="p">Find articles by <a href="https://pubmed.ncbi.nlm.nih.gov/?term=%22McDonald%20JF%22%5BAuthor%5D" class="usa-link"><span class="name western">John F McDonald</span></a>
+</div>
+</div>
+<sup>1,</sup><sup>2,</sup><sup>#</sup>, <a href="https://pubmed.ncbi.nlm.nih.gov/?term=%22Vannberg%20F%22%5BAuthor%5D" class="usa-link" aria-describedby="id4"><span class="name western">Fredrik Vannberg</span></a><div hidden="hidden" id="id4">
+<h3><span class="name western">Fredrik Vannberg</span></h3>
+<div class="p">
+<sup>1</sup>School of Biological Sciences, Georgia Institute of Technology, Atlanta, Georgia, United States of America</div>
+<div class="p">
+<sup>2</sup>Parker H. Petit Institute for Bioengineering and Bioscience, Georgia Institute of Technology, Atlanta, Georgia, United States of America</div>
+<div>Conceptualization, Formal analysis, Funding acquisition, Investigation, Methodology, Project administration, Resources, Software, Supervision, Validation, Visualization, Writing – original draft, Writing – review &amp; editing</div>
+<div class="p">Find articles by <a href="https://pubmed.ncbi.nlm.nih.gov/?term=%22Vannberg%20F%22%5BAuthor%5D" class="usa-link"><span class="name western">Fredrik Vannberg</span></a>
+</div>
+</div>
+<sup>1,</sup><sup>2,</sup><sup>*,</sup><sup>#</sup>
+</div>
+<div class="cg p">Editor: <span class="name western">Bin Liu</span><sup>3</sup>
+</div>
+<ul class="d-buttons inline-list">
+<li><button class="d-button" aria-controls="aip_a" aria-expanded="false">Author information</button></li>
+<li><button class="d-button" aria-controls="anp_a" aria-expanded="false">Article notes</button></li>
+<li><button class="d-button" aria-controls="clp_a" aria-expanded="false">Copyright and License information</button></li>
+</ul>
+<div class="d-panels font-secondary-light">
+<div id="aip_a" class="d-panel p" style="display: none">
+<div class="p" id="aff001">
+<sup>1</sup>School of Biological Sciences, Georgia Institute of Technology, Atlanta, Georgia, United States of America</div>
+<div id="aff002">
+<sup>2</sup>Parker H. Petit Institute for Bioengineering and Bioscience, Georgia Institute of Technology, Atlanta, Georgia, United States of America</div>
+<div id="edit1">
+<sup>3</sup>Harbin Institute of Technology Shenzhen Graduate School, CHINA</div>
+<div class="author-notes p">
+<div class="fn" id="coi001"><p><strong>Competing Interests: </strong>The authors have declared that no competing interests exist.</p></div>
+<div class="fn" id="cor001">
+<sup>✉</sup><p class="display-inline">* E-mail: <span>vannberg@gatech.edu</span></p>
+</div>
+<div class="fn" id="_eqcntrb93pmc__">
+<sup>#</sup><p class="display-inline">Contributed equally.</p>
+</div>
+</div>
+<h4 class="font-secondary">Roles</h4>
+<div class="p">
+<strong class="contrib"><span class="name western">Cai Huang</span></strong>: <span class="role">Data curation, Formal analysis, Investigation, Methodology, Software, Validation, Visualization, Writing – original draft, Writing – review &amp; editing</span>
+</div>
+<div>
+<strong class="contrib"><span class="name western">Roman Mezencev</span></strong>: <span class="role">Data curation, Formal analysis, Investigation, Methodology, Validation</span>
+</div>
+<div>
+<strong class="contrib"><span class="name western">John F McDonald</span></strong>: <span class="role">Conceptualization, Formal analysis, Funding acquisition, Investigation, Methodology, Project administration, Resources, Supervision, Validation, Visualization, Writing – original draft, Writing – review &amp; editing</span>
+</div>
+<div>
+<strong class="contrib"><span class="name western">Fredrik Vannberg</span></strong>: <span class="role">Conceptualization, Formal analysis, Funding acquisition, Investigation, Methodology, Project administration, Resources, Software, Supervision, Validation, Visualization, Writing – original draft, Writing – review &amp; editing</span>
+</div>
+<div class="p">
+<strong class="contrib"><span class="name western">Bin Liu</span></strong>: <span class="role">Editor</span>
+</div>
+</div>
+<div id="anp_a" class="d-panel p" style="display: none"><div class="notes p"><section id="historyarticle-meta1" class="history"><p>Received 2017 Jun 9; Accepted 2017 Sep 14; Collection date 2017.</p></section></div></div>
+<div id="clp_a" class="d-panel p" style="display: none">
+<div>© 2017 Huang et al</div>
+<p>This is an open access article distributed under the terms of the <a href="http://creativecommons.org/licenses/by/4.0/" class="usa-link usa-link--external" data-ga-action="click_feat_suppl" target="_blank" rel="noopener noreferrer">Creative Commons Attribution License</a>, which permits unrestricted use, distribution, and reproduction in any medium, provided the original author and source are credited.</p>
+<div class="p"><a href="/about/copyright/" class="usa-link">PMC Copyright notice</a></div>
+</div>
+</div>
+<div>PMCID: PMC5658085  PMID: <a href="https://pubmed.ncbi.nlm.nih.gov/29073279/" class="usa-link">29073279</a>
+</div>
+</div></section></section><section aria-label="Article content"><section class="body main-article-body"><section class="abstract" id="abstract1"><h2>Abstract</h2>
+<p>Precision medicine is a rapidly growing area of modern medical science and open source machine-learning codes promise to be a critical component for the successful development of standardized and automated analysis of patient data. One important goal of precision cancer medicine is the accurate prediction of optimal drug therapies from the genomic profiles of individual patient tumors. We introduce here an open source software platform that employs a highly versatile support vector machine (SVM) algorithm combined with a standard recursive feature elimination (RFE) approach to predict personalized drug responses from gene expression profiles. Drug specific models were built using gene expression and drug response data from the National Cancer Institute panel of 60 human cancer cell lines (NCI-60). The models are highly accurate in predicting the drug responsiveness of a variety of cancer cell lines including those comprising the recent NCI-DREAM Challenge. We demonstrate that predictive accuracy is optimized when the learning dataset utilizes all probe-set expression values from a diversity of cancer cell types without pre-filtering for genes generally considered to be “drivers” of cancer onset/progression. Application of our models to publically available ovarian cancer (OC) patient gene expression datasets generated predictions consistent with observed responses previously reported in the literature. By making our algorithm “open source”, we hope to facilitate its testing in a variety of cancer types and contexts leading to community-driven improvements and refinements in subsequent applications.</p></section><section id="sec001"><h2 class="pmc_sec_title">Introduction</h2>
+<p>The sequencing of the human genome, genome-wide association studies (GWAS), quantitative trait loci (QTL) mapping, and similar research initiatives over the past few decades have greatly increased our understanding of the molecular pathways associated with human diseases. These efforts have significantly benefited from the liberal sharing of data and open-source scripts utilized for these efforts. Over the last few years, there has been a number of alternative machine-learning (ML) approaches employed in personalized cancer drug prediction, each associated with variable degrees of success [<a href="#pone.0186906.ref001" class="usa-link" aria-describedby="pone.0186906.ref001">1</a>–<a href="#pone.0186906.ref003" class="usa-link" aria-describedby="pone.0186906.ref003">3</a>]. For example, pRRocphetic [<a href="#pone.0186906.ref004" class="usa-link" aria-describedby="pone.0186906.ref004">4</a>] is a recently designed R package designed to run the entire learning and subsequent calling of patient data. Other recent contributions include the Bioconductor [<a href="#pone.0186906.ref005" class="usa-link" aria-describedby="pone.0186906.ref005">5</a>] package SCAN that allows for single-sample array normalization for precision medicine workflows. While a number of ML applications for precision medicine have benefited from community assessments of predicted drug response [<em>e</em>.<em>g</em>., [<a href="#pone.0186906.ref001" class="usa-link" aria-describedby="pone.0186906.ref001">1</a>,<a href="#pone.0186906.ref002" class="usa-link" aria-describedby="pone.0186906.ref002">2</a>]), such efforts have not always shared code, and for the majority of efforts only the organizers of the community assessment exercise were able to see the source code to evaluate each independent solution. This is unfortunate because the open sharing of code has been demonstrated to be a significant catalyst in the optimization of ML applications as in the Large Scale Visual Recognition Challenge (ILSVRC) where computational solutions are openly available [<a href="#pone.0186906.ref006" class="usa-link" aria-describedby="pone.0186906.ref006">6</a>,<a href="#pone.0186906.ref007" class="usa-link" aria-describedby="pone.0186906.ref007">7</a>].</p>
+<p>We present here an open source software platform using a highly versatile support vector machine (SVM) algorithm that utilizes standard recursive feature elimination (RFE) methods to predict cancer drug response. In pilot applications, we utilized publicly available datasets from NCBI Gene Expression Omnibus (GEO) [<a href="#pone.0186906.ref008" class="usa-link" aria-describedby="pone.0186906.ref008">8</a>] that we formatted and the array files were partitioned into learning sets and experimental sets. Each individual array is accessible as a.CEL file with individual identifiers at a publically accessible GitHub site that outlines the learning, validation and test sets employed in our initial studies (<a href="https://github.com/chuang95/KEA_DrugResponse" class="usa-link usa-link--external" data-ga-action="click_feat_suppl" target="_blank" rel="noopener noreferrer">https://github.com/chuang95/KEA_DrugResponse</a>). Also available at this GitHub site are general procedures for open application of our software to additional datasets (<a href="https://github.com/chuang95/KEA_DrugResponseLearning" class="usa-link usa-link--external" data-ga-action="click_feat_suppl" target="_blank" rel="noopener noreferrer">https://github.com/chuang95/KEA_DrugResponseLearning</a>). We have employed the algorithms to explore the effect of a variety of alternative learning datasets on predictive accuracy leading to several unanticipated findings. First, predictive accuracy was significantly improved when microarray probe level expression data rather than average gene expression values were employed in the model building process. Second, predictive accuracy was improved when models were built upon a diversity of cancer types. Third, the pre-filtering of learning datasets based upon preconceived biological models significantly reduces predictive accuracy. Application of our optimized models to publically available ovarian cancer (OC) patient gene expression datasets generated predictions highly consistent with observed responses to a variety of drugs. By providing true open access to our software, we seek to encourage additional improvements in current methods, as well as, constructive comparisons with alternative approaches leading to the development of optimal ML-based strategies for personalized cancer medicine.</p></section><section id="sec002"><h2 class="pmc_sec_title">Results</h2>
+<section id="sec003"><h3 class="pmc_sec_title">Support vector machine (SVM) model building and recursive feature selection</h3>
+<p>A variety of ML techniques and strategies have been employed in the quest for optimal accuracy, sensitivity and specificity in drug response predictions. In this work, we utilize an SVM approach paired with recursive feature elimination (RFE). SVM has been successfully applied in a variety of biological applications in recent years (e.g., [<a href="#pone.0186906.ref009" class="usa-link" aria-describedby="pone.0186906.ref009">9</a>]). Our SVM models were built using gene expression (<a href="https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE32474" class="usa-link" data-ga-action="click_feat_suppl" target="_blank" rel="noopener noreferrer">https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE32474</a>) (see also Table A in <a href="#pone.0186906.s002" class="usa-link">S2 File</a>) and drug sensitivity profiles (<a href="https://wiki.nci.nih.gov/display/NCIDTPdata/NCI-60+Growth+Inhibition+Data" class="usa-link" data-ga-action="click_feat_suppl" target="_blank" rel="noopener noreferrer">https://wiki.nci.nih.gov/display/NCIDTPdata/NCI-60+Growth+Inhibition+Data</a>)) (see also Table B in <a href="#pone.0186906.s002" class="usa-link">S2 File</a>) of the NCI-60 panel of human cancer cell lines. Predictive models were built for seven drugs often employed in the treatment of ovarian cancer (carboplatin, cisplatin, paclitaxel, docetaxel, gemcitabine, doxorubicin, gefitinib). The drug sensitivities (GI50) of the NCI-60 cell lines approximate a normal distribution (<a href="#pone.0186906.g001" class="usa-link">Fig 1A</a>; Fig A in <a href="#pone.0186906.s001" class="usa-link">S1 File</a>). For our learning dataset, we conservatively excluded cell lines displaying GI50 values within ±0.50 SD of the mean. The test dataset, however, was selected from all cell lines. In all cases, cell lines used to build the models were distinct from those used in testing the models.</p>
+<figure class="fig xbox font-sm" id="pone.0186906.g001"><h4 class="obj_head">Fig 1. An SVM-RFE predictive model of carboplatin sensitivity for NCI-60 cell lines.</h4>
+<p class="img-box line-height-none margin-x-neg-2 tablet:margin-x-0 text-center"><a class="tileshop" target="_blank" href="https://www.ncbi.nlm.nih.gov/core/lw/2.0/html/tileshop_pmc/tileshop_pmc_inline.html?title=Click%20on%20image%20to%20zoom&amp;p=PMC3&amp;id=5658085_pone.0186906.g001.jpg"><img class="graphic zoom-in" src="https://cdn.ncbi.nlm.nih.gov/pmc/blobs/9e17/5658085/c65807d57116/pone.0186906.g001.jpg" loading="lazy" height="279" width="750" alt="Fig 1"></a></p>
+<div class="p text-right font-secondary"><a href="figure/pone.0186906.g001/" class="usa-link" target="_blank" rel="noopener noreferrer">Open in a new tab</a></div>
+<figcaption><p>(A) Ranked display of -log transformed GI50 values for carboplatin for each of the NCI-60 cell lines. Blue circles = carboplatin resistant cells; red circles = carboplatin sensitive cell lines. Cell lines with GI50 values within ±0.5 SD of the mean (green circles) are less reliably classified as resistant or sensitive and were, thus, not employed in learning datasets. Test sets were selected from cell lines across the entire distribution; (B) Evolution of accuracy of predicted response to carboplatin using SVM-RFE selection for gene probe classifiers; (C) Visualization of the optimal separation between carboplatin sensitive and resistant NCI-60 cell lines. The X-axis is the optimal weight vector (prediction score) of the SVM model for carboplatin; the Y-axis is the -log transformed GI50 values for carboplatin.</p></figcaption></figure><p>SVM models built upon large datasets typically contain uninformative features, and a number of feature selection methods have been developed to identify subsets of features with optimal predictive accuracy [<a href="#pone.0186906.ref010" class="usa-link" aria-describedby="pone.0186906.ref010">10</a>–<a href="#pone.0186906.ref012" class="usa-link" aria-describedby="pone.0186906.ref012">12</a>]. We employed a previously described RFE [<a href="#pone.0186906.ref013" class="usa-link" aria-describedby="pone.0186906.ref013">13</a>, <a href="#pone.0186906.ref014" class="usa-link" aria-describedby="pone.0186906.ref014">14</a>] method to select for features (gene probe sets) that optimally distinguish cells predicted to be sensitive to a drug from those that are not. The RFE method starts by discarding the least relevant features of the model from the bottom of the sorted feature list (Table C in <a href="#pone.0186906.s002" class="usa-link">S2 File</a>). The subsequent SVM model is built on the remaining features and again, features with the lowest weights are removed. This process proceeds in a recursive manner until a minimal subset of features is identified that is essential to maintain optimal predictive accuracy. For example, <a href="#pone.0186906.g001" class="usa-link">Fig 1B</a> depicts the evolution of predictive accuracy using SVM-RFE feature selection for increased sensitivity to carboplatin (see Fig B in <a href="#pone.0186906.s001" class="usa-link">S1 File</a> for feature selection of the other drugs). In this case, initial removal of uninformative features increased accuracy due to the elimination of features that negatively interact with predictive accuracy. Our SVM-RFE approach compares favorably with other commonly employed methods of feature selection (see Fig F in <a href="#pone.0186906.s001" class="usa-link">S1 File</a>).</p>
+<p>The minimal number of informative features associated with optimally predicted responsiveness to the seven drugs modeled in this study ranged from 10 to 32 (Table D in <a href="#pone.0186906.s002" class="usa-link">S2 File</a>). While the biological contribution of the majority of these genes to drug responsiveness is currently unknown, potentially informative trends are often apparent. For example, several of the most informative genes predictive of carboplatin sensitivity have been directly or indirectly implicated with apoptosis (Table E in <a href="#pone.0186906.s002" class="usa-link">S2 File</a>), a cellular function known to be induced in response to carboplatin treatment [<a href="#pone.0186906.ref015" class="usa-link" aria-describedby="pone.0186906.ref015">15</a>].</p>
+<p>The SVM models generate drug prediction scores for each cell line. Scores higher than "0" indicate a predicted sensitive response, less than "0" a predicted resistant response (<em>e</em>.<em>g</em>., see <a href="#pone.0186906.g001" class="usa-link">Fig 1C</a>, X-axis). The overall accuracy, specificity and sensitivity are evaluated by leave-one-out cross-validation (LOOCV). The SVM computed predictive scores are plotted against observed GI50 values to graphically display the accuracy of each model. For example, the quadrant plot for carboplatin (<a href="#pone.0186906.g001" class="usa-link">Fig 1C</a>) shows that the SVM model is 84% accurate across the NCI-60 test dataset. The predictive accuracies of each of the seven models ranged from 75% to 85% (see Fig C in <a href="#pone.0186906.s001" class="usa-link">S1 File</a> for predictive accuracies of the other 6 chemotherapeutic drugs).</p></section><section id="sec004"><h3 class="pmc_sec_title">Building SVM-based models across a variety of cancer types improves predictive accuracy</h3>
+<p>While feature selection methods are designed to identify the most informative features by systematically eliminating less informative ones, the predictive accuracy of ML models is heavily dependent on the presumption that the original learning dataset encompasses the full spectrum of features potentially relevant to the predicted variable [<a href="#pone.0186906.ref010" class="usa-link" aria-describedby="pone.0186906.ref010">10</a>]. The selection of appropriate learning datasets for building predictive models of cancer drug response is especially challenging because a full understanding of the molecular processes underlying cancer onset/progression has yet to be attained [<a href="#pone.0186906.ref016" class="usa-link" aria-describedby="pone.0186906.ref016">16</a>]. For this reason, subjective limitations in the scope of data employed in learning datasets may negatively affect predictive accuracy of derived models if informative features are inadvertently excluded. For example, it is frequently assumed that models designed to predict optimal therapies for a particular cancer type should appropriately be built using learning datasets derived exclusively from that same type of cancer. However, a growing body of evidence indicates that the molecular pathways underlying cancer onset/progression are not necessarily defined by a tumor's tissue of origin [<a href="#pone.0186906.ref017" class="usa-link" aria-describedby="pone.0186906.ref017">17</a>]. Thus, a gene expression pattern associated with a particular cancer type may underlie cancer development in other cancer types as well.</p>
+<p>To explore this issue, we compared the relative accuracies of two SVM-derived models designed to predict response to the commonly prescribed cancer drug carboplatin. The respective models were built using gene expression profiles and drug response profiles (<em>i</em>.<em>e</em>., learning datasets) derived from 18 of the NCI-60 cell lines. In one case, the 18 cell lines were representative of only two types of cancers (lung and melanoma) while in the other case, the 18 cell lines were randomly selected to be representative of all 9 types of cancer comprising the NCI-60 dataset (lung, colon, breast, ovarian, leukemia, renal, melanoma, prostate and CNS). As shown in <a href="#pone.0186906.g002" class="usa-link">Fig 2A</a>, the model built using data from the 9 cancer types was more accurate in predicting carboplatin sensitivity (87.5%) than the model built upon only 2 cancer types (75.0%) (Fig D in <a href="#pone.0186906.s001" class="usa-link">S1 File</a>). This finding is consistent with growing evidence that the molecular basis of individual cancers may not necessarily be defined by tissue of origin [<a href="#pone.0186906.ref017" class="usa-link" aria-describedby="pone.0186906.ref017">17</a>]. In addition, the fact that variation in gene expression levels is typically greater among multiple cancer types (see Fig G in <a href="#pone.0186906.s001" class="usa-link">S1 File</a>) may be an additional relevant factor since the predictive accuracy of ML models is well known to improve with increasing diversity of the learning set data [<a href="#pone.0186906.ref010" class="usa-link" aria-describedby="pone.0186906.ref010">10</a>].</p>
+<figure class="fig xbox font-sm" id="pone.0186906.g002"><h4 class="obj_head">Fig 2. The influence of learning datasets on the predictive accuracy of SVM-RFE models.</h4>
+<p class="img-box line-height-none margin-x-neg-2 tablet:margin-x-0 text-center"><a class="tileshop" target="_blank" href="https://www.ncbi.nlm.nih.gov/core/lw/2.0/html/tileshop_pmc/tileshop_pmc_inline.html?title=Click%20on%20image%20to%20zoom&amp;p=PMC3&amp;id=5658085_pone.0186906.g002.jpg"><img class="graphic zoom-in" src="https://cdn.ncbi.nlm.nih.gov/pmc/blobs/9e17/5658085/f5a01357e678/pone.0186906.g002.jpg" loading="lazy" height="873" width="749" alt="Fig 2"></a></p>
+<div class="p text-right font-secondary"><a href="figure/pone.0186906.g002/" class="usa-link" target="_blank" rel="noopener noreferrer">Open in a new tab</a></div>
+<figcaption><p>(A) Comparison of predictive accuracy (ROC curves) for two SVM models of response to carboplatin using a learning dataset derived from 2 cancer types (lung, melanoma) vs. 9 cancer types (brain, breast, lung, leukemia, renal, colon, ovarian, prostate and melanoma). In each case, the data were derived from a total of 18 cell lines. The results indicate that the model built using learning set data from 9 cancer types generates a more accurate prediction (see also Fig D in <a href="#pone.0186906.s001" class="usa-link">S1 File</a>); (B,C,D) Prediction of the sensitivity of breast cancer cell lines to doxorubicin. In one case, the model was built using a learning dataset comprised of average gene expression values. In the other case, the model was built using a learning dataset comprised of the expression values of all gene probes. The results demonstrate that the model built using probe set data is more accurate than the model built using average gene expression data; (C) prediction score accuracy using average gene expression values; (D) prediction score accuracy using expression values of all gene probes (Red circles = drug sensitive training set; Blue circles = drug resistant training set; Black diamonds = breast cancer cells test set).</p></figcaption></figure></section><section id="sec005"><h3 class="pmc_sec_title">The averaging of microarray probe set expression values reduces predictive accuracy</h3>
+<p>Another way in which the information content of learning datasets may be compromised is by the employment of average rather than raw experimental values. For example, Affymetrix and other microarray gene expression systems typically incorporate multiple probe sets per gene, thereby providing the possibility of monitoring differences in levels of alternative splicing and other post-transcriptional expression variants (<em>e</em>.<em>g</em>., Fig E in <a href="#pone.0186906.s001" class="usa-link">S1 File</a>). While the use of average gene expression values may be appropriate for many applications, the loss of information associated with the use of such average values in learning datasets could negatively affect the accuracy of drug prediction algorithms if, for example, rare splice variants turn out to be particularly informative features.</p>
+<p>To test this possibility, we compared the relative predictive accuracies of two SVM-based algorithms developed to predict the sensitivity of the set of breast cancer cell lines recently employed in the NCI-DREAM Challenge to the drug doxorubicin [<a href="#pone.0186906.ref001" class="usa-link" aria-describedby="pone.0186906.ref001">1</a>]. In one case, we employed the average Affymetrix gene expression dataset that was provided to the Challenge participants (<a href="https://www.synapse.org/#!Synapse:syn2785783" class="usa-link usa-link--external" data-ga-action="click_feat_suppl" target="_blank" rel="noopener noreferrer">https://www.synapse.org/#!Synapse:syn2785783</a>). In the other case, we downloaded and employed the original probe data as our learning set (ArrayExpress E-MTAB-181, <a href="http://www.ebi.ac.uk/arrayexpress/experiments/E-MTAB-181/" class="usa-link usa-link--external" data-ga-action="click_feat_suppl" target="_blank" rel="noopener noreferrer">http://www.ebi.ac.uk/arrayexpress/experiments/E-MTAB-181/</a>). The results presented in <a href="#pone.0186906.g002" class="usa-link">Fig 2B, 2C and 2D</a> demonstrate that the model built using the probe set data is substantially more accurate (89%) in predicting the sensitivity of the breast cancer cells lines to doxorubicin than the model (78%) built using the averaged gene expression values.</p></section><section id="sec006"><h3 class="pmc_sec_title">Pre-filtering of learning datasets can reduce predictive accuracy</h3>
+<p>Some methods to assess risk of cancer progression and/or severity focus almost exclusively on genes previously identified as drivers of cancer onset/progression [<a href="#pone.0186906.ref018" class="usa-link" aria-describedby="pone.0186906.ref018">18</a>]. The advantage of such data pre-filtering is a reduction in the complexity of downstream analyses but, as discussed above, it may also negatively impact the accuracy of derived predictive models if the truncated datasets do not encompass all genes associated with drug sensitivity.</p>
+<p>To explore this question, we compared the predictive accuracy of two SVM-based models using the above breast cancer cell line data. In one model, the learning dataset consisted of expression patterns of 297 genes previously implicated in cancer onset/progression [<a href="#pone.0186906.ref019" class="usa-link" aria-describedby="pone.0186906.ref019">19</a>] (<a href="http://foundationone.com/docs/FoundationOne_tech-info-and-overview.pdf" class="usa-link usa-link--external" data-ga-action="click_feat_suppl" target="_blank" rel="noopener noreferrer">http://foundationone.com/docs/FoundationOne_tech-info-and-overview.pdf</a>). In the second model, the learning dataset included probes of all significantly expressed genes (Table A in <a href="#pone.0186906.s002" class="usa-link">S2 File</a>). The models built using the pre-filtered data from the 297 genes were substantially less accurate (59.6%) in predicting responses to doxorubicin than the model built upon unfiltered data (89.4%) (<a href="#pone.0186906.g003" class="usa-link">Fig 3</a>).</p>
+<figure class="fig xbox font-sm" id="pone.0186906.g003"><h4 class="obj_head">Fig 3. Pre-filtering of learning datasets can reduce the accuracy of predictive models.</h4>
+<p class="img-box line-height-none margin-x-neg-2 tablet:margin-x-0 text-center"><a class="tileshop" target="_blank" href="https://www.ncbi.nlm.nih.gov/core/lw/2.0/html/tileshop_pmc/tileshop_pmc_inline.html?title=Click%20on%20image%20to%20zoom&amp;p=PMC3&amp;id=5658085_pone.0186906.g003.jpg"><img class="graphic zoom-in" src="https://cdn.ncbi.nlm.nih.gov/pmc/blobs/9e17/5658085/8e9a69decd1a/pone.0186906.g003.jpg" loading="lazy" height="225" width="700" alt="Fig 3"></a></p>
+<div class="p text-right font-secondary"><a href="figure/pone.0186906.g003/" class="usa-link" target="_blank" rel="noopener noreferrer">Open in a new tab</a></div>
+<figcaption><p>Shown is the predicted sensitivity of breast cancer cell lines to doxorubicin by two SVM models built using different learning datasets. In one case, the model was built using a learning dataset limited to the expression of 297 genes previously associated with cancer onset/progression [<a href="#pone.0186906.ref019" class="usa-link" aria-describedby="pone.0186906.ref019">19</a>]. In the other case, the model was built using a learning dataset drawn from all significantly expressed genes (Table A in <a href="#pone.0186906.s002" class="usa-link">S2 File</a>). The results indicate that pre-filtering of the learning dataset to only include gene expression values of previously identified cancer related genes reduces predictive accuracy. (A) Quadrant plot of SVM predicted sensitivity to doxorubicin vs. observed sensitivity to doxorubicin of model built using a learning dataset pre-filtered for genes previously associated with cancer onset/progression; (B) Quadrant plot of SVM predicted sensitivity to doxorubicin vs. observed sensitivity to doxorubicin of model built using all gene expression data (Table A in <a href="#pone.0186906.s002" class="usa-link">S2 File</a>); (C) ROC curves of the two models showing reduced predictive accuracy associated with the pre-filtered learning dataset (Red circles = drug sensitive training set; Blue circles = drug resistant training set; Black diamonds = breast cancer cells test set).</p></figcaption></figure></section><section id="sec007"><h3 class="pmc_sec_title">Model applications to human cancer datasets</h3>
+<p>While our predictive models were established using gene expression and drug sensitivity data from human cell lines, we were interested in conducting preliminary evaluations of the models' ability to predict the response of human cancer patients to chemotherapeutic treatments. Toward this end, we downloaded three independently derived (Affymetrix) gene expression datasets of 273 ovarian cancer patient tumors from the Gene Expression Omnibus (GEO) repository (<a href="https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE30161" class="usa-link" data-ga-action="click_feat_suppl" target="_blank" rel="noopener noreferrer">GSE30161</a>, <a href="https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE18521" class="usa-link" data-ga-action="click_feat_suppl" target="_blank" rel="noopener noreferrer">GSE18521</a>, <a href="https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE20565" class="usa-link" data-ga-action="click_feat_suppl" target="_blank" rel="noopener noreferrer">GSE20565</a>; <a href="http://www.ncbi.nlm.nih.gov/gds" class="usa-link" data-ga-action="click_feat_suppl" target="_blank" rel="noopener noreferrer">http://www.ncbi.nlm.nih.gov/gds</a>). The expression values for each individual array were normalized back to the NCI-60 gene expression data matrix.</p>
+<p>Using these data, we employed our models to predict the response of the 273 cancer patients to cisplatin, doxorubicin, paclitaxel, carboplatin, docetaxel, gemcitabine and gefitinib. For example, <a href="#pone.0186906.g004" class="usa-link">Fig 4A and 4B</a> display the predicted response of two randomly selected patients from the GEO data set. One of the patients (<a href="#pone.0186906.g004" class="usa-link">Fig 4A</a>) is predicted to respond favorably to the standard first-line therapy (carboplatin/paclitaxel) while the second patient (<a href="#pone.0186906.g004" class="usa-link">Fig 4B</a>) is not. Interestingly, the patient predicted not to respond to first line therapy, is predicted to respond favorably to gemcitabine. Unfortunately, the observed response of these individual patients to therapy is not available. However, the collective response of ovarian cancer patients to the seven drugs analyzed in these studies has been previously reported (Table F in <a href="#pone.0186906.s002" class="usa-link">S2 File</a>). To compare the collective predictive accuracy of our models to the collective observed response rates, we combined the predictive sensitivities of the 273 patients comprising the 3 GEO datasets and displayed the results as a distribution of the combined SVM predicted scores (<a href="#pone.0186906.g004" class="usa-link">Fig 4C</a>). The results indicate that while at least some patients are predicted to respond to each of the seven drugs, the vast majority (75%) of patients are predicted to respond favorably to carboplatin (<a href="#pone.0186906.g004" class="usa-link">Fig 4C</a>), followed closely by gemcitabine, cisplatin (58%) and paclitaxel (56%). Of interest is the fact that carboplatin, given concurrently with paclitaxel, is the current first-line chemotherapy for ovarian cancer patients, with approximately 75–80% of patients being responsive to this combination [<a href="#pone.0186906.ref020" class="usa-link" aria-describedby="pone.0186906.ref020">20</a>]. Our predictions suggest that the drug primarily responsible for this favorable response is carboplatin. Gemcitabine is commonly given as a second-line chemotherapy for OC and has been found to be of moderate clinical effectiveness, in line with our predictive models [<a href="#pone.0186906.ref021" class="usa-link" aria-describedby="pone.0186906.ref021">21</a>]. <a href="#pone.0186906.g004" class="usa-link">Fig 4D</a> displays the linear regression between the predicted response rates to the seven chemotherapeutic drugs by our models and the observed response rate from clinical studies (Table F in <a href="#pone.0186906.s002" class="usa-link">S2 File</a>). The overall predictive accuracy of our models in this dataset is &gt; 80% (R2 = 0.8201).</p>
+<figure class="fig xbox font-sm" id="pone.0186906.g004"><h4 class="obj_head">Fig 4. Individual and aggregate prediction of response to chemotherapeutic drugs.</h4>
+<p class="img-box line-height-none margin-x-neg-2 tablet:margin-x-0 text-center"><a class="tileshop" target="_blank" href="https://www.ncbi.nlm.nih.gov/core/lw/2.0/html/tileshop_pmc/tileshop_pmc_inline.html?title=Click%20on%20image%20to%20zoom&amp;p=PMC3&amp;id=5658085_pone.0186906.g004.jpg"><img class="graphic zoom-in" src="https://cdn.ncbi.nlm.nih.gov/pmc/blobs/9e17/5658085/9c0b4b3375c6/pone.0186906.g004.jpg" loading="lazy" height="519" width="701" alt="Fig 4"></a></p>
+<div class="p text-right font-secondary"><a href="figure/pone.0186906.g004/" class="usa-link" target="_blank" rel="noopener noreferrer">Open in a new tab</a></div>
+<figcaption><p>The SVM algorithms output binary classifications for each drug (sensitive/resistant) established through a decision function that numerically separates cancer cells predicted to respond to the drug (positive score) from those predicted to be non-responders (negative score). (A) The predicted response of an individual patient (<a href="https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSM516724" class="usa-link" data-ga-action="click_feat_suppl" target="_blank" rel="noopener noreferrer">GSM516724</a>) to seven chemotherapeutic drugs. This patient is predicted to respond favorably to the first line therapies of carboplatin (score 2.88) and paclitaxel (score 3.20). (B)The predicted response of a second individual OC patient (<a href="https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSM516801" class="usa-link" data-ga-action="click_feat_suppl" target="_blank" rel="noopener noreferrer">GSM516801</a>) to seven chemotherapeutic drugs. The patient is predicted NOT to respond favorably to the first line therapies of carboplatin (score -0.28) and paclitaxel (score -2.53). (C) Density plot of aggregate prediction scores for 3 GEO data sets of 273 ovarian cancer patients and the predicted group response rate for each drug. (D) Scatter plot of the predicted group response rates vs. the observed group responses of OC patients to seven chemotherapeutic drugs (Linear regression p value = 0.0031, R<sup>2</sup> = 0.8201) (Table F in <a href="#pone.0186906.s002" class="usa-link">S2 File</a>).</p></figcaption></figure></section></section><section id="sec008"><h2 class="pmc_sec_title">Discussion</h2>
+<p>A primary goal of personalized cancer medicine is the accurate prediction of optimal drug therapies based upon individualized molecular profiles of patient tumors [<a href="#pone.0186906.ref022" class="usa-link" aria-describedby="pone.0186906.ref022">22</a>]. In an ideal world, such predictions are based upon firmly established cause and effect relationships between identified molecular aberrations and specific aspects of the onset and progression of the disease. An example is the well-established relationship between constitutively active Bcr-Abl tyrosine kinase (TK) expression and the leukemic phenotype associated with CML (chronic myelogenous leukemia) [<a href="#pone.0186906.ref023" class="usa-link" aria-describedby="pone.0186906.ref023">23</a>]. Patients identified with this molecular aberration are effectively treated with targeted TK inhibitors that work to reduce the elevated activity and restore regulatory balance to the cell. Regrettably, the underlying molecular causes of most tumors are, as yet, not as well understood as for CML. This has led to growing interest in the application of ML approaches to the prediction of optimal drug therapies [<a href="#pone.0186906.ref018" class="usa-link" aria-describedby="pone.0186906.ref018">18</a>]. ML-based predictive models are not predicated upon knowledge of underlying cause and effect relationships but rather on the identification of significant correlations between specific components of tumor molecular profiles and the favorable response of tumors to specific drugs.</p>
+<p>The open source availability of ML prediction algorithms provides the research community with unique opportunities for creative modifications and improvements of existing algorithms not otherwise possible. For example, open sharing of code has been critical to improvements in ML approaches to image recognition [<a href="#pone.0186906.ref006" class="usa-link" aria-describedby="pone.0186906.ref006">6</a>,<a href="#pone.0186906.ref007" class="usa-link" aria-describedby="pone.0186906.ref007">7</a>].</p>
+<p>Despite the documented advantages of the open sharing of code, to date, the practice has been extremely limited within the field of cancer drug prediction. For example, there is a notable lack of GitHub, Sourceforge, R Bioconductor and other online repositories of cancer drug prediction applications in contrast to the resources available for other ML applications such as the Large Online Image (LOI) repository competitions where alternative computational solutions are openly deposited [<a href="#pone.0186906.ref007" class="usa-link" aria-describedby="pone.0186906.ref007">7</a>]. We believe that making cancer drug prediction algorithms open source could result in similar benefits in the field of personalized cancer medicine.</p>
+<p>Toward that end, we present here an open access support vector machine (SVM)-based algorithm for the predictive response of cancers to seven widely employed chemotherapeutic drugs. The algorithm combines a standard SVM approach with a "one-by one" data normalization pipeline. We have employed the algorithm to explore the effect of a variety of alternative learning datasets on predictive accuracy leading to several unanticipated findings. For example, although it may seem intuitive that drug predictive models for a specific type of cancer should optimally be built upon data from the same cancer type, our results suggest that this may not always be the case. The predictive accuracy of the drug response of a particular cancer type was significantly increased when the model was built using data from a variety of cancer types. This finding is consistent with growing evidence that molecular signatures of optimal cancer drug response are not necessarily defined by the cancer's tissue of origin [<a href="#pone.0186906.ref017" class="usa-link" aria-describedby="pone.0186906.ref017">17</a>].</p>
+<p>Microarray platforms typically monitor gene expression levels using multiple probe sets. This allows discrimination between the expression patterns of alternative splice variants and/or other gene transcript isoforms. Most often, the input expression data for the building of ML predictive models utilizes average expression values across all gene probes. We found that higher accuracy is attained when all probes are incorporated in the learning dataset presumably because some isoforms are more informative than others with respect to drug response and this information is lost or diluted when individual probe data are combined in an average value.</p>
+<p>Personal cancer drug therapy, as currently envisioned, involves the targeted inhibition of one or more "cancer driver" genes, <em>i</em>.<em>e</em>., genes that have been previously identified as playing key roles in cancer onset and progression. For this reason, the molecular profiles of putative cancer driver genes or other pre-defined subsets of genes are often considered sufficient for the accurate prediction of optimal drug therapies. We found that predictive accuracy can, in fact, be significantly reduced when expression profile datasets are pre-filtered prior to ML-based model building. This result suggests that genes involved in cancer drug response are not necessarily limited to those involved in cancer onset even when the drug in question is designed to target a specific group of driver genes.</p>
+<p>Although our models were built using the publically available NCI-60 cancer cell line datasets, we are encouraged that predictions using publically available human patient datasets are generally consistent with clinical observations. By making our predictive models open source, we hope to encourage the testing of predictions in additional human datasets representative of a diversity of tumor types.</p>
+<p>In summary, our findings demonstrate that significant improvements can be made in the predictive accuracy of ML-based algorithms by modulating the format and/or type of learning datasets employed in the model building process. This finding is likely to be relevant regardless of the type of ML approach employed. While our results illustrate several paths by which the predictive accuracy of our ML-based cancer drug prediction algorithm was improved, these and additional possibilities need to be tested with larger and more extensive datasets. We believe that such goals are most effectively attained by communal efforts where the research community is provided open access to the underlying code and pipelines employed so that meaningful improvements and comparisons with alternative methods can be made [<a href="#pone.0186906.ref024" class="usa-link" aria-describedby="pone.0186906.ref024">24</a>]. Toward this end, we currently provide an open source R package and pipeline for application of our prediction methods (<a href="https://github.com/chuang95/KEA_DrugResponse" class="usa-link usa-link--external" data-ga-action="click_feat_suppl" target="_blank" rel="noopener noreferrer">https://github.com/chuang95/KEA_DrugResponse</a>). In addition, a user-friendly web server is currently under construction that will further enhance public access to our methods.</p>
+<p>It is our hope that through community sharing of this and other open source cancer drug prediction algorithms and associated data formatting/normalization procedures that the attainment of a major goal of personalized cancer medicine will be facilitated.</p></section><section id="sec009"><h2 class="pmc_sec_title">Materials and methods</h2>
+<section id="sec010"><h3 class="pmc_sec_title">Microarray data normalization</h3>
+<p>Standard gene expression data analyses were conducted as previously described [<a href="#pone.0186906.ref025" class="usa-link" aria-describedby="pone.0186906.ref025">25</a>]. Individual gene expression microarray (.CEL) files were normalized one-by-one against the original NCI-60 gene expression microarray data specific to each array (both Affymetrix U133 Plus 2 and Human Exon Array) using standard quantile normalization [<a href="#pone.0186906.ref026" class="usa-link" aria-describedby="pone.0186906.ref026">26</a>, <a href="#pone.0186906.ref027" class="usa-link" aria-describedby="pone.0186906.ref027">27</a>] and using the mean of each probe. This approach creates distributions for each array that are as similar as possible in terms of statistical properties.</p></section><section id="sec011"><h3 class="pmc_sec_title">Bifurcation of response data</h3>
+<p>We define the negative log transformed GI50 value for each cell line. In this approach, the higher the transformed GI50 value, the more sensitive the cell line is to the drug. Three labels were collected: sensitive (marked 1), resistant (marked -1) and indeterminate (marked 0). The sensitive label indicates GI50 values above <em>mean+0</em>.<em>50 SD</em> while resistant label indicates GI50 values below <em>mean+0</em>.<em>50 SD</em>. GI50 values that lie within ±0.50 SD of the mean are marked as indeterminate.</p></section><section id="sec012"><h3 class="pmc_sec_title">Machine-Learning. SVM: Recursive feature elimination (RFE)</h3>
+<p>The microarray gene expression values of the NCI-60 cell lines are formatted as a matrix, and sub-divided into training (75%) and validation (25%) datasets. Each probe of a gene is analyzed as a separate feature for each sample. We applied SVM on training data to get weights for each feature, and sort the features based on the weights (Table C in <a href="#pone.0186906.s002" class="usa-link">S2 File</a>). Models are built using a learning dataset, and evaluated using a test dataset. Linear support vector machine (SVM) is employed recursively as a classification model to separate samples into two classes: sensitive and resistant. The learning function is <em>svmtrain</em> (Matlab R2013b version 8.2.0.701), and the kernel function is linear. The samples are represented as a vector <em>x</em>, and the two classes are divided in the dataspace by a hyperplane <em>wx’ + b = 0</em> that maximizes the margins between the learning samples of the two classes. This margin is defined such that:
+</p>
+<table class="disp-formula p" id="pone.0186906.e001"><tr><td class="formula"><math id="M1" display="block" overflow="linebreak"><mtable columnalign="left"><mtr><mtd><mi>w</mi><mi>x</mi><mo>'</mo><mo>+</mo><mi>b</mi><mo>≥</mo><mn>1</mn><mo>,</mo><mi>c</mi><mo>=</mo><mn>1</mn></mtd></mtr><mtr><mtd><mi>w</mi><mi>x</mi><mo>'</mo><mo>+</mo><mi>b</mi><mo>≤</mo><mo>−</mo><mn>1</mn><mo>,</mo><mi>c</mi><mo>=</mo><mo>−</mo><mn>1</mn></mtd></mtr></mtable></math></td></tr></table>
+<p>
+Binary classification is performed for the test prediction. The prediction score for test samples are calculated by using the decision function as follows:
+</p>
+<table class="disp-formula p" id="pone.0186906.e002"><tr><td class="formula"><math id="M2" display="block" overflow="linebreak"><mrow><mi>p</mi><mi>r</mi><mi>e</mi><mi>d</mi><mi>i</mi><mi>c</mi><mi>t</mi><mi>i</mi><mi>o</mi><mi>n</mi><mo>_</mo><mi>s</mi><mi>o</mi><mi>c</mi><mi>r</mi><mi>e</mi><mo>=</mo><mo>−</mo><mn>1</mn><mo>×</mo><mo stretchy="false">(</mo><mstyle displaystyle="true"><munderover><mo>∑</mo><mrow><mi>f</mi><mo>=</mo><mn>1</mn></mrow><mi>i</mi></munderover><mrow><msub><mi>w</mi><mi>f</mi></msub><msub><mi>x</mi><mi>f</mi></msub><mo>+</mo><mi>b</mi></mrow></mstyle><mo stretchy="false">)</mo></mrow></math></td></tr></table>
+<p>
+where <em>w</em> and <em>b</em> are the weight vector and bias parameters from the SVM model. The input <em>x</em> is the normalized test sample gene expression data with RFE selected <em>i</em> number of features. The classification of the patient drug response is based on this score. We call a sample a responder to the drug if this score is higher than 0, and a non-responder to the drug if the score is lower than 0.</p>
+<p>Recursive feature elimination (RFE) was performed to find the minimum set of features that maximized accuracy in the classification on the test dataset (<a href="#pone.0186906.g005" class="usa-link">Fig 5</a>). The approach starts by removing the least relevant 100 features for the model from the bottom (lowest weights) of the sorted feature list. The following SVM model is built using the remaining features, and then again removes the 100 features with lowest weights. This process proceeds recursively until the number of remaining features reaches 100. Thereafter, features are removed one at a time until the most informative set of features is obtained [<a href="#pone.0186906.ref028" class="usa-link" aria-describedby="pone.0186906.ref028">28</a>–<a href="#pone.0186906.ref030" class="usa-link" aria-describedby="pone.0186906.ref030">30</a>]. If there are multiple models with the highest accuracy, the model with the fewest number of features is selected. Each model is forced to contain a minimum of ten probes. The predictive model for each drug is based on the most informative set of features determined for that drug. Leave one out cross-validation (LOOCV) is used to evaluate the performance of each of the models as previously described [<a href="#pone.0186906.ref014" class="usa-link" aria-describedby="pone.0186906.ref014">14</a>].</p>
+<figure class="fig xbox font-sm" id="pone.0186906.g005"><h4 class="obj_head">Fig 5. Pseudo code for the RFE approach.</h4>
+<p class="img-box line-height-none margin-x-neg-2 tablet:margin-x-0 text-center"><a class="tileshop" target="_blank" href="https://www.ncbi.nlm.nih.gov/core/lw/2.0/html/tileshop_pmc/tileshop_pmc_inline.html?title=Click%20on%20image%20to%20zoom&amp;p=PMC3&amp;id=5658085_pone.0186906.g005.jpg"><img class="graphic zoom-in" src="https://cdn.ncbi.nlm.nih.gov/pmc/blobs/9e17/5658085/76cfaca5f6e7/pone.0186906.g005.jpg" loading="lazy" height="1110" width="634" alt="Fig 5"></a></p>
+<div class="p text-right font-secondary"><a href="figure/pone.0186906.g005/" class="usa-link" target="_blank" rel="noopener noreferrer">Open in a new tab</a></div>
+<figcaption><p>This approach takes the microarray expression data of NCI-60 cancer cell lines as input data, and the output is a model with the most informative features.</p></figcaption></figure></section><section id="sec013"><h3 class="pmc_sec_title">Receiver operating characteristic (ROC)</h3>
+<p>ROC curves were generated using the standard function as outlined below:
+</p>
+<table class="disp-formula p" id="pone.0186906.e003"><tr><td class="formula"><math id="M3" display="block" overflow="linebreak"><mrow><mi>A</mi><mi>U</mi><mi>C</mi><mo>=</mo><mo stretchy="false">(</mo><mi>t</mi><mi>p</mi><mi>r</mi><mo>−</mo><mi>f</mi><mi>p</mi><mi>r</mi><mo>+</mo><mn>1</mn><mo stretchy="false">)</mo><mo>/</mo><mn>2</mn><mo>=</mo><mo stretchy="false">(</mo><mi>t</mi><mi>p</mi><mi>r</mi><mo>+</mo><mi>t</mi><mi>n</mi><mi>r</mi><mo stretchy="false">)</mo><mo>/</mo><mn>2</mn><mo>=</mo><mn>1</mn><mo>−</mo><mo stretchy="false">(</mo><mi>f</mi><mi>p</mi><mi>r</mi><mo>+</mo><mi>f</mi><mi>n</mi><mi>r</mi><mo stretchy="false">)</mo><mo>/</mo><mn>2</mn></mrow></math></td></tr></table>
+<p>
+where AUC = <em>area under the curve</em>, tpr = <em>true positive</em>, fpr = <em>false positive</em>, tnr = <em>true negative</em> and fnr = <em>false negative</em>. We optimize AUC by maximizing <em>tpr—fpr</em> or minimizing a sum of (absolute) normalized error <em>fpr + fnr</em>. Optimal models are associated with higher <em>AUC</em> values.</p></section></section><section id="sec014"><h2 class="pmc_sec_title">Supporting information</h2>
+<section class="sm xbox font-sm" id="pone.0186906.s001"><div class="caption p">
+<span>S1 File. Supporting information with additional figures.</span><p><strong>Fig A</strong>. Ranked display of -log transformed GI50 values for the other six chemotherapeutic drugs for each of the NCI-60 cell lines.</p>
+<p><strong>Fig B</strong>. Evolution of accuracy of predicted drug responses for the other six chemotherapeutic drugs using SVM-RFE selection for gene probe classifiers.</p>
+<p><strong>Fig C</strong>. Visualization of the optimal separation between drug sensitive and resistant NCI-60 cell lines for the other six chemotherapeutic drugs.</p>
+<p><strong>Fig D</strong>. The models built using data from the 9 cancer types vs. 2 cancer types.</p>
+<p><strong>Fig E</strong>. Example of expression levels for probes from the same gene, <em>NEAT1</em>.</p>
+<p><strong>Fig F.</strong> Comparison of LOO-cross validation of predicted response to carboplatin using our SVM-RFE method vs. two other commonly employed methods.</p>
+<p><strong>Fig G.</strong> Comparison of the average gene expression for the learning datasets derived from 2 cancer types (lung, melanoma) vs. 9 cancer types (brain, breast, lung, leukemia, renal, colon, ovarian, prostate and melanoma).</p>
+<p>(PDF)</p>
+</div>
+<div class="media p"><div class="caption">
+<a href="/articles/instance/5658085/bin/pone.0186906.s001.pdf" data-ga-action="click_feat_suppl" class="usa-link">Click here for additional data file.</a><sup> (1.5MB, pdf) </sup>
+</div></div></section><section class="sm xbox font-sm" id="pone.0186906.s002"><div class="caption p">
+<span>S2 File. Supporting information with additional tables.</span><p><strong>Table A.</strong> Expression values of gene probes (Affymetrix_U133_2.0_plus) for the NCI-60 cell lines.</p>
+<p><strong>Table B.</strong> Sensitivity (GI50) of NCI-60 cell lines to seven chemotherapeutic drugs.</p>
+<p><strong>Table C.</strong> Ranking of probe (feature) weights for employed in the recursive feature elimination (RFE) process for the prediction of carboplatin sensitivity.</p>
+<p><strong>Table D.</strong> Probes associated with optimal predictive accuracy for 7 chemotherapeutic drugs.</p>
+<p><strong>Table E.</strong> Several of the most informative genes predictive of carboplatin sensitivity have been directly or indirectly implicated with apoptosis.</p>
+<p><strong>Table F.</strong> Comparison between predicted response rates of ovarian cancer patients to 7 chemotherapeutic drugs and response rates as reported in the literature.</p>
+<p>(XLSX)</p>
+</div>
+<div class="media p"><div class="caption">
+<a href="/articles/instance/5658085/bin/pone.0186906.s002.xlsx" data-ga-action="click_feat_suppl" class="usa-link">Click here for additional data file.</a><sup> (26.4MB, xlsx) </sup>
+</div></div></section></section><section id="notes1"><h2 class="pmc_sec_title">Data Availability</h2>
+<p>All relevant data are within the paper and its Supporting Information files.</p></section><section id="funding-statement1" lang="en"><h2 class="pmc_sec_title">Funding Statement</h2>
+<p>Funding was provided by the Rising Tide Foundation. The funders had no role in study design, data collection and analysis, decision to publish, or preparation of the manuscript.</p></section><section id="ref-list1" class="ref-list"><h2 class="pmc_sec_title">References</h2>
+<section id="ref-list1_sec2"><ul class="ref-list font-sm" style="list-style-type:none">
+<li id="pone.0186906.ref001">
+<span class="label">1.</span><cite>Costello JC, Heiser LM, Georgii E, Gonen M, Menden MP, Wang NJ, et al. 
+A community effort to assess and improve drug sensitivity prediction algorithms. Nat Biotech. 2014;32: 1202–1212.</cite> [<a href="https://doi.org/10.1038/nbt.2877" class="usa-link usa-link--external" data-ga-action="click_feat_suppl" target="_blank" rel="noopener noreferrer">DOI</a>] [<a href="/articles/PMC4547623/" class="usa-link">PMC free article</a>] [<a href="https://pubmed.ncbi.nlm.nih.gov/24880487/" class="usa-link">PubMed</a>] [<a href="https://scholar.google.com/scholar_lookup?journal=Nat%20Biotech&amp;title=A%20community%20effort%20to%20assess%20and%20improve%20drug%20sensitivity%20prediction%20algorithms&amp;author=JC%20Costello&amp;author=LM%20Heiser&amp;author=E%20Georgii&amp;author=M%20Gonen&amp;author=MP%20Menden&amp;volume=32&amp;publication_year=2014&amp;pages=1202-1212&amp;pmid=24880487&amp;doi=10.1038/nbt.2877&amp;" class="usa-link usa-link--external" data-ga-action="click_feat_suppl" target="_blank" rel="noopener noreferrer">Google Scholar</a>]</li>
+<li id="pone.0186906.ref002">
+<span class="label">2.</span><cite>Haverty PM, Lin E, Tan J, Yu Y, Lam B, Lianoglou S, et al. 
+Reproducible pharmacogenomic profiling of cancer cell line panels. Nature. 2016;533: 333–337. doi: <a href="https://doi.org/10.1038/nature17987" class="usa-link usa-link--external" data-ga-action="click_feat_suppl" target="_blank" rel="noopener noreferrer">10.1038/nature17987</a>
+</cite> [<a href="https://doi.org/10.1038/nature17987" class="usa-link usa-link--external" data-ga-action="click_feat_suppl" target="_blank" rel="noopener noreferrer">DOI</a>] [<a href="https://pubmed.ncbi.nlm.nih.gov/27193678/" class="usa-link">PubMed</a>] [<a href="https://scholar.google.com/scholar_lookup?journal=Nature&amp;title=Reproducible%20pharmacogenomic%20profiling%20of%20cancer%20cell%20line%20panels&amp;author=PM%20Haverty&amp;author=E%20Lin&amp;author=J%20Tan&amp;author=Y%20Yu&amp;author=B%20Lam&amp;volume=533&amp;publication_year=2016&amp;pages=333-337&amp;pmid=27193678&amp;doi=10.1038/nature17987&amp;" class="usa-link usa-link--external" data-ga-action="click_feat_suppl" target="_blank" rel="noopener noreferrer">Google Scholar</a>]</li>
+<li id="pone.0186906.ref003">
+<span class="label">3.</span><cite>Haibe-Kains B, El-Hachem N, Birbak NJ, Jin AC, Beck AH, Aerts HJ, Quackenbush J. Inconsistency in large pharmacogenomic studies. Nature. 2013; 504: 389–393. doi: <a href="https://doi.org/10.1038/nature12831" class="usa-link usa-link--external" data-ga-action="click_feat_suppl" target="_blank" rel="noopener noreferrer">10.1038/nature12831</a>
+</cite> [<a href="https://doi.org/10.1038/nature12831" class="usa-link usa-link--external" data-ga-action="click_feat_suppl" target="_blank" rel="noopener noreferrer">DOI</a>] [<a href="/articles/PMC4237165/" class="usa-link">PMC free article</a>] [<a href="https://pubmed.ncbi.nlm.nih.gov/24284626/" class="usa-link">PubMed</a>] [<a href="https://scholar.google.com/scholar_lookup?journal=Nature&amp;title=Inconsistency%20in%20large%20pharmacogenomic%20studies&amp;author=B%20Haibe-Kains&amp;author=N%20El-Hachem&amp;author=NJ%20Birbak&amp;author=AC%20Jin&amp;author=AH%20Beck&amp;volume=504&amp;publication_year=2013&amp;pages=389-393&amp;pmid=24284626&amp;doi=10.1038/nature12831&amp;" class="usa-link usa-link--external" data-ga-action="click_feat_suppl" target="_blank" rel="noopener noreferrer">Google Scholar</a>]</li>
+<li id="pone.0186906.ref004">
+<span class="label">4.</span><cite>Geeleher P, Cox N, Huang RS. pRRophetic: an R package for prediction of clinical chemotherapeutic response from tumor gene expression levels. PLoS One. 2014;9: e107468
+doi: <a href="https://doi.org/10.1371/journal.pone.0107468" class="usa-link usa-link--external" data-ga-action="click_feat_suppl" target="_blank" rel="noopener noreferrer">10.1371/journal.pone.0107468</a>
+</cite> [<a href="https://doi.org/10.1371/journal.pone.0107468" class="usa-link usa-link--external" data-ga-action="click_feat_suppl" target="_blank" rel="noopener noreferrer">DOI</a>] [<a href="/articles/PMC4167990/" class="usa-link">PMC free article</a>] [<a href="https://pubmed.ncbi.nlm.nih.gov/25229481/" class="usa-link">PubMed</a>] [<a href="https://scholar.google.com/scholar_lookup?journal=PLoS%20One&amp;title=pRRophetic:%20an%20R%20package%20for%20prediction%20of%20clinical%20chemotherapeutic%20response%20from%20tumor%20gene%20expression%20levels&amp;author=P%20Geeleher&amp;author=N%20Cox&amp;author=RS%20Huang&amp;volume=9&amp;publication_year=2014&amp;pages=e107468&amp;pmid=25229481&amp;doi=10.1371/journal.pone.0107468&amp;" class="usa-link usa-link--external" data-ga-action="click_feat_suppl" target="_blank" rel="noopener noreferrer">Google Scholar</a>]</li>
+<li id="pone.0186906.ref005">
+<span class="label">5.</span><cite>Piccolo SR, Withers MR, Francis OE, Bild AH, Johnson WE. Multiplatform single-sample estimates of transcriptional activation. Proc Natl Acad Sci USA. 2013;110: 17778–17783. doi: <a href="https://doi.org/10.1073/pnas.1305823110" class="usa-link usa-link--external" data-ga-action="click_feat_suppl" target="_blank" rel="noopener noreferrer">10.1073/pnas.1305823110</a>
+</cite> [<a href="https://doi.org/10.1073/pnas.1305823110" class="usa-link usa-link--external" data-ga-action="click_feat_suppl" target="_blank" rel="noopener noreferrer">DOI</a>] [<a href="/articles/PMC3816418/" class="usa-link">PMC free article</a>] [<a href="https://pubmed.ncbi.nlm.nih.gov/24128763/" class="usa-link">PubMed</a>] [<a href="https://scholar.google.com/scholar_lookup?journal=Proc%20Natl%20Acad%20Sci%20USA&amp;title=Multiplatform%20single-sample%20estimates%20of%20transcriptional%20activation&amp;author=SR%20Piccolo&amp;author=MR%20Withers&amp;author=OE%20Francis&amp;author=AH%20Bild&amp;author=WE%20Johnson&amp;volume=110&amp;publication_year=2013&amp;pages=17778-17783&amp;pmid=24128763&amp;doi=10.1073/pnas.1305823110&amp;" class="usa-link usa-link--external" data-ga-action="click_feat_suppl" target="_blank" rel="noopener noreferrer">Google Scholar</a>]</li>
+<li id="pone.0186906.ref006">
+<span class="label">6.</span><cite>Esteva A, Kuprel B, Novoa RA, Ko J, Swetter SM, Blau HM, Thrun S. Dermatologist-level classification of skin cancer with deep neural networks. Nature. 2017;542: 115–118. doi: <a href="https://doi.org/10.1038/nature21056" class="usa-link usa-link--external" data-ga-action="click_feat_suppl" target="_blank" rel="noopener noreferrer">10.1038/nature21056</a>
+</cite> [<a href="https://doi.org/10.1038/nature21056" class="usa-link usa-link--external" data-ga-action="click_feat_suppl" target="_blank" rel="noopener noreferrer">DOI</a>] [<a href="/articles/PMC8382232/" class="usa-link">PMC free article</a>] [<a href="https://pubmed.ncbi.nlm.nih.gov/28117445/" class="usa-link">PubMed</a>] [<a href="https://scholar.google.com/scholar_lookup?journal=Nature&amp;title=Dermatologist-level%20classification%20of%20skin%20cancer%20with%20deep%20neural%20networks&amp;author=A%20Esteva&amp;author=B%20Kuprel&amp;author=RA%20Novoa&amp;author=J%20Ko&amp;author=SM%20Swetter&amp;volume=542&amp;publication_year=2017&amp;pages=115-118&amp;pmid=28117445&amp;doi=10.1038/nature21056&amp;" class="usa-link usa-link--external" data-ga-action="click_feat_suppl" target="_blank" rel="noopener noreferrer">Google Scholar</a>]</li>
+<li id="pone.0186906.ref007">
+<span class="label">7.</span><cite>Russakovsky O, Deng J, Su H, Krause J, Satheesh S, Ma S, et al. 
+ImageNet large scale visual recognition challenge. Int J Comput Vision. 2015;115: 211–252.</cite> [<a href="https://scholar.google.com/scholar_lookup?journal=Int%20J%20Comput%20Vision&amp;title=ImageNet%20large%20scale%20visual%20recognition%20challenge&amp;author=O%20Russakovsky&amp;author=J%20Deng&amp;author=H%20Su&amp;author=J%20Krause&amp;author=S%20Satheesh&amp;volume=115&amp;publication_year=2015&amp;pages=211-252&amp;" class="usa-link usa-link--external" data-ga-action="click_feat_suppl" target="_blank" rel="noopener noreferrer">Google Scholar</a>]</li>
+<li id="pone.0186906.ref008">
+<span class="label">8.</span><cite>Clough E, Barrett T. The gene expression omnibus database. Methods Mol Biol. 2016;1418: 93–110. doi: <a href="https://doi.org/10.1007/978-1-4939-3578-9_5" class="usa-link usa-link--external" data-ga-action="click_feat_suppl" target="_blank" rel="noopener noreferrer">10.1007/978-1-4939-3578-9_5</a>
+</cite> [<a href="https://doi.org/10.1007/978-1-4939-3578-9_5" class="usa-link usa-link--external" data-ga-action="click_feat_suppl" target="_blank" rel="noopener noreferrer">DOI</a>] [<a href="/articles/PMC4944384/" class="usa-link">PMC free article</a>] [<a href="https://pubmed.ncbi.nlm.nih.gov/27008011/" class="usa-link">PubMed</a>] [<a href="https://scholar.google.com/scholar_lookup?journal=Methods%20Mol%20Biol&amp;title=The%20gene%20expression%20omnibus%20database&amp;author=E%20Clough&amp;author=T%20Barrett&amp;volume=1418&amp;publication_year=2016&amp;pages=93-110&amp;pmid=27008011&amp;doi=10.1007/978-1-4939-3578-9_5&amp;" class="usa-link usa-link--external" data-ga-action="click_feat_suppl" target="_blank" rel="noopener noreferrer">Google Scholar</a>]</li>
+<li id="pone.0186906.ref009">
+<span class="label">9.</span><cite>Liu B, Zhang D, Xu J, Wang X, Chen Q, Dong Q, Chou KC. Combining evolutionary information extracted from frequency profiles with sequence-based kernels for protein remote homolgy detection. Bioinformatics. 2014;30: 472–479. doi: <a href="https://doi.org/10.1093/bioinformatics/btt709" class="usa-link usa-link--external" data-ga-action="click_feat_suppl" target="_blank" rel="noopener noreferrer">10.1093/bioinformatics/btt709</a>
+</cite> [<a href="https://doi.org/10.1093/bioinformatics/btt709" class="usa-link usa-link--external" data-ga-action="click_feat_suppl" target="_blank" rel="noopener noreferrer">DOI</a>] [<a href="/articles/PMC7537947/" class="usa-link">PMC free article</a>] [<a href="https://pubmed.ncbi.nlm.nih.gov/24318998/" class="usa-link">PubMed</a>] [<a href="https://scholar.google.com/scholar_lookup?journal=Bioinformatics&amp;title=Combining%20evolutionary%20information%20extracted%20from%20frequency%20profiles%20with%20sequence-based%20kernels%20for%20protein%20remote%20homolgy%20detection&amp;author=B%20Liu&amp;author=D%20Zhang&amp;author=J%20Xu&amp;author=X%20Wang&amp;author=Q%20Chen&amp;volume=30&amp;publication_year=2014&amp;pages=472-479&amp;pmid=24318998&amp;doi=10.1093/bioinformatics/btt709&amp;" class="usa-link usa-link--external" data-ga-action="click_feat_suppl" target="_blank" rel="noopener noreferrer">Google Scholar</a>]</li>
+<li id="pone.0186906.ref010">
+<span class="label">10.</span><cite>Hsu C-W, Chang C-C, Lin C-J. A practical guide to support vector classification, Technical Report
+Department of Computer Science and Information Engineering, National Taiwan University, Taipei 106, Taiwan, 2003.</cite> [<a href="https://scholar.google.com/scholar_lookup?title=Department%20of%20Computer%20Science%20and%20Information%20Engineering&amp;author=C-W%20Hsu&amp;author=C-C%20Chang&amp;author=C-J%20Lin&amp;publication_year=2003&amp;" class="usa-link usa-link--external" data-ga-action="click_feat_suppl" target="_blank" rel="noopener noreferrer">Google Scholar</a>]</li>
+<li id="pone.0186906.ref011">
+<span class="label">11.</span><cite>Saeys Y, Inza I, Larrañaga P. A review of feature selection techniques in bioinformatics. Bioinformatics. 2007;23: 2507–2517. doi: <a href="https://doi.org/10.1093/bioinformatics/btm344" class="usa-link usa-link--external" data-ga-action="click_feat_suppl" target="_blank" rel="noopener noreferrer">10.1093/bioinformatics/btm344</a>
+</cite> [<a href="https://doi.org/10.1093/bioinformatics/btm344" class="usa-link usa-link--external" data-ga-action="click_feat_suppl" target="_blank" rel="noopener noreferrer">DOI</a>] [<a href="https://pubmed.ncbi.nlm.nih.gov/17720704/" class="usa-link">PubMed</a>] [<a href="https://scholar.google.com/scholar_lookup?journal=Bioinformatics&amp;title=A%20review%20of%20feature%20selection%20techniques%20in%20bioinformatics&amp;author=Y%20Saeys&amp;author=I%20Inza&amp;author=P%20Larra%C3%B1aga&amp;volume=23&amp;publication_year=2007&amp;pages=2507-2517&amp;pmid=17720704&amp;doi=10.1093/bioinformatics/btm344&amp;" class="usa-link usa-link--external" data-ga-action="click_feat_suppl" target="_blank" rel="noopener noreferrer">Google Scholar</a>]</li>
+<li id="pone.0186906.ref012">
+<span class="label">12.</span><cite>Radovic M, Ghalwash M, Filipovic N, Obradovic Z. Minimum redundancy maximum relevance feature selection approach for temporal gene expression data. BMC Bioinformatics. 2017;18: 9
+doi: <a href="https://doi.org/10.1186/s12859-016-1423-9" class="usa-link usa-link--external" data-ga-action="click_feat_suppl" target="_blank" rel="noopener noreferrer">10.1186/s12859-016-1423-9</a>
+</cite> [<a href="https://doi.org/10.1186/s12859-016-1423-9" class="usa-link usa-link--external" data-ga-action="click_feat_suppl" target="_blank" rel="noopener noreferrer">DOI</a>] [<a href="/articles/PMC5209828/" class="usa-link">PMC free article</a>] [<a href="https://pubmed.ncbi.nlm.nih.gov/28049413/" class="usa-link">PubMed</a>] [<a href="https://scholar.google.com/scholar_lookup?journal=BMC%20Bioinformatics&amp;title=Minimum%20redundancy%20maximum%20relevance%20feature%20selection%20approach%20for%20temporal%20gene%20expression%20data&amp;author=M%20Radovic&amp;author=M%20Ghalwash&amp;author=N%20Filipovic&amp;author=Z%20Obradovic&amp;volume=18&amp;publication_year=2017&amp;pages=9&amp;pmid=28049413&amp;doi=10.1186/s12859-016-1423-9&amp;" class="usa-link usa-link--external" data-ga-action="click_feat_suppl" target="_blank" rel="noopener noreferrer">Google Scholar</a>]</li>
+<li id="pone.0186906.ref013">
+<span class="label">13.</span><cite>Gaul DA, Mezencev R, Long TQ, Jones CM, Benigno BB, Gray A, et al. 
+Highly-accurate metabolomic detection of early-stage ovarian cancer. Sci Reports. 2015;5: 16351.</cite> [<a href="https://doi.org/10.1038/srep16351" class="usa-link usa-link--external" data-ga-action="click_feat_suppl" target="_blank" rel="noopener noreferrer">DOI</a>] [<a href="/articles/PMC4647115/" class="usa-link">PMC free article</a>] [<a href="https://pubmed.ncbi.nlm.nih.gov/26573008/" class="usa-link">PubMed</a>] [<a href="https://scholar.google.com/scholar_lookup?journal=Sci%20Reports&amp;title=Highly-accurate%20metabolomic%20detection%20of%20early-stage%20ovarian%20cancer&amp;author=DA%20Gaul&amp;author=R%20Mezencev&amp;author=TQ%20Long&amp;author=CM%20Jones&amp;author=BB%20Benigno&amp;volume=5&amp;publication_year=2015&amp;pages=16351&amp;pmid=26573008&amp;doi=10.1038/srep16351&amp;" class="usa-link usa-link--external" data-ga-action="click_feat_suppl" target="_blank" rel="noopener noreferrer">Google Scholar</a>]</li>
+<li id="pone.0186906.ref014">
+<span class="label">14.</span><cite>Guan W, Zhou M, Hampton CY, Benigno BB, Walker LD, Gray A, et al. 
+Ovarian cancer detection from metabolomic liquid chromatography/mass spectrometry data by support vector machines. BMC Bioinformatics. 2009;10: 259–274. doi: <a href="https://doi.org/10.1186/1471-2105-10-259" class="usa-link usa-link--external" data-ga-action="click_feat_suppl" target="_blank" rel="noopener noreferrer">10.1186/1471-2105-10-259</a>
+</cite> [<a href="https://doi.org/10.1186/1471-2105-10-259" class="usa-link usa-link--external" data-ga-action="click_feat_suppl" target="_blank" rel="noopener noreferrer">DOI</a>] [<a href="/articles/PMC2741455/" class="usa-link">PMC free article</a>] [<a href="https://pubmed.ncbi.nlm.nih.gov/19698113/" class="usa-link">PubMed</a>] [<a href="https://scholar.google.com/scholar_lookup?journal=BMC%20Bioinformatics&amp;title=Ovarian%20cancer%20detection%20from%20metabolomic%20liquid%20chromatography/mass%20spectrometry%20data%20by%20support%20vector%20machines&amp;author=W%20Guan&amp;author=M%20Zhou&amp;author=CY%20Hampton&amp;author=BB%20Benigno&amp;author=LD%20Walker&amp;volume=10&amp;publication_year=2009&amp;pages=259-274&amp;pmid=19698113&amp;doi=10.1186/1471-2105-10-259&amp;" class="usa-link usa-link--external" data-ga-action="click_feat_suppl" target="_blank" rel="noopener noreferrer">Google Scholar</a>]</li>
+<li id="pone.0186906.ref015">
+<span class="label">15.</span><cite>Wen Y, Gorsic LK, Wheeler HE, Ziliak DM, Huang RS, Dolan ME. Chemotherapeutic-induced apoptosis: a phenotype for harmacogenomics studies. Pharmacogenet Genomics. 2011;21: 476–88. doi: <a href="https://doi.org/10.1097/FPC.0b013e3283481967" class="usa-link usa-link--external" data-ga-action="click_feat_suppl" target="_blank" rel="noopener noreferrer">10.1097/FPC.0b013e3283481967</a>
+</cite> [<a href="https://doi.org/10.1097/FPC.0b013e3283481967" class="usa-link usa-link--external" data-ga-action="click_feat_suppl" target="_blank" rel="noopener noreferrer">DOI</a>] [<a href="/articles/PMC3134538/" class="usa-link">PMC free article</a>] [<a href="https://pubmed.ncbi.nlm.nih.gov/21642893/" class="usa-link">PubMed</a>] [<a href="https://scholar.google.com/scholar_lookup?journal=Pharmacogenet%20Genomics&amp;title=Chemotherapeutic-induced%20apoptosis:%20a%20phenotype%20for%20harmacogenomics%20studies&amp;author=Y%20Wen&amp;author=LK%20Gorsic&amp;author=HE%20Wheeler&amp;author=DM%20Ziliak&amp;author=RS%20Huang&amp;volume=21&amp;publication_year=2011&amp;pages=476-88&amp;pmid=21642893&amp;doi=10.1097/FPC.0b013e3283481967&amp;" class="usa-link usa-link--external" data-ga-action="click_feat_suppl" target="_blank" rel="noopener noreferrer">Google Scholar</a>]</li>
+<li id="pone.0186906.ref016">
+<span class="label">16.</span><cite>International Cancer Genome Consortium. International network of cancer genome projects. Nature. 2010;464: 993–998. doi: <a href="https://doi.org/10.1038/nature08987" class="usa-link usa-link--external" data-ga-action="click_feat_suppl" target="_blank" rel="noopener noreferrer">10.1038/nature08987</a>
+</cite> [<a href="https://doi.org/10.1038/nature08987" class="usa-link usa-link--external" data-ga-action="click_feat_suppl" target="_blank" rel="noopener noreferrer">DOI</a>] [<a href="/articles/PMC2902243/" class="usa-link">PMC free article</a>] [<a href="https://pubmed.ncbi.nlm.nih.gov/20393554/" class="usa-link">PubMed</a>] [<a href="https://scholar.google.com/scholar_lookup?journal=Nature&amp;title=International%20network%20of%20cancer%20genome%20projects&amp;volume=464&amp;publication_year=2010&amp;pages=993-998&amp;pmid=20393554&amp;doi=10.1038/nature08987&amp;" class="usa-link usa-link--external" data-ga-action="click_feat_suppl" target="_blank" rel="noopener noreferrer">Google Scholar</a>]</li>
+<li id="pone.0186906.ref017">
+<span class="label">17.</span><cite>Hoadley KA, Yau C, Wolf DM, Cherniack AD, Tamborero D, Ng S. et al. 
+Multiplatform analysis of 12 cancer types reveals molecular classification within and across tissues of origin. Cell. 2014;158: 929–44. doi: <a href="https://doi.org/10.1016/j.cell.2014.06.049" class="usa-link usa-link--external" data-ga-action="click_feat_suppl" target="_blank" rel="noopener noreferrer">10.1016/j.cell.2014.06.049</a>
+</cite> [<a href="https://doi.org/10.1016/j.cell.2014.06.049" class="usa-link usa-link--external" data-ga-action="click_feat_suppl" target="_blank" rel="noopener noreferrer">DOI</a>] [<a href="/articles/PMC4152462/" class="usa-link">PMC free article</a>] [<a href="https://pubmed.ncbi.nlm.nih.gov/25109877/" class="usa-link">PubMed</a>] [<a href="https://scholar.google.com/scholar_lookup?journal=Cell&amp;title=Multiplatform%20analysis%20of%2012%20cancer%20types%20reveals%20molecular%20classification%20within%20and%20across%20tissues%20of%20origin&amp;author=KA%20Hoadley&amp;author=C%20Yau&amp;author=DM%20Wolf&amp;author=AD%20Cherniack&amp;author=D%20Tamborero&amp;volume=158&amp;publication_year=2014&amp;pages=929-44&amp;pmid=25109877&amp;doi=10.1016/j.cell.2014.06.049&amp;" class="usa-link usa-link--external" data-ga-action="click_feat_suppl" target="_blank" rel="noopener noreferrer">Google Scholar</a>]</li>
+<li id="pone.0186906.ref018">
+<span class="label">18.</span><cite>Azuaje F. Computational models for predicting drug responses in cancer research. Brief Bioinform. 2016;pii: bbw065 (Epub ahead of print).</cite> [<a href="https://doi.org/10.1093/bib/bbw065" class="usa-link usa-link--external" data-ga-action="click_feat_suppl" target="_blank" rel="noopener noreferrer">DOI</a>] [<a href="/articles/PMC5862310/" class="usa-link">PMC free article</a>] [<a href="https://pubmed.ncbi.nlm.nih.gov/27444372/" class="usa-link">PubMed</a>] [<a href="https://scholar.google.com/scholar_lookup?journal=Brief%20Bioinform&amp;title=Computational%20models%20for%20predicting%20drug%20responses%20in%20cancer%20research&amp;author=F%20Azuaje&amp;publication_year=2016&amp;pmid=27444372&amp;doi=10.1093/bib/bbw065&amp;" class="usa-link usa-link--external" data-ga-action="click_feat_suppl" target="_blank" rel="noopener noreferrer">Google Scholar</a>]</li>
+<li id="pone.0186906.ref019">
+<span class="label">19.</span><cite>Frampton GM, Fichtenholtz A, Otto GA, Wang K, Downing SR, He J, et al. 
+Development and validation of a clinical cancer genomic profiling test based on massively parallel DNA sequencing. Nature Biotech. 2013;31: 1023–31.</cite> [<a href="https://doi.org/10.1038/nbt.2696" class="usa-link usa-link--external" data-ga-action="click_feat_suppl" target="_blank" rel="noopener noreferrer">DOI</a>] [<a href="/articles/PMC5710001/" class="usa-link">PMC free article</a>] [<a href="https://pubmed.ncbi.nlm.nih.gov/24142049/" class="usa-link">PubMed</a>] [<a href="https://scholar.google.com/scholar_lookup?journal=Nature%20Biotech&amp;title=Development%20and%20validation%20of%20a%20clinical%20cancer%20genomic%20profiling%20test%20based%20on%20massively%20parallel%20DNA%20sequencing&amp;author=GM%20Frampton&amp;author=A%20Fichtenholtz&amp;author=GA%20Otto&amp;author=K%20Wang&amp;author=SR%20Downing&amp;volume=31&amp;publication_year=2013&amp;pages=1023-31&amp;pmid=24142049&amp;doi=10.1038/nbt.2696&amp;" class="usa-link usa-link--external" data-ga-action="click_feat_suppl" target="_blank" rel="noopener noreferrer">Google Scholar</a>]</li>
+<li id="pone.0186906.ref020">
+<span class="label">20.</span><cite>Ozols RF. Challenges for chemotherapy in ovarian cancer. Ann Oncol. 2006;17: 181–187.</cite> [<a href="https://doi.org/10.1093/annonc/mdj978" class="usa-link usa-link--external" data-ga-action="click_feat_suppl" target="_blank" rel="noopener noreferrer">DOI</a>] [<a href="https://pubmed.ncbi.nlm.nih.gov/16807453/" class="usa-link">PubMed</a>] [<a href="https://scholar.google.com/scholar_lookup?journal=Ann%20Oncol&amp;title=Challenges%20for%20chemotherapy%20in%20ovarian%20cancer&amp;author=RF%20Ozols&amp;volume=17&amp;publication_year=2006&amp;pages=181-187&amp;pmid=16807453&amp;doi=10.1093/annonc/mdj978&amp;" class="usa-link usa-link--external" data-ga-action="click_feat_suppl" target="_blank" rel="noopener noreferrer">Google Scholar</a>]</li>
+<li id="pone.0186906.ref021">
+<span class="label">21.</span><cite>Hansen SW, Tuxen MK, Sessa C. Gemcitabine in the treatment of ovarian cancer. Ann Oncol. 1999;10: 51–54.</cite> [<a href="https://doi.org/10.1023/a:1008359418422" class="usa-link usa-link--external" data-ga-action="click_feat_suppl" target="_blank" rel="noopener noreferrer">DOI</a>] [<a href="https://pubmed.ncbi.nlm.nih.gov/10219453/" class="usa-link">PubMed</a>] [<a href="https://scholar.google.com/scholar_lookup?journal=Ann%20Oncol&amp;title=Gemcitabine%20in%20the%20treatment%20of%20ovarian%20cancer&amp;author=SW%20Hansen&amp;author=MK%20Tuxen&amp;author=C%20Sessa&amp;volume=10&amp;publication_year=1999&amp;pages=51-54&amp;pmid=10219453&amp;doi=10.1023/a:1008359418422&amp;" class="usa-link usa-link--external" data-ga-action="click_feat_suppl" target="_blank" rel="noopener noreferrer">Google Scholar</a>]</li>
+<li id="pone.0186906.ref022">
+<span class="label">22.</span><cite>Bode AM, Dong Z, Precision oncology-the future of personalized cancer medicine?
+Precision Oncol. 2017;1: 2.</cite> [<a href="https://doi.org/10.1038/s41698-017-0010-5" class="usa-link usa-link--external" data-ga-action="click_feat_suppl" target="_blank" rel="noopener noreferrer">DOI</a>] [<a href="/articles/PMC5859419/" class="usa-link">PMC free article</a>] [<a href="https://pubmed.ncbi.nlm.nih.gov/29872692/" class="usa-link">PubMed</a>] [<a href="https://scholar.google.com/scholar_lookup?journal=Precision%20Oncol&amp;title=Precision%20oncology-the%20future%20of%20personalized%20cancer%20medicine?&amp;author=AM%20Bode&amp;author=Z%20Dong&amp;volume=1&amp;publication_year=2017&amp;pages=2&amp;pmid=29872692&amp;doi=10.1038/s41698-017-0010-5&amp;" class="usa-link usa-link--external" data-ga-action="click_feat_suppl" target="_blank" rel="noopener noreferrer">Google Scholar</a>]</li>
+<li id="pone.0186906.ref023">
+<span class="label">23.</span><cite>Salesse S, Verfaillie CM. BCR/ABL: from molecular mechanisms of leukemia induction to treatment of chronic myelogenous leukemia. Oncogene. 2002;21: 8547–59. doi: <a href="https://doi.org/10.1038/sj.onc.1206082" class="usa-link usa-link--external" data-ga-action="click_feat_suppl" target="_blank" rel="noopener noreferrer">10.1038/sj.onc.1206082</a>
+</cite> [<a href="https://doi.org/10.1038/sj.onc.1206082" class="usa-link usa-link--external" data-ga-action="click_feat_suppl" target="_blank" rel="noopener noreferrer">DOI</a>] [<a href="https://pubmed.ncbi.nlm.nih.gov/12476301/" class="usa-link">PubMed</a>] [<a href="https://scholar.google.com/scholar_lookup?journal=Oncogene&amp;title=BCR/ABL:%20from%20molecular%20mechanisms%20of%20leukemia%20induction%20to%20treatment%20of%20chronic%20myelogenous%20leukemia&amp;author=S%20Salesse&amp;author=CM%20Verfaillie&amp;volume=21&amp;publication_year=2002&amp;pages=8547-59&amp;pmid=12476301&amp;doi=10.1038/sj.onc.1206082&amp;" class="usa-link usa-link--external" data-ga-action="click_feat_suppl" target="_blank" rel="noopener noreferrer">Google Scholar</a>]</li>
+<li id="pone.0186906.ref024">
+<span class="label">24.</span><cite>Saez-Rodriguez J, Costello JC, Friend SH, Kellen MR, Mangravite L, Meyer P. Crowdsourcing biomedical research: leveraging communities as innovation engines. Nat Rev Genetics. 2016;17: 470–486. doi: <a href="https://doi.org/10.1038/nrg.2016.69" class="usa-link usa-link--external" data-ga-action="click_feat_suppl" target="_blank" rel="noopener noreferrer">10.1038/nrg.2016.69</a>
+</cite> [<a href="https://doi.org/10.1038/nrg.2016.69" class="usa-link usa-link--external" data-ga-action="click_feat_suppl" target="_blank" rel="noopener noreferrer">DOI</a>] [<a href="/articles/PMC5918684/" class="usa-link">PMC free article</a>] [<a href="https://pubmed.ncbi.nlm.nih.gov/27418159/" class="usa-link">PubMed</a>] [<a href="https://scholar.google.com/scholar_lookup?journal=Nat%20Rev%20Genetics&amp;title=Crowdsourcing%20biomedical%20research:%20leveraging%20communities%20as%20innovation%20engines&amp;author=J%20Saez-Rodriguez&amp;author=JC%20Costello&amp;author=SH%20Friend&amp;author=MR%20Kellen&amp;author=L%20Mangravite&amp;volume=17&amp;publication_year=2016&amp;pages=470-486&amp;pmid=27418159&amp;doi=10.1038/nrg.2016.69&amp;" class="usa-link usa-link--external" data-ga-action="click_feat_suppl" target="_blank" rel="noopener noreferrer">Google Scholar</a>]</li>
+<li id="pone.0186906.ref025">
+<span class="label">25.</span><cite>Mezencev R, McDonald JF. Snail-induced epithelial-to-mesenchymal transition of MCF-7 breast cancer cells: systems analysis of molecular changes and their effect on radiation and drug sensitivity. BMC Cancer. 2016;16: 236
+doi: <a href="https://doi.org/10.1186/s12885-016-2274-5" class="usa-link usa-link--external" data-ga-action="click_feat_suppl" target="_blank" rel="noopener noreferrer">10.1186/s12885-016-2274-5</a>
+</cite> [<a href="https://doi.org/10.1186/s12885-016-2274-5" class="usa-link usa-link--external" data-ga-action="click_feat_suppl" target="_blank" rel="noopener noreferrer">DOI</a>] [<a href="/articles/PMC4797178/" class="usa-link">PMC free article</a>] [<a href="https://pubmed.ncbi.nlm.nih.gov/26988558/" class="usa-link">PubMed</a>] [<a href="https://scholar.google.com/scholar_lookup?journal=BMC%20Cancer&amp;title=Snail-induced%20epithelial-to-mesenchymal%20transition%20of%20MCF-7%20breast%20cancer%20cells:%20systems%20analysis%20of%20molecular%20changes%20and%20their%20effect%20on%20radiation%20and%20drug%20sensitivity&amp;author=R%20Mezencev&amp;author=JF%20McDonald&amp;volume=16&amp;publication_year=2016&amp;pages=236&amp;pmid=26988558&amp;doi=10.1186/s12885-016-2274-5&amp;" class="usa-link usa-link--external" data-ga-action="click_feat_suppl" target="_blank" rel="noopener noreferrer">Google Scholar</a>]</li>
+<li id="pone.0186906.ref026">
+<span class="label">26.</span><cite>Bolstad BM, Irizarry RA, Astrand M, Speed TP. A comparison of normalization methods for high density oligonucleotide array data based on variance and bias. Bioinformatics. 2003;19: 185–193. </cite> [<a href="https://doi.org/10.1093/bioinformatics/19.2.185" class="usa-link usa-link--external" data-ga-action="click_feat_suppl" target="_blank" rel="noopener noreferrer">DOI</a>] [<a href="https://pubmed.ncbi.nlm.nih.gov/12538238/" class="usa-link">PubMed</a>] [<a href="https://scholar.google.com/scholar_lookup?journal=Bioinformatics&amp;title=A%20comparison%20of%20normalization%20methods%20for%20high%20density%20oligonucleotide%20array%20data%20based%20on%20variance%20and%20bias&amp;author=BM%20Bolstad&amp;author=RA%20Irizarry&amp;author=M%20Astrand&amp;author=TP%20Speed&amp;volume=19&amp;publication_year=2003&amp;pages=185-193&amp;pmid=12538238&amp;doi=10.1093/bioinformatics/19.2.185&amp;" class="usa-link usa-link--external" data-ga-action="click_feat_suppl" target="_blank" rel="noopener noreferrer">Google Scholar</a>]</li>
+<li id="pone.0186906.ref027">
+<span class="label">27.</span><cite>Amaratunga D, Cabrera J. Analysis of data from viral DNA microchips. J Amer Stat Assoc. 2001;96: 1161–1170.</cite> [<a href="https://scholar.google.com/scholar_lookup?journal=J%20Amer%20Stat%20Assoc&amp;title=Analysis%20of%20data%20from%20viral%20DNA%20microchips&amp;author=D%20Amaratunga&amp;author=J%20Cabrera&amp;volume=96&amp;publication_year=2001&amp;pages=1161-1170&amp;" class="usa-link usa-link--external" data-ga-action="click_feat_suppl" target="_blank" rel="noopener noreferrer">Google Scholar</a>]</li>
+<li id="pone.0186906.ref028">
+<span class="label">28.</span><cite>Gysels E, Renevey P, Celka P. SVM-based recursive feature elimination to compare phase synchronization computed from broadband and narrowband EEG signals in brain-computer interfaces. Signal Proc. 2005;85: 2178–2189.</cite> [<a href="https://scholar.google.com/scholar_lookup?journal=Signal%20Proc&amp;title=SVM-based%20recursive%20feature%20elimination%20to%20compare%20phase%20synchronization%20computed%20from%20broadband%20and%20narrowband%20EEG%20signals%20in%20brain-computer%20interfaces&amp;author=E%20Gysels&amp;author=P%20Renevey&amp;author=P%20Celka&amp;volume=85&amp;publication_year=2005&amp;pages=2178-2189&amp;" class="usa-link usa-link--external" data-ga-action="click_feat_suppl" target="_blank" rel="noopener noreferrer">Google Scholar</a>]</li>
+<li id="pone.0186906.ref029">
+<span class="label">29.</span><cite>Bedo J, Sanderson C, Kowalczyk A. An efficient alternative to SVM based recursive feature elimination with applications in natural language processing and bioinformatics In: Satter A, Kang BH, editors. AI 2006: Advances in Artificial Intelligence. Springer; 2006.  pp. 170–180.</cite> [<a href="https://scholar.google.com/scholar_lookup?title=AI%202006:%20Advances%20in%20Artificial%20Intelligence&amp;author=J%20Bedo&amp;author=C%20Sanderson&amp;author=A%20Kowalczyk&amp;author=A%20Satter&amp;author=BH%20Kang&amp;publication_year=2006&amp;" class="usa-link usa-link--external" data-ga-action="click_feat_suppl" target="_blank" rel="noopener noreferrer">Google Scholar</a>]</li>
+<li id="pone.0186906.ref030">
+<span class="label">30.</span><cite>Liu T, Tao P, Li X, Qin Y, Wang C. Prediction of subcellular location of apoptosis proteins combining tri-gram encoding based on PSSM and recursive feature elimination. J Theor Biol. 2015;366: 8–12. doi: <a href="https://doi.org/10.1016/j.jtbi.2014.11.010" class="usa-link usa-link--external" data-ga-action="click_feat_suppl" target="_blank" rel="noopener noreferrer">10.1016/j.jtbi.2014.11.010</a>
+</cite> [<a href="https://doi.org/10.1016/j.jtbi.2014.11.010" class="usa-link usa-link--external" data-ga-action="click_feat_suppl" target="_blank" rel="noopener noreferrer">DOI</a>] [<a href="https://pubmed.ncbi.nlm.nih.gov/25463695/" class="usa-link">PubMed</a>] [<a href="https://scholar.google.com/scholar_lookup?journal=J%20Theor%20Biol&amp;title=Prediction%20of%20subcellular%20location%20of%20apoptosis%20proteins%20combining%20tri-gram%20encoding%20based%20on%20PSSM%20and%20recursive%20feature%20elimination&amp;author=T%20Liu&amp;author=P%20Tao&amp;author=X%20Li&amp;author=Y%20Qin&amp;author=C%20Wang&amp;volume=366&amp;publication_year=2015&amp;pages=8-12&amp;pmid=25463695&amp;doi=10.1016/j.jtbi.2014.11.010&amp;" class="usa-link usa-link--external" data-ga-action="click_feat_suppl" target="_blank" rel="noopener noreferrer">Google Scholar</a>]</li>
+</ul></section></section><section id="_ad93_" lang="en" class="associated-data"><h2 class="pmc_sec_title">Associated Data</h2>
+<p class="font-secondary"><em>This section collects any data citations, data availability statements, or supplementary materials included in this article.</em></p>
+<section id="_adsm93_" lang="en" class="supplementary-materials"><h3 class="pmc_sec_title">Supplementary Materials</h3>
+<section class="sm xbox font-sm" id="db_ds_supplementary-material1_reqid_"><div class="caption p">
+<span>S1 File. Supporting information with additional figures.</span><p><strong>Fig A</strong>. Ranked display of -log transformed GI50 values for the other six chemotherapeutic drugs for each of the NCI-60 cell lines.</p>
+<p><strong>Fig B</strong>. Evolution of accuracy of predicted drug responses for the other six chemotherapeutic drugs using SVM-RFE selection for gene probe classifiers.</p>
+<p><strong>Fig C</strong>. Visualization of the optimal separation between drug sensitive and resistant NCI-60 cell lines for the other six chemotherapeutic drugs.</p>
+<p><strong>Fig D</strong>. The models built using data from the 9 cancer types vs. 2 cancer types.</p>
+<p><strong>Fig E</strong>. Example of expression levels for probes from the same gene, <em>NEAT1</em>.</p>
+<p><strong>Fig F.</strong> Comparison of LOO-cross validation of predicted response to carboplatin using our SVM-RFE method vs. two other commonly employed methods.</p>
+<p><strong>Fig G.</strong> Comparison of the average gene expression for the learning datasets derived from 2 cancer types (lung, melanoma) vs. 9 cancer types (brain, breast, lung, leukemia, renal, colon, ovarian, prostate and melanoma).</p>
+<p>(PDF)</p>
+</div>
+<div class="media p"><div class="caption">
+<a href="/articles/instance/5658085/bin/pone.0186906.s001.pdf" data-ga-action="click_feat_suppl" class="usa-link">Click here for additional data file.</a><sup> (1.5MB, pdf) </sup>
+</div></div></section><section class="sm xbox font-sm" id="db_ds_supplementary-material2_reqid_"><div class="caption p">
+<span>S2 File. Supporting information with additional tables.</span><p><strong>Table A.</strong> Expression values of gene probes (Affymetrix_U133_2.0_plus) for the NCI-60 cell lines.</p>
+<p><strong>Table B.</strong> Sensitivity (GI50) of NCI-60 cell lines to seven chemotherapeutic drugs.</p>
+<p><strong>Table C.</strong> Ranking of probe (feature) weights for employed in the recursive feature elimination (RFE) process for the prediction of carboplatin sensitivity.</p>
+<p><strong>Table D.</strong> Probes associated with optimal predictive accuracy for 7 chemotherapeutic drugs.</p>
+<p><strong>Table E.</strong> Several of the most informative genes predictive of carboplatin sensitivity have been directly or indirectly implicated with apoptosis.</p>
+<p><strong>Table F.</strong> Comparison between predicted response rates of ovarian cancer patients to 7 chemotherapeutic drugs and response rates as reported in the literature.</p>
+<p>(XLSX)</p>
+</div>
+<div class="media p"><div class="caption">
+<a href="/articles/instance/5658085/bin/pone.0186906.s002.xlsx" data-ga-action="click_feat_suppl" class="usa-link">Click here for additional data file.</a><sup> (26.4MB, xlsx) </sup>
+</div></div></section></section><section id="_adda93_" lang="en" class="data-availability-statement"><h3 class="pmc_sec_title">Data Availability Statement</h3>
+<p>All relevant data are within the paper and its Supporting Information files.</p></section></section></section><footer class="p courtesy-note font-secondary font-sm text-center"><hr class="headless">
+<p>Articles from PLoS ONE are provided here courtesy of <strong>PLOS</strong></p></footer></section></article>
+
+                      
+
+                    </main>
+                </div>
+            </div>
+        </div>
+
+        
+
+
+
+<!-- Secondary navigation placeholder -->
+<div class="pmc-sidenav desktop:grid-col-4 display-flex">
+    <section class="pmc-sidenav__container" aria-label="Article resources and navigation">
+        <button type="button" class="usa-button pmc-sidenav__container__close usa-button--unstyled">
+            <img src="/static/img/usa-icons/close.svg" role="img" alt="Close" />
+        </button>
+    <div class="display-none desktop:display-block">
+       <section class="margin-top-4 desktop:margin-top-0">
+              <h2 class="margin-top-0">ACTIONS</h2>
+           <ul class="usa-list usa-list--unstyled usa-list--actions">
+               
+               <li>
+                     <a
+                             href="https://doi.org/10.1371/journal.pone.0186906"
+                             class="usa-button usa-button--outline width-24 font-xs display-inline-flex flex-align-center flex-justify-start padding-left-1"
+                             target="_blank"
+                             rel="noreferrer noopener"
+                             data-ga-category="actions"
+                             data-ga-action="click"
+                             data-ga-label="publisher_link_desktop"
+                     >
+                         <svg class="usa-icon width-3 height-3" aria-hidden="true" focusable="false" role="img" hidden>
+                            <use xlink:href="/static/img/sprite.svg#launch"></use>
+                         </svg>
+                         <span class="display-inline-flex flex-justify-center flex-1 padding-right-2">View on publisher site</span>
+                     </a>
+               </li>
+               
+               
+               <li>
+                    <a
+                            href="pdf/pone.0186906.pdf"
+                            class="usa-button usa-button--outline width-24 display-inline-flex flex-align-center flex-justify-start padding-left-1"
+                            data-ga-category="actions"
+                            data-ga-action="click"
+                            data-ga-label="pdf_download_desktop"
+                    >
+                         <svg class="usa-icon width-3 height-3" aria-hidden="true" focusable="false" role="img" hidden>
+                            <use xlink:href="/static/img/sprite.svg#file_download"></use>
+                        </svg>
+                        <span class="display-inline-flex flex-justify-center flex-1">PDF (5.4 MB)</span>
+                    </a>
+               </li>
+               
+                
+               <li>
+                   <button role="button" class="usa-button width-24 citation-dialog-trigger display-inline-flex flex-align-center flex-justify-start padding-left-1"
+                        aria-label="Open dialog with citation text in different styles"
+                        data-ga-category="actions"
+                        data-ga-action="open"
+                        data-ga-label="cite_desktop"
+                        data-all-citations-url="/resources/citations/5658085/"
+                        data-citation-style="nlm"
+                        data-download-format-link="/resources/citations/5658085/export/"
+                    >
+                        <svg class="usa-icon width-3 height-3" aria-hidden="true" focusable="false" role="img" hidden>
+                            <use xlink:href="/static/img/sprite.svg#format_quote"></use>
+                        </svg>
+                       <span class="display-inline-flex flex-justify-center flex-1 button-label">Cite</span>
+                    </button>
+               </li>
+                
+               <li>
+
+                        <button class="usa-button width-24 collections-dialog-trigger collections-button display-inline-flex flex-align-center flex-justify-start padding-left-1 collections-button-empty"
+                              aria-label="Save article in MyNCBI collections."
+                              data-ga-category="actions"
+                              data-ga-action="click"
+                              data-ga-label="collections_button_desktop"
+                              data-collections-open-dialog-enabled="false"
+                              data-collections-open-dialog-url="https://account.ncbi.nlm.nih.gov/?back_url=https%3A%2F%2Fpmc.ncbi.nlm.nih.gov%2Farticles%2FPMC5658085%2F%23open-collections-dialog"
+                              data-in-collections="false">
+                            <svg class="usa-icon width-3 height-3 usa-icon--bookmark-full" aria-hidden="true" focusable="false" role="img" hidden>
+                                <use xlink:href="/static/img/action-bookmark-full.svg#icon"></use>
+                            </svg>
+                            <svg class="usa-icon width-3 height-3 usa-icon--bookmark-empty" aria-hidden="true" focusable="false" role="img" hidden>
+                                <use xlink:href="/static/img/action-bookmark-empty.svg#icon"></use>
+                            </svg>
+                            <span class="display-inline-flex flex-justify-center flex-1">Collections</span>
+                       </button>
+               </li>
+               <li class="pmc-permalink">
+                    <button
+                            type="button"
+                            class="usa-button width-24 display-inline-flex flex-align-center flex-justify padding-left-1 shadow-none"
+                            aria-label="Show article permalink"
+                            aria-expanded="false"
+                            aria-haspopup="true"
+                            data-ga-category="actions"
+                            data-ga-action="open"
+                            data-ga-label="permalink_desktop"
+                    >
+                         <svg class="usa-icon width-3 height-3" aria-hidden="true" focusable="false" role="img" hidden>
+                            <use xlink:href="/static/img/sprite.svg#share"></use>
+                        </svg>
+                        <span class="display-inline-flex flex-justify-center flex-1 button-label">Permalink</span>
+                    </button>
+                   
+
+<div class="pmc-permalink__dropdown" hidden>
+    <div class="pmc-permalink__dropdown__container">
+          <h2 class="usa-modal__heading margin-top-0 margin-bottom-2 text-uppercase font-sans-xs">PERMALINK</h2>
+          <div class="pmc-permalink__dropdown__content">
+              <input type="text" class="usa-input" value="https://pmc.ncbi.nlm.nih.gov/articles/PMC5658085/" aria-label="Article permalink">
+              <button class="usa-button display-inline-flex pmc-permalink__dropdown__copy__btn margin-right-0" title="Copy article permalink" data-ga-category="save_share" data-ga-action="link" data-ga-label="copy_link">
+                  <svg class="usa-icon" aria-hidden="true" focusable="false" role="img">
+                    <use xlink:href="/static/img/sprite.svg#content_copy"></use>
+                  </svg>
+                  <span class="margin-left-1">Copy</span>
+              </button>
+          </div>
+    </div>
+</div>
+               </li>
+           </ul>
+       </section>
+     </div>
+
+        <section class="pmc-resources margin-top-6 desktop:margin-top-4" data-page-path="/articles/PMC5658085/">
+            <h2 class="margin-top-0">RESOURCES</h2>
+            
+                <div class="usa-accordion usa-accordion--multiselectable" data-allow-multiple>
+                    <h3 class="usa-accordion__heading">
+                        <button
+                        type="button"
+                        class="usa-accordion__button"
+                        aria-expanded="false"
+                        aria-controls="resources-similar-articles"
+                        data-ga-category="resources_accordion"
+                        data-ga-action="open_similar_articles"
+                        data-ga-label="/articles/PMC5658085/"
+                        data-action-open="open_similar_articles"
+                        data-action-close="close_similar_articles"
+                        >
+                            Similar articles
+                        </button>
+                    </h3>
+                    <div
+                            id="resources-similar-articles"
+                            class="usa-accordion__content usa-prose"
+                            
+                                data-source-url="/resources/similar-article-links/29073279/"
+                            
+                    >
+                        
+                    </div>
+                    <h3 class="usa-accordion__heading">
+                        <button
+                        type="button"
+                        class="usa-accordion__button"
+                        aria-expanded="false"
+                        aria-controls="resources-cited-by-other-articles"
+                        data-ga-category="resources_accordion"
+                        data-ga-action="open_cited_by"
+                        data-ga-label="/articles/PMC5658085/"
+                        data-action-open="open_cited_by"
+                        data-action-close="close_cited_by"
+                        >
+                             Cited by other articles
+                        </button>
+                    </h3>
+                    <div
+                            id="resources-cited-by-other-articles"
+                            class="usa-accordion__content usa-prose"
+                            
+                                data-source-url="/resources/cited-by-links/29073279/"
+                            
+                    >
+                          
+                    </div>
+                    
+                        <h3 class="usa-accordion__heading">
+                            <button
+                            type="button"
+                            class="usa-accordion__button"
+                            aria-expanded="false"
+                            aria-controls="resources-links-to-ncbi-databases"
+                            data-ga-category="resources_accordion"
+                            data-ga-action="open_NCBI_links"
+                            data-ga-label="/articles/PMC5658085/"
+                            data-action-open="open_NCBI_links"
+                            data-action-close="close_NCBI_link"
+                            >
+                                 Links to NCBI Databases
+                            </button>
+                        </h3>
+                        <div
+                                id="resources-links-to-ncbi-databases"
+                                class="usa-accordion__content usa-prose"
+                                data-source-url="/resources/db-links/5658085/"
+                        >
+                        </div>
+                    
+                    
+                </div>
+            
+        </section>
+
+
+        <section
+        class="usa-in-page-nav usa-in-page-nav--wide margin-top-6 desktop:margin-top-4"
+        data-title-text="On this page"
+        data-title-heading-level="h2"
+        data-scroll-offset="0"
+        data-root-margin="-10% 0px -80% 0px"
+        data-main-content-selector="main"
+        data-threshold="1"
+        hidden
+        ></section>
+    </section>
+</div>
+
+
+        
+
+<div class="overlay" role="dialog" aria-label="Citation Dialog" hidden>
+    <div class="dialog citation-dialog" aria-hidden="true">
+        <div class="display-inline-flex flex-align-center flex-justify width-full margin-bottom-2">
+            <h2 class="usa-modal__heading margin-0">Cite</h2>
+             <button type="button" class="usa-button usa-button--unstyled close-overlay text-black width-auto"  tabindex="1">
+                <svg class="usa-icon width-3 height-3" aria-hidden="true" focusable="false" role="img">
+                    <use xlink:href="/static/img/sprite.svg#close"></use>
+                </svg>
+             </button>
+        </div>
+
+        
+
+<div class="citation-text-block">
+  <div class="citation-text margin-bottom-2"></div>
+  <ul class="usa-list usa-list--unstyled display-inline-flex flex-justify width-full flex-align-center">
+      <li>
+        <button
+          class="usa-button usa-button--unstyled text-no-underline display-flex flex-align-center copy-button dialog-focus"
+          data-ga-category="save_share"
+          data-ga-action="cite"
+          data-ga-label="copy"
+          tabindex="2">
+            <svg class="usa-icon width-3 height-3" aria-hidden="true" focusable="false" role="img">
+                <use xlink:href="/static/img/sprite.svg#content_copy"></use>
+            </svg>
+            <span>Copy</span>
+        </button>
+      </li>
+      <li>
+          <a
+              href="#"
+              role="button"
+              class="usa-button usa-button--unstyled text-no-underline display-flex flex-align-center export-button"
+              data-ga-category="save_share"
+              data-ga-action="cite"
+              data-ga-label="download"
+              title="Download a file for external citation management software"
+              tabindex="3">
+                <svg class="usa-icon width-3 height-3" aria-hidden="true" focusable="false" role="img">
+                    <use xlink:href="/static/img/sprite.svg#file_download"></use>
+                </svg>
+                <span class="display-none mobile-lg:display-inline">Download .nbib</span>
+                <span class="display-inline mobile-lg:display-none">.nbib</span>
+            </a>
+      </li>
+      <li>
+          
+
+<div class="display-inline-flex flex-align-center">
+  <label class="usa-label margin-top-0">Format:</label>
+  <select aria-label="Format" class="usa-select citation-style-selector padding-1 margin-top-0 border-0 padding-right-4" tabindex="4" >
+    
+      <option data-style-url-name="ama"
+              value="AMA"
+              >
+        AMA
+      </option>
+    
+      <option data-style-url-name="apa"
+              value="APA"
+              >
+        APA
+      </option>
+    
+      <option data-style-url-name="mla"
+              value="MLA"
+              >
+        MLA
+      </option>
+    
+      <option data-style-url-name="nlm"
+              value="NLM"
+              selected="selected">
+        NLM
+      </option>
+    
+  </select>
+</div>
+      </li>
+  </ul>
+</div>
+    </div>
+</div>
+
+        <div class="overlay" role="dialog" hidden>
+  <div id="collections-action-dialog" class="dialog collections-dialog" aria-hidden="true">
+   <div class="display-inline-flex flex-align-center flex-justify width-full margin-bottom-2">
+        <h2 class="usa-modal__heading margin-0">Add to Collections</h2>
+    </div>
+    <div class="collections-action-panel action-panel">
+      
+
+
+<form id="collections-action-dialog-form"
+      class="usa-form maxw-full collections-action-panel-form action-panel-content action-form action-panel-smaller-selectors"
+      data-existing-collections-url="/list-existing-collections/"
+      data-add-to-existing-collection-url="/add-to-existing-collection/"
+      data-create-and-add-to-new-collection-url="/create-and-add-to-new-collection/"
+      data-myncbi-max-collection-name-length="100"
+      data-collections-root-url="https://www.ncbi.nlm.nih.gov/myncbi/collections/">
+
+    <input type="hidden" name="csrfmiddlewaretoken" value="sEQM3oBRRYWwnDSPH0D1Sq9cPolXdq3IHaaFR5rmzkd1YvYcTSKsHqsJRFKUTaer">
+
+    <fieldset class="usa-fieldset margin-bottom-2">
+        <div class="usa-radio">
+            <input type="radio"
+            id="collections-action-dialog-new"
+            class="usa-radio__input usa-radio__input--tile collections-new  margin-top-0"
+            name="collections"
+            value="new"
+            data-ga-category="collections_button"
+            data-ga-action="click"
+            data-ga-label="collections_radio_new" />
+            <label class="usa-radio__label" for="collections-action-dialog-new">Create a new collection</label>
+        </div>
+        <div class="usa-radio">
+            <input type="radio"
+            id="collections-action-dialog-existing"
+            class="usa-radio__input usa-radio__input--tile collections-existing"
+            name="collections"
+            value="existing"
+            checked="true"
+            data-ga-category="collections_button"
+            data-ga-action="click"
+            data-ga-label="collections_radio_existing" />
+            <label class="usa-radio__label" for="collections-action-dialog-existing">Add to an existing collection</label>
+        </div>
+    </fieldset>
+
+    <fieldset class="usa-fieldset margin-bottom-2">
+        <div class="action-panel-control-wrap new-collections-controls">
+           <label for="collections-action-dialog-add-to-new" class="usa-label margin-top-0">
+                Name your collection
+               <abbr title="required" class="usa-hint usa-hint--required text-no-underline">*</abbr>
+          </label>
+          <input
+            type="text"
+            name="add-to-new-collection"
+            id="collections-action-dialog-add-to-new"
+            class="usa-input collections-action-add-to-new"
+            pattern="[^&quot;&amp;=&lt;&gt;/]*" title="The following characters are not allowed in the Name field: &quot;&amp;=&lt;&gt;/"
+            maxlength=""
+            data-ga-category="collections_button"
+            data-ga-action="create_collection"
+            data-ga-label="non_favorties_collection"
+            required
+          />
+        </div>
+        <div class="action-panel-control-wrap existing-collections-controls">
+             <label for="collections-action-dialog-add-to-existing" class="usa-label margin-top-0">
+                Choose a collection
+              </label>
+              <select id="collections-action-dialog-add-to-existing"
+                      class="usa-select collections-action-add-to-existing"
+                      data-ga-category="collections_button"
+                      data-ga-action="select_collection"
+                      data-ga-label="($('.collections-action-add-to-existing').val() === 'Favorites') ? 'Favorites' : 'non_favorites_collection'">
+              </select>
+              <div class="collections-retry-load-on-error usa-input-error-message selection-validation-message">
+                Unable to load your collection due to an error<br>
+                <a href="#">Please try again</a>
+              </div>
+        </div>
+    </fieldset>
+
+    <div class="display-inline-flex">
+        <button class="usa-button margin-top-0 action-panel-submit"
+            type="submit"
+            data-loading-label="Adding..."
+            data-pinger-ignore
+            data-ga-category="collections_button"
+            data-ga-action="click"
+            data-ga-label="add">
+          Add
+        </button>
+        <button class="usa-button usa-button--outline margin-top-0 action-panel-cancel"
+                aria-label="Close 'Add to Collections' panel"
+                ref="linksrc=close_collections_panel"
+                data-ga-category="collections_button"
+                data-ga-action="click"
+                data-ga-label="cancel">
+          Cancel
+        </button>
+    </div>
+</form>
+    </div>
+  </div>
+</div>
+
+        
+
+      </div>
+    </div>
+  </div>
+
+
+
+        
+    
+    
+
+<footer class="ncbi-footer ncbi-dark-background " >
+    
+        <div class="ncbi-footer__icon-section">
+            <div class="ncbi-footer__social-header">
+                Follow NCBI
+            </div>
+
+            <div class="grid-container ncbi-footer__ncbi-social-icons-container">
+                
+                    <a href="https://twitter.com/ncbi"
+                       class="ncbi-footer__social-icon ncbi-footer__social-icon--gray"
+                       target="_blank"
+                       rel="noreferrer noopener">
+                        <svg width="40"
+                             height="40"
+                             viewBox="0 0 40 40"
+                             fill="none"
+                             xmlns="http://www.w3.org/2000/svg"
+                             focusable="false"
+                             aria-hidden="true">
+                            <path d="m6.067 8 10.81 13.9L6 33.2h4.2l8.4-9.1 7.068 9.1H34L22.8 18.5 31.9 8h-3.5l-7.7 8.4L14.401 8H6.067Zm3.6 1.734h3.266l16.8 21.732H26.57L9.668 9.734Z">
+                            </path>
+                        </svg>
+                        <span class="usa-sr-only">NCBI on X (formerly known as Twitter)</span>
+                    </a>
+                
+
+                
+                    <a href="https://www.facebook.com/ncbi.nlm"
+                       class="ncbi-footer__social-icon ncbi-footer__social-icon--gray"
+                       target="_blank"
+                       rel="noreferrer noopener">
+                        <svg width="16"
+                             height="29"
+                             focusable="false"
+                             aria-hidden="true"
+                             viewBox="0 0 16 29"
+                             fill="none"
+                             xmlns="http://www.w3.org/2000/svg">
+                            <path d="M3.8809 21.4002C3.8809 19.0932 3.8809 16.7876 3.8809 14.478C3.8809 14.2117 3.80103 14.1452 3.54278 14.1492C2.53372 14.1638 1.52334 14.1492 0.514288 14.1598C0.302626 14.1598 0.248047 14.0972 0.248047 13.8936C0.256034 12.4585 0.256034 11.0239 0.248047 9.58978C0.248047 9.37013 0.302626 9.30224 0.528931 9.3049C1.53798 9.31688 2.54837 9.3049 3.55742 9.31555C3.80103 9.31555 3.8809 9.26097 3.87957 9.00272C3.87158 8.00565 3.85428 7.00592 3.90753 6.00884C3.97142 4.83339 4.31487 3.73115 5.04437 2.78467C5.93095 1.63318 7.15699 1.09005 8.56141 0.967577C10.5582 0.79319 12.555 0.982221 14.5518 0.927641C14.7102 0.927641 14.7462 0.99287 14.7449 1.13664C14.7449 2.581 14.7449 4.02668 14.7449 5.47104C14.7449 5.67604 14.6517 5.68669 14.4946 5.68669C13.4523 5.68669 12.4113 5.68669 11.3703 5.68669C10.3506 5.68669 9.92057 6.10868 9.90593 7.13904C9.89661 7.7647 9.91525 8.39303 9.89794 9.01869C9.88995 9.26364 9.96583 9.31822 10.2015 9.31688C11.7204 9.30623 13.2393 9.31688 14.7595 9.3049C15.0257 9.3049 15.0723 9.3728 15.0444 9.62439C14.89 10.9849 14.7515 12.3467 14.6144 13.7085C14.5691 14.1571 14.5785 14.1585 14.1458 14.1585C12.8386 14.1585 11.5313 14.1665 10.2254 14.1518C9.95119 14.1518 9.89794 14.2317 9.89794 14.4899C9.90593 19.0799 9.89794 23.6752 9.91125 28.2612C9.91125 28.5674 9.8407 28.646 9.53186 28.6433C7.77866 28.6273 6.02414 28.6366 4.27094 28.634C3.82499 28.634 3.87158 28.6992 3.87158 28.22C3.87602 25.9472 3.87913 23.6739 3.8809 21.4002Z">
+                            </path>
+                        </svg>
+                        <span class="usa-sr-only">NCBI on Facebook</span>
+                    </a>
+                
+
+                
+                    <a href="https://www.linkedin.com/company/ncbinlm"
+                       class="ncbi-footer__social-icon ncbi-footer__social-icon--gray"
+                       target="_blank"
+                       rel="noreferrer noopener">
+                        <svg width="25"
+                             height="23"
+                             viewBox="0 0 26 24"
+                             fill="none"
+                             xmlns="http://www.w3.org/2000/svg"
+                             focusable="false"
+                             aria-hidden="true">
+                            <path d="M14.6983 9.98423C15.6302 9.24808 16.5926 8.74754 17.6762 8.51991C19.673 8.09126 21.554 8.30824 23.1262 9.7526C24.2351 10.7723 24.7529 12.1115 25.0165 13.5612C25.1486 14.3363 25.2105 15.1218 25.2015 15.9081C25.2015 18.3043 25.2015 20.6898 25.2082 23.0806C25.2082 23.3468 25.1549 23.444 24.8621 23.4414C23.1297 23.4272 21.3992 23.4272 19.6704 23.4414C19.4041 23.4414 19.3429 23.3588 19.3442 23.1019C19.3535 20.5194 19.3442 17.9368 19.3442 15.3543C19.3442 14.0005 18.3258 12.9448 17.0266 12.9488C15.7273 12.9528 14.6983 14.0071 14.6983 15.361C14.6983 17.9328 14.6917 20.5047 14.6983 23.0753C14.6983 23.3708 14.6198 23.444 14.3296 23.4427C12.6185 23.4294 10.9079 23.4294 9.19779 23.4427C8.93155 23.4427 8.86099 23.3735 8.86232 23.1086C8.8783 19.7619 8.88628 16.4144 8.88628 13.066C8.88628 11.5688 8.87874 10.0708 8.86365 8.57182C8.86365 8.3575 8.90758 8.27896 9.14054 8.28029C10.9048 8.29094 12.6687 8.29094 14.4321 8.28029C14.6464 8.28029 14.6983 8.34818 14.6983 8.54653C14.6903 9.00047 14.6983 9.45441 14.6983 9.98423Z">
+                            </path>
+                            <path d="M6.55316 15.8443C6.55316 18.2564 6.55316 20.6699 6.55316 23.082C6.55316 23.3629 6.48127 23.4388 6.19906 23.4374C4.47737 23.4241 2.75568 23.4241 1.03399 23.4374C0.767751 23.4374 0.69986 23.3629 0.701191 23.1006C0.709178 18.2648 0.709178 13.4281 0.701191 8.59053C0.701191 8.34026 0.765089 8.27237 1.01669 8.2737C2.74991 8.28435 4.48048 8.28435 6.20838 8.2737C6.47462 8.2737 6.5465 8.33627 6.54517 8.6065C6.54783 11.0186 6.55316 13.4308 6.55316 15.8443Z">
+                            </path>
+                            <path d="M3.65878 0.243898C5.36804 0.243898 6.58743 1.45529 6.58743 3.1406C6.58743 4.75801 5.32145 5.95742 3.60819 5.96807C3.22177 5.97614 2.83768 5.90639 2.47877 5.76299C2.11985 5.61959 1.79344 5.40546 1.51897 5.13334C1.24449 4.86123 1.02755 4.53668 0.881058 4.17902C0.734563 3.82136 0.661505 3.43788 0.666231 3.05141C0.67555 1.42601 1.9362 0.242566 3.65878 0.243898Z">
+                            </path>
+                        </svg>
+                        <span class="usa-sr-only">NCBI on LinkedIn</span>
+                    </a>
+                
+
+                
+                    <a href="https://github.com/ncbi"
+                       class="ncbi-footer__social-icon ncbi-footer__social-icon--gray"
+                       target="_blank"
+                       rel="noreferrer noopener">
+                        <svg width="28"
+                             height="27"
+                             viewBox="0 0 28 28"
+                             fill="none"
+                             xmlns="http://www.w3.org/2000/svg"
+                             focusable="false"
+                             aria-hidden="true">
+                            <path d="M16.7228 20.6334C17.5057 20.5527 18.2786 20.3944 19.0301 20.1608C21.3108 19.4193 22.5822 17.8259 22.963 15.4909C23.1228 14.5112 23.1814 13.5287 22.9883 12.5437C22.8106 11.6423 22.4013 10.8028 21.8007 10.1076C21.7526 10.0605 21.7197 10 21.7064 9.934C21.6931 9.86799 21.7 9.79952 21.7262 9.73748C22.0856 8.6206 21.9711 7.51969 21.601 6.42677C21.582 6.3497 21.5345 6.2827 21.468 6.23923C21.4016 6.19577 21.3211 6.17906 21.2429 6.19248C20.7329 6.21649 20.2313 6.33051 19.7611 6.52928C19.1103 6.7908 18.4899 7.12198 17.9104 7.51703C17.84 7.56996 17.7581 7.60551 17.6713 7.62078C17.5846 7.63605 17.4954 7.6306 17.4112 7.60489C15.2596 7.05882 13.0054 7.06203 10.8554 7.61421C10.7806 7.63586 10.7018 7.63967 10.6253 7.62534C10.5487 7.611 10.4766 7.57892 10.4148 7.53167C9.64788 7.03247 8.85171 6.58918 7.96368 6.33359C7.65781 6.24338 7.34123 6.19458 7.02239 6.18849C6.94879 6.17986 6.87462 6.19893 6.81432 6.242C6.75402 6.28507 6.71191 6.34904 6.69621 6.42145C6.32342 7.51437 6.2209 8.61527 6.56307 9.73348C6.59635 9.84264 6.64694 9.93316 6.54177 10.0516C5.47666 11.2604 5.09988 12.6834 5.19574 14.2676C5.2663 15.4244 5.46201 16.5466 6.01454 17.5769C6.84399 19.1171 8.21664 19.9119 9.85158 20.3352C10.3938 20.4706 10.9444 20.5698 11.4998 20.632C11.5384 20.7492 11.4506 20.7798 11.408 20.8291C11.1734 21.1179 10.9894 21.4441 10.8634 21.7942C10.7622 22.0458 10.8315 22.4039 10.6065 22.5516C10.263 22.7766 9.83827 22.8485 9.42421 22.8871C8.17936 23.0056 7.26471 22.4877 6.6283 21.4348C6.25552 20.8184 5.76956 20.3325 5.08523 20.0663C4.76981 19.9325 4.42139 19.8967 4.08537 19.9638C3.7898 20.029 3.73788 20.1901 3.93891 20.4111C4.03639 20.5234 4.14989 20.6207 4.27575 20.6999C4.9796 21.1318 5.51717 21.7884 5.80152 22.5636C6.37002 23.9973 7.48039 24.5697 8.93825 24.6323C9.43741 24.6575 9.93768 24.615 10.4254 24.5058C10.5892 24.4672 10.6531 24.4872 10.6517 24.6762C10.6451 25.4936 10.6637 26.3123 10.6517 27.131C10.6517 27.6635 10.1684 27.9297 9.58663 27.7393C8.17396 27.2671 6.84977 26.5631 5.66838 25.656C2.59555 23.2891 0.720966 20.1861 0.217704 16.3376C-0.357453 11.9127 0.911353 8.00824 3.98551 4.73881C6.11909 2.42656 8.99932 0.939975 12.1203 0.540191C16.5351 -0.0601815 20.4347 1.14323 23.7232 4.16373C26.2449 6.47869 27.724 9.37672 28.1048 12.7726C28.5828 17.0325 27.3686 20.7945 24.4768 23.9827C22.9762 25.6323 21.0956 26.8908 18.9982 27.6488C18.8783 27.6927 18.7585 27.738 18.636 27.7726C18.0356 27.9404 17.6189 27.6395 17.6189 27.0098C17.6189 25.7452 17.6308 24.4806 17.6295 23.2159C17.6329 22.9506 17.6128 22.6856 17.5696 22.4238C17.4325 21.6664 17.3419 21.484 16.7228 20.6334Z">
+                            </path>
+                        </svg>
+                        <span class="usa-sr-only">NCBI on GitHub</span>
+                    </a>
+                
+
+                
+                    <a href="https://ncbiinsights.ncbi.nlm.nih.gov/"
+                       class="ncbi-footer__social-icon ncbi-footer__social-icon--gray"
+                       target="_blank"
+                       rel="noreferrer noopener">
+                        <svg width="26"
+                             height="26"
+                             viewBox="0 0 27 27"
+                             fill="none"
+                             xmlns="http://www.w3.org/2000/svg"
+                             focusable="false"
+                             aria-hidden="true">
+                            <path d="M23.7778 26.4574C23.1354 26.3913 22.0856 26.8024 21.636 26.3087C21.212 25.8444 21.4359 24.8111 21.324 24.0347C19.9933 14.8323 14.8727 8.80132 6.09057 5.85008C4.37689 5.28406 2.58381 4.99533 0.779072 4.99481C0.202773 4.99481 -0.0229751 4.83146 0.00455514 4.21479C0.0660406 3.08627 0.0660406 1.95525 0.00455514 0.826734C-0.0413285 0.0815827 0.259669 -0.0193618 0.896534 0.00266238C6.96236 0.222904 12.3693 2.24179 16.9889 6.16209C22.9794 11.2478 26.1271 17.7688 26.4372 25.648C26.4629 26.294 26.3179 26.5271 25.6609 26.4684C25.0827 26.417 24.4991 26.4574 23.7778 26.4574Z">
+                            </path>
+                            <path d="M14.8265 26.441C14.0924 26.441 13.2371 26.6795 12.6626 26.3786C12.0092 26.0372 12.3781 25.0644 12.246 24.378C11.1154 18.5324 6.6849 14.5497 0.74755 14.1001C0.217135 14.0615 -0.0104482 13.9422 0.0134113 13.3659C0.0519536 12.1454 0.0482829 10.9213 0.0134113 9.69524C-0.00127145 9.14464 0.196946 9.03268 0.703502 9.04736C9.21217 9.27128 16.5994 16.2511 17.2804 24.7231C17.418 26.4446 17.418 26.4446 15.6579 26.4446H14.832L14.8265 26.441Z">
+                            </path>
+                            <path d="M3.58928 26.4555C2.64447 26.4618 1.73584 26.0925 1.06329 25.4289C0.39073 24.7653 0.00933763 23.8617 0.0030097 22.9169C-0.00331824 21.9721 0.365937 21.0635 1.02954 20.3909C1.69315 19.7184 2.59675 19.337 3.54156 19.3306C4.48637 19.3243 5.39499 19.6936 6.06755 20.3572C6.7401 21.0208 7.1215 21.9244 7.12782 22.8692C7.13415 23.814 6.7649 24.7226 6.10129 25.3952C5.43768 26.0677 4.53409 26.4491 3.58928 26.4555Z">
+                            </path>
+                        </svg>
+                        <span class="usa-sr-only">NCBI RSS feed</span>
+                    </a>
+                
+            </div>
+        </div>
+    
+
+    <div data-testid="gridContainer"
+         class="grid-container ncbi-footer__container">
+        <div class="grid-row ncbi-footer__main-content-container"
+             data-testid="grid">
+            
+                <div class="ncbi-footer__column">
+                    
+                        <p class="ncbi-footer__circled-icons-heading">
+                            Connect with NLM
+                        </p>
+                    
+
+                    <div class="ncbi-footer__circled-icons-list">
+                        
+                            <a href=https://twitter.com/nlm_nih class="ncbi-footer__social-icon ncbi-footer__social-icon--circled" target="_blank" rel="noreferrer noopener">
+                                <svg width="32"
+                                     height="32"
+                                     viewBox="0 0 40 40"
+                                     fill="none"
+                                     xmlns="http://www.w3.org/2000/svg"
+                                     focusable="false"
+                                     aria-hidden="true">
+                                    <path d="m6.067 8 10.81 13.9L6 33.2h4.2l8.4-9.1 7.068 9.1H34L22.8 18.5 31.9 8h-3.5l-7.7 8.4L14.401 8H6.067Zm3.6 1.734h3.266l16.8 21.732H26.57L9.668 9.734Z">
+                                    </path>
+                                </svg>
+                                <span class="usa-sr-only">NLM on X (formerly known as Twitter)</span>
+                            </a>
+                        
+
+                        
+                            <a href=https://www.facebook.com/nationallibraryofmedicine class="ncbi-footer__social-icon ncbi-footer__social-icon--circled" target="_blank" rel="noreferrer noopener">
+                                <svg width="13"
+                                     height="24"
+                                     viewBox="0 0 13 24"
+                                     fill="none"
+                                     xmlns="http://www.w3.org/2000/svg"
+                                     focusable="false"
+                                     aria-hidden="true">
+                                    <path d="M4.11371 23.1369C4.11371 23.082 4.11371 23.0294 4.11371 22.9745V12.9411H0.817305C0.6709 12.9411 0.670898 12.9411 0.670898 12.8016C0.670898 11.564 0.670898 10.3287 0.670898 9.09341C0.670898 8.97903 0.705213 8.95158 0.815017 8.95158C1.8673 8.95158 2.91959 8.95158 3.97417 8.95158H4.12057V8.83263C4.12057 7.8055 4.12057 6.7738 4.12057 5.74897C4.1264 4.92595 4.31387 4.11437 4.66959 3.37217C5.12916 2.38246 5.94651 1.60353 6.95717 1.1921C7.64827 0.905008 8.3913 0.764035 9.13953 0.778051C10.0019 0.791777 10.8644 0.830666 11.7268 0.860404C11.8869 0.860404 12.047 0.894717 12.2072 0.90158C12.2964 0.90158 12.3261 0.940469 12.3261 1.02968C12.3261 1.5421 12.3261 2.05452 12.3261 2.56465C12.3261 3.16857 12.3261 3.7725 12.3261 4.37642C12.3261 4.48165 12.2964 4.51367 12.1912 4.51138C11.5369 4.51138 10.8804 4.51138 10.2261 4.51138C9.92772 4.51814 9.63058 4.5526 9.33855 4.61433C9.08125 4.6617 8.84537 4.78881 8.66431 4.97766C8.48326 5.16652 8.3662 5.40755 8.32972 5.66661C8.28476 5.89271 8.26027 6.1224 8.25652 6.35289C8.25652 7.19014 8.25652 8.02969 8.25652 8.86923C8.25652 8.89439 8.25652 8.91955 8.25652 8.95615H12.0219C12.1797 8.95615 12.182 8.95616 12.1614 9.10714C12.0768 9.76596 11.9876 10.4248 11.9029 11.0813C11.8312 11.6319 11.7626 12.1824 11.697 12.733C11.6719 12.9434 11.6787 12.9434 11.4683 12.9434H8.26338V22.899C8.26338 22.979 8.26338 23.0591 8.26338 23.1392L4.11371 23.1369Z">
+                                    </path>
+                                </svg>
+                                <span class="usa-sr-only">NLM on Facebook</span>
+                            </a>
+                        
+
+                        
+                            <a href=https://www.youtube.com/user/NLMNIH class="ncbi-footer__social-icon ncbi-footer__social-icon--circled" target="_blank" rel="noreferrer noopener">
+                                <svg width="21"
+                                     height="15"
+                                     viewBox="0 0 21 15"
+                                     fill="none"
+                                     xmlns="http://www.w3.org/2000/svg"
+                                     focusable="false"
+                                     aria-hidden="true">
+                                    <path d="M19.2561 1.47914C18.9016 1.15888 18.5699 0.957569 17.2271 0.834039C15.5503 0.678484 13.2787 0.655608 11.563 0.65332H9.43556C7.71987 0.65332 5.4483 0.678484 3.77151 0.834039C2.43098 0.957569 2.097 1.15888 1.74242 1.47914C0.813665 2.32097 0.619221 4.62685 0.598633 6.89384C0.598633 7.31781 0.598633 7.74101 0.598633 8.16345C0.626084 10.4121 0.827391 12.686 1.74242 13.521C2.097 13.8412 2.4287 14.0425 3.77151 14.1661C5.4483 14.3216 7.71987 14.3445 9.43556 14.3468H11.563C13.2787 14.3468 15.5503 14.3216 17.2271 14.1661C18.5676 14.0425 18.9016 13.8412 19.2561 13.521C20.1712 12.6929 20.3725 10.451 20.3999 8.22064C20.3999 7.74025 20.3999 7.25986 20.3999 6.77946C20.3725 4.54907 20.1689 2.30724 19.2561 1.47914ZM8.55942 10.5311V4.65201L13.5601 7.50005L8.55942 10.5311Z"
+                                          fill="white" />
+                                </svg>
+                                <span class="usa-sr-only">NLM on YouTube</span>
+                            </a>
+                        
+                    </div>
+                </div>
+            
+
+            
+                <address class="ncbi-footer__address ncbi-footer__column">
+                    
+        <p>
+            <a class="usa-link usa-link--external"
+            href="https://www.google.com/maps/place/8600+Rockville+Pike,+Bethesda,+MD+20894/%4038.9959508,
+            -77.101021,17z/data%3D!3m1!4b1!4m5!3m4!1s0x89b7c95e25765ddb%3A0x19156f88b27635b8!8m2!3d38.9959508!
+            4d-77.0988323"
+            rel="noopener noreferrer" target="_blank">National Library of Medicine
+            <br/> 8600 Rockville Pike<br/> Bethesda, MD 20894</a>
+        </p>
+    
+                </address>
+            
+
+            
+                <ul class="usa-list usa-list--unstyled ncbi-footer__vertical-list ncbi-footer__column">
+                    
+                        <li class="ncbi-footer__vertical-list-item">
+                            
+
+
+
+
+
+
+
+
+
+    <a href="https://www.nlm.nih.gov/web_policies.html" class="usa-link  usa-link--alt ncbi-footer__link"  >
+        
+
+        
+            Web Policies
+        
+
+        
+    </a>
+
+
+                        </li>
+                    
+                        <li class="ncbi-footer__vertical-list-item">
+                            
+
+
+
+
+
+
+
+
+
+    <a href="https://www.nih.gov/institutes-nih/nih-office-director/office-communications-public-liaison/freedom-information-act-office" class="usa-link  usa-link--alt ncbi-footer__link"  >
+        
+
+        
+            FOIA
+        
+
+        
+    </a>
+
+
+                        </li>
+                    
+                        <li class="ncbi-footer__vertical-list-item">
+                            
+
+
+
+
+
+
+
+
+
+    <a href="https://www.hhs.gov/vulnerability-disclosure-policy/index.html" class="usa-link usa-link--external usa-link--alt ncbi-footer__link" rel="noreferrer noopener" target='_blank' >
+        
+
+        
+            HHS Vulnerability Disclosure
+        
+
+        
+    </a>
+
+
+                        </li>
+                    
+                </ul>
+            
+
+            
+                <ul class="usa-list usa-list--unstyled ncbi-footer__vertical-list ncbi-footer__column">
+                    
+                        <li class="ncbi-footer__vertical-list-item">
+                            
+
+
+
+
+
+
+
+
+
+    <a href="https://support.nlm.nih.gov/" class="usa-link  usa-link--alt ncbi-footer__link"  >
+        
+
+        
+            Help
+        
+
+        
+    </a>
+
+
+                        </li>
+                    
+                        <li class="ncbi-footer__vertical-list-item">
+                            
+
+
+
+
+
+
+
+
+
+    <a href="https://www.nlm.nih.gov/accessibility.html" class="usa-link  usa-link--alt ncbi-footer__link"  >
+        
+
+        
+            Accessibility
+        
+
+        
+    </a>
+
+
+                        </li>
+                    
+                        <li class="ncbi-footer__vertical-list-item">
+                            
+
+
+
+
+
+
+
+
+
+    <a href="https://www.nlm.nih.gov/careers/careers.html" class="usa-link  usa-link--alt ncbi-footer__link"  >
+        
+
+        
+            Careers
+        
+
+        
+    </a>
+
+
+                        </li>
+                    
+                </ul>
+            
+        </div>
+
+        
+            <div class="grid-row grid-col-12" data-testid="grid">
+                <ul class="ncbi-footer__bottom-links-list">
+                    
+                        <li class="ncbi-footer__bottom-list-item">
+                            
+
+
+
+
+
+
+
+
+
+    <a href="https://www.nlm.nih.gov/" class="usa-link  usa-link--alt ncbi-footer__link"  >
+        
+
+        
+            NLM
+        
+
+        
+    </a>
+
+
+                        </li>
+                    
+                        <li class="ncbi-footer__bottom-list-item">
+                            
+
+
+
+
+
+
+
+
+
+    <a href="https://www.nih.gov/" class="usa-link  usa-link--alt ncbi-footer__link"  >
+        
+
+        
+            NIH
+        
+
+        
+    </a>
+
+
+                        </li>
+                    
+                        <li class="ncbi-footer__bottom-list-item">
+                            
+
+
+
+
+
+
+
+
+
+    <a href="https://www.hhs.gov/" class="usa-link usa-link--external usa-link--alt ncbi-footer__link" rel="noreferrer noopener" target='_blank' >
+        
+
+        
+            HHS
+        
+
+        
+    </a>
+
+
+                        </li>
+                    
+                        <li class="ncbi-footer__bottom-list-item">
+                            
+
+
+
+
+
+
+
+
+
+    <a href="https://www.usa.gov/" class="usa-link usa-link--external usa-link--alt ncbi-footer__link" rel="noreferrer noopener" target='_blank' >
+        
+
+        
+            USA.gov
+        
+
+        
+    </a>
+
+
+                        </li>
+                    
+                </ul>
+            </div>
+        
+    </div>
+</footer>
+
+    
+
+
+        
+        
+    
+  <script  type="text/javascript" src="https://cdn.ncbi.nlm.nih.gov/core/pinger/pinger.js"> </script>
+
+
+    
+        
+
+<button class="back-to-top" data-ga-category="pagination" data-ga-action="back_to_top">
+    <label>Back to Top</label>
+    <svg class="usa-icon order-0" aria-hidden="true" focusable="false" role="img">
+        <use xlink:href="/static/img/sprite.svg#arrow_upward"></use>
+    </svg>
+</button>
+    
+
+
+        
+    
+    
+    
+        
+    <script type="application/javascript">
+    window.ncbi = window.ncbi || {};
+    window.ncbi.pmc = window.ncbi.pmc || {};
+    window.ncbi.pmc.options = {
+        logLevel: 'INFO',
+        
+        staticEndpoint: '/static/',
+        
+        citeCookieName: 'pmc-cf',
+    };
+</script>
+    <script type="module" crossorigin="" src="/static/assets/base-133c6271.js"></script>
+    
+    <script type="text/javascript" src="https://cdn.ncbi.nlm.nih.gov/core/jquery/jquery-3.6.0.min.js">&#xA0;</script>
+    <script type="text/javascript">
+        jQuery.getScript("https://cdn.ncbi.nlm.nih.gov/core/alerts/alerts.js", function () {
+            galert(['div.nav_and_browser', 'div.header', '#universal_header', '.usa-banner', 'body > *:nth-child(1)'])
+        });
+    </script>
+
+
+    <script type="text/javascript">var exports = {};</script>
+     <script src="/static/CACHE/js/output.13b077bc3ffd.js"></script>
+
+    <script type="module" crossorigin="" src="/static/assets/article-44d04358.js"></script>
+    
+        <script type="module" crossorigin="" src="/static/assets/math-574fdcc6.js"></script>
+    
+    
+
+    </body>
+</html>

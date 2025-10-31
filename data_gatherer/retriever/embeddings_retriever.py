@@ -42,15 +42,14 @@ class EmbeddingsRetriever(BaseRetriever):
                 self.logger.info("Using CPU - no GPU acceleration available")
         
         self.device = device
-
+        
+        self.config = AutoConfig.from_pretrained(model_name)
 
         if "BiomedBERT" in model_name or "biomedbert" in model_name.lower():
             self.model = self._initialize_biomedbert_model(model_name, device)
         else:
             self.model = SentenceTransformer(model_name, device=device)
         self.logger.info(f"Initialized model: {self.model}")
-
-        self.config = AutoConfig.from_pretrained(model_name)
 
         try:
             self.max_seq_length = self.model.get_max_seq_length()
@@ -69,6 +68,19 @@ class EmbeddingsRetriever(BaseRetriever):
         if corpus and embed_corpus:
             self.embed_corpus()
         self.query_embedding = None
+    
+    def cnt_tokens(self, text):
+        """
+        Count the number of tokens in the given text using the model's tokenizer.
+        
+        Args:
+            text (str): Input text to tokenize.
+        Returns:
+            int: Number of tokens in the text.
+        """
+        tokens = self.tokenizer(text)
+        self.logger.debug(f"Text tokenized into {len(tokens['input_ids'])} tokens.")
+        return len(tokens['input_ids'])
 
     def embed_corpus(self, corpus=None, enable_chunking=True, chunk_size=None, chunk_overlap=20, batch_size=32):
         """
@@ -119,7 +131,7 @@ class EmbeddingsRetriever(BaseRetriever):
 
         return SentenceTransformer(
             modules=[
-                models.Transformer("microsoft/BiomedNLP-BiomedBERT-base-uncased-abstract-fulltext", max_seq_length=self.max_seq_length),
+                models.Transformer("microsoft/BiomedNLP-BiomedBERT-base-uncased-abstract-fulltext", max_seq_length=self.config.max_position_embeddings),
                 models.Pooling("microsoft/BiomedNLP-BiomedBERT-base-uncased-abstract-fulltext", pooling_mode='mean')
             ], device=device
         )

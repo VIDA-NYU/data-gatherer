@@ -80,7 +80,7 @@ class HTMLParser(LLMParser):
                          )
 
         self.logger = logger
-        self.logger.info("Initializing htmlRetriever")
+        self.logger.info(f"Initializing htmlRetriever with model: {embeddings_model_name}")
         self.retriever = htmlRetriever(logger, 'general', retrieval_patterns_file='retrieval_patterns.json',
                                        headers=None)
 
@@ -215,19 +215,18 @@ class HTMLParser(LLMParser):
         """
         soup = BeautifulSoup(html_content, "html.parser")
         paragraphs = []
-        for section in soup.find_all(['section', 'div']):
-            section_title = section.find(['h1', 'h2', 'h3', 'h4', 'h5', 'h6'])
+        for para in soup.find_all(['p']):
+            section_title = para.find(['h1', 'h2', 'h3', 'h4', 'h5', 'h6'])
             section_title_text = section_title.get_text(strip=True) if section_title else "No Title"
-            sec_type = section.get('class', ['unknown'])[0] if section.has_attr('class') else "unknown"
-            for p in section.find_all('p'):
-                para_text = p.get_text(strip=True)
-                if len(para_text) >= 5:
-                    paragraphs.append({
-                        "paragraph": para_text,
-                        "section_title": section_title_text,
-                        "sec_type": sec_type,
-                        "text": para_text
-                    })
+            sec_type = para.get('class', ['unknown'])[0] if para.has_attr('class') else "unknown"
+            para_text = para.get_text(strip=True)
+            if len(para_text) >= 5:
+                paragraphs.append({
+                    "paragraph": para_text,
+                    "section_title": section_title_text,
+                    "sec_type": sec_type,
+                    "text": para_text
+                })
         return paragraphs
 
     def extract_sections_from_html(self, html_content: str) -> list[dict]:
@@ -252,34 +251,34 @@ class HTMLParser(LLMParser):
         # Process each section (similar to XML parser)
         for sec_idx, sec in enumerate(section_elements):
             self.logger.debug(f"Processing section {sec_idx + 1}/{len(section_elements)} (tag: {sec.name})")
-            
             # Determine section type from class attribute
             sec_type = sec.get('class', ['unknown'])[0] if sec.has_attr('class') else "unknown"
             self.logger.debug(f"Section type: '{sec_type}'")
-            
             # Find section title from headers
             title_elem = sec.find(['h1', 'h2', 'h3', 'h4', 'h5', 'h6'])
             section_title = title_elem.get_text(strip=True) if title_elem else "No Title"
             self.logger.debug(f"Section title: '{section_title}'")
-
             # Initialize text containers (matching XML parser structure)
             section_text_from_paragraphs = f'{section_title}\n'
             section_rawtxt_from_paragraphs = ''
 
             # Find all paragraphs in this section (like XML parser)
             paragraphs = sec.find_all('p')
-            self.logger.debug(f"Found {len(paragraphs)} paragraphs in section '{section_title}'")
+            self.logger.debug(f"Found {len(paragraphs)} paragraphs")
 
             for p_idx, p in enumerate(paragraphs):
-                self.logger.debug(f"Processing paragraph {p_idx + 1}/{len(paragraphs)} in section '{section_title}'")
+                self.logger.debug(f"Processing paragraph {p_idx + 1} out of {len(paragraphs)}")
+                parent_section = p.find_parent('section')
+                if parent_section is not None and parent_section != sec:
+                    self.logger.debug(f"We've entered a different section: {parent_section != sec}, so break out of the loop")
+                    break
 
                 # Extract clean text (similar to itertext in XML)
                 para_clean_text = p.get_text(separator=" ", strip=True)
                 self.logger.debug(f"Paragraph clean text length: {len(para_clean_text)} chars")
-
                 if len(para_clean_text) >= 5:
                     section_text_from_paragraphs += "\n" + para_clean_text + "\n"
-                    self.logger.debug(f"Added clean text to section (total clean length now: {len(section_text_from_paragraphs)})")
+                    self.logger.debug(f"Added clean text to section --> Updated Section length (clean): {len(section_text_from_paragraphs)})")
 
                 # Extract raw HTML (similar to tostring in XML)
                 para_raw_html = str(p).strip()
@@ -287,14 +286,17 @@ class HTMLParser(LLMParser):
 
                 if len(para_raw_html) >= 5:
                     section_rawtxt_from_paragraphs += "\n" + para_raw_html + "\n"
-                    self.logger.debug(f"Added HTML to section (total raw length now: {len(section_rawtxt_from_paragraphs)})")
+                    self.logger.debug(f"Added Paragraph to section --> Updated Section length (raw): {len(section_rawtxt_from_paragraphs)}")
 
             # Find all tables in this section (important for dataset information)
             tables = sec.find_all('table')
-            self.logger.debug(f"Found {len(tables)} tables in section '{section_title}'")
+            self.logger.debug(f"Found {len(tables)} tables")
 
             for table_idx, table in enumerate(tables):
-                self.logger.debug(f"Processing table {table_idx + 1}/{len(tables)} in section '{section_title}'")
+                self.logger.debug(f"Processing table {table_idx + 1}/{len(tables)}")
+                if parent_section is not None and parent_section != sec:
+                    self.logger.debug(f"We've entered a different section: {parent_section != sec}, so break out of the loop")
+                    break
 
                 # Extract clean text from table (similar to itertext in XML)
                 table_clean_text = table.get_text(separator=" ", strip=True)
@@ -302,27 +304,35 @@ class HTMLParser(LLMParser):
 
                 if len(table_clean_text) >= 5:
                     section_text_from_paragraphs += "\n" + table_clean_text + "\n"
-                    self.logger.debug(f"Added table clean text to section (total clean length now: {len(section_text_from_paragraphs)})")
+                    self.logger.debug(f"Added Table to section --> Updated Section length: {len(section_text_from_paragraphs)})")
 
                 # Extract raw HTML table (similar to tostring in XML)
                 table_raw_html = str(table).strip()
                 self.logger.debug(f"Table HTML length: {len(table_raw_html)} chars")
-
                 if len(table_raw_html) >= 5:
                     section_rawtxt_from_paragraphs += "\n" + table_raw_html + "\n"
-                    self.logger.debug(f"Added table HTML to section (total raw length now: {len(section_rawtxt_from_paragraphs)})")
+                    self.logger.debug(f"Added table HTML to section --> Updated Section length (raw): {len(section_rawtxt_from_paragraphs)})")
+
+            if section_text_from_paragraphs.strip() == f'{section_title}':
+                self.logger.debug(f"Section '{section_title}' is empty after processing. Skipping.")
+                continue
+
+            elif section_text_from_paragraphs in [sect['sec_txt_clean'] for sect in sections]:
+                self.logger.debug(f"Section '{section_title}' is a duplicate after processing. Skipping.")
+                continue
 
             # Create section dictionary (matching XML parser structure)
             section_dict = {
                 "sec_txt": section_rawtxt_from_paragraphs,
                 "section_title": section_title,
                 "sec_type": sec_type,
-                "sec_txt_clean": section_text_from_paragraphs
+                "sec_txt_clean": section_text_from_paragraphs,
+                "sec_txt_objs": paragraphs,
+                "sec_table_objs": tables
             }
             
             sections.append(section_dict)
             self.logger.debug(f"Added section '{section_title}' (tag: {sec.name}) to results. Final lengths - raw: {len(section_rawtxt_from_paragraphs)}, clean: {len(section_text_from_paragraphs)}")
-
         self.logger.info(f"Extracted {len(sections)} sections from HTML.")
         self.logger.debug(f"Section titles extracted: {[s['section_title'] for s in sections]}")
         return sections
@@ -401,10 +411,9 @@ class HTMLParser(LLMParser):
         self.logger.debug(f"compress HTML. Final len: {len(text)}")
         return text
 
-    def parse_data(self, html_str, publisher=None, current_url_address=None, additional_data=None,
-                   raw_data_format='HTML', article_file_dir='tmp/raw_files/', process_DAS_links_separately=False,
-                   section_filter=None, prompt_name='GPT_FewShot', use_portkey=True,
-                   semantic_retrieval=False, top_k=2, response_format=dataset_response_schema_gpt):
+    def parse_data(self, html_str, publisher=None, current_url_address=None, raw_data_format='HTML',
+        article_file_dir='tmp/raw_files/', section_filter=None, prompt_name='GPT_FewShot', use_portkey=True, 
+        semantic_retrieval=False, top_k=2, response_format=dataset_response_schema_gpt):
         """
         Parse the API data and extract relevant links and metadata.
 
@@ -412,10 +421,8 @@ class HTMLParser(LLMParser):
             html_str (str): The raw HTML content to be parsed.
             publisher (str): The publisher of the content.
             current_url_address (str): The URL address of the content.
-            additional_data (dict): Additional data to be used in the parsing.
             raw_data_format (str): The format of the raw data (default is 'HTML').
             article_file_dir (str): Directory to save article files (default is 'tmp/raw_files/').
-            process_DAS_links_separately (bool): Whether to process Data Availability Statement links separately.
             section_filter (str): Filter for sections to be processed.
             prompt_name (str): Name of the prompt to be used for dataset extraction.
             use_portkey (bool): Whether to use Portkey for Gemini model.
@@ -428,7 +435,7 @@ class HTMLParser(LLMParser):
         """
         out_df = None
         self.logger.info(f"Function call: parse_data(html_str, {publisher}, {current_url_address}, "
-                         f"additional_data, {raw_data_format})")
+                         f"{raw_data_format})")
         self.publisher = publisher
 
         filter_supp = section_filter == 'supplementary_material' or section_filter is None
@@ -535,7 +542,7 @@ class HTMLParser(LLMParser):
 
         anchors = tree.xpath("//a[@data-ga-action='click_feat_suppl']")
         anchors.extend(tree.xpath("//a[@data-track-action='view supplementary info']"))
-        self.logger.debug(f"Found {len(anchors)} anchors with data-ga-action='click_feat_suppl'.")
+        self.logger.debug(f"Found {len(anchors)} anchors with data-ga-action='click_feat_suppl'. or \"//a[@data-track-action='view supplementary info']\"")
 
         for anchor in anchors:
             href = anchor.get("href")
@@ -716,7 +723,7 @@ class HTMLParser(LLMParser):
         surrounding_text = " ".join(parent_text)
         return re.sub(r"[\s\n]+", " ", surrounding_text)
 
-    def from_sections_to_corpus(self, sections):
+    def from_sections_to_corpus(self, sections, max_tokens=None):
         """
         Convert structured HTML sections to a flat corpus of documents for embeddings retrieval.
         This method takes the output from extract_sections_from_html (list of dicts) and converts it
@@ -727,122 +734,76 @@ class HTMLParser(LLMParser):
         """
         self.logger.info(f"Converting {len(sections)} HTML sections to embeddings corpus")
 
-        # Get model token limits from the initialized retriever
-        max_tokens = None
-        try:
+        if max_tokens is None:
             max_tokens = self.embeddings_retriever.model.get_max_seq_length()
             self.logger.debug(f"Using model max sequence length: {max_tokens} tokens")
-        except Exception as e:
-            self.logger.warning(f"Could not get model token limit: {e}. Using default of 512")
-            max_tokens = 512
-        
-        # Reserve some tokens for the query and model overhead (typically 10-20% buffer)
-        effective_max_tokens = int(max_tokens * 0.95)  # 95% of max to be safe
+        effective_max_tokens = int(max_tokens * 0.95)
         self.logger.debug(f"Effective max tokens per section: {effective_max_tokens}")
-        
+
         corpus_documents = []
         for i, section_dict in enumerate(sections):
             if not section_dict or not isinstance(section_dict, dict):
                 self.logger.info(f"Skipping invalid section at index {i}")
                 continue
-            
-            # Extract raw text from the section dictionary
-            section_text_raw = section_dict.get('sec_txt', '')
-            section_title = section_dict.get('section_title', '')
-            doc = section_dict.copy()
-            
-            self.logger.debug(f"Processing section '{section_title}' ({i}). Section text length: {len(section_text_raw)} chars")
 
-            if not section_text_raw:
-                self.logger.debug(f"Skipping empty section '{section_title}' ({i})")
-                continue
-                
-            # Basic HTML-specific cleaning
-            # Remove excessive whitespace and normalize text
-            normalized_section = re.sub(r'\s+', ' ', section_text_raw.strip())
-            self.logger.debug(f"Normalized section length: {len(normalized_section)} chars")
-            
-            # Skip very short sections that are unlikely to contain useful information
-            if len(normalized_section) < 8:
-                self.logger.debug(f"Skipping too short section '{section_title}' ({len(normalized_section)} chars)")
-                continue
-            
-            # Token-aware processing: check if section exceeds token limit
-            try:
-                # Get actual token count for this section
-                section_tokens = self.embeddings_retriever.model.encode([normalized_section], convert_to_tensor=False)[0]
-                actual_token_count = len(section_tokens) if hasattr(section_tokens, '__len__') else 0
-                
-                if actual_token_count > effective_max_tokens:
-                    self.logger.debug(f"Section '{section_title}' ({i}) has {actual_token_count} tokens, exceeds limit of {effective_max_tokens}. Chunking...")
-                    
-                    # Intelligent chunking: split by sentences/paragraphs while respecting token limits
-                    chunks = self._intelligent_chunk_section(normalized_section, effective_max_tokens)
-                    
-                    # Create document objects for each chunk
-                    for j, chunk in enumerate(chunks):
-                        chunk_doc = doc.copy()
-                        chunk_doc['sec_txt_clean'] = chunk
-                        chunk_doc['sec_txt'] = chunk
-                        chunk_doc['text'] = chunk  # Add 'text' field for compatibility
-                        chunk_doc['chunk_id'] = j + 1
-                        corpus_documents.append(chunk_doc)
-                    
-                    self.logger.debug(f"Section '{section_title}' split into {len(chunks)} chunks")
-                else:
-                    doc['text'] = normalized_section  # Add 'text' field for compatibility
-                    corpus_documents.append(doc)
-                    self.logger.debug(f"Section '{section_title}' ({i}) added to corpus (tokens: {actual_token_count})")
-                    
-            except Exception as e:
-                self.logger.warning(f"Error processing section '{section_title}' tokens: {e}. Using character-based estimation")
-                # Fallback: rough character-based estimation (1 token ≈ 4 characters)
-                estimated_tokens = len(normalized_section) // 4
-                
-                if estimated_tokens > effective_max_tokens:
-                    self.logger.debug(f"Section '{section_title}' estimated {estimated_tokens} tokens, chunking (fallback)...")
-                    # Simple character-based chunking as fallback
-                    target_chars = effective_max_tokens * 4
-                    chunks = [normalized_section[i:i+target_chars] for i in range(0, len(normalized_section), target_chars)]
-                    
-                    # Create document objects for each chunk
-                    for j, chunk in enumerate(chunks):
-                        chunk_doc = doc.copy()
-                        chunk_doc['sec_txt_clean'] = chunk
-                        chunk_doc['sec_txt'] = chunk
-                        chunk_doc['text'] = chunk  # Add 'text' field for compatibility
-                        chunk_doc['chunk_id'] = j + 1
-                        corpus_documents.append(chunk_doc)
-                    
-                    self.logger.debug(f"Section '{section_title}' split into {len(chunks)} chunks (fallback method)")
-                else:
-                    doc['text'] = normalized_section  # Add 'text' field for compatibility
-                    corpus_documents.append(doc)
-                    self.logger.debug(f"Section '{section_title}' ({i}) added to corpus (estimated: {estimated_tokens} tokens)")
-        
-        # Remove duplicates based on normalized text content and merge section titles
+            section_title = section_dict.get('section_title', '')
+            section_paragraphs = section_dict.get('sec_txt_objs', [])
+            sec_type = section_dict.get('sec_type', '')
+            doc_base = section_dict.copy()
+
+            chunk_texts = []
+            chunk_token_count = 0
+            chunk_paragraphs = []
+            chunk_id = 1
+
+            for p_idx, p in enumerate(section_paragraphs):
+                para_text = p.get_text(separator=" ", strip=True)
+                if len(para_text) < 8:
+                    continue
+                para_tokens = self.embeddings_retriever.cnt_tokens(para_text)
+                if chunk_token_count + para_tokens > effective_max_tokens and chunk_texts:
+                    # Save current chunk
+                    chunk_doc = doc_base.copy()
+                    chunk_doc['sec_txt_clean'] = "\n".join(chunk_texts)
+                    chunk_doc['sec_txt'] = "\n".join(chunk_texts)
+                    chunk_doc['text'] = "\n".join(chunk_texts)
+                    chunk_doc['chunk_id'] = chunk_id
+                    corpus_documents.append(chunk_doc)
+                    chunk_id += 1
+                    chunk_texts = []
+                    chunk_token_count = 0
+                    chunk_paragraphs = []
+                chunk_texts.append(para_text)
+                chunk_token_count += para_tokens
+                chunk_paragraphs.append(p)
+
+            # Save any remaining chunk
+            if chunk_texts:
+                chunk_doc = doc_base.copy()
+                chunk_doc['sec_txt_clean'] = "\n".join(chunk_texts)
+                chunk_doc['sec_txt'] = "\n".join(chunk_texts)
+                chunk_doc['text'] = "\n".join(chunk_texts)
+                chunk_doc['chunk_id'] = chunk_id
+                corpus_documents.append(chunk_doc)
+
+        # Deduplicate and merge section titles as before
         self.logger.info(f"Pre-deduplication: {len(corpus_documents)} corpus documents")
-        
         unique_documents = []
-        seen_texts = {}  # Changed to dict to track documents by text content
-        
+        seen_texts = {}
         for doc in corpus_documents:
-            # Use normalized text as the deduplication key
             text_key = doc.get('text', '').strip().lower()
             current_section_title = doc.get('section_title', '').strip()
-            
-            # Check if we've seen this exact text before
+
             if text_key and text_key not in seen_texts:
                 seen_texts[text_key] = doc
                 unique_documents.append(doc)
                 self.logger.debug(f"Added new document with section title: '{current_section_title}'")
+
             elif text_key:
-                # Found duplicate content - check if section title is different
                 existing_doc = seen_texts[text_key]
                 existing_section_title = existing_doc.get('section_title', '').strip()
-                
+
                 if current_section_title and current_section_title != existing_section_title:
-                    # Concatenate section titles if they are different
                     if current_section_title not in existing_section_title:
                         concatenated_title = f"{existing_section_title} | {current_section_title}"
                         existing_doc['section_title'] = concatenated_title
@@ -916,7 +877,7 @@ class HTMLParser(LLMParser):
         :param query: str — the search query (default: dataset identification query)
         :return: list of dict — the most relevant documents from the corpus
         """
-        self.logger.info(f"HTML semantic retrieval from corpus with {len(corpus)} sections")
+        self.logger.info(f"HTML semantic retrieval from corpus with {len(corpus)} sections of type {type(corpus[0]) if corpus else 'None'}")
         
         if query is None:
             query = """Explicitly identify all the datasets by their database accession codes, repository names, and links
@@ -956,3 +917,44 @@ class HTMLParser(LLMParser):
         else:
             self.logger.warning("No publication title found in the HTML data.")
             return "No title found"
+
+    def extract_citations(self, raw_html):
+        """
+        Extract citations information from the HTML content.
+        This includes the citation text and the anchor elements (external links) inside the reference list.
+
+        :param raw_html: str — raw HTML content.
+        :return: list of dict — list of extracted citations with metadata.
+        """
+        soup = BeautifulSoup(raw_html, "html.parser")
+        citations = []
+        # Find the references section (usually <section class="Bibl" ...> or similar)
+        ref_sections = soup.find_all("section", class_=lambda c: c and "ref-list" in c)
+        for ref_section in ref_sections:
+            # Find all list items (each citation)
+            for li in ref_section.find_all("li"):
+                citation_obj = {}
+                # Extract citation label (number)
+                label_span = li.find("span", class_="label")
+                citation_obj["label"] = label_span.get_text(strip=True) if label_span else None
+                # Extract citation text (from <cite> or direct text)
+                cite_tag = li.find("cite")
+                if cite_tag:
+                    citation_obj["citation_text"] = cite_tag.get_text(separator=" ", strip=True)
+                else:
+                    # Fallback: get all text in li
+                    citation_obj["citation_text"] = li.get_text(separator=" ", strip=True)
+                # Extract external links (DOI, PubMed, Google Scholar, etc.)
+                links = []
+                for a in li.find_all("a", href=True):
+                    link_info = {
+                        "href": a["href"],
+                        "citation_text": a.get_text(strip=True),
+                        "classes": a.get("class", []),
+                        "target": a.get("target"),
+                        "data_action": a.get("data-ga-action"),
+                    }
+                    links.append(link_info)
+                citation_obj["external_links"] = links
+                citations.append(citation_obj)
+        return citations

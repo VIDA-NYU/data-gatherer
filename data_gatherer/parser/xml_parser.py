@@ -9,6 +9,7 @@ import regex as re
 
 
 class XMLParser(LLMParser):
+
     def __init__(self, open_data_repos_ontology, logger, log_file_override=None, full_document_read=True,
                  prompt_dir="data_gatherer/prompts/prompt_templates",
                  llm_name=None, save_dynamic_prompts=False, save_responses_to_cache=False, use_cached_responses=False,
@@ -22,7 +23,7 @@ class XMLParser(LLMParser):
                          )
 
         self.logger = logger
-        self.logger.info("Initializing xmlRetriever")
+        self.logger.info(f"Initializing xmlRetriever with model: {embeddings_model_name}")
         self.retriever = xmlRetriever(self.logger, publisher='PMC')
 
         self.embeddings_retriever = EmbeddingsRetriever(
@@ -103,7 +104,8 @@ class XMLParser(LLMParser):
             title_elem = sec.find("title")
             section_title = title_elem.text.strip() if title_elem is not None and title_elem.text else "No Title"
             self.logger.debug(f"Section title: '{section_title}'")
-
+            parent_section_title = section_title
+            
             section_text_from_paragraphs = f'{section_title}\n'
             section_rawtxt_from_paragraphs = ''
 
@@ -113,7 +115,14 @@ class XMLParser(LLMParser):
 
             for p_idx, p in enumerate(paragraphs):
                 self.logger.debug(f"Processing paragraph {p_idx + 1}/{len(paragraphs)} in section '{section_title}'")
-
+                parent_section = p.getparent()
+                grandparent_section = parent_section.getparent() if parent_section is not None else None
+                if parent_section is not None and parent_section != sec:
+                    self.logger.debug(f"We've entered a different section: {parent_section} != {sec}, so break out of the loop")
+                    break
+                elif grandparent_section is not None and grandparent_section.find("title") is not None:
+                    section_title = grandparent_section.find("title").text + " > " + parent_section_title
+                
                 itertext = " ".join(p.itertext()).strip()
                 self.logger.debug(f"Paragraph itertext length: {len(itertext)} chars")
 
@@ -131,6 +140,14 @@ class XMLParser(LLMParser):
                     self.logger.debug(f"Added XML to section_rawtxt_from_paragraphs (total raw text length now: {len(section_rawtxt_from_paragraphs)})")
                 else:
                     self.logger.debug(f"Skipped XML paragraph (too short: {len(para_text)} chars)")
+            
+            if section_title.lower().strip() == section_text_from_paragraphs.lower().strip():
+                self.logger.debug(f"Section skipped for not having valid paragraphs.")
+                continue
+                
+            elif section_text_from_paragraphs in [sect['sec_txt_clean'] for sect in sections]:
+                self.logger.debug(f"Section skipped for being a duplicate.")
+                continue
 
             # Create section dictionary
             section_dict = {
@@ -195,120 +212,58 @@ class XMLParser(LLMParser):
             if not section_dict or not isinstance(section_dict, dict):
                 self.logger.info(f"Skipping invalid section at index {i}")
                 continue
-            
             section_title = section_dict.get('section_title', 'n.a.')
             section_paragraphs = section_dict.get('sec_txt_objs', [])
-            
-            self.logger.debug(f"Processing section '{section_title}' ({i}) with {len(section_paragraphs)} paragraphs")
+            self.logger.debug(f"Processing section '{section_title}' (i:{i}) with {len(section_paragraphs)} paragraphs")
 
             if not section_paragraphs:
-                self.logger.debug(f"Skipping empty section '{section_title}' ({i})")
+                self.logger.debug(f"Skipping empty section '{section_title}' (i:{i})")
                 continue
-            
-            # Process paragraphs iteratively, building chunks that fit within token limits
-            current_chunk = ''
-            current_chunk_tokens = 0
-            chunk_paragraphs = []
+
             chunks_created = []
-            
-            # Estimate initial tokens for section title
-            try:
-                title_tokens = len(self.embeddings_retriever.model.encode([current_chunk], convert_to_tensor=False)[0])
-                current_chunk_tokens = title_tokens
-            except Exception:
-                # Fallback: rough estimation (1 token ≈ 4 characters)
-                current_chunk_tokens = len(current_chunk) // 4
-            
+            self.logger.debug(f"Starting chunk creation for section '{section_title}'")
             for p_idx, paragraph in enumerate(section_paragraphs):
-                # Extract clean text from paragraph element
+                self.logger.info(f"Processing paragraph {p_idx + 1}/{len(section_paragraphs)} in section '{section_title}', type: {type(paragraph)}")
+                
                 try:
                     if hasattr(paragraph, 'itertext'):
-                        # It's an lxml element
                         para_text = " ".join(paragraph.itertext()).strip()
                     else:
-                        # It's already text
                         para_text = str(paragraph).strip()
+
                 except Exception as e:
                     self.logger.warning(f"Error extracting text from paragraph {p_idx}: {e}")
                     continue
-                
+
                 if len(para_text) < 5:
                     self.logger.debug(f"Skipping short paragraph {p_idx} in section '{section_title}'")
                     continue
-                
-                # Clean and normalize paragraph text
+
                 normalized_para = re.sub(r'\s+', ' ', para_text.strip())
-                
-                # Check if adding this paragraph would exceed token limit
-                test_chunk = current_chunk + "\n" + normalized_para + "\n"
-                
+
                 try:
-                    # Get actual token count for test chunk
-                    test_tokens = len(self.embeddings_retriever.model.encode([test_chunk], convert_to_tensor=False)[0])
+                    para_tokens = self.embeddings_retriever.cnt_tokens(normalized_para)
+                except Exception:
+                    para_tokens = len(normalized_para) // 4
                     
-                    if test_tokens <= effective_max_tokens:
-                        # Safe to add paragraph to current chunk
-                        current_chunk = test_chunk
-                        current_chunk_tokens = test_tokens
-                        chunk_paragraphs.append(normalized_para)
-                        self.logger.debug(f"Added paragraph {p_idx} to chunk (tokens: {test_tokens})")
-                    else:
-                        # Adding this paragraph would exceed limit, finalize current chunk
-                        if chunk_paragraphs:  # Only create chunk if it has content
-                            chunk_doc = section_dict.copy()
-                            chunk_doc['sec_txt'] = current_chunk
-                            chunk_doc['sec_txt_clean'] = current_chunk
-                            chunk_doc['text'] = current_chunk  # Add 'text' field for compatibility
-                            chunk_doc['chunk_id'] = len(chunks_created) + 1
-                            chunks_created.append(chunk_doc)
-                            self.logger.debug(f"Finalized chunk {len(chunks_created)} with {len(chunk_paragraphs)} paragraphs (tokens: {current_chunk_tokens})")
-                        
-                        # Start new chunk with current paragraph
-                        current_chunk = section_title + "\n" + normalized_para + "\n"
-                        try:
-                            current_chunk_tokens = len(self.embeddings_retriever.model.encode([current_chunk], convert_to_tensor=False)[0])
-                        except Exception:
-                            current_chunk_tokens = len(current_chunk) // 4
-                        chunk_paragraphs = [normalized_para]
-                        self.logger.debug(f"Started new chunk with paragraph {p_idx} (tokens: {current_chunk_tokens})")
-                        
-                except Exception as e:
-                    self.logger.warning(f"Error processing tokens for paragraph {p_idx}: {e}. Using character-based estimation")
-                    # Fallback: character-based estimation
-                    estimated_tokens = len(test_chunk) // 4
-                    
-                    if estimated_tokens <= effective_max_tokens:
-                        current_chunk = test_chunk
-                        current_chunk_tokens = estimated_tokens
-                        chunk_paragraphs.append(normalized_para)
-                        self.logger.debug(f"Added paragraph {p_idx} to chunk (estimated tokens: {estimated_tokens})")
-                    else:
-                        # Finalize current chunk and start new one
-                        if chunk_paragraphs:
-                            chunk_doc = section_dict.copy()
-                            chunk_doc['sec_txt'] = current_chunk
-                            chunk_doc['sec_txt_clean'] = current_chunk
-                            chunk_doc['text'] = current_chunk
-                            chunk_doc['chunk_id'] = len(chunks_created) + 1
-                            chunks_created.append(chunk_doc)
-                            self.logger.debug(f"Finalized chunk {len(chunks_created)} (fallback, estimated tokens: {current_chunk_tokens})")
-                        
-                        current_chunk = section_title + "\n" + normalized_para + "\n"
-                        current_chunk_tokens = len(current_chunk) // 4
-                        chunk_paragraphs = [normalized_para]
-                        self.logger.debug(f"Started new chunk (fallback, estimated tokens: {current_chunk_tokens})")
-            
-            # Add final chunk if it has content
-            if chunk_paragraphs:
-                chunk_doc = section_dict.copy()
-                chunk_doc['sec_txt'] = current_chunk
-                chunk_doc['sec_txt_clean'] = current_chunk
-                chunk_doc['text'] = current_chunk
-                chunk_doc['chunk_id'] = len(chunks_created) + 1
-                chunks_created.append(chunk_doc)
-                self.logger.debug(f"Added final chunk {len(chunks_created)} with {len(chunk_paragraphs)} paragraphs (tokens: {current_chunk_tokens})")
-            
-            # Add all chunks for this section to corpus
+                if para_tokens > effective_max_tokens:
+                    self.logger.debug(f"Paragraph {p_idx} in section '{section_title}' exceeds token limit ({para_tokens} > {effective_max_tokens}), splitting...")
+                    para_chunks = self._intelligent_chunk_section(normalized_para, effective_max_tokens)
+                    self.logger.debug(f"para_chunks for paragraph {p_idx}: {para_chunks}")
+                else:
+                    para_chunks = [normalized_para]
+                    self.logger.debug(f"para_chunks for paragraph {p_idx}: {para_chunks}")
+
+                for chunk_text in para_chunks:
+                    self.logger.debug(f"Creating chunk {len(chunks_created) + 1} for paragraph {p_idx}: '{chunk_text[:80]}...' (tokens: {self.embeddings_retriever.cnt_tokens(chunk_text) if hasattr(self.embeddings_retriever, 'cnt_tokens') else 'N/A'})")
+                    chunk_doc = section_dict.copy()
+                    chunk_doc['sec_txt'] = section_title + "\n" + chunk_text
+                    chunk_doc['sec_txt_clean'] = section_title + "\n" + chunk_text
+                    chunk_doc['text'] = section_title + "\n" + chunk_text
+                    chunk_doc['chunk_id'] = len(chunks_created) + 1
+                    chunks_created.append(chunk_doc)
+                    self.logger.debug(f"chunks_created now has {len(chunks_created)} items")
+
             corpus_documents.extend(chunks_created)
             self.logger.info(f"Section '{section_title}' split into {len(chunks_created)} chunks from {len(section_paragraphs)} paragraphs")
         
@@ -347,12 +302,41 @@ class XMLParser(LLMParser):
         self.logger.info(f"XML sections converted: {len(sections)} sections → {len(unique_documents)} unique corpus documents (processed {len(corpus_documents) - len(unique_documents)} duplicates with title merging)")
         return unique_documents
 
+    def _intelligent_chunk_section(self, section_text, max_tokens):
+        """
+        Intelligently chunk a paragraph of text into smaller parts that fit within the token limit.
+        This method attempts to split by sentences or sub-paragraphs while respecting token limits.
+        :param section_text: str — the full text of the paragraph to be chunked
+        :param max_tokens: int — the maximum number of tokens allowed per chunk
+        :return: list of str — list of text chunks fitting within token limits
+        """
+        self.logger.debug(f"Input section length: {len(section_text)} chars")
+        # Simple sentence tokenizer (could be replaced with a more sophisticated one if needed)
+        sentences = re.split(r'(?<=[.!?]) +', section_text)
+        self.logger.debug(f"Split into {len(sentences)} sentences")
+        chunks = []
+        current_chunk = ""
+        for i, sentence in enumerate(sentences):
+            test_chunk = current_chunk + (" " if current_chunk else "") + sentence
+            try:
+                test_tokens = self.embeddings_retriever.cnt_tokens(test_chunk)
+            except Exception:
+                test_tokens = len(test_chunk) // 4
+            if test_tokens <= max_tokens:
+                current_chunk = test_chunk
+            else:
+                if current_chunk:
+                    chunks.append(current_chunk.strip())
+                current_chunk = sentence
+        if current_chunk:
+            chunks.append(current_chunk.strip())
+        self.logger.debug(f"Final result: {len(chunks)} chunks")
+        return chunks
 
-    def parse_data(self, api_data, publisher=None, current_url_address=None, additional_data=None,
-                   raw_data_format='XML',
-                   article_file_dir='tmp/raw_files/', process_DAS_links_separately=False, section_filter=None,
-                   prompt_name='GPT_FewShot', use_portkey=True, semantic_retrieval=False,
-                   top_k=2, response_format=dataset_response_schema_gpt):
+    def parse_data(self, api_data, publisher=None, current_url_address=None,
+                   raw_data_format='XML', article_file_dir='tmp/raw_files/', section_filter=None,
+                   prompt_name='GPT_FewShot', use_portkey=True, semantic_retrieval=False, top_k=2, 
+                   response_format=dataset_response_schema_gpt):
         """
         Parse the API data and extract relevant links and metadata.
 
@@ -362,8 +346,6 @@ class XMLParser(LLMParser):
 
         :param current_url_address: The current URL address being processed.
 
-        :param additional_data: Additional data to be processed (optional).
-
         :param raw_data_format: The format of the raw data ('XML' or 'HTML').
 
         :return: A DataFrame containing the extracted links and links to metadata - if repo is supported. Add support for unsupported repos in the ontology.
@@ -372,7 +354,7 @@ class XMLParser(LLMParser):
         out_df = None
         # Check if api_data is a string, and convert to XML if needed
         self.logger.info(f"Function call: parse_data(api_data({type(api_data)}), {publisher}, {current_url_address}, "
-                         f"additional_data, {raw_data_format})")
+                         f"{raw_data_format})")
         self.publisher = publisher
 
         if isinstance(api_data, str):
@@ -409,50 +391,20 @@ class XMLParser(LLMParser):
             self.logger.warning(f"Semantic Retrieval Enabled, but not needed for full-document-read method") if semantic_retrieval and self.full_document_read else None
 
             if not self.full_document_read:
-                if process_DAS_links_separately and (filter_das is None or filter_das):
-                    # Extract dataset links
-                    dataset_links = self.extract_href_from_data_availability(api_data)
-                    dataset_links.extend(self.extract_xrefs_from_data_availability(api_data, current_url_address))
-                    self.logger.info(f"dataset_links: {dataset_links}")
-
-                    augmented_dataset_links = self.process_data_availability_links(dataset_links)
-                    self.logger.info(f"Len of augmented_dataset_links: {len(augmented_dataset_links)}")
-
-                    self.logger.debug(f"Additional data: {(additional_data)}")
-                    if additional_data is not None and len(additional_data) > 0:
-                        self.logger.info(f"Additional data ({type(additional_data), len(additional_data)} items) "
-                                         f"and Parsed data ({type(augmented_dataset_links), len(augmented_dataset_links)} items).")
-                        # extend the dataset links with additional data
-                        augmented_dataset_links = augmented_dataset_links + self.process_additional_data(
-                            additional_data)
-                        self.logger.debug(f"Type: {type(augmented_dataset_links)}")
-                        self.logger.debug(f"Len of augmented_dataset_links: {len(augmented_dataset_links)}")
-
-                    self.logger.debug(f"Content of augmented_dataset_links: {augmented_dataset_links}")
-                    dataset_links_w_target_pages = self.get_dataset_page(augmented_dataset_links)
-
-                elif filter_das is None or filter_das:
+                if filter_das is None or filter_das:
                     data_availability_cont = self.get_data_availability_text(api_data)
 
                     if semantic_retrieval:
                         self.logger.info(f"Using semantic retrieval for data availability sections.")
-                        corpus = self.extract_sections_from_xml(api_data)
-                        top_k_sections = self.semantic_retrieve_from_corpus(corpus, topk_docs_to_retrieve=top_k)
+                        sections = self.extract_sections_from_xml(api_data)
+                        corpus = self.from_sections_to_corpus(sections)
+                        top_k_sections = self.semantic_retrieve_from_corpus(corpus, topk_docs_to_retrieve=top_k, model_name=self.embeddings_retriever.model_name)
                         top_k_sections_text = [item['text'] for item in top_k_sections]
                         data_availability_cont.extend(top_k_sections_text)
 
                     augmented_dataset_links = self.process_data_availability_text(data_availability_cont,
                                                                                   prompt_name=prompt_name,
                                                                                   response_format=response_format)
-
-                    if additional_data is not None and len(additional_data) > 0:
-                        self.logger.info(f"Additional data ({type(additional_data), len(additional_data)} items) "
-                                         f"and Parsed data ({type(augmented_dataset_links), len(augmented_dataset_links)} items).")
-                        # extend the dataset links with additional data
-                        augmented_dataset_links = augmented_dataset_links + self.process_additional_data(
-                            additional_data)
-                        self.logger.debug(f"Type: {type(augmented_dataset_links)}, Len: {len(augmented_dataset_links)}")
-                        self.logger.debug(f"Augmented_dataset_links: {augmented_dataset_links}")
 
                     self.logger.debug(f"Content of augmented_dataset_links: {augmented_dataset_links}")
                     dataset_links_w_target_pages = self.get_dataset_page(augmented_dataset_links)
@@ -1022,8 +974,61 @@ class XMLParser(LLMParser):
     def regex_match_id_patterns(self, xml_element, id_patterns=None):
         """XML-specific version that preserves structure if needed"""
         # Extract specific XML sections first, then apply regex
-        text_content = etree.tostring(xml_element, encoding='unicode', method='text')
+        if type(xml_element) != str:
+            text_content = etree.tostring(xml_element, encoding='unicode', method='text')
+        else:
+            text_content = xml_element
         return super().regex_match_id_patterns(text_content, id_patterns)
+
+    def extract_citations(self, xml_root):
+        """
+        Extract citations from XML reference sections.
+        Returns a list of dicts with label, text, and external links (DOI, PMID, PMCID, etc).
+        """
+        citations = []
+        # Find all <ref> elements (references)
+        for ref in xml_root.findall('.//ref'):
+            label = None
+            citation_text = None
+            external_links = {}
+
+            # Extract label (e.g., [1], [2])
+            label_elem = ref.find('label')
+            if label_elem is not None and label_elem.text:
+                label = label_elem.text.strip()
+
+            # Extract citation text from <mixed-citation> or <element-citation>
+            mixed_cit = ref.find('.//mixed-citation')
+            elem_cit = ref.find('.//element-citation')
+            if mixed_cit is not None:
+                citation_text = ' '.join(mixed_cit.itertext()).strip()
+                # Extract external links from <pub-id> children
+                for pub_id in mixed_cit.findall('pub-id'):
+                    id_type = pub_id.get('pub-id-type')
+                    if id_type and pub_id.text:
+                        external_links[id_type] = pub_id.text.strip()
+            elif elem_cit is not None:
+                citation_text = ' '.join(elem_cit.itertext()).strip()
+                for pub_id in elem_cit.findall('pub-id'):
+                    id_type = pub_id.get('pub-id-type')
+                    if id_type and pub_id.text:
+                        external_links[id_type] = pub_id.text.strip()
+
+            # Also check for <ext-link> elements for direct URLs
+            for ext_link in ref.findall('.//ext-link'):
+                href = ext_link.get('{http://www.w3.org/1999/xlink}href')
+                if href:
+                    ext_type = ext_link.get('ext-link-type', 'url')
+                    external_links[ext_type] = href
+
+            citations.append({
+                'label': label,
+                'citation_text': citation_text,
+                'external_links': external_links
+            })
+
+        return citations
+        
 
     @staticmethod
     def is_tei_xml_static(xml_root):
@@ -1200,11 +1205,10 @@ class TEI_XMLParser(XMLParser):
             return title_el.text.strip()
         return ""
 
-    def parse_data(self, api_data, publisher=None, current_url_address=None, additional_data=None,
-                   raw_data_format='XML',
-                   article_file_dir='tmp/raw_files/', process_DAS_links_separately=False, section_filter=None,
-                   prompt_name='GPT_FewShot', use_portkey=True, semantic_retrieval=False,
-                   top_k=2, response_format=dataset_response_schema_gpt):
+    def parse_data(self, api_data, publisher=None, current_url_address=None,
+                   raw_data_format='XML', article_file_dir='tmp/raw_files/', section_filter=None,
+                   prompt_name='GPT_FewShot', use_portkey=True, semantic_retrieval=False, top_k=2, 
+                   response_format=dataset_response_schema_gpt):
         """
         Parse the API data and extract relevant links and metadata.
 
@@ -1214,8 +1218,6 @@ class TEI_XMLParser(XMLParser):
 
         :param current_url_address: The current URL address being processed.
 
-        :param additional_data: Additional data to be processed (optional).
-
         :param raw_data_format: The format of the raw data ('XML' or 'HTML').
 
         :return: A DataFrame containing the extracted links and links to metadata - if repo is supported. Add support for unsupported repos in the ontology.
@@ -1224,7 +1226,7 @@ class TEI_XMLParser(XMLParser):
         out_df = None
         # Check if api_data is a string, and convert to XML if needed
         self.logger.info(f"Function call: parse_data(api_data({type(api_data)}), {publisher}, {current_url_address}, "
-                         f"additional_data, {raw_data_format})")
+                         f"{raw_data_format})")
         self.publisher = publisher
 
         if isinstance(api_data, str):
@@ -1261,50 +1263,20 @@ class TEI_XMLParser(XMLParser):
             self.logger.warning(f"Semantic Retrieval Enabled, but not needed for full-document-read method") if semantic_retrieval and self.full_document_read else None
 
             if not self.full_document_read:
-                if process_DAS_links_separately and (filter_das is None or filter_das):
-                    # Extract dataset links
-                    dataset_links = self.extract_href_from_data_availability(api_data)
-                    dataset_links.extend(self.extract_xrefs_from_data_availability(api_data, current_url_address))
-                    self.logger.info(f"dataset_links: {dataset_links}")
-
-                    augmented_dataset_links = self.process_data_availability_links(dataset_links)
-                    self.logger.info(f"Len of augmented_dataset_links: {len(augmented_dataset_links)}")
-
-                    self.logger.debug(f"Additional data: {(additional_data)}")
-                    if additional_data is not None and len(additional_data) > 0:
-                        self.logger.info(f"Additional data ({type(additional_data), len(additional_data)} items) "
-                                         f"and Parsed data ({type(augmented_dataset_links), len(augmented_dataset_links)} items).")
-                        # extend the dataset links with additional data
-                        augmented_dataset_links = augmented_dataset_links + self.process_additional_data(
-                            additional_data)
-                        self.logger.debug(f"Type: {type(augmented_dataset_links)}")
-                        self.logger.debug(f"Len of augmented_dataset_links: {len(augmented_dataset_links)}")
-
-                    self.logger.debug(f"Content of augmented_dataset_links: {augmented_dataset_links}")
-                    dataset_links_w_target_pages = self.get_dataset_page(augmented_dataset_links)
-
-                elif filter_das is None or filter_das:
+                if filter_das is None or filter_das:
                     data_availability_cont = self.get_data_availability_text(api_data)
 
                     if semantic_retrieval:
                         self.logger.info(f"Using semantic retrieval for data availability sections.")
-                        corpus = self.extract_sections_from_xml(api_data)
-                        top_k_sections = self.semantic_retrieve_from_corpus(corpus, topk_docs_to_retrieve=top_k)
+                        sections = self.extract_sections_from_xml(api_data)
+                        corpus = self.from_sections_to_corpus(sections)
+                        top_k_sections = self.semantic_retrieve_from_corpus(corpus, topk_docs_to_retrieve=top_k, model_name=self.embeddings_retriever.model_name)
                         top_k_sections_text = [item['text'] for item in top_k_sections]
                         data_availability_cont.extend(top_k_sections_text)
 
                     augmented_dataset_links = self.process_data_availability_text(data_availability_cont,
                                                                                   prompt_name=prompt_name,
                                                                                   response_format=response_format)
-
-                    if additional_data is not None and len(additional_data) > 0:
-                        self.logger.info(f"Additional data ({type(additional_data), len(additional_data)} items) "
-                                         f"and Parsed data ({type(augmented_dataset_links), len(augmented_dataset_links)} items).")
-                        # extend the dataset links with additional data
-                        augmented_dataset_links = augmented_dataset_links + self.process_additional_data(
-                            additional_data)
-                        self.logger.debug(f"Type: {type(augmented_dataset_links)}, Len: {len(augmented_dataset_links)}")
-                        self.logger.debug(f"Augmented_dataset_links: {augmented_dataset_links}")
 
                     self.logger.debug(f"Content of augmented_dataset_links: {augmented_dataset_links}")
                     dataset_links_w_target_pages = self.get_dataset_page(augmented_dataset_links)

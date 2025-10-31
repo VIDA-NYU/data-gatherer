@@ -277,10 +277,9 @@ class PDFParser(LLMParser):
         text = text.replace('<PARA>', '\n\n')
         return text
 
-    def parse_data(self, file_path, publisher=None, current_url_address=None, additional_data=None, raw_data_format='PDF',
-                   file_path_is_temp=False, article_file_dir='tmp/raw_files/', process_DAS_links_separately=False,
-                   prompt_name='GPT_FewShot', use_portkey=True, semantic_retrieval=False,
-                   top_k=2, section_filter=None, response_format=dataset_response_schema_gpt):
+    def parse_data(self, file_path, publisher=None, current_url_address=None, raw_data_format='PDF',
+                   file_path_is_temp=False, article_file_dir='tmp/raw_files/', prompt_name='GPT_FewShot', use_portkey=True, 
+                   semantic_retrieval=False, top_k=2, section_filter=None, response_format=dataset_response_schema_gpt):
         """
         Parse the PDF file and extract metadata of the relevant datasets.
 
@@ -288,7 +287,6 @@ class PDFParser(LLMParser):
 
         :param current_url_address: The current URL address being processed.
 
-        :param additional_data: Additional data to be processed (optional).
 
         :param raw_data_format: The format of the raw data ('XML' or 'HTML').
 
@@ -300,7 +298,7 @@ class PDFParser(LLMParser):
         out_df = None
         # Check if api_data is a string, and convert to XML if needed
         self.logger.info(f"Function call: parse_data({file_path}, {current_url_address}, "
-                         f"additional_data, {raw_data_format})")
+                         f"{raw_data_format})")
 
         text_from_pdf = self.extract_text_from_pdf(file_path)
         preprocessed_data = self.normalize_extracted_text(text_from_pdf)

@@ -120,7 +120,7 @@ class LLMParser(ABC):
     def reconstruct_download_link(self, href, content_type, current_url_address):
         download_link = None
         self.logger.debug(f"Function_call: reconstruct_download_link({href}, {content_type}, {current_url_address})")
-        if self.publisher == 'PMC':
+        if self.publisher == 'PMC' and 'pmc' in current_url_address.lower():
             PMCID = re.search(r'PMC(\d+)', current_url_address, re.IGNORECASE).group(1)
             self.logger.debug(
                 f"Inputs to reconstruct_download_link: {href}, {content_type}, {current_url_address}, {PMCID}")
@@ -137,69 +137,6 @@ class LLMParser(ABC):
 
         return download_link
 
-    def union_additional_data(self, parsed_data, additional_data):
-        self.logger.info(f"Merging additional data ({type(additional_data)}) with parsed data({type(parsed_data)}).")
-        self.logger.info(f"Additional data\n{additional_data}")
-        return pd.concat([parsed_data, additional_data], ignore_index=True)
-
-    def process_additional_data(self, additional_data, prompt_name='GPT_FewShot',
-                                response_format=dataset_response_schema_gpt):
-        """
-        Process the additional data from the webpage. This is the data matched from the HTML with the patterns in
-        retrieval_patterns xpaths.
-
-        :param additional_data: List of dictionaries containing additional data to be processed.
-
-        :return: List of dictionaries containing processed data.
-
-        """
-        self.logger.info(f"Processing additional data: {len(additional_data)} items")
-        repos_elements = []
-        for repo, details in self.open_data_repos_ontology['repos'].items():
-            entry = repo
-            if 'repo_name' in details:
-                entry += f" ({details['repo_name']})"
-            repos_elements.append(entry)
-
-        # Join the elements into a properly formatted string
-        repos = ', '.join(repos_elements)
-
-        # Log for debugging
-        self.logger.info(f"Repos elements: {repos_elements}")
-
-        ret = []
-        for element in additional_data:
-            self.logger.info(f"Processing additional data element ({type(element)}): {element}")
-            cont = element['surrounding_text']
-
-            if 'Supplementary Material' in cont or 'supplementary material' in cont:
-                continue
-
-            if (element['source_section'] in ['data availability', 'data_availability', 'data_availability_elements']
-                or 'data availability' in cont) and len(cont) > 1:
-                self.logger.info(f"Processing data availability text")
-                # Call the generalized function
-                datasets = self.extract_datasets_info_from_content(
-                    cont, 
-                    repos_elements, model=self.llm_name,
-                    temperature=0,
-                    prompt_name=prompt_name,
-                    response_format=response_format
-                )
-
-                for dt in datasets:
-                    dt['source_section'] = element['source_section']
-                    dt['retrieval_pattern'] = element['retrieval_pattern']
-
-                ret.extend(datasets)
-            else:
-                self.logger.debug(f"Processing supplementary material element")
-                ret.append(element)
-
-        self.logger.info(f"Final ret additional data: {len(ret)} items")
-        self.logger.debug(f"Final ret additional data: {ret}")
-        return ret
-
     def process_data_availability_text(self, DAS_content, prompt_name='GPT_FewShot',
                                        response_format=dataset_response_schema_gpt):
         """
@@ -209,17 +146,14 @@ class LLMParser(ABC):
 
         :return: List of dictionaries containing processed data.
         """
-        self.logger.info(f"Processing DAS_content: {len(DAS_content)} elements")
+        self.logger.info(f"Processing DAS_content: {len(DAS_content)} elements of type: {[type(item) for item in DAS_content]}")
         repos_elements = self.repo_names
 
+        DAS_str = "\n".join([item + "\n" for item in DAS_content])
+
         # Call the generalized function
-        datasets = []
-        for element in DAS_content:
-            datasets.extend(self.extract_datasets_info_from_content(element, repos_elements,
-                                                                    model=self.llm_name,
-                                                                    temperature=0,
-                                                                    prompt_name=prompt_name,
-                                                                    response_format=response_format))
+        datasets = self.extract_datasets_info_from_content(DAS_str, repos_elements,
+            model=self.llm_name, temperature=0, prompt_name=prompt_name, response_format=response_format)
 
         # Add source_section information and return
         ret = []
@@ -227,7 +161,7 @@ class LLMParser(ABC):
         for dataset in datasets:
             self.logger.info(f"iter dataset ({type(dataset)}): {dataset}")
             dataset['source_section'] = 'data_availability'
-            self.logger.warning(f"Adding retrieval pattern 'data availability' to dataset")
+            self.logger.info(f"Adding retrieval pattern 'data availability' to dataset")
             dataset['retrieval_pattern'] = 'data availability'
             ret.append(dataset)
 

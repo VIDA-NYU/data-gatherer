@@ -248,7 +248,7 @@ def test_semantic_retrieve_from_corpus(get_test_data_path):
     accession_ids = ['GSE269782', 'GSE31210', 'GSE106765', 'GSE60189', 'GSE59239', 'GSE122005', 'GSE38121', 'GSE71587',
                      'GSE37699', 'PXD051771']
     #print(f"top_k_sections: {[sect['L2_distance'] for sect in top_k_sections]}")
-    scores = [1.2540757656097412, 1.4350833892822266, 1.4540908336639404, 1.461714744567871, 1.496106505393982]
+    scores = [1.515732765197754, 1.6149314641952515, 1.6210191249847412, 1.6590588092803955, 1.6655248403549194]
     DAS_text = ".\n".join([item['text'] for item in top_k_sections])
     assert isinstance(top_k_sections, list)
     assert len(top_k_sections) == 5
@@ -257,6 +257,41 @@ def test_semantic_retrieve_from_corpus(get_test_data_path):
         assert acc_id.lower() in str.lower(DAS_text)
     for sect_i, sect in enumerate(top_k_sections):
         assert abs(sect['L2_distance'] - scores[sect_i]) < 0.05
+    print('\n')
+
+def test_sections_to_corpus_for_HTML_RTR(get_test_data_path):
+    logger = setup_logging("test_logger", log_file="../logs/scraper.log", level=logging.INFO)
+    parser = HTMLParser("open_bio_data_repos.json", logger, llm_name='gemini-2.0-flash', embeddings_model_name='sentence-transformers/multi-qa-MiniLM-L6-cos-v1')
+    with open(get_test_data_path('test_section_to_corpus.html'), 'rb') as f:
+        raw_html = f.read()
+    sections = parser.extract_sections_from_html(raw_html)
+    assert isinstance(sections, list)
+    assert len(sections) == 21
+    assert all(isinstance(s, dict) for s in sections)
+    corpus = parser.from_sections_to_corpus(sections)
+    assert isinstance(corpus, list)
+    assert len(corpus) == 31
+    query = "Datasets used, or downloaded, or deposited, or created, or available online"
+    top_k_sections = parser.semantic_retrieve_from_corpus(corpus, topk_docs_to_retrieve=3, query=query)
+    assert isinstance(top_k_sections, list)
+    assert len(top_k_sections) == 3
+    scores = [1.1357561349868774, 1.4607781171798706, 1.4750547409057617]
+    print(f"top_k_sections: {[sect['L2_distance'] for sect in top_k_sections]}")
+    for sect_i, sect in enumerate(top_k_sections):
+        assert abs(sect['L2_distance'] - scores[sect_i]) < 0.01
+    print('\n')
+
+def test_from_section_to_corpus(get_test_data_path):
+    logger = setup_logging("test_logger", log_file="../logs/scraper.log", level=logging.INFO)
+    parser = XMLParser("open_bio_data_repos.json", logger, llm_name='gemini-2.0-flash')
+    with open(get_test_data_path('pmc_element_set_1.xml'), 'rb') as f:
+        xml_root = etree.fromstring(f.read())
+    sections = parser.extract_sections_from_xml(xml_root)
+    assert isinstance(sections, list)
+    assert len(sections) == 28
+    corpus = parser.from_sections_to_corpus(sections)
+    assert isinstance(corpus, list)
+    assert len(corpus) == 83
     print('\n')
 
 def test_normalize_text_from_pdf(get_test_data_path):
@@ -333,3 +368,19 @@ def test_schema_validation(get_test_data_path):
         assert dataset_webpage_val == ret['dataset_webpage'] if 'dataset_webpage' in ret else dataset_webpage_val is None
         print('\n')
         
+def test_extract_citations_from_html_xml_and_compare(get_test_data_path):
+    logger = setup_logging("test_logger", log_file="../logs/scraper.log")
+    html_parser = HTMLParser("open_bio_data_repos.json", logger, llm_name='gemini-2.0-flash')
+    xml_parser = XMLParser("open_bio_data_repos.json", logger, llm_name='gemini-2.0-flash')
+    with open(get_test_data_path('test_extract_citations.html'), 'rb') as f:
+        raw_html = f.read()
+    citations_from_html = html_parser.extract_citations(raw_html)
+    print(f"citations: \n\n{citations_from_html}\n\n")
+
+    with open(get_test_data_path('test_extract_citations.xml'), 'rb') as f:
+        raw_xml = etree.fromstring(f.read())
+    citations_from_xml = xml_parser.extract_citations(raw_xml)
+    print(f"citations: \n\n{citations_from_xml}\n\n")
+
+    assert isinstance(citations_from_xml, list) and isinstance(citations_from_html, list)
+    assert len(citations_from_xml) == len(citations_from_html) == 82
