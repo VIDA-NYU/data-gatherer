@@ -27,7 +27,6 @@ class DataGatherer:
     """
     This class orchestrates the data gathering process by coordinating the publication fetcher, the publication parser, and
     the metadata processing in a single workflow.
-	Initializes the DataGatherer with the given configuration file and sets up logging.
 
     :param llm_name: Name of the LLM model to use for parsing and classification.
 
