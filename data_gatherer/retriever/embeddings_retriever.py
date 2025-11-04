@@ -98,9 +98,18 @@ class EmbeddingsRetriever(BaseRetriever):
         
         if self.corpus is None:
             raise ValueError("No corpus provided for embedding")
-            
-        print(f"Embedding corpus of {len(self.corpus)} documents using {self.model_name}")
-        
+        elif isinstance(self.corpus, str):
+            raise ValueError("Corpus should be a list of documents, not a single string")
+        elif isinstance(self.corpus, list):
+            self.logger.info(f"Corpus contains {len(self.corpus)} documents.")
+            self.corpus = [doc for doc in self.corpus]
+        elif isinstance(self.corpus, dict):
+            self.logger.info(f"Corpus is a dict with {len(self.corpus)} entries.")
+        else:
+            raise ValueError("Corpus should be a list or dict of documents")
+
+        self.logger.info(f"Embedding {type(self.corpus)} corpus of {len(self.corpus)} documents using {self.model_name}")
+
         # Extract text from corpus documents
         corpus_texts = [doc['sec_txt'] if 'sec_txt' in doc else doc['text'] for doc in self.corpus]
 
@@ -110,14 +119,14 @@ class EmbeddingsRetriever(BaseRetriever):
         self.embeddings = self.model.encode(corpus_texts, show_progress_bar=True, convert_to_numpy=True, batch_size=batch_size)
         embed_time = time.time() - embed_start
 
-        print(f"Embedding time: {embed_time:.2f}s ({embed_time/len(corpus_texts):.3f}s per chunk)")
-        print(f"Corpus embedding completed. Shape: {self.embeddings.shape}")
+        self.logger.info(f"Embedding time: {embed_time:.2f}s ({embed_time/len(corpus_texts):.3f}s per chunk)")
+        self.logger.info(f"Corpus embedding completed. Shape: {self.embeddings.shape}")
         
         if enable_chunking:
             # Log chunking statistics
             original_docs = len(corpus_texts)
             final_chunks = self.embeddings.shape[0]
-            print(f"Chunking results: {original_docs} original documents → {final_chunks} embedded chunks")
+            self.logger.debug(f"Chunking results: {original_docs} original documents → {final_chunks} embedded chunks")
 
     def _initialize_biomedbert_model(self, model_name, device):
         """
@@ -206,10 +215,11 @@ class EmbeddingsRetriever(BaseRetriever):
             else:
                 result['is_chunked'] = False
             
-            results.append(result)
-            passage = result['text']
+            passage = result.get('text', 'sec_txt')
             chunk_info = f" (chunk {doc.get('chunk_id', 'N/A')+1}/{doc.get('total_chunks', 'N/A')})" if 'chunk_id' in doc else ""
-            self.logger.debug(f"Retrieved passage{chunk_info}: {passage[:100]}... with L2 distance: {score}")
+            passage_preview = str(passage)[:100] if passage is not None else ""
+            self.logger.debug(f"Retrieved passage{chunk_info}: {passage_preview}... with L2 distance: {score}")
+            results.append(result)
         return results
 
     def embed_query(self, query):

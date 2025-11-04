@@ -62,6 +62,15 @@ class XMLParser(LLMParser):
                     # self.logger.info(f"Extracted paragraph: {paragraphs[-1]}")
 
         return paragraphs
+    
+    def extract_sections_from_text(self, xml_content: str) -> list[dict]:
+        """
+        alias for extract_sections_from_xml
+        """
+        if isinstance(xml_content, str):
+            xml_content = etree.fromstring(xml_content.encode('utf-8'))
+        
+        return self.extract_sections_from_xml(xml_content)
 
     def extract_sections_from_xml(self, xml_root) -> list[dict]:
         """
@@ -183,7 +192,7 @@ class XMLParser(LLMParser):
             self.logger.error(f"Error parsing XML: {e}")
             return None
 
-    def from_sections_to_corpus(self, sections):
+    def from_sections_to_corpus(self, sections, max_tokens=None):
         """
         Convert structured XML sections to a flat corpus of documents for embeddings retrieval.
         This method takes the output from extract_sections_from_xml (list of dicts) and converts it
@@ -195,13 +204,11 @@ class XMLParser(LLMParser):
         self.logger.info(f"Converting {len(sections)} XML sections to embeddings corpus")
 
         # Get model token limits from the initialized retriever
-        max_tokens = None
-        try:
+        if max_tokens is None:
             max_tokens = self.embeddings_retriever.model.get_max_seq_length()
             self.logger.debug(f"Using model max sequence length: {max_tokens} tokens")
-        except Exception as e:
-            self.logger.warning(f"Could not get model token limit: {e}. Using default of 512")
-            max_tokens = 512
+        effective_max_tokens = int(max_tokens * 0.95)
+        self.logger.debug(f"Effective max tokens per section: {effective_max_tokens}")
         
         # Reserve some tokens for the query and model overhead (typically 10-20% buffer)
         effective_max_tokens = int(max_tokens * 0.95)  # 95% of max to be safe

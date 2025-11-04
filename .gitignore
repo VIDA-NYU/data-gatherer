@@ -165,3 +165,4 @@ scripts/output/false_positives.txt
 scripts/output/syn_data_results/result_gpt-5-mini_full-input.csv
 uv.lock
 data_gatherer/prompts/prompt_evals/**
+scripts/exp_input/dspy_ground_truth*

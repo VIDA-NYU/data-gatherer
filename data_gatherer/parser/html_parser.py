@@ -229,6 +229,12 @@ class HTMLParser(LLMParser):
                 })
         return paragraphs
 
+    def extract_sections_from_text(self, html_content: str) -> list[dict]:
+        """
+        alias for extract_sections_from_html
+        """
+        return self.extract_sections_from_html(html_content)
+
     def extract_sections_from_html(self, html_content: str) -> list[dict]:
         """
         Extract sections from an HTML document, following the XML parser pattern.

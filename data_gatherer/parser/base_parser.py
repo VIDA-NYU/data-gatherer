@@ -195,6 +195,11 @@ class LLMParser(ABC):
         n_tokens_static_prompt = self.count_tokens(static_prompt, model)
 
         if 'gpt' in model:
+            tokens_cnt = self.count_tokens(content)
+            if tokens_cnt > int(1.2 * 128000):
+                return self.extract_datasets_info_from_chunks(
+                    content, tokens_cnt, repos, model, temperature, prompt_name,full_document_read,response_format)
+                
             while self.tokens_over_limit(content, model, allowance_static_prompt=n_tokens_static_prompt):
                 content = content[:-2000]
         self.logger.info(f"Content length: {len(content)}")
@@ -279,6 +284,34 @@ class LLMParser(ABC):
         result = self.process_datasets_response(resps)
 
         return result
+    
+    def extract_datasets_info_from_chunks(self, content, tokens_cnt, repos, model, temperature, prompt_name,full_document_read,response_format):
+        '''
+        This function splits the content into chunks based on token count, then calls extract_datasets_info_from_content for each chunk.
+        '''
+        ret = []
+        # Determine chunk size (e.g., 128000 tokens per chunk for GPT-4o)
+        # Estimate chunk size in string indices: 1 token ≈ 3.5 characters
+        token_chunk_size = 128000
+        char_chunk_size = int(token_chunk_size * 3.5)
+        # Split content into chunks
+        chunks = []
+        start = 0
+        while start < len(content):
+            end = start + char_chunk_size
+            chunks.append(content[start:end])
+            start = end
+        self.logger.info(f"Splitting content into {len(chunks)} chunks of size {char_chunk_size} characters (approx {token_chunk_size} tokens per chunk).")
+        # Call extract_datasets_info_from_content for each chunk
+        for idx, chunk in enumerate(chunks):
+            self.logger.info(f"Processing chunk {idx+1}/{len(chunks)}")
+            chunk_results = self.extract_datasets_info_from_content(
+                chunk,
+                repos_elements=repos, model=model, temperature=temperature,prompt_name=prompt_name,response_format=response_format
+            )
+            ret.extend(chunk_results)
+        return ret
+
 
     def process_datasets_response(self, resps):
         """
