@@ -1191,13 +1191,15 @@ class DataGatherer:
 
     def run(
         self, 
-        input_file='input/test_input.txt', 
-        full_output_file='output/result.csv',
+        input_file='scripts/exp_input/test_input.txt', 
+        full_output_file='scripts/output/result.csv',
         semantic_retrieval=False, 
         top_k=5,
         embeddings_retriever_model=None,
         section_filter=None,
-        prompt_name='GPT_FewShot'):
+        prompt_name='GPT_FewShot',
+        response_format=dataset_response_schema_gpt
+        ):
         """
         This method orchestrates the entire data gathering process by performing the following steps:
 
@@ -1211,11 +1213,19 @@ class DataGatherer:
 
         :param input_file: Path to the input file containing URLs or PMCIDs to process.
 
+        :param full_output_file: Path to the output file where results will be saved.
+
         :param semantic_retrieval: Flag to indicate if semantic retrieval should be used.
+
+        :param top_k: Number of top documents to retrieve for semantic retrieval.
+
+        :param embeddings_retriever_model: Model to use for embeddings retrieval.
 
         :param section_filter: Optional filter to apply to the sections (supplementary_material', 'data_availability_statement').
 
         :param prompt_name: Name of the prompt to use for LLM parsing.
+
+        :param response_format: Format of the response to return.
 
         :return: Combined DataFrame of all processed data links.
 
@@ -1228,7 +1238,7 @@ class DataGatherer:
 
             # Process each URL and return results as a dictionary like source_url: DataFrame_of_data_links
             results = self.process_articles(urls, semantic_retrieval=semantic_retrieval, top_k=top_k, embeddings_retriever_model=embeddings_retriever_model,
-                section_filter=section_filter,prompt_name=prompt_name, driver_path=self.fetcher_driver_path)
+                section_filter=section_filter,prompt_name=prompt_name, driver_path=self.fetcher_driver_path, response_format=response_format)
 
             # return the union of all the results
             combined_df = pd.DataFrame()

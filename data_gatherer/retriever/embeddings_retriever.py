@@ -95,24 +95,22 @@ class EmbeddingsRetriever(BaseRetriever):
         """
         if corpus is not None:
             self.corpus = corpus
+        corpus_texts = []
         
         if self.corpus is None:
             raise ValueError("No corpus provided for embedding")
         elif isinstance(self.corpus, str):
             raise ValueError("Corpus should be a list of documents, not a single string")
         elif isinstance(self.corpus, list):
-            self.logger.info(f"Corpus contains {len(self.corpus)} documents.")
-            self.corpus = [doc for doc in self.corpus]
+            self.logger.info(f"Corpus contains {len(self.corpus)} documents of type ({type(self.corpus[0])})")
+            corpus_texts = self.corpus
         elif isinstance(self.corpus, dict):
             self.logger.info(f"Corpus is a dict with {len(self.corpus)} entries.")
+            corpus_texts = [doc['sec_txt'] if 'sec_txt' in doc else doc['text'] for doc in self.corpus]
         else:
             raise ValueError("Corpus should be a list or dict of documents")
 
-        self.logger.info(f"Embedding {type(self.corpus)} corpus of {len(self.corpus)} documents using {self.model_name}")
-
-        # Extract text from corpus documents
-        corpus_texts = [doc['sec_txt'] if 'sec_txt' in doc else doc['text'] for doc in self.corpus]
-
+        self.logger.info(f"Embedding {type(corpus_texts)} corpus of {len(corpus_texts)} documents using {self.model_name}")
 
         # Embed the (potentially chunked) corpus
         embed_start = time.time()
@@ -199,8 +197,14 @@ class EmbeddingsRetriever(BaseRetriever):
         results = []
         for idx, score in zip(idxs, dists):
             doc = self.corpus[idx]
+
+            if isinstance(doc, str):
+                text_content = doc
+            else:
+                text_content = doc['sec_txt'] if 'sec_txt' in doc else doc['text']
+                
             result = {
-                'text': doc['sec_txt'] if 'sec_txt' in doc else doc['text'],
+                'text': text_content,
                 'section_title': doc.get('section_title', None),
                 'sec_type': doc.get('sec_type', None),
                 'L2_distance': float(score)

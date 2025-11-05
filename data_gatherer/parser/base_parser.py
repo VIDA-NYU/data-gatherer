@@ -1295,8 +1295,11 @@ class LLMParser(ABC):
         """
 
         if query is None:
-            query = """Explicitly identify all the datasets by their database accession codes, repository names, and links
-                    to deposited datasets mentioned in this paper."""
+            query = """Data Availability Statement or mentions of dataset repositories/portals, identifiers, or accession codes, including PRIDE, ProteomeXchange, MassIVE, iProX, JPOST, Proteomic Data Commons (PDC), Genomic Data Commons (GDC), Cancer Imaging Archive (TCIA), Imaging Data Commons (IDC), Gene Expression Omnibus (GEO), ArrayExpress, dbGaP, Sequence Read Archive (SRA), Protein Data Bank (PDB), Mendeley Data, Synapse, European Genome-Phenome Archive (EGA), BIGD, and ProteomeCentral. 
+            Also include dataset identifiers or links such as PXD, MSV, GSE, GSM, GPL, GDS, phs, syn, PDC, PRJNA, DOI, or accession code. 
+            Look for phrases like deposited in, available at, submitted to, uploaded to, archived in, hosted by, retrieved from, accessible via, or publicly available. 
+            Capture statements indicating datasets, repositories, or data access locations.
+            """
 
         self.embeddings_retriever = EmbeddingsRetriever(
             corpus=corpus,

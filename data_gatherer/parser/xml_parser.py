@@ -406,7 +406,7 @@ class XMLParser(LLMParser):
                         sections = self.extract_sections_from_xml(api_data)
                         corpus = self.from_sections_to_corpus(sections)
                         top_k_sections = self.semantic_retrieve_from_corpus(corpus, topk_docs_to_retrieve=top_k, model_name=self.embeddings_retriever.model_name)
-                        top_k_sections_text = [item['text'] for item in top_k_sections]
+                        top_k_sections_text = [item['text'] for item in top_k_sections if item['text'] not in data_availability_cont]
                         data_availability_cont.extend(top_k_sections_text)
 
                     augmented_dataset_links = self.process_data_availability_text(data_availability_cont,
@@ -1278,7 +1278,7 @@ class TEI_XMLParser(XMLParser):
                         sections = self.extract_sections_from_xml(api_data)
                         corpus = self.from_sections_to_corpus(sections)
                         top_k_sections = self.semantic_retrieve_from_corpus(corpus, topk_docs_to_retrieve=top_k, model_name=self.embeddings_retriever.model_name)
-                        top_k_sections_text = [item['text'] for item in top_k_sections]
+                        top_k_sections_text = [item['text'] for item in top_k_sections if item['text'] not in data_availability_cont]
                         data_availability_cont.extend(top_k_sections_text)
 
                     augmented_dataset_links = self.process_data_availability_text(data_availability_cont,

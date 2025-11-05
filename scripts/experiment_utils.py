@@ -484,7 +484,7 @@ def evaluate_performance(predict_df, ground_truth, orchestrator, false_positives
         orchestrator.logger.info(f"Evaluation datasets: {eval_datasets}")
 
         # Handle cases where both ground truth and evaluation are empty
-        if not gt_datasets and not eval_datasets:
+        if not gt_datasets and not eval_datasets or (len(gt_datasets) == 0 and len(eval_datasets) == 0):
             orchestrator.logger.info("No datasets in both ground truth and evaluation. Perfect precision and recall.")
             total_precision += 1
             total_recall += 1

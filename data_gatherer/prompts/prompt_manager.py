@@ -56,10 +56,16 @@ class PromptManager:
             return static_prompt
         else:
             self.logger.debug(f"Rendering prompt with dynamic parts({type(dynamic_parts)}): {dynamic_parts}, and items: {static_prompt}")
-            return [
+            for item in static_prompt:
+                self.logger.debug(f"Item before formatting: {item}")
+                item["content"] = item["content"].replace("{\n", "subst-cbon-subst").replace("}\n", "subst-cbcn-subst").replace("},\n", "subst-cbccn-subst")
+            ret = [
                 {**item, "content": item["content"].format(**dynamic_parts)}
                 for item in static_prompt
             ]
+            for item in ret:
+                item["content"] = item["content"].replace("subst-cbon-subst", "{\n").replace("subst-cbcn-subst", "}\n").replace("subst-cbccn-subst", "},\n")
+            return ret
 
     # In PromptManager
 

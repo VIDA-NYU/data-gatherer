@@ -488,7 +488,7 @@ class HTMLParser(LLMParser):
             if semantic_retrieval:
                 corpus = self.extract_sections_from_html(preprocessed_data)
                 top_k_sections = self.semantic_retrieve_from_corpus(corpus, topk_docs_to_retrieve=top_k)
-                top_k_sections_text = [item['text'] for item in top_k_sections]
+                top_k_sections_text = [item['text'] for item in top_k_sections if item['text'] not in data_availability_str]
                 top_k_sections_str = "\n".join(top_k_sections_text)
                 data_availability_str = top_k_sections_str + "\n" + data_availability_str
 
@@ -886,9 +886,11 @@ class HTMLParser(LLMParser):
         self.logger.info(f"HTML semantic retrieval from corpus with {len(corpus)} sections of type {type(corpus[0]) if corpus else 'None'}")
         
         if query is None:
-            query = """Explicitly identify all the datasets by their database accession codes, repository names, and links
-                    to deposited datasets mentioned in this paper."""
-
+            query = """Data Availability Statement or mentions of dataset repositories/portals, identifiers, or accession codes, including PRIDE, ProteomeXchange, MassIVE, iProX, JPOST, Proteomic Data Commons (PDC), Genomic Data Commons (GDC), Cancer Imaging Archive (TCIA), Imaging Data Commons (IDC), Gene Expression Omnibus (GEO), ArrayExpress, dbGaP, Sequence Read Archive (SRA), Protein Data Bank (PDB), Mendeley Data, Synapse, European Genome-Phenome Archive (EGA), BIGD, and ProteomeCentral. 
+            Also include dataset identifiers or links such as PXD, MSV, GSE, GSM, GPL, GDS, phs, syn, PDC, PRJNA, DOI, or accession code. 
+            Look for phrases like deposited in, available at, submitted to, uploaded to, archived in, hosted by, retrieved from, accessible via, or publicly available. 
+            Capture statements indicating datasets, repositories, or data access locations.
+            """
         # Convert structured sections to flat corpus for embeddings
         self.embeddings_retriever.corpus = self.from_sections_to_corpus(corpus)
 

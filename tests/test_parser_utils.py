@@ -242,13 +242,15 @@ def test_semantic_retrieve_from_corpus(get_test_data_path):
     parser = HTMLParser("open_bio_data_repos.json", logger, llm_name='gemini-2.0-flash')
     with open(get_test_data_path('Webscraper_fetch_1.html'), 'rb') as f:
         raw_html = f.read()
-    corpus = parser.extract_sections_from_html(raw_html)
+    sections = parser.extract_sections_from_html(raw_html)
+    corpus = parser.from_sections_to_corpus(sections)
     query = "Available data, accession code, data repository, deposited data, obtained data"
     top_k_sections = parser.semantic_retrieve_from_corpus(corpus, topk_docs_to_retrieve=5, query=query)
     accession_ids = ['GSE269782', 'GSE31210', 'GSE106765', 'GSE60189', 'GSE59239', 'GSE122005', 'GSE38121', 'GSE71587',
                      'GSE37699', 'PXD051771']
     #print(f"top_k_sections: {[sect['L2_distance'] for sect in top_k_sections]}")
-    scores = [1.515732765197754, 1.6149314641952515, 1.6210191249847412, 1.6590588092803955, 1.6655248403549194]
+    scores = [1.5200263261795044, 1.5799630880355835, 1.5926913022994995, 1.6268982887268066, 1.6333708763122559]
+    print(f"Top-k sections: {top_k_sections[0]}")
     DAS_text = ".\n".join([item['text'] for item in top_k_sections])
     assert isinstance(top_k_sections, list)
     assert len(top_k_sections) == 5
@@ -340,7 +342,7 @@ def test_is_tei_xml(get_test_data_path):
 
 def test_schema_validation(get_test_data_path):
     logger = setup_logging("test_logger", log_file="../logs/scraper.log")
-    parser = XMLParser("open_bio_data_repos.json", logger, llm_name='gemini-2.0-flash')
+    parser = XMLParser("data_repos_ontology.json", logger, llm_name='gemini-2.0-flash')
     test_cases = [
         {'dataset_id': 'https://doi.org/10.1594/PANGAEA.964081', 'repository_reference': 'PANGAEA'},
         {'dataset_id': 'https://doi.org/10.17632/xtb4mkvf8f.1', 'repository_reference': 'data.mendeley.com'},
@@ -350,12 +352,12 @@ def test_schema_validation(get_test_data_path):
         {'dataset_identifier': 'M27187', 'repository_reference': 'https://www.ncbi.nlm.nih.gov/nuccore/M27187', 'dataset_id': 'M27187'}
     ]
     ret_cases = [  # change these when adding support for new repos
-        {'dataset_identifier': '10.1594/PANGAEA.964081', 'repository_reference': 'doi.org', 'dataset_webpage': 'https://doi.pangaea.de/10.1594/PANGAEA.964081'}, 
+        {'dataset_identifier': '10.1594/PANGAEA.964081', 'repository_reference': 'doi.org/10.1594', 'dataset_webpage': 'https://doi.pangaea.de/10.1594/PANGAEA.964081'}, 
         {'dataset_identifier': '10.17632/xtb4mkvf8f.1', 'repository_reference': 'data.mendeley.com', 'dataset_webpage': 'https://data.mendeley.com/datasets/xtb4mkvf8f/1'},
         {'dataset_identifier': 'MSV000081006', 'repository_reference': 'massive.ucsd.edu'},
         {'dataset_identifier': '10.7937/tcia.2019.30ilqfcl', 'repository_reference': 'cancerimagingarchive.net', 'dataset_webpage': 'https://www.cancerimagingarchive.net/collection/acrin-nsclc-fdg-pet/'},
         {'dataset_identifier': 'syn9702085', 'repository_reference': 'synapse.org', 'dataset_webpage': 'https://www.synapse.org/#!Synapse:syn9702085'},
-        {'dataset_identifier': 'M27187', 'repository_reference': 'nuccore', 'dataset_webpage': 'https://www.ncbi.nlm.nih.gov/nuccore/M27187'}
+        {'dataset_identifier': 'M27187', 'repository_reference': 'www.ncbi.nlm.nih.gov', 'dataset_webpage': 'https://www.ncbi.nlm.nih.gov/nuccore/M27187'}
     ]
     for obj,ret in zip(test_cases, ret_cases):
         dataset_id_val, data_repo_val, dataset_webpage_val = parser.schema_validation(obj, req_timeout=5)
