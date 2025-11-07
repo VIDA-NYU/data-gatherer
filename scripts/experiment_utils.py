@@ -526,6 +526,10 @@ def evaluate_performance(predict_df, ground_truth, orchestrator, false_positives
         precision = true_positives / (true_positives + false_positives) if (true_positives + false_positives) > 0 else 0
         recall = true_positives / (true_positives + false_negatives) if (true_positives + false_negatives) > 0 else 0
 
+        if true_positives + false_negatives == 0:
+            orchestrator.logger.info(f"No ground truth datasets for {source_page}. Setting recall to 1.")
+            recall = 1.0
+
         orchestrator.logger.info(f"Precision for {source_page}: {precision}")
         orchestrator.logger.info(f"Recall for {source_page}: {recall}")
 

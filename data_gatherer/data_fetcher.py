@@ -95,6 +95,7 @@ class DataFetcher(ABC):
         self.browser = browser
         self.headless = headless
         self.src = src
+        self.local_data_used = False
         
         # Initialize backup data store (lightweight, shared across all instances)
         self.backup_store = None
@@ -272,18 +273,17 @@ class DataFetcher(ABC):
     def PMCID_to_url(self, PMCID):
         return f"https://www.ncbi.nlm.nih.gov/pmc/articles/{PMCID}"
 
-    def update_DataFetcher_settings(self, url, entire_doc_model, logger, HTML_fallback=False, driver_path=None,
+    def update_DataFetcher_settings(self, url, HTML_fallback=False, driver_path=None,
                                     browser='firefox', headless=True, local_fetch_file=None):
         """
         Creates appropriate data fetcher with BackupDataStore integration. 
         All fetchers now automatically check backup data first, then fall back to live fetching.
 
         :param url: The URL to fetch data from.
-        :param entire_doc_model: Flag to indicate if the entire document model is being used.
-        :param logger: The logger instance for logging messages.
         :return: An instance of the appropriate data fetcher with backup capability.
         """
         self.logger.debug(f"update_DataFetcher_settings for URL: {url}")
+        self.local_data_used = False
 
         # Determine backup data file
         backup_file = local_fetch_file or 'scripts/exp_input/Local_fetched_data.parquet'
@@ -299,7 +299,7 @@ class DataFetcher(ABC):
             if isinstance(self, PdfFetcher):
                 self.logger.info(f"Reusing existing PdfFetcher instance.")
                 return self
-            return PdfFetcher(logger, driver_path=driver_path, browser=browser, headless=headless)
+            return PdfFetcher(self.logger, driver_path=driver_path, browser=browser, headless=headless)
 
         # Detect API type for optimal fetcher selection
         API = None
@@ -314,7 +314,7 @@ class DataFetcher(ABC):
                 self.logger.info(f"Reusing existing EntrezFetcher instance with backup support.")
                 return self
             self.logger.info(f"Creating EntrezFetcher with backup support")
-            return EntrezFetcher(requests, logger)
+            return EntrezFetcher(requests, self.logger)
 
         # For HTTP GET requests (simpler, faster for static content)
         if type(HTML_fallback) == str and HTML_fallback == 'HTTPGetRequest':
@@ -322,13 +322,13 @@ class DataFetcher(ABC):
             if isinstance(self, HttpGetRequest):
                 self.logger.info(f"Reusing existing HttpGetRequest instance.")
                 return self
-            return HttpGetRequest(logger)
+            return HttpGetRequest(self.logger)
         
         # Default case: check if we need complex JS rendering or simple HTTP
         if not HTML_fallback:
             # Start with simple HTTP GET (faster, backup-first)
             self.logger.info(f"Using HttpGetRequest (backup-first) for URL: {url}")
-            return HttpGetRequest(logger)
+            return HttpGetRequest(self.logger)
 
         # For complex dynamic content, use WebScraper with backup support
         # Reuse existing driver if available
@@ -338,7 +338,7 @@ class DataFetcher(ABC):
 
         self.logger.info(f"Creating new WebScraper with backup support: {browser}, headless={headless}")
         driver = create_driver(driver_path, browser, headless, self.logger)
-        return WebScraper(driver, logger, driver_path=driver_path, browser=browser, headless=headless)
+        return WebScraper(driver, self.logger, driver_path=driver_path, browser=browser, headless=headless)
 
     def url_in_dataframe(self, url):
         """
@@ -880,6 +880,9 @@ class EntrezFetcher(DataFetcher):
 
         :param article_id: The URL of the article to fetch data for.
         """
+
+        self.raw_data_format = 'XML'
+
         try:
             # Extract the PMC ID from the article URL, ignore case
             PMCID = re.search(r'PMC\d+', article_id, re.IGNORECASE).group(0)
@@ -904,6 +907,8 @@ class EntrezFetcher(DataFetcher):
         """Helper method to fetch data from live NCBI API."""
         api_call = re.sub('__PMCID__', pmcid, self.base)
         self.logger.info(f"API request: {api_call}")
+
+        self.raw_data_format = 'XML'
 
         # Retry logic for API calls
         for attempt in range(retries):
@@ -1118,6 +1123,16 @@ class DataCompletenessChecker:
     
             :return: True if all required sections are present, False otherwise.
             """
+            if isinstance(raw_data, str):
+                self.logger.debug(f"Raw data is a string of length {len(raw_data)}")
+                raw_data_format = 'HTML'
+            elif isinstance(raw_data, ET._Element):
+                self.logger.debug(f"Raw data is of type {type(raw_data)}")
+                raw_data_format = 'XML'
+            else:
+                self.logger.error(f"Unsupported raw data type: {type(raw_data)}")
+                return False
+
             if raw_data_format.upper() == 'XML':
                 return self.is_xml_data_complete(raw_data, url, required_sections)
             elif raw_data_format.upper() == 'HTML':

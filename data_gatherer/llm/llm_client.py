@@ -323,28 +323,28 @@ class LLMClient_dev:
                 
         elif 'gpt' in self.model:
             self.logger.debug(f"Processing GPT model response")
-            self.logger.info(f"raw_response type: {type(raw_response)}, length: {len(str(raw_response))}, response: {raw_response}")
+            self.logger.debug(f"raw_response type: {type(raw_response)}, length: {len(str(raw_response))}, response: {raw_response}")
             if from_batch_mode:
-                self.logger.info(f"From batch mode, raw_response type: {type(raw_response)}, length: {len(raw_response)}")
+                self.logger.debug(f"From batch mode, raw_response type: {type(raw_response)}, length: {len(raw_response)}")
                 for item in raw_response:
-                    self.logger.info(f"Batch item type: {type(item)}, content (first 100 chars): {str(item)[:100]}")
+                    self.logger.debug(f"Batch item type: {type(item)}, content (first 100 chars): {str(item)[:100]}")
                     if item['type'] == 'reasoning':
                         continue
                     elif item['type'] == 'message':
                         raw_response = item['content'][0]['text']
-                        self.logger.info(f"Using message content for processing: {raw_response[:100]}")
+                        self.logger.debug(f"Using message content for processing: {raw_response[:100]}")
                         break
 
             parsed_response = self.safe_parse_json(raw_response)
             self.logger.info(f"GPT parsed response: {parsed_response}, type: {type(parsed_response)}")
             if self.full_document_read and isinstance(parsed_response, dict) and expected_key in parsed_response:
                 result = parsed_response.get(expected_key, []) if expected_key else parsed_response
-                self.logger.info(f"GPT full_document_read=True, extracted result: {result}")
+                self.logger.debug(f"GPT full_document_read=True, extracted result: {result}")
             else:
                 result = parsed_response or []
-                self.logger.info(f"GPT full_document_read=False, result: {result}")
+                self.logger.debug(f"GPT full_document_read=False, result: {result}")
             final_result = self.normalize_response_format(result)
-            self.logger.info(f"GPT final normalized result: {final_result}")
+            self.logger.debug(f"GPT final normalized result: {final_result}")
             return final_result
             
         elif 'gemini' in self.model:

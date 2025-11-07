@@ -189,6 +189,7 @@ class LLMParser(ABC):
 
         :return: List of datasets retrieved from the content.
         """
+        self.input_tokens = 0
         self.logger.info(f"Function_call: extract_datasets_info_from_content(...)")
         self.logger.debug(f"Loading prompt: {prompt_name} for model {model}")
         static_prompt = self.prompt_manager.load_prompt(prompt_name)
@@ -219,7 +220,8 @@ class LLMParser(ABC):
             content=content,
             repos=', '.join(repos)
         )
-        self.logger.info(f"Prompt messages total length: {self.count_tokens(messages, model)} tokens")
+        tokens_cnt = self.count_tokens(messages, model)
+        self.logger.info(f"Prompt messages total length: {tokens_cnt} tokens")
         self.logger.debug(f"Prompt messages: {messages}")
 
         # Generate the checksum for the prompt content
@@ -251,7 +253,9 @@ class LLMParser(ABC):
             # Make the request using the unified LLM client
             self.logger.info(
                 f"Requesting datasets from content using model: {model}, temperature: {temperature}, "
-                f"messages length: {self.count_tokens(messages, model)} tokens, schema: {response_format}")
+                f"messages length: {tokens_cnt} tokens, schema: {response_format}")
+
+            self.input_tokens += tokens_cnt
             
             # Use the generic make_llm_call method
             raw_response = self.llm_client.make_llm_call(
