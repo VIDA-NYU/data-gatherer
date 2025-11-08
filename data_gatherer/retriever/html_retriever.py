@@ -139,8 +139,8 @@ class htmlRetriever(BaseRetriever):
                 for child in children:
                     if not child.get_text(strip=True):
                         continue
-                    text_val += child.get_text(strip=True) + " \n"
-                    html_val += str(child) + " \n"
+                    text_val += "\n" + child.get_text(strip=True) + "\n"
+                    html_val += "\n" + str(child) + "\n"
 
                 element_info = {
                     'retrieval_pattern': selector,
@@ -162,6 +162,7 @@ class htmlRetriever(BaseRetriever):
                 self.logger.debug(f"Extracted data availability element: {element_info}")
 
         self.logger.info(f"Found {len(data_availability_elements)} data availability elements from HTML.")
+        self.data_availability_elements = data_availability_elements
         return data_availability_elements
 
     def extract_publication_title(self, raw_data):

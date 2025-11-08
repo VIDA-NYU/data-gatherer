@@ -252,6 +252,7 @@ class HTMLParser(LLMParser):
 
         # Find all <section> elements (just like XML parser finds <sec> elements)
         section_elements = soup.find_all('section')
+        self.extracted_tables = []
         self.logger.debug(f"Found {len(section_elements)} <section> blocks in HTML")
 
         # Process each section (similar to XML parser)
@@ -299,32 +300,38 @@ class HTMLParser(LLMParser):
             self.logger.debug(f"Found {len(tables)} tables")
 
             for table_idx, table in enumerate(tables):
-                self.logger.debug(f"Processing table {table_idx + 1}/{len(tables)}")
-                if parent_section is not None and parent_section != sec:
+                self.logger.info(f"Processing table {table_idx + 1}/{len(tables)}")
+                if parent_section is not None and parent_section != sec and "methods" not in section_title.lower() and sec_type != 'tw':
                     self.logger.debug(f"We've entered a different section: {parent_section != sec}, so break out of the loop")
                     break
 
+                if table in self.extracted_tables: # or section_title not in [<allowables>]
+                    self.logger.info(f"Table already extracted in a previous section. Skipping.")
+                    continue
+
                 # Extract clean text from table (similar to itertext in XML)
-                table_clean_text = table.get_text(separator=" ", strip=True)
-                self.logger.debug(f"Table clean text length: {len(table_clean_text)} chars")
+                table_clean_text = self.convert_html_table_to_str(table)
+                self.logger.info(f"Table clean text length: {table_clean_text} chars")
 
                 if len(table_clean_text) >= 5:
                     section_text_from_paragraphs += "\n" + table_clean_text + "\n"
-                    self.logger.debug(f"Added Table to section --> Updated Section length: {len(section_text_from_paragraphs)})")
+                    self.logger.info(f"Added Table to section --> Updated Section length: {len(section_text_from_paragraphs)})")
 
                 # Extract raw HTML table (similar to tostring in XML)
                 table_raw_html = str(table).strip()
-                self.logger.debug(f"Table HTML length: {len(table_raw_html)} chars")
+                self.logger.info(f"Table HTML length: {len(table_raw_html)} chars")
                 if len(table_raw_html) >= 5:
                     section_rawtxt_from_paragraphs += "\n" + table_raw_html + "\n"
-                    self.logger.debug(f"Added table HTML to section --> Updated Section length (raw): {len(section_rawtxt_from_paragraphs)})")
+                    self.logger.info(f"Added table HTML to section --> Updated Section length (raw): {len(section_rawtxt_from_paragraphs)})")
+
+                self.extracted_tables.append(table)
 
             if section_text_from_paragraphs.strip() == f'{section_title}':
-                self.logger.debug(f"Section '{section_title}' is empty after processing. Skipping.")
+                self.logger.info(f"Section '{section_title}' is empty after processing. Skipping.")
                 continue
 
             elif section_text_from_paragraphs in [sect['sec_txt_clean'] for sect in sections]:
-                self.logger.debug(f"Section '{section_title}' is a duplicate after processing. Skipping.")
+                self.logger.info(f"Section '{section_title}' is a duplicate after processing. Skipping.")
                 continue
 
             # Create section dictionary (matching XML parser structure)
@@ -486,7 +493,8 @@ class HTMLParser(LLMParser):
             data_availability_str = "\n".join([item['html'] + "\n" for item in data_availability_elements])
 
             if semantic_retrieval:
-                corpus = self.extract_sections_from_html(preprocessed_data)
+                sections = self.extract_sections_from_html(preprocessed_data)
+                corpus = self.from_sections_to_corpus(sections, skip_rule_based_retrieved_elm=True)
                 top_k_sections = self.semantic_retrieve_from_corpus(corpus, topk_docs_to_retrieve=top_k)
                 top_k_sections_text = [item['text'] for item in top_k_sections if item['text'] not in data_availability_str]
                 top_k_sections_str = "\n".join(top_k_sections_text)
@@ -728,8 +736,8 @@ class HTMLParser(LLMParser):
                 parent_text.append(child.tail.strip())
         surrounding_text = " ".join(parent_text)
         return re.sub(r"[\s\n]+", " ", surrounding_text)
-
-    def from_sections_to_corpus(self, sections, max_tokens=None):
+    
+    def from_sections_to_corpus(self, sections, max_tokens=None, skip_rule_based_retrieved_elm=False):
         """
         Convert structured HTML sections to a flat corpus of documents for embeddings retrieval.
         This method takes the output from extract_sections_from_html (list of dicts) and converts it
@@ -746,14 +754,24 @@ class HTMLParser(LLMParser):
         effective_max_tokens = int(max_tokens * 0.95)
         self.logger.debug(f"Effective max tokens per section: {effective_max_tokens}")
 
+        self.skip_text_matching = ' '.join([x['html'] for x in self.retriever.data_availability_elements]) if skip_rule_based_retrieved_elm else []
+        self.logger.debug(f"Skipping rule-based retrieved elements: {len(self.skip_text_matching)}")
+
         corpus_documents = []
         for i, section_dict in enumerate(sections):
             if not section_dict or not isinstance(section_dict, dict):
                 self.logger.info(f"Skipping invalid section at index {i}")
                 continue
+            if skip_rule_based_retrieved_elm:
+                self.logger.debug(f"Skipping rule-based retrieved elements: {len(self.skip_text_matching)}")
+                html_content = section_dict.get('sec_txt', '')
+                if html_content in self.skip_text_matching:
+                    self.logger.info(f"Skipping section at index {i} as it matches rule-based retrieved elements")
+                    continue
 
             section_title = section_dict.get('section_title', '')
             section_paragraphs = section_dict.get('sec_txt_objs', [])
+            sec_table_objs = section_dict.get('sec_table_objs', [])
             sec_type = section_dict.get('sec_type', '')
             doc_base = section_dict.copy()
 
@@ -792,6 +810,19 @@ class HTMLParser(LLMParser):
                 chunk_doc['chunk_id'] = chunk_id
                 corpus_documents.append(chunk_doc)
 
+            # Process tables separately with chunking
+            for table in sec_table_objs:
+                table_chunks = self._intelligent_chunk_table(table, effective_max_tokens)
+                for chunk in table_chunks:
+                    chunk_doc = doc_base.copy()
+                    chunk_doc['sec_txt_clean'] = chunk
+                    chunk_doc['sec_txt'] = chunk
+                    chunk_doc['text'] = chunk
+                    chunk_doc['chunk_id'] = chunk_id
+                    chunk_doc['is_table_chunk'] = True
+                    corpus_documents.append(chunk_doc)
+                    chunk_id += 1
+
         # Deduplicate and merge section titles as before
         self.logger.info(f"Pre-deduplication: {len(corpus_documents)} corpus documents")
         unique_documents = []
@@ -821,6 +852,123 @@ class HTMLParser(LLMParser):
         
         self.logger.info(f"HTML sections converted: {len(sections)} sections → {len(unique_documents)} unique corpus documents (processed {len(corpus_documents) - len(unique_documents)} duplicates with title merging)")
         return unique_documents
+
+    def extract_table_headers(self, soup_table):
+        """
+        Extract headers from an HTML table element.
+
+        :param table_html: lxml.html.HtmlElement — the HTML table element
+        :return: list — the list of headers
+        """
+        headers = []
+        thead = soup_table.find('thead')
+        if thead:
+            header_rows = thead.find_all('tr')
+            for header_row in header_rows:
+                ths = header_row.find_all('th')
+                headers.extend([ele.text.strip() for ele in ths])
+        else:
+            self.logger.warning("No <thead> found in table.")
+        self.logger.debug(f"Table headers: {headers}")
+        return headers
+    
+    def convert_html_table_to_list_of_lists(self, soup_table):
+        """
+        Convert an HTML table element to a list of lists.
+
+        :param table_html: lxml.html.HtmlElement — the HTML table element
+        :return: list of list — the converted table as a list of lists
+        """
+        data = []
+
+        headers = self.extract_table_headers(soup_table)
+        if headers:
+            data.append(headers)
+
+        table_body = soup_table.find('tbody')
+        if not table_body:
+            self.logger.warning("No <tbody> found in table.")
+            return None
+
+        rows = table_body.find_all('tr')
+        for row_idx, row in enumerate(rows):
+            cols = row.find_all('td')
+            cols = [ele.text.strip() for ele in cols]
+            self.logger.debug(f"Row {row_idx}: {cols}")
+            data.append([ele for ele in cols if ele])
+
+        return data
+
+    def convert_html_table_to_str(self, soup_table):
+        """
+        Convert an HTML table element to a string representation.
+
+        :param table_html: lxml.html.HtmlElement — the HTML table element
+        :return: str — the string representation of the table
+        """
+        if soup_table.get('class') and 'formula' in soup_table.get('class'):
+            formula_str = soup_table.get_text(separator="")
+            self.logger.debug("Skipping infobox table conversion to string.")
+            return formula_str
+
+        list_of_lists = self.convert_html_table_to_list_of_lists(soup_table)
+
+        if not list_of_lists or len(list_of_lists) == 0:
+            self.logger.warning("No data found in table to convert to string.")
+            return ""
+
+        col_widths = [max(len(str(item)) for item in col) for col in zip(*list_of_lists)]
+        table_str = ""
+
+        for row in list_of_lists:
+            row_str = " | ".join(f"{str(item).ljust(col_widths[i])}" for i, item in enumerate(row))
+            table_str += row_str + "\n"
+
+        return table_str
+        
+    def _intelligent_chunk_table(self, table_text, max_tokens):
+        """
+        From an html table, chunk it into smaller parts that fit within the token limit.
+        """
+
+        header = self.extract_table_headers(table_text)
+        header_str = " | ".join(header)
+        header_tokens = len(header_str) // 4  # Rough estimate
+        body = self.convert_html_table_to_list_of_lists(table_text)
+
+        if not header:
+            header = body[0] if body else []
+        
+        if not body or len(body) < 2:
+            self.logger.warning("Table has no header or body to chunk.")
+            return []
+
+        rows = body[1:] if body[0] == header else body
+
+        ret = []
+        chunk_rows = []
+        chunk_tokens = header_tokens
+
+        for i, row in enumerate(rows):
+            row_text = " | ".join(row)
+            row_tokens = len(row_text) // 4  # Rough estimate
+
+            if chunk_tokens + row_tokens > max_tokens and chunk_rows:
+                chunk_str = header_str + "\n" + "\n".join([" | ".join(r) for r in chunk_rows])
+                ret.append(chunk_str)
+                chunk_rows = []
+                chunk_tokens = header_tokens
+
+            chunk_rows.append(row)
+            chunk_tokens += row_tokens
+
+        # Add any remaining rows as the last chunk
+        if chunk_rows:
+            chunk_str = header_str + "\n" + "\n".join([" | ".join(r) for r in chunk_rows])
+            ret.append(chunk_str)
+
+        return ret
+
 
     def _intelligent_chunk_section(self, section_text, max_tokens):
         """
@@ -891,10 +1039,9 @@ class HTMLParser(LLMParser):
             Look for phrases like deposited in, available at, submitted to, uploaded to, archived in, hosted by, retrieved from, accessible via, or publicly available. 
             Capture statements indicating datasets, repositories, or data access locations.
             """
-        # Convert structured sections to flat corpus for embeddings
-        self.embeddings_retriever.corpus = self.from_sections_to_corpus(corpus)
+        self.embeddings_retriever.corpus = corpus
 
-        if not self.embeddings_retriever.corpus:
+        if not self.embeddings_retriever.corpus or len(self.embeddings_retriever.corpus) == 0:
             raise ValueError("Corpus is empty after converting sections to documents.")
         
         self.embeddings = self.embeddings_retriever.embed_corpus(batch_size=embedding_encode_batch_size)

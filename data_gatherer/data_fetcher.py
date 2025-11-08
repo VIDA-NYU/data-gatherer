@@ -68,7 +68,9 @@ class BackupDataStore:
         """Retrieve publication data if available."""
         if not self.has_publication(identifier):
             return None
+        self.logger.debug(f"Fetching publication {identifier} from backup store")
         row = self._dataframe[self._dataframe['publication'].str.lower() == identifier.lower()]
+        self.logger.info(f"Fetched {len(row)} records from backup store")
         if len(row) > 0:
             return {
                 'content': row.iloc[0]['raw_cont'],
