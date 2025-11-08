@@ -72,6 +72,41 @@ class XMLParser(LLMParser):
         
         return self.extract_sections_from_xml(xml_content)
 
+    def from_section_to_text_content(self, sect_element) -> str:
+        """
+        Convert a section ET element to plain text content.
+
+        Args:
+            sect_element: lxml.etree.Element — section element from extract_sections_from_xml.
+
+        Returns:
+            str — plain text content of the section.
+        """
+
+        if not isinstance(sect_element, etree._Element):
+            raise TypeError(f"Invalid section element type: {type(sect_element)}. Expected lxml.etree.Element.")
+
+        str_cont_ret = ''
+
+        # extract the text from the data availability section
+        for elem in sect.iter():
+            if elem.text and elem.text not in str_cont_ret:
+                str_cont_ret += ' ' + elem.text + ' '
+            if elem.tail and elem.tail not in str_cont_ret:
+                str_cont_ret += ' ' + elem.tail + ' '
+            if elem.tag == 'ext-link' and elem.get('{http://www.w3.org/1999/xlink}href') not in str_cont_ret:
+                str_cont_ret += ' ' + elem.get('{http://www.w3.org/1999/xlink}href') + ' '
+            if elem.tag == 'xref' and elem.text not in str_cont_ret:
+                str_cont_ret += ' ' + elem.text + ' '
+            
+            # table elements 
+            if elem.tag == 'table':
+                table_text = self.table_to_text(elem)
+                if table_text not in str_cont_ret:
+                    str_cont_ret += ' ' + table_text + ' '
+
+        return str_cont_ret        
+
     def extract_sections_from_xml(self, xml_root) -> list[dict]:
         """
         Extract sections from an XML document.
@@ -192,7 +227,7 @@ class XMLParser(LLMParser):
             self.logger.error(f"Error parsing XML: {e}")
             return None
 
-    def from_sections_to_corpus(self, sections, max_tokens=None):
+    def from_sections_to_corpus(self, sections, max_tokens=None, skip_rule_based_retrieved_elm=False):
         """
         Convert structured XML sections to a flat corpus of documents for embeddings retrieval.
         This method takes the output from extract_sections_from_xml (list of dicts) and converts it
@@ -213,6 +248,9 @@ class XMLParser(LLMParser):
         # Reserve some tokens for the query and model overhead (typically 10-20% buffer)
         effective_max_tokens = int(max_tokens * 0.95)  # 95% of max to be safe
         self.logger.debug(f"Effective max tokens per section: {effective_max_tokens}")
+
+        self.skip_text_matching = self.data_availability_cont_str if skip_rule_based_retrieved_elm else []
+        self.logger.debug(f"Skipping rule-based retrieved elements: {len(self.skip_text_matching)}")
         
         corpus_documents = []
         for i, section_dict in enumerate(sections):
@@ -226,6 +264,13 @@ class XMLParser(LLMParser):
             if not section_paragraphs:
                 self.logger.debug(f"Skipping empty section '{section_title}' (i:{i})")
                 continue
+
+            if skip_rule_based_retrieved_elm:
+                self.logger.debug(f"Skipping rule-based retrieved elements: {len(self.skip_text_matching)}")
+                sec_cont = section_dict.get('sec_txt', '')
+                if sec_cont in self.skip_text_matching:
+                    self.logger.info(f"Skipping section at index {i} as it matches rule-based retrieved elements")
+                    continue
 
             chunks_created = []
             self.logger.debug(f"Starting chunk creation for section '{section_title}'")
@@ -404,7 +449,7 @@ class XMLParser(LLMParser):
                     if semantic_retrieval:
                         self.logger.info(f"Using semantic retrieval for data availability sections.")
                         sections = self.extract_sections_from_xml(api_data)
-                        corpus = self.from_sections_to_corpus(sections)
+                        corpus = self.from_sections_to_corpus(sections, skip_rule_based_retrieved_elm=True)
                         top_k_sections = self.semantic_retrieve_from_corpus(corpus, topk_docs_to_retrieve=top_k, model_name=self.embeddings_retriever.model_name)
                         top_k_sections_text = [item['text'] for item in top_k_sections if item['text'] not in data_availability_cont]
                         data_availability_cont.extend(top_k_sections_text)
@@ -952,6 +997,7 @@ class XMLParser(LLMParser):
         self.logger.info(f"Data Availability len: {len(data_availability_cont)}, type: {type(data_availability_cont)}")
         self.logger.debug(f"Found data availability content: {data_availability_cont}")
 
+        self.data_availability_cont_str = ''.join(data_availability_cont)
         return data_availability_cont
 
     def table_to_text(self, table_wrap):
@@ -1276,7 +1322,7 @@ class TEI_XMLParser(XMLParser):
                     if semantic_retrieval:
                         self.logger.info(f"Using semantic retrieval for data availability sections.")
                         sections = self.extract_sections_from_xml(api_data)
-                        corpus = self.from_sections_to_corpus(sections)
+                        corpus = self.from_sections_to_corpus(sections, skip_rule_based_retrieved_elm=True)
                         top_k_sections = self.semantic_retrieve_from_corpus(corpus, topk_docs_to_retrieve=top_k, model_name=self.embeddings_retriever.model_name)
                         top_k_sections_text = [item['text'] for item in top_k_sections if item['text'] not in data_availability_cont]
                         data_availability_cont.extend(top_k_sections_text)

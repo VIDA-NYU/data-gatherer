@@ -488,7 +488,12 @@ class DataGatherer:
         self.logger.info(f"Type of data_fetcher {self.data_fetcher.__class__.__name__}")
 
         article_id = self.url_to_article_id(url)
-        process_id = self.llm + "-FDR-" + article_id if self.full_document_read else self.llm + "-RTR-" + article_id
+        if self.full_document_read:
+            process_id = self.llm + "-FDR-" + article_id
+        elif semantic_retrieval:
+            process_id = self.llm + "-RTR-" + f"top{top_k}-" + article_id
+        else:
+            process_id = self.llm + "-RTR-" + article_id
         if os.path.exists(os.path.join(CACHE_BASE_DIR, "process_url_cache.json")) and self.load_from_cache:
             cache = json.load(open(os.path.join(CACHE_BASE_DIR, "process_url_cache.json"), 'r'))
             if process_id in cache:
@@ -894,7 +899,7 @@ class DataGatherer:
 
             dataset_webpage = row.get('dataset_webpage', None)
             download_link = row.get('download_link', None)
-            dataset_webpage_id = self.url_to_article_id(dataset_webpage) if dataset_webpage is not None else None
+            dataset_webpage_id = self.url_to_page_id(dataset_webpage) if dataset_webpage is not None else None
 
             if dataset_webpage is None and download_link is None:
                 self.logger.info(f"Row {i} does not contain 'dataset_webpage' or 'download_link'. Skipping...")
@@ -1155,12 +1160,23 @@ class DataGatherer:
             self.logger.warning("No valid internal ID found in metadata.")
             return None
 
-    def url_to_article_id(self, url):
+    def url_to_page_id(self, url):
         url = re.sub(r'^https?://', '', url)
         article_id = re.sub(r'[^A-Za-z0-9]', '_', url)
         if article_id.endswith('_'):
             article_id = article_id[:-1]
         return article_id
+    
+    def url_to_article_id(self, url):
+        if self.data_fetcher:
+            pmcid = self.data_fetcher.url_to_pmcid(url)
+            if pmcid:
+                return pmcid
+            doi = self.data_fetcher.url_to_doi(url)
+            if doi:
+                return self.url_to_page_id(doi)
+        
+        self.logger.warning(f"Could not extract article ID from URL: {url}")
 
     def save_func_output_to_cache(self, output, process_id, function_name):
         """
@@ -1376,7 +1392,7 @@ class DataGatherer:
                         data = fetched_data[url]
                         
                         # Generate unique custom_id
-                        article_id = self.url_to_article_id(url)
+                        article_id = self.url_to_page_id(url)
                         timestamp = int(time.time() * 1000)
                         custom_id = f"{self.llm}_{article_id}_{timestamp}"
                         custom_id = re.sub(r'[^a-zA-Z0-9_-]', '_', custom_id)[:64]
