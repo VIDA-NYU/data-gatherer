@@ -763,17 +763,6 @@ class WebScraper(DataFetcher):
 
         return pmc_id, doi
 
-    def convert_url_to_doi(self, url : str):
-        # Extract DOI from the URL
-        url = url.lower()
-        match = re.search(r'(10\.\d{4,9}/[-._;()/:A-Z0-9]+)', url, re.IGNORECASE)
-        if match:
-            doi = match.group(1)
-            self.logger.info(f"DOI: {doi}")
-            return doi
-        else:
-            return None
-
     def download_file_from_url(self, url, output_root, paper_id):
         """
         Downloads a file from the given URL and saves it to the specified directory.
