@@ -478,6 +478,7 @@ class DataGatherer:
         :return: DataFrame of classified links or None if an error occurs.
         """
         self.logger.info(f"Processing URL: {url}")
+        url = self.preprocess_url(url)
         self.current_url = url
         self.write_htmls_xmls = write_htmls_xmls or self.write_htmls_xmls
         self.publisher = self.data_fetcher.url_to_publisher_domain(url)
@@ -1295,6 +1296,103 @@ class DataGatherer:
             if isinstance(self.data_fetcher, EntrezFetcher):
                 self.logger.info("Closing the EntrezFetcher.")
                 self.data_fetcher.api_client.close()
+
+    def fetch_publication_and_extract_dataset_references(
+        self,
+        url,
+        full_document_read=False,
+        semantic_retrieval=False, 
+        top_k=5,
+        embeddings_retriever_model=None,
+        section_filter=None, 
+        save_staging_table=False, 
+        article_file_dir='tmp/raw_files/', 
+        use_portkey=True,
+        driver_path=None, 
+        browser='Firefox', 
+        headless=True,   
+        HTML_fallback=False, 
+        grobid_for_pdf=False, 
+        write_htmls_xmls=False
+        ):
+        """
+        Simplified interface for process_url, where you do not have to select prompt and response format
+        and all the parameters are set automatically based on the LLM being used.
+
+        :param url: URL/PMCID of the publication to process
+
+        :param full_document_read: Flag to indicate if the model processes the entire document.
+
+        :param semantic_retrieval: Flag to indicate if semantic retrieval should be used.
+
+        :param top_k: Number of top documents to retrieve for semantic retrieval.
+
+        :param embeddings_retriever_model: Model to use for embeddings retrieval.
+
+        :param section_filter: Optional filter to apply to the sections (supplementary_material', 'data_availability_statement').
+
+        :param save_staging_table: Flag to save the staging table.
+
+        :param article_file_dir: Directory to save the raw HTML/XML/PDF files.
+
+        :param use_portkey: Flag to use Portkey for Gemini LLM.
+
+        :param driver_path: Path to your local WebDriver executable (if applicable). When set to None, Webdriver manager will be used.
+
+        :param browser: Browser to use for scraping (if applicable). Supported values are 'Firefox', 'Chrome'.
+
+        :param headless: Whether to run the browser in headless mode (if applicable).
+
+        :param HTML_fallback: Flag to indicate if HTML fallback should be used.
+
+        :param grobid_for_pdf: Flag to indicate if GROBID should be used for PDF processing.
+
+        :param write_htmls_xmls: Flag to indicate if raw HTML/XML files should be saved.
+
+        :return: DataFrame of classified data links.
+        """
+
+        if full_document_read:
+            if 'gemini' in self.llm.lower() and not use_portkey:
+                prompt_name='GEMINI_FDR_FewShot'
+                response_format=Dataset_w_Page
+            elif 'qwen' in self.llm.lower() or 'gemma' in self.llm.lower():
+                prompt_name='Ollama_FewShot'
+                response_format=Dataset_w_Page
+            else:
+                prompt_name='GPR_FDR_FewShot'
+                response_format=dataset_response_schema_gpt
+
+        else:
+            if 'gemini' in self.llm.lower() and not use_portkey:
+                prompt_name='GEMINI_RTR_FewShot'
+                response_format=Dataset_w_Page
+            elif 'qwen' in self.llm.lower() or 'gemma' in self.llm.lower():
+                prompt_name='Ollama_FewShot'
+                response_format=Dataset_w_Page
+            else:
+                prompt_name='GPT_FewShot'
+                response_format=dataset_response_schema_gpt
+
+        return self.process_url(
+            url, 
+            full_document_read=full_document_read,
+            prompt_name=prompt_name,
+            response_format=response_format,
+            semantic_retrieval=False, 
+            top_k=5,
+            embeddings_retriever_model=None,
+            section_filter=None, 
+            save_staging_table=False, 
+            article_file_dir='tmp/raw_files/', 
+            use_portkey=True,
+            driver_path=None, 
+            browser='Firefox', 
+            headless=True,   
+            HTML_fallback=False, 
+            grobid_for_pdf=False, 
+            write_htmls_xmls=False
+        )
 
     def run_integrated_batch_processing(
         self,
