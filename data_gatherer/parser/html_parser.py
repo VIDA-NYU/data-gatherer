@@ -917,10 +917,13 @@ class HTMLParser(LLMParser):
             self.logger.warning("No data found in table to convert to string.")
             return ""
 
-        col_widths = [max(len(str(item)) for item in col) for col in zip(*list_of_lists)]
+        # Pad all rows to the same length as the header
+        max_cols = max(len(row) for row in list_of_lists)
+        padded_rows = [row + [""] * (max_cols - len(row)) for row in list_of_lists]
+        col_widths = [max(len(str(item)) for item in col) for col in zip(*padded_rows)]
         table_str = ""
 
-        for row in list_of_lists:
+        for row in padded_rows:
             row_str = " | ".join(f"{str(item).ljust(col_widths[i])}" for i, item in enumerate(row))
             table_str += row_str + "\n"
 
