@@ -42,6 +42,7 @@ class xmlRetriever(BaseRetriever):
                              required_sections=("data_availability_sections", "supplementary_data_sections")) -> bool:
         """
         Check if required sections are present in the raw_data.
+        Check if number of sections is lower than min_threshold.
         Return True if all required sections are present.
 
         :param raw_data: Raw XML data.
@@ -52,11 +53,21 @@ class xmlRetriever(BaseRetriever):
 
         :return: True if all required sections are present, False otherwise.
         """
-        self.logger.debug(f"Checking XML completeness for {url}")
+        self.logger.debug(f"Checking XML completeness with required sections: {required_sections}")
 
-        for section in required_sections:
-            if not self.has_target_xml_tag(raw_data, section) and not self.has_target_xpath(raw_data, section):
-                self.logger.info(f"Missing section in XML: {section}")
+        if isinstance(required_sections, list):
+            for section in required_sections:
+                if not self.has_target_xml_tag(raw_data, section) and not self.has_target_xpath(raw_data, section):
+                    self.logger.info(f"Missing section in XML: {section}")
+                    return False
+        
+        if isinstance(required_sections, int):
+            # find all sections and count them
+            sec_elements = raw_data.findall(".//sec")
+            n_sections_found = len(sec_elements)
+            self.logger.info(f"Number of <sec> elements found: {n_sections_found}")
+            if n_sections_found < required_sections:
+                self.logger.info(f"Number of sections {n_sections_found} is less than the required threshold of {required_sections}.")
                 return False
 
         self.logger.info("XML data contains all required sections.")
