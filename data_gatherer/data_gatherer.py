@@ -187,9 +187,9 @@ class DataGatherer:
                 # Fetch data
                 fetched_data = self.data_fetcher.fetch_data(pub_link)
                 self.logger.info(f"Raw_data_format: {self.data_fetcher.raw_data_format}, Type of fetched data: {type(fetched_data)}")
-                completeness_check = self.data_checker.is_fulltext_complete(fetched_data, pub_link, self.data_fetcher.raw_data_format)
+                self.completeness_check = self.data_checker.is_fulltext_complete(fetched_data, pub_link, self.data_fetcher.raw_data_format, required_sections=5)
 
-                if completeness_check:
+                if self.completeness_check:
                     self.logger.info(f"Fetch complete {self.data_fetcher.raw_data_format} data from {pub_link}.")
                     complete_publication_fetches[pub_link] = {
                         'fetched_data': fetched_data,
@@ -210,9 +210,9 @@ class DataGatherer:
                     directory = os.path.join(article_file_dir, publisher)
                     if HTML_fallback == 'Selenium':
                         self.data_fetcher.html_page_source_download(directory, pub_link)
-                    elif self.data_fetcher.raw_data_format == "HTML" and completeness_check:
+                    elif self.data_fetcher.raw_data_format == "HTML" and self.completeness_check:
                         self.data_fetcher.html_page_source_download(directory, pub_link, fetched_data)
-                    elif self.data_fetcher.raw_data_format == "XML" and completeness_check:
+                    elif self.data_fetcher.raw_data_format == "XML" and self.completeness_check:
                         self.data_fetcher.download_xml(directory, fetched_data, pub_link)
                     elif self.data_fetcher.raw_data_format == "PDF":
                         self.data_fetcher.download_pdf(directory, fetched_data, pub_link)

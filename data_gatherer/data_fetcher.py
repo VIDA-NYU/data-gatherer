@@ -99,14 +99,15 @@ class DataFetcher(ABC):
         self.src = src
         self.local_data_used = False
         
-        # Initialize backup data store (lightweight, shared across all instances)
-        self.backup_store = None
-        if backup_data_file and os.path.exists(backup_data_file):
-            self.backup_store = BackupDataStore(filepath=backup_data_file, logger=self.logger)
-            stats = self.backup_store.get_stats()
-            self.logger.info(f"Backup data store initialized: {stats['size']} publications, valid: {stats['valid']}")
+        if hasattr(self, 'backup_store') and self.backup_store is not None:
+            self.logger.debug("Using existing BackupDataStore instance.")
         else:
-            self.logger.info(f"No backup data available at {backup_data_file}")
+            if backup_data_file and os.path.exists(backup_data_file):
+                self.backup_store = BackupDataStore(filepath=backup_data_file, logger=self.logger)
+                stats = self.backup_store.get_stats()
+                self.logger.info(f"Backup data store initialized: {stats['size']} publications, valid: {stats['valid']}")
+            else:
+                self.logger.info(f"No backup data available at {backup_data_file}")
     
     def try_backup_fetch(self, identifier):
         """
@@ -1098,7 +1099,7 @@ class DataCompletenessChecker:
         self.retriever = htmlRetriever(self.logger)
         return self.retriever.is_html_data_complete(raw_data, url, required_sections)
 
-    def is_fulltext_complete(self, raw_data, url, raw_data_format,
+    def is_fulltext_complete(self, raw_data, url, raw_data_format=None,
                             required_sections=["data_availability_sections", "supplementary_data_sections"]) -> bool:
             """
             Check if required sections are present in the raw_data.
@@ -1117,7 +1118,7 @@ class DataCompletenessChecker:
             if isinstance(raw_data, str):
                 self.logger.debug(f"Raw data is a string of length {len(raw_data)}")
                 raw_data_format = 'HTML'
-            elif isinstance(raw_data, ET._Element):
+            elif isinstance(raw_data, ET._Element) or isinstance(raw_data, ET._ElementTree):
                 self.logger.debug(f"Raw data is of type {type(raw_data)}")
                 raw_data_format = 'XML'
             else:
