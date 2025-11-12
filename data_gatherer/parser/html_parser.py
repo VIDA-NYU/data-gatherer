@@ -313,7 +313,7 @@ class HTMLParser(LLMParser):
 
                 # Extract clean text from table (similar to itertext in XML)
                 table_clean_text = self.convert_html_table_to_str(table)
-                self.logger.info(f"Table clean text length: {table_clean_text} chars")
+                self.logger.info(f"Table clean text length: {len(table_clean_text)} chars")
 
                 if len(table_clean_text) >= 5:
                     section_text_from_paragraphs += "\n" + table_clean_text + "\n"
@@ -425,6 +425,14 @@ class HTMLParser(LLMParser):
         text = re.sub(r"\s+", " ", soup.getText())
         self.logger.debug(f"compress HTML. Final len: {len(text)}")
         return text
+    
+    def get_data_availability_text(self, html_content: str) -> list[str]:
+        """
+        get data avialbility elements and then extract text from there.
+        """
+        data_availability_elements = self.retriever.get_data_availability_elements_from_webpage(html_content)
+        data_availability_texts = [item['html'] for item in data_availability_elements]
+        return data_availability_texts
 
     def parse_data(self, html_str, publisher=None, current_url_address=None, raw_data_format='HTML',
         article_file_dir='tmp/raw_files/', section_filter=None, prompt_name='GPT_FewShot', use_portkey=True, 
@@ -1025,7 +1033,8 @@ class HTMLParser(LLMParser):
         return chunks
 
     def semantic_retrieve_from_corpus(self, corpus, model_name='sentence-transformers/all-MiniLM-L6-v2',
-                                      topk_docs_to_retrieve=5, query=None, embedding_encode_batch_size=32):
+                                      topk_docs_to_retrieve=5, query=None, embedding_encode_batch_size=32,
+                                      src=None):
         """
         Given a pre-extracted HTML corpus (list of sections), normalize for embeddings and retrieve relevant documents.
         This override provides HTML-specific corpus normalization before semantic search.
@@ -1049,7 +1058,8 @@ class HTMLParser(LLMParser):
         if not self.embeddings_retriever.corpus or len(self.embeddings_retriever.corpus) == 0:
             raise ValueError("Corpus is empty after converting sections to documents.")
         
-        self.embeddings = self.embeddings_retriever.embed_corpus(batch_size=embedding_encode_batch_size)
+        self.embeddings = self.embeddings_retriever.embed_corpus(batch_size=embedding_encode_batch_size, read_cache=True, 
+        write_cache=True, src=src)
 
         result = self.embeddings_retriever.search(
             query=query,

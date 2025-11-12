@@ -268,7 +268,12 @@ class BatchStorageManager:
             
             if original_size <= max_file_size_bytes:
                 self.logger.info("File is already under the size limit, no chunking needed")
-                return [{'file_path': large_batch_file_path, 'size_mb': original_size / 1024 / 1024}]
+                return [{'chunk_info': {
+                    'chunk_number': 1,
+                    'total_chunks': 1,
+                    'chunk_file_path': large_batch_file_path,
+                    'requests_in_chunk': self.read_jsonl_batch_file(large_batch_file_path).__len__(),
+                    'chunk_size_mb': original_size / 1024 / 1024}}]
             
             # Read all requests from the original file
             requests = self.read_jsonl_batch_file(large_batch_file_path)

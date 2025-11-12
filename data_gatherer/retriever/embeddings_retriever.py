@@ -137,6 +137,7 @@ class EmbeddingsRetriever(BaseRetriever):
 
         if src is not None and write_cache:
             self.embeddings_cache[process_id] = self.embeddings
+            self.logger.info(f"Writing embeddings to cache for process ID: {process_id}")
             np.savez(os.path.join(CACHE_BASE_DIR, "corpus_embeddings_cache.npz"), **self.embeddings_cache)
 
         self.logger.info(f"Embedding time: {embed_time:.2f}s ({embed_time/len(corpus_texts):.3f}s per chunk)")

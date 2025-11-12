@@ -1285,7 +1285,7 @@ class LLMParser(ABC):
         return dataset_info
 
     def semantic_retrieve_from_corpus(self, corpus, model_name='sentence-transformers/all-MiniLM-L6-v2',
-                                      topk_docs_to_retrieve=5, query=None):
+                                      topk_docs_to_retrieve=5, query=None, src=None):
         """
         Given a corpus of text, retrieve the most relevant documents using semantic search.
 
@@ -1304,26 +1304,28 @@ class LLMParser(ABC):
             Look for phrases like deposited in, available at, submitted to, uploaded to, archived in, hosted by, retrieved from, accessible via, or publicly available. 
             Capture statements indicating datasets, repositories, or data access locations.
             """
+            # Other queries can be used here as well, e.g.:
+            # "Available data, accession code, data repository, deposited data"
+            # "Explicitly identify all database accession codes, repository names, and links to deposited datasets or ...
+            # ...supplementary data mentioned in this paper."
+            # "Deposited data will be available in the repository XYZ, with accession code ABC123."
+            # """Data availability statement, dataset reference, digital repository name, dataset identifier,
+            #         dataset accession code, dataset doi, dataset page"""
 
-        self.embeddings_retriever = EmbeddingsRetriever(
-            corpus=corpus,
-            model_name=model_name,  # or any other model you prefer
-            device="cpu",
-            logger=self.logger
-        )
-        # Other queries can be used here as well, e.g.:
-        # "Available data, accession code, data repository, deposited data"
-        # "Explicitly identify all database accession codes, repository names, and links to deposited datasets or ...
-        # ...supplementary data mentioned in this paper."
-        # "Deposited data will be available in the repository XYZ, with accession code ABC123."
-        # """Data availability statement, dataset reference, digital repository name, dataset identifier,
-        #         dataset accession code, dataset doi, dataset page"""
+        self.embeddings_retriever.corpus = corpus
+
+        if not self.embeddings_retriever.corpus or len(self.embeddings_retriever.corpus) == 0:
+            raise ValueError("Corpus is empty after converting sections to documents.")
+        
+        self.embeddings = self.embeddings_retriever.embed_corpus(batch_size=embedding_encode_batch_size, read_cache=True, 
+        write_cache=True, src=src)
 
         result = self.embeddings_retriever.search(
             query=query,
             k=topk_docs_to_retrieve
         )
 
+        self.logger.info(f"Semantic retrieval completed: found {len(result)} relevant sections")
         return result
 
     def regex_match_id_patterns(self, document, id_patterns=None):

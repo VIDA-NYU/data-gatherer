@@ -1505,24 +1505,36 @@ class DataGatherer:
                         
                         # Generate unique custom_id
                         article_id = self.url_to_page_id(url)
+                        pmcid = self.data_fetcher.url_to_pmcid(url)
                         timestamp = int(time.time() * 1000)
                         custom_id = f"{self.llm}_{article_id}_{timestamp}"
                         custom_id = re.sub(r'[^a-zA-Z0-9_-]', '_', custom_id)[:64]
                         
-                        # Normalize input data based on actual format
-                        if url_raw_data_format.upper() == 'XML':
-                            normalized_input = (self.parser.normalize_XML(data['fetched_data']) 
-                                            if hasattr(self.parser, 'normalize_XML') 
-                                            else data['fetched_data'])
-                        elif url_raw_data_format.upper() == 'HTML':
-                            normalized_input = (self.parser.normalize_HTML(data['fetched_data']) 
-                                            if hasattr(self.parser, 'normalize_HTML') 
-                                            else data['fetched_data'])
-                        elif url_raw_data_format.upper() == 'PDF':
-                            normalized_input = data['fetched_data']
-                        else:
-                            raise ValueError(f"Unsupported raw data format: {url_raw_data_format}")
+                        if self.full_document_read:
+                            if url_raw_data_format.upper() == 'XML':
+                                normalized_input = (self.parser.normalize_XML(data['fetched_data']) 
+                                                if hasattr(self.parser, 'normalize_XML') 
+                                                else data['fetched_data'])
+                            elif url_raw_data_format.upper() == 'HTML':
+                                normalized_input = (self.parser.normalize_HTML(data['fetched_data']) 
+                                                if hasattr(self.parser, 'normalize_HTML') 
+                                                else data['fetched_data'])
+                            elif url_raw_data_format.upper() == 'PDF':
+                                normalized_input = data['fetched_data']
+                            else:
+                                raise ValueError(f"Unsupported raw data format: {url_raw_data_format}")
                         
+                        else:
+                            data_availability_cont = self.parser.get_data_availability_text(data['fetched_data'])                            
+                            all_sections = self.parser.extract_sections_from_text(data['fetched_data'])
+                            corpus = self.parser.from_sections_to_corpus(all_sections)
+                            top_k_sections = self.parser.semantic_retrieve_from_corpus(corpus, topk_docs_to_retrieve=top_k, src=pmcid)
+                            top_k_sections_text = [item['text'] for item in top_k_sections if item['text'] not in data_availability_cont]
+                            data_availability_cont.extend(top_k_sections_text)
+                            # Before passing this to an LLM check the attributes of the source obj we are puttin in data_availability_cont.
+                            # I mean at the previuous level (before filtering text only)
+                            normalized_input = "\n\n".join(data_availability_cont)
+
                         # Render prompt using the correct parser
                         static_prompt = self.parser.prompt_manager.load_prompt(prompt_name)
                         messages = self.parser.prompt_manager.render_prompt(
@@ -1691,7 +1703,6 @@ class DataGatherer:
                     '''
                     )
                 )
-            1/0
         
         # Prepare result
         successful_submissions = [r for r in submission_results if 'batch_id' in r]
