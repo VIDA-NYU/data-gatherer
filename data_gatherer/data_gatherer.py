@@ -53,6 +53,10 @@ class DataGatherer:
     :param download_data_for_description_generation: Flag to indicate if data should be downloaded for description generation.
 
     :param data_resource_preview: Flag to indicate if a preview of data resources should be generated.
+    
+    :param embeds_cache_read: Flag to indicate if embeddings cache should be read.
+
+    :param embeds_cache_write: Flag to indicate if embeddings cache should be written.
 
     :param download_previewed_data_resources: Flag to indicate if previewed data resources should be downloaded.
 
@@ -73,7 +77,10 @@ class DataGatherer:
         article_file_dir='tmp/raw_files/',
         download_data_for_description_generation=False,
         data_resource_preview=False,
-        download_previewed_data_resources=False):
+        download_previewed_data_resources=False,
+        embeds_cache_read=False,
+        embeds_cache_write=False
+        ):
 
         self.open_data_repos_ontology = load_config('open_bio_data_repos.json')
 
@@ -94,6 +101,9 @@ class DataGatherer:
         self.load_from_cache = load_from_cache
         self.save_to_cache = save_to_cache
         self.save_dynamic_prompts = save_dynamic_prompts
+
+        self.embeds_cache_read = embeds_cache_read
+        self.embeds_cache_write = embeds_cache_write
 
         self.download_data_for_description_generation = download_data_for_description_generation
 
@@ -249,17 +259,19 @@ class DataGatherer:
             if raw_data is not None:
                 router = XMLRouter(self.open_data_repos_ontology, self.logger, full_document_read=self.full_document_read,
                                 llm_name=self.llm, use_portkey=use_portkey, save_dynamic_prompts=self.save_dynamic_prompts,
-                                     embeddings_model_name=embeddings_retriever_model)
+                                     embeddings_model_name=embeddings_retriever_model, embeds_cache_read=self.embeds_cache_read, 
+                                     embeds_cache_write=self.embeds_cache_write)
                 self.parser = router.get_parser(raw_data)
             else:
                 self.parser = XMLParser(self.open_data_repos_ontology, self.logger, full_document_read=self.full_document_read,
                                 llm_name=self.llm, use_portkey=use_portkey, save_dynamic_prompts=self.save_dynamic_prompts,
-                                     embeddings_model_name=embeddings_retriever_model)
+                                     embeddings_model_name=embeddings_retriever_model, embeds_cache_read=self.embeds_cache_read, 
+                                     embeds_cache_write=self.embeds_cache_write)
         elif raw_data_format.upper() == "HTML":
             self.parser = HTMLParser(self.open_data_repos_ontology, self.logger, full_document_read=self.full_document_read,
                                llm_name=self.llm, use_portkey=use_portkey, save_dynamic_prompts=self.save_dynamic_prompts,
-                                     embeddings_model_name=embeddings_retriever_model)
-
+                                     embeddings_model_name=embeddings_retriever_model, embeds_cache_read=self.embeds_cache_read, 
+                                     embeds_cache_write=self.embeds_cache_write)
         elif raw_data_format.upper() == "PDF" and grobid_for_pdf:
             self.parser = GrobidPDFParser(self.open_data_repos_ontology, self.logger, full_document_read=self.full_document_read,
                                llm_name=self.llm, use_portkey=use_portkey, save_dynamic_prompts=self.save_dynamic_prompts, 
@@ -286,7 +298,8 @@ class DataGatherer:
         current_url_address=None,
         parsed_data_dir='tmp/parsed_articles/',
         use_portkey=True,
-        grobid_for_pdf=False):
+        grobid_for_pdf=False
+        ):
         """
         Parses the raw data fetched from the source using the appropriate parser.
 
@@ -430,7 +443,7 @@ class DataGatherer:
         headless=True,   
         HTML_fallback=False, 
         grobid_for_pdf=False, 
-        write_htmls_xmls=False, 
+        write_htmls_xmls=False
         ):
         """
         Orchestrates the process for a single given source URL (publication).
@@ -1412,7 +1425,8 @@ class DataGatherer:
         poll_interval=60,
         batch_description=None,
         grobid_for_pdf=False,
-        use_portkey=True):
+        use_portkey=True
+        ):
         """
         Complete integrated batch processing using LLMClient batch functionality.
         

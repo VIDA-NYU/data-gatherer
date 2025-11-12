@@ -13,7 +13,7 @@ class XMLParser(LLMParser):
     def __init__(self, open_data_repos_ontology, logger, log_file_override=None, full_document_read=True,
                  prompt_dir="data_gatherer/prompts/prompt_templates",
                  llm_name=None, save_dynamic_prompts=False, save_responses_to_cache=False, use_cached_responses=False,
-                 use_portkey=True, embeddings_model_name=None):
+                 use_portkey=True, embeddings_model_name=None, embeds_cache_read=False, embeds_cache_write=False):
 
         super().__init__(open_data_repos_ontology, logger, log_file_override=log_file_override,
                          full_document_read=full_document_read, prompt_dir=prompt_dir,
@@ -28,7 +28,9 @@ class XMLParser(LLMParser):
 
         self.embeddings_retriever = EmbeddingsRetriever(
             model_name=embeddings_model_name,
-            logger=self.logger
+            logger=self.logger,
+            read_cache=embeds_cache_read,
+            write_cache=embeds_cache_write
         )
 
     def extract_paragraphs_from_xml(self, xml_root) -> list[dict]:
@@ -165,7 +167,9 @@ class XMLParser(LLMParser):
                     self.logger.debug(f"We've entered a different section: {parent_section} != {sec}, so break out of the loop")
                     break
                 elif grandparent_section is not None and grandparent_section.find("title") is not None:
-                    section_title = grandparent_section.find("title").text + " > " + parent_section_title
+                    title_elem = grandparent_section.find("title")
+                    title_text = title_elem.text if title_elem is not None and title_elem.text is not None else ""
+                    section_title = title_text + " > " + parent_section_title
                 
                 itertext = " ".join(p.itertext()).strip()
                 self.logger.debug(f"Paragraph itertext length: {len(itertext)} chars")
