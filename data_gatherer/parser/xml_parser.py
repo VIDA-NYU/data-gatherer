@@ -393,7 +393,8 @@ class XMLParser(LLMParser):
     def parse_data(self, api_data, publisher=None, current_url_address=None,
                    raw_data_format='XML', article_file_dir='tmp/raw_files/', section_filter=None,
                    prompt_name='GPT_FewShot', use_portkey=True, semantic_retrieval=False, top_k=2, 
-                   response_format=dataset_response_schema_gpt):
+                   response_format=dataset_response_schema_gpt, dedup=True, brute_force_RegEx_ID_ptrs=False,
+                   article_id=None):
         """
         Parse the API data and extract relevant links and metadata.
 
@@ -404,6 +405,10 @@ class XMLParser(LLMParser):
         :param current_url_address: The current URL address being processed.
 
         :param raw_data_format: The format of the raw data ('XML' or 'HTML').
+
+        :param dedup: Whether to deduplicate the extracted snippets.
+
+        :param brute_force_RegEx_ID_ptrs: Whether to use brute force regular expression matching for ID patterns.
 
         :return: A DataFrame containing the extracted links and links to metadata - if repo is supported. Add support for unsupported repos in the ontology.
 
@@ -449,15 +454,15 @@ class XMLParser(LLMParser):
 
             if not self.full_document_read:
                 if filter_das is None or filter_das:
-                    data_availability_cont = self.get_data_availability_text(api_data)
-
-                    if semantic_retrieval:
-                        self.logger.info(f"Using semantic retrieval for data availability sections.")
-                        sections = self.extract_sections_from_xml(api_data)
-                        corpus = self.from_sections_to_corpus(sections, skip_rule_based_retrieved_elm=True)
-                        top_k_sections = self.semantic_retrieve_from_corpus(corpus, topk_docs_to_retrieve=top_k, model_name=self.embeddings_retriever.model_name)
-                        top_k_sections_text = [item['text'] for item in top_k_sections if item['text'] not in data_availability_cont]
-                        data_availability_cont.extend(top_k_sections_text)
+                    data_availability_cont = self.retrieve_relevant_content(
+                                api_data,
+                                semantic_retrieval=semantic_retrieval,
+                                top_k=top_k,
+                                article_id=article_id,
+                                skip_rule_based_retrieved_elm=dedup,
+                                include_snippets_with_ID_patterns=brute_force_RegEx_ID_ptrs,
+                                output_format='text'
+                            )
 
                     augmented_dataset_links = self.process_data_availability_text(data_availability_cont,
                                                                                   prompt_name=prompt_name,
@@ -1266,7 +1271,8 @@ class TEI_XMLParser(XMLParser):
     def parse_data(self, api_data, publisher=None, current_url_address=None,
                    raw_data_format='XML', article_file_dir='tmp/raw_files/', section_filter=None,
                    prompt_name='GPT_FewShot', use_portkey=True, semantic_retrieval=False, top_k=2, 
-                   response_format=dataset_response_schema_gpt):
+                   response_format=dataset_response_schema_gpt, dedup=True, brute_force_RegEx_ID_ptrs=False,
+                   article_id=None):
         """
         Parse the API data and extract relevant links and metadata.
 
@@ -1277,6 +1283,12 @@ class TEI_XMLParser(XMLParser):
         :param current_url_address: The current URL address being processed.
 
         :param raw_data_format: The format of the raw data ('XML' or 'HTML').
+
+        :param dedup: Whether to deduplicate the extracted snippets.
+
+        :param brute_force_RegEx_ID_ptrs: Whether to use brute force regular expression matching for ID patterns.
+
+        :param article_id: PMCID/DOI for tracing / cache save.
 
         :return: A DataFrame containing the extracted links and links to metadata - if repo is supported. Add support for unsupported repos in the ontology.
 
@@ -1322,15 +1334,15 @@ class TEI_XMLParser(XMLParser):
 
             if not self.full_document_read:
                 if filter_das is None or filter_das:
-                    data_availability_cont = self.get_data_availability_text(api_data)
-
-                    if semantic_retrieval:
-                        self.logger.info(f"Using semantic retrieval for data availability sections.")
-                        sections = self.extract_sections_from_xml(api_data)
-                        corpus = self.from_sections_to_corpus(sections, skip_rule_based_retrieved_elm=True)
-                        top_k_sections = self.semantic_retrieve_from_corpus(corpus, topk_docs_to_retrieve=top_k, model_name=self.embeddings_retriever.model_name)
-                        top_k_sections_text = [item['text'] for item in top_k_sections if item['text'] not in data_availability_cont]
-                        data_availability_cont.extend(top_k_sections_text)
+                    data_availability_cont = self.retrieve_relevant_content(
+                                api_data,
+                                semantic_retrieval=semantic_retrieval,
+                                top_k=top_k,
+                                article_id=article_id,
+                                skip_rule_based_retrieved_elm=dedup,
+                                include_snippets_with_ID_patterns=brute_force_RegEx_ID_ptrs,
+                                output_format='text'
+                            )
 
                     augmented_dataset_links = self.process_data_availability_text(data_availability_cont,
                                                                                   prompt_name=prompt_name,

@@ -763,7 +763,7 @@ class LLMClient_dev:
             # Check batch status first
             status_info = self.check_batch_status(batch_id, api_provider)
             
-            if status_info['status'] != 'completed':
+            if status_info['status'] not in ['completed', 'cancelled']:
                 raise ValueError(f"Batch {batch_id} is not completed. Status: {status_info['status']}")
             
             if not status_info.get('output_file_id'):

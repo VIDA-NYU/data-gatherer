@@ -220,11 +220,16 @@ class DataFetcher(ABC):
 
         :return: The extracted PMC ID or None if not found.
         """
-        match = re.search(r'PMC(\d+)', url)
+        match = re.search(r'PMC(\d+)', url, re.IGNORECASE)
+        doi = re.search(r'(10\.\d{4,9}/[-._;()/:A-Z0-9]+)', url, re.IGNORECASE)
         if match:
             pmcid = f"PMC{match.group(1)}"
             self.logger.info(f"Extracted PMC ID: {pmcid}")
             return pmcid
+
+        elif doi:
+            return doi.group(1)
+
         else:
             self.logger.warning(f"No PMC ID found in URL: {url}")
             return None
@@ -453,11 +458,12 @@ class HttpGetRequest(DataFetcher):
         :return: The raw content of the page.
         """
         # Try backup data FIRST (microsecond lookup)
-        pmcid = re.search(r'PMC\d+', url, re.IGNORECASE)
-        if pmcid:
-            backup_data = self.try_backup_fetch(pmcid.group(0))
+        article_id = self.url_to_pmcid(url)
+        self.article_id = article_id
+        if article_id:
+            backup_data = self.try_backup_fetch(article_id)
             if backup_data:
-                self.logger.info(f"Found {pmcid.group(0)} in local backup data (fast path, format: {self.raw_data_format})")
+                self.logger.info(f"Found {article_id} in local backup data (fast path, format: {self.raw_data_format})")
                 return backup_data
         
         # Fallback to live HTTP fetch (slow path)
@@ -593,11 +599,12 @@ class WebScraper(DataFetcher):
         self.raw_data_format = 'HTML'  # Default format for web scraping
         
         # Try backup data FIRST (microsecond lookup)
-        pmcid = re.search(r'PMC\d+', url, re.IGNORECASE)
-        if pmcid:
-            backup_data = self.try_backup_fetch(pmcid.group(0))
+        article_id = self.url_to_pmcid(url)
+        self.article_id = article_id
+        if article_id:
+            backup_data = self.try_backup_fetch(article_id)
             if backup_data:
-                self.logger.info(f"Found {pmcid.group(0)} in local backup data (fast path, format: {self.raw_data_format})")
+                self.logger.info(f"Found {article_id} in local backup data (fast path, format: {self.raw_data_format})")
                 return backup_data
         
         # Fallback to live web scraping (slow path)
@@ -877,18 +884,18 @@ class EntrezFetcher(DataFetcher):
 
         try:
             # Extract the PMC ID from the article URL, ignore case
-            PMCID = re.search(r'PMC\d+', article_id, re.IGNORECASE).group(0)
-            self.PMCID = PMCID
+            pmcid = re.search(r'PMC\d+', article_id, re.IGNORECASE).group(0)
+            self.article_id = pmcid
             
             # Try backup data FIRST (microsecond lookup)
-            backup_data = self.try_backup_fetch(PMCID)
+            backup_data = self.try_backup_fetch(pmcid)
             if backup_data:
-                self.logger.info(f"Found {PMCID} in local backup data (fast path, format: {self.raw_data_format})")
+                self.logger.info(f"Found {pmcid} in local backup data (fast path, format: {self.raw_data_format})")
                 return backup_data
 
             # Fallback to live API call (slow path)
-            self.logger.info(f"Local data not found, fetching live from API for {PMCID}")
-            return self._fetch_live_api_data(PMCID, retries, delay)
+            self.logger.info(f"Local data not found, fetching live from API for {pmcid}")
+            return self._fetch_live_api_data(pmcid, retries, delay)
 
         except Exception as e:
             # Log any exceptions and return None (backup already tried at start)

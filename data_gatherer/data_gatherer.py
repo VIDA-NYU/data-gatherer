@@ -298,7 +298,9 @@ class DataGatherer:
         current_url_address=None,
         parsed_data_dir='tmp/parsed_articles/',
         use_portkey=True,
-        grobid_for_pdf=False
+        grobid_for_pdf=False,
+        dedup=True,
+        brute_force_RegEx_ID_ptrs=False
         ):
         """
         Parses the raw data fetched from the source using the appropriate parser.
@@ -358,6 +360,9 @@ class DataGatherer:
                                       top_k=top_k,
                                       section_filter=section_filter,
                                       response_format=response_format,
+                                      dedup=dedup,
+                                      brute_force_RegEx_ID_ptrs=brute_force_RegEx_ID_ptrs,
+                                      article_id=self.data_fetcher.url_to_pmcid(current_url_address)
                                       )
 
         if isinstance(ret, pd.DataFrame):
@@ -443,7 +448,9 @@ class DataGatherer:
         headless=True,   
         HTML_fallback=False, 
         grobid_for_pdf=False, 
-        write_htmls_xmls=False
+        write_htmls_xmls=False,
+        dedup=True,
+        brute_force_RegEx_ID_ptrs=False
         ):
         """
         Orchestrates the process for a single given source URL (publication).
@@ -577,6 +584,8 @@ class DataGatherer:
                     self.logger.info(f"Skipping raw HTML/XML/PDF saving. Param write_htmls_xmls set to {self.write_htmls_xmls}.")
 
                 self.data_fetcher.quit() if hasattr(self.data_fetcher, 'scraper_tool') else None
+            
+            article_id = self.data_fetcher.article_id if hasattr(self.data_fetcher, 'article_id') else None
 
             # Step 2: Use HTMLParser/XMLParser
             self.logger.info("Initializing parser based on raw data format")
@@ -586,14 +595,17 @@ class DataGatherer:
             if self.raw_data_format.upper() == "XML" and raw_data is not None:
 
                 parsed_data = self.parser.parse_data(raw_data, self.publisher, self.current_url, top_k=top_k, prompt_name=prompt_name, 
-                    semantic_retrieval=semantic_retrieval, section_filter=section_filter, response_format=response_format)
+                    semantic_retrieval=semantic_retrieval, section_filter=section_filter, response_format=response_format, dedup=dedup, 
+                    brute_force_RegEx_ID_ptrs=brute_force_RegEx_ID_ptrs, article_id=article_id)
 
             elif self.raw_data_format.upper() == 'HTML':
                 
                 parsed_data = self.parser.parse_data(raw_data, self.publisher, self.current_url, 
                                                      raw_data_format=self.raw_data_format, prompt_name=prompt_name,
                                                      semantic_retrieval=semantic_retrieval, top_k=top_k,
-                                                     section_filter=section_filter, response_format=response_format)
+                                                     section_filter=section_filter, response_format=response_format,
+                                                     dedup=dedup, brute_force_RegEx_ID_ptrs=brute_force_RegEx_ID_ptrs,
+                                                     article_id=article_id)
                 parsed_data['source_url'] = url
                 parsed_data['pub_title'] = self.parser.extract_publication_title(raw_data)
                 self.logger.info(f"Parsed data extraction completed. Elements collected: {len(parsed_data)}")
@@ -609,7 +621,10 @@ class DataGatherer:
                                                      semantic_retrieval=semantic_retrieval,
                                                      top_k=top_k,
                                                      section_filter=section_filter,
-                                                     response_format=response_format)
+                                                     response_format=response_format,
+                                                     dedup=dedup,
+                                                     brute_force_RegEx_ID_ptrs=brute_force_RegEx_ID_ptrs,
+                                                     article_id=article_id)
                 self.logger.info(f"PDF parsing completed. Elements collected: {len(parsed_data)}")
 
             else:
@@ -1425,7 +1440,9 @@ class DataGatherer:
         poll_interval=60,
         batch_description=None,
         grobid_for_pdf=False,
-        use_portkey=True
+        use_portkey=True,
+        dedup=True,
+        brute_force_RegEx_ID_ptrs=False
         ):
         """
         Complete integrated batch processing using LLMClient batch functionality.
@@ -1525,18 +1542,16 @@ class DataGatherer:
                                 raise ValueError(f"Unsupported raw data format: {url_raw_data_format}")
                         
                         else:
-                            data_availability_cont = self.parser.get_data_availability_text(data['fetched_data'])                            
-                            all_sections = self.parser.extract_sections_from_text(data['fetched_data'])
-                            corpus = self.parser.from_sections_to_corpus(all_sections)
-                            top_k_sections = self.parser.semantic_retrieve_from_corpus(corpus, topk_docs_to_retrieve=top_k, src=pmcid)
-                            top_k_sections_text = [item['text'] for item in top_k_sections if item['text'] not in data_availability_cont]
-                            data_availability_cont.extend(top_k_sections_text)
-                            docs_mathcing_id_ptr = [item for item in corpus if item.get('contains_id_pattern', False)]
-                            self.logger.info(f"Number of documents matching ID patterns: {len(docs_mathcing_id_ptr)}")
-                            data_availability_cont.extend([item['text'] for item in docs_mathcing_id_ptr if item['text'] not in data_availability_cont])
-                            # Before passing this to an LLM check the attributes of the source obj we are puttin in data_availability_cont.
-                            # I mean at the previuous level (before filtering text only)
-                            normalized_input = "\n\n".join(data_availability_cont)
+                            data_availability_cont = self.parser.retrieve_relevant_content(
+                                data['fetched_data'],
+                                section_filter=section_filter,
+                                semantic_retrieval=semantic_retrieval,
+                                top_k=top_k,
+                                pmcid=pmcid,
+                                skip_rule_based_retrieved_elm=dedup,
+                                include_snippets_with_ID_patterns=brute_force_RegEx_ID_ptrs,
+                                article_id=self.url_to_pmcid(url)
+                            )
 
                         # Render prompt using the correct parser
                         static_prompt = self.parser.prompt_manager.load_prompt(prompt_name)
@@ -1735,7 +1750,7 @@ class DataGatherer:
         
         return result
 
-    def from_batch_resp_file_to_df(self, batch_results_file: str):
+    def from_batch_resp_file_to_df(self, batch_results_file: str, output_file_path: str = None) -> pd.DataFrame:
         """
         Convert a batch response JSONL file to a pandas DataFrame.
         This method processes batch API results and converts them to the standard DataFrame format.
@@ -1793,6 +1808,10 @@ class DataGatherer:
                     df.rename(columns={'dataset_id': 'dataset_identifier'}, inplace=True)
                 if 'repository_reference' in df.columns:
                     df.rename(columns={'repository_reference': 'data_repository'}, inplace=True)
+                
+                if output_file_path:
+                    df.to_csv(output_file_path, index=False)
+                    self.logger.info(f"DataFrame saved to CSV file: {output_file_path}")
                 
                 return df
             else:

@@ -436,7 +436,8 @@ class HTMLParser(LLMParser):
 
     def parse_data(self, html_str, publisher=None, current_url_address=None, raw_data_format='HTML',
         article_file_dir='tmp/raw_files/', section_filter=None, prompt_name='GPT_FewShot', use_portkey=True, 
-        semantic_retrieval=False, top_k=2, response_format=dataset_response_schema_gpt):
+        semantic_retrieval=False, top_k=2, response_format=dataset_response_schema_gpt, dedup=True,
+        brute_force_RegEx_ID_ptrs=False, article_id=None):
         """
         Parse the API data and extract relevant links and metadata.
 
@@ -450,7 +451,11 @@ class HTMLParser(LLMParser):
             prompt_name (str): Name of the prompt to be used for dataset extraction.
             use_portkey (bool): Whether to use Portkey for Gemini model.
             semantic_retrieval (bool): Whether to use semantic retrieval for extracting sections.
-
+            top_k (int): Number of top relevant sections to retrieve.
+            response_format: The expected response format for the LLM output.
+            dedup (bool): Whether to deduplicate the extracted snippets.
+            brute_force_RegEx_ID_ptrs (bool): Whether to use brute force regular expression matching
+            article_id (str): The article identifier (e.g., PMCID, doi) for retrieval context.
         Returns:
             pd.DataFrame: A DataFrame containing the extracted dataset links and metadata (if repo is supported or info
             is available in paper). Feel free to add support for unsupported repos in the ontology!
@@ -497,18 +502,15 @@ class HTMLParser(LLMParser):
         elif filter_das is None or filter_das is True:
             self.logger.info(f"Chunking the HTML content for the parsing step.")
 
-            # Extract dataset links from the entire text
-            data_availability_elements = self.retriever.get_data_availability_elements_from_webpage(preprocessed_data)
-
-            data_availability_str = "\n".join([item['html'] + "\n" for item in data_availability_elements])
-
-            if semantic_retrieval:
-                sections = self.extract_sections_from_html(preprocessed_data)
-                corpus = self.from_sections_to_corpus(sections, skip_rule_based_retrieved_elm=True)
-                top_k_sections = self.semantic_retrieve_from_corpus(corpus, topk_docs_to_retrieve=top_k)
-                top_k_sections_text = [item['text'] for item in top_k_sections if item['text'] not in data_availability_str]
-                top_k_sections_str = "\n".join(top_k_sections_text)
-                data_availability_str = top_k_sections_str + "\n" + data_availability_str
+            data_availability_str = self.retrieve_relevant_content(
+                                preprocessed_data,
+                                semantic_retrieval=semantic_retrieval,
+                                top_k=top_k,
+                                article_id=article_id,
+                                skip_rule_based_retrieved_elm=dedup,
+                                include_snippets_with_ID_patterns=brute_force_RegEx_ID_ptrs,
+                                output_format='text'
+                            )
 
             augmented_dataset_links = self.extract_datasets_info_from_content(data_availability_str,
                                                                               self.open_data_repos_ontology['repos'],

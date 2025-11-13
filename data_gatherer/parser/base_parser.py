@@ -1339,6 +1339,36 @@ class LLMParser(ABC):
         self.logger.info(f"Semantic retrieval completed: found {len(result)} relevant sections")
         return result
 
+    def retrieve_relevant_content(self, data, semantic_retrieval=True, top_k=5, article_id=None, max_tokens=None, skip_rule_based_retrieved_elm=False,
+                                  include_snippets_with_ID_patterns=False, output_format='text'):
+
+        data_avail_cont = self.get_data_availability_text(data)
+        ret_lst = data_avail_cont.copy()
+        top_k_sections, docs_matching_id_ptr = [], []
+
+        if semantic_retrieval:
+            self.logger.info(f"Performing semantic retrieval for relevant content")
+            all_sections = self.extract_sections_from_text(data['fetched_data'])
+            corpus = self.from_sections_to_corpus(all_sections, max_tokens=max_tokens, skip_rule_based_retrieved_elm=skip_rule_based_retrieved_elm)
+            top_k_sections = self.semantic_retrieve_from_corpus(corpus, topk_docs_to_retrieve=top_k, src=article_id)
+            top_k_sections_text = [item['text'] for item in top_k_sections if item['text'] not in ret_lst]
+            ret_lst.extend(top_k_sections_text)
+        
+        if include_snippets_with_ID_patterns:
+            docs_matching_id_ptr = [item for item in corpus if item.get('contains_id_pattern', False)]
+            self.logger.info(f"Number of documents matching ID patterns: {len(docs_matching_id_ptr)}")
+            ret_lst.extend([item['text'] for item in docs_matching_id_ptr if item['text'] not in ret_lst])
+
+        # Before passing this to an LLM check the attributes of the source obj we are puttin in data_availability_cont.
+        # I mean at the previuous level (before filtering text only)
+        if output_format == 'text':
+            normalized_input = "\n\n".join(ret_lst)
+        elif output_format == 'json':
+            normalized_input = data_avail_cont + top_k_sections + docs_matching_id_ptr
+        else:
+            normalized_input = ret_lst
+        return normalized_input
+
     def regex_match_id_patterns(self, document, id_patterns=None):
         """
         Extract dataset identifiers from document using regex patterns from ontology.

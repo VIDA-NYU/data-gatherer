@@ -454,14 +454,17 @@ def extract_all_elements_with_UID(source_html, uid):
     return [None]  # No match found
 
 def evaluate_performance(predict_df, ground_truth, orchestrator, false_positives_file, false_negatives_file=None,
-                         repo_return=False):
+                         repo_return=False, gt_base=None):
     """ Evaluates dataset extraction performance using precision, recall, and F1-score. """
 
     recall_list, false_positives_output, false_negatives_output = [], [], []
     total_precision, total_recall, num_sources = 0, 0, 0
 
-    for source_page in predict_df['source_url'].unique():
-        pub_id = source_page.split('/')[-1].lower() if not source_page.endswith('/') else source_page.split('/')[-2]
+    if gt_base is None:
+        gt_base = predict_df['source_url'].unique()
+
+    for source_page in gt_base:
+        pub_id = source_page.split('/')[-1].lower() if not source_page.endswith('/') else source_page.split('/')[-2].lower()
         
         orchestrator.logger.info(f"Evaluating pub_id: {pub_id}")
         gt_data = ground_truth[ground_truth['pmcid'].str.lower() == pub_id.lower()]  # extract ground truth
@@ -475,13 +478,13 @@ def evaluate_performance(predict_df, ground_truth, orchestrator, false_positives
         num_sources += 1
 
         # Extract evaluation datasets for this source page
-        eval_data = predict_df[predict_df['source_url'] == source_page]
+        eval_data = predict_df[predict_df['source_url'].str.lower() == source_page.lower()]
         eval_datasets = set(eval_data['dataset_identifier'].dropna().str.lower())
         # Remove invalid entries
         eval_datasets.discard('n/a')
         eval_datasets.discard('')
 
-        orchestrator.logger.info(f"Evaluation datasets: {eval_datasets}")
+        orchestrator.logger.info(f"# of Extracted Datasets: {len(eval_datasets)}. Evaluation datasets: {eval_datasets}")
 
         # Handle cases where both ground truth and evaluation are empty
         if not gt_datasets and not eval_datasets or (len(gt_datasets) == 0 and len(eval_datasets) == 0):
