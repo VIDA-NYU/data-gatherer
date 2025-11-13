@@ -1531,6 +1531,9 @@ class DataGatherer:
                             top_k_sections = self.parser.semantic_retrieve_from_corpus(corpus, topk_docs_to_retrieve=top_k, src=pmcid)
                             top_k_sections_text = [item['text'] for item in top_k_sections if item['text'] not in data_availability_cont]
                             data_availability_cont.extend(top_k_sections_text)
+                            docs_mathcing_id_ptr = [item for item in corpus if item.get('contains_id_pattern', False)]
+                            self.logger.info(f"Number of documents matching ID patterns: {len(docs_mathcing_id_ptr)}")
+                            data_availability_cont.extend([item['text'] for item in docs_mathcing_id_ptr if item['text'] not in data_availability_cont])
                             # Before passing this to an LLM check the attributes of the source obj we are puttin in data_availability_cont.
                             # I mean at the previuous level (before filtering text only)
                             normalized_input = "\n\n".join(data_availability_cont)

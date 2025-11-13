@@ -55,6 +55,7 @@ class LLMParser(ABC):
                                             save_responses_to_cache=save_responses_to_cache,
                                             use_cached_responses=use_cached_responses)
         self.repo_names = self.get_all_repo_names()
+        self.id_patterns = self.get_all_id_patterns()
         self.repo_domain_to_name_mapping = self.get_repo_domain_to_name_mapping()
 
         self.save_dynamic_prompts = save_dynamic_prompts
@@ -799,6 +800,16 @@ class LLMParser(ABC):
         else:
             self.logger.error(f"Error extracting domain from URL: {url}")
             return 'Unknown_Publisher'
+
+    def get_all_id_patterns(self):
+        # Get all the id patterns from the config file. (all the repos in ontology)
+        id_patterns = []
+        for k, v in self.open_data_repos_ontology['repos'].items():
+            if 'id_pattern' in v.keys():
+                id_patterns.append(v['id_pattern'])
+        self.logger.info(f"# of defined dataset ID patterns: {len(id_patterns)}")
+        self.logger.debug(f"All ID patterns: {id_patterns}")
+        return id_patterns
 
     def get_all_repo_names(self, uncased=False):
         # Get the all the repository names from the config file. (all the repos in ontology)

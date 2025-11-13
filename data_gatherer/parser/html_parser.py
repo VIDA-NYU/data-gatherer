@@ -802,6 +802,7 @@ class HTMLParser(LLMParser):
                     chunk_doc['sec_txt'] = "\n".join(chunk_texts)
                     chunk_doc['text'] = "\n".join(chunk_texts)
                     chunk_doc['chunk_id'] = chunk_id
+                    chunk_doc['contains_id_pattern'] = any(re.search(pattern, chunk_doc['text'], re.IGNORECASE) for pattern in self.id_patterns)
                     corpus_documents.append(chunk_doc)
                     chunk_id += 1
                     chunk_texts = []
@@ -818,6 +819,7 @@ class HTMLParser(LLMParser):
                 chunk_doc['sec_txt'] = "\n".join(chunk_texts)
                 chunk_doc['text'] = "\n".join(chunk_texts)
                 chunk_doc['chunk_id'] = chunk_id
+                chunk_doc['contains_id_pattern'] = any(re.search(pattern, chunk_doc['text'], re.IGNORECASE) for pattern in self.id_patterns)
                 corpus_documents.append(chunk_doc)
 
             # Process tables separately with chunking
@@ -830,6 +832,7 @@ class HTMLParser(LLMParser):
                     chunk_doc['text'] = chunk
                     chunk_doc['chunk_id'] = chunk_id
                     chunk_doc['is_table_chunk'] = True
+                    chunk_doc['contains_id_pattern'] = any(re.search(pattern, chunk, re.IGNORECASE) for pattern in self.id_patterns)
                     corpus_documents.append(chunk_doc)
                     chunk_id += 1
 

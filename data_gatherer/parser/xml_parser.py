@@ -317,6 +317,7 @@ class XMLParser(LLMParser):
                     chunk_doc['sec_txt_clean'] = section_title + "\n" + chunk_text
                     chunk_doc['text'] = section_title + "\n" + chunk_text
                     chunk_doc['chunk_id'] = len(chunks_created) + 1
+                    chunk_doc['contains_id_pattern'] = any(re.search(pattern, chunk_text, re.IGNORECASE) for pattern in self.id_patterns)
                     chunks_created.append(chunk_doc)
                     self.logger.debug(f"chunks_created now has {len(chunks_created)} items")
 
