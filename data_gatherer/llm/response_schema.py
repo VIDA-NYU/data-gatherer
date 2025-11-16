@@ -50,18 +50,24 @@ dataset_response_schema_gpt = {
                     "properties": {
                         "dataset_identifier": {
                             "type": "string",
-                            "description": "A unique identifier or accession code for the dataset."
+                            "description": "A unique identifier or accession code for the dataset.",
+                            "maxLength": 100
                         },
                         "repository_reference": {
                             "type": "string",
-                            "description": "A valid URI or string referring to the repository."
+                            "description": "A valid URI or string referring to the repository.",
+                            "maxLength": 200
+                        },
+                        "dataset_webpage": {
+                            "type": "string",
+                            "description": "If present the URL of the dataset page, otherwise return 'n/a'.",
+                            "maxLength": 200
                         }
                     },
                     "additionalProperties": False,
-                    "required": ["dataset_identifier", "repository_reference"]
+                    "required": ["dataset_identifier", "repository_reference", "dataset_webpage"]
                 },
-                "minItems": 1,
-                "additionalProperties": False
+                "minItems": 1
             }
         },
         "additionalProperties": False,

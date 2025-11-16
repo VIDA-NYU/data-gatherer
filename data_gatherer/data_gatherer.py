@@ -1542,16 +1542,15 @@ class DataGatherer:
                                 raise ValueError(f"Unsupported raw data format: {url_raw_data_format}")
                         
                         else:
-                            data_availability_cont = self.parser.retrieve_relevant_content(
+                            data_availability_str = self.parser.retrieve_relevant_content(
                                 data['fetched_data'],
-                                section_filter=section_filter,
                                 semantic_retrieval=semantic_retrieval,
                                 top_k=top_k,
-                                pmcid=pmcid,
                                 skip_rule_based_retrieved_elm=dedup,
                                 include_snippets_with_ID_patterns=brute_force_RegEx_ID_ptrs,
-                                article_id=self.url_to_pmcid(url)
+                                article_id=self.data_fetcher.url_to_pmcid(url)
                             )
+                            normalized_input = data_availability_str
 
                         # Render prompt using the correct parser
                         static_prompt = self.parser.prompt_manager.load_prompt(prompt_name)
@@ -1581,7 +1580,7 @@ class DataGatherer:
                         self.logger.error(f"Error preparing request for {url}: {e}")
                         continue
 
-                    last_data_format = url_raw_data_format
+                    last_url_raw_data_format = url_raw_data_format
                     cnt+=1
             
             self.logger.info(f"Prepared {len(batch_requests)} batch requests")
