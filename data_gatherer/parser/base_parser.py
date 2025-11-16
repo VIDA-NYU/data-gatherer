@@ -930,6 +930,25 @@ class LLMParser(ABC):
         except requests.RequestException as e:
             self.logger.warning(f"Error resolving URL {url}: {e}")
             return url
+    
+    def validate_schema_org(self, dataset_page):
+        dataset_page_str = re.sub(r':', '%3A', dataset_page)
+        dataset_page_str = re.sub(r'\/', '%2F', dataset_page_str)
+        base_url = 'https://validator.schema.org/'
+        req = f"{base_url}#url={dataset_page_str}"
+        self.logger.info(f"Validating schema.org for dataset page: {dataset_page} with URL: {req}")
+        try:
+            response = requests.get(req, timeout=2)
+            if response.status_code == 200:
+                self.logger.info(f"Schema.org validation successful for {dataset_page}")
+                return True
+            else:
+                self.logger.warning(f"Schema.org validation failed for {dataset_page} with status code: {response.status_code}")
+                return False
+        except requests.RequestException as e:
+            self.logger.warning(f"Error validating schema.org for {dataset_page}: {e}")
+            return False
+
 
     def resolve_accession_id_for_repository(self, dataset_identifier, data_repository, resolved_dataset_page=None):
         """
@@ -1296,7 +1315,7 @@ class LLMParser(ABC):
         return dataset_info
 
     def semantic_retrieve_from_corpus(self, corpus, model_name='sentence-transformers/all-MiniLM-L6-v2',
-                                      topk_docs_to_retrieve=5, query=None, src=None):
+                                      topk_docs_to_retrieve=5, query=None, src=None, embedding_encode_batch_size=128):
         """
         Given a corpus of text, retrieve the most relevant documents using semantic search.
 
@@ -1348,7 +1367,7 @@ class LLMParser(ABC):
 
         if semantic_retrieval:
             self.logger.info(f"Performing semantic retrieval for relevant content")
-            all_sections = self.extract_sections_from_text(data['fetched_data'])
+            all_sections = self.extract_sections_from_text(data)
             corpus = self.from_sections_to_corpus(all_sections, max_tokens=max_tokens, skip_rule_based_retrieved_elm=skip_rule_based_retrieved_elm)
             top_k_sections = self.semantic_retrieve_from_corpus(corpus, topk_docs_to_retrieve=top_k, src=article_id)
             top_k_sections_text = [item['text'] for item in top_k_sections if item['text'] not in ret_lst]

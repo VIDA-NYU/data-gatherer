@@ -92,7 +92,8 @@ class EmbeddingsRetriever(BaseRetriever):
         self.logger.debug(f"Text tokenized into {len(tokens['input_ids'])} tokens.")
         return len(tokens['input_ids'])
 
-    def embed_corpus(self, corpus=None, enable_chunking=True, chunk_size=None, chunk_overlap=20, batch_size=32, src=None, read_cache=False, write_cache=False):
+    def embed_corpus(self, corpus=None, enable_chunking=True, chunk_size=None, chunk_overlap=20, batch_size=32, src=None, read_cache=False, write_cache=False,
+                    fmt=None):
         """
         Embed the corpus using the initialized model with intelligent chunking to prevent truncation.
         
@@ -102,10 +103,17 @@ class EmbeddingsRetriever(BaseRetriever):
             chunk_size (int): Maximum tokens per chunk. If None, uses 80% of max_seq_length.
             chunk_overlap (int): Number of tokens to overlap between chunks.
             batch_size (int): Batch size for encoding. Default 32. Larger batches may be faster but use more memory.
+            src (str): Source identifier for caching.
+            read_cache (bool): Whether to read embeddings from cache.
+            write_cache (bool): Whether to write embeddings to cache.
+            fmt (str): format of the source string embedded (xml, html).
         """
         if corpus is not None:
             self.corpus = corpus
         corpus_texts = []
+
+        if fmt is not None:
+            src = src + '-' + fmt
 
         process_id = None
 
@@ -138,7 +146,12 @@ class EmbeddingsRetriever(BaseRetriever):
         if src is not None and write_cache:
             self.embeddings_cache[process_id] = self.embeddings
             self.logger.info(f"Writing embeddings to cache for process ID: {process_id}")
-            np.savez(os.path.join(CACHE_BASE_DIR, "corpus_embeddings_cache.npz"), **self.embeddings_cache)
+            try:
+                cache_path = os.path.join(CACHE_BASE_DIR, "corpus_embeddings_cache.npz")
+                np.savez(cache_path, **self.embeddings_cache)
+                self.logger.info(f"Successfully wrote embeddings cache with {len(self.embeddings_cache)} entries")
+            except Exception as e:
+                self.logger.error(f"Failed to write embeddings cache: {e}")
 
         self.logger.info(f"Embedding time: {embed_time:.2f}s ({embed_time/len(corpus_texts):.3f}s per chunk)")
         self.logger.info(f"Corpus embedding completed. Shape: {self.embeddings.shape}")

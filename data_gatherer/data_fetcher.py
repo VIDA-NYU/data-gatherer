@@ -90,7 +90,7 @@ class BackupDataStore:
 # Abstract base class for fetching data
 class DataFetcher(ABC):
     def __init__(self, logger, src='WebScraper', driver_path=None, browser='firefox', headless=True, 
-                 backup_data_file='scripts/exp_input/Local_fetched_data.parquet'):
+                 backup_data_file='scripts/exp_input/Local_fulltext_pub_REV.parquet'):
         self.logger = logger
         self.logger.debug(f"DataFetcher ({src}) initialized.")
         self.driver_path = driver_path
@@ -460,7 +460,7 @@ class HttpGetRequest(DataFetcher):
         # Try backup data FIRST (microsecond lookup)
         article_id = self.url_to_pmcid(url)
         self.article_id = article_id
-        if article_id:
+        if article_id and hasattr(self, 'backup_store') and self.backup_store is not None:
             backup_data = self.try_backup_fetch(article_id)
             if backup_data:
                 self.logger.info(f"Found {article_id} in local backup data (fast path, format: {self.raw_data_format})")
@@ -601,7 +601,7 @@ class WebScraper(DataFetcher):
         # Try backup data FIRST (microsecond lookup)
         article_id = self.url_to_pmcid(url)
         self.article_id = article_id
-        if article_id:
+        if article_id and hasattr(self, 'backup_store') and self.backup_store is not None:
             backup_data = self.try_backup_fetch(article_id)
             if backup_data:
                 self.logger.info(f"Found {article_id} in local backup data (fast path, format: {self.raw_data_format})")
@@ -887,14 +887,14 @@ class EntrezFetcher(DataFetcher):
             pmcid = re.search(r'PMC\d+', article_id, re.IGNORECASE).group(0)
             self.article_id = pmcid
             
-            # Try backup data FIRST (microsecond lookup)
-            backup_data = self.try_backup_fetch(pmcid)
-            if backup_data:
-                self.logger.info(f"Found {pmcid} in local backup data (fast path, format: {self.raw_data_format})")
-                return backup_data
+            if hasattr(self, 'backup_store') and self.backup_store is not None:
+                backup_data = self.try_backup_fetch(pmcid)
+                if backup_data:
+                    self.logger.info(f"Found {pmcid} in local backup data (fast path, format: {self.raw_data_format})")
+                    return backup_data
 
-            # Fallback to live API call (slow path)
-            self.logger.info(f"Local data not found, fetching live from API for {pmcid}")
+            else:
+                self.logger.info(f"Local data not found, fetching live from API for {pmcid}")
             return self._fetch_live_api_data(pmcid, retries, delay)
 
         except Exception as e:

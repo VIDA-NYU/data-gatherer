@@ -235,7 +235,27 @@ class DataGatherer:
 
         if write_df_to_path:
             if write_df_to_path.endswith('.parquet'):
-                df = pd.DataFrame.from_dict(complete_publication_fetches, orient='index')
+                # Convert XML elements to strings for Parquet serialization
+                serialized_data = {}
+                for url, data in complete_publication_fetches.items():
+                    serialized_entry = data.copy()
+                    fetched = data['fetched_data']
+                    
+                    # Check if fetched_data is an lxml Element and convert to string
+                    if hasattr(fetched, 'tag'):  # It's an XML Element
+                        from lxml import etree
+                        serialized_entry['fetched_data'] = etree.tostring(
+                            fetched, 
+                            encoding='unicode', 
+                            method='xml',
+                            pretty_print=True
+                        )
+                    # Otherwise keep as is (for HTML strings, etc.)
+                    
+                    serialized_data[url] = serialized_entry
+                
+                df = pd.DataFrame.from_dict(serialized_data, orient='index')
+                df.index.name = None
                 df.to_parquet(write_df_to_path, index=True)
 
             else:
