@@ -62,7 +62,10 @@ class BackupDataStore:
         """Check if publication exists in backup store."""
         if not self._is_valid() or self._dataframe is None:
             return False
-        return identifier.lower() in self._dataframe['publication'].str.lower().values
+        if 'publication' in self._dataframe.keys():
+            return identifier.lower() in self._dataframe['publication'].str.lower().values
+        else:
+            return identifier.lower() in self._dataframe.index.str.lower().values
     
     def get_publication_data(self, identifier):
         """Retrieve publication data if available."""

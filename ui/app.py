@@ -125,7 +125,7 @@ MODEL_OPTIONS = [
     "gemini-1.5-flash", "gemini-1.5-pro", "gemini-2.0-flash-exp", "gemini-2.0-flash", "gemini-2.5-flash"
 ]
 PROMPT_MODEL_OPTIONS = {
-    'FDR': 'GPT_from_full_input_Examples',
+    'FDR': 'GPT_FDR_FewShot',
     'RTR': 'GPT_FewShot',
 }
 metadata_prompt_name = 'portkey_gemini_metadata_extract'
