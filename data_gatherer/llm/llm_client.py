@@ -676,10 +676,32 @@ class LLMClient_dev:
         # Create a dedicated OpenAI client for batch operations
         # This ensures we use the direct OpenAI API even if the main client uses Portkey
         openai_client = OpenAI(api_key=GPT_API_KEY)
+
+        # Filter out invalid keys (i.e. 'metadata') from batch request JSONL file
+        # OpenAI Batch API doesn't accept 'metadata' field in request body
+        cleaned_file_path = batch_file_path.replace('.jsonl', '_cleaned.jsonl')
+        self.logger.info(f"Filtering invalid keys from batch file: {batch_file_path}")
         
-        # Upload the batch file
-        self.logger.info(f"Uploading batch file to OpenAI: {batch_file_path}")
-        with open(batch_file_path, 'rb') as file:
+        with open(batch_file_path, 'r', encoding='utf-8') as infile, \
+             open(cleaned_file_path, 'w', encoding='utf-8') as outfile:
+            for line_num, line in enumerate(infile, 1):
+                if not line.strip():
+                    continue
+                try:
+                    request = json.loads(line)
+                    if 'metadata' in request:
+                        self.logger.debug(f"Removing 'metadata' field from request {line_num}")
+                        del request['metadata']
+                    outfile.write(json.dumps(request) + '\n')
+                except json.JSONDecodeError as e:
+                    self.logger.error(f"Invalid JSON at line {line_num}: {e}")
+                    raise
+        
+        self.logger.info(f"Created cleaned batch file: {cleaned_file_path}")
+        
+        # Upload the cleaned batch file
+        self.logger.info(f"Uploading cleaned batch file to OpenAI: {cleaned_file_path}")
+        with open(cleaned_file_path, 'rb') as file:
             batch_input_file = openai_client.files.create(
                 file=file,
                 purpose="batch"
