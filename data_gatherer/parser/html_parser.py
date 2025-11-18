@@ -1133,3 +1133,164 @@ class HTMLParser(LLMParser):
                 citation_obj["external_links"] = links
                 citations.append(citation_obj)
         return citations
+
+    def normalize_schema_org_metadata(self, html_str):
+        """
+        Given as input the html of the schema.org validator, extract metadata from the dataset page 
+        normalized based on the schema.org dataset schema standards.
+        
+        Extracts JSON-LD, Microdata, and RDFa structured data and normalizes it to a standard format.
+        
+        :param html_str: str — raw HTML content containing Schema.org markup
+        :return: dict — normalized metadata following Schema.org Dataset schema, or None if no data found
+        """
+        import json
+        
+        self.logger.info("Extracting and normalizing Schema.org metadata from HTML")
+        soup = BeautifulSoup(html_str, "html.parser")
+        
+        normalized_data = {
+            "@context": "https://schema.org",
+            "@type": "Dataset",
+            "name": None,
+            "description": None,
+            "url": None,
+            "identifier": None,
+            "creator": None,
+            "publisher": None,
+            "datePublished": None,
+            "dateModified": None,
+            "license": None,
+            "keywords": [],
+            "distribution": [],
+            "citation": [],
+            "version": None,
+            "isAccessibleForFree": None,
+        }
+        
+        # 1. Try to extract JSON-LD structured data (most common for Schema.org)
+        json_ld_scripts = soup.find_all("script", type="application/ld+json")
+        for script in json_ld_scripts:
+            try:
+                data = json.loads(script.string)
+                # Handle both single objects and arrays of objects
+                if isinstance(data, list):
+                    datasets = [d for d in data if d.get("@type") == "Dataset"]
+                    if datasets:
+                        data = datasets[0]
+                    else:
+                        continue
+                
+                if isinstance(data, dict) and data.get("@type") == "Dataset":
+                    self.logger.info("Found JSON-LD Dataset schema")
+                    # Extract and normalize fields
+                    normalized_data["name"] = data.get("name")
+                    normalized_data["description"] = data.get("description")
+                    normalized_data["url"] = data.get("url")
+                    normalized_data["identifier"] = data.get("identifier")
+                    
+                    # Handle creator (can be string, object, or array)
+                    creator = data.get("creator")
+                    if creator:
+                        normalized_data["creator"] = self._normalize_person_org(creator)
+                    
+                    # Handle publisher
+                    publisher = data.get("publisher")
+                    if publisher:
+                        normalized_data["publisher"] = self._normalize_person_org(publisher)
+                    
+                    normalized_data["datePublished"] = data.get("datePublished")
+                    normalized_data["dateModified"] = data.get("dateModified")
+                    normalized_data["license"] = data.get("license")
+                    normalized_data["version"] = data.get("version")
+                    normalized_data["isAccessibleForFree"] = data.get("isAccessibleForFree")
+                    
+                    # Handle keywords (can be string or array)
+                    keywords = data.get("keywords", [])
+                    if isinstance(keywords, str):
+                        normalized_data["keywords"] = [kw.strip() for kw in keywords.split(",")]
+                    elif isinstance(keywords, list):
+                        normalized_data["keywords"] = keywords
+                    
+                    # Handle distribution
+                    distribution = data.get("distribution", [])
+                    if isinstance(distribution, dict):
+                        distribution = [distribution]
+                    normalized_data["distribution"] = distribution
+                    
+                    # Handle citation
+                    citation = data.get("citation", [])
+                    if isinstance(citation, (str, dict)):
+                        citation = [citation]
+                    normalized_data["citation"] = citation
+                    
+                    self.logger.info(f"Extracted metadata for dataset: {normalized_data.get('name', 'Unknown')}")
+                    return normalized_data
+                    
+            except json.JSONDecodeError as e:
+                self.logger.warning(f"Failed to parse JSON-LD script: {e}")
+                continue
+        
+        # 2. Try to extract Microdata (fallback)
+        dataset_items = soup.find_all(attrs={"itemtype": re.compile(r"schema\.org/Dataset", re.IGNORECASE)})
+        if dataset_items:
+            self.logger.info("Found Microdata Dataset schema")
+            item = dataset_items[0]
+            
+            # Extract name
+            name_prop = item.find(attrs={"itemprop": "name"})
+            if name_prop:
+                normalized_data["name"] = name_prop.get_text(strip=True)
+            
+            # Extract description
+            desc_prop = item.find(attrs={"itemprop": "description"})
+            if desc_prop:
+                normalized_data["description"] = desc_prop.get_text(strip=True)
+            
+            # Extract URL
+            url_prop = item.find(attrs={"itemprop": "url"})
+            if url_prop:
+                normalized_data["url"] = url_prop.get("href") or url_prop.get_text(strip=True)
+            
+            # Extract identifier
+            id_prop = item.find(attrs={"itemprop": "identifier"})
+            if id_prop:
+                normalized_data["identifier"] = id_prop.get_text(strip=True)
+            
+            # Extract keywords
+            keyword_props = item.find_all(attrs={"itemprop": "keywords"})
+            keywords = [kw.get_text(strip=True) for kw in keyword_props]
+            normalized_data["keywords"] = keywords
+            
+            self.logger.info(f"Extracted microdata for dataset: {normalized_data.get('name', 'Unknown')}")
+            return normalized_data
+        
+        # 3. Try to extract from meta tags (minimal fallback)
+        meta_name = soup.find("meta", attrs={"name": re.compile(r"dc\.title|citation_title", re.IGNORECASE)})
+        if meta_name:
+            normalized_data["name"] = meta_name.get("content")
+            self.logger.info("Extracted dataset name from meta tags")
+            return normalized_data
+        
+        self.logger.warning("No Schema.org Dataset metadata found in HTML")
+        return None
+    
+    def _normalize_person_org(self, entity):
+        """
+        Helper method to normalize Person or Organization entities from Schema.org data.
+        
+        :param entity: dict, str, or list — creator or publisher data
+        :return: normalized entity data
+        """
+        if isinstance(entity, str):
+            return {"name": entity}
+        elif isinstance(entity, dict):
+            return {
+                "@type": entity.get("@type", "Person"),
+                "name": entity.get("name"),
+                "url": entity.get("url"),
+                "identifier": entity.get("identifier"),
+            }
+        elif isinstance(entity, list):
+            return [self._normalize_person_org(e) for e in entity]
+        return None

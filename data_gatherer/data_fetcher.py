@@ -446,6 +446,21 @@ class DataFetcher(ABC):
             self.logger.info("No cookie pattern 1 found in HTML")
         return html
 
+    def validate_schema_org(self, dataset_page_url):
+        base_url = 'https://validator.schema.org/#url='
+        re_subst = {
+            ':': '%3A',
+            '\/': '%2F'
+        } 
+        concat_str = dataset_page_url
+        for ptr,subst in re_subst.items():
+            concat_str = re.sub(ptr, subst, concat_str)
+        
+        return base_url + concat_str
+
+    def http_get_validated_schema_org(resolved_url):
+        return requests.get(resolved_url)
+
 class HttpGetRequest(DataFetcher):
     "class for fetching data via HTTP GET requests using the requests library."
     def __init__(self, logger):

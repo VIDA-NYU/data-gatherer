@@ -1019,6 +1019,10 @@ class DataGatherer:
                     response = requests.get(row['dataset_webpage'], timeout=timeout)
                     html = self.metadata_parser.normalize_HTML(response.text, keep_tags=keep_sect)
 
+                validated_url = self.data_fetcher.validate_schema_org(dataset_webpage)
+                normalized_dataset_schema_HTML = self.data_fetcher.http_get_validated_schema_org(validated_url)
+                metadata_schema_org = self.parser.normalize_schema_org_metadata(normalized_dataset_schema_HTML)
+
                 if not skip:
                     metadata = self.metadata_parser.parse_datasets_metadata(html,
                                                                             use_portkey=use_portkey,
