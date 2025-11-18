@@ -883,7 +883,7 @@ class HTMLParser(LLMParser):
                 ths = header_row.find_all('th')
                 headers.extend([ele.text.strip() for ele in ths])
         else:
-            self.logger.warning("No <thead> found in table.")
+            self.logger.warning(f"No <thead> found in table: {soup_table}.")
         self.logger.debug(f"Table headers: {headers}")
         return headers
     

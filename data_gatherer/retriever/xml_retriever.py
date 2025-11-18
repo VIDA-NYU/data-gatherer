@@ -434,7 +434,12 @@ class xmlRetriever(BaseRetriever):
     def get_data_availability_sections(self, api_xml):
         data_availability_sections = []
         for ptr in self.load_patterns_for_tgt_section('data_availability_sections'):
-            data_availability_sections.extend(api_xml.findall(ptr))
+            cont = api_xml.findall(ptr)
+            if cont is not None:
+                self.logger.debug(f"Found {len(cont)} data availability sections. cont: {cont}")
+                data_availability_sections.extend(cont)
+
+        self.logger.debug(f"Func get_data_availability_sections returns {len(data_availability_sections)} section")
         return data_availability_sections
 
     def has_target_xml_tag(self, raw_data, section_name: str) -> bool:

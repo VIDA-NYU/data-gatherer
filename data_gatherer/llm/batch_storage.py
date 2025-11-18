@@ -341,7 +341,8 @@ class BatchRequestBuilder:
                              messages: List[Dict[str, str]], 
                              model: str,
                              temperature: float = 0.0,
-                             response_format: Optional[Dict] = dataset_response_schema_with_use_description) -> Dict[str, Any]:
+                             response_format: Optional[Dict] = dataset_response_schema_with_use_description,
+                             metadata: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         """
         Create a batch request in OpenAI format for the responses endpoint.
         
@@ -365,6 +366,20 @@ class BatchRequestBuilder:
                 "text": { "format": response_format }
             }
         }
+        
+        if metadata:
+            # Add only serializable metadata values
+            serializable_metadata = {}
+            for key, value in metadata.items():
+                try:
+                    # Test if the value is JSON serializable
+                    json.dumps(value)
+                    serializable_metadata[key] = value
+                except (TypeError, ValueError) as e:
+                    self.logger.warning(f"Skipping non-serializable metadata key '{key}': {e}")
+            
+            if serializable_metadata:
+                request["metadata"] = serializable_metadata
             
         return request
     

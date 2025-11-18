@@ -580,6 +580,7 @@ class LLMClient_dev:
             for request_data in batch_requests:
                 custom_id = request_data.get('custom_id')
                 messages = request_data.get('messages')
+                metadata = request_data.get('metadata')
                 
                 if not custom_id or not messages:
                     self.logger.warning(f"Skipping invalid batch request: missing custom_id or messages")
@@ -598,7 +599,8 @@ class LLMClient_dev:
                         messages=messages,
                         model=batch_model,
                         temperature=temperature,
-                        response_format=response_format
+                        response_format=response_format,
+                        metadata=metadata
                     )
                 elif api_provider.lower() == 'portkey':
                     formatted_request = self.batch_builder.create_portkey_request(

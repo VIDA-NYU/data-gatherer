@@ -169,3 +169,4 @@ scripts/exp_input/dspy_ground_truth*
 scripts/output/result*
 scripts/output/gold/GT_DataLinks_PMC_and_Fenyo.xlsx
 scripts/output/semantic_search/resp_RTR*
+scripts/output/semantic_search/Train_results.csv

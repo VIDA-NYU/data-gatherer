@@ -940,6 +940,7 @@ class XMLParser(LLMParser):
         :return: List of strings from sections that match the data availability section patterns.
 
         """
+        self.logger.debug(f"Function call: get_data_availability_text(api_xml({type(api_xml)})")
 
         data_availability_sections = self.retriever.get_data_availability_sections(api_xml)
 
@@ -954,20 +955,20 @@ class XMLParser(LLMParser):
         for sect in data_availability_sections:
             cont = ""
             for elem in sect.iter():
-                if elem.text:
+                if elem.text and elem.text is not None:
                     cont += ' '
                     cont += elem.text
                     cont += ' '
-                if elem.tail:
+                if elem.tail and elem.tail is not None:
                     cont += ' '
                     cont += elem.tail
                     cont += ' '
                 # also include the links in the data availability section
-                if elem.tag == 'ext-link':
+                if elem.tag == 'ext-link' and elem.get('{http://www.w3.org/1999/xlink}href') is not None:
                     cont += ' '
                     cont += elem.get('{http://www.w3.org/1999/xlink}href')
                     cont += ' '
-                if elem.tag == 'xref':
+                if elem.tag == 'xref' and elem.text is not None:
                     cont += ' '
                     cont += elem.text
                     cont += ' '

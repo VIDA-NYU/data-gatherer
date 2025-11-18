@@ -1361,6 +1361,8 @@ class LLMParser(ABC):
     def retrieve_relevant_content(self, data, semantic_retrieval=True, top_k=5, article_id=None, max_tokens=None, skip_rule_based_retrieved_elm=False,
                                   include_snippets_with_ID_patterns=False, output_format='text'):
 
+        self.logger.debug(f"Function call: retrieve_relevant_content(semantic_retrieval={semantic_retrieval}, top_k={top_k}, article_id={article_id}, max_tokens={max_tokens}, skip_rule_based_retrieved_elm={skip_rule_based_retrieved_elm}, include_snippets_with_ID_patterns={include_snippets_with_ID_patterns}, output_format={output_format})")
+
         data_avail_cont = self.get_data_availability_text(data)
         ret_lst = data_avail_cont.copy()
         top_k_sections, docs_matching_id_ptr = [], []
@@ -1377,7 +1379,8 @@ class LLMParser(ABC):
             docs_matching_id_ptr = [item for item in corpus if item.get('contains_id_pattern', False)]
             self.logger.info(f"Number of documents matching ID patterns: {len(docs_matching_id_ptr)}")
             ret_lst.extend([item['text'] for item in docs_matching_id_ptr if item['text'] not in ret_lst])
-
+        
+        self.logger.debug(f"Prepare output as {output_format}")
         # Before passing this to an LLM check the attributes of the source obj we are puttin in data_availability_cont.
         # I mean at the previuous level (before filtering text only)
         if output_format == 'text':
