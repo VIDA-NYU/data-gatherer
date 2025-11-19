@@ -386,3 +386,31 @@ def test_extract_citations_from_html_xml_and_compare(get_test_data_path):
 
     assert isinstance(citations_from_xml, list) and isinstance(citations_from_html, list)
     assert len(citations_from_xml) == len(citations_from_html) == 82
+
+def test_schema_org_metadata_extract(get_test_data_path):
+    logger = setup_logging("test_logger", log_file="logs/scraper.log", level=logging.DEBUG)
+    parser = HTMLParser("open_bio_data_repos.json", logger, llm_name='gemini-2.0-flash')
+    with open(get_test_data_path('metadata_schema_org.html'), 'rb') as f:
+        raw_html = f.read()
+    schema_org_metadata = parser.normalize_schema_org_metadata(raw_html)
+    print(f"schema_org_metadata: \n\n{schema_org_metadata}\n\n")
+
+    assert isinstance(schema_org_metadata, dict)
+    assert schema_org_metadata['@context'] == 'https://schema.org'
+    assert 'Dataset' in str(schema_org_metadata['@type'])
+    
+    assert schema_org_metadata['name'] == 'Single cell analysis of human mesenchymal stem cells'
+    assert 'RDS files' in schema_org_metadata['description']
+    assert 'zenodo.org/records/8026174' in schema_org_metadata['url']
+    
+    assert isinstance(schema_org_metadata['creator'], list)
+    assert schema_org_metadata['creator'][0]['name'] == 'Yuchen Gao'
+    assert schema_org_metadata['publisher']['name'] == 'Zenodo'
+    
+    assert schema_org_metadata['datePublished'] == '2023-06-14'
+    assert 'creativecommons.org/licenses/by/4.0' in schema_org_metadata['license']
+    
+    assert len(schema_org_metadata['distribution']) == 6
+    assert schema_org_metadata['distribution'][0]['@type'] == 'DataDownload'
+
+
