@@ -2,6 +2,7 @@ from data_gatherer.parser.base_parser import *
 from data_gatherer.retriever.html_retriever import htmlRetriever
 from data_gatherer.llm.response_schema import *
 import regex as re
+import json
 import logging
 import pandas as pd
 from bs4 import BeautifulSoup, Comment, NavigableString, CData
@@ -1144,7 +1145,6 @@ class HTMLParser(LLMParser):
         :param html_str: str — raw HTML content containing Schema.org markup
         :return: dict — normalized metadata following Schema.org Dataset schema, or None if no data found
         """
-        import json
         
         self.logger.info("Extracting and normalizing Schema.org metadata from HTML")
         soup = BeautifulSoup(html_str, "html.parser")

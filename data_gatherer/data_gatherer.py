@@ -942,6 +942,7 @@ class DataGatherer:
         if isinstance(combined_df, pd.Series):
             combined_df = combined_df.to_frame().T
 
+        # Process each row
         for i, row in combined_df.iterrows():
             self.logger.info(f"Row # {i}")
             self.logger.debug(f"Row keys: {row}")
@@ -1044,8 +1045,8 @@ class DataGatherer:
             if return_metadata:
                 flat_metadata = self.metadata_parser.flatten_metadata_dict(metadata)
                 ret_list.append(flat_metadata)
-
-            self.display_metadata(metadata, display_type=display_type, interactive=interactive)
+            
+            self.logger.info(f"Processed metadata from dataset page {dataset_webpage}")
 
         return ret_list if return_metadata else None
 
@@ -1214,6 +1215,8 @@ class DataGatherer:
             return None
 
     def url_to_page_id(self, url):
+        if not isinstance(url, str) or len(url) == 0:
+            return None
         url = re.sub(r'^https?://', '', url)
         article_id = re.sub(r'[^A-Za-z0-9]', '_', url)
         if article_id.endswith('_'):

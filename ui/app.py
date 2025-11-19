@@ -174,11 +174,11 @@ if st.button("🚀 Run Extraction", type="primary"):
                     llm_name=model_name, 
                     process_entire_document=full_document_read, 
                     log_level="INFO",
-                    load_from_cache=True, 
-                    save_to_cache=True, 
+                    load_from_cache=not True, 
+                    save_to_cache=not True, 
                     driver_path=driver_path,
                     log_file_override="ui/data_gatherer.log",
-                    clear_previous_logs=False
+                    clear_previous_logs=not False
                 )
                 orch.logger.info(f"[FLOW] Extraction button pressed by user {user_id[:8]}")
                 orch.logger.info(f"[FLOW] Checking rate limit for user {user_id[:8]}")

@@ -150,7 +150,7 @@ class LLMParser(ABC):
         self.logger.info(f"Processing DAS_content: {len(DAS_content)} elements of type: {[type(item) for item in DAS_content]}")
         repos_elements = self.repo_names
 
-        DAS_str = "\n".join([item + "\n" for item in DAS_content])
+        DAS_str = "".join([DAS_content])
 
         # Call the generalized function
         datasets = self.extract_datasets_info_from_content(DAS_str, repos_elements,
@@ -431,7 +431,7 @@ class LLMParser(ABC):
 
         for repo_key, repo_vals in self.open_data_repos_ontology['repos'].items():
             for key, val in dataset.items():
-                if 'dataset_webpage_url_ptr' in repo_vals:
+                if 'dataset_webpage_url_ptr' in repo_vals and type(val) == str:
                     ptr_search = re.sub('__ID__', '', repo_vals['dataset_webpage_url_ptr'])
                     if re.search(ptr_search, val, re.IGNORECASE):
                         self.logger.info(f"Matched dataset_webpage_url_ptr: {repo_vals['dataset_webpage_url_ptr']} to value: {val}")
@@ -446,7 +446,7 @@ class LLMParser(ABC):
                                                            dataset_page=dataset_webpage,
                                                            candidate_repo=repo_key)
                                                            
-                if 'id_pattern' in repo_vals:
+                if 'id_pattern' in repo_vals and type(val) == str:
                     if re.search(repo_vals['id_pattern'], val, re.IGNORECASE):
                         self.logger.info(f"Matched id_pattern: {repo_vals['id_pattern']} to value: {val}")
                         if val.startswith('http'):
@@ -806,6 +806,8 @@ class LLMParser(ABC):
         id_patterns = []
         for k, v in self.open_data_repos_ontology['repos'].items():
             if 'id_pattern' in v.keys():
+                if k in ['zenodo.org']: # avoid adding generic patterns (7 digits can also be something other than a dataset. identifier)
+                    continue
                 id_patterns.append(v['id_pattern'])
         self.logger.info(f"# of defined dataset ID patterns: {len(id_patterns)}")
         self.logger.debug(f"All ID patterns: {id_patterns}")
@@ -1373,18 +1375,18 @@ class LLMParser(ABC):
             corpus = self.from_sections_to_corpus(all_sections, max_tokens=max_tokens, skip_rule_based_retrieved_elm=skip_rule_based_retrieved_elm)
             top_k_sections = self.semantic_retrieve_from_corpus(corpus, topk_docs_to_retrieve=top_k, src=article_id)
             top_k_sections_text = [item['text'] for item in top_k_sections if item['text'] not in ret_lst]
-            ret_lst.extend(top_k_sections_text)
+            ret_lst.extend(top_k_sections_text)  # Use extend() instead of append() to add individual strings
         
         if include_snippets_with_ID_patterns:
             docs_matching_id_ptr = [item for item in corpus if item.get('contains_id_pattern', False)]
             self.logger.info(f"Number of documents matching ID patterns: {len(docs_matching_id_ptr)}")
-            ret_lst.extend([item['text'] for item in docs_matching_id_ptr if item['text'] not in ret_lst])
+            ret_lst.extend([item['text'] for item in docs_matching_id_ptr if item['text'] not in ret_lst])  # Use extend() instead of append()
         
         self.logger.debug(f"Prepare output as {output_format}")
         # Before passing this to an LLM check the attributes of the source obj we are puttin in data_availability_cont.
         # I mean at the previuous level (before filtering text only)
         if output_format == 'text':
-            normalized_input = "\n\n".join(ret_lst)
+            normalized_input = "".join(ret_lst)
         elif output_format == 'json':
             normalized_input = data_avail_cont + top_k_sections + docs_matching_id_ptr
         else:
