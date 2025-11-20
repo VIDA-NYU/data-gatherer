@@ -480,6 +480,8 @@ class LLMParser(ABC):
 
         if dataset_id is None:
             dataset_id = self.validate_dataset_id(dataset.get('dataset_identifier', dataset.get('dataset_id', 'n/a')))
+            if isinstance(dataset_id, list):
+                self.logger.info(f"{dataset.get('dataset_identifier', dataset.get('dataset_id', 'n/a'))} detected as range of IDs")
         else:
             self.logger.info(f"Dataset ID found via pattern matching: {dataset_id}")
 
@@ -857,9 +859,18 @@ class LLMParser(ABC):
             self.logger.info(f"Accession ID {new_id} is valid") if new_id != 'n/a' else self.logger.info(
                 f"Accession ID {dataset_identifier} is invalid")
             return new_id
-        else:
-            self.logger.info(f"Accession ID {dataset_identifier} is valid")
-            return dataset_identifier
+        elif '-' in dataset_identifier: 
+            range_pattern = r'(\w+)(\d+)-(\w+)(\d+)'
+            alpha_1 = str(re.search(range_pattern, dataset_identifier, re.IGNORECASE).group(1))
+            digit_1 = int(re.search(range_pattern, dataset_identifier, re.IGNORECASE).group(2))
+            alpha_2 = str(re.search(range_pattern, dataset_identifier, re.IGNORECASE).group(3))
+            digit_2 = int(re.search(range_pattern, dataset_identifier, re.IGNORECASE).group(4))
+            if alpha_1 == alpha_2 and digit_1 < digit_2:
+                self.logger.info(f"detected a range of accession ids: returning range as list")
+                return [alpha_1 + str(digit_i) for digit_i in range(digit_1, digit_2 + 1)]
+
+        self.logger.info(f"Accession ID {dataset_identifier} is valid")
+        return dataset_identifier
 
     def validate_dataset_webpage(self, dataset_webpage_url, resolved_repo, dataset_id, old_metadata=None, req_timeout=0.5):
         """
@@ -872,6 +883,7 @@ class LLMParser(ABC):
         """
         self.logger.info(f"Validating Dataset Page: {dataset_webpage_url}, resolved_repo {resolved_repo}, dataset_id {dataset_id}")
         resolved_dataset_page = self.resolve_url(dataset_webpage_url, req_timeout=req_timeout)
+        dataset_id = dataset_id[0] if isinstance(dataset_id, list) else dataset_id
 
         if resolved_repo in self.open_data_repos_ontology['repos']:
             if 'dataset_webpage_url_ptr' in self.open_data_repos_ontology['repos'][resolved_repo].keys():
@@ -988,6 +1000,7 @@ class LLMParser(ABC):
         :return: str — the normalized repository name.
         """
         self.logger.info(f"Resolving data repository for candidate: {repo}, identifier: {identifier}, dataset_page: {dataset_page}")
+        identifier = identifier[0] if isinstance(identifier, list) else identifier 
 
         if repo is None:
             self.logger.warning(f"Repository is None")

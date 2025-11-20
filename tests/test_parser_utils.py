@@ -32,7 +32,7 @@ def test_get_data_availability_elements_from_HTML(get_test_data_path):
     print('\n')
 
 def test_extract_href_from_supplementary_material_html(get_test_data_path):
-    logger = setup_logging("test_logger", log_file="../logs/scraper.log")
+    logger = setup_logging("test_logger", log_file="logs/tests.log")
     parser = HTMLParser("open_bio_data_repos.json", logger, llm_name='gemini-2.0-flash')
     with open(get_test_data_path('test_extract_2.html'), 'rb') as f:
         raw_html = f.read()
@@ -49,7 +49,7 @@ def test_extract_href_from_supplementary_material_html(get_test_data_path):
     print('\n')
 
 def test_extract_supplementary_material_refs_html(get_test_data_path):
-    logger = setup_logging("test_logger", log_file="../logs/scraper.log")
+    logger = setup_logging("test_logger", log_file="logs/tests.log")
     parser = HTMLParser("open_bio_data_repos.json", logger, llm_name='gemini-2.0-flash')
     with open(get_test_data_path('test_extract_2.html'), 'rb') as f:
         raw_html = f.read()
@@ -70,7 +70,7 @@ def test_extract_supplementary_material_refs_html(get_test_data_path):
 
     print('\n')
 def test_extract_href_from_supplementary_material_xml(get_test_data_path):
-    logger = setup_logging("test_logger", log_file="../logs/scraper.log")
+    logger = setup_logging("test_logger", log_file="logs/tests.log")
     parser = XMLParser("open_bio_data_repos.json", logger, llm_name='gemini-2.0-flash')
     with open(get_test_data_path('test_2.xml'), 'rb') as f:
         api_xml = f.read()
@@ -86,7 +86,7 @@ def test_extract_href_from_supplementary_material_xml(get_test_data_path):
     print('\n')
 
 def test_extract_supplementary_material_refs_xml(get_test_data_path):
-    logger = setup_logging("test_logger", log_file="../logs/scraper.log")
+    logger = setup_logging("test_logger", log_file="logs/tests.log")
     parser = XMLParser("open_bio_data_repos.json", logger, llm_name='gemini-2.0-flash')
     with open(get_test_data_path('test_2.xml'), 'rb') as f:
         api_xml = f.read()
@@ -108,7 +108,7 @@ def test_extract_supplementary_material_refs_xml(get_test_data_path):
     print('\n')
 
 def test_extract_paragraphs_from_xml(get_test_data_path):
-    logger = setup_logging("test_logger", log_file="../logs/scraper.log")
+    logger = setup_logging("test_logger", log_file="logs/tests.log")
     parser = XMLParser("open_bio_data_repos.json", logger, log_file_override=None,
                        llm_name='gemini-2.0-flash')
     with open(get_test_data_path('test_1.xml'), 'rb') as f:  # ✅ open in binary mode
@@ -120,7 +120,7 @@ def test_extract_paragraphs_from_xml(get_test_data_path):
     print('\n')
 
 def test_extract_sections_from_xml(get_test_data_path):
-    logger = setup_logging("test_logger", log_file="../logs/scraper.log")
+    logger = setup_logging("test_logger", log_file="logs/tests.log")
     parser = XMLParser("open_bio_data_repos.json", logger, log_file_override=None,
                        llm_name='gemini-2.0-flash')
     with open(get_test_data_path('test_1.xml'), 'rb') as f:  # ✅ open in binary mode
@@ -132,7 +132,7 @@ def test_extract_sections_from_xml(get_test_data_path):
     print('\n')
 
 def test_extract_sections_from_text(get_test_data_path):
-    logger = setup_logging("test_logger", log_file="../logs/scraper.log")
+    logger = setup_logging("test_logger", log_file="logs/tests.log")
     parser = PDFParser("open_bio_data_repos.json", logger, log_file_override=None,
                        llm_name='gemini-2.0-flash')
     text = parser.extract_text_from_pdf(get_test_data_path('test_pdf_extract_1.pdf'))
@@ -144,7 +144,7 @@ def test_extract_sections_from_text(get_test_data_path):
     print('\n')
 
 def test_split_references_from_text(get_test_data_path):
-    logger = setup_logging("test_logger", log_file="../logs/scraper.log")
+    logger = setup_logging("test_logger", log_file="logs/tests.log")
     parser = PDFParser("open_bio_data_repos.json", logger, log_file_override=None,
                        llm_name='gemini-2.0-flash')
     text = parser.extract_text_from_pdf(get_test_data_path('test_pdf_refs_1.pdf'))
@@ -158,7 +158,7 @@ def test_split_references_from_text(get_test_data_path):
     print('\n')
 
 def test_resolve_data_repository():
-    logger = setup_logging("test_logger", log_file="../logs/scraper.log", level="INFO",
+    logger = setup_logging("test_logger", log_file="logs/tests.log", level="INFO",
                                     clear_previous_logs=True)
     parser = XMLParser("open_bio_data_repos.json", logger, log_file_override=None,
                        llm_name='gemini-2.0-flash')
@@ -183,7 +183,7 @@ def test_resolve_data_repository():
         print('\n')
 
 def test_extract_title_from_xml(get_test_data_path):
-    logger = setup_logging("test_logger", log_file="../logs/scraper.log")
+    logger = setup_logging("test_logger", log_file="logs/tests.log")
     parser = XMLParser("open_bio_data_repos.json", logger, log_file_override=None,
                        llm_name='gemini-2.0-flash')
     with open(get_test_data_path('test_1.xml'), 'rb') as f:  # ✅ open in binary mode
@@ -203,7 +203,7 @@ def grobid_is_alive(grobid_url="http://localhost:8070/api/isalive"):
 
 @pytest.mark.skipif(not grobid_is_alive(), reason="GROBID server is not running")
 def test_extract_publication_title_GrobidPDFParser(get_test_data_path):
-    logger = setup_logging("test_logger", log_file="../logs/scraper.log")
+    logger = setup_logging("test_logger", log_file="logs/tests.log")
     parser = GrobidPDFParser("open_bio_data_repos.json", logger, llm_name='gemini-2.0-flash')
     raw_text = parser.extract_full_text_xml(get_test_data_path('test_pdf_refs_1.pdf'))
     router = XMLRouter("open_bio_data_repos.json", logger, llm_name='gemini-2.0-flash')
@@ -217,7 +217,7 @@ def test_extract_publication_title_GrobidPDFParser(get_test_data_path):
 
 
 def test_extract_title_from_html_PMC(get_test_data_path):
-    logger = setup_logging("test_logger", log_file="../logs/scraper.log")
+    logger = setup_logging("test_logger", log_file="logs/tests.log")
     parser = HTMLParser("open_bio_data_repos.json", logger, llm_name='gemini-2.0-flash')
     with open(get_test_data_path('test_extract_1.html'), 'rb') as f:
         raw_html = f.read()
@@ -228,7 +228,7 @@ def test_extract_title_from_html_PMC(get_test_data_path):
     print('\n')
 
 def test_extract_title_from_html_nature(get_test_data_path):
-    logger = setup_logging("test_logger", log_file="../logs/scraper.log")
+    logger = setup_logging("test_logger", log_file="logs/tests.log")
     parser = HTMLParser("open_bio_data_repos.json", logger, llm_name='gemini-2.0-flash')
     with open(get_test_data_path('Webscraper_fetch_1.html'), 'rb') as f:
         raw_html = f.read()
@@ -238,7 +238,7 @@ def test_extract_title_from_html_nature(get_test_data_path):
     print('\n')
 
 def test_semantic_retrieve_from_corpus(get_test_data_path):
-    logger = setup_logging("test_logger", log_file="../logs/scraper.log", level=logging.INFO)
+    logger = setup_logging("test_logger", log_file="logs/tests.log", level=logging.INFO)
     parser = HTMLParser("open_bio_data_repos.json", logger, llm_name='gemini-2.0-flash')
     with open(get_test_data_path('Webscraper_fetch_1.html'), 'rb') as f:
         raw_html = f.read()
@@ -262,7 +262,7 @@ def test_semantic_retrieve_from_corpus(get_test_data_path):
     print('\n')
 
 def test_sections_to_corpus_for_HTML_RTR(get_test_data_path):
-    logger = setup_logging("test_logger", log_file="../logs/scraper.log", level=logging.INFO)
+    logger = setup_logging("test_logger", log_file="logs/tests.log", level=logging.INFO)
     parser = HTMLParser("open_bio_data_repos.json", logger, llm_name='gemini-2.0-flash', embeddings_model_name='sentence-transformers/multi-qa-MiniLM-L6-cos-v1')
     with open(get_test_data_path('test_section_to_corpus.html'), 'rb') as f:
         raw_html = f.read()
@@ -284,7 +284,7 @@ def test_sections_to_corpus_for_HTML_RTR(get_test_data_path):
     print('\n')
 
 def test_from_section_to_corpus(get_test_data_path):
-    logger = setup_logging("test_logger", log_file="../logs/scraper.log", level=logging.INFO)
+    logger = setup_logging("test_logger", log_file="logs/tests.log", level=logging.INFO)
     parser = XMLParser("open_bio_data_repos.json", logger, llm_name='gemini-2.0-flash')
     with open(get_test_data_path('pmc_element_set_1.xml'), 'rb') as f:
         xml_root = etree.fromstring(f.read())
@@ -297,7 +297,7 @@ def test_from_section_to_corpus(get_test_data_path):
     print('\n')
 
 def test_normalize_text_from_pdf(get_test_data_path):
-    logger = setup_logging("test_logger", log_file="../logs/scraper.log")
+    logger = setup_logging("test_logger", log_file="logs/tests.log")
     parser = PDFParser("open_bio_data_repos.json", logger, llm_name='gemini-2.0-flash')
     raw_text = parser.extract_text_from_pdf(get_test_data_path('test_pdf_extract_1.pdf'))
     normalized_text = parser.normalize_extracted_text(raw_text)
@@ -309,7 +309,7 @@ def test_normalize_text_from_pdf(get_test_data_path):
     print('\n')
 
 def test_safe_parse_json(get_test_data_path):
-    logger = setup_logging("test_logger", log_file="../logs/scraper.log")
+    logger = setup_logging("test_logger", log_file="logs/tests.log")
     parser = XMLParser("open_bio_data_repos.json", logger, llm_name='gemini-2.0-flash')
     malformed_json = """
     {"datasets":[{"dataset_identifier":"GSE39582","repository_reference":"https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE39582"},{"dataset_identifier":"GSE13067","repository_reference":"https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE13067"},{"dataset_identifier":"GSE13294","repository_reference":"https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE13294"},{"dataset_identifier":"GSE14333","repository_reference":"https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE14333"},{"dataset_identifier":"GSE17536","repository_reference":"https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE17536"},{"dataset_identifier":"GSE33113","repository_reference":"https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE33113"},{"dataset_identifier":"GSE37892","repository_reference":"https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE37892"},{"dataset_identifier":"GSE38832","repository_reference":"https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE38832"},{"dataset_identifier":"PRJEB23709","repository_reference":"https://www.ncbi.nlm.nih.gov/bioproject/PRJEB23709"},{"dataset_identifier":"GSE103479","repository_reference":"https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE103479"},{"
@@ -323,7 +323,7 @@ def test_safe_parse_json(get_test_data_path):
     print('\n')
 
 def test_is_tei_xml(get_test_data_path):
-    logger = setup_logging("test_logger", log_file="../logs/scraper.log")
+    logger = setup_logging("test_logger", log_file="logs/tests.log")
     parser = XMLParser("open_bio_data_repos.json", logger, llm_name='gemini-2.0-flash')
     with open(get_test_data_path('test_tei_xml_extract.xml'), 'rb') as f:
         xml_bytes = f.read()
@@ -340,8 +340,16 @@ def test_is_tei_xml(get_test_data_path):
     assert is_tei is True
     print('\n')
 
+def internet_connection(test_url='https://home.nyu.edu'):
+    try:
+        r = requests.get(test_url, timeout=2)
+        return r.status_code == 200
+    except Exception:
+        return False
+
+@pytest.mark.skipif(not internet_connection(), reason="Not connected to Wi-Fi")
 def test_schema_validation(get_test_data_path):
-    logger = setup_logging("test_logger", log_file="../logs/scraper.log")
+    logger = setup_logging("test_logger", log_file="logs/tests.log", level=logging.INFO)
     parser = XMLParser("data_repos_ontology.json", logger, llm_name='gemini-2.0-flash')
     test_cases = [
         {'dataset_id': 'https://doi.org/10.1594/PANGAEA.964081', 'repository_reference': 'PANGAEA'},
@@ -371,7 +379,7 @@ def test_schema_validation(get_test_data_path):
         print('\n')
         
 def test_extract_citations_from_html_xml_and_compare(get_test_data_path):
-    logger = setup_logging("test_logger", log_file="../logs/scraper.log")
+    logger = setup_logging("test_logger", log_file="logs/tests.log")
     html_parser = HTMLParser("open_bio_data_repos.json", logger, llm_name='gemini-2.0-flash')
     xml_parser = XMLParser("open_bio_data_repos.json", logger, llm_name='gemini-2.0-flash')
     with open(get_test_data_path('test_extract_citations.html'), 'rb') as f:
@@ -386,3 +394,12 @@ def test_extract_citations_from_html_xml_and_compare(get_test_data_path):
 
     assert isinstance(citations_from_xml, list) and isinstance(citations_from_html, list)
     assert len(citations_from_xml) == len(citations_from_html) == 82
+
+def test_dataset_id_as_range():
+    logger = setup_logging("test_logger", log_file="logs/tests.log", level="INFO")
+    parser = HTMLParser("open_bio_data_repos.json", logger, llm_name='gemini-2.0-flash')
+    input_str = 'OP191201-OP191207'
+    ret = parser.validate_dataset_id(input_str)
+
+    assert isinstance(ret, list)
+    assert len(ret) == 7
