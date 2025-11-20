@@ -29,3 +29,5 @@ sentence-transformers
 pymupdf
 json_repair
 mcp
+nest-asyncio
+playwright
