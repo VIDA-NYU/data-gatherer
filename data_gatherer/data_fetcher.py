@@ -231,13 +231,16 @@ class DataFetcher(ABC):
         if match:
             pmcid = f"PMC{match.group(1)}"
             self.logger.info(f"Extracted PMC ID: {pmcid}")
+            self.current_article_id = pmcid
             return pmcid
 
         elif doi:
+            self.current_article_id = doi.group(1)
             return doi.group(1)
 
         else:
             self.logger.warning(f"No PMC ID found in URL: {url}")
+            self.current_article_id = None
             return None
 
     def url_to_doi(self, url : str, candidate_pmcid=None):
@@ -294,13 +297,14 @@ class DataFetcher(ABC):
         All fetchers now automatically check backup data first, then fall back to live fetching.
 
         :param url: The URL to fetch data from.
+        :param HTML_fallback: If False, use simple HTTP. If True, use Selenium. If 'HTTPGetRequest', force HTTP. If 'Playwright', force Playwright.
         :return: An instance of the appropriate data fetcher with backup capability.
         """
         self.logger.debug(f"update_DataFetcher_settings for URL: {url}")
         self.local_data_used = False
 
         # Determine backup data file
-        backup_file = local_fetch_file or 'scripts/exp_input/Local_fetched_data.parquet'
+        backup_file = local_fetch_file or 'scripts/exp_input/Local_fulltext_pub_REV.parquet'
 
         if hasattr(self, 'backup_store') and (self.backup_store is None or self.backup_store._filepath != backup_file):
             self.backup_store = BackupDataStore(filepath=backup_file, logger=self.logger)

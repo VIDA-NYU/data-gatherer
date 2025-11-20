@@ -922,19 +922,11 @@ class DataGatherer:
         self.logger.info(f"Processing metadata for preview to display metadata preview in {display_type} format.")
 
         self.already_previewed = []
+
+        self.data_fetcher = self.data_fetcher.update_DataFetcher_settings('any_url', HTML_fallback='Selenium')
+
         self.metadata_parser = HTMLParser(self.open_data_repos_ontology, self.logger, full_document_read=True,
                                           llm_name=self.llm, use_portkey=use_portkey)
-
-        self.data_fetcher = self.data_fetcher.update_DataFetcher_settings('any_url',
-                                                                          self.logger,
-                                                                          driver_path=None,
-                                                                          browser='Firefox',
-                                                                          headless=True)
-
-        if isinstance(self.data_fetcher, WebScraper):
-            self.logger.info("Found WebScraper to fetch data.")
-        else:
-            raise TypeError(f"DataFetcher must be an instance of WebScraper to fetch dataset webpages. Found {type(self.data_fetcher).__name__} instead.")
 
         if return_metadata:
             ret_list = []
@@ -942,54 +934,48 @@ class DataGatherer:
         if isinstance(combined_df, pd.Series):
             combined_df = combined_df.to_frame().T
 
-        # Process each row
         for i, row in combined_df.iterrows():
             self.logger.info(f"Row # {i}")
             self.logger.debug(f"Row keys: {row}")
 
-            dataset_webpage = row.get('dataset_webpage', None)
-            download_link = row.get('download_link', None)
+            dataset_webpage, download_link = self.metadata_parser.extract_normalized_dataset_urls(row)
+
             dataset_webpage_id = self.url_to_page_id(dataset_webpage) if dataset_webpage is not None else None
+            paper_id = self.url_to_article_id(row['source_url']) if 'source_url' in row else 'unknown_paper_id'
 
             if dataset_webpage is None and download_link is None:
                 self.logger.info(f"Row {i} does not contain 'dataset_webpage' or 'download_link'. Skipping...")
                 continue
 
-            # skip if already added
-            if (dataset_webpage is not None and dataset_webpage in self.already_previewed) or (
-                    download_link is not None and download_link in self.already_previewed):
-                self.logger.info(f"Duplicate dataset. Skipping...")
+            if dataset_webpage is not None and dataset_webpage in self.already_previewed:
+                self.logger.info(f"Duplicate dataset with dataset page {dataset_webpage}. Skipping...")
+                continue
+            if download_link is not None and download_link in self.already_previewed:
+                self.logger.info(f"Duplicate dataset with download link {download_link}. Skipping...")
                 continue
 
-            # identify those that may be datasets
+            # identify those that may be datasets but do not have a valid dataset webpage
             if dataset_webpage is None or not isinstance(dataset_webpage, str) or len(dataset_webpage) <= 5:
                 if (row.get('file_extension', None) is not None and 'data' not in row['source_section'] and row[
-                    'file_extension'] not
-                        in ['xlsx', 'csv', 'json', 'xml', 'zip']):
-                    self.logger.info(
-                        f"Skipping row {i} as it does not contain a valid dataset webpage or file extension.")
+                    'file_extension'] not in ['xlsx', 'csv', 'json', 'xml', 'zip']):
+                    self.logger.info(f"Skipping row {i} as it does not contain a valid dataset webpage or file extension.")
                     continue
                 else:
                     self.logger.info(f"Potentially a valid dataset, displaying hardscraped metadata")
-                    #metadata = self.metadata_parser.parse_datasets_metadata(row['source_section'])
-                    hardscraped_metadata = {k: v for k, v in row.items() if
-                                            v is not None and v not in ['nan', 'None', '', 'n/a', np.nan, 'NaN', 'na']}
+                    hardscraped_metadata = {k: v for k, v in row.items() if v is not None and v not in ['nan', 'None', '', 'n/a', np.nan, 'NaN', 'na']}
                     self.already_previewed.append(download_link)
+                    self.logger.info(f"Appending download link {download_link} to already_previewed list.")
                     if self.download_data_for_description_generation:
-                        split_source_url = hardscraped_metadata.get('source_url').split('/')
-                        paper_id = split_source_url[-1] if len(split_source_url[-1]) > 0 else split_source_url[-2]
                         self.data_fetcher.download_file_from_url(download_link, "scripts/downloads/suppl_files", paper_id)
-                        hardscraped_metadata[
-                            'data_description_generated'] = self.metadata_parser.generate_dataset_description(
-                            download_link)
+                        hardscraped_metadata['data_description_generated'] = self.metadata_parser.generate_dataset_description(download_link)
                     self.display_metadata(hardscraped_metadata, display_type=display_type, interactive=interactive)
                     continue
 
             else:
                 self.logger.info(f"LLM scraped metadata")
-                repo_mapping_key = row['repository_reference'].lower() if 'repository_reference' in row else row[
-                    'data_repository'].lower()
-                resolved_key = self.metadata_parser.resolve_data_repository(repo_mapping_key)
+                keep_tags = None
+                repo_mapping_key = row['repository_reference'].lower() if 'repository_reference' in row else row['data_repository'].lower()
+                repo_dict = self.open_data_repos_ontology['repos'][repo_mapping_key]
 
                 # caching: load_from_cache
                 skip, cache = False, {}
@@ -998,43 +984,65 @@ class DataGatherer:
                     cache = json.load(open(os.path.join(CACHE_BASE_DIR, "process_metadata_cache.json"), 'r'))
                     if process_id in cache:
                         metadata, skip = cache[process_id], True
+                
+                if skip:
+                    self.logger.info(f"Loading metadata from cache for process ID: {process_id}")
+                    continue
 
-                if ('javascript_load_required' in self.open_data_repos_ontology['repos'][resolved_key]) and not skip:
-                    self.logger.info(
-                        f"JavaScript load required for {repo_mapping_key} dataset webpage. Using WebScraper.")
-                    html = self.data_fetcher.fetch_data(row['dataset_webpage'], delay=5)
-                    if "informative_html_metadata_tags" in self.open_data_repos_ontology['repos'][resolved_key]:
-                        html = self.metadata_parser.normalize_HTML(html, self.open_data_repos_ontology['repos'][
-                            resolved_key]['informative_html_metadata_tags'])
-                    else:
-                        html = self.metadata_parser.normalize_HTML(html)
+                if ('javascript_load_required' in repo_dict):
+                    self.logger.info(f"JavaScript load required for {repo_mapping_key} dataset webpage. Using Playwright (asyncio-aware).")
+                    # Switch to Playwright with automatic asyncio detection
+                    self.data_fetcher = self.data_fetcher.update_DataFetcher_settings(
+                        row['dataset_webpage'], 
+                        HTML_fallback='Playwright',  # Use Playwright with asyncio detection
+                        browser='chromium',  # Try chromium instead of firefox
+                        headless=self.headless
+                    )
+                    html = self.data_fetcher.fetch_data(row['dataset_webpage'], delay=5, wait_time=10000)  # Increased to 10s
+                    if "informative_html_metadata_tags" in repo_dict:
+                        keep_tags = repo_dict['informative_html_metadata_tags']
                     if write_raw_metadata:
                         self.logger.info(f"Saving raw metadata to: {article_file_dir + 'raw_metadata/'}")
                         self.data_fetcher.html_page_source_download(article_file_dir + 'raw_metadata/')
-                elif not skip:
-                    if 'informative_html_metadata_tags' in self.open_data_repos_ontology['repos'][resolved_key]:
-                        keep_sect = self.open_data_repos_ontology['repos'][resolved_key][
-                            'informative_html_metadata_tags']
+
+                else:
+                    if 'informative_html_metadata_tags' in repo_dict:
+                        keep_tags = repo_dict['informative_html_metadata_tags']
+
+                    html = self.data_fetcher.fetch_data(row['dataset_webpage'])
+                
+                # Check if HTML was successfully fetched
+                if html is None:
+                    self.logger.error(f"Failed to fetch HTML from {row['dataset_webpage']}, skipping metadata extraction")
+                    continue
+                
+                self.logger.info(f"Fetched dataset webpage HTML for metadata extraction, len: {len(html)} characters.")
+
+                metadata_schema_org = self.metadata_parser.normalize_schema_org_metadata(html)
+                
+                # Debug logging for Schema.org metadata extraction
+                if metadata_schema_org:
+                    self.logger.info(f"✓ Schema.org metadata extracted successfully")
+                    self.logger.debug(f"Schema.org fields present: {[k for k, v in metadata_schema_org.items() if v]}")
+                    if metadata_schema_org.get('description'):
+                        desc_len = len(metadata_schema_org['description'])
+                        self.logger.info(f"✓ Description found: {desc_len} characters - '{metadata_schema_org['description'][:100]}...'")
                     else:
-                        keep_sect = None
-                    response = requests.get(row['dataset_webpage'], timeout=timeout)
-                    html = self.metadata_parser.normalize_HTML(response.text, keep_tags=keep_sect)
+                        self.logger.warning("⚠ No description field in extracted Schema.org metadata")
+                else:
+                    self.logger.warning("⚠ normalize_schema_org_metadata returned None - no structured data found")
 
-                validated_url = self.data_fetcher.validate_schema_org(dataset_webpage)
-                normalized_dataset_schema_HTML = self.data_fetcher.http_get_validated_schema_org(validated_url)
-                metadata_schema_org = self.parser.normalize_schema_org_metadata(normalized_dataset_schema_HTML)
+                html = self.metadata_parser.normalize_HTML(html, keep_tags=keep_tags)
 
-                if not skip:
-                    metadata = self.metadata_parser.parse_datasets_metadata(html,
-                                                                            use_portkey=use_portkey,
-                                                                            prompt_name=prompt_name)
-                    metadata['source_url_for_metadata'] = row['dataset_webpage']
-                    metadata['access_mode'] = row.get('access_mode', None)
-                    metadata['source_section'] = row.get('source_section', row.get('section_class', None))
-                    metadata['download_link'] = row.get('download_link', None)
-                    metadata['accession_id'] = row.get('dataset_id', row.get('dataset_identifier', None))
-                    metadata['data_repository'] = repo_mapping_key
-                    self.already_previewed.append(row['dataset_webpage'])
+                metadata = self.metadata_parser.parse_datasets_metadata(html, use_portkey=use_portkey, prompt_name=prompt_name)
+                metadata['source_url_for_metadata'] = row['dataset_webpage']
+                metadata['access_mode'] = row.get('access_mode', None)
+                metadata['source_section'] = row.get('source_section', row.get('section_class', None))
+                metadata['download_link'] = row.get('download_link', None)
+                metadata['accession_id'] = row.get('dataset_id', row.get('dataset_identifier', None))
+                metadata['data_repository'] = repo_mapping_key
+                metadata['metadata_schema_org'] = metadata_schema_org
+                self.already_previewed.append(row['dataset_webpage'])
 
             metadata['paper_with_dataset_citation'] = row['source_url']
 

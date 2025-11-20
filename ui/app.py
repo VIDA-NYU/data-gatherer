@@ -125,8 +125,8 @@ MODEL_OPTIONS = [
     "gemini-1.5-flash", "gemini-1.5-pro", "gemini-2.0-flash-exp", "gemini-2.0-flash", "gemini-2.5-flash"
 ]
 PROMPT_MODEL_OPTIONS = {
-    'FDR': 'GPT_FDR_FewShot',
-    'RTR': 'GPT_FewShot',
+    'FDR': 'GPT_FDR_FewShot_shortDescr',
+    'RTR': 'GPT_FDR_FewShot_shortDescr',
 }
 metadata_prompt_name = 'portkey_gemini_metadata_extract'
 model_name = st.sidebar.selectbox("Model", MODEL_OPTIONS, index=MODEL_OPTIONS.index('gemini-2.0-flash'))
@@ -138,6 +138,7 @@ extraction_mode = st.sidebar.radio(
 )
 full_document_read = extraction_mode == "Full Document Read"
 prompt_name = PROMPT_MODEL_OPTIONS['FDR'] if full_document_read else PROMPT_MODEL_OPTIONS['RTR']
+extract_keywords_from_supp_files = True
 
 # --- Main input: PMCIDs ---
 load_dotenv()
@@ -173,7 +174,7 @@ if st.button("🚀 Run Extraction", type="primary"):
                 orch = DataGatherer(
                     llm_name=model_name, 
                     process_entire_document=full_document_read, 
-                    log_level="INFO",
+                    log_level="DEBUG",
                     load_from_cache=not True, 
                     save_to_cache=not True, 
                     driver_path=driver_path,
@@ -215,7 +216,22 @@ if st.button("🚀 Run Extraction", type="primary"):
                             title = title[0]
                         files_with_extension = result[result["file_extension"].notna()] if "file_extension" in result else pd.DataFrame(columns=["download_link", "description", "file_extension"])
                         files_with_repo = result[result["data_repository"].notna()] if "data_repository" in result else pd.DataFrame(columns=["data_repository", "dataset_identifier", "dataset_webpage"])
-                        supp_df = files_with_extension[["download_link", "description"]].copy() if not files_with_extension.empty else pd.DataFrame(columns=["download_link", "description"])
+                        
+                        orch.logger.info(f"[FLOW] Before LLM: files_with_extension has {len(files_with_extension)} rows, columns: {files_with_extension.columns.tolist()}")
+                        
+                        # Process supplementary files with LLM to enhance descriptions
+                        if not files_with_extension.empty and extract_keywords_from_supp_files:
+                            orch.logger.info(f"[FLOW] Processing supplementary files with LLM for {article_id}")
+                            files_with_extension = orch.parser.extract_supplementary_file_info_from_refs(files_with_extension)
+                            orch.logger.info(f"[FLOW] After LLM: files_with_extension has {len(files_with_extension)} rows, columns: {files_with_extension.columns.tolist()}")
+                            if 'supplementary_file_keywords' in files_with_extension.columns:
+                                orch.logger.info(f"[FLOW] supplementary_file_keywords column exists! Sample values: {files_with_extension['supplementary_file_keywords'].head(2).tolist()}")
+                            else:
+                                orch.logger.warning(f"[FLOW] supplementary_file_keywords column NOT FOUND after LLM processing!")
+                        else:
+                            orch.logger.info(f"[FLOW] Skipping LLM processing: empty={files_with_extension.empty}, extract_keywords={extract_keywords_from_supp_files}")
+                        
+                        supp_df = files_with_extension.copy() if not files_with_extension.empty else pd.DataFrame(columns=["download_link", "supplementary_file_keywords", "description"])
                         supp_df["Source PMCID"] = pmcid
                         supp_df["Source DOI"] = doi
                         supp_df["Source Title"] = title
@@ -350,14 +366,12 @@ if st.session_state.get("results_ready", False):
             pmcid = article["pmcid"]
             with st.expander(f"{title}", expanded=False):
                 st.markdown(f"<h2 style='text-align: left; font-size: 2em; font-weight: bold; margin-bottom: 0.5em;'>{title}</h2>", unsafe_allow_html=True)
-                supp_df = files_with_extension[["download_link", "description"]]
                 if not supp_df.empty:
                     supp_df = supp_df.drop_duplicates()
                     files_with_extension = files_with_extension.drop_duplicates(
                         subset=["download_link", "description"],
                         keep='first'
                     )
-                avail_df = files_with_repo[["data_repository", "dataset_identifier", "dataset_webpage"]]
                 file_exts = pd.DataFrame.from_dict(
                     files_with_extension["file_extension"].value_counts().to_dict(),
                     orient="index", columns=["Count"]
@@ -409,60 +423,177 @@ if st.session_state.get("results_ready", False):
                     )
                     st.altair_chart(bar_chart2, use_container_width=True)
                     st.markdown("</div>", unsafe_allow_html=True)
-                st.markdown("### Supplementary Material")
-                st.markdown("#### Supplementary File Types")
-                st.dataframe(file_exts, width='content')
-                st.markdown("#### Supplementary Files")
-                st.dataframe(supp_df, width='content')
-                st.markdown("### Available datasets")
-                if files_with_repo.empty:
+                
+                # --- Unified Dataset Table with Checkboxes ---
+                st.markdown("### Datasets Found")
+                
+                # Create unified dataset table
+                unified_datasets = []
+                
+                # Add repository datasets (from avail_df)
+                for j, row in files_with_repo.iterrows():
+                    # Handle description - join list elements with " | "
+                    desc_value = row.get("dataset_keywords", "n/a") if "dataset_keywords" in row else "n/a"
+                    if isinstance(desc_value, list):
+                        desc_value = " | ".join(str(item) for item in desc_value)
+                    
+                    dataset_entry = {
+                        "source_type": "repository",
+                        "source_index": j,
+                        "Repository": row.get("data_repository", "n/a"),
+                        "Dataset ID": row.get("dataset_identifier", "n/a"),
+                        "Description": desc_value,
+                        "webpage": row.get("dataset_webpage", "n/a"),
+                        "original_data": row
+                    }
+                    unified_datasets.append(dataset_entry)
+                
+                # Add supplementary files (from supp_df) 
+                for j, row in supp_df.iterrows():
+                    # Only add if it has meaningful content
+                    if pd.notna(row.get("download_link")):
+                        # Extract ID from download link or use index
+                        file_id = row.get("id", row.get('download_link', f"supp_{j}")).split("/")[-1] if pd.notna(row.get("download_link")) else f"supp_{j}"
+                        
+                        orch_display.logger.info(f"[FLOW] Row {j}: {row.to_dict()}")
+
+                        # Use supplementary_file_keywords if available, otherwise fall back to description
+                        desc_value = row.get("supplementary_file_keywords", row.get("description", "n/a"))
+                        if isinstance(desc_value, list):
+                            desc_value = " | ".join(str(item) for item in desc_value)
+                        
+                        dataset_entry = {
+                            "source_type": "supplementary",
+                            "source_index": j,
+                            "Repository": "PMC",
+                            "Dataset ID": file_id,
+                            "Description": desc_value,
+                            "webpage": row.get("download_link", "n/a"),
+                            "original_data": row
+                        }
+                        unified_datasets.append(dataset_entry)
+                
+                if not unified_datasets:
                     st.info("No datasets found.")
                 else:
-                    st.dataframe(avail_df, width='content')
-                    for j, data_item in files_with_repo.iterrows():
-                        dataset_label = f"**{data_item['dataset_identifier']}** ({data_item['dataset_webpage']})"
-                        st.markdown(f"- {dataset_label}")
-                        dataset_webpage = data_item["dataset_webpage"] if "dataset_webpage" in data_item and pd.notna(data_item["dataset_webpage"]) else ""
-                        with st.spinner(
-                            f"Fetching metadata from repo: {data_item['data_repository']}... {dataset_webpage}"):
-                            try:
-                                preview_result = orch_display.process_metadata(
-                                    data_item, interactive=False, return_metadata=True,
-                                    write_raw_metadata=False,
-                                    use_portkey=use_portkey,
-                                    prompt_name=metadata_prompt_name,
-                                    timeout=15
-                                )
-                                if not preview_result or not isinstance(preview_result, list) or len(preview_result) == 0:
-                                    st.warning("No data preview available.")
-                                    orch_display.logger.warning(f"No data preview available for {data_item['dataset_identifier']}, dataset_webpage: {dataset_webpage}")
-                                    continue
-                                item = preview_result[0]
-                            except Exception as e:
-                                st.warning(f"No data preview available.")
-                                orch_display.logger.warning(f"No data preview available  dataset_webpage: {dataset_webpage}")
-                                continue
-                            display_item = None
-                            if isinstance(item, dict):
-                                unwanted = {'', 'na', 'n/a', 'nan', 'unavailable', 'none', '0'}
-                                pairs = [
-                                    (k, v) for k, v in item.items()
-                                    if str(v).strip().lower() not in unwanted and str(v).strip() != ''
-                                ]
-                                display_item = pd.DataFrame(pairs, columns=["Field", "Value"])
-                                display_item['Value'] = display_item['Value'].astype(str)
-                                display_item = display_item[display_item["Value"].astype(str).str.strip() != ""]
-                            if display_item is not None and not display_item.empty:
-                                st.dataframe(display_item, width='content')
-                                orch_display.logger.info(f"[FLOW] Metadata preview available for {data_item['dataset_identifier']}, dataset_webpage: {dataset_webpage}")
-                                safe_dataset_identifier = sanitize_sheet_name(str(data_item["dataset_identifier"]))
-                                orch_display.logger.info(f"[FLOW] Adding metadata preview tab for {pmcid} - {safe_dataset_identifier}")
-                                sheet_name = sanitize_sheet_name(f"{pmcid}_meta_{safe_dataset_identifier}")
-                                orch_display.logger.info(f"[FLOW] Sheet name sanitized to {sheet_name}")
-                                excel_tabs[sheet_name] = display_item
+                    # Initialize session state for checkbox selections
+                    checkbox_key = f"selected_datasets_{pmcid}_{idx}"
+                    if checkbox_key not in st.session_state:
+                        st.session_state[checkbox_key] = {}
+                    
+                    st.markdown("**Select datasets to fetch metadata:**")
+                    
+                    # Create columns for the table layout (widened Repository column)
+                    col_select, col_repo, col_id, col_desc = st.columns([0.5, 2.5, 2, 4])
+                    
+                    # Header row
+                    with col_select:
+                        st.markdown("**Select**")
+                    with col_repo:
+                        st.markdown("**Repository**")
+                    with col_id:
+                        st.markdown("**Dataset ID**")
+                    with col_desc:
+                        st.markdown("**Description**")
+                    
+                    st.markdown("---")
+                    
+                    # Data rows with checkboxes
+                    for i, dataset in enumerate(unified_datasets):
+                        dataset_key = f"{pmcid}_{dataset['source_type']}_{dataset['source_index']}"
+                        
+                        # Initialize checkbox state
+                        if dataset_key not in st.session_state[checkbox_key]:
+                            # Auto-select repository datasets, don't auto-select supplementary files
+                            st.session_state[checkbox_key][dataset_key] = (dataset['source_type'] == 'repository')
+                        
+                        col_select, col_repo, col_id, col_desc = st.columns([0.5, 2.5, 2, 4])
+                        
+                        with col_select:
+                            is_selected = st.checkbox(
+                                "✓",
+                                value=st.session_state[checkbox_key][dataset_key],
+                                key=f"checkbox_{dataset_key}",
+                                label_visibility="collapsed"
+                            )
+                            st.session_state[checkbox_key][dataset_key] = is_selected
+                        
+                        with col_repo:
+                            st.text(dataset["Repository"])
+                        
+                        with col_id:
+                            st.text(dataset["Dataset ID"][:50] + "..." if len(str(dataset["Dataset ID"])) > 50 else dataset["Dataset ID"])
+                        
+                        with col_desc:
+                            desc_text = str(dataset["Description"])[:100] + "..." if len(str(dataset["Description"])) > 100 else str(dataset["Description"])
+                            st.text(desc_text)
+                    
+                    st.markdown("---")
+                    
+                    # Button to fetch metadata for selected datasets
+                    if st.button(f"🔍 Fetch Metadata for Selected Datasets", key=f"fetch_metadata_{pmcid}_{idx}"):
+                        # Get selected datasets
+                        selected_datasets = [
+                            dataset for i, dataset in enumerate(unified_datasets)
+                            if st.session_state[checkbox_key].get(f"{pmcid}_{dataset['source_type']}_{dataset['source_index']}", False)
+                        ]
+                        
+                        if not selected_datasets:
+                            st.warning("Please select at least one dataset to fetch metadata.")
+                        else:
+                            # Process only repository datasets (supplementary files don't have metadata to fetch)
+                            repo_datasets = [d for d in selected_datasets if d['source_type'] == 'repository']
+                            
+                            if not repo_datasets:
+                                st.info("Only supplementary files selected. Metadata fetching is only available for repository datasets.")
                             else:
-                                st.warning("No data preview available.")
-                                orch_display.logger.warning(f"No data preview available for {data_item['dataset_identifier']}, error occurred: {str(e)}")
+                                for dataset in repo_datasets:
+                                    data_item = dataset['original_data']
+                                    dataset_label = f"**{data_item['dataset_identifier']}** ({data_item['dataset_webpage']})"
+                                    st.markdown(f"- {dataset_label}")
+                                    dataset_webpage = data_item["dataset_webpage"] if "dataset_webpage" in data_item and pd.notna(data_item["dataset_webpage"]) else ""
+                                    
+                                    with st.spinner(f"Fetching metadata from repo: {data_item['data_repository']}... {dataset_webpage}"):
+                                        try:
+                                            preview_result = orch_display.process_metadata(
+                                                data_item, interactive=False, return_metadata=True,
+                                                write_raw_metadata=False,
+                                                use_portkey=use_portkey,
+                                                prompt_name=metadata_prompt_name,
+                                                timeout=15
+                                            )
+                                            if not preview_result or not isinstance(preview_result, list) or len(preview_result) == 0:
+                                                st.warning("No data preview available.")
+                                                orch_display.logger.warning(f"No data preview available for {data_item['dataset_identifier']}, dataset_webpage: {dataset_webpage}")
+                                                continue
+                                            item = preview_result[0]
+                                        except Exception as e:
+                                            st.warning(f"No data preview available.")
+                                            orch_display.logger.warning(f"No data preview available  dataset_webpage: {dataset_webpage}")
+                                            continue
+                                    
+                                        display_item = None
+                                        if isinstance(item, dict):
+                                            unwanted = {'', 'na', 'n/a', 'nan', 'unavailable', 'none', '0'}
+                                            pairs = [
+                                                (k, v) for k, v in item.items()
+                                                if str(v).strip().lower() not in unwanted and str(v).strip() != ''
+                                            ]
+                                            display_item = pd.DataFrame(pairs, columns=["Field", "Value"])
+                                            display_item['Value'] = display_item['Value'].astype(str)
+                                            display_item = display_item[display_item["Value"].astype(str).str.strip() != ""]
+                                        
+                                        if display_item is not None and not display_item.empty:
+                                            st.dataframe(display_item, width='content')
+                                            orch_display.logger.info(f"[FLOW] Metadata preview available for {data_item['dataset_identifier']}, dataset_webpage: {dataset_webpage}")
+                                            safe_dataset_identifier = sanitize_sheet_name(str(data_item["dataset_identifier"]))
+                                            orch_display.logger.info(f"[FLOW] Adding metadata preview tab for {pmcid} - {safe_dataset_identifier}")
+                                            sheet_name = sanitize_sheet_name(f"{pmcid}_meta_{safe_dataset_identifier}")
+                                            orch_display.logger.info(f"[FLOW] Sheet name sanitized to {sheet_name}")
+                                            excel_tabs[sheet_name] = display_item
+                                        else:
+                                            st.warning("No data preview available.")
+                                            orch_display.logger.warning(f"No data preview available for {data_item['dataset_identifier']}, error occurred: {str(e)}")
         # Download button (use the saved excel_buffer)
         if "excel_buffer" in st.session_state:
             st.download_button(

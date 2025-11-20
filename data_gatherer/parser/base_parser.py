@@ -170,6 +170,98 @@ class LLMParser(ABC):
         self.logger.info(f"Final ret data availability: {ret}")
         return ret
 
+    def extract_supplementary_file_info_from_refs(self, supplementary_files_df):
+        """
+        Process supplementary files using StreamSets-style LLM Complete pattern.
+        Applies a prompt template to each row and writes results to a new column.
+        
+        :param supplementary_files_df: DataFrame with columns: download_link, description, context_description
+        :return: DataFrame with new 'supplementary_file_keywords' column
+        """
+        self.logger.info(f"Processing supplementary_files_df with {len(supplementary_files_df)} entries")
+        
+        if supplementary_files_df.empty:
+            self.logger.info("Empty supplementary files dataframe, returning as is")
+            return supplementary_files_df
+        
+        # Make a copy to avoid modifying the original
+        result_df = supplementary_files_df.copy()
+        
+        # Define prompt template with field placeholders (StreamSets pattern)
+        system_prompt = "You are a scientific data analyst that categorizes supplementary files. Respond with 1-3 keywords separated by commas for each file."
+        
+        # Process all rows in a single batch by building structured input/output mapping
+        batch_prompts = []
+        for idx, row in result_df.iterrows():
+            download_link = row.get('download_link', '')
+            filename = download_link.split('/')[-1] if download_link else f'file_{idx}'
+            description = str(row.get('description', 'n/a'))
+            context_description = str(row.get('context_description', 'n/a'))
+            
+            file_info = f"""File {idx + 1}:
+- Filename: {filename}
+- Description: {description}
+- Context: {context_description}"""
+            
+            batch_prompts.append(file_info)
+        
+        # Create batch request that maintains row order
+        user_prompt = f"""Analyze these {len(batch_prompts)} supplementary files and generate keywords for each.
+Return a JSON object with a "supplementary_file_keywords" array containing {len(batch_prompts)} keyword strings in order.
+
+Files:
+{chr(10).join(batch_prompts)}"""
+        
+        try:
+            self.logger.debug(f"Sending batch request for {len(batch_prompts)} supplementary files")
+            
+            messages = [
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_prompt}
+            ]
+            
+            # Use make_llm_call with the structured response schema
+            response = self.llm_client.make_llm_call(
+                messages=messages, 
+                response_format=supplementary_files_keywords_schema
+            )
+            
+            self.logger.debug(f"Raw LLM response type: {type(response)}")
+            
+            # Process the response using the LLM client's parser
+            response = self.llm_client.process_llm_response(
+                response, 
+                response_format=supplementary_files_keywords_schema,
+                expected_key='supplementary_file_keywords'
+            )
+            
+            self.logger.debug(f"Processed LLM response type: {type(response)}")
+            self.logger.debug(f"Processed LLM response: {response}")
+                        
+            if isinstance(response, list) and len(response) == len(result_df):
+                result_df['supplementary_file_keywords'] = response
+                self.logger.info(f"Successfully generated keywords for {len(response)} supplementary files")
+            elif isinstance(response, dict) and 'supplementary_file_keywords' in response:
+                keywords_list = response['supplementary_file_keywords']
+                if len(keywords_list) == len(result_df):
+                    result_df['supplementary_file_keywords'] = keywords_list
+                    self.logger.info(f"Successfully generated keywords for {len(keywords_list)} supplementary files")
+                else:
+                    self.logger.warning(f"Response length mismatch. Expected {len(result_df)}, got {len(keywords_list)}")
+                    result_df['supplementary_file_keywords'] = result_df['description'].fillna('n/a')
+            else:
+                self.logger.warning(f"Unexpected response format. Type: {type(response)}, Length: {len(response) if hasattr(response, '__len__') else 'N/A'}")
+                self.logger.warning(f"Response content: {response}")
+                result_df['supplementary_file_keywords'] = result_df['description'].fillna('n/a')
+                
+        except Exception as e:
+            self.logger.error(f"Error in batch processing supplementary files: {e}")
+            # Fallback: use original descriptions
+            result_df['supplementary_file_keywords'] = result_df['description'].fillna('n/a')
+        
+        self.logger.info(f"Completed processing {len(result_df)} supplementary files")
+        return result_df
+
     def extract_datasets_info_from_content(self, content: str, repos: list, model: str = 'gpt-4o-mini',
                                            temperature: float = 0.0,
                                            prompt_name: str = 'GPT_FewShot',
@@ -351,15 +443,14 @@ class LLMParser(ABC):
                     try:
                         dataset_id, data_repository, dataset_webpage = self.schema_validation(valid_dataset)
                         if dataset_id and data_repository:
-                            dataset_result = {
-                                "dataset_identifier": dataset_id,
-                                "data_repository": data_repository,
-                                "dataset_webpage": dataset_webpage if dataset_webpage is not None else 'n/a',
-                                "citation_type": valid_dataset.get('citation_type', 'n/a')
-                            }
-                            # Preserve dataset_context_from_paper field if present (for PaperMiner enhanced schema)
-                            if 'dataset_context_from_paper' in valid_dataset:
-                                dataset_result['dataset_context_from_paper'] = valid_dataset['dataset_context_from_paper']
+                            # Start with all fields from valid_dataset
+                            dataset_result = valid_dataset.copy()
+                            
+                            # Override the three validated fields
+                            dataset_result["dataset_identifier"] = dataset_id
+                            dataset_result["data_repository"] = data_repository
+                            dataset_result["dataset_webpage"] = dataset_webpage if dataset_webpage is not None else 'n/a'
+                            
                             result.append(dataset_result)
                             self.logger.info(f"Successfully processed dataset from list: {result[-1]}")
                     except Exception as e:
@@ -396,23 +487,13 @@ class LLMParser(ABC):
                 self.logger.info(f"Skipping dataset due to missing ID, repository, dataset page: {dataset}")
                 continue
 
-            result.append({
-                "dataset_identifier": dataset_id,
-                "data_repository": data_repository,
-                "dataset_webpage": dataset_webpage if dataset_webpage is not None else 'n/a',
-                "citation_type": dataset.get('citation_type', 'n/a')
-            })
-
-            if 'decision_rationale' in dataset:
-                result[-1]['decision_rationale'] = dataset['decision_rationale']
-
-            if 'dataset-publication_relationship' in dataset:
-                result[-1]['dataset-publication_relationship'] = dataset['dataset-publication_relationship']
-
-            # Preserve dataset_context_from_paper field if present (for PaperMiner enhanced schema)
-            if 'dataset_context_from_paper' in dataset:
-                result[-1]['dataset_context_from_paper'] = dataset['dataset_context_from_paper']
-
+            dataset_result = dataset.copy() if isinstance(dataset, dict) else {}
+            
+            dataset_result["dataset_identifier"] = dataset_id
+            dataset_result["data_repository"] = data_repository
+            dataset_result["dataset_webpage"] = dataset_webpage if dataset_webpage is not None else 'n/a'
+            
+            result.append(dataset_result)
             self.logger.info(f"Extracted dataset: {result[-1]}")
 
         self.logger.debug(f"Final result: {result}")

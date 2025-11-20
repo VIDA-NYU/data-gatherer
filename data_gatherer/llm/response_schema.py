@@ -345,3 +345,30 @@ class Dataset_w_Context(BaseModel):
     decision_rationale: str  # Why this dataset was selected and its significance
     dataset_scope: str  # Scope of the dataset: "primary_analysis", "secondary_analysis", "background_context", "methodology_development", "comparative_study", "other"
 
+
+# Response schema for supplementary files keywords extraction
+supplementary_files_keywords_schema = {
+    "type": "json_schema",
+    "name": "Supplementary_files_keywords_schema",
+    "schema": {
+        "type": "object",
+        "properties": {
+            "supplementary_file_keywords": {
+                "type": "array",
+                "description": "Array of keyword strings, one for each supplementary file in the same order as input",
+                "items": {
+                    "type": "string",
+                    "description": "3-5 keywords separated by commas describing the file content, data type, and purpose",
+                    "maxLength": 128
+                },
+                "minItems": 1
+            }
+        },
+        "required": ["supplementary_file_keywords"],
+        "additionalProperties": False
+    }
+}
+
+class SupplementaryFileKeywords(BaseModel):
+    supplementary_file_keywords: list[str]
+
