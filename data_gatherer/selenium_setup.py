@@ -1,4 +1,6 @@
 import os
+import platform
+import subprocess
 from selenium import webdriver
 from selenium.webdriver.firefox.service import Service as FirefoxService
 from selenium.webdriver.firefox.options import Options as FirefoxOptions
@@ -39,7 +41,42 @@ def create_driver(driver_path=None, browser="Firefox", headless=True, logger=Non
             logger.info(f"Using provided Firefox driver path: {driver_path}")
         else:
             logger.info("No driver path provided, using GeckoDriverManager to auto-install Firefox driver.")
-            service = FirefoxService(executable_path=GeckoDriverManager().install(), log_path="logs/geckodriver.log")
+            
+            # Handle Apple Silicon Macs - force correct architecture
+            import platform
+            if platform.system() == 'Darwin' and platform.machine() == 'arm64':
+                logger.info("Detected Apple Silicon Mac (ARM64) - ensuring compatible geckodriver")
+                # Delete old incompatible geckodriver if exists
+                old_mac64_path = os.path.expanduser("~/.wdm/drivers/geckodriver/mac64")
+                if os.path.exists(old_mac64_path):
+                    logger.info(f"Removing old Intel geckodriver from: {old_mac64_path}")
+                    try:
+                        import shutil
+                        shutil.rmtree(old_mac64_path)
+                    except Exception as e:
+                        logger.warning(f"Could not remove old geckodriver: {e}")
+            
+            geckodriver_path = GeckoDriverManager().install()
+            logger.info(f"Geckodriver path: {geckodriver_path}")
+            
+            # Set execute permissions and remove quarantine attributes
+            try:
+                os.chmod(geckodriver_path, 0o755)
+                logger.info(f"Set execute permissions (755) on geckodriver")
+                
+                # Remove macOS quarantine/provenance attributes
+                if platform.system() == 'Darwin':
+                    try:
+                        # Remove all extended attributes
+                        subprocess.run(['xattr', '-c', geckodriver_path], 
+                                      capture_output=True, check=False)
+                        logger.info(f"Removed macOS extended attributes from geckodriver")
+                    except Exception as e:
+                        logger.warning(f"Could not remove extended attributes: {e}")
+            except Exception as e:
+                logger.warning(f"Error setting geckodriver permissions: {e}")
+            
+            service = FirefoxService(executable_path=geckodriver_path, log_path="logs/geckodriver.log")
             logger.info(f"Using GeckoDriverManager to auto-install Firefox driver {service}.") if logger else None
 
         driver = webdriver.Firefox(service=service, options=firefox_options)

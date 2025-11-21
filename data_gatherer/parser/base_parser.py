@@ -490,7 +490,7 @@ Files:
             dataset_result = dataset.copy() if isinstance(dataset, dict) else {}
             
             dataset_result["dataset_identifier"] = dataset_id
-            dataset_result["data_repository"] = data_repository
+            dataset_result["repository_reference"] = data_repository
             dataset_result["dataset_webpage"] = dataset_webpage if dataset_webpage is not None else 'n/a'
             
             result.append(dataset_result)
@@ -1213,7 +1213,7 @@ Files:
             # Add access mode
             self._add_access_mode_if_missing(item, i)
 
-        self.logger.info(f"Dataset enhancement completed: {len(datasets)} datasets processed")
+        self.logger.info(f"Dataset enhancement completed: {type(datasets)}, {len(datasets)} datasets processed")
         return datasets
 
     def _construct_dataset_webpage(self, repo, accession_id, existing_webpage):
