@@ -861,13 +861,14 @@ class LLMParser(ABC):
             return new_id
         elif '-' in dataset_identifier: 
             range_pattern = r'(\w+)(\d+)-(\w+)(\d+)'
-            alpha_1 = str(re.search(range_pattern, dataset_identifier, re.IGNORECASE).group(1))
-            digit_1 = int(re.search(range_pattern, dataset_identifier, re.IGNORECASE).group(2))
-            alpha_2 = str(re.search(range_pattern, dataset_identifier, re.IGNORECASE).group(3))
-            digit_2 = int(re.search(range_pattern, dataset_identifier, re.IGNORECASE).group(4))
-            if alpha_1 == alpha_2 and digit_1 < digit_2:
-                self.logger.info(f"detected a range of accession ids: returning range as list")
-                return [alpha_1 + str(digit_i) for digit_i in range(digit_1, digit_2 + 1)]
+            if re.search(range_pattern, dataset_identifier, re.IGNORECASE):
+                alpha_1 = str(re.search(range_pattern, dataset_identifier, re.IGNORECASE).group(1))
+                digit_1 = int(re.search(range_pattern, dataset_identifier, re.IGNORECASE).group(2))
+                alpha_2 = str(re.search(range_pattern, dataset_identifier, re.IGNORECASE).group(3))
+                digit_2 = int(re.search(range_pattern, dataset_identifier, re.IGNORECASE).group(4))
+                if alpha_1 == alpha_2 and digit_1 < digit_2:
+                    self.logger.info(f"detected a range of accession ids: returning range as list")
+                    return [alpha_1 + str(digit_i) for digit_i in range(digit_1, digit_2 + 1)]
 
         self.logger.info(f"Accession ID {dataset_identifier} is valid")
         return dataset_identifier
