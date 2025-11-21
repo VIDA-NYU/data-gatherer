@@ -983,15 +983,13 @@ class DataGatherer:
                     continue
 
                 if ('javascript_load_required' in repo_dict):
-                    self.logger.info(f"JavaScript load required for {repo_mapping_key} dataset webpage. Using Playwright (asyncio-aware).")
-                    # Switch to Playwright with automatic asyncio detection
+                    self.logger.info(f"JavaScript load required for {repo_mapping_key} dataset webpage. Using Selenium.")
+                    # Switch to Selenium --> Playwright can be added later
                     self.data_fetcher = self.data_fetcher.update_DataFetcher_settings(
                         row['dataset_webpage'], 
-                        HTML_fallback='Playwright',  # Use Playwright with asyncio detection
-                        browser='chromium',  # Try chromium instead of firefox
-                        headless=self.headless
+                        HTML_fallback='Selenium'  # Use Selenium --> Playwright can be added later
                     )
-                    html = self.data_fetcher.fetch_data(row['dataset_webpage'], delay=5, wait_time=10000)  # Increased to 10s
+                    html = self.data_fetcher.fetch_data(row['dataset_webpage'], delay=2)
                     if "informative_html_metadata_tags" in repo_dict:
                         keep_tags = repo_dict['informative_html_metadata_tags']
                     if write_raw_metadata:

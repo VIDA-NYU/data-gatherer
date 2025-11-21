@@ -412,9 +412,13 @@ if st.session_state.get("results_ready", False):
                 if pd.notna(row.get("download_link")):
                     file_id = row.get("id", row.get('download_link', f"supp_{j}")).split("/")[-1] if pd.notna(row.get("download_link")) else f"supp_{j}"
                     
+                    # Get keywords as a list
                     desc_value = row.get("supplementary_file_keywords", row.get("description", "n/a"))
-                    if isinstance(desc_value, list):
-                        desc_value = "\n".join(' - ' + str(item) for item in desc_value)
+                    if isinstance(desc_value, str):
+                        # If it's a string, split by comma
+                        desc_value = [kw.strip() for kw in desc_value.split(',') if kw.strip()]
+                    elif not isinstance(desc_value, list):
+                        desc_value = [str(desc_value)]
                     
                     dataset_entry = {
                         "source_type": "supplementary",
@@ -423,7 +427,7 @@ if st.session_state.get("results_ready", False):
                         "Source Publication": title,
                         "Repository": "PMC",
                         "Dataset ID": file_id,
-                        "Description": desc_value,
+                        "Description": desc_value,  # Keep as list
                         "webpage": row.get("download_link", "n/a"),
                         "pmcid": pmcid,
                         "original_data": row
@@ -439,55 +443,88 @@ if st.session_state.get("results_ready", False):
             
             st.markdown(f"**Found {len(all_unified_datasets)} datasets across {len(per_article_results)} articles. Select datasets to fetch metadata:**")
             
-            # Create markdown table header with adjusted column widths
+            # Group datasets by article
+            datasets_by_article = {}
+            for dataset in all_unified_datasets:
+                article_key = (dataset['pmcid'], dataset['source_article_idx'])
+                if article_key not in datasets_by_article:
+                    datasets_by_article[article_key] = {
+                        'title': dataset['Source Publication'],
+                        'pmcid': dataset['pmcid'],
+                        'datasets': []
+                    }
+                datasets_by_article[article_key]['datasets'].append(dataset)
+            
+            # Single table header
             st.markdown("---")
-            col_select, col_source, col_repo, col_id, col_desc = st.columns([0.4, 3.5, 1.5, 1.5, 3.1])
+            col_select, col_repo, col_id, col_kw1, col_kw2, col_kw3 = st.columns([0.2, 1.6, 1.9, 2.1, 2.1, 2.1])
             
             with col_select:
-                st.markdown("**☑**")  # Shorter header
-            with col_source:
-                st.markdown("**Source Publication**")
+                st.markdown("**☑**")
             with col_repo:
                 st.markdown("**Repository**")
             with col_id:
                 st.markdown("**Dataset ID**")
-            with col_desc:
-                st.markdown("**Description**")
+            with col_kw1:
+                st.markdown("")  # Part of Keywords span
+            with col_kw2:
+                st.markdown("<div style='text-align: center;'><strong>Keywords</strong></div>", unsafe_allow_html=True)  
+            with col_kw3:
+                st.markdown("")  # Part of Keywords span
             
             st.markdown("---")
             
-            # Data rows with checkboxes
-            for i, dataset in enumerate(all_unified_datasets):
-                dataset_key = f"{dataset['pmcid']}_{dataset['source_type']}_{dataset['source_article_idx']}_{dataset['source_index']}"
+            # Display datasets grouped by article within the same table
+            for article_idx, (article_key, article_data) in enumerate(sorted(datasets_by_article.items())):
+                # Article divider row (spans the entire width, centered)
+                if article_idx > 0:  # Only add separator line for articles after the first
+                    st.markdown("---")
+                st.markdown(f"<div style='text-align: center;'><strong>{article_data['title']}</strong></div>", unsafe_allow_html=True)
+                st.markdown("")  # Empty line after title
                 
-                # Initialize checkbox state (auto-select repository datasets)
-                if dataset_key not in st.session_state.selected_datasets_global:
-                    st.session_state.selected_datasets_global[dataset_key] = (dataset['source_type'] == 'repository')
-                
-                col_select, col_source, col_repo, col_id, col_desc = st.columns([0.4, 3.5, 1.5, 1.5, 3.1])
-                
-                with col_select:
-                    is_selected = st.checkbox(
-                        "✓",
-                        value=st.session_state.selected_datasets_global[dataset_key],
-                        key=f"checkbox_global_{dataset_key}_{i}",
-                        label_visibility="collapsed"
-                    )
-                    st.session_state.selected_datasets_global[dataset_key] = is_selected
-                
-                with col_source:
-                    st.text(dataset["Source Publication"])
-                
-                with col_repo:
-                    st.text(dataset["Repository"])
-                
-                with col_id:
-                    id_text = str(dataset["Dataset ID"])
-                    st.text(id_text[:40] + "..." if len(id_text) > 40 else id_text)
-                
-                with col_desc:
-                    desc_text = str(dataset["Description"])
-                    st.text(desc_text[:80] + "..." if len(desc_text) > 80 else desc_text)
+                # Data rows for this article
+                for i, dataset in enumerate(article_data['datasets']):
+                    dataset_key = f"{dataset['pmcid']}_{dataset['source_type']}_{dataset['source_article_idx']}_{dataset['source_index']}"
+                    
+                    # Initialize checkbox state (auto-select repository datasets)
+                    if dataset_key not in st.session_state.selected_datasets_global:
+                        st.session_state.selected_datasets_global[dataset_key] = (dataset['source_type'] == 'repository')
+                    
+                    col_select, col_repo, col_id, col_kw1, col_kw2, col_kw3 = st.columns([0.4, 1.5, 2, 2, 2, 2])
+                    
+                    with col_select:
+                        is_selected = st.checkbox(
+                            "✓",
+                            value=st.session_state.selected_datasets_global[dataset_key],
+                            key=f"checkbox_global_{dataset_key}_{article_idx}_{i}",
+                            label_visibility="collapsed"
+                        )
+                        st.session_state.selected_datasets_global[dataset_key] = is_selected
+                    
+                    with col_repo:
+                        st.text(dataset["Repository"])
+                    
+                    with col_id:
+                        id_text = str(dataset["Dataset ID"])
+                        st.text(id_text[:40] + "..." if len(id_text) > 40 else id_text)
+                    
+                    # Parse keywords into list if it's a string
+                    desc_value = dataset["Description"]
+                    if isinstance(desc_value, str):
+                        # Split by newline and remove ' - ' prefix
+                        keywords = [kw.strip().lstrip('- ').strip() for kw in desc_value.split('\n') if kw.strip()]
+                    elif isinstance(desc_value, list):
+                        keywords = [str(kw).strip() for kw in desc_value]
+                    else:
+                        keywords = [str(desc_value)]
+                    
+                    # Display up to 3 keywords in separate columns
+                    with col_kw1:
+                        st.text(keywords[0] if len(keywords) > 0 else "-")
+                    with col_kw2:
+                        st.text(keywords[1] if len(keywords) > 1 else "-")
+                    with col_kw3:
+                        st.text(keywords[2] if len(keywords) > 2 else "-")
             
             st.markdown("---")
             
