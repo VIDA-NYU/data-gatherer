@@ -88,10 +88,16 @@ def save_user_feedback(feedback_text):
     with open(feedback_file, "w") as f:
         f.write(feedback_text)
 
-def normalize_repo(repo_key):
-    if '.' in repo_key.lower() and repo_key in config:
-        if '.' not in config[repo_key]['repo_name']:
-            return config[repo_key]['repo_name']
+def normalize_repo(logger,repo_key):
+    logger.debug(f"Normalizing repository key: {repo_key}")
+    if '.' in repo_key.lower() and repo_key in config['repos']:
+        repo_dict = config['repos'][repo_key]
+        logger.debug(f"Char '.' in repo key: {repo_key}")
+        if 'repo_name' in repo_dict:
+            logger.debug(f"Key repo_name defined for {repo_key}")
+            if '.' not in repo_dict['repo_name']:
+                logger.debug(f"Replacing repo key '{repo_key}' with '{repo_dict['repo_name']}'")
+            return repo_dict['repo_name']
     return repo_key
     
 # --- Custom CSS for UI tweaks ---
@@ -383,14 +389,16 @@ if st.session_state.get("results_ready", False):
             for j, row in files_with_repo.iterrows():
                 desc_value = row.get("dataset_keywords", "n/a") if "dataset_keywords" in row else "n/a"
                 if isinstance(desc_value, list):
-                    desc_value = " | ".join(str(item) for item in desc_value)
+                    desc_value = "\n".join(' - ' + str(item) for item in desc_value)
+                normalize_repo_val = normalize_repo(orch_display.logger, row.get("data_repository"))
+                orch_display.logger.info(f"[FLOW] Normalized repository for dataset {row.get('dataset_identifier', 'n/a')}: {normalize_repo_val}")
                 
                 dataset_entry = {
                     "source_type": "repository",
                     "source_article_idx": idx,
                     "source_index": j,
-                    "Source Publication": title[:60] + "..." if len(title) > 60 else title,
-                    "Repository": normalize_repo(row.get("data_repository", "n/a")),
+                    "Source Publication": title,
+                    "Repository": normalize_repo_val,
                     "Dataset ID": row.get("dataset_identifier", "n/a"),
                     "Description": desc_value,
                     "webpage": row.get("dataset_webpage", "n/a"),
@@ -406,13 +414,13 @@ if st.session_state.get("results_ready", False):
                     
                     desc_value = row.get("supplementary_file_keywords", row.get("description", "n/a"))
                     if isinstance(desc_value, list):
-                        desc_value = " | ".join(str(item) for item in desc_value)
+                        desc_value = "\n".join(' - ' + str(item) for item in desc_value)
                     
                     dataset_entry = {
                         "source_type": "supplementary",
                         "source_article_idx": idx,
                         "source_index": j,
-                        "Source Publication": title[:60] + "..." if len(title) > 60 else title,
+                        "Source Publication": title,
                         "Repository": "PMC",
                         "Dataset ID": file_id,
                         "Description": desc_value,
@@ -433,7 +441,7 @@ if st.session_state.get("results_ready", False):
             
             # Create markdown table header with adjusted column widths
             st.markdown("---")
-            col_select, col_source, col_repo, col_id, col_desc = st.columns([0.4, 2.5, 1.5, 2, 4])
+            col_select, col_source, col_repo, col_id, col_desc = st.columns([0.4, 3.5, 1.5, 1.5, 3.1])
             
             with col_select:
                 st.markdown("**☑**")  # Shorter header
@@ -456,7 +464,7 @@ if st.session_state.get("results_ready", False):
                 if dataset_key not in st.session_state.selected_datasets_global:
                     st.session_state.selected_datasets_global[dataset_key] = (dataset['source_type'] == 'repository')
                 
-                col_select, col_source, col_repo, col_id, col_desc = st.columns([0.4, 2.5, 1.5, 2, 4])
+                col_select, col_source, col_repo, col_id, col_desc = st.columns([0.4, 3.5, 1.5, 1.5, 3.1])
                 
                 with col_select:
                     is_selected = st.checkbox(
