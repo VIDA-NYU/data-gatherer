@@ -301,7 +301,7 @@ class DataFetcher(ABC):
         :param HTML_fallback: If False, use simple HTTP. If True, use Selenium. If 'HTTPGetRequest', force HTTP. If 'Playwright', force Playwright.
         :return: An instance of the appropriate data fetcher with backup capability.
         """
-        self.logger.debug(f"update_DataFetcher_settings for URL: {url}")
+        self.logger.debug(f"update_DataFetcher_settings for URL: {url}, current instance: {self.__class__.__name__}")
         self.local_data_used = False
 
         # Determine backup data file
