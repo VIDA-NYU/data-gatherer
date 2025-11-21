@@ -820,13 +820,6 @@ class DataGatherer:
                     f"| ETA: {time.strftime('%H:%M:%S', time.gmtime(estimated_remaining))}\n"
                 )
         self.logger.debug("Completed processing all URLs.")
-        # rename 'dataset_id', 'repository_reference' to 'dataset_identifier', 'data_repository' respectively
-        for url, df in results.items():
-            if df is not None and not df.empty:
-                if 'dataset_id' in df.columns:
-                    df.rename(columns={'dataset_id': 'dataset_identifier'}, inplace=True)
-                if 'repository_reference' in df.columns:
-                    df.rename(columns={'repository_reference': 'data_repository'}, inplace=True)
         return results
     
 
@@ -974,7 +967,7 @@ class DataGatherer:
             else:
                 self.logger.info(f"LLM scraped metadata")
                 keep_tags = None
-                repo_mapping_key = row['repository_reference'].lower() if 'repository_reference' in row else row['data_repository'].lower()
+                repo_mapping_key = row['data_repository'].lower()
                 repo_dict = self.open_data_repos_ontology['repos'][repo_mapping_key]
 
                 # caching: load_from_cache
@@ -1039,7 +1032,7 @@ class DataGatherer:
                 metadata['access_mode'] = row.get('access_mode', None)
                 metadata['source_section'] = row.get('source_section', row.get('section_class', None))
                 metadata['download_link'] = row.get('download_link', None)
-                metadata['accession_id'] = row.get('dataset_id', row.get('dataset_identifier', None))
+                metadata['accession_id'] = row.get('dataset_identifier', None)
                 metadata['data_repository'] = repo_mapping_key
                 metadata['metadata_schema_org'] = metadata_schema_org
                 self.already_previewed.append(row['dataset_webpage'])
@@ -1836,12 +1829,6 @@ class DataGatherer:
             if processed_datasets:
                 df = pd.DataFrame(processed_datasets)
                 self.logger.info(f"Successfully converted batch results to DataFrame with {len(df)} rows")
-                
-                # Standardize column names (ensure compatibility with existing pipeline)
-                if 'dataset_id' in df.columns:
-                    df.rename(columns={'dataset_id': 'dataset_identifier'}, inplace=True)
-                if 'repository_reference' in df.columns:
-                    df.rename(columns={'repository_reference': 'data_repository'}, inplace=True)
                 
                 if output_file_path:
                     df.to_csv(output_file_path, index=False)

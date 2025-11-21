@@ -478,11 +478,8 @@ class XMLParser(LLMParser):
 
                 available_data = pd.DataFrame(dataset_links_w_target_pages)
                 # Create a DataFrame from the dataset links union supplementary material links
-                out_df = pd.concat([available_data.rename(
-                    columns={'dataset_id': 'dataset_identifier', 'repository_reference': 'data_repository'}),
-                    supplementary_material_metadata], ignore_index=True)  # check index error here
-                self.logger.info(
-                    f"Dataset Links type: {type(out_df)} of len {len(out_df)}, with cols: {out_df.columns}")
+                out_df = pd.concat([available_data,supplementary_material_metadata], ignore_index=True)  # check index error here
+                self.logger.info(f"Dataset Links type: {type(out_df)} of len {len(out_df)}, with cols: {out_df.columns}")
                 self.logger.debug(f"Datasets: {out_df}")
 
                 # Extract file extensions from download links if possible, and add to the dataframe out_df as column
@@ -1359,11 +1356,8 @@ class TEI_XMLParser(XMLParser):
                     dataset_links_w_target_pages = []
 
                 # Create a DataFrame from the dataset links union supplementary material links
-                out_df = pd.concat([pd.DataFrame(dataset_links_w_target_pages).rename(
-                    columns={'dataset_id': 'dataset_identifier', 'repository_reference': 'data_repository'}),
-                    supplementary_material_metadata], ignore_index=True)  # check index error here
-                self.logger.info(
-                    f"Dataset Links type: {type(out_df)} of len {len(out_df)}, with cols: {out_df.columns}")
+                out_df = pd.concat([pd.DataFrame(dataset_links_w_target_pages), supplementary_material_metadata], ignore_index=True)  # check index error here
+                self.logger.info(f"Dataset Links type: {type(out_df)} of len {len(out_df)}, with cols: {out_df.columns}")
                 self.logger.debug(f"Datasets: {out_df}")
 
                 # Extract file extensions from download links if possible, and add to the dataframe out_df as column

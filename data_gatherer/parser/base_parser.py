@@ -434,7 +434,7 @@ Files:
                 # Try to extract valid dictionary items from the list
                 valid_datasets = []
                 for item in dataset:
-                    if isinstance(item, dict) and any(key in item for key in ['dataset_identifier', 'dataset_id', 'data_repository']):
+                    if isinstance(item, dict) and any(key in item for key in ['dataset_identifier', 'data_repository']):
                         valid_datasets.append(item)
                         self.logger.info(f"Found valid dataset in list: {item}")
                 
@@ -490,7 +490,7 @@ Files:
             dataset_result = dataset.copy() if isinstance(dataset, dict) else {}
             
             dataset_result["dataset_identifier"] = dataset_id
-            dataset_result["repository_reference"] = data_repository
+            dataset_result["data_repository"] = data_repository
             dataset_result["dataset_webpage"] = dataset_webpage if dataset_webpage is not None else 'n/a'
             
             result.append(dataset_result)
@@ -521,9 +521,8 @@ Files:
                             dataset_webpage = val
                         if data_repository is None:
                             self.logger.info(f"Candidate data_repository: {repo_key}")
-                            data_repository = self.resolve_data_repository(dataset.get('data_repository',
-                                                                        dataset.get('repository_reference', 'n/a')),
-                                                           identifier=dataset.get('dataset_identifier', dataset.get('dataset_id', 'n/a')),
+                            data_repository = self.resolve_data_repository(dataset.get('data_repository', 'n/a'),
+                                                           identifier=dataset.get('dataset_identifier', 'n/a'),
                                                            dataset_page=dataset_webpage,
                                                            candidate_repo=repo_key)
                                                            
@@ -551,22 +550,20 @@ Files:
                                 dataset_id = val
                             if data_repository is None:
                                 self.logger.info(f"Candidate data_repository: {repo_key}")
-                                data_repository = self.resolve_data_repository(dataset.get('data_repository',
-                                                                        dataset.get('repository_reference', 'n/a')),
-                                                           identifier=dataset.get('dataset_identifier', dataset.get('dataset_id', 'n/a')),
+                                data_repository = self.resolve_data_repository(dataset.get('data_repository', 'n/a'),
+                                                           identifier=dataset.get('dataset_identifier', 'n/a'),
                                                            dataset_page=dataset_webpage,
                                                            candidate_repo=repo_key)
 
         self.logger.info(f"Schema validation vals: {dataset_id}, {data_repository}, {dataset_webpage}")
 
         if dataset_id is None:
-            dataset_id = self.validate_dataset_id(dataset.get('dataset_identifier', dataset.get('dataset_id', 'n/a')))
+            dataset_id = self.validate_dataset_id(dataset.get('dataset_identifier', 'n/a'))
         else:
             self.logger.info(f"Dataset ID found via pattern matching: {dataset_id}")
 
         if data_repository is None:
-            data_repository = self.resolve_data_repository(dataset.get('data_repository',
-                                                                        dataset.get('repository_reference', 'n/a')),
+            data_repository = self.resolve_data_repository(dataset.get('data_repository','n/a'),
                                                            identifier=dataset_id,
                                                            dataset_page=dataset_webpage)
         else:
@@ -632,13 +629,13 @@ Files:
                 deduped.append(item)
                 continue
             
-            dataset_id = item.get("dataset_identifier", item.get("dataset_id", ""))
+            dataset_id = item.get("dataset_identifier", "n/a")
             self.logger.debug(f"Extracted dataset_id: {dataset_id}")
             if not dataset_id:
                 self.logger.debug(f"Skipping item with missing dataset_id: {item}")
                 self.logger.warning(f"Skipping item with missing dataset_id: {item}")
                 continue
-            repo = item.get("data_repository", item.get("repository_reference", "n/a"))
+            repo = item.get("data_repository", "n/a")
             self.logger.debug(f"Extracted repo: {repo}")
 
             # Normalize: remove DOI prefix if it matches '10.x/PXD123456'
@@ -646,8 +643,8 @@ Files:
             self.logger.debug(f"Normalized clean_id: {clean_id}")
 
             if clean_id not in seen:
-                # Update the dataset_id to the normalized version
-                item["dataset_id"] = clean_id
+                # Update the dataset_identifier to the normalized version
+                item["dataset_identifier"] = clean_id
                 self.logger.debug(f"Adding unique item: {clean_id}")
                 self.logger.info(f"Adding unique item: {clean_id}")
                 deduped.append(item)
@@ -1181,8 +1178,8 @@ Files:
             self.logger.info(f"Processing dataset {1 + i} - missing or invalid webpage")
 
             # Get required fields
-            repo = item.get('data_repository', item.get('repository_reference', None))
-            accession_id = item.get('dataset_identifier', item.get('dataset_id', 'n/a'))
+            repo = item.get('data_repository', 'n/a')
+            accession_id = item.get('dataset_identifier', 'n/a')
             
             if repo is None or repo == 'n/a' or accession_id == 'n/a':
                 self.logger.info(f"Skipping dataset {1 + i}: missing repo ({repo}) or accession_id ({accession_id})")
@@ -1251,7 +1248,7 @@ Files:
     def _add_access_mode_if_missing(self, item, index):
         """Helper method to add access_mode if missing."""
         if 'access_mode' not in item:
-            repo = item.get('data_repository', item.get('repository_reference', None))
+            repo = item.get('data_repository', None)
             if repo and repo in self.open_data_repos_ontology['repos']:
                 repo_config = self.open_data_repos_ontology['repos'][repo]
                 if 'access_mode' in repo_config:
