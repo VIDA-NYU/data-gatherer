@@ -292,20 +292,24 @@ if st.button("🚀 Run Extraction", type="primary"):
                 excel_buffer = io.BytesIO()
                 if xlsxwriter and (excel_tabs or not supp_summary_df.empty or not avail_summary_df.empty):
                     with pd.ExcelWriter(excel_buffer, engine="xlsxwriter") as writer:
-                        supp_summary_df.to_excel(writer, sheet_name="Supplementary Material", index=False)
+                        # Drop null columns from Supplementary Material
+                        supp_clean = supp_summary_df.dropna(axis=1, how='all')
+                        supp_clean.to_excel(writer, sheet_name="Supplementary Material", index=False)
                         worksheet = writer.sheets["Supplementary Material"]
-                        for i, col in enumerate(supp_summary_df.columns):
+                        for i, col in enumerate(supp_clean.columns):
                             max_len = max(
-                                supp_summary_df[col].astype(str).map(len).max() if not supp_summary_df.empty else 0,
+                                supp_clean[col].astype(str).map(len).max() if not supp_clean.empty else 0,
                                 len(str(col)),
                                 15
                             )
                             worksheet.set_column(i, i, max_len + 2)
-                        avail_summary_df.to_excel(writer, sheet_name="Data Availability", index=False)
+                        # Drop null columns from Data Availability
+                        avail_clean = avail_summary_df.dropna(axis=1, how='all')
+                        avail_clean.to_excel(writer, sheet_name="Data Availability", index=False)
                         worksheet = writer.sheets["Data Availability"]
-                        for i, col in enumerate(avail_summary_df.columns):
+                        for i, col in enumerate(avail_clean.columns):
                             max_len = max(
-                                avail_summary_df[col].astype(str).map(len).max() if not avail_summary_df.empty else 0,
+                                avail_clean[col].astype(str).map(len).max() if not avail_clean.empty else 0,
                                 len(str(col)),
                                 15
                             )
@@ -316,6 +320,8 @@ if st.button("🚀 Run Extraction", type="primary"):
                                 worksheet = None
                                 for title, df in sections:
                                     df = df.copy()
+                                    # Drop null columns
+                                    df = df.dropna(axis=1, how='all')
                                     df_rows, df_cols = df.shape
                                     df_cols = max(df_cols, 1)
                                     df_startcol = 0
@@ -334,7 +340,9 @@ if st.button("🚀 Run Extraction", type="primary"):
                                         worksheet.set_column(i, i, max_len + 2)
                                     startrow += len(df) + 4
                             else:
-                                df = sections
+                                df = sections.copy()
+                                # Drop null columns
+                                df = df.dropna(axis=1, how='all')
                                 df.to_excel(writer, sheet_name=sheet_name, index=False)
                                 worksheet = writer.sheets[sheet_name]
                                 for i, col in enumerate(df.columns):
@@ -591,6 +599,76 @@ if st.session_state.get("results_ready", False):
                                     excel_tabs[sheet_name] = display_item
                                 else:
                                     st.warning("No metadata to display.")
+                        
+                        # Regenerate Excel with metadata
+                        st.session_state.excel_tabs = excel_tabs
+                        excel_buffer = io.BytesIO()
+                        supp_summary_df = st.session_state.supp_summary_df
+                        avail_summary_df = st.session_state.avail_summary_df
+                        
+                        if xlsxwriter and (excel_tabs or not supp_summary_df.empty or not avail_summary_df.empty):
+                            with pd.ExcelWriter(excel_buffer, engine="xlsxwriter") as writer:
+                                # Drop null columns from Supplementary Material
+                                supp_clean = supp_summary_df.dropna(axis=1, how='all')
+                                supp_clean.to_excel(writer, sheet_name="Supplementary Material", index=False)
+                                worksheet = writer.sheets["Supplementary Material"]
+                                for i, col in enumerate(supp_clean.columns):
+                                    max_len = max(
+                                        supp_clean[col].astype(str).map(len).max() if not supp_clean.empty else 0,
+                                        len(str(col)),
+                                        15
+                                    )
+                                    worksheet.set_column(i, i, max_len + 2)
+                                # Drop null columns from Data Availability
+                                avail_clean = avail_summary_df.dropna(axis=1, how='all')
+                                avail_clean.to_excel(writer, sheet_name="Data Availability", index=False)
+                                worksheet = writer.sheets["Data Availability"]
+                                for i, col in enumerate(avail_clean.columns):
+                                    max_len = max(
+                                        avail_clean[col].astype(str).map(len).max() if not avail_clean.empty else 0,
+                                        len(str(col)),
+                                        15
+                                    )
+                                    worksheet.set_column(i, i, max_len + 2)
+                                for sheet_name, sections in excel_tabs.items():
+                                    if isinstance(sections, list):
+                                        startrow = 0
+                                        worksheet = None
+                                        for title, df in sections:
+                                            df = df.copy()
+                                            # Drop null columns
+                                            df = df.dropna(axis=1, how='all')
+                                            df_rows, df_cols = df.shape
+                                            df_cols = max(df_cols, 1)
+                                            df_startcol = 0
+                                            df_endcol = df_cols - 1
+                                            df.to_excel(writer, sheet_name=sheet_name, startrow=startrow+1, index=False, header=True)
+                                            worksheet = writer.sheets[sheet_name]
+                                            worksheet.merge_range(startrow, df_startcol, startrow, df_endcol, title, writer.book.add_format({
+                                                'bold': True, 'align': 'center', 'valign': 'vcenter', 'bg_color': '#D9E1F2', 'border': 1
+                                            }))
+                                            for i, col in enumerate(df.columns):
+                                                max_len = max(
+                                                    df[col].astype(str).map(len).max() if not df.empty else 0,
+                                                    len(str(col)),
+                                                    15
+                                                )
+                                                worksheet.set_column(i, i, max_len + 2)
+                                            startrow += len(df) + 4
+                                    else:
+                                        df = sections.copy()
+                                        # Drop null columns
+                                        df = df.dropna(axis=1, how='all')
+                                        df.to_excel(writer, sheet_name=sheet_name, index=False)
+                                        worksheet = writer.sheets[sheet_name]
+                                        for i, col in enumerate(df.columns):
+                                            max_len = max(
+                                                df[col].astype(str).map(len).max() if not df.empty else 0,
+                                                len(str(col)),
+                                                15
+                                            )
+                                            worksheet.set_column(i, i, max_len + 2)
+                            st.session_state.excel_buffer = excel_buffer.getvalue()
         
         # Download button (use the saved excel_buffer)
         if "excel_buffer" in st.session_state:
