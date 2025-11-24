@@ -147,10 +147,14 @@ class LLMParser(ABC):
 
         :return: List of dictionaries containing processed data.
         """
+        # Handle both string and list inputs
+        if isinstance(DAS_content, str):
+            DAS_content = [DAS_content]
+        
         self.logger.info(f"Processing DAS_content: {len(DAS_content)} elements of type: {[type(item) for item in DAS_content]}")
         repos_elements = self.repo_names
 
-        DAS_str = "\n".join([item + "\n" for item in DAS_content])
+        DAS_str = "\n\n".join(DAS_content)
 
         # Call the generalized function
         datasets = self.extract_datasets_info_from_content(DAS_str, repos_elements,

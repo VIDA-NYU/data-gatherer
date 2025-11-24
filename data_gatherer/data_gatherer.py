@@ -742,6 +742,7 @@ class DataGatherer:
         headless=True, 
         use_portkey=True, 
         grobid_for_pdf=False,
+        brute_force_RegEx_ID_ptrs=False
         ):
         """
         Processes a list of article URLs and returns parsed data.
@@ -777,6 +778,8 @@ class DataGatherer:
         :param use_portkey: Flag to use Portkey for Gemini LLM.
 
         :param grobid_for_pdf: Flag to indicate if GROBID should be used for PDF processing.
+        
+        :param brute_force_RegEx_ID_ptrs: Flag to indicate if brute force RegEx ID pointers should be used.
 
         :return: Dictionary with URLs as keys and DataFrames of classified data as values.
         """
@@ -806,7 +809,8 @@ class DataGatherer:
                 headless=headless,
                 use_portkey=use_portkey,
                 grobid_for_pdf=grobid_for_pdf,
-                write_htmls_xmls=write_htmls_xmls
+                write_htmls_xmls=write_htmls_xmls,
+                brute_force_RegEx_ID_ptrs=brute_force_RegEx_ID_ptrs
             )
 
             if iteration % log_modulo == 0:

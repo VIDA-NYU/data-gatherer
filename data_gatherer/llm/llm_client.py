@@ -72,13 +72,71 @@ class LLMClient_dev:
             self.logger.debug(f"Initializing direct Gemini client for model: {model}")
             genai.configure(api_key=GEMINI_KEY)
             self.llm_client = genai.GenerativeModel(model)
-            
+        
+        elif model.startswith('local-flan-t5'):
+            self.logger.debug(f"Initializing local Flan-T5 model: {model}")
+            model_path = self._resolve_local_model_path(model)
+            from data_gatherer.llm.local_model_client import LocalModelClient
+            self.llm_client = LocalModelClient(model_path, logger=self.logger)
+            self.llm_client.load_model()
+
         else:
             self.logger.debug(f"Unsupported model: {model}")
             raise ValueError(f"Unsupported LLM name: {model}.")
 
         self.logger.debug(f"Client initialization complete. self.llm_client: {self.llm_client}, self.portkey: {getattr(self, 'portkey', 'Not set')}")
 
+    def _resolve_local_model_path(self, model_name):
+        """
+        Resolve the local model path from the model name.
+        Supports environment variables and relative paths.
+        
+        :param model_name: Model name (e.g., 'local-flan-t5-dataset-extraction')
+        :return: Absolute path to the model directory
+        """
+        import os
+        from pathlib import Path
+        
+        # Check if an environment variable is set for local models
+        env_var_name = "DATA_GATHERER_LOCAL_MODELS_PATH"
+        if env_var_name in os.environ:
+            base_path = Path(os.environ[env_var_name])
+            self.logger.info(f"Using local models base path from environment: {base_path}")
+        else:
+            # Default to scripts/Local_model_finetuning/flan-t5-models/
+            base_path = Path(__file__).parent.parent.parent / "scripts" / "Local_model_finetuning" / "flan-t5-models"
+            self.logger.info(f"Using default local models base path: {base_path}")
+        
+        # Extract the specific model directory name from the model_name
+        # e.g., 'local-flan-t5-dataset-extraction' -> look for 'final_model' or specific checkpoint
+        if "local-flan-t5" in model_name:
+            # Default to final_model directory
+            model_path = base_path / "final_model"
+            
+            # Allow specifying checkpoint in model name, e.g., 'local-flan-t5-checkpoint-1530'
+            if "checkpoint" in model_name:
+                checkpoint_num = model_name.split("checkpoint-")[-1]
+                model_path = base_path / f"checkpoint-{checkpoint_num}"
+        else:
+            # Fallback: use the model name as-is
+            model_path = base_path / model_name.replace("local-", "")
+        
+        if not model_path.exists():
+            self.logger.error(f"Model path does not exist: {model_path}")
+            raise FileNotFoundError(f"Local model not found at {model_path}")
+        
+        self.logger.info(f"Resolved local model path: {model_path}")
+        return str(model_path)
+
+    def _call_local_model(self, messages, temperature=0.0):
+        # Extract content from messages format
+        if isinstance(messages, list):
+            content = messages[-1].get('content', messages[-1])
+        else:
+            content = messages
+        
+        return self.llm_client.generate(content, temperature=temperature)
+    
     def api_call(self, content, response_format, temperature=0.0, **kwargs):
         self.logger.info(f"Calling {self.model} with prompt length {len(content)}")
         if self.model.startswith('gpt'):
@@ -282,6 +340,10 @@ class LLMClient_dev:
                 except Exception as e:
                     self.logger.error(f"Error processing Gemini response: {e}")
                     raise RuntimeError(f"Gemini response processing failed: {e}")
+        
+        elif self.model.startswith('local-flan-t5'):
+            return self._call_local_model(messages, temperature=temperature)
+
         else:
             raise ValueError(f"Unsupported model: {self.model}. Please use a supported LLM model.")
     
@@ -372,6 +434,12 @@ class LLMClient_dev:
                     self.logger.debug(f"Gemini JSON decoding error: {e}")
                     self.logger.error(f"JSON decoding error: {e}")
                     return []
+        
+        elif self.model.startswith('local-flan-t5'):
+            parsed_response = self.safe_parse_json(raw_response)
+            self.logger.debug(f"Processing local Flan-T5 model response: {parsed_response}")
+            return parsed_response
+
         else:
             self.logger.debug(f"Unsupported model: {self.model}")
             raise ValueError(f"Unsupported model: {self.model}. Please use a supported LLM model.")
