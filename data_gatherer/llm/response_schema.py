@@ -17,7 +17,7 @@ dataset_response_schema_gpt_completions = {
                                 "type": "string",
                                 "description": "A unique identifier for the dataset."
                             },
-                            "repository_reference": {
+                            "data_repository": {
                                 "type": "string",
                                 "description": "A valid URI or string referring to the repository."
                             },
@@ -26,7 +26,7 @@ dataset_response_schema_gpt_completions = {
                                 "description": "Why did we select this dataset?"
                             }
                         },
-                        "required": ["dataset_identifier", "repository_reference"]
+                        "required": ["dataset_identifier", "data_repository"]
                     },
                     "minItems": 1,
                     "uniqueItems": True
@@ -51,21 +51,21 @@ dataset_response_schema_gpt = {
                         "dataset_identifier": {
                             "type": "string",
                             "description": "A unique identifier or accession code for the dataset.",
-                            "maxLength": 100
+                            "maxLength": 64
                         },
-                        "repository_reference": {
+                        "data_repository": {
                             "type": "string",
                             "description": "A valid URI or string referring to the repository.",
-                            "maxLength": 200
+                            "maxLength": 128
                         },
                         "dataset_webpage": {
                             "type": "string",
                             "description": "If present the URL of the dataset page, otherwise return 'n/a'.",
-                            "maxLength": 200
+                            "maxLength": 128
                         }
                     },
                     "additionalProperties": False,
-                    "required": ["dataset_identifier", "repository_reference", "dataset_webpage"]
+                    "required": ["dataset_identifier", "data_repository", "dataset_webpage"]
                 },
                 "minItems": 1
             }
@@ -148,6 +148,55 @@ dataset_metadata_response_schema_gpt = {
 }
 
 # Simplified schema focused on dataset provenance and reuse enablement
+dataset_response_schema_with_use_description_and_short = {
+    "type": "json_schema",
+    "name": "PaperMiner_dataset_provenance_schema",
+    "schema": {
+        "type": "object",
+        "properties": {
+            "datasets": {
+                "type": "array",
+                "items": {
+                    "type": "object",
+                    "properties": {
+                        "dataset_identifier": {
+                            "type": "string",
+                            "description": "A unique identifier or accession code for the dataset.",
+                            "maxLength": 64
+                        },
+                        "data_repository": {
+                            "type": "string",
+                            "description": "A valid URI or string referring to the repository where the dataset can be found.",
+                            "maxLength": 128
+                        },
+                        "dataset_context_from_paper": {
+                            "type": "string",
+                            "description": "Relevant text passages from the paper that either describe this dataset and provide context of its use or refer to it more implicitly.",
+                            "maxLength": 1024
+                        },
+                        "dataset_keywords": {
+                            "type": "string",
+                            "description": "Two or three keywords to help user understand if they want to reuse this dataset (about content and scope).",
+                            "maxLength": 128
+                        },
+                        "citation_type": {
+                            "type": "string",
+                            "description": "Type of citation used for this dataset. It can be either Primary (firsthand information collected by the researcher for a specific purpose) or Secondary (pre-existing information collected by someone else and then used by another researcher).",
+                            "maxLength": 16
+                        }
+                    },
+                    "additionalProperties": False,
+                    "required": ["dataset_identifier", "data_repository", "dataset_context_from_paper", "dataset_keywords", "citation_type"]
+                },
+                "minItems": 1,
+                "additionalProperties": False
+            }
+        },
+        "additionalProperties": False,
+        "required": ["datasets"]
+    }
+}
+
 dataset_response_schema_with_use_description = {
     "type": "json_schema",
     "name": "PaperMiner_dataset_provenance_schema",
@@ -163,7 +212,7 @@ dataset_response_schema_with_use_description = {
                             "type": "string",
                             "description": "A unique identifier or accession code for the dataset."
                         },
-                        "repository_reference": {
+                        "data_repository": {
                             "type": "string",
                             "description": "A valid URI or string referring to the repository where the dataset can be found."
                         },
@@ -177,7 +226,7 @@ dataset_response_schema_with_use_description = {
                         }
                     },
                     "additionalProperties": False,
-                    "required": ["dataset_identifier", "repository_reference", "dataset_context_from_paper", "citation_type"]
+                    "required": ["dataset_identifier", "data_repository", "dataset_context_from_paper", "citation_type"]
                 },
                 "minItems": 1,
                 "additionalProperties": False
@@ -204,7 +253,7 @@ dataset_response_schema_with_context = {
                             "type": "string",
                             "description": "A unique identifier or accession code for the dataset."
                         },
-                        "repository_reference": {
+                        "data_repository": {
                             "type": "string",
                             "description": "A valid URI or string referring to the repository."
                         },
@@ -233,7 +282,7 @@ dataset_response_schema_with_context = {
                         }
                     },
                     "additionalProperties": False,
-                    "required": ["dataset_identifier", "repository_reference", "dataset_usage_role", "usage_description", "results_relationship", "decision_rationale", "dataset_scope"]
+                    "required": ["dataset_identifier", "data_repository", "dataset_usage_role", "usage_description", "results_relationship", "decision_rationale", "dataset_scope"]
                 },
                 "minItems": 1,
                 "additionalProperties": False
@@ -247,16 +296,16 @@ dataset_response_schema_with_context = {
 
 class Dataset(BaseModel):
     dataset_identifier: str
-    repository_reference: str
+    data_repository: str
 
 class Dataset_w_Page(BaseModel):
     dataset_identifier: str
-    repository_reference: str
+    data_repository: str
     dataset_webpage: str
 
 class Dataset_w_CitationType(BaseModel):
     dataset_identifier: str
-    repository_reference: str
+    data_repository: str
     citation_type: str
 
 class Array_Dataset_w_CitationType(BaseModel):
@@ -264,7 +313,7 @@ class Array_Dataset_w_CitationType(BaseModel):
 
 class Dataset_w_Description(typing.TypedDict):
     dataset_identifier: str
-    repository_reference: str
+    data_repository: str
     rationale: str
 
 class Dataset_metadata(BaseModel):
@@ -282,17 +331,44 @@ class Dataset_metadata(BaseModel):
 
 class Dataset_w_Use_Description(BaseModel):
     dataset_identifier: str
-    repository_reference: str
+    data_repository: str
     dataset_context_from_paper: str  # Rich description of how this dataset was used in the paper - enables data reuse
 
 
 
 class Dataset_w_Context(BaseModel):
     dataset_identifier: str
-    repository_reference: str
+    data_repository: str
     dataset_usage_role: str  # How the dataset is used: "training_data", "validation_data", "comparison_baseline", "reference_standard", "supplementary_data", "replication_data", "meta_analysis_source", "other"
     usage_description: str  # Brief description of how this dataset was used in the study
     results_relationship: str  # How it relates to findings: "supports_main_findings", "contradicts_previous_work", "provides_context", "enables_methodology", "validates_approach", "other"
     decision_rationale: str  # Why this dataset was selected and its significance
     dataset_scope: str  # Scope of the dataset: "primary_analysis", "secondary_analysis", "background_context", "methodology_development", "comparative_study", "other"
+
+
+# Response schema for supplementary files keywords extraction
+supplementary_files_keywords_schema = {
+    "type": "json_schema",
+    "name": "Supplementary_files_keywords_schema",
+    "schema": {
+        "type": "object",
+        "properties": {
+            "supplementary_file_keywords": {
+                "type": "array",
+                "description": "Array of keyword strings, one for each supplementary file in the same order as input",
+                "items": {
+                    "type": "string",
+                    "description": "3-5 keywords separated by commas describing the file content, data type, and purpose",
+                    "maxLength": 128
+                },
+                "minItems": 1
+            }
+        },
+        "required": ["supplementary_file_keywords"],
+        "additionalProperties": False
+    }
+}
+
+class SupplementaryFileKeywords(BaseModel):
+    supplementary_file_keywords: list[str]
 

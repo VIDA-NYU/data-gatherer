@@ -174,6 +174,98 @@ class LLMParser(ABC):
         self.logger.info(f"Final ret data availability: {ret}")
         return ret
 
+    def extract_supplementary_file_info_from_refs(self, supplementary_files_df):
+        """
+        Process supplementary files using StreamSets-style LLM Complete pattern.
+        Applies a prompt template to each row and writes results to a new column.
+        
+        :param supplementary_files_df: DataFrame with columns: download_link, description, context_description
+        :return: DataFrame with new 'supplementary_file_keywords' column
+        """
+        self.logger.info(f"Processing supplementary_files_df with {len(supplementary_files_df)} entries")
+        
+        if supplementary_files_df.empty:
+            self.logger.info("Empty supplementary files dataframe, returning as is")
+            return supplementary_files_df
+        
+        # Make a copy to avoid modifying the original
+        result_df = supplementary_files_df.copy()
+        
+        # Define prompt template with field placeholders (StreamSets pattern)
+        system_prompt = "You are a scientific data analyst that categorizes supplementary files. Respond with 1-3 keywords separated by commas for each file."
+        
+        # Process all rows in a single batch by building structured input/output mapping
+        batch_prompts = []
+        for idx, row in result_df.iterrows():
+            download_link = row.get('download_link', '')
+            filename = download_link.split('/')[-1] if download_link else f'file_{idx}'
+            description = str(row.get('description', 'n/a'))
+            context_description = str(row.get('context_description', 'n/a'))
+            
+            file_info = f"""File {idx + 1}:
+- Filename: {filename}
+- Description: {description}
+- Context: {context_description}"""
+            
+            batch_prompts.append(file_info)
+        
+        # Create batch request that maintains row order
+        user_prompt = f"""Analyze these {len(batch_prompts)} supplementary files and generate keywords for each.
+Return a JSON object with a "supplementary_file_keywords" array containing {len(batch_prompts)} keyword strings in order.
+
+Files:
+{chr(10).join(batch_prompts)}"""
+        
+        try:
+            self.logger.debug(f"Sending batch request for {len(batch_prompts)} supplementary files")
+            
+            messages = [
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_prompt}
+            ]
+            
+            # Use make_llm_call with the structured response schema
+            response = self.llm_client.make_llm_call(
+                messages=messages, 
+                response_format=supplementary_files_keywords_schema
+            )
+            
+            self.logger.debug(f"Raw LLM response type: {type(response)}")
+            
+            # Process the response using the LLM client's parser
+            response = self.llm_client.process_llm_response(
+                response, 
+                response_format=supplementary_files_keywords_schema,
+                expected_key='supplementary_file_keywords'
+            )
+            
+            self.logger.debug(f"Processed LLM response type: {type(response)}")
+            self.logger.debug(f"Processed LLM response: {response}")
+                        
+            if isinstance(response, list) and len(response) == len(result_df):
+                result_df['supplementary_file_keywords'] = response
+                self.logger.info(f"Successfully generated keywords for {len(response)} supplementary files")
+            elif isinstance(response, dict) and 'supplementary_file_keywords' in response:
+                keywords_list = response['supplementary_file_keywords']
+                if len(keywords_list) == len(result_df):
+                    result_df['supplementary_file_keywords'] = keywords_list
+                    self.logger.info(f"Successfully generated keywords for {len(keywords_list)} supplementary files")
+                else:
+                    self.logger.warning(f"Response length mismatch. Expected {len(result_df)}, got {len(keywords_list)}")
+                    result_df['supplementary_file_keywords'] = result_df['description'].fillna('n/a')
+            else:
+                self.logger.warning(f"Unexpected response format. Type: {type(response)}, Length: {len(response) if hasattr(response, '__len__') else 'N/A'}")
+                self.logger.warning(f"Response content: {response}")
+                result_df['supplementary_file_keywords'] = result_df['description'].fillna('n/a')
+                
+        except Exception as e:
+            self.logger.error(f"Error in batch processing supplementary files: {e}")
+            # Fallback: use original descriptions
+            result_df['supplementary_file_keywords'] = result_df['description'].fillna('n/a')
+        
+        self.logger.info(f"Completed processing {len(result_df)} supplementary files")
+        return result_df
+
     def extract_datasets_info_from_content(self, content: str, repos: list, model: str = 'gpt-4o-mini',
                                            temperature: float = 0.0,
                                            prompt_name: str = 'GPT_FewShot',
@@ -346,7 +438,7 @@ class LLMParser(ABC):
                 # Try to extract valid dictionary items from the list
                 valid_datasets = []
                 for item in dataset:
-                    if isinstance(item, dict) and any(key in item for key in ['dataset_identifier', 'dataset_id', 'data_repository']):
+                    if isinstance(item, dict) and any(key in item for key in ['dataset_identifier', 'data_repository']):
                         valid_datasets.append(item)
                         self.logger.info(f"Found valid dataset in list: {item}")
                 
@@ -355,15 +447,14 @@ class LLMParser(ABC):
                     try:
                         dataset_id, data_repository, dataset_webpage = self.schema_validation(valid_dataset)
                         if dataset_id and data_repository:
-                            dataset_result = {
-                                "dataset_identifier": dataset_id,
-                                "data_repository": data_repository,
-                                "dataset_webpage": dataset_webpage if dataset_webpage is not None else 'n/a',
-                                "citation_type": valid_dataset.get('citation_type', 'n/a')
-                            }
-                            # Preserve dataset_context_from_paper field if present (for PaperMiner enhanced schema)
-                            if 'dataset_context_from_paper' in valid_dataset:
-                                dataset_result['dataset_context_from_paper'] = valid_dataset['dataset_context_from_paper']
+                            # Start with all fields from valid_dataset
+                            dataset_result = valid_dataset.copy()
+                            
+                            # Override the three validated fields
+                            dataset_result["dataset_identifier"] = dataset_id
+                            dataset_result["data_repository"] = data_repository
+                            dataset_result["dataset_webpage"] = dataset_webpage if dataset_webpage is not None else 'n/a'
+                            
                             result.append(dataset_result)
                             self.logger.info(f"Successfully processed dataset from list: {result[-1]}")
                     except Exception as e:
@@ -400,23 +491,13 @@ class LLMParser(ABC):
                 self.logger.info(f"Skipping dataset due to missing ID, repository, dataset page: {dataset}")
                 continue
 
-            result.append({
-                "dataset_identifier": dataset_id,
-                "data_repository": data_repository,
-                "dataset_webpage": dataset_webpage if dataset_webpage is not None else 'n/a',
-                "citation_type": dataset.get('citation_type', 'n/a')
-            })
-
-            if 'decision_rationale' in dataset:
-                result[-1]['decision_rationale'] = dataset['decision_rationale']
-
-            if 'dataset-publication_relationship' in dataset:
-                result[-1]['dataset-publication_relationship'] = dataset['dataset-publication_relationship']
-
-            # Preserve dataset_context_from_paper field if present (for PaperMiner enhanced schema)
-            if 'dataset_context_from_paper' in dataset:
-                result[-1]['dataset_context_from_paper'] = dataset['dataset_context_from_paper']
-
+            dataset_result = dataset.copy() if isinstance(dataset, dict) else {}
+            
+            dataset_result["dataset_identifier"] = dataset_id
+            dataset_result["data_repository"] = data_repository
+            dataset_result["dataset_webpage"] = dataset_webpage if dataset_webpage is not None else 'n/a'
+            
+            result.append(dataset_result)
             self.logger.info(f"Extracted dataset: {result[-1]}")
 
         self.logger.debug(f"Final result: {result}")
@@ -435,7 +516,7 @@ class LLMParser(ABC):
 
         for repo_key, repo_vals in self.open_data_repos_ontology['repos'].items():
             for key, val in dataset.items():
-                if 'dataset_webpage_url_ptr' in repo_vals:
+                if 'dataset_webpage_url_ptr' in repo_vals and type(val) == str:
                     ptr_search = re.sub('__ID__', '', repo_vals['dataset_webpage_url_ptr'])
                     if re.search(ptr_search, val, re.IGNORECASE):
                         self.logger.info(f"Matched dataset_webpage_url_ptr: {repo_vals['dataset_webpage_url_ptr']} to value: {val}")
@@ -444,13 +525,12 @@ class LLMParser(ABC):
                             dataset_webpage = val
                         if data_repository is None:
                             self.logger.info(f"Candidate data_repository: {repo_key}")
-                            data_repository = self.resolve_data_repository(dataset.get('data_repository',
-                                                                        dataset.get('repository_reference', 'n/a')),
-                                                           identifier=dataset.get('dataset_identifier', dataset.get('dataset_id', 'n/a')),
+                            data_repository = self.resolve_data_repository(dataset.get('data_repository', 'n/a'),
+                                                           identifier=dataset.get('dataset_identifier', 'n/a'),
                                                            dataset_page=dataset_webpage,
                                                            candidate_repo=repo_key)
                                                            
-                if 'id_pattern' in repo_vals:
+                if 'id_pattern' in repo_vals and type(val) == str:
                     if re.search(repo_vals['id_pattern'], val, re.IGNORECASE):
                         self.logger.info(f"Matched id_pattern: {repo_vals['id_pattern']} to value: {val}")
                         if val.startswith('http'):
@@ -474,24 +554,20 @@ class LLMParser(ABC):
                                 dataset_id = val
                             if data_repository is None:
                                 self.logger.info(f"Candidate data_repository: {repo_key}")
-                                data_repository = self.resolve_data_repository(dataset.get('data_repository',
-                                                                        dataset.get('repository_reference', 'n/a')),
-                                                           identifier=dataset.get('dataset_identifier', dataset.get('dataset_id', 'n/a')),
+                                data_repository = self.resolve_data_repository(dataset.get('data_repository', 'n/a'),
+                                                           identifier=dataset.get('dataset_identifier', 'n/a'),
                                                            dataset_page=dataset_webpage,
                                                            candidate_repo=repo_key)
 
         self.logger.info(f"Schema validation vals: {dataset_id}, {data_repository}, {dataset_webpage}")
 
         if dataset_id is None:
-            dataset_id = self.validate_dataset_id(dataset.get('dataset_identifier', dataset.get('dataset_id', 'n/a')))
-            if isinstance(dataset_id, list):
-                self.logger.info(f"{dataset.get('dataset_identifier', dataset.get('dataset_id', 'n/a'))} detected as range of IDs")
+            dataset_id = self.validate_dataset_id(dataset.get('dataset_identifier', 'n/a'))
         else:
             self.logger.info(f"Dataset ID found via pattern matching: {dataset_id}")
 
         if data_repository is None:
-            data_repository = self.resolve_data_repository(dataset.get('data_repository',
-                                                                        dataset.get('repository_reference', 'n/a')),
+            data_repository = self.resolve_data_repository(dataset.get('data_repository','n/a'),
                                                            identifier=dataset_id,
                                                            dataset_page=dataset_webpage)
         else:
@@ -557,13 +633,13 @@ class LLMParser(ABC):
                 deduped.append(item)
                 continue
             
-            dataset_id = item.get("dataset_identifier", item.get("dataset_id", ""))
+            dataset_id = item.get("dataset_identifier", "n/a")
             self.logger.debug(f"Extracted dataset_id: {dataset_id}")
             if not dataset_id:
                 self.logger.debug(f"Skipping item with missing dataset_id: {item}")
                 self.logger.warning(f"Skipping item with missing dataset_id: {item}")
                 continue
-            repo = item.get("data_repository", item.get("repository_reference", "n/a"))
+            repo = item.get("data_repository", "n/a")
             self.logger.debug(f"Extracted repo: {repo}")
 
             # Normalize: remove DOI prefix if it matches '10.x/PXD123456'
@@ -571,8 +647,8 @@ class LLMParser(ABC):
             self.logger.debug(f"Normalized clean_id: {clean_id}")
 
             if clean_id not in seen:
-                # Update the dataset_id to the normalized version
-                item["dataset_id"] = clean_id
+                # Update the dataset_identifier to the normalized version
+                item["dataset_identifier"] = clean_id
                 self.logger.debug(f"Adding unique item: {clean_id}")
                 self.logger.info(f"Adding unique item: {clean_id}")
                 deduped.append(item)
@@ -812,6 +888,8 @@ class LLMParser(ABC):
         id_patterns = []
         for k, v in self.open_data_repos_ontology['repos'].items():
             if 'id_pattern' in v.keys():
+                if k in ['zenodo.org']: # avoid adding generic patterns (7 digits can also be something other than a dataset. identifier)
+                    continue
                 id_patterns.append(v['id_pattern'])
         self.logger.info(f"# of defined dataset ID patterns: {len(id_patterns)}")
         self.logger.debug(f"All ID patterns: {id_patterns}")
@@ -1116,8 +1194,8 @@ class LLMParser(ABC):
             self.logger.info(f"Processing dataset {1 + i} - missing or invalid webpage")
 
             # Get required fields
-            repo = item.get('data_repository', item.get('repository_reference', None))
-            accession_id = item.get('dataset_identifier', item.get('dataset_id', 'n/a'))
+            repo = item.get('data_repository', 'n/a')
+            accession_id = item.get('dataset_identifier', 'n/a')
             
             if repo is None or repo == 'n/a' or accession_id == 'n/a':
                 self.logger.info(f"Skipping dataset {1 + i}: missing repo ({repo}) or accession_id ({accession_id})")
@@ -1148,7 +1226,7 @@ class LLMParser(ABC):
             # Add access mode
             self._add_access_mode_if_missing(item, i)
 
-        self.logger.info(f"Dataset enhancement completed: {len(datasets)} datasets processed")
+        self.logger.info(f"Dataset enhancement completed: {type(datasets)}, {len(datasets)} datasets processed")
         return datasets
 
     def _construct_dataset_webpage(self, repo, accession_id, existing_webpage):
@@ -1186,7 +1264,7 @@ class LLMParser(ABC):
     def _add_access_mode_if_missing(self, item, index):
         """Helper method to add access_mode if missing."""
         if 'access_mode' not in item:
-            repo = item.get('data_repository', item.get('repository_reference', None))
+            repo = item.get('data_repository', None)
             if repo and repo in self.open_data_repos_ontology['repos']:
                 repo_config = self.open_data_repos_ontology['repos'][repo]
                 if 'access_mode' in repo_config:
@@ -1391,18 +1469,18 @@ class LLMParser(ABC):
             corpus = self.from_sections_to_corpus(all_sections, max_tokens=max_tokens, skip_rule_based_retrieved_elm=skip_rule_based_retrieved_elm)
             top_k_sections = self.semantic_retrieve_from_corpus(corpus, topk_docs_to_retrieve=top_k, src=article_id)
             top_k_sections_text = [item['text'] for item in top_k_sections if item['text'] not in ret_lst]
-            ret_lst.extend(top_k_sections_text)
+            ret_lst.extend(top_k_sections_text)  # Use extend() instead of append() to add individual strings
         
         if include_snippets_with_ID_patterns:
             docs_matching_id_ptr = [item for item in corpus if item.get('contains_id_pattern', False)]
             self.logger.info(f"Number of documents matching ID patterns: {len(docs_matching_id_ptr)}")
-            ret_lst.extend([item['text'] for item in docs_matching_id_ptr if item['text'] not in ret_lst])
+            ret_lst.extend([item['text'] for item in docs_matching_id_ptr if item['text'] not in ret_lst])  # Use extend() instead of append()
         
         self.logger.debug(f"Prepare output as {output_format}")
         # Before passing this to an LLM check the attributes of the source obj we are puttin in data_availability_cont.
         # I mean at the previuous level (before filtering text only)
         if output_format == 'text':
-            normalized_input = "\n\n".join(ret_lst)
+            normalized_input = "".join(ret_lst)
         elif output_format == 'json':
             normalized_input = data_avail_cont + top_k_sections + docs_matching_id_ptr
         else:

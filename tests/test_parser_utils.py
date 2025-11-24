@@ -312,7 +312,7 @@ def test_safe_parse_json(get_test_data_path):
     logger = setup_logging("test_logger", log_file="logs/tests.log")
     parser = XMLParser("open_bio_data_repos.json", logger, llm_name='gemini-2.0-flash')
     malformed_json = """
-    {"datasets":[{"dataset_identifier":"GSE39582","repository_reference":"https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE39582"},{"dataset_identifier":"GSE13067","repository_reference":"https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE13067"},{"dataset_identifier":"GSE13294","repository_reference":"https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE13294"},{"dataset_identifier":"GSE14333","repository_reference":"https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE14333"},{"dataset_identifier":"GSE17536","repository_reference":"https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE17536"},{"dataset_identifier":"GSE33113","repository_reference":"https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE33113"},{"dataset_identifier":"GSE37892","repository_reference":"https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE37892"},{"dataset_identifier":"GSE38832","repository_reference":"https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE38832"},{"dataset_identifier":"PRJEB23709","repository_reference":"https://www.ncbi.nlm.nih.gov/bioproject/PRJEB23709"},{"dataset_identifier":"GSE103479","repository_reference":"https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE103479"},{"
+    {"datasets":[{"dataset_identifier":"GSE39582","data_repository":"https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE39582"},{"dataset_identifier":"GSE13067","data_repository":"https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE13067"},{"dataset_identifier":"GSE13294","data_repository":"https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE13294"},{"dataset_identifier":"GSE14333","data_repository":"https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE14333"},{"dataset_identifier":"GSE17536","data_repository":"https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE17536"},{"dataset_identifier":"GSE33113","data_repository":"https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE33113"},{"dataset_identifier":"GSE37892","data_repository":"https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE37892"},{"dataset_identifier":"GSE38832","data_repository":"https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE38832"},{"dataset_identifier":"PRJEB23709","data_repository":"https://www.ncbi.nlm.nih.gov/bioproject/PRJEB23709"},{"dataset_identifier":"GSE103479","data_repository":"https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE103479"},{"
     """
     parsed_data = parser.llm_client.safe_parse_json(malformed_json)
     dada = parsed_data["datasets"]
@@ -352,20 +352,20 @@ def test_schema_validation(get_test_data_path):
     logger = setup_logging("test_logger", log_file="logs/tests.log", level=logging.INFO)
     parser = XMLParser("data_repos_ontology.json", logger, llm_name='gemini-2.0-flash')
     test_cases = [
-        {'dataset_id': 'https://doi.org/10.1594/PANGAEA.964081', 'repository_reference': 'PANGAEA'},
-        {'dataset_id': 'https://doi.org/10.17632/xtb4mkvf8f.1', 'repository_reference': 'data.mendeley.com'},
-        {'dataset_id': 'MSV000081006', 'repository_reference': 'massive.ucsd.edu'}, 
-        {'dataset_id': '10.7937/tcia.2019.30ilqfcl', 'repository_reference': 'cancerimagingarchive.net'},
-        {'dataset_identifier': 'syn9702085', 'repository_reference': 'https://www.synapse.org/#!Synapse:syn9702085', 'dataset_id': 'syn9702085'},
-        {'dataset_identifier': 'M27187', 'repository_reference': 'https://www.ncbi.nlm.nih.gov/nuccore/M27187', 'dataset_id': 'M27187'}
+        {'dataset_identifier': 'https://doi.org/10.1594/PANGAEA.964081', 'data_repository': 'PANGAEA'},
+        {'dataset_identifier': 'https://doi.org/10.17632/xtb4mkvf8f.1', 'data_repository': 'data.mendeley.com'},
+        {'dataset_identifier': 'MSV000081006', 'data_repository': 'massive.ucsd.edu'}, 
+        {'dataset_identifier': '10.7937/tcia.2019.30ilqfcl', 'data_repository': 'cancerimagingarchive.net'},
+        {'dataset_identifier': 'syn9702085', 'data_repository': 'https://www.synapse.org/#!Synapse:syn9702085'},
+        {'dataset_identifier': 'M27187', 'data_repository': 'https://www.ncbi.nlm.nih.gov/nuccore/M27187'}
     ]
     ret_cases = [  # change these when adding support for new repos
-        {'dataset_identifier': '10.1594/PANGAEA.964081', 'repository_reference': 'doi.org/10.1594', 'dataset_webpage': 'https://doi.pangaea.de/10.1594/PANGAEA.964081'}, 
-        {'dataset_identifier': '10.17632/xtb4mkvf8f.1', 'repository_reference': 'data.mendeley.com', 'dataset_webpage': 'https://data.mendeley.com/datasets/xtb4mkvf8f/1'},
-        {'dataset_identifier': 'MSV000081006', 'repository_reference': 'massive.ucsd.edu'},
-        {'dataset_identifier': '10.7937/tcia.2019.30ilqfcl', 'repository_reference': 'cancerimagingarchive.net', 'dataset_webpage': 'https://www.cancerimagingarchive.net/collection/acrin-nsclc-fdg-pet/'},
-        {'dataset_identifier': 'syn9702085', 'repository_reference': 'synapse.org', 'dataset_webpage': 'https://www.synapse.org/#!Synapse:syn9702085'},
-        {'dataset_identifier': 'M27187', 'repository_reference': 'www.ncbi.nlm.nih.gov', 'dataset_webpage': 'https://www.ncbi.nlm.nih.gov/nuccore/M27187'}
+        {'dataset_identifier': '10.1594/PANGAEA.964081', 'data_repository': 'doi.org/10.1594', 'dataset_webpage': 'https://doi.pangaea.de/10.1594/PANGAEA.964081'}, 
+        {'dataset_identifier': '10.17632/xtb4mkvf8f.1', 'data_repository': 'data.mendeley.com', 'dataset_webpage': 'https://data.mendeley.com/datasets/xtb4mkvf8f/1'},
+        {'dataset_identifier': 'MSV000081006', 'data_repository': 'massive.ucsd.edu'},
+        {'dataset_identifier': '10.7937/tcia.2019.30ilqfcl', 'data_repository': 'cancerimagingarchive.net', 'dataset_webpage': 'https://www.cancerimagingarchive.net/collection/acrin-nsclc-fdg-pet/'},
+        {'dataset_identifier': 'syn9702085', 'data_repository': 'synapse.org', 'dataset_webpage': 'https://www.synapse.org/#!Synapse:syn9702085'},
+        {'dataset_identifier': 'M27187', 'data_repository': 'www.ncbi.nlm.nih.gov', 'dataset_webpage': 'https://www.ncbi.nlm.nih.gov/nuccore/M27187'}
     ]
     for obj,ret in zip(test_cases, ret_cases):
         dataset_id_val, data_repo_val, dataset_webpage_val = parser.schema_validation(obj, req_timeout=5)
@@ -374,7 +374,7 @@ def test_schema_validation(get_test_data_path):
         assert isinstance(data_repo_val, str)
         assert isinstance(dataset_webpage_val, str) or dataset_webpage_val is None
         assert dataset_id_val == ret['dataset_identifier']
-        assert data_repo_val.lower() == ret['repository_reference'].lower()
+        assert data_repo_val.lower() == ret['data_repository'].lower()
         assert dataset_webpage_val == ret['dataset_webpage'] if 'dataset_webpage' in ret else dataset_webpage_val is None
         print('\n')
         
@@ -403,3 +403,31 @@ def test_dataset_id_as_range():
 
     assert isinstance(ret, list)
     assert len(ret) == 7
+
+def test_schema_org_metadata_extract(get_test_data_path):
+    logger = setup_logging("test_logger", log_file="logs/scraper.log", level=logging.DEBUG)
+    parser = HTMLParser("open_bio_data_repos.json", logger, llm_name='gemini-2.0-flash')
+    with open(get_test_data_path('metadata_schema_org.html'), 'rb') as f:
+        raw_html = f.read()
+    schema_org_metadata = parser.normalize_schema_org_metadata(raw_html)
+    print(f"schema_org_metadata: \n\n{schema_org_metadata}\n\n")
+
+    assert isinstance(schema_org_metadata, dict)
+    assert schema_org_metadata['@context'] == 'https://schema.org'
+    assert 'Dataset' in str(schema_org_metadata['@type'])
+    
+    assert schema_org_metadata['name'] == 'Single cell analysis of human mesenchymal stem cells'
+    assert 'RDS files' in schema_org_metadata['description']
+    assert 'zenodo.org/records/8026174' in schema_org_metadata['url']
+    
+    assert isinstance(schema_org_metadata['creator'], list)
+    assert schema_org_metadata['creator'][0]['name'] == 'Yuchen Gao'
+    assert schema_org_metadata['publisher']['name'] == 'Zenodo'
+    
+    assert schema_org_metadata['datePublished'] == '2023-06-14'
+    assert 'creativecommons.org/licenses/by/4.0' in schema_org_metadata['license']
+    
+    assert len(schema_org_metadata['distribution']) == 6
+    assert schema_org_metadata['distribution'][0]['@type'] == 'DataDownload'
+
+

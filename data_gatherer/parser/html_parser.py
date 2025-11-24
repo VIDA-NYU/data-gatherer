@@ -2,6 +2,7 @@ from data_gatherer.parser.base_parser import *
 from data_gatherer.retriever.html_retriever import htmlRetriever
 from data_gatherer.llm.response_schema import *
 import regex as re
+import json
 import logging
 import pandas as pd
 from bs4 import BeautifulSoup, Comment, NavigableString, CData
@@ -1133,3 +1134,269 @@ class HTMLParser(LLMParser):
                 citation_obj["external_links"] = links
                 citations.append(citation_obj)
         return citations
+
+    def _is_dataset_type(self, type_value):
+        """
+        Check if a @type value represents a Dataset.
+        Handles both short form ("Dataset") and full URL form ("https://schema.org/Dataset").
+        
+        :param type_value: The @type value from JSON-LD (can be string, list, or None)
+        :return: bool — True if it's a Dataset type
+        """
+        if not type_value:
+            return False
+        
+        # Handle list of types
+        if isinstance(type_value, list):
+            return any(self._is_dataset_type(t) for t in type_value)
+        
+        # Handle string types
+        if isinstance(type_value, str):
+            # Check for both short and full URL forms
+            return type_value == "Dataset" or type_value.endswith("/Dataset") or type_value.endswith("#Dataset")
+        
+        return False
+
+    def normalize_schema_org_metadata(self, html_str):
+        """
+        Given as input the html of the schema.org validator, extract metadata from the dataset page 
+        normalized based on the schema.org dataset schema standards.
+        
+        Extracts JSON-LD, Microdata, and RDFa structured data and normalizes it to a standard format.
+        
+        :param html_str: str — raw HTML content containing Schema.org markup
+        :return: dict — normalized metadata following Schema.org Dataset schema, or None if no data found
+        """
+        
+        self.logger.info("Extracting and normalizing Schema.org metadata from HTML")
+        self.logger.debug(f"HTML input length: {len(html_str)} characters")
+        soup = BeautifulSoup(html_str, "html.parser")
+        
+        normalized_data = {
+            "@context": "https://schema.org",
+            "@type": "Dataset",
+            "name": None,
+            "description": None,
+            "url": None,
+            "identifier": None,
+            "creator": None,
+            "publisher": None,
+            "datePublished": None,
+            "dateModified": None,
+            "license": None,
+            "keywords": [],
+            "distribution": [],
+            "citation": [],
+            "version": None,
+            "isAccessibleForFree": None,
+        }
+        
+        # 1. Try to extract JSON-LD structured data (most common for Schema.org)
+        json_ld_scripts = soup.find_all("script", type="application/ld+json")
+        self.logger.debug(f"Found {len(json_ld_scripts)} JSON-LD script tags")
+        
+        for idx, script in enumerate(json_ld_scripts):
+            self.logger.debug(f"Processing JSON-LD script #{idx + 1}")
+            try:
+                data = json.loads(script.string)
+                self.logger.debug(f"JSON-LD script #{idx + 1} type: {type(data)}")
+                
+                # Handle both single objects and arrays of objects
+                if isinstance(data, list):
+                    self.logger.debug(f"JSON-LD is a list with {len(data)} items")
+                    # Check for Dataset type (handle both short and full URL formats)
+                    datasets = [d for d in data if self._is_dataset_type(d.get("@type"))]
+                    self.logger.debug(f"Found {len(datasets)} Dataset objects in list")
+                    if datasets:
+                        data = datasets[0]
+                        self.logger.debug(f"Using first Dataset object")
+                    else:
+                        self.logger.debug(f"No Dataset objects found in list, skipping")
+                        continue
+                
+                # Check if this is a Dataset (handle both "Dataset" and "https://schema.org/Dataset")
+                if isinstance(data, dict) and self._is_dataset_type(data.get("@type")):
+                    self.logger.info("Found JSON-LD Dataset schema")
+                    self.logger.debug(f"JSON-LD Dataset keys: {list(data.keys())}")
+                    
+                    # Extract and normalize fields
+                    normalized_data["name"] = data.get("name")
+                    self.logger.debug(f"Extracted name: {normalized_data['name']}")
+                    
+                    normalized_data["description"] = data.get("description")
+                    self.logger.debug(f"Extracted description: {normalized_data['description'][:100] if normalized_data['description'] else None}...")
+                    
+                    normalized_data["url"] = data.get("url")
+                    self.logger.debug(f"Extracted url: {normalized_data['url']}")
+                    
+                    normalized_data["identifier"] = data.get("identifier")
+                    self.logger.debug(f"Extracted identifier: {normalized_data['identifier']}")
+                    
+                    # Handle creator (can be string, object, or array)
+                    creator = data.get("creator")
+                    if creator:
+                        self.logger.debug(f"Extracted creator (type: {type(creator)}): {creator}")
+                        normalized_data["creator"] = self._normalize_person_org(creator)
+                    else:
+                        self.logger.debug("No creator found in JSON-LD")
+                    
+                    # Handle publisher
+                    publisher = data.get("publisher")
+                    if publisher:
+                        self.logger.debug(f"Extracted publisher (type: {type(publisher)}): {publisher}")
+                        normalized_data["publisher"] = self._normalize_person_org(publisher)
+                    else:
+                        self.logger.debug("No publisher found in JSON-LD")
+                    
+                    normalized_data["datePublished"] = data.get("datePublished")
+                    self.logger.debug(f"Extracted datePublished: {normalized_data['datePublished']}")
+                    
+                    normalized_data["dateModified"] = data.get("dateModified")
+                    self.logger.debug(f"Extracted dateModified: {normalized_data['dateModified']}")
+                    
+                    normalized_data["license"] = data.get("license")
+                    self.logger.debug(f"Extracted license: {normalized_data['license']}")
+                    
+                    normalized_data["version"] = data.get("version")
+                    self.logger.debug(f"Extracted version: {normalized_data['version']}")
+                    
+                    normalized_data["isAccessibleForFree"] = data.get("isAccessibleForFree")
+                    self.logger.debug(f"Extracted isAccessibleForFree: {normalized_data['isAccessibleForFree']}")
+                    
+                    # Handle keywords (can be string or array)
+                    keywords = data.get("keywords", [])
+                    self.logger.debug(f"Extracted keywords (type: {type(keywords)}): {keywords}")
+                    if isinstance(keywords, str):
+                        normalized_data["keywords"] = [kw.strip() for kw in keywords.split(",")]
+                    elif isinstance(keywords, list):
+                        normalized_data["keywords"] = keywords
+                    
+                    # Handle distribution
+                    distribution = data.get("distribution", [])
+                    self.logger.debug(f"Extracted distribution (type: {type(distribution)}, count: {len(distribution) if isinstance(distribution, list) else 1})")
+                    if isinstance(distribution, dict):
+                        distribution = [distribution]
+                    normalized_data["distribution"] = distribution
+                    
+                    # Handle citation
+                    citation = data.get("citation", [])
+                    self.logger.debug(f"Extracted citation (type: {type(citation)}, count: {len(citation) if isinstance(citation, list) else 1})")
+                    if isinstance(citation, (str, dict)):
+                        citation = [citation]
+                    normalized_data["citation"] = citation
+                    
+                    self.logger.info(f"✓ Successfully extracted JSON-LD metadata for dataset: {normalized_data.get('name', 'Unknown')}")
+                    self.logger.info(f"✓ Description length: {len(normalized_data.get('description', '')) if normalized_data.get('description') else 0} characters")
+                    return normalized_data
+                else:
+                    actual_type = data.get('@type') if isinstance(data, dict) else 'not a dict'
+                    self.logger.debug(f"JSON-LD script #{idx + 1} is not a Dataset (type: {actual_type})")
+                    self.logger.debug(f"Available keys: {list(data.keys()) if isinstance(data, dict) else 'N/A'}")
+                    
+            except json.JSONDecodeError as e:
+                self.logger.warning(f"Failed to parse JSON-LD script #{idx + 1}: {e}")
+                self.logger.debug(f"Problematic JSON content (first 200 chars): {script.string[:200] if script.string else 'None'}")
+                continue
+        
+        self.logger.debug("No JSON-LD Dataset found, trying Microdata...")
+        
+        # 2. Try to extract Microdata (fallback)
+        dataset_items = soup.find_all(attrs={"itemtype": re.compile(r"schema\.org/Dataset", re.IGNORECASE)})
+        self.logger.debug(f"Found {len(dataset_items)} Microdata Dataset items")
+        
+        if dataset_items:
+            self.logger.info("Found Microdata Dataset schema")
+            item = dataset_items[0]
+            
+            # Extract name
+            name_prop = item.find(attrs={"itemprop": "name"})
+            if name_prop:
+                normalized_data["name"] = name_prop.get_text(strip=True)
+                self.logger.debug(f"Microdata extracted name: {normalized_data['name']}")
+            else:
+                self.logger.debug("No 'name' itemprop found in Microdata")
+            
+            # Extract description
+            desc_prop = item.find(attrs={"itemprop": "description"})
+            if desc_prop:
+                normalized_data["description"] = desc_prop.get_text(strip=True)
+                self.logger.debug(f"Microdata extracted description: {normalized_data['description'][:100]}...")
+            else:
+                self.logger.debug("No 'description' itemprop found in Microdata")
+            
+            # Extract URL
+            url_prop = item.find(attrs={"itemprop": "url"})
+            if url_prop:
+                normalized_data["url"] = url_prop.get("href") or url_prop.get_text(strip=True)
+                self.logger.debug(f"Microdata extracted url: {normalized_data['url']}")
+            else:
+                self.logger.debug("No 'url' itemprop found in Microdata")
+            
+            # Extract identifier
+            id_prop = item.find(attrs={"itemprop": "identifier"})
+            if id_prop:
+                normalized_data["identifier"] = id_prop.get_text(strip=True)
+                self.logger.debug(f"Microdata extracted identifier: {normalized_data['identifier']}")
+            else:
+                self.logger.debug("No 'identifier' itemprop found in Microdata")
+            
+            # Extract keywords
+            keyword_props = item.find_all(attrs={"itemprop": "keywords"})
+            keywords = [kw.get_text(strip=True) for kw in keyword_props]
+            normalized_data["keywords"] = keywords
+            self.logger.debug(f"Microdata extracted {len(keywords)} keywords")
+            
+            self.logger.info(f"✓ Successfully extracted Microdata for dataset: {normalized_data.get('name', 'Unknown')}")
+            self.logger.info(f"✓ Description length: {len(normalized_data.get('description', '')) if normalized_data.get('description') else 0} characters")
+            return normalized_data
+        
+        self.logger.debug("No Microdata Dataset found, trying meta tags...")
+        
+        # 3. Try to extract from meta tags (minimal fallback)
+        meta_name = soup.find("meta", attrs={"name": re.compile(r"dc\.title|citation_title", re.IGNORECASE)})
+        if meta_name:
+            normalized_data["name"] = meta_name.get("content")
+            self.logger.info(f"Extracted dataset name from meta tags: {normalized_data['name']}")
+            self.logger.warning("Only extracted name from meta tags - no description available")
+            return normalized_data
+        
+        self.logger.warning("❌ No Schema.org Dataset metadata found in HTML (tried JSON-LD, Microdata, and meta tags)")
+        return None
+    
+    def _normalize_person_org(self, entity):
+        """
+        Helper method to normalize Person or Organization entities from Schema.org data.
+        
+        :param entity: dict, str, or list — creator or publisher data
+        :return: normalized entity data
+        """
+        if isinstance(entity, str):
+            return {"name": entity}
+        elif isinstance(entity, dict):
+            return {
+                "@type": entity.get("@type", "Person"),
+                "name": entity.get("name"),
+                "url": entity.get("url"),
+                "identifier": entity.get("identifier"),
+            }
+        elif isinstance(entity, list):
+            return [self._normalize_person_org(e) for e in entity]
+        return None
+
+    def extract_normalized_dataset_urls(self, row):
+        self.logger.info("Extracting normalized dataset URL from row data")
+
+        download_link = str(row.get('download_link', None))
+        dataset_webpage = str(row.get('dataset_webpage', None))
+
+        if download_link and download_link not in ['nan', 'None', '', 'n/a', 'NaN', 'na']:
+            self.logger.debug(f"Using download link as dataset URL: {download_link}")
+        else:
+            download_link = None
+
+        if dataset_webpage and dataset_webpage not in ['nan', 'None', '', 'n/a', 'NaN', 'na']:
+            self.logger.debug(f"Using dataset webpage as dataset URL: {dataset_webpage}")
+        else:
+            dataset_webpage = None
+
+        return dataset_webpage, download_link
