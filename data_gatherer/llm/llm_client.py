@@ -542,31 +542,56 @@ class LLMClient_dev:
         except json.JSONDecodeError:
             self.logger.warning(f"Initial JSON parsing failed. Attempting json_repair on {response_text[:100]}...")
             try:
+                fixed = False
                 # Pre-process common malformed patterns before json_repair
                 repaired = response_text
+
+                # Check if we have the T5 duplicate key pattern
+                if '"dataset_identifier"' in repaired and repaired.count('"dataset_identifier"') > 1 and 't5' in self.model:
+                    self.logger.info("Detected T5 duplicate key pattern, attempting to split into array of objects...")
+                    
+                    pairs_pattern = r'"(dataset_identifier|repository_reference|data_repository|dataset_webpage)"\s*:\s*"([^"]*)"'
+                    matches = re.findall(pairs_pattern, repaired)
+                    
+                    if matches:
+                        # Group pairs into objects (every 2-4 pairs = 1 object)
+                        objects = []
+                        current_obj = {}
+                        
+                        for key, value in matches:
+                            if key == 'dataset_identifier' and 'dataset_identifier' in current_obj:
+                                objects.append(current_obj)
+                                current_obj = {}
+                            current_obj[key] = value
+                        
+                        if current_obj:
+                            objects.append(current_obj)
+                        
+                        if objects:
+                            # Ensure proper JSON list format with outer braces
+                            repaired = json.dumps(objects)
+                            self.logger.info(f"Reconstructed {len(objects)} objects from T5 output: {repaired[:200]}")
+                            fixed = True
                 
-                # Fix the specific pattern we're seeing: arrays using [ instead of { for objects
-                # Pattern: [ [ "key": "value", "key2": "value2", ... ], [...] ]
-                # Should be: [ { "key": "value", "key2": "value2", ... }, {...} ]
-                
-                # Replace array brackets with object braces when they contain key-value pairs
-                def fix_malformed_objects(match):
-                    content = match.group(1)
-                    # If content has key-value pairs, wrap in object braces
-                    if '"' in content and ':' in content:
-                        return '{' + content + '}'
-                    return '[' + content + ']'  # Keep as array if no key-value pairs
-                
-                # Find nested arrays that should be objects
-                repaired = re.sub(r'\[\s*([^[\]]*"[^"]*"\s*:\s*"[^"]*"[^[\]]*)\s*\]', fix_malformed_objects, repaired)
-                
-                self.logger.info(f"After malformed pattern fix: {repaired[:200]}...")
-                
-                # Use json_repair
-                repaired = repair_json(repaired)
-                
-                # Clean up artifacts
-                repaired = re.sub(r',\s*\{\}\]', ']', repaired)  # Remove trailing empty objects in lists
+                if not fixed:
+                    # Replace array brackets with object braces when they contain key-value pairs
+                    def fix_malformed_objects(match):
+                        content = match.group(1)
+                        # If content has key-value pairs, wrap in object braces
+                        if '"' in content and ':' in content:
+                            return '{' + content + '}'
+                        return '[' + content + ']'  # Keep as array if no key-value pairs
+                    
+                    # Find nested arrays that should be objects
+                    repaired = re.sub(r'\[\s*([^[\]]*"[^"]*"\s*:\s*"[^"]*"[^[\]]*)\s*\]', fix_malformed_objects, repaired)
+                    
+                    self.logger.info(f"After malformed pattern fix: {repaired[:200]}...")
+                    
+                    # Use json_repair
+                    repaired = repair_json(repaired)
+                    
+                    # Clean up artifacts
+                    repaired = re.sub(r',\s*\{\}\]', ']', repaired)  # Remove trailing empty objects in lists
                 
                 parsed = json.loads(repaired)
                 self.logger.info(f"Successfully parsed after repair: {type(parsed)} with {len(parsed) if hasattr(parsed, '__len__') else 'N/A'} items")

@@ -279,7 +279,7 @@ class XMLParser(LLMParser):
             chunks_created = []
             self.logger.debug(f"Starting chunk creation for section '{section_title}'")
             for p_idx, paragraph in enumerate(section_paragraphs):
-                self.logger.info(f"Processing paragraph {p_idx + 1}/{len(section_paragraphs)} in section '{section_title}', type: {type(paragraph)}")
+                self.logger.debug(f"Processing paragraph {p_idx + 1}/{len(section_paragraphs)} in section '{section_title}', type: {type(paragraph)}")
                 
                 try:
                     if hasattr(paragraph, 'itertext'):
@@ -322,7 +322,8 @@ class XMLParser(LLMParser):
                     self.logger.debug(f"chunks_created now has {len(chunks_created)} items")
 
             corpus_documents.extend(chunks_created)
-            self.logger.info(f"Section '{section_title}' split into {len(chunks_created)} chunks from {len(section_paragraphs)} paragraphs")
+            diff_chunk = len(chunks_created) != len(section_paragraphs)
+            self.logger.info(f"Section '{section_title}' split into {len(chunks_created)} chunks from {len(section_paragraphs)} paragraphs") if diff_chunk else None
         
         # Remove duplicates based on normalized text content and merge section titles
         self.logger.info(f"Pre-deduplication: {len(corpus_documents)} corpus documents")
@@ -454,6 +455,7 @@ class XMLParser(LLMParser):
 
             if not self.full_document_read:
                 if filter_das is None or filter_das:
+                    output_fmt = 'list' if 'local' in self.llm_name.lower() else 'text'
                     data_availability_cont = self.retrieve_relevant_content(
                                 api_data,
                                 semantic_retrieval=semantic_retrieval,
@@ -461,10 +463,18 @@ class XMLParser(LLMParser):
                                 article_id=article_id,
                                 skip_rule_based_retrieved_elm=dedup,
                                 include_snippets_with_ID_patterns=brute_force_RegEx_ID_ptrs,
-                                output_format='text'
+                                output_format=output_fmt
                             )
+                    
+                    augmented_dataset_links = []
+                    if isinstance(data_availability_cont, list):
+                        for das_content in data_availability_cont:
+                            augmented_dataset_links.extend(self.extract_datasets_info_from_content(
+                                das_content, self.open_data_repos_ontology['repos'], model=self.llm_name,
+                                temperature=0, prompt_name=prompt_name, response_format=response_format))
 
-                    augmented_dataset_links = self.process_data_availability_text(data_availability_cont,
+                    else:
+                        augmented_dataset_links = self.process_data_availability_text(data_availability_cont,
                                                                                   prompt_name=prompt_name,
                                                                                   response_format=response_format)
 
@@ -1333,6 +1343,7 @@ class TEI_XMLParser(XMLParser):
 
             if not self.full_document_read:
                 if filter_das is None or filter_das:
+                    output_fmt = 'list' if 'local' in self.llm_name.lower() else 'text'
                     data_availability_cont = self.retrieve_relevant_content(
                                 api_data,
                                 semantic_retrieval=semantic_retrieval,
@@ -1340,10 +1351,18 @@ class TEI_XMLParser(XMLParser):
                                 article_id=article_id,
                                 skip_rule_based_retrieved_elm=dedup,
                                 include_snippets_with_ID_patterns=brute_force_RegEx_ID_ptrs,
-                                output_format='text'
+                                output_format=output_fmt
                             )
+                    
+                    augmented_dataset_links = []
+                    if isinstance(data_availability_cont, list):
+                        for das_content in data_availability_cont:
+                            augmented_dataset_links.extend(self.extract_datasets_info_from_content(
+                                das_content, self.open_data_repos_ontology['repos'], model=self.llm_name,
+                                temperature=0, prompt_name=prompt_name, response_format=response_format))
 
-                    augmented_dataset_links = self.process_data_availability_text(data_availability_cont,
+                    else:
+                        augmented_dataset_links = self.process_data_availability_text(data_availability_cont,
                                                                                   prompt_name=prompt_name,
                                                                                   response_format=response_format)
 

@@ -38,7 +38,7 @@ class BackupDataStore:
         self.logger = logger or logging.getLogger(__name__)
         if filepath and (self._filepath != filepath or not self._is_valid()):
             self._load_dataframe(filepath)
-            self.logger.info(f"BackupDataStore loaded from {filepath}, entries: {len(self._dataframe) if self._dataframe is not None else 0}")
+            self.logger.debug(f"BackupDataStore loaded from {filepath}, entries: {len(self._dataframe) if self._dataframe is not None else 0}")
     
     def _load_dataframe(self, filepath):
         """Load DataFrame from file with error handling."""

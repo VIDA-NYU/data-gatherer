@@ -109,7 +109,6 @@ class LLMParser(ABC):
         """
 
         self.logger.info(f"Function_call: load_patterns_for_tgt_section({section_name})")
-        self.logger.info(f"Consider migrating this function to the BaseRetriever class.")
         return self.retriever.load_target_sections_ptrs(section_name)
 
     def generate_dataset_description(self, data_file):
@@ -324,7 +323,7 @@ Files:
         # Generate the checksum for the prompt content
         # Save the prompt and calculate checksum
         prompt_id = f"{model}-{temperature}-{self.prompt_manager._calculate_checksum(str(messages))}"
-        self.logger.info(f"Prompt ID: {prompt_id}")
+        self.logger.debug(f"Prompt ID: {prompt_id}")
         # Save the prompt using the PromptManager
         if self.save_dynamic_prompts:
             self.prompt_manager.save_prompt(prompt_id=prompt_id, prompt_content=messages)
@@ -348,7 +347,7 @@ Files:
                 resps = cached_response
         else:
             # Make the request using the unified LLM client
-            self.logger.info(
+            self.logger.debug(
                 f"Requesting datasets from content using model: {model}, temperature: {temperature}, "
                 f"messages length: {tokens_cnt} tokens, schema: {response_format}")
 
@@ -512,6 +511,10 @@ Files:
         :return: tuple — (dataset_id, data_repository, dataset_webpage) or (None, None, None) if invalid.
         """
         self.logger.info(f"Schema validation called with dataset: {dataset}")
+        dataset['data_repository'] = dataset.pop('repository_references') if 'repository_references' in dataset and 'data_repository' not in dataset else dataset.get('data_repository', 'n/a')
+
+        self.logger.debug(f"Validating dataset schema for dataset: {dataset}")
+
         dataset_id, data_repository, dataset_webpage = None, None, None
 
         for repo_key, repo_vals in self.open_data_repos_ontology['repos'].items():
@@ -608,7 +611,7 @@ Files:
         self.logger.debug(f"normalize_response_type called with response type: {type(response)}, length: {len(response) if hasattr(response, '__len__') else 'N/A'}")
         self.logger.debug(f"normalize_response_type input: {response}")
         
-        self.logger.info(f"Deduplicating response with {len(response)} items")
+        self.logger.info(f"Deduplicating response ({type(response)}) with {len(response)} items")
         seen = set()
         deduped = []
 
@@ -1179,8 +1182,12 @@ Files:
         self.logger.info(f"Enhancing dataset pages for {len(datasets)} datasets")
 
         for i, item in enumerate(datasets):
+            if type(item) == list and len(item) == 1:
+                item = item[0]
+                datasets[i] = item
+
             if type(item) != dict:
-                self.logger.error(f"Can't process non-dict item {1 + i}: {item}")
+                self.logger.error(f"Can't process non-dict item {1 + i} of type {type(item)}: {item}")
                 continue
 
             # Skip if we already have a valid dataset webpage (preserve schema validation results)
@@ -1327,7 +1334,7 @@ Files:
             encoding = tiktoken.encoding_for_model(model)
             n_tokens = len(encoding.encode(prompt))
 
-        elif 'gemini' in model or 'gemma' in model:
+        else:
             try:
                 n_tokens = len(prompt) // 4  # Adjust based on the response structure
                 self.logger.debug(f"Rough estimate of token count for Gemini model '{model}': {n_tokens}")
@@ -1476,7 +1483,7 @@ Files:
             self.logger.info(f"Number of documents matching ID patterns: {len(docs_matching_id_ptr)}")
             ret_lst.extend([item['text'] for item in docs_matching_id_ptr if item['text'] not in ret_lst])  # Use extend() instead of append()
         
-        self.logger.debug(f"Prepare output as {output_format}")
+        self.logger.debug(f"Prepare output as {output_format} from list of length {len(ret_lst)}")
         # Before passing this to an LLM check the attributes of the source obj we are puttin in data_availability_cont.
         # I mean at the previuous level (before filtering text only)
         if output_format == 'text':

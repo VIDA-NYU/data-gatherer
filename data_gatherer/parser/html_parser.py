@@ -501,25 +501,36 @@ class HTMLParser(LLMParser):
             out_df = pd.concat([pd.DataFrame(dataset_links_w_target_pages), supplementary_material_metadata])
 
         elif filter_das is None or filter_das is True:
+            output_fmt = 'list' if 'local' in self.llm_name.lower() else 'text'
+
             self.logger.info(f"Chunking the HTML content for the parsing step.")
 
-            data_availability_str = self.retrieve_relevant_content(
+            data_availability_cont = self.retrieve_relevant_content(
                                 preprocessed_data,
                                 semantic_retrieval=semantic_retrieval,
                                 top_k=top_k,
                                 article_id=article_id,
                                 skip_rule_based_retrieved_elm=dedup,
                                 include_snippets_with_ID_patterns=brute_force_RegEx_ID_ptrs,
-                                output_format='text'
+                                output_format=output_fmt
                             )
+            
+            augmented_dataset_links = []
+            if isinstance(data_availability_cont, list):
+                for das_content in data_availability_cont:
+                    augmented_dataset_links.extend(self.extract_datasets_info_from_content(
+                        das_content, self.open_data_repos_ontology['repos'], model=self.llm_name,
+                        temperature=0, prompt_name=prompt_name, response_format=response_format))
 
-            augmented_dataset_links = self.extract_datasets_info_from_content(data_availability_str,
+            else:
+                augmented_dataset_links = self.extract_datasets_info_from_content(data_availability_cont,
                                                                               self.open_data_repos_ontology['repos'],
                                                                               model=self.llm_name,
                                                                               temperature=0,
                                                                               prompt_name=prompt_name,
                                                                               response_format=response_format)
 
+            self.logger.info(f"Augmented dataset links: {augmented_dataset_links}")
             dataset_links_w_target_pages = self.get_dataset_page(augmented_dataset_links)
 
             out_df = pd.concat([pd.DataFrame(dataset_links_w_target_pages), supplementary_material_metadata])
