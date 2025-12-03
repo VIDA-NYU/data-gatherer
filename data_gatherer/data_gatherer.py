@@ -95,6 +95,13 @@ class DataGatherer:
         self.setup_data_fetcher(driver_path=driver_path)
         self.fetcher_driver_path = driver_path
         self.data_checker = DataCompletenessChecker(self.logger)
+        
+        self._cached_parsers = {
+            'XML': None,
+            'HTML': None,
+            'PDF': None,
+            'PDF_GROBID': None
+        }
 
         self.write_htmls_xmls = write_htmls_xmls
         self.article_file_dir = article_file_dir
@@ -274,7 +281,23 @@ class DataGatherer:
         use_portkey=True,
         grobid_for_pdf=False
         ):
-
+        """
+        Get or create a cached parser for the given format type.
+        This avoids reloading models for every document.
+        """
+        format_key = raw_data_format.upper()
+        if grobid_for_pdf and format_key == "PDF":
+            format_key = "PDF_GROBID"
+        
+        # Check if we already have a cached parser for this format
+        if self._cached_parsers.get(format_key) is not None:
+            self.logger.info(f"Reusing cached parser for format: {format_key}")
+            self.parser = self._cached_parsers[format_key]
+            return
+        
+        # Create new parser and cache it
+        self.logger.info(f"Creating new parser for format: {format_key}")
+        
         if raw_data_format.upper() == "XML":
             if raw_data is not None:
                 router = XMLRouter(self.open_data_repos_ontology, self.logger, full_document_read=self.full_document_read,
@@ -302,6 +325,10 @@ class DataGatherer:
                                llm_name=self.llm, use_portkey=use_portkey, save_dynamic_prompts=self.save_dynamic_prompts)
         else:
             raise ValueError(f"Unsupported raw data format: {raw_data_format}")
+        
+        # Cache the newly created parser
+        self._cached_parsers[format_key] = self.parser
+        self.logger.info(f"Cached parser for format: {format_key}")
 
     def parse_data(
         self,
