@@ -364,7 +364,7 @@ def test_schema_validation(get_test_data_path):
         {'dataset_identifier': '10.17632/xtb4mkvf8f.1', 'data_repository': 'data.mendeley.com', 'dataset_webpage': 'https://data.mendeley.com/datasets/xtb4mkvf8f/1'},
         {'dataset_identifier': 'MSV000081006', 'data_repository': 'massive.ucsd.edu'},
         {'dataset_identifier': '10.7937/tcia.2019.30ilqfcl', 'data_repository': 'cancerimagingarchive.net', 'dataset_webpage': 'https://www.cancerimagingarchive.net/collection/acrin-nsclc-fdg-pet/'},
-        {'dataset_identifier': 'syn9702085', 'data_repository': 'synapse.org', 'dataset_webpage': 'https://www.synapse.org/#!Synapse:syn9702085'},
+        {'dataset_identifier': 'syn9702085', 'data_repository': 'synapse.org', 'dataset_webpage': 'https://www.synapse.org/Synapse:syn9702085'},
         {'dataset_identifier': 'M27187', 'data_repository': 'www.ncbi.nlm.nih.gov', 'dataset_webpage': 'https://www.ncbi.nlm.nih.gov/nuccore/M27187'}
     ]
     for obj,ret in zip(test_cases, ret_cases):

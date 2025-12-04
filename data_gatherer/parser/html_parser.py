@@ -481,6 +481,7 @@ class HTMLParser(LLMParser):
 
         preprocessed_data = self.normalize_HTML(html_str)
         self.logger.debug(f"Preprocessed data: {preprocessed_data}")
+        self.logger.debug(f"filter_das: {filter_das}, filter_supp: {filter_supp}, full_document_read: {self.full_document_read}")
 
         if self.full_document_read and (filter_das is None or filter_das is True):
             self.logger.info(f"Extracting links from full HTML content.")
@@ -555,9 +556,15 @@ class HTMLParser(LLMParser):
         # Ensure out_df is a copy to avoid SettingWithCopyWarning
         out_df = out_df.copy()
 
-        out_df.loc[:, 'source_url'] = current_url_address
-        out_df.loc[:, 'pub_title'] = self.retriever.extract_publication_title(preprocessed_data)
-        out_df['raw_data_format'] = raw_data_format
+        # Only set metadata if DataFrame is not empty
+        if len(out_df) > 0:
+            out_df.loc[:, 'source_url'] = current_url_address
+            out_df.loc[:, 'pub_title'] = self.retriever.extract_publication_title(preprocessed_data)
+            out_df['raw_data_format'] = raw_data_format
+        else:
+            # Create empty DataFrame with proper columns
+            out_df = pd.DataFrame(columns=['source_url', 'pub_title', 'raw_data_format'])
+            self.logger.warning(f"No datasets found in the document")
 
         return out_df
 

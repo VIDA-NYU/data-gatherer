@@ -362,10 +362,16 @@ class PDFParser(LLMParser):
         elif 'download_link' in out_df.columns:
             out_df = out_df.drop_duplicates(subset=['download_link'], keep='first')
 
-        out_df['source_url'] = current_url_address if current_url_address else ''
-        out_df['source_file_path'] = file_path
-        out_df['pub_title'] = self.extract_publication_title(preprocessed_data)
-        out_df['raw_data_format'] = raw_data_format
+        # Only set metadata if DataFrame is not empty
+        if len(out_df) > 0:
+            out_df['source_url'] = current_url_address if current_url_address else ''
+            out_df['source_file_path'] = file_path
+            out_df['pub_title'] = self.extract_publication_title(preprocessed_data)
+            out_df['raw_data_format'] = raw_data_format
+        else:
+            # Create empty DataFrame with proper columns
+            out_df = pd.DataFrame(columns=['source_url', 'source_file_path', 'pub_title', 'raw_data_format'])
+            self.logger.warning(f"No datasets found in the document")
 
         self.remove_temp_file(file_path) if os.path.exists(file_path) and file_path_is_temp else None
 

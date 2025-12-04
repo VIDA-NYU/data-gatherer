@@ -979,6 +979,9 @@ Files:
                 if re.search(pattern, resolved_dataset_page, re.IGNORECASE) or pattern in resolved_dataset_page:
                     self.logger.info(f"Link matches the pattern {pattern} of resolved_dataset_page.")
                     return resolved_dataset_page
+                elif pattern not in resolved_dataset_page and resolved_dataset_page in dataset_webpage_url:
+                    self.logger.info(f"Resolved URL is contained in original URL, using ontology pattern.")
+                    return pattern + dataset_id
                 else:
                     self.logger.warning(f"Link does not match expected pattern {pattern} but may still be valid after redirect.")
                     # Check if the resolved URL contains the dataset_id as a fallback

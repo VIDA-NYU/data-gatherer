@@ -279,23 +279,27 @@ class DataGatherer:
         raw_data=None,
         embeddings_retriever_model=None,
         use_portkey=True,
-        grobid_for_pdf=False
+        grobid_for_pdf=False,
+        full_document_read=None,
+        force_reinit=False
         ):
         """
         Get or create a cached parser for the given format type.
         This avoids reloading models for every document.
         """
+
+        self.full_document_read = full_document_read if full_document_read is not None else self.full_document_read
+
         format_key = raw_data_format.upper()
         if grobid_for_pdf and format_key == "PDF":
             format_key = "PDF_GROBID"
         
-        # Check if we already have a cached parser for this format
-        if self._cached_parsers.get(format_key) is not None:
+        if self._cached_parsers.get(format_key) is not None and not force_reinit:
             self.logger.info(f"Reusing cached parser for format: {format_key}")
             self.parser = self._cached_parsers[format_key]
+            self.parser.full_document_read = self.full_document_read
             return
         
-        # Create new parser and cache it
         self.logger.info(f"Creating new parser for format: {format_key}")
         
         if raw_data_format.upper() == "XML":
@@ -384,7 +388,7 @@ class DataGatherer:
         """
         self.logger.info(f"Parsing data from URL: {current_url_address} with publisher: {publisher}")
 
-        self.init_parser_by_input_type(raw_data_format, raw_data, embeddings_retriever_model, use_portkey, grobid_for_pdf)
+        self.init_parser_by_input_type(raw_data_format, raw_data, embeddings_retriever_model, use_portkey, grobid_for_pdf, full_document_read)
 
         if isinstance(raw_data, dict):
             cont = raw_data.values()
@@ -636,7 +640,7 @@ class DataGatherer:
 
             # Step 2: Use HTMLParser/XMLParser
             self.logger.info("Initializing parser based on raw data format")
-            self.init_parser_by_input_type(self.raw_data_format, raw_data, embeddings_retriever_model, use_portkey, grobid_for_pdf)
+            self.init_parser_by_input_type(self.raw_data_format, raw_data, embeddings_retriever_model, use_portkey, grobid_for_pdf, full_document_read)
 
             self.logger.info("Parsing Raw content from format: " + self.raw_data_format + " with parser " + self.parser.__class__.__name__)
             if self.raw_data_format.upper() == "XML" and raw_data is not None:
@@ -1573,7 +1577,7 @@ class DataGatherer:
                         else:
                             self.logger.info(f"Creating new parser for format: {url_raw_data_format}")
                             self.init_parser_by_input_type(url_raw_data_format, fetched_data[url], embeddings_retriever_model, 
-                            use_portkey, grobid_for_pdf)
+                            use_portkey, grobid_for_pdf, full_document_read)
                                          
                         data = fetched_data[url]
                         

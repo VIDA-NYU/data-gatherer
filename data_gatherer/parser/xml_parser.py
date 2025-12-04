@@ -502,9 +502,14 @@ class XMLParser(LLMParser):
                 if 'dataset_identifier' in out_df.columns and 'download_link' in out_df.columns:
                     out_df = out_df.drop_duplicates(subset=['download_link', 'dataset_identifier'], keep='first')
 
-                out_df['pub_title'] = self.title
-                out_df['source_url'] = current_url_address
-                out_df['raw_data_format'] = raw_data_format
+                # Only set metadata if DataFrame is not empty
+                if len(out_df) > 0:
+                    out_df['pub_title'] = self.title
+                    out_df['source_url'] = current_url_address
+                    out_df['raw_data_format'] = raw_data_format
+                else:
+                    out_df = pd.DataFrame(columns=['pub_title', 'source_url', 'raw_data_format'])
+                    self.logger.warning(f"No datasets found in the document")
 
                 return out_df
 
@@ -550,9 +555,14 @@ class XMLParser(LLMParser):
                 elif 'download_link' in out_df.columns:
                     out_df = out_df.drop_duplicates(subset=['download_link'], keep='first')
 
-                out_df['source_url'] = current_url_address
-                out_df['pub_title'] = self.title
-                out_df['raw_data_format'] = raw_data_format
+                # Only set metadata if DataFrame is not empty
+                if len(out_df) > 0:
+                    out_df['source_url'] = current_url_address
+                    out_df['pub_title'] = self.title
+                    out_df['raw_data_format'] = raw_data_format
+                else:
+                    out_df = pd.DataFrame(columns=['source_url', 'pub_title', 'raw_data_format'])
+                    self.logger.warning(f"No datasets found in the document")
 
                 return out_df
         else:
@@ -1435,8 +1445,13 @@ class TEI_XMLParser(XMLParser):
                 elif 'download_link' in out_df.columns:
                     out_df = out_df.drop_duplicates(subset=['download_link'], keep='first')
 
-                out_df['source_url'] = current_url_address
-                out_df['pub_title'] = self.title
+                # Only set metadata if DataFrame is not empty
+                if len(out_df) > 0:
+                    out_df['source_url'] = current_url_address
+                    out_df['pub_title'] = self.title
+                else:
+                    out_df = pd.DataFrame(columns=['source_url', 'pub_title'])
+                    self.logger.warning(f"No datasets found in the document")
 
                 return out_df
         else:
