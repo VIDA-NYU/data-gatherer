@@ -1,5 +1,6 @@
 #!/bin/bash
 
+#SBATCH --account=users
 #SBATCH --job-name=t5-finetune
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
