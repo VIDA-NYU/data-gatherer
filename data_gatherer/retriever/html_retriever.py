@@ -139,8 +139,8 @@ class htmlRetriever(BaseRetriever):
                 for child in children:
                     if not child.get_text(strip=True):
                         continue
-                    text_val += child.get_text(strip=True) + " \n"
-                    html_val += str(child) + " \n"
+                    text_val += "\n" + child.get_text(strip=True) + "\n"
+                    html_val += "\n" + str(child) + "\n"
 
                 element_info = {
                     'retrieval_pattern': selector,
@@ -162,6 +162,7 @@ class htmlRetriever(BaseRetriever):
                 self.logger.debug(f"Extracted data availability element: {element_info}")
 
         self.logger.info(f"Found {len(data_availability_elements)} data availability elements from HTML.")
+        self.data_availability_elements = data_availability_elements
         return data_availability_elements
 
     def extract_publication_title(self, raw_data):
@@ -251,11 +252,21 @@ class htmlRetriever(BaseRetriever):
         :return: bool — True if data is considered complete, False otherwise.
 
         """
-        self.logger.info("Checking if HTML data is complete")
+        self.logger.info(f"Checking if HTML data is complete with required sections: {required_sections}")
 
-        for section in required_sections:
-            if not self.has_target_section(raw_data, section):
-                self.logger.info(f"Missing section in HTML: {section}")
+        if isinstance(required_sections, list):
+            for section in required_sections:
+                if not self.has_target_section(raw_data, section):
+                    self.logger.info(f"Missing section in HTML: {section}")
+                    return False
+        
+        if isinstance(required_sections, int):
+            soup = BeautifulSoup(raw_data, "html.parser")
+            sec_elements = soup.find_all("section")
+            n_sections_found = len(sec_elements)
+            self.logger.info(f"Number of <section> elements found: {n_sections_found}")
+            if n_sections_found < required_sections:
+                self.logger.info(f"Number of sections {n_sections_found} is less than the required threshold of {required_sections}.")
                 return False
 
         self.logger.info("HTML data contains all required sections.")

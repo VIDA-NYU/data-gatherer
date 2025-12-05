@@ -1,0 +1,27 @@
+/* Make the content area flexible and responsive */
+.wy-nav-content {
+    max-width: 90% !important;
+    margin: 0 auto !important;
+}
+
+/* For very wide screens, cap at a reasonable width for readability */
+@media screen and (min-width: 1800px) {
+    .wy-nav-content {
+        max-width: 1600px !important;
+    }
+}
+
+/* For medium screens */
+@media screen and (min-width: 1400px) and (max-width: 1799px) {
+    .wy-nav-content {
+        max-width: 85% !important;
+    }
+}
+
+/* For smaller screens, use more space */
+@media screen and (max-width: 1399px) {
+    .wy-nav-content {
+        max-width: 95% !important;
+    }
+}
+

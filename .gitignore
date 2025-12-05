@@ -152,7 +152,7 @@ data_gatherer/prompts/prompt_templates/old
 data_gatherer/config/repos.txt
 scripts/exp_input/bdf_paper_pdfs/**
 scripts/output/gold/datacatalog_export-2025-10-02.json
-scripts/exp_input/Local_fetched_data_SAGE.parquet
+scripts/exp_input/Local_*
 scripts/output/gold/dryad_datasets_preview.xlsx
 scripts/output/gold/dryad_datasets.parquet
 scripts/output/gold/datacatalog_export-2025-10-02.json
@@ -165,3 +165,12 @@ scripts/output/false_positives.txt
 scripts/output/syn_data_results/result_gpt-5-mini_full-input.csv
 uv.lock
 data_gatherer/prompts/prompt_evals/**
+scripts/exp_input/dspy_ground_truth*
+scripts/output/result*
+scripts/output/gold/GT_DataLinks_PMC_and_Fenyo.xlsx
+scripts/output/semantic_search/resp_RTR*
+scripts/output/semantic_search/Train_results.csv
+
+# Fine-tuned models
+scripts/Local_model_finetuning/flan-t5-models/
+*.safetensors

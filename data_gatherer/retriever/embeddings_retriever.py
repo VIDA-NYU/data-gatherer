@@ -3,14 +3,17 @@ import time
 from sentence_transformers import SentenceTransformer, models
 from transformers import AutoModel, AutoTokenizer, AutoConfig
 from data_gatherer.retriever.base_retriever import BaseRetriever
+from data_gatherer.env import CACHE_BASE_DIR
 import torch
+import os
+import json
 
 class EmbeddingsRetriever(BaseRetriever):
     """
     Embeddings-based retriever for text passages, inspired by DSPy's approach.
     """
 
-    def __init__(self, model_name='sentence-transformers/all-MiniLM-L6-v2', corpus=None, device=None, logger=None, embed_corpus=True):
+    def __init__(self, model_name='sentence-transformers/all-MiniLM-L6-v2', corpus=None, device=None, logger=None, embed_corpus=True, read_cache=False, write_cache=False):
         """
         Initialize the EmbeddingsRetriever.
 
@@ -20,6 +23,8 @@ class EmbeddingsRetriever(BaseRetriever):
             device (str): Device to run the model on ('cpu' or 'cuda').
             logger: Logger instance.
             embed_corpus (bool): Whether to embed the corpus during initialization. Default True for backward compatibility.
+            read_cache (bool): Whether to read embeddings from cache.
+            write_cache (bool): Whether to write embeddings to cache.
         """
         super().__init__(publisher='general', retrieval_patterns_file='retrieval_patterns.json')
         self.logger = logger
@@ -28,6 +33,11 @@ class EmbeddingsRetriever(BaseRetriever):
             self.logger.warning(f"No embeddings model name provided under parameter 'model_name'. Defaulting to {model_name}")
         self.model_name = model_name
         self.corpus = corpus
+        self.embeddings_cache = {}
+
+        if os.path.exists(os.path.join(CACHE_BASE_DIR, "corpus_embeddings_cache.npz")) and (read_cache or write_cache):
+            corpus_emb_cache = np.load(os.path.join(CACHE_BASE_DIR, "corpus_embeddings_cache.npz"), 'r')
+            self.embeddings_cache = {key: corpus_emb_cache[key] for key in corpus_emb_cache.files}
         
         # Auto-detect best available device if not specified
         if device is None:
@@ -66,7 +76,7 @@ class EmbeddingsRetriever(BaseRetriever):
 
         self.embeddings = None
         if corpus and embed_corpus:
-            self.embed_corpus()
+            self.embed_corpus(read_cache=read_cache, write_cache=write_cache)
         self.query_embedding = None
     
     def cnt_tokens(self, text):
@@ -82,7 +92,8 @@ class EmbeddingsRetriever(BaseRetriever):
         self.logger.debug(f"Text tokenized into {len(tokens['input_ids'])} tokens.")
         return len(tokens['input_ids'])
 
-    def embed_corpus(self, corpus=None, enable_chunking=True, chunk_size=None, chunk_overlap=20, batch_size=32):
+    def embed_corpus(self, corpus=None, enable_chunking=True, chunk_size=None, chunk_overlap=20, batch_size=32, src=None, read_cache=False, write_cache=False,
+                    fmt=None):
         """
         Embed the corpus using the initialized model with intelligent chunking to prevent truncation.
         
@@ -92,32 +103,64 @@ class EmbeddingsRetriever(BaseRetriever):
             chunk_size (int): Maximum tokens per chunk. If None, uses 80% of max_seq_length.
             chunk_overlap (int): Number of tokens to overlap between chunks.
             batch_size (int): Batch size for encoding. Default 32. Larger batches may be faster but use more memory.
+            src (str): Source identifier for caching.
+            read_cache (bool): Whether to read embeddings from cache.
+            write_cache (bool): Whether to write embeddings to cache.
+            fmt (str): format of the source string embedded (xml, html).
         """
         if corpus is not None:
             self.corpus = corpus
+        corpus_texts = []
+
+        if fmt is not None:
+            src = src + '-' + fmt
+
+        process_id = None
+
+        if src is not None and (read_cache or write_cache):
+            process_id = f"{src}_{self.model_name.replace('/', '_')}"
         
         if self.corpus is None:
             raise ValueError("No corpus provided for embedding")
-            
-        print(f"Embedding corpus of {len(self.corpus)} documents using {self.model_name}")
-        
-        # Extract text from corpus documents
-        corpus_texts = [doc['sec_txt'] if 'sec_txt' in doc else doc['text'] for doc in self.corpus]
+        elif isinstance(self.corpus, str):
+            raise ValueError("Corpus should be a list of documents, not a single string")
+        elif isinstance(self.corpus, list):
+            self.logger.info(f"Corpus contains {len(self.corpus)} documents of type ({type(self.corpus[0])})")
+            corpus_texts = self.corpus
+        elif isinstance(self.corpus, dict):
+            self.logger.info(f"Corpus is a dict with {len(self.corpus)} entries.")
+            corpus_texts = [doc['sec_txt'] if 'sec_txt' in doc else doc['text'] for doc in self.corpus]
+        else:
+            raise ValueError("Corpus should be a list or dict of documents")
 
+        self.logger.info(f"Embedding {type(corpus_texts)} corpus of {len(corpus_texts)} documents using {self.model_name}")
 
-        # Embed the (potentially chunked) corpus
         embed_start = time.time()
-        self.embeddings = self.model.encode(corpus_texts, show_progress_bar=True, convert_to_numpy=True, batch_size=batch_size)
+        if process_id is not None and read_cache and process_id in self.embeddings_cache:
+            self.logger.info(f"Loading results from cache for process ID: {process_id}")
+            self.embeddings =self.embeddings_cache[process_id]
+        else:
+            self.embeddings = self.model.encode(corpus_texts, show_progress_bar=True, convert_to_numpy=True, batch_size=batch_size)
         embed_time = time.time() - embed_start
 
-        print(f"Embedding time: {embed_time:.2f}s ({embed_time/len(corpus_texts):.3f}s per chunk)")
-        print(f"Corpus embedding completed. Shape: {self.embeddings.shape}")
+        if src is not None and write_cache:
+            self.embeddings_cache[process_id] = self.embeddings
+            self.logger.info(f"Writing embeddings to cache for process ID: {process_id}")
+            try:
+                cache_path = os.path.join(CACHE_BASE_DIR, "corpus_embeddings_cache.npz")
+                np.savez(cache_path, **self.embeddings_cache)
+                self.logger.info(f"Successfully wrote embeddings cache with {len(self.embeddings_cache)} entries")
+            except Exception as e:
+                self.logger.error(f"Failed to write embeddings cache: {e}")
+
+        self.logger.info(f"Embedding time: {embed_time:.2f}s ({embed_time/len(corpus_texts):.3f}s per chunk)")
+        self.logger.info(f"Corpus embedding completed. Shape: {self.embeddings.shape}")
         
         if enable_chunking:
             # Log chunking statistics
             original_docs = len(corpus_texts)
             final_chunks = self.embeddings.shape[0]
-            print(f"Chunking results: {original_docs} original documents → {final_chunks} embedded chunks")
+            self.logger.debug(f"Chunking results: {original_docs} original documents → {final_chunks} embedded chunks")
 
     def _initialize_biomedbert_model(self, model_name, device):
         """
@@ -190,8 +233,14 @@ class EmbeddingsRetriever(BaseRetriever):
         results = []
         for idx, score in zip(idxs, dists):
             doc = self.corpus[idx]
+
+            if isinstance(doc, str):
+                text_content = doc
+            else:
+                text_content = doc['sec_txt'] if 'sec_txt' in doc else doc['text']
+                
             result = {
-                'text': doc['sec_txt'] if 'sec_txt' in doc else doc['text'],
+                'text': text_content,
                 'section_title': doc.get('section_title', None),
                 'sec_type': doc.get('sec_type', None),
                 'L2_distance': float(score)
@@ -206,10 +255,11 @@ class EmbeddingsRetriever(BaseRetriever):
             else:
                 result['is_chunked'] = False
             
-            results.append(result)
-            passage = result['text']
+            passage = result.get('text', 'sec_txt')
             chunk_info = f" (chunk {doc.get('chunk_id', 'N/A')+1}/{doc.get('total_chunks', 'N/A')})" if 'chunk_id' in doc else ""
-            self.logger.debug(f"Retrieved passage{chunk_info}: {passage[:100]}... with L2 distance: {score}")
+            passage_preview = str(passage)[:100] if passage is not None else ""
+            self.logger.debug(f"Retrieved passage{chunk_info}: {passage_preview}... with L2 distance: {score}")
+            results.append(result)
         return results
 
     def embed_query(self, query):
@@ -219,5 +269,3 @@ class EmbeddingsRetriever(BaseRetriever):
         if len(query) > self.max_seq_length*4:
             self.logger.warning(f"Query maybe longer than max tokens limit for model {self.model}.")
         self.query_embedding = self.model.encode([query], convert_to_numpy=True)[0]
-
-

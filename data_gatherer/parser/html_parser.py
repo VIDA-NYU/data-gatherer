@@ -2,6 +2,7 @@ from data_gatherer.parser.base_parser import *
 from data_gatherer.retriever.html_retriever import htmlRetriever
 from data_gatherer.llm.response_schema import *
 import regex as re
+import json
 import logging
 import pandas as pd
 from bs4 import BeautifulSoup, Comment, NavigableString, CData
@@ -70,7 +71,7 @@ class HTMLParser(LLMParser):
     def __init__(self, open_data_repos_ontology, logger, log_file_override=None, full_document_read=True,
                  prompt_dir="data_gatherer/prompts/prompt_templates",
                  llm_name=None, save_dynamic_prompts=False, save_responses_to_cache=False, use_cached_responses=False,
-                 use_portkey=True, embeddings_model_name=None):
+                 use_portkey=True, embeddings_model_name=None, embeds_cache_read=False, embeds_cache_write=False):
 
         super().__init__(open_data_repos_ontology, logger, log_file_override=log_file_override,
                          full_document_read=full_document_read, prompt_dir=prompt_dir,
@@ -86,7 +87,9 @@ class HTMLParser(LLMParser):
 
         self.embeddings_retriever = EmbeddingsRetriever(
             model_name=embeddings_model_name,
-            logger=self.logger
+            logger=self.logger,
+            read_cache=embeds_cache_read,
+            write_cache=embeds_cache_write
         )
 
     def normalize_HTML(self, html, keep_tags=None):
@@ -229,6 +232,12 @@ class HTMLParser(LLMParser):
                 })
         return paragraphs
 
+    def extract_sections_from_text(self, html_content: str) -> list[dict]:
+        """
+        alias for extract_sections_from_html
+        """
+        return self.extract_sections_from_html(html_content)
+
     def extract_sections_from_html(self, html_content: str) -> list[dict]:
         """
         Extract sections from an HTML document, following the XML parser pattern.
@@ -246,6 +255,7 @@ class HTMLParser(LLMParser):
 
         # Find all <section> elements (just like XML parser finds <sec> elements)
         section_elements = soup.find_all('section')
+        self.extracted_tables = []
         self.logger.debug(f"Found {len(section_elements)} <section> blocks in HTML")
 
         # Process each section (similar to XML parser)
@@ -293,32 +303,38 @@ class HTMLParser(LLMParser):
             self.logger.debug(f"Found {len(tables)} tables")
 
             for table_idx, table in enumerate(tables):
-                self.logger.debug(f"Processing table {table_idx + 1}/{len(tables)}")
-                if parent_section is not None and parent_section != sec:
+                self.logger.info(f"Processing table {table_idx + 1}/{len(tables)}")
+                if parent_section is not None and parent_section != sec and "methods" not in section_title.lower() and sec_type != 'tw':
                     self.logger.debug(f"We've entered a different section: {parent_section != sec}, so break out of the loop")
                     break
 
+                if table in self.extracted_tables: # or section_title not in [<allowables>]
+                    self.logger.info(f"Table already extracted in a previous section. Skipping.")
+                    continue
+
                 # Extract clean text from table (similar to itertext in XML)
-                table_clean_text = table.get_text(separator=" ", strip=True)
-                self.logger.debug(f"Table clean text length: {len(table_clean_text)} chars")
+                table_clean_text = self.convert_html_table_to_str(table)
+                self.logger.info(f"Table clean text length: {len(table_clean_text)} chars")
 
                 if len(table_clean_text) >= 5:
                     section_text_from_paragraphs += "\n" + table_clean_text + "\n"
-                    self.logger.debug(f"Added Table to section --> Updated Section length: {len(section_text_from_paragraphs)})")
+                    self.logger.info(f"Added Table to section --> Updated Section length: {len(section_text_from_paragraphs)})")
 
                 # Extract raw HTML table (similar to tostring in XML)
                 table_raw_html = str(table).strip()
-                self.logger.debug(f"Table HTML length: {len(table_raw_html)} chars")
+                self.logger.info(f"Table HTML length: {len(table_raw_html)} chars")
                 if len(table_raw_html) >= 5:
                     section_rawtxt_from_paragraphs += "\n" + table_raw_html + "\n"
-                    self.logger.debug(f"Added table HTML to section --> Updated Section length (raw): {len(section_rawtxt_from_paragraphs)})")
+                    self.logger.info(f"Added table HTML to section --> Updated Section length (raw): {len(section_rawtxt_from_paragraphs)})")
+
+                self.extracted_tables.append(table)
 
             if section_text_from_paragraphs.strip() == f'{section_title}':
-                self.logger.debug(f"Section '{section_title}' is empty after processing. Skipping.")
+                self.logger.info(f"Section '{section_title}' is empty after processing. Skipping.")
                 continue
 
             elif section_text_from_paragraphs in [sect['sec_txt_clean'] for sect in sections]:
-                self.logger.debug(f"Section '{section_title}' is a duplicate after processing. Skipping.")
+                self.logger.info(f"Section '{section_title}' is a duplicate after processing. Skipping.")
                 continue
 
             # Create section dictionary (matching XML parser structure)
@@ -410,10 +426,19 @@ class HTMLParser(LLMParser):
         text = re.sub(r"\s+", " ", soup.getText())
         self.logger.debug(f"compress HTML. Final len: {len(text)}")
         return text
+    
+    def get_data_availability_text(self, html_content: str) -> list[str]:
+        """
+        get data avialbility elements and then extract text from there.
+        """
+        data_availability_elements = self.retriever.get_data_availability_elements_from_webpage(html_content)
+        data_availability_texts = [item['html'] for item in data_availability_elements]
+        return data_availability_texts
 
     def parse_data(self, html_str, publisher=None, current_url_address=None, raw_data_format='HTML',
         article_file_dir='tmp/raw_files/', section_filter=None, prompt_name='GPT_FewShot', use_portkey=True, 
-        semantic_retrieval=False, top_k=2, response_format=dataset_response_schema_gpt):
+        semantic_retrieval=False, top_k=2, response_format=dataset_response_schema_gpt, dedup=True,
+        brute_force_RegEx_ID_ptrs=False, article_id=None):
         """
         Parse the API data and extract relevant links and metadata.
 
@@ -427,7 +452,11 @@ class HTMLParser(LLMParser):
             prompt_name (str): Name of the prompt to be used for dataset extraction.
             use_portkey (bool): Whether to use Portkey for Gemini model.
             semantic_retrieval (bool): Whether to use semantic retrieval for extracting sections.
-
+            top_k (int): Number of top relevant sections to retrieve.
+            response_format: The expected response format for the LLM output.
+            dedup (bool): Whether to deduplicate the extracted snippets.
+            brute_force_RegEx_ID_ptrs (bool): Whether to use brute force regular expression matching
+            article_id (str): The article identifier (e.g., PMCID, doi) for retrieval context.
         Returns:
             pd.DataFrame: A DataFrame containing the extracted dataset links and metadata (if repo is supported or info
             is available in paper). Feel free to add support for unsupported repos in the ontology!
@@ -452,6 +481,7 @@ class HTMLParser(LLMParser):
 
         preprocessed_data = self.normalize_HTML(html_str)
         self.logger.debug(f"Preprocessed data: {preprocessed_data}")
+        self.logger.debug(f"filter_das: {filter_das}, filter_supp: {filter_supp}, full_document_read: {self.full_document_read}")
 
         if self.full_document_read and (filter_das is None or filter_das is True):
             self.logger.info(f"Extracting links from full HTML content.")
@@ -472,27 +502,36 @@ class HTMLParser(LLMParser):
             out_df = pd.concat([pd.DataFrame(dataset_links_w_target_pages), supplementary_material_metadata])
 
         elif filter_das is None or filter_das is True:
+            output_fmt = 'list' if 'local' in self.llm_name.lower() else 'text'
+
             self.logger.info(f"Chunking the HTML content for the parsing step.")
 
-            # Extract dataset links from the entire text
-            data_availability_elements = self.retriever.get_data_availability_elements_from_webpage(preprocessed_data)
+            data_availability_cont = self.retrieve_relevant_content(
+                                preprocessed_data,
+                                semantic_retrieval=semantic_retrieval,
+                                top_k=top_k,
+                                article_id=article_id,
+                                skip_rule_based_retrieved_elm=dedup,
+                                include_snippets_with_ID_patterns=brute_force_RegEx_ID_ptrs,
+                                output_format=output_fmt
+                            )
+            
+            augmented_dataset_links = []
+            if isinstance(data_availability_cont, list):
+                for das_content in data_availability_cont:
+                    augmented_dataset_links.extend(self.extract_datasets_info_from_content(
+                        das_content, self.open_data_repos_ontology['repos'], model=self.llm_name,
+                        temperature=0, prompt_name=prompt_name, response_format=response_format))
 
-            data_availability_str = "\n".join([item['html'] + "\n" for item in data_availability_elements])
-
-            if semantic_retrieval:
-                corpus = self.extract_sections_from_html(preprocessed_data)
-                top_k_sections = self.semantic_retrieve_from_corpus(corpus, topk_docs_to_retrieve=top_k)
-                top_k_sections_text = [item['text'] for item in top_k_sections]
-                top_k_sections_str = "\n".join(top_k_sections_text)
-                data_availability_str = top_k_sections_str + "\n" + data_availability_str
-
-            augmented_dataset_links = self.extract_datasets_info_from_content(data_availability_str,
+            else:
+                augmented_dataset_links = self.extract_datasets_info_from_content(data_availability_cont,
                                                                               self.open_data_repos_ontology['repos'],
                                                                               model=self.llm_name,
                                                                               temperature=0,
                                                                               prompt_name=prompt_name,
                                                                               response_format=response_format)
 
+            self.logger.info(f"Augmented dataset links: {augmented_dataset_links}")
             dataset_links_w_target_pages = self.get_dataset_page(augmented_dataset_links)
 
             out_df = pd.concat([pd.DataFrame(dataset_links_w_target_pages), supplementary_material_metadata])
@@ -517,9 +556,15 @@ class HTMLParser(LLMParser):
         # Ensure out_df is a copy to avoid SettingWithCopyWarning
         out_df = out_df.copy()
 
-        out_df.loc[:, 'source_url'] = current_url_address
-        out_df.loc[:, 'pub_title'] = self.retriever.extract_publication_title(preprocessed_data)
-        out_df['raw_data_format'] = raw_data_format
+        # Only set metadata if DataFrame is not empty
+        if len(out_df) > 0:
+            out_df.loc[:, 'source_url'] = current_url_address
+            out_df.loc[:, 'pub_title'] = self.retriever.extract_publication_title(preprocessed_data)
+            out_df['raw_data_format'] = raw_data_format
+        else:
+            # Create empty DataFrame with proper columns
+            out_df = pd.DataFrame(columns=['source_url', 'pub_title', 'raw_data_format'])
+            self.logger.warning(f"No datasets found in the document")
 
         return out_df
 
@@ -722,8 +767,8 @@ class HTMLParser(LLMParser):
                 parent_text.append(child.tail.strip())
         surrounding_text = " ".join(parent_text)
         return re.sub(r"[\s\n]+", " ", surrounding_text)
-
-    def from_sections_to_corpus(self, sections, max_tokens=None):
+    
+    def from_sections_to_corpus(self, sections, max_tokens=None, skip_rule_based_retrieved_elm=False):
         """
         Convert structured HTML sections to a flat corpus of documents for embeddings retrieval.
         This method takes the output from extract_sections_from_html (list of dicts) and converts it
@@ -740,14 +785,24 @@ class HTMLParser(LLMParser):
         effective_max_tokens = int(max_tokens * 0.95)
         self.logger.debug(f"Effective max tokens per section: {effective_max_tokens}")
 
+        self.skip_text_matching = ' '.join([x['html'] for x in self.retriever.data_availability_elements]) if skip_rule_based_retrieved_elm else []
+        self.logger.debug(f"Skipping rule-based retrieved elements: {len(self.skip_text_matching)}")
+
         corpus_documents = []
         for i, section_dict in enumerate(sections):
             if not section_dict or not isinstance(section_dict, dict):
                 self.logger.info(f"Skipping invalid section at index {i}")
                 continue
+            if skip_rule_based_retrieved_elm:
+                self.logger.debug(f"Skipping rule-based retrieved elements: {len(self.skip_text_matching)}")
+                html_content = section_dict.get('sec_txt', '')
+                if html_content in self.skip_text_matching:
+                    self.logger.info(f"Skipping section at index {i} as it matches rule-based retrieved elements")
+                    continue
 
             section_title = section_dict.get('section_title', '')
             section_paragraphs = section_dict.get('sec_txt_objs', [])
+            sec_table_objs = section_dict.get('sec_table_objs', [])
             sec_type = section_dict.get('sec_type', '')
             doc_base = section_dict.copy()
 
@@ -768,6 +823,7 @@ class HTMLParser(LLMParser):
                     chunk_doc['sec_txt'] = "\n".join(chunk_texts)
                     chunk_doc['text'] = "\n".join(chunk_texts)
                     chunk_doc['chunk_id'] = chunk_id
+                    chunk_doc['contains_id_pattern'] = any(re.search(pattern, chunk_doc['text'], re.IGNORECASE) for pattern in self.id_patterns)
                     corpus_documents.append(chunk_doc)
                     chunk_id += 1
                     chunk_texts = []
@@ -784,7 +840,22 @@ class HTMLParser(LLMParser):
                 chunk_doc['sec_txt'] = "\n".join(chunk_texts)
                 chunk_doc['text'] = "\n".join(chunk_texts)
                 chunk_doc['chunk_id'] = chunk_id
+                chunk_doc['contains_id_pattern'] = any(re.search(pattern, chunk_doc['text'], re.IGNORECASE) for pattern in self.id_patterns)
                 corpus_documents.append(chunk_doc)
+
+            # Process tables separately with chunking
+            for table in sec_table_objs:
+                table_chunks = self._intelligent_chunk_table(table, effective_max_tokens)
+                for chunk in table_chunks:
+                    chunk_doc = doc_base.copy()
+                    chunk_doc['sec_txt_clean'] = chunk
+                    chunk_doc['sec_txt'] = chunk
+                    chunk_doc['text'] = chunk
+                    chunk_doc['chunk_id'] = chunk_id
+                    chunk_doc['is_table_chunk'] = True
+                    chunk_doc['contains_id_pattern'] = any(re.search(pattern, chunk, re.IGNORECASE) for pattern in self.id_patterns)
+                    corpus_documents.append(chunk_doc)
+                    chunk_id += 1
 
         # Deduplicate and merge section titles as before
         self.logger.info(f"Pre-deduplication: {len(corpus_documents)} corpus documents")
@@ -815,6 +886,126 @@ class HTMLParser(LLMParser):
         
         self.logger.info(f"HTML sections converted: {len(sections)} sections → {len(unique_documents)} unique corpus documents (processed {len(corpus_documents) - len(unique_documents)} duplicates with title merging)")
         return unique_documents
+
+    def extract_table_headers(self, soup_table):
+        """
+        Extract headers from an HTML table element.
+
+        :param table_html: lxml.html.HtmlElement — the HTML table element
+        :return: list — the list of headers
+        """
+        headers = []
+        thead = soup_table.find('thead')
+        if thead:
+            header_rows = thead.find_all('tr')
+            for header_row in header_rows:
+                ths = header_row.find_all('th')
+                headers.extend([ele.text.strip() for ele in ths])
+        else:
+            self.logger.warning(f"No <thead> found in table: {soup_table}.")
+        self.logger.debug(f"Table headers: {headers}")
+        return headers
+    
+    def convert_html_table_to_list_of_lists(self, soup_table):
+        """
+        Convert an HTML table element to a list of lists.
+
+        :param table_html: lxml.html.HtmlElement — the HTML table element
+        :return: list of list — the converted table as a list of lists
+        """
+        data = []
+
+        headers = self.extract_table_headers(soup_table)
+        if headers:
+            data.append(headers)
+
+        table_body = soup_table.find('tbody')
+        if not table_body:
+            self.logger.warning("No <tbody> found in table.")
+            return None
+
+        rows = table_body.find_all('tr')
+        for row_idx, row in enumerate(rows):
+            cols = row.find_all('td')
+            cols = [ele.text.strip() for ele in cols]
+            self.logger.debug(f"Row {row_idx}: {cols}")
+            data.append([ele for ele in cols if ele])
+
+        return data
+
+    def convert_html_table_to_str(self, soup_table):
+        """
+        Convert an HTML table element to a string representation.
+
+        :param table_html: lxml.html.HtmlElement — the HTML table element
+        :return: str — the string representation of the table
+        """
+        if soup_table.get('class') and 'formula' in soup_table.get('class'):
+            formula_str = soup_table.get_text(separator="")
+            self.logger.debug("Skipping infobox table conversion to string.")
+            return formula_str
+
+        list_of_lists = self.convert_html_table_to_list_of_lists(soup_table)
+
+        if not list_of_lists or len(list_of_lists) == 0:
+            self.logger.warning("No data found in table to convert to string.")
+            return ""
+
+        # Pad all rows to the same length as the header
+        max_cols = max(len(row) for row in list_of_lists)
+        padded_rows = [row + [""] * (max_cols - len(row)) for row in list_of_lists]
+        col_widths = [max(len(str(item)) for item in col) for col in zip(*padded_rows)]
+        table_str = ""
+
+        for row in padded_rows:
+            row_str = " | ".join(f"{str(item).ljust(col_widths[i])}" for i, item in enumerate(row))
+            table_str += row_str + "\n"
+
+        return table_str
+        
+    def _intelligent_chunk_table(self, table_text, max_tokens):
+        """
+        From an html table, chunk it into smaller parts that fit within the token limit.
+        """
+
+        header = self.extract_table_headers(table_text)
+        header_str = " | ".join(header)
+        header_tokens = len(header_str) // 4  # Rough estimate
+        body = self.convert_html_table_to_list_of_lists(table_text)
+
+        if not header:
+            header = body[0] if body else []
+        
+        if not body or len(body) < 2:
+            self.logger.warning("Table has no header or body to chunk.")
+            return []
+
+        rows = body[1:] if body[0] == header else body
+
+        ret = []
+        chunk_rows = []
+        chunk_tokens = header_tokens
+
+        for i, row in enumerate(rows):
+            row_text = " | ".join(row)
+            row_tokens = len(row_text) // 4  # Rough estimate
+
+            if chunk_tokens + row_tokens > max_tokens and chunk_rows:
+                chunk_str = header_str + "\n" + "\n".join([" | ".join(r) for r in chunk_rows])
+                ret.append(chunk_str)
+                chunk_rows = []
+                chunk_tokens = header_tokens
+
+            chunk_rows.append(row)
+            chunk_tokens += row_tokens
+
+        # Add any remaining rows as the last chunk
+        if chunk_rows:
+            chunk_str = header_str + "\n" + "\n".join([" | ".join(r) for r in chunk_rows])
+            ret.append(chunk_str)
+
+        return ret
+
 
     def _intelligent_chunk_section(self, section_text, max_tokens):
         """
@@ -866,7 +1057,8 @@ class HTMLParser(LLMParser):
         return chunks
 
     def semantic_retrieve_from_corpus(self, corpus, model_name='sentence-transformers/all-MiniLM-L6-v2',
-                                      topk_docs_to_retrieve=5, query=None, embedding_encode_batch_size=32):
+                                      topk_docs_to_retrieve=5, query=None, embedding_encode_batch_size=32,
+                                      src=None):
         """
         Given a pre-extracted HTML corpus (list of sections), normalize for embeddings and retrieve relevant documents.
         This override provides HTML-specific corpus normalization before semantic search.
@@ -880,16 +1072,18 @@ class HTMLParser(LLMParser):
         self.logger.info(f"HTML semantic retrieval from corpus with {len(corpus)} sections of type {type(corpus[0]) if corpus else 'None'}")
         
         if query is None:
-            query = """Explicitly identify all the datasets by their database accession codes, repository names, and links
-                    to deposited datasets mentioned in this paper."""
+            query = """Data Availability Statement or mentions of dataset repositories/portals, identifiers, or accession codes, including PRIDE, ProteomeXchange, MassIVE, iProX, JPOST, Proteomic Data Commons (PDC), Genomic Data Commons (GDC), Cancer Imaging Archive (TCIA), Imaging Data Commons (IDC), Gene Expression Omnibus (GEO), ArrayExpress, dbGaP, Sequence Read Archive (SRA), Protein Data Bank (PDB), Mendeley Data, Synapse, European Genome-Phenome Archive (EGA), BIGD, and ProteomeCentral. 
+            Also include dataset identifiers or links such as PXD, MSV, GSE, GSM, GPL, GDS, phs, syn, PDC, PRJNA, DOI, or accession code. 
+            Look for phrases like deposited in, available at, submitted to, uploaded to, archived in, hosted by, retrieved from, accessible via, or publicly available. 
+            Capture statements indicating datasets, repositories, or data access locations.
+            """
+        self.embeddings_retriever.corpus = corpus
 
-        # Convert structured sections to flat corpus for embeddings
-        self.embeddings_retriever.corpus = self.from_sections_to_corpus(corpus)
-
-        if not self.embeddings_retriever.corpus:
+        if not self.embeddings_retriever.corpus or len(self.embeddings_retriever.corpus) == 0:
             raise ValueError("Corpus is empty after converting sections to documents.")
         
-        self.embeddings = self.embeddings_retriever.embed_corpus(batch_size=embedding_encode_batch_size)
+        self.embeddings = self.embeddings_retriever.embed_corpus(batch_size=embedding_encode_batch_size, read_cache=True, 
+        write_cache=True, src=src)
 
         result = self.embeddings_retriever.search(
             query=query,
@@ -958,3 +1152,269 @@ class HTMLParser(LLMParser):
                 citation_obj["external_links"] = links
                 citations.append(citation_obj)
         return citations
+
+    def _is_dataset_type(self, type_value):
+        """
+        Check if a @type value represents a Dataset.
+        Handles both short form ("Dataset") and full URL form ("https://schema.org/Dataset").
+        
+        :param type_value: The @type value from JSON-LD (can be string, list, or None)
+        :return: bool — True if it's a Dataset type
+        """
+        if not type_value:
+            return False
+        
+        # Handle list of types
+        if isinstance(type_value, list):
+            return any(self._is_dataset_type(t) for t in type_value)
+        
+        # Handle string types
+        if isinstance(type_value, str):
+            # Check for both short and full URL forms
+            return type_value == "Dataset" or type_value.endswith("/Dataset") or type_value.endswith("#Dataset")
+        
+        return False
+
+    def normalize_schema_org_metadata(self, html_str):
+        """
+        Given as input the html of the schema.org validator, extract metadata from the dataset page 
+        normalized based on the schema.org dataset schema standards.
+        
+        Extracts JSON-LD, Microdata, and RDFa structured data and normalizes it to a standard format.
+        
+        :param html_str: str — raw HTML content containing Schema.org markup
+        :return: dict — normalized metadata following Schema.org Dataset schema, or None if no data found
+        """
+        
+        self.logger.info("Extracting and normalizing Schema.org metadata from HTML")
+        self.logger.debug(f"HTML input length: {len(html_str)} characters")
+        soup = BeautifulSoup(html_str, "html.parser")
+        
+        normalized_data = {
+            "@context": "https://schema.org",
+            "@type": "Dataset",
+            "name": None,
+            "description": None,
+            "url": None,
+            "identifier": None,
+            "creator": None,
+            "publisher": None,
+            "datePublished": None,
+            "dateModified": None,
+            "license": None,
+            "keywords": [],
+            "distribution": [],
+            "citation": [],
+            "version": None,
+            "isAccessibleForFree": None,
+        }
+        
+        # 1. Try to extract JSON-LD structured data (most common for Schema.org)
+        json_ld_scripts = soup.find_all("script", type="application/ld+json")
+        self.logger.debug(f"Found {len(json_ld_scripts)} JSON-LD script tags")
+        
+        for idx, script in enumerate(json_ld_scripts):
+            self.logger.debug(f"Processing JSON-LD script #{idx + 1}")
+            try:
+                data = json.loads(script.string)
+                self.logger.debug(f"JSON-LD script #{idx + 1} type: {type(data)}")
+                
+                # Handle both single objects and arrays of objects
+                if isinstance(data, list):
+                    self.logger.debug(f"JSON-LD is a list with {len(data)} items")
+                    # Check for Dataset type (handle both short and full URL formats)
+                    datasets = [d for d in data if self._is_dataset_type(d.get("@type"))]
+                    self.logger.debug(f"Found {len(datasets)} Dataset objects in list")
+                    if datasets:
+                        data = datasets[0]
+                        self.logger.debug(f"Using first Dataset object")
+                    else:
+                        self.logger.debug(f"No Dataset objects found in list, skipping")
+                        continue
+                
+                # Check if this is a Dataset (handle both "Dataset" and "https://schema.org/Dataset")
+                if isinstance(data, dict) and self._is_dataset_type(data.get("@type")):
+                    self.logger.info("Found JSON-LD Dataset schema")
+                    self.logger.debug(f"JSON-LD Dataset keys: {list(data.keys())}")
+                    
+                    # Extract and normalize fields
+                    normalized_data["name"] = data.get("name")
+                    self.logger.debug(f"Extracted name: {normalized_data['name']}")
+                    
+                    normalized_data["description"] = data.get("description")
+                    self.logger.debug(f"Extracted description: {normalized_data['description'][:100] if normalized_data['description'] else None}...")
+                    
+                    normalized_data["url"] = data.get("url")
+                    self.logger.debug(f"Extracted url: {normalized_data['url']}")
+                    
+                    normalized_data["identifier"] = data.get("identifier")
+                    self.logger.debug(f"Extracted identifier: {normalized_data['identifier']}")
+                    
+                    # Handle creator (can be string, object, or array)
+                    creator = data.get("creator")
+                    if creator:
+                        self.logger.debug(f"Extracted creator (type: {type(creator)}): {creator}")
+                        normalized_data["creator"] = self._normalize_person_org(creator)
+                    else:
+                        self.logger.debug("No creator found in JSON-LD")
+                    
+                    # Handle publisher
+                    publisher = data.get("publisher")
+                    if publisher:
+                        self.logger.debug(f"Extracted publisher (type: {type(publisher)}): {publisher}")
+                        normalized_data["publisher"] = self._normalize_person_org(publisher)
+                    else:
+                        self.logger.debug("No publisher found in JSON-LD")
+                    
+                    normalized_data["datePublished"] = data.get("datePublished")
+                    self.logger.debug(f"Extracted datePublished: {normalized_data['datePublished']}")
+                    
+                    normalized_data["dateModified"] = data.get("dateModified")
+                    self.logger.debug(f"Extracted dateModified: {normalized_data['dateModified']}")
+                    
+                    normalized_data["license"] = data.get("license")
+                    self.logger.debug(f"Extracted license: {normalized_data['license']}")
+                    
+                    normalized_data["version"] = data.get("version")
+                    self.logger.debug(f"Extracted version: {normalized_data['version']}")
+                    
+                    normalized_data["isAccessibleForFree"] = data.get("isAccessibleForFree")
+                    self.logger.debug(f"Extracted isAccessibleForFree: {normalized_data['isAccessibleForFree']}")
+                    
+                    # Handle keywords (can be string or array)
+                    keywords = data.get("keywords", [])
+                    self.logger.debug(f"Extracted keywords (type: {type(keywords)}): {keywords}")
+                    if isinstance(keywords, str):
+                        normalized_data["keywords"] = [kw.strip() for kw in keywords.split(",")]
+                    elif isinstance(keywords, list):
+                        normalized_data["keywords"] = keywords
+                    
+                    # Handle distribution
+                    distribution = data.get("distribution", [])
+                    self.logger.debug(f"Extracted distribution (type: {type(distribution)}, count: {len(distribution) if isinstance(distribution, list) else 1})")
+                    if isinstance(distribution, dict):
+                        distribution = [distribution]
+                    normalized_data["distribution"] = distribution
+                    
+                    # Handle citation
+                    citation = data.get("citation", [])
+                    self.logger.debug(f"Extracted citation (type: {type(citation)}, count: {len(citation) if isinstance(citation, list) else 1})")
+                    if isinstance(citation, (str, dict)):
+                        citation = [citation]
+                    normalized_data["citation"] = citation
+                    
+                    self.logger.info(f"✓ Successfully extracted JSON-LD metadata for dataset: {normalized_data.get('name', 'Unknown')}")
+                    self.logger.info(f"✓ Description length: {len(normalized_data.get('description', '')) if normalized_data.get('description') else 0} characters")
+                    return normalized_data
+                else:
+                    actual_type = data.get('@type') if isinstance(data, dict) else 'not a dict'
+                    self.logger.debug(f"JSON-LD script #{idx + 1} is not a Dataset (type: {actual_type})")
+                    self.logger.debug(f"Available keys: {list(data.keys()) if isinstance(data, dict) else 'N/A'}")
+                    
+            except json.JSONDecodeError as e:
+                self.logger.warning(f"Failed to parse JSON-LD script #{idx + 1}: {e}")
+                self.logger.debug(f"Problematic JSON content (first 200 chars): {script.string[:200] if script.string else 'None'}")
+                continue
+        
+        self.logger.debug("No JSON-LD Dataset found, trying Microdata...")
+        
+        # 2. Try to extract Microdata (fallback)
+        dataset_items = soup.find_all(attrs={"itemtype": re.compile(r"schema\.org/Dataset", re.IGNORECASE)})
+        self.logger.debug(f"Found {len(dataset_items)} Microdata Dataset items")
+        
+        if dataset_items:
+            self.logger.info("Found Microdata Dataset schema")
+            item = dataset_items[0]
+            
+            # Extract name
+            name_prop = item.find(attrs={"itemprop": "name"})
+            if name_prop:
+                normalized_data["name"] = name_prop.get_text(strip=True)
+                self.logger.debug(f"Microdata extracted name: {normalized_data['name']}")
+            else:
+                self.logger.debug("No 'name' itemprop found in Microdata")
+            
+            # Extract description
+            desc_prop = item.find(attrs={"itemprop": "description"})
+            if desc_prop:
+                normalized_data["description"] = desc_prop.get_text(strip=True)
+                self.logger.debug(f"Microdata extracted description: {normalized_data['description'][:100]}...")
+            else:
+                self.logger.debug("No 'description' itemprop found in Microdata")
+            
+            # Extract URL
+            url_prop = item.find(attrs={"itemprop": "url"})
+            if url_prop:
+                normalized_data["url"] = url_prop.get("href") or url_prop.get_text(strip=True)
+                self.logger.debug(f"Microdata extracted url: {normalized_data['url']}")
+            else:
+                self.logger.debug("No 'url' itemprop found in Microdata")
+            
+            # Extract identifier
+            id_prop = item.find(attrs={"itemprop": "identifier"})
+            if id_prop:
+                normalized_data["identifier"] = id_prop.get_text(strip=True)
+                self.logger.debug(f"Microdata extracted identifier: {normalized_data['identifier']}")
+            else:
+                self.logger.debug("No 'identifier' itemprop found in Microdata")
+            
+            # Extract keywords
+            keyword_props = item.find_all(attrs={"itemprop": "keywords"})
+            keywords = [kw.get_text(strip=True) for kw in keyword_props]
+            normalized_data["keywords"] = keywords
+            self.logger.debug(f"Microdata extracted {len(keywords)} keywords")
+            
+            self.logger.info(f"✓ Successfully extracted Microdata for dataset: {normalized_data.get('name', 'Unknown')}")
+            self.logger.info(f"✓ Description length: {len(normalized_data.get('description', '')) if normalized_data.get('description') else 0} characters")
+            return normalized_data
+        
+        self.logger.debug("No Microdata Dataset found, trying meta tags...")
+        
+        # 3. Try to extract from meta tags (minimal fallback)
+        meta_name = soup.find("meta", attrs={"name": re.compile(r"dc\.title|citation_title", re.IGNORECASE)})
+        if meta_name:
+            normalized_data["name"] = meta_name.get("content")
+            self.logger.info(f"Extracted dataset name from meta tags: {normalized_data['name']}")
+            self.logger.warning("Only extracted name from meta tags - no description available")
+            return normalized_data
+        
+        self.logger.warning("❌ No Schema.org Dataset metadata found in HTML (tried JSON-LD, Microdata, and meta tags)")
+        return None
+    
+    def _normalize_person_org(self, entity):
+        """
+        Helper method to normalize Person or Organization entities from Schema.org data.
+        
+        :param entity: dict, str, or list — creator or publisher data
+        :return: normalized entity data
+        """
+        if isinstance(entity, str):
+            return {"name": entity}
+        elif isinstance(entity, dict):
+            return {
+                "@type": entity.get("@type", "Person"),
+                "name": entity.get("name"),
+                "url": entity.get("url"),
+                "identifier": entity.get("identifier"),
+            }
+        elif isinstance(entity, list):
+            return [self._normalize_person_org(e) for e in entity]
+        return None
+
+    def extract_normalized_dataset_urls(self, row):
+        self.logger.info("Extracting normalized dataset URL from row data")
+
+        download_link = str(row.get('download_link', None))
+        dataset_webpage = str(row.get('dataset_webpage', None))
+
+        if download_link and download_link not in ['nan', 'None', '', 'n/a', 'NaN', 'na']:
+            self.logger.debug(f"Using download link as dataset URL: {download_link}")
+        else:
+            download_link = None
+
+        if dataset_webpage and dataset_webpage not in ['nan', 'None', '', 'n/a', 'NaN', 'na']:
+            self.logger.debug(f"Using dataset webpage as dataset URL: {dataset_webpage}")
+        else:
+            dataset_webpage = None
+
+        return dataset_webpage, download_link

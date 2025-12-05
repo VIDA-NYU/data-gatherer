@@ -36,13 +36,23 @@ class PromptManager:
     def render_prompt(self, static_prompt, entire_doc, **dynamic_parts):
         """Render a dynamic prompt by replacing placeholders."""
         self.logger.debug(f"Rendering prompt with static_prompt:{static_prompt}, entire_doc: {entire_doc}, dynamic parts({type(dynamic_parts)}): {dynamic_parts}")
+        
+        # Escape curly braces in dynamic_parts to prevent .format() from interpreting them as placeholders
+        escaped_dynamic_parts = {}
+        for key, value in dynamic_parts.items():
+            if isinstance(value, str):
+                # Replace { with {{ and } with }} to escape them for .format()
+                escaped_dynamic_parts[key] = value.replace("{", "{{").replace("}", "}}")
+            else:
+                escaped_dynamic_parts[key] = value
+        
         if entire_doc or "parts" in static_prompt[0]:
             # Handle the "parts" elements in the prompt
             for item in static_prompt:
                 if "parts" in item:
                     item["parts"] = [
                         {
-                            "text": part["text"].format(**dynamic_parts)
+                            "text": part["text"].format(**escaped_dynamic_parts)
                             if "{" in part["text"] and "}" in part["text"]
                             else part["text"]
                         }
@@ -50,16 +60,27 @@ class PromptManager:
                     ]
                 elif "content" in item:
                     if "{" in item["content"] and "}" in item["content"]:
-                        item["content"] = item["content"].format(**dynamic_parts)
+                        item["content"] = item["content"].format(**escaped_dynamic_parts)
                     else:
                         item["content"]
             return static_prompt
         else:
             self.logger.debug(f"Rendering prompt with dynamic parts({type(dynamic_parts)}): {dynamic_parts}, and items: {static_prompt}")
-            return [
-                {**item, "content": item["content"].format(**dynamic_parts)}
+            
+            # Escape curly braces in dynamic_parts to prevent .format() from interpreting them as placeholders
+            escaped_dynamic_parts = {}
+            for key, value in dynamic_parts.items():
+                if isinstance(value, str):
+                    # Replace { with {{ and } with }} to escape them for .format()
+                    escaped_dynamic_parts[key] = value.replace("{", "{{").replace("}", "}}")
+                else:
+                    escaped_dynamic_parts[key] = value
+            
+            ret = [
+                {**item, "content": item["content"].format(**escaped_dynamic_parts)}
                 for item in static_prompt
             ]
+            return ret
 
     # In PromptManager
 

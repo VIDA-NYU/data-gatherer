@@ -72,13 +72,71 @@ class LLMClient_dev:
             self.logger.debug(f"Initializing direct Gemini client for model: {model}")
             genai.configure(api_key=GEMINI_KEY)
             self.llm_client = genai.GenerativeModel(model)
-            
+        
+        elif model.startswith('local-flan-t5'):
+            self.logger.debug(f"Initializing local Flan-T5 model: {model}")
+            model_path = self._resolve_local_model_path(model)
+            from data_gatherer.llm.local_model_client import LocalModelClient
+            self.llm_client = LocalModelClient(model_path, logger=self.logger)
+            self.llm_client.load_model()
+
         else:
             self.logger.debug(f"Unsupported model: {model}")
             raise ValueError(f"Unsupported LLM name: {model}.")
 
         self.logger.debug(f"Client initialization complete. self.llm_client: {self.llm_client}, self.portkey: {getattr(self, 'portkey', 'Not set')}")
 
+    def _resolve_local_model_path(self, model_name):
+        """
+        Resolve the local model path from the model name.
+        Supports environment variables and relative paths.
+        
+        :param model_name: Model name (e.g., 'local-flan-t5-dataset-extraction')
+        :return: Absolute path to the model directory
+        """
+        import os
+        from pathlib import Path
+        
+        # Check if an environment variable is set for local models
+        env_var_name = "DATA_GATHERER_LOCAL_MODELS_PATH"
+        if env_var_name in os.environ:
+            base_path = Path(os.environ[env_var_name])
+            self.logger.info(f"Using local models base path from environment: {base_path}")
+        else:
+            # Default to scripts/Local_model_finetuning/flan-t5-models/
+            base_path = Path(__file__).parent.parent.parent / "scripts" / "Local_model_finetuning" / "flan-t5-models"
+            self.logger.info(f"Using default local models base path: {base_path}")
+        
+        # Extract the specific model directory name from the model_name
+        # e.g., 'local-flan-t5-dataset-extraction' -> look for 'final_model' or specific checkpoint
+        if "local-flan-t5" in model_name:
+            # Default to final_model directory
+            model_path = base_path / "final_model"
+            
+            # Allow specifying checkpoint in model name, e.g., 'local-flan-t5-checkpoint-1530'
+            if "checkpoint" in model_name:
+                checkpoint_num = model_name.split("checkpoint-")[-1]
+                model_path = base_path / f"checkpoint-{checkpoint_num}"
+        else:
+            # Fallback: use the model name as-is
+            model_path = base_path / model_name.replace("local-", "")
+        
+        if not model_path.exists():
+            self.logger.error(f"Model path does not exist: {model_path}")
+            raise FileNotFoundError(f"Local model not found at {model_path}")
+        
+        self.logger.info(f"Resolved local model path: {model_path}")
+        return str(model_path)
+
+    def _call_local_model(self, messages, temperature=0.0):
+        # Extract content from messages format
+        if isinstance(messages, list):
+            content = messages[-1].get('content', messages[-1])
+        else:
+            content = messages
+        
+        return self.llm_client.generate(content, temperature=temperature)
+    
     def api_call(self, content, response_format, temperature=0.0, **kwargs):
         self.logger.info(f"Calling {self.model} with prompt length {len(content)}")
         if self.model.startswith('gpt'):
@@ -282,6 +340,10 @@ class LLMClient_dev:
                 except Exception as e:
                     self.logger.error(f"Error processing Gemini response: {e}")
                     raise RuntimeError(f"Gemini response processing failed: {e}")
+        
+        elif self.model.startswith('local-flan-t5'):
+            return self._call_local_model(messages, temperature=temperature)
+
         else:
             raise ValueError(f"Unsupported model: {self.model}. Please use a supported LLM model.")
     
@@ -323,28 +385,28 @@ class LLMClient_dev:
                 
         elif 'gpt' in self.model:
             self.logger.debug(f"Processing GPT model response")
-            self.logger.info(f"raw_response type: {type(raw_response)}, length: {len(str(raw_response))}, response: {raw_response}")
+            self.logger.debug(f"raw_response type: {type(raw_response)}, length: {len(str(raw_response))}, response: {raw_response}")
             if from_batch_mode:
-                self.logger.info(f"From batch mode, raw_response type: {type(raw_response)}, length: {len(raw_response)}")
+                self.logger.debug(f"From batch mode, raw_response type: {type(raw_response)}, length: {len(raw_response)}")
                 for item in raw_response:
-                    self.logger.info(f"Batch item type: {type(item)}, content (first 100 chars): {str(item)[:100]}")
+                    self.logger.debug(f"Batch item type: {type(item)}, content (first 100 chars): {str(item)[:100]}")
                     if item['type'] == 'reasoning':
                         continue
                     elif item['type'] == 'message':
                         raw_response = item['content'][0]['text']
-                        self.logger.info(f"Using message content for processing: {raw_response[:100]}")
+                        self.logger.debug(f"Using message content for processing: {raw_response[:100]}")
                         break
 
             parsed_response = self.safe_parse_json(raw_response)
             self.logger.info(f"GPT parsed response: {parsed_response}, type: {type(parsed_response)}")
             if self.full_document_read and isinstance(parsed_response, dict) and expected_key in parsed_response:
                 result = parsed_response.get(expected_key, []) if expected_key else parsed_response
-                self.logger.info(f"GPT full_document_read=True, extracted result: {result}")
+                self.logger.debug(f"GPT full_document_read=True, extracted result: {result}")
             else:
                 result = parsed_response or []
-                self.logger.info(f"GPT full_document_read=False, result: {result}")
+                self.logger.debug(f"GPT full_document_read=False, result: {result}")
             final_result = self.normalize_response_format(result)
-            self.logger.info(f"GPT final normalized result: {final_result}")
+            self.logger.debug(f"GPT final normalized result: {final_result}")
             return final_result
             
         elif 'gemini' in self.model:
@@ -372,6 +434,12 @@ class LLMClient_dev:
                     self.logger.debug(f"Gemini JSON decoding error: {e}")
                     self.logger.error(f"JSON decoding error: {e}")
                     return []
+        
+        elif self.model.startswith('local-flan-t5'):
+            parsed_response = self.safe_parse_json(raw_response)
+            self.logger.debug(f"Processing local Flan-T5 model response: {parsed_response}")
+            return parsed_response
+
         else:
             self.logger.debug(f"Unsupported model: {self.model}")
             raise ValueError(f"Unsupported model: {self.model}. Please use a supported LLM model.")
@@ -474,31 +542,56 @@ class LLMClient_dev:
         except json.JSONDecodeError:
             self.logger.warning(f"Initial JSON parsing failed. Attempting json_repair on {response_text[:100]}...")
             try:
+                fixed = False
                 # Pre-process common malformed patterns before json_repair
                 repaired = response_text
+
+                # Check if we have the T5 duplicate key pattern
+                if '"dataset_identifier"' in repaired and repaired.count('"dataset_identifier"') > 1 and 't5' in self.model:
+                    self.logger.info("Detected T5 duplicate key pattern, attempting to split into array of objects...")
+                    
+                    pairs_pattern = r'"(dataset_identifier|repository_reference|data_repository|dataset_webpage)"\s*:\s*"([^"]*)"'
+                    matches = re.findall(pairs_pattern, repaired)
+                    
+                    if matches:
+                        # Group pairs into objects (every 2-4 pairs = 1 object)
+                        objects = []
+                        current_obj = {}
+                        
+                        for key, value in matches:
+                            if key == 'dataset_identifier' and 'dataset_identifier' in current_obj:
+                                objects.append(current_obj)
+                                current_obj = {}
+                            current_obj[key] = value
+                        
+                        if current_obj:
+                            objects.append(current_obj)
+                        
+                        if objects:
+                            # Ensure proper JSON list format with outer braces
+                            repaired = json.dumps(objects)
+                            self.logger.info(f"Reconstructed {len(objects)} objects from T5 output: {repaired[:200]}")
+                            fixed = True
                 
-                # Fix the specific pattern we're seeing: arrays using [ instead of { for objects
-                # Pattern: [ [ "key": "value", "key2": "value2", ... ], [...] ]
-                # Should be: [ { "key": "value", "key2": "value2", ... }, {...} ]
-                
-                # Replace array brackets with object braces when they contain key-value pairs
-                def fix_malformed_objects(match):
-                    content = match.group(1)
-                    # If content has key-value pairs, wrap in object braces
-                    if '"' in content and ':' in content:
-                        return '{' + content + '}'
-                    return '[' + content + ']'  # Keep as array if no key-value pairs
-                
-                # Find nested arrays that should be objects
-                repaired = re.sub(r'\[\s*([^[\]]*"[^"]*"\s*:\s*"[^"]*"[^[\]]*)\s*\]', fix_malformed_objects, repaired)
-                
-                self.logger.info(f"After malformed pattern fix: {repaired[:200]}...")
-                
-                # Use json_repair
-                repaired = repair_json(repaired)
-                
-                # Clean up artifacts
-                repaired = re.sub(r',\s*\{\}\]', ']', repaired)  # Remove trailing empty objects in lists
+                if not fixed:
+                    # Replace array brackets with object braces when they contain key-value pairs
+                    def fix_malformed_objects(match):
+                        content = match.group(1)
+                        # If content has key-value pairs, wrap in object braces
+                        if '"' in content and ':' in content:
+                            return '{' + content + '}'
+                        return '[' + content + ']'  # Keep as array if no key-value pairs
+                    
+                    # Find nested arrays that should be objects
+                    repaired = re.sub(r'\[\s*([^[\]]*"[^"]*"\s*:\s*"[^"]*"[^[\]]*)\s*\]', fix_malformed_objects, repaired)
+                    
+                    self.logger.info(f"After malformed pattern fix: {repaired[:200]}...")
+                    
+                    # Use json_repair
+                    repaired = repair_json(repaired)
+                    
+                    # Clean up artifacts
+                    repaired = re.sub(r',\s*\{\}\]', ']', repaired)  # Remove trailing empty objects in lists
                 
                 parsed = json.loads(repaired)
                 self.logger.info(f"Successfully parsed after repair: {type(parsed)} with {len(parsed) if hasattr(parsed, '__len__') else 'N/A'} items")
@@ -580,6 +673,7 @@ class LLMClient_dev:
             for request_data in batch_requests:
                 custom_id = request_data.get('custom_id')
                 messages = request_data.get('messages')
+                metadata = request_data.get('metadata')
                 
                 if not custom_id or not messages:
                     self.logger.warning(f"Skipping invalid batch request: missing custom_id or messages")
@@ -598,7 +692,8 @@ class LLMClient_dev:
                         messages=messages,
                         model=batch_model,
                         temperature=temperature,
-                        response_format=response_format
+                        response_format=response_format,
+                        metadata=metadata
                     )
                 elif api_provider.lower() == 'portkey':
                     formatted_request = self.batch_builder.create_portkey_request(
@@ -674,10 +769,32 @@ class LLMClient_dev:
         # Create a dedicated OpenAI client for batch operations
         # This ensures we use the direct OpenAI API even if the main client uses Portkey
         openai_client = OpenAI(api_key=GPT_API_KEY)
+
+        # Filter out invalid keys (i.e. 'metadata') from batch request JSONL file
+        # OpenAI Batch API doesn't accept 'metadata' field in request body
+        cleaned_file_path = batch_file_path.replace('.jsonl', '_cleaned.jsonl')
+        self.logger.info(f"Filtering invalid keys from batch file: {batch_file_path}")
         
-        # Upload the batch file
-        self.logger.info(f"Uploading batch file to OpenAI: {batch_file_path}")
-        with open(batch_file_path, 'rb') as file:
+        with open(batch_file_path, 'r', encoding='utf-8') as infile, \
+             open(cleaned_file_path, 'w', encoding='utf-8') as outfile:
+            for line_num, line in enumerate(infile, 1):
+                if not line.strip():
+                    continue
+                try:
+                    request = json.loads(line)
+                    if 'metadata' in request:
+                        self.logger.debug(f"Removing 'metadata' field from request {line_num}")
+                        del request['metadata']
+                    outfile.write(json.dumps(request) + '\n')
+                except json.JSONDecodeError as e:
+                    self.logger.error(f"Invalid JSON at line {line_num}: {e}")
+                    raise
+        
+        self.logger.info(f"Created cleaned batch file: {cleaned_file_path}")
+        
+        # Upload the cleaned batch file
+        self.logger.info(f"Uploading cleaned batch file to OpenAI: {cleaned_file_path}")
+        with open(cleaned_file_path, 'rb') as file:
             batch_input_file = openai_client.files.create(
                 file=file,
                 purpose="batch"
@@ -763,7 +880,7 @@ class LLMClient_dev:
             # Check batch status first
             status_info = self.check_batch_status(batch_id, api_provider)
             
-            if status_info['status'] != 'completed':
+            if status_info['status'] not in ['completed', 'cancelled']:
                 raise ValueError(f"Batch {batch_id} is not completed. Status: {status_info['status']}")
             
             if not status_info.get('output_file_id'):

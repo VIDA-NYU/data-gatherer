@@ -17,10 +17,7 @@ def setup_logging(logger_name, log_file=None, level=logging.WARNING, clear_previ
     logger.setLevel(level)
     logger.propagate = False
 
-    # Disable logging if running tests
-    if os.getenv('PYTEST_CURRENT_TEST'):
-        logger.setLevel(logging.CRITICAL)  # suppress all logs
-        return logger
+    # Always show logs, even during tests (do not suppress logging)
 
     WHITE = "\033[97m"
     RESET = "\033[0m"

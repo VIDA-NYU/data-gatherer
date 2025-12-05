@@ -104,7 +104,9 @@ class GrobidPDFParser(PDFParser):
 
     def parse_data(self, file_path, publisher=None, current_url_address=None, raw_data_format='PDF',
                    file_path_is_temp=False, article_file_dir='tmp/raw_files/', prompt_name='GPT_FewShot', use_portkey=True, 
-                   semantic_retrieval=False, top_k=2, section_filter=None, response_format=None):
+                   semantic_retrieval=False, top_k=2, section_filter=None, response_format=None, 
+                   dedup=True, brute_force_RegEx_ID_ptrs=False
+                   ):
         """
         Parse the PDF file and extract metadata of the relevant datasets.
         """
@@ -148,7 +150,9 @@ class GrobidPDFParser(PDFParser):
                 use_portkey=use_portkey,
                 semantic_retrieval=semantic_retrieval,
                 top_k=top_k,
-                response_format=response_format
+                response_format=response_format,
+                dedup=True,
+                brute_force_RegEx_ID_ptrs=False
             )
 
             return out_df
@@ -175,7 +179,8 @@ class GrobidPDFParser(PDFParser):
                                                   prompt_name=prompt_name,
                                                   use_portkey=use_portkey,
                                                   semantic_retrieval=semantic_retrieval, top_k=top_k,
-                                                  section_filter=section_filter, response_format=response_format)
+                                                  section_filter=section_filter, response_format=response_format,
+                                                  dedup=dedup, brute_force_RegEx_ID_ptrs=brute_force_RegEx_ID_ptrs)
 
             except Exception as fallback_error:
                 self.logger.error(f"Fallback parser also failed: {fallback_error}")

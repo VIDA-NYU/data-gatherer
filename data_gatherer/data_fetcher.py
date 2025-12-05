@@ -3,6 +3,7 @@ import re
 import logging
 import numpy as np
 from selenium.webdriver.common.by import By
+import asyncio
 import os
 import time
 import requests
@@ -37,7 +38,7 @@ class BackupDataStore:
         self.logger = logger or logging.getLogger(__name__)
         if filepath and (self._filepath != filepath or not self._is_valid()):
             self._load_dataframe(filepath)
-            self.logger.info(f"BackupDataStore loaded from {filepath}, entries: {len(self._dataframe) if self._dataframe is not None else 0}")
+            self.logger.debug(f"BackupDataStore loaded from {filepath}, entries: {len(self._dataframe) if self._dataframe is not None else 0}")
     
     def _load_dataframe(self, filepath):
         """Load DataFrame from file with error handling."""
@@ -62,13 +63,21 @@ class BackupDataStore:
         """Check if publication exists in backup store."""
         if not self._is_valid() or self._dataframe is None:
             return False
-        return identifier.lower() in self._dataframe['publication'].str.lower().values
+        if 'publication' in self._dataframe.keys():
+            return identifier.lower() in self._dataframe['publication'].str.lower().values
+        else:
+            return identifier.lower() in self._dataframe.index.str.lower().values
     
     def get_publication_data(self, identifier):
         """Retrieve publication data if available."""
         if not self.has_publication(identifier):
             return None
-        row = self._dataframe[self._dataframe['publication'].str.lower() == identifier.lower()]
+        self.logger.debug(f"Fetching publication {identifier} from backup store")
+        if 'publication' in self._dataframe.columns:
+            row = self._dataframe[self._dataframe['publication'].str.lower() == identifier.lower()]
+        else:
+            row = self._dataframe[self._dataframe.index.str.lower() == identifier.lower()]
+        self.logger.info(f"Fetched {len(row)} records from backup store")
         if len(row) > 0:
             return {
                 'content': row.iloc[0]['raw_cont'],
@@ -88,22 +97,24 @@ class BackupDataStore:
 # Abstract base class for fetching data
 class DataFetcher(ABC):
     def __init__(self, logger, src='WebScraper', driver_path=None, browser='firefox', headless=True, 
-                 backup_data_file='scripts/exp_input/Local_fetched_data.parquet'):
+                 backup_data_file='scripts/exp_input/Local_fulltext_pub_REV.parquet'):
         self.logger = logger
         self.logger.debug(f"DataFetcher ({src}) initialized.")
         self.driver_path = driver_path
         self.browser = browser
         self.headless = headless
         self.src = src
+        self.local_data_used = False
         
-        # Initialize backup data store (lightweight, shared across all instances)
-        self.backup_store = None
-        if backup_data_file and os.path.exists(backup_data_file):
-            self.backup_store = BackupDataStore(filepath=backup_data_file, logger=self.logger)
-            stats = self.backup_store.get_stats()
-            self.logger.info(f"Backup data store initialized: {stats['size']} publications, valid: {stats['valid']}")
+        if hasattr(self, 'backup_store') and self.backup_store is not None:
+            self.logger.debug("Using existing BackupDataStore instance.")
         else:
-            self.logger.info(f"No backup data available at {backup_data_file}")
+            if backup_data_file and os.path.exists(backup_data_file):
+                self.backup_store = BackupDataStore(filepath=backup_data_file, logger=self.logger)
+                stats = self.backup_store.get_stats()
+                self.logger.info(f"Backup data store initialized: {stats['size']} publications, valid: {stats['valid']}")
+            else:
+                self.logger.info(f"No backup data available at {backup_data_file}")
     
     def try_backup_fetch(self, identifier):
         """
@@ -216,13 +227,21 @@ class DataFetcher(ABC):
 
         :return: The extracted PMC ID or None if not found.
         """
-        match = re.search(r'PMC(\d+)', url)
+        match = re.search(r'PMC(\d+)', url, re.IGNORECASE)
+        doi = re.search(r'(10\.\d{4,9}/[-._;()/:A-Z0-9]+)', url, re.IGNORECASE)
         if match:
             pmcid = f"PMC{match.group(1)}"
             self.logger.info(f"Extracted PMC ID: {pmcid}")
+            self.current_article_id = pmcid
             return pmcid
+
+        elif doi:
+            self.current_article_id = doi.group(1)
+            return doi.group(1)
+
         else:
             self.logger.warning(f"No PMC ID found in URL: {url}")
+            self.current_article_id = None
             return None
 
     def url_to_doi(self, url : str, candidate_pmcid=None):
@@ -272,23 +291,23 @@ class DataFetcher(ABC):
     def PMCID_to_url(self, PMCID):
         return f"https://www.ncbi.nlm.nih.gov/pmc/articles/{PMCID}"
 
-    def update_DataFetcher_settings(self, url, entire_doc_model, logger, HTML_fallback=False, driver_path=None,
+    def update_DataFetcher_settings(self, url, HTML_fallback=False, driver_path=None,
                                     browser='firefox', headless=True, local_fetch_file=None):
         """
         Creates appropriate data fetcher with BackupDataStore integration. 
         All fetchers now automatically check backup data first, then fall back to live fetching.
 
         :param url: The URL to fetch data from.
-        :param entire_doc_model: Flag to indicate if the entire document model is being used.
-        :param logger: The logger instance for logging messages.
+        :param HTML_fallback: If False, use simple HTTP. If True, use Selenium. If 'HTTPGetRequest', force HTTP. If 'Playwright', force Playwright.
         :return: An instance of the appropriate data fetcher with backup capability.
         """
-        self.logger.debug(f"update_DataFetcher_settings for URL: {url}")
+        self.logger.debug(f"update_DataFetcher_settings for URL: {url}, current instance: {self.__class__.__name__}")
+        self.local_data_used = False
 
         # Determine backup data file
-        backup_file = local_fetch_file or 'scripts/exp_input/Local_fetched_data.parquet'
+        backup_file = local_fetch_file or 'scripts/exp_input/Local_fulltext_pub_REV.parquet'
 
-        if self.backup_store is None or self.backup_store._filepath != backup_file:
+        if hasattr(self, 'backup_store') and (self.backup_store is None or self.backup_store._filepath != backup_file):
             self.backup_store = BackupDataStore(filepath=backup_file, logger=self.logger)
             stats = self.backup_store.get_stats()
             self.logger.info(f"Backup data store re-initialized: {stats['size']} publications, valid: {stats['valid']}")
@@ -299,7 +318,7 @@ class DataFetcher(ABC):
             if isinstance(self, PdfFetcher):
                 self.logger.info(f"Reusing existing PdfFetcher instance.")
                 return self
-            return PdfFetcher(logger, driver_path=driver_path, browser=browser, headless=headless)
+            return PdfFetcher(self.logger, driver_path=driver_path, browser=browser, headless=headless)
 
         # Detect API type for optimal fetcher selection
         API = None
@@ -314,7 +333,7 @@ class DataFetcher(ABC):
                 self.logger.info(f"Reusing existing EntrezFetcher instance with backup support.")
                 return self
             self.logger.info(f"Creating EntrezFetcher with backup support")
-            return EntrezFetcher(requests, logger)
+            return EntrezFetcher(requests, self.logger)
 
         # For HTTP GET requests (simpler, faster for static content)
         if type(HTML_fallback) == str and HTML_fallback == 'HTTPGetRequest':
@@ -322,15 +341,37 @@ class DataFetcher(ABC):
             if isinstance(self, HttpGetRequest):
                 self.logger.info(f"Reusing existing HttpGetRequest instance.")
                 return self
-            return HttpGetRequest(logger)
+            return HttpGetRequest(self.logger)
+        
+        use_playwright = False
+        if type(HTML_fallback) == str and HTML_fallback == 'Playwright':
+            use_playwright = True
         
         # Default case: check if we need complex JS rendering or simple HTTP
         if not HTML_fallback:
             # Start with simple HTTP GET (faster, backup-first)
             self.logger.info(f"Using HttpGetRequest (backup-first) for URL: {url}")
-            return HttpGetRequest(logger)
+            return HttpGetRequest(self.logger)
 
-        # For complex dynamic content, use WebScraper with backup support
+        # For complex dynamic content, use Playwright (with asyncio detection)
+        if use_playwright:
+            # Check if we're in an asyncio event loop (Jupyter notebook)
+            in_event_loop = False
+            try:
+                asyncio.get_running_loop()
+                in_event_loop = True
+                self.logger.info("Detected asyncio event loop - will use Playwright Async API")
+            except RuntimeError:
+                self.logger.info("No asyncio event loop detected - will use Playwright Sync API")
+            
+            if isinstance(self, PlaywrightFetcher):
+                self.logger.info(f"Reusing existing PlaywrightFetcher instance with backup support")
+                return self
+            
+            self.logger.info(f"Creating new PlaywrightFetcher with backup support: {browser}, headless={headless}, async={in_event_loop}")
+            return PlaywrightFetcher(self.logger, browser_type=browser, headless=headless, use_async=in_event_loop)
+        
+        # Default: Use traditional Selenium WebScraper with backup support
         # Reuse existing driver if available
         if isinstance(self, WebScraper) and hasattr(self, 'scraper_tool') and self.scraper_tool is not None:
             self.logger.info(f"Reusing existing WebScraper driver with backup support")
@@ -338,7 +379,7 @@ class DataFetcher(ABC):
 
         self.logger.info(f"Creating new WebScraper with backup support: {browser}, headless={headless}")
         driver = create_driver(driver_path, browser, headless, self.logger)
-        return WebScraper(driver, logger, driver_path=driver_path, browser=browser, headless=headless)
+        return WebScraper(driver, self.logger, driver_path=driver_path, browser=browser, headless=headless)
 
     def url_in_dataframe(self, url):
         """
@@ -432,6 +473,7 @@ class DataFetcher(ABC):
             self.logger.info("No cookie pattern 1 found in HTML")
         return html
 
+
 class HttpGetRequest(DataFetcher):
     "class for fetching data via HTTP GET requests using the requests library."
     def __init__(self, logger):
@@ -450,11 +492,12 @@ class HttpGetRequest(DataFetcher):
         :return: The raw content of the page.
         """
         # Try backup data FIRST (microsecond lookup)
-        pmcid = re.search(r'PMC\d+', url, re.IGNORECASE)
-        if pmcid:
-            backup_data = self.try_backup_fetch(pmcid.group(0))
+        article_id = self.url_to_pmcid(url)
+        self.article_id = article_id
+        if article_id and hasattr(self, 'backup_store') and self.backup_store is not None:
+            backup_data = self.try_backup_fetch(article_id)
             if backup_data:
-                self.logger.info(f"Found {pmcid.group(0)} in local backup data (fast path, format: {self.raw_data_format})")
+                self.logger.info(f"Found {article_id} in local backup data (fast path, format: {self.raw_data_format})")
                 return backup_data
         
         # Fallback to live HTTP fetch (slow path)
@@ -590,11 +633,12 @@ class WebScraper(DataFetcher):
         self.raw_data_format = 'HTML'  # Default format for web scraping
         
         # Try backup data FIRST (microsecond lookup)
-        pmcid = re.search(r'PMC\d+', url, re.IGNORECASE)
-        if pmcid:
-            backup_data = self.try_backup_fetch(pmcid.group(0))
+        article_id = self.url_to_pmcid(url)
+        self.article_id = article_id
+        if article_id and hasattr(self, 'backup_store') and self.backup_store is not None:
+            backup_data = self.try_backup_fetch(article_id)
             if backup_data:
-                self.logger.info(f"Found {pmcid.group(0)} in local backup data (fast path, format: {self.raw_data_format})")
+                self.logger.info(f"Found {article_id} in local backup data (fast path, format: {self.raw_data_format})")
                 return backup_data
         
         # Fallback to live web scraping (slow path)
@@ -763,17 +807,6 @@ class WebScraper(DataFetcher):
 
         return pmc_id, doi
 
-    def convert_url_to_doi(self, url : str):
-        # Extract DOI from the URL
-        url = url.lower()
-        match = re.search(r'(10\.\d{4,9}/[-._;()/:A-Z0-9]+)', url, re.IGNORECASE)
-        if match:
-            doi = match.group(1)
-            self.logger.info(f"DOI: {doi}")
-            return doi
-        else:
-            return None
-
     def download_file_from_url(self, url, output_root, paper_id):
         """
         Downloads a file from the given URL and saves it to the specified directory.
@@ -880,20 +913,23 @@ class EntrezFetcher(DataFetcher):
 
         :param article_id: The URL of the article to fetch data for.
         """
+
+        self.raw_data_format = 'XML'
+
         try:
             # Extract the PMC ID from the article URL, ignore case
-            PMCID = re.search(r'PMC\d+', article_id, re.IGNORECASE).group(0)
-            self.PMCID = PMCID
+            pmcid = re.search(r'PMC\d+', article_id, re.IGNORECASE).group(0)
+            self.article_id = pmcid
             
-            # Try backup data FIRST (microsecond lookup)
-            backup_data = self.try_backup_fetch(PMCID)
-            if backup_data:
-                self.logger.info(f"Found {PMCID} in local backup data (fast path, format: {self.raw_data_format})")
-                return backup_data
+            if hasattr(self, 'backup_store') and self.backup_store is not None:
+                backup_data = self.try_backup_fetch(pmcid)
+                if backup_data:
+                    self.logger.info(f"Found {pmcid} in local backup data (fast path, format: {self.raw_data_format})")
+                    return backup_data
 
-            # Fallback to live API call (slow path)
-            self.logger.info(f"Local data not found, fetching live from API for {PMCID}")
-            return self._fetch_live_api_data(PMCID, retries, delay)
+            else:
+                self.logger.info(f"Local data not found, fetching live from API for {pmcid}")
+            return self._fetch_live_api_data(pmcid, retries, delay)
 
         except Exception as e:
             # Log any exceptions and return None (backup already tried at start)
@@ -904,6 +940,8 @@ class EntrezFetcher(DataFetcher):
         """Helper method to fetch data from live NCBI API."""
         api_call = re.sub('__PMCID__', pmcid, self.base)
         self.logger.info(f"API request: {api_call}")
+
+        self.raw_data_format = 'XML'
 
         # Retry logic for API calls
         for attempt in range(retries):
@@ -997,6 +1035,471 @@ class EntrezFetcher(DataFetcher):
         else:
             self.logger.warning("No article title found in XML data.")
             return "No Title Found"
+
+class PlaywrightFetcher(DataFetcher):
+    """
+    Class for fetching data from web pages using Playwright.
+    Modern, faster alternative to Selenium with better JavaScript handling.
+    Automatically detects and adapts to asyncio event loops (Jupyter notebooks).
+    """
+    def __init__(self, logger, browser_type='chromium', headless=True, use_async=False):
+        """
+        Initializes the PlaywrightFetcher.
+        
+        :param logger: Logger instance for logging messages
+        :param browser_type: Browser to use ('chromium', 'firefox', or 'webkit')
+        :param headless: Whether to run in headless mode
+        :param use_async: Whether to use async API (auto-detected for Jupyter)
+        """
+        super().__init__(logger, src='PlaywrightFetcher', browser=browser_type, headless=headless)
+        self.browser_type = browser_type
+        self.headless = headless
+        self.use_async = use_async
+        self.playwright = None
+        self.browser = None
+        self.context = None
+        self.page = None
+        self.raw_data_format = 'HTML'
+        self.logger.debug(f"PlaywrightFetcher initialized with {browser_type} (headless={headless}, async={use_async})")
+    
+    def _ensure_browser_started(self):
+        """Lazily start the browser when needed (sync version)."""
+        if self.playwright is None and not self.use_async:
+            from playwright.sync_api import sync_playwright
+            
+            self.logger.debug("Starting Playwright browser (sync API)")
+            self.playwright = sync_playwright().start()
+            
+            # Select browser type
+            if self.browser_type.lower() == 'firefox':
+                browser_launcher = self.playwright.firefox
+            elif self.browser_type.lower() == 'webkit':
+                browser_launcher = self.playwright.webkit
+            else:  # default to chromium
+                browser_launcher = self.playwright.chromium
+            
+            self.browser = browser_launcher.launch(headless=self.headless)
+            self.context = self.browser.new_context(
+                user_agent='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+            )
+            self.page = self.context.new_page()
+            self.logger.info(f"Playwright {self.browser_type} browser started (sync)")
+    
+    async def _ensure_browser_started_async(self):
+        """Lazily start the browser when needed (async version for Jupyter)."""
+        if self.playwright is None and self.use_async:
+            from playwright.async_api import async_playwright
+            
+            self.logger.debug("Starting Playwright browser (async API)")
+            self.playwright = await async_playwright().start()
+            
+            # Select browser type
+            if self.browser_type.lower() == 'firefox':
+                browser_launcher = self.playwright.firefox
+            elif self.browser_type.lower() == 'webkit':
+                browser_launcher = self.playwright.webkit
+            else:  # default to chromium
+                browser_launcher = self.playwright.chromium
+            
+            self.browser = await browser_launcher.launch(headless=self.headless)
+            self.context = await self.browser.new_context(
+                user_agent='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+            )
+            self.page = await self.context.new_page()
+            self.logger.info(f"Playwright {self.browser_type} browser started (async)")
+    
+    def fetch_data(self, url, retries=3, delay=2, wait_for_selector=None, wait_time=2000):
+        """
+        Fetches data from the given URL using Playwright.
+        First tries backup data (fast), then live fetching if needed.
+        Automatically uses async API if in event loop (Jupyter).
+        
+        :param url: The URL to fetch data from
+        :param retries: Number of retries in case of failure
+        :param delay: Delay time between retries
+        :param wait_for_selector: Optional CSS selector to wait for before extracting HTML
+        :param wait_time: Time to wait for page load (milliseconds)
+        :return: The raw HTML content of the page
+        """
+        self.raw_data_format = 'HTML'
+        
+        # Try backup data FIRST (microsecond lookup)
+        article_id = self.url_to_pmcid(url)
+        self.article_id = article_id
+        if article_id and hasattr(self, 'backup_store') and self.backup_store is not None:
+            backup_data = self.try_backup_fetch(article_id)
+            if backup_data:
+                self.logger.info(f"Found {article_id} in local backup data (fast path, format: {self.raw_data_format})")
+                return backup_data
+        
+        # Detect asyncio loop at RUNTIME (not initialization)
+        in_event_loop = False
+        try:
+            asyncio.get_running_loop()
+            in_event_loop = True
+            self.logger.debug("Asyncio event loop detected - will use workaround")
+        except RuntimeError:
+            self.logger.debug("No asyncio event loop - using sync API directly")
+        
+        # In Jupyter (event loop), use sync API but in a thread to avoid conflicts
+        if in_event_loop:
+            self.logger.info(f"Local data not found, fetching from {url} with Playwright (sync in thread)")
+            return self._fetch_in_thread(url, retries, delay, wait_for_selector, wait_time)
+        else:
+            # Regular script - use sync API directly
+            self.logger.info(f"Local data not found, fetching from {url} with Playwright (sync)")
+            return self._fetch_data_sync(url, retries, delay, wait_for_selector, wait_time)
+    
+    def _fetch_in_thread(self, url, retries, delay, wait_for_selector, wait_time):
+        """Run sync Playwright in a separate thread to avoid event loop conflicts."""
+        import concurrent.futures
+        self.logger.debug("Starting Playwright in separate thread")
+        
+        with concurrent.futures.ThreadPoolExecutor() as executor:
+            future = executor.submit(
+                self._fetch_data_sync,
+                url, retries, delay, wait_for_selector, wait_time
+            )
+            result = future.result()
+            return result
+    
+    def _fetch_data_sync(self, url, retries, delay, wait_for_selector, wait_time):
+        """Sync version of fetch_data for regular Python scripts."""
+        # Ensure browser is started IN THIS THREAD (important for thread isolation)
+        playwright_ctx = None
+        browser = None
+        page = None
+        
+        attempt = 0
+        while attempt < retries:
+            try:
+                # Initialize Playwright in THIS thread if not already done
+                if page is None:
+                    from playwright.sync_api import sync_playwright
+                    self.logger.debug("Initializing Playwright browser in current thread")
+                    
+                    playwright_ctx = sync_playwright().start()
+                    
+                    # Select browser type
+                    if self.browser_type.lower() == 'firefox':
+                        browser_launcher = playwright_ctx.firefox
+                    elif self.browser_type.lower() == 'webkit':
+                        browser_launcher = playwright_ctx.webkit
+                    else:  # default to chromium
+                        browser_launcher = playwright_ctx.chromium
+                    
+                    browser = browser_launcher.launch(headless=self.headless)
+                    context = browser.new_context(
+                        user_agent='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+                    )
+                    page = context.new_page()
+                    self.logger.debug(f"Playwright {self.browser_type} browser started in thread")
+                
+                # Navigate to URL
+                self.logger.debug(f"Playwright sync attempt {attempt + 1}: navigating to {url}")
+                response = page.goto(url, wait_until='load', timeout=30000)
+                self.logger.debug(f"Page loaded with status: {response.status if response else 'Unknown'}")
+                
+                # Wait for network to settle
+                try:
+                    page.wait_for_load_state('networkidle', timeout=10000)
+                    self.logger.debug("Network is idle")
+                except Exception as e:
+                    self.logger.warning(f"Network idle timeout (expected for some pages): {e}")
+                
+                # Give extra time for JavaScript to finish
+                self.logger.debug(f"Waiting additional {wait_time}ms for dynamic content")
+                page.wait_for_timeout(wait_time)
+                
+                # Try to wait for Schema.org metadata to be present
+                try:
+                    self.logger.debug("Waiting for Schema.org metadata script...")
+                    page.wait_for_selector('script[type="application/ld+json"]', timeout=5000)
+                    self.logger.debug("✓ Schema.org metadata found")
+                except Exception as e:
+                    self.logger.warning(f"Schema.org metadata not found (may not be present): {e}")
+                
+                # Optional: Wait for specific selector
+                if wait_for_selector:
+                    self.logger.debug(f"Waiting for selector: {wait_for_selector}")
+                    page.wait_for_selector(wait_for_selector, timeout=wait_time)
+                
+                # Extract page content
+                html_content = page.content()
+                self.logger.info(f"Successfully fetched {len(html_content)} bytes from {url}")
+                
+                # Debug: Log first 500 chars if suspiciously small
+                if len(html_content) < 1000:
+                    self.logger.warning(f"⚠️  Content is suspiciously small ({len(html_content)} bytes)")
+                    self.logger.warning(f"First 500 chars: {html_content[:500]}")
+                
+                # Cleanup
+                if browser:
+                    browser.close()
+                if playwright_ctx:
+                    playwright_ctx.stop()
+                
+                return html_content
+                
+            except Exception as e:
+                self.logger.warning(f"Playwright sync attempt {attempt + 1} failed: {e}")
+                self.logger.debug(f"Exception details: {type(e).__name__}: {str(e)}")
+                attempt += 1
+                if attempt < retries:
+                    time.sleep(delay)
+        
+        # Cleanup on failure
+        if browser:
+            try:
+                browser.close()
+            except:
+                pass
+        if playwright_ctx:
+            try:
+                playwright_ctx.stop()
+            except:
+                pass
+        
+        self.logger.error(f"Failed to fetch data from {url} after {retries} attempts (sync)")
+        return None
+    
+    def _fetch_data_async_wrapper(self, url, retries, delay, wait_for_selector, wait_time):
+        """Wrapper to run async fetch in Jupyter's event loop."""
+        import asyncio
+        
+        # Check if we're already in an event loop (Jupyter)
+        try:
+            loop = asyncio.get_running_loop()
+            # We're in Jupyter's event loop - schedule the coroutine in THIS loop
+            self.logger.debug("In existing event loop (Jupyter), scheduling async task")
+            
+            # Create a task in the current loop and wait for it using run_until_complete
+            # This is the key - we need to run it in the SAME loop where it was created
+            try:
+                import nest_asyncio
+                nest_asyncio.apply()
+                self.logger.debug("nest_asyncio applied, using asyncio.run()")
+                # nest_asyncio allows nested loops
+                return asyncio.run(self._fetch_data_async(url, retries, delay, wait_for_selector, wait_time))
+            except ImportError:
+                self.logger.error("nest_asyncio not installed - required for Playwright in Jupyter")
+                self.logger.error("Install with: pip install nest-asyncio")
+                raise ImportError("nest_asyncio required for Playwright in Jupyter. Install with: pip install nest-asyncio")
+                    
+        except RuntimeError:
+            # No event loop, create one (normal Python script)
+            self.logger.debug("No event loop, creating new one with asyncio.run()")
+            return asyncio.run(self._fetch_data_async(url, retries, delay, wait_for_selector, wait_time))
+            self.logger.debug("No event loop, creating new one")
+            return asyncio.run(self._fetch_data_async(url, retries, delay, wait_for_selector, wait_time))
+    
+    async def _fetch_data_async(self, url, retries, delay, wait_for_selector, wait_time):
+        """Async version of fetch_data for Jupyter notebooks."""
+        attempt = 0
+        while attempt < retries:
+            try:
+                await self._ensure_browser_started_async()
+                
+                # Navigate to URL
+                self.logger.debug(f"Playwright async attempt {attempt + 1}: navigating to {url}")
+                await self.page.goto(url, wait_until='domcontentloaded', timeout=30000)
+                
+                # Optional: Wait for specific selector
+                if wait_for_selector:
+                    self.logger.debug(f"Waiting for selector: {wait_for_selector}")
+                    await self.page.wait_for_selector(wait_for_selector, timeout=wait_time)
+                else:
+                    # Default: wait for network to be idle
+                    await self.page.wait_for_load_state('networkidle', timeout=wait_time)
+                
+                # Extract page content
+                html_content = await self.page.content()
+                self.logger.info(f"Successfully fetched {len(html_content)} bytes from {url}")
+                
+                return html_content
+                
+            except Exception as e:
+                self.logger.warning(f"Playwright async attempt {attempt + 1} failed: {e}")
+                attempt += 1
+                if attempt < retries:
+                    await asyncio.sleep(delay)
+        
+        self.logger.error(f"Failed to fetch data from {url} after {retries} attempts (async)")
+        return None
+    
+    def simulate_user_scroll(self, scroll_pause=0.5, max_scrolls=10):
+        """
+        Simulates user scrolling to load dynamic content.
+        
+        :param scroll_pause: Pause between scrolls (seconds)
+        :param max_scrolls: Maximum number of scroll attempts
+        """
+        if not self.page:
+            self.logger.warning("No active page to scroll")
+            return
+        
+        self.logger.debug("Simulating user scroll to load dynamic content")
+        
+        previous_height = self.page.evaluate("document.body.scrollHeight")
+        scrolls = 0
+        
+        while scrolls < max_scrolls:
+            # Scroll to bottom
+            self.page.evaluate("window.scrollTo(0, document.body.scrollHeight)")
+            time.sleep(scroll_pause)
+            
+            # Check if new content loaded
+            new_height = self.page.evaluate("document.body.scrollHeight")
+            if new_height == previous_height:
+                self.logger.debug(f"No new content after {scrolls} scrolls")
+                break
+            
+            previous_height = new_height
+            scrolls += 1
+        
+        self.logger.debug(f"Completed {scrolls} scrolls")
+    
+    def extract_publication_title(self):
+        """
+        Extracts the publication title from the current page.
+        
+        :return: The publication title as a string
+        """
+        if not self.page:
+            self.logger.warning("No active page to extract title from")
+            return "No title found"
+        
+        try:
+            # Try page title first
+            title = self.page.title()
+            if title and title.strip():
+                self.logger.info(f"Paper title (from page.title()): {title}")
+                return title.strip()
+            
+            # Fallback: Try citation_title meta tag
+            meta_title = self.page.locator('meta[name="citation_title"]').get_attribute('content')
+            if meta_title:
+                self.logger.info(f"Paper title (from meta tag): {meta_title}")
+                return meta_title.strip()
+            
+            # Fallback: Try h1.article-title
+            h1_title = self.page.locator('h1.article-title').text_content()
+            if h1_title:
+                self.logger.info(f"Paper title (from h1): {h1_title}")
+                return h1_title.strip()
+            
+            self.logger.warning("Could not extract publication title")
+            return "No title found"
+            
+        except Exception as e:
+            self.logger.error(f"Error extracting publication title: {e}")
+            return "No title found"
+    
+    def html_page_source_download(self, directory, pub_link=None):
+        """
+        Downloads the HTML page source to a file.
+        
+        :param directory: Directory to save the HTML file
+        :param pub_link: URL of the publication (optional)
+        """
+        if not self.page:
+            self.logger.error("No active page to download")
+            return
+        
+        os.makedirs(directory, exist_ok=True)
+        
+        # Get publication name
+        pub_name = self.extract_publication_title()
+        pub_name = re.sub(r'[\\/:*?"<>|]', '_', pub_name)
+        pub_name = re.sub(r'[\s-]+PMC\s*$', '', pub_name)
+        
+        # Get PMCID
+        pmcid = self.url_to_pmcid(pub_link) if pub_link else "unknown"
+        
+        if directory[-1] != '/':
+            directory += '/'
+        
+        fn = directory + f"{pmcid}__{pub_name}.html"
+        self.logger.info(f"Downloading HTML page source to {fn}")
+        
+        try:
+            html_content = self.page.content()
+            with open(fn, 'w', encoding='utf-8') as f:
+                f.write(html_content)
+            self.logger.info(f"Successfully saved HTML to {fn}")
+        except Exception as e:
+            self.logger.error(f"Error saving HTML: {e}")
+    
+    def screenshot(self, path, full_page=True):
+        """
+        Takes a screenshot of the current page.
+        
+        :param path: Path to save the screenshot
+        :param full_page: Whether to capture the full page
+        """
+        if not self.page:
+            self.logger.error("No active page for screenshot")
+            return
+        
+        try:
+            self.page.screenshot(path=path, full_page=full_page)
+            self.logger.info(f"Screenshot saved to {path}")
+        except Exception as e:
+            self.logger.error(f"Error taking screenshot: {e}")
+    
+    def wait_for_element(self, selector, timeout=5000):
+        """
+        Wait for a specific element to appear.
+        
+        :param selector: CSS selector to wait for
+        :param timeout: Timeout in milliseconds
+        :return: True if element appears, False otherwise
+        """
+        if not self.page:
+            return False
+        
+        try:
+            self.page.wait_for_selector(selector, timeout=timeout)
+            return True
+        except Exception as e:
+            self.logger.warning(f"Element {selector} not found: {e}")
+            return False
+    
+    def click_element(self, selector):
+        """
+        Click an element on the page.
+        
+        :param selector: CSS selector of element to click
+        """
+        if not self.page:
+            self.logger.error("No active page")
+            return
+        
+        try:
+            self.page.click(selector)
+            self.logger.debug(f"Clicked element: {selector}")
+        except Exception as e:
+            self.logger.error(f"Error clicking element {selector}: {e}")
+    
+    def quit(self):
+        """Close the browser and clean up resources."""
+        try:
+            if self.page:
+                self.page.close()
+                self.page = None
+            if self.context:
+                self.context.close()
+                self.context = None
+            if self.browser:
+                self.browser.close()
+                self.browser = None
+            if self.playwright:
+                self.playwright.stop()
+                self.playwright = None
+            self.logger.info("PlaywrightFetcher closed successfully")
+        except Exception as e:
+            self.logger.error(f"Error closing PlaywrightFetcher: {e}")
+
 
 class PdfFetcher(DataFetcher):
     """
@@ -1102,7 +1605,7 @@ class DataCompletenessChecker:
         self.retriever = htmlRetriever(self.logger)
         return self.retriever.is_html_data_complete(raw_data, url, required_sections)
 
-    def is_fulltext_complete(self, raw_data, url, raw_data_format,
+    def is_fulltext_complete(self, raw_data, url, raw_data_format=None,
                             required_sections=["data_availability_sections", "supplementary_data_sections"]) -> bool:
             """
             Check if required sections are present in the raw_data.
@@ -1118,6 +1621,16 @@ class DataCompletenessChecker:
     
             :return: True if all required sections are present, False otherwise.
             """
+            if isinstance(raw_data, str):
+                self.logger.debug(f"Raw data is a string of length {len(raw_data)}")
+                raw_data_format = 'HTML'
+            elif isinstance(raw_data, ET._Element) or isinstance(raw_data, ET._ElementTree):
+                self.logger.debug(f"Raw data is of type {type(raw_data)}")
+                raw_data_format = 'XML'
+            else:
+                self.logger.error(f"Unsupported raw data type: {type(raw_data)}")
+                return False
+
             if raw_data_format.upper() == 'XML':
                 return self.is_xml_data_complete(raw_data, url, required_sections)
             elif raw_data_format.upper() == 'HTML':

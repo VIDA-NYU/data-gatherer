@@ -2,6 +2,7 @@
 
 import streamlit as st
 from data_gatherer.data_gatherer import DataGatherer
+from data_gatherer.resources_loader import load_config
 from dotenv import load_dotenv
 import pandas as pd
 import altair as alt
@@ -24,6 +25,8 @@ st.set_page_config(
 )
 
 linux = os.path.exists('/.dockerenv')
+
+config = load_config('open_bio_data_repos.json')
 
 # --- Session state and concurrency management ---
 if 'active_requests' not in st.session_state:
@@ -85,6 +88,18 @@ def save_user_feedback(feedback_text):
     with open(feedback_file, "w") as f:
         f.write(feedback_text)
 
+def normalize_repo(logger,repo_key):
+    logger.debug(f"Normalizing repository key: {repo_key}")
+    if '.' in repo_key.lower() and repo_key in config['repos']:
+        repo_dict = config['repos'][repo_key]
+        logger.debug(f"Char '.' in repo key: {repo_key}")
+        if 'repo_name' in repo_dict:
+            logger.debug(f"Key repo_name defined for {repo_key}")
+            if '.' not in repo_dict['repo_name']:
+                logger.debug(f"Replacing repo key '{repo_key}' with '{repo_dict['repo_name']}'")
+            return repo_dict['repo_name']
+    return repo_key
+    
 # --- Custom CSS for UI tweaks ---
 st.markdown("""
     <style>
@@ -125,8 +140,8 @@ MODEL_OPTIONS = [
     "gemini-1.5-flash", "gemini-1.5-pro", "gemini-2.0-flash-exp", "gemini-2.0-flash", "gemini-2.5-flash"
 ]
 PROMPT_MODEL_OPTIONS = {
-    'FDR': 'GPT_from_full_input_Examples',
-    'RTR': 'GPT_FewShot',
+    'FDR': 'GPT_FDR_FewShot_shortDescr',
+    'RTR': 'GPT_FDR_FewShot_shortDescr',
 }
 metadata_prompt_name = 'portkey_gemini_metadata_extract'
 model_name = st.sidebar.selectbox("Model", MODEL_OPTIONS, index=MODEL_OPTIONS.index('gemini-2.0-flash'))
@@ -138,11 +153,12 @@ extraction_mode = st.sidebar.radio(
 )
 full_document_read = extraction_mode == "Full Document Read"
 prompt_name = PROMPT_MODEL_OPTIONS['FDR'] if full_document_read else PROMPT_MODEL_OPTIONS['RTR']
+extract_keywords_from_supp_files = True
 
 # --- Main input: PMCIDs ---
 load_dotenv()
 st.markdown("Enter one or more **PMCIDs** to extract dataset references from open-access publications.")
-st.info(f"Maximum {MAX_PMCIDS_PER_REQUEST} PMCIDs per request.")
+st.info(f"Maximum {MAX_PMCIDS_PER_REQUEST} article urls or PMCIDs per request.")
 pmc_input = st.text_area("🔢 Enter PMCIDs (comma or newline separated)", height=100)
 
 # --- Extraction state initialization ---
@@ -173,12 +189,12 @@ if st.button("🚀 Run Extraction", type="primary"):
                 orch = DataGatherer(
                     llm_name=model_name, 
                     process_entire_document=full_document_read, 
-                    log_level="INFO",
-                    load_from_cache=True, 
-                    save_to_cache=True, 
+                    log_level="DEBUG",
+                    load_from_cache=not True, 
+                    save_to_cache=not True, 
                     driver_path=driver_path,
                     log_file_override="ui/data_gatherer.log",
-                    clear_previous_logs=False
+                    clear_previous_logs=not False
                 )
                 orch.logger.info(f"[FLOW] Extraction button pressed by user {user_id[:8]}")
                 orch.logger.info(f"[FLOW] Checking rate limit for user {user_id[:8]}")
@@ -215,7 +231,22 @@ if st.button("🚀 Run Extraction", type="primary"):
                             title = title[0]
                         files_with_extension = result[result["file_extension"].notna()] if "file_extension" in result else pd.DataFrame(columns=["download_link", "description", "file_extension"])
                         files_with_repo = result[result["data_repository"].notna()] if "data_repository" in result else pd.DataFrame(columns=["data_repository", "dataset_identifier", "dataset_webpage"])
-                        supp_df = files_with_extension[["download_link", "description"]].copy() if not files_with_extension.empty else pd.DataFrame(columns=["download_link", "description"])
+                        
+                        orch.logger.info(f"[FLOW] Before LLM: files_with_extension has {len(files_with_extension)} rows, columns: {files_with_extension.columns.tolist()}")
+                        
+                        # Process supplementary files with LLM to enhance descriptions
+                        if not files_with_extension.empty and extract_keywords_from_supp_files:
+                            orch.logger.info(f"[FLOW] Processing supplementary files with LLM for {article_id}")
+                            files_with_extension = orch.parser.extract_supplementary_file_info_from_refs(files_with_extension)
+                            orch.logger.info(f"[FLOW] After LLM: files_with_extension has {len(files_with_extension)} rows, columns: {files_with_extension.columns.tolist()}")
+                            if 'supplementary_file_keywords' in files_with_extension.columns:
+                                orch.logger.info(f"[FLOW] supplementary_file_keywords column exists! Sample values: {files_with_extension['supplementary_file_keywords'].head(2).tolist()}")
+                            else:
+                                orch.logger.warning(f"[FLOW] supplementary_file_keywords column NOT FOUND after LLM processing!")
+                        else:
+                            orch.logger.info(f"[FLOW] Skipping LLM processing: empty={files_with_extension.empty}, extract_keywords={extract_keywords_from_supp_files}")
+                        
+                        supp_df = files_with_extension.copy() if not files_with_extension.empty else pd.DataFrame(columns=["download_link", "supplementary_file_keywords", "description"])
                         supp_df["Source PMCID"] = pmcid
                         supp_df["Source DOI"] = doi
                         supp_df["Source Title"] = title
@@ -261,20 +292,24 @@ if st.button("🚀 Run Extraction", type="primary"):
                 excel_buffer = io.BytesIO()
                 if xlsxwriter and (excel_tabs or not supp_summary_df.empty or not avail_summary_df.empty):
                     with pd.ExcelWriter(excel_buffer, engine="xlsxwriter") as writer:
-                        supp_summary_df.to_excel(writer, sheet_name="Supplementary Material", index=False)
+                        # Drop null columns from Supplementary Material
+                        supp_clean = supp_summary_df.dropna(axis=1, how='all')
+                        supp_clean.to_excel(writer, sheet_name="Supplementary Material", index=False)
                         worksheet = writer.sheets["Supplementary Material"]
-                        for i, col in enumerate(supp_summary_df.columns):
+                        for i, col in enumerate(supp_clean.columns):
                             max_len = max(
-                                supp_summary_df[col].astype(str).map(len).max() if not supp_summary_df.empty else 0,
+                                supp_clean[col].astype(str).map(len).max() if not supp_clean.empty else 0,
                                 len(str(col)),
                                 15
                             )
                             worksheet.set_column(i, i, max_len + 2)
-                        avail_summary_df.to_excel(writer, sheet_name="Data Availability", index=False)
+                        # Drop null columns from Data Availability
+                        avail_clean = avail_summary_df.dropna(axis=1, how='all')
+                        avail_clean.to_excel(writer, sheet_name="Data Availability", index=False)
                         worksheet = writer.sheets["Data Availability"]
-                        for i, col in enumerate(avail_summary_df.columns):
+                        for i, col in enumerate(avail_clean.columns):
                             max_len = max(
-                                avail_summary_df[col].astype(str).map(len).max() if not avail_summary_df.empty else 0,
+                                avail_clean[col].astype(str).map(len).max() if not avail_clean.empty else 0,
                                 len(str(col)),
                                 15
                             )
@@ -285,6 +320,8 @@ if st.button("🚀 Run Extraction", type="primary"):
                                 worksheet = None
                                 for title, df in sections:
                                     df = df.copy()
+                                    # Drop null columns
+                                    df = df.dropna(axis=1, how='all')
                                     df_rows, df_cols = df.shape
                                     df_cols = max(df_cols, 1)
                                     df_startcol = 0
@@ -303,7 +340,9 @@ if st.button("🚀 Run Extraction", type="primary"):
                                         worksheet.set_column(i, i, max_len + 2)
                                     startrow += len(df) + 4
                             else:
-                                df = sections
+                                df = sections.copy()
+                                # Drop null columns
+                                df = df.dropna(axis=1, how='all')
                                 df.to_excel(writer, sheet_name=sheet_name, index=False)
                                 worksheet = writer.sheets[sheet_name]
                                 for i, col in enumerate(df.columns):
@@ -330,6 +369,7 @@ if st.session_state.get("results_ready", False):
     if not st.session_state.get("results_displayed", False):
         st.session_state.results_displayed = True
         st.markdown("<h2 style='margin-top: 1.5em;'>Results</h2>", unsafe_allow_html=True)
+    
     # Results tables, charts, and per-article expanders
     supp_summary_df = st.session_state.supp_summary_df
     avail_summary_df = st.session_state.avail_summary_df
@@ -337,132 +377,299 @@ if st.session_state.get("results_ready", False):
     pmcids = st.session_state.pmcids
     per_article_results = st.session_state.per_article_results
     orch_display = st.session_state.get("orch", None)
+    
     if orch_display is None:
         st.warning("Session expired or no extraction context. Please rerun extraction.")
     else:
+        # --- Unified Dataset Table across all articles ---
+        st.markdown("### Datasets Found")
+        
+        # Collect all datasets from all articles
+        all_unified_datasets = []
+        
         for idx, article in enumerate(per_article_results):
             title = article["title"]
-            files_with_extension = article["files_with_extension"]
             files_with_repo = article["files_with_repo"]
             supp_df = article["supp_df"]
-            avail_df = article["avail_df"]
-            summary = article["summary"]
             pmcid = article["pmcid"]
-            with st.expander(f"{title}", expanded=False):
-                st.markdown(f"<h2 style='text-align: left; font-size: 2em; font-weight: bold; margin-bottom: 0.5em;'>{title}</h2>", unsafe_allow_html=True)
-                supp_df = files_with_extension[["download_link", "description"]]
-                if not supp_df.empty:
-                    supp_df = supp_df.drop_duplicates()
-                    files_with_extension = files_with_extension.drop_duplicates(
-                        subset=["download_link", "description"],
-                        keep='first'
-                    )
-                avail_df = files_with_repo[["data_repository", "dataset_identifier", "dataset_webpage"]]
-                file_exts = pd.DataFrame.from_dict(
-                    files_with_extension["file_extension"].value_counts().to_dict(),
-                    orient="index", columns=["Count"]
-                ).reset_index().rename(columns={"index": "File Type"})
-                repos = pd.DataFrame.from_dict(summary["frequency_of_data_repository"], orient="index",
-                                               columns=["Count"]).reset_index().rename(columns={"index": "Repository"})
-                col1, col2 = st.columns(2)
-                with col1:
-                    st.markdown(
-                        "<h3 style='text-align: center; font-size: 1.3em;'>Supplementary File Types</h3>",
-                        unsafe_allow_html=True
-                    )
-                    bar_chart1 = (
-                        alt.Chart(file_exts)
-                        .mark_bar()
-                        .encode(
-                            x=alt.X("File Type:N", sort="-y", axis=alt.Axis(labelAngle=0, labelFontSize=13, titleFontSize=15)),
-                            y=alt.Y("Count:Q"),
-                            tooltip=["File Type", "Count"]
+            
+            # Add repository datasets
+            for j, row in files_with_repo.iterrows():
+                desc_value = row.get("dataset_keywords", "n/a") if "dataset_keywords" in row else "n/a"
+                if isinstance(desc_value, list):
+                    desc_value = "\n".join(' - ' + str(item) for item in desc_value)
+                normalize_repo_val = normalize_repo(orch_display.logger, row.get("data_repository"))
+                orch_display.logger.info(f"[FLOW] Normalized repository for dataset {row.get('dataset_identifier', 'n/a')}: {normalize_repo_val}")
+                
+                dataset_entry = {
+                    "source_type": "repository",
+                    "source_article_idx": idx,
+                    "source_index": j,
+                    "Source Publication": title,
+                    "Repository": normalize_repo_val,
+                    "Dataset ID": row.get("dataset_identifier", "n/a"),
+                    "Description": desc_value,
+                    "webpage": row.get("dataset_webpage", "n/a"),
+                    "pmcid": pmcid,
+                    "original_data": row
+                }
+                all_unified_datasets.append(dataset_entry)
+            
+            # Add supplementary files
+            for j, row in supp_df.iterrows():
+                if pd.notna(row.get("download_link")):
+                    file_id = row.get("id", row.get('download_link', f"supp_{j}")).split("/")[-1] if pd.notna(row.get("download_link")) else f"supp_{j}"
+                    
+                    # Get keywords as a list
+                    desc_value = row.get("supplementary_file_keywords", row.get("description", "n/a"))
+                    if isinstance(desc_value, str):
+                        # If it's a string, split by comma
+                        desc_value = [kw.strip() for kw in desc_value.split(',') if kw.strip()]
+                    elif not isinstance(desc_value, list):
+                        desc_value = [str(desc_value)]
+                    
+                    dataset_entry = {
+                        "source_type": "supplementary",
+                        "source_article_idx": idx,
+                        "source_index": j,
+                        "Source Publication": title,
+                        "Repository": "PMC",
+                        "Dataset ID": file_id,
+                        "Description": desc_value,  # Keep as list
+                        "webpage": row.get("download_link", "n/a"),
+                        "pmcid": pmcid,
+                        "original_data": row
+                    }
+                    all_unified_datasets.append(dataset_entry)
+        
+        if not all_unified_datasets:
+            st.info("No datasets found across all articles.")
+        else:
+            # Initialize session state for checkbox selections
+            if 'selected_datasets_global' not in st.session_state:
+                st.session_state.selected_datasets_global = {}
+            
+            st.markdown(f"**Found {len(all_unified_datasets)} datasets across {len(per_article_results)} articles. Select datasets to fetch metadata:**")
+            
+            # Group datasets by article
+            datasets_by_article = {}
+            for dataset in all_unified_datasets:
+                article_key = (dataset['pmcid'], dataset['source_article_idx'])
+                if article_key not in datasets_by_article:
+                    datasets_by_article[article_key] = {
+                        'title': dataset['Source Publication'],
+                        'pmcid': dataset['pmcid'],
+                        'datasets': []
+                    }
+                datasets_by_article[article_key]['datasets'].append(dataset)
+            
+            # Single table header
+            st.markdown("---")
+            col_select, col_repo, col_id, col_kw1, col_kw2, col_kw3 = st.columns([0.2, 1.6, 1.9, 2.1, 2.1, 2.1])
+            
+            with col_select:
+                st.markdown("**☑**")
+            with col_repo:
+                st.markdown("**Repository**")
+            with col_id:
+                st.markdown("**Dataset ID**")
+            with col_kw1:
+                st.markdown("")  # Part of Keywords span
+            with col_kw2:
+                st.markdown("<div style='text-align: center;'><strong>Keywords</strong></div>", unsafe_allow_html=True)  
+            with col_kw3:
+                st.markdown("")  # Part of Keywords span
+            
+            st.markdown("---")
+            
+            # Display datasets grouped by article within the same table
+            for article_idx, (article_key, article_data) in enumerate(sorted(datasets_by_article.items())):
+                # Article divider row (spans the entire width, centered)
+                if article_idx > 0:  # Only add separator line for articles after the first
+                    st.markdown("---")
+                st.markdown(f"<div style='text-align: center;'><strong>{article_data['title']}</strong></div>", unsafe_allow_html=True)
+                st.markdown("")  # Empty line after title
+                
+                # Data rows for this article
+                for i, dataset in enumerate(article_data['datasets']):
+                    dataset_key = f"{dataset['pmcid']}_{dataset['source_type']}_{dataset['source_article_idx']}_{dataset['source_index']}"
+                    
+                    # Initialize checkbox state (auto-select repository datasets)
+                    if dataset_key not in st.session_state.selected_datasets_global:
+                        st.session_state.selected_datasets_global[dataset_key] = (dataset['source_type'] == 'repository')
+                    
+                    col_select, col_repo, col_id, col_kw1, col_kw2, col_kw3 = st.columns([0.4, 1.5, 2, 2, 2, 2])
+                    
+                    with col_select:
+                        is_selected = st.checkbox(
+                            "✓",
+                            value=st.session_state.selected_datasets_global[dataset_key],
+                            key=f"checkbox_global_{dataset_key}_{article_idx}_{i}",
+                            label_visibility="collapsed"
                         )
-                        .properties(width=300, height=200)
-                        .configure_axis(labelFontSize=13, titleFontSize=15)
+                        st.session_state.selected_datasets_global[dataset_key] = is_selected
+                    
+                    with col_repo:
+                        st.text(dataset["Repository"])
+                    
+                    with col_id:
+                        id_text = str(dataset["Dataset ID"])
+                        st.text(id_text[:40] + "..." if len(id_text) > 40 else id_text)
+                    
+                    # Parse keywords into list if it's a string
+                    desc_value = dataset["Description"]
+                    if isinstance(desc_value, str):
+                        # Split by newline and remove ' - ' prefix
+                        keywords = [kw.strip().lstrip('- ').strip() for kw in desc_value.split('\n') if kw.strip()]
+                    elif isinstance(desc_value, list):
+                        keywords = [str(kw).strip() for kw in desc_value]
+                    else:
+                        keywords = [str(desc_value)]
+                    
+                    # Display up to 3 keywords in separate columns
+                    with col_kw1:
+                        st.text(keywords[0] if len(keywords) > 0 else "-")
+                    with col_kw2:
+                        st.text(keywords[1] if len(keywords) > 1 else "-")
+                    with col_kw3:
+                        st.text(keywords[2] if len(keywords) > 2 else "-")
+            
+            st.markdown("---")
+            
+            # Button to fetch metadata for selected datasets
+            if st.button(f"🔍 Fetch Metadata for Selected Datasets", key="fetch_metadata_global"):
+                # Get selected datasets
+                selected_datasets = [
+                    dataset for dataset in all_unified_datasets
+                    if st.session_state.selected_datasets_global.get(
+                        f"{dataset['pmcid']}_{dataset['source_type']}_{dataset['source_article_idx']}_{dataset['source_index']}", 
+                        False
                     )
-                    st.markdown(
-                        "<div style='display: flex; justify-content: center; align-items: center;'>",
-                        unsafe_allow_html=True
-                    )
-                    st.altair_chart(bar_chart1, use_container_width=True)
-                    st.markdown("</div>", unsafe_allow_html=True)
-                with col2:
-                    st.markdown(
-                        "<h3 style='text-align: center; font-size: 1.3em;'>Available Data Repositories</h3>",
-                        unsafe_allow_html=True
-                    )
-                    bar_chart2 = (
-                        alt.Chart(repos)
-                        .mark_bar()
-                        .encode(
-                            x=alt.X("Repository:N", sort="-y", axis=alt.Axis(labelAngle=0, labelFontSize=13, titleFontSize=15)),
-                            y=alt.Y("Count:Q"),
-                            tooltip=["Repository", "Count"]
-                        )
-                        .properties(width=300, height=200)
-                        .configure_axis(labelFontSize=13, titleFontSize=15)
-                    )
-                    st.markdown(
-                        "<div style='display: flex; justify-content: center; align-items: center;'>",
-                        unsafe_allow_html=True
-                    )
-                    st.altair_chart(bar_chart2, use_container_width=True)
-                    st.markdown("</div>", unsafe_allow_html=True)
-                st.markdown("### Supplementary Material")
-                st.markdown("#### Supplementary File Types")
-                st.dataframe(file_exts, width='content')
-                st.markdown("#### Supplementary Files")
-                st.dataframe(supp_df, width='content')
-                st.markdown("### Available datasets")
-                if files_with_repo.empty:
-                    st.info("No datasets found.")
+                ]
+                
+                if not selected_datasets:
+                    st.warning("Please select at least one dataset to fetch metadata.")
                 else:
-                    st.dataframe(avail_df, width='content')
-                    for j, data_item in files_with_repo.iterrows():
-                        dataset_label = f"**{data_item['dataset_identifier']}** ({data_item['dataset_webpage']})"
-                        st.markdown(f"- {dataset_label}")
-                        dataset_webpage = data_item["dataset_webpage"] if "dataset_webpage" in data_item and pd.notna(data_item["dataset_webpage"]) else ""
-                        with st.spinner(
-                            f"Fetching metadata from repo: {data_item['data_repository']}... {dataset_webpage}"):
-                            try:
-                                preview_result = orch_display.process_metadata(
-                                    data_item, interactive=False, return_metadata=True,
-                                    write_raw_metadata=False,
-                                    use_portkey=use_portkey,
-                                    prompt_name=metadata_prompt_name,
-                                    timeout=15
-                                )
-                                if not preview_result or not isinstance(preview_result, list) or len(preview_result) == 0:
-                                    st.warning("No data preview available.")
-                                    orch_display.logger.warning(f"No data preview available for {data_item['dataset_identifier']}, dataset_webpage: {dataset_webpage}")
+                    # Process only repository datasets
+                    repo_datasets = [d for d in selected_datasets if d['source_type'] == 'repository']
+                    
+                    if not repo_datasets:
+                        st.info("Only supplementary files selected. Metadata fetching is only available for repository datasets.")
+                    else:
+                        st.markdown("### Fetching Metadata")
+                        for dataset in repo_datasets:
+                            data_item = dataset['original_data']
+                            dataset_label = f"**{data_item['dataset_identifier']}** from *{dataset['Source Publication']}*"
+                            st.markdown(f"#### {dataset_label}")
+                            dataset_webpage = data_item["dataset_webpage"] if "dataset_webpage" in data_item and pd.notna(data_item["dataset_webpage"]) else ""
+                            
+                            with st.spinner(f"Fetching from {data_item['data_repository']}..."):
+                                try:
+                                    preview_result = orch_display.process_metadata(
+                                        data_item, interactive=False, return_metadata=True,
+                                        write_raw_metadata=False,
+                                        use_portkey=use_portkey,
+                                        prompt_name=metadata_prompt_name,
+                                        timeout=15
+                                    )
+                                    if not preview_result or not isinstance(preview_result, list) or len(preview_result) == 0:
+                                        st.warning("No metadata available.")
+                                        continue
+                                    item = preview_result[0]
+                                except Exception as e:
+                                    st.warning(f"Could not fetch metadata: {str(e)}")
                                     continue
-                                item = preview_result[0]
-                            except Exception as e:
-                                st.warning(f"No data preview available.")
-                                orch_display.logger.warning(f"No data preview available  dataset_webpage: {dataset_webpage}")
-                                continue
-                            display_item = None
-                            if isinstance(item, dict):
-                                unwanted = {'', 'na', 'n/a', 'nan', 'unavailable', 'none', '0'}
-                                pairs = [
-                                    (k, v) for k, v in item.items()
-                                    if str(v).strip().lower() not in unwanted and str(v).strip() != ''
-                                ]
-                                display_item = pd.DataFrame(pairs, columns=["Field", "Value"])
-                                display_item['Value'] = display_item['Value'].astype(str)
-                                display_item = display_item[display_item["Value"].astype(str).str.strip() != ""]
-                            if display_item is not None and not display_item.empty:
-                                st.dataframe(display_item, width='content')
-                                orch_display.logger.info(f"[FLOW] Metadata preview available for {data_item['dataset_identifier']}, dataset_webpage: {dataset_webpage}")
-                                safe_dataset_identifier = sanitize_sheet_name(str(data_item["dataset_identifier"]))
-                                orch_display.logger.info(f"[FLOW] Adding metadata preview tab for {pmcid} - {safe_dataset_identifier}")
-                                sheet_name = sanitize_sheet_name(f"{pmcid}_meta_{safe_dataset_identifier}")
-                                orch_display.logger.info(f"[FLOW] Sheet name sanitized to {sheet_name}")
-                                excel_tabs[sheet_name] = display_item
-                            else:
-                                st.warning("No data preview available.")
-                                orch_display.logger.warning(f"No data preview available for {data_item['dataset_identifier']}, error occurred: {str(e)}")
+                            
+                                display_item = None
+                                if isinstance(item, dict):
+                                    unwanted = {'', 'na', 'n/a', 'nan', 'unavailable', 'none', '0'}
+                                    pairs = [
+                                        (k, v) for k, v in item.items()
+                                        if str(v).strip().lower() not in unwanted and str(v).strip() != ''
+                                    ]
+                                    display_item = pd.DataFrame(pairs, columns=["Field", "Value"])
+                                    display_item['Value'] = display_item['Value'].astype(str)
+                                    display_item = display_item[display_item["Value"].astype(str).str.strip() != ""]
+                                
+                                if display_item is not None and not display_item.empty:
+                                    st.dataframe(display_item, use_container_width=True)
+                                    # Add to Excel tabs
+                                    safe_dataset_identifier = sanitize_sheet_name(str(data_item["dataset_identifier"]))
+                                    sheet_name = sanitize_sheet_name(f"{dataset['pmcid']}_meta_{safe_dataset_identifier}")
+                                    excel_tabs[sheet_name] = display_item
+                                else:
+                                    st.warning("No metadata to display.")
+                        
+                        # Regenerate Excel with metadata
+                        st.session_state.excel_tabs = excel_tabs
+                        excel_buffer = io.BytesIO()
+                        supp_summary_df = st.session_state.supp_summary_df
+                        avail_summary_df = st.session_state.avail_summary_df
+                        
+                        if xlsxwriter and (excel_tabs or not supp_summary_df.empty or not avail_summary_df.empty):
+                            with pd.ExcelWriter(excel_buffer, engine="xlsxwriter") as writer:
+                                # Drop null columns from Supplementary Material
+                                supp_clean = supp_summary_df.dropna(axis=1, how='all')
+                                supp_clean.to_excel(writer, sheet_name="Supplementary Material", index=False)
+                                worksheet = writer.sheets["Supplementary Material"]
+                                for i, col in enumerate(supp_clean.columns):
+                                    max_len = max(
+                                        supp_clean[col].astype(str).map(len).max() if not supp_clean.empty else 0,
+                                        len(str(col)),
+                                        15
+                                    )
+                                    worksheet.set_column(i, i, max_len + 2)
+                                # Drop null columns from Data Availability
+                                avail_clean = avail_summary_df.dropna(axis=1, how='all')
+                                avail_clean.to_excel(writer, sheet_name="Data Availability", index=False)
+                                worksheet = writer.sheets["Data Availability"]
+                                for i, col in enumerate(avail_clean.columns):
+                                    max_len = max(
+                                        avail_clean[col].astype(str).map(len).max() if not avail_clean.empty else 0,
+                                        len(str(col)),
+                                        15
+                                    )
+                                    worksheet.set_column(i, i, max_len + 2)
+                                for sheet_name, sections in excel_tabs.items():
+                                    if isinstance(sections, list):
+                                        startrow = 0
+                                        worksheet = None
+                                        for title, df in sections:
+                                            df = df.copy()
+                                            # Drop null columns
+                                            df = df.dropna(axis=1, how='all')
+                                            df_rows, df_cols = df.shape
+                                            df_cols = max(df_cols, 1)
+                                            df_startcol = 0
+                                            df_endcol = df_cols - 1
+                                            df.to_excel(writer, sheet_name=sheet_name, startrow=startrow+1, index=False, header=True)
+                                            worksheet = writer.sheets[sheet_name]
+                                            worksheet.merge_range(startrow, df_startcol, startrow, df_endcol, title, writer.book.add_format({
+                                                'bold': True, 'align': 'center', 'valign': 'vcenter', 'bg_color': '#D9E1F2', 'border': 1
+                                            }))
+                                            for i, col in enumerate(df.columns):
+                                                max_len = max(
+                                                    df[col].astype(str).map(len).max() if not df.empty else 0,
+                                                    len(str(col)),
+                                                    15
+                                                )
+                                                worksheet.set_column(i, i, max_len + 2)
+                                            startrow += len(df) + 4
+                                    else:
+                                        df = sections.copy()
+                                        # Drop null columns
+                                        df = df.dropna(axis=1, how='all')
+                                        df.to_excel(writer, sheet_name=sheet_name, index=False)
+                                        worksheet = writer.sheets[sheet_name]
+                                        for i, col in enumerate(df.columns):
+                                            max_len = max(
+                                                df[col].astype(str).map(len).max() if not df.empty else 0,
+                                                len(str(col)),
+                                                15
+                                            )
+                                            worksheet.set_column(i, i, max_len + 2)
+                            st.session_state.excel_buffer = excel_buffer.getvalue()
+        
         # Download button (use the saved excel_buffer)
         if "excel_buffer" in st.session_state:
             st.download_button(

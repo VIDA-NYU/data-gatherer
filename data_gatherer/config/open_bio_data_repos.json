@@ -34,6 +34,8 @@
     "proteomecentral.proteomexchange.org": {
       "repo_name": "ProteomeCentral",
       "dataset_webpage_url_ptr": "https://proteomecentral.proteomexchange.org/cgi/GetDataset?ID=__ID__",
+      "id_pattern": "\\bPXD\\d{5,10}",
+      "read_timeout": 3,
       "download_root": "",
       "access_mode": "Complex download"
     },
@@ -115,8 +117,13 @@
     },
     "pdb": {
       "repo_name": "Protein Data Bank",
-      "id_pattern": "[1-9][a-zA-Z0-9]{3}",
+      "id_pattern": "\\bpdb[1-9][a-zA-Z0-9]{3}\\b",
       "dataset_webpage_url_ptr": "https://www.rcsb.org/structure/__ID__"
+    },
+    "zenodo.org": {
+      "repo_name": "zenodo",
+      "id_pattern": "\\b\\d{7}\\b",
+      "dataset_webpage_url_ptr": "https://zenodo.org/__ID__"
     }
   }
 }

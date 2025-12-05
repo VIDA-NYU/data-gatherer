@@ -13,7 +13,7 @@ class XMLParser(LLMParser):
     def __init__(self, open_data_repos_ontology, logger, log_file_override=None, full_document_read=True,
                  prompt_dir="data_gatherer/prompts/prompt_templates",
                  llm_name=None, save_dynamic_prompts=False, save_responses_to_cache=False, use_cached_responses=False,
-                 use_portkey=True, embeddings_model_name=None):
+                 use_portkey=True, embeddings_model_name=None, embeds_cache_read=False, embeds_cache_write=False):
 
         super().__init__(open_data_repos_ontology, logger, log_file_override=log_file_override,
                          full_document_read=full_document_read, prompt_dir=prompt_dir,
@@ -28,7 +28,9 @@ class XMLParser(LLMParser):
 
         self.embeddings_retriever = EmbeddingsRetriever(
             model_name=embeddings_model_name,
-            logger=self.logger
+            logger=self.logger,
+            read_cache=embeds_cache_read,
+            write_cache=embeds_cache_write
         )
 
     def extract_paragraphs_from_xml(self, xml_root) -> list[dict]:
@@ -62,6 +64,50 @@ class XMLParser(LLMParser):
                     # self.logger.info(f"Extracted paragraph: {paragraphs[-1]}")
 
         return paragraphs
+    
+    def extract_sections_from_text(self, xml_content: str) -> list[dict]:
+        """
+        alias for extract_sections_from_xml
+        """
+        if isinstance(xml_content, str):
+            xml_content = etree.fromstring(xml_content.encode('utf-8'))
+        
+        return self.extract_sections_from_xml(xml_content)
+
+    def from_section_to_text_content(self, sect_element) -> str:
+        """
+        Convert a section ET element to plain text content.
+
+        Args:
+            sect_element: lxml.etree.Element — section element from extract_sections_from_xml.
+
+        Returns:
+            str — plain text content of the section.
+        """
+
+        if not isinstance(sect_element, etree._Element):
+            raise TypeError(f"Invalid section element type: {type(sect_element)}. Expected lxml.etree.Element.")
+
+        str_cont_ret = ''
+
+        # extract the text from the data availability section
+        for elem in sect.iter():
+            if elem.text and elem.text not in str_cont_ret:
+                str_cont_ret += ' ' + elem.text + ' '
+            if elem.tail and elem.tail not in str_cont_ret:
+                str_cont_ret += ' ' + elem.tail + ' '
+            if elem.tag == 'ext-link' and elem.get('{http://www.w3.org/1999/xlink}href') not in str_cont_ret:
+                str_cont_ret += ' ' + elem.get('{http://www.w3.org/1999/xlink}href') + ' '
+            if elem.tag == 'xref' and elem.text not in str_cont_ret:
+                str_cont_ret += ' ' + elem.text + ' '
+            
+            # table elements 
+            if elem.tag == 'table':
+                table_text = self.table_to_text(elem)
+                if table_text not in str_cont_ret:
+                    str_cont_ret += ' ' + table_text + ' '
+
+        return str_cont_ret        
 
     def extract_sections_from_xml(self, xml_root) -> list[dict]:
         """
@@ -121,7 +167,9 @@ class XMLParser(LLMParser):
                     self.logger.debug(f"We've entered a different section: {parent_section} != {sec}, so break out of the loop")
                     break
                 elif grandparent_section is not None and grandparent_section.find("title") is not None:
-                    section_title = grandparent_section.find("title").text + " > " + parent_section_title
+                    title_elem = grandparent_section.find("title")
+                    title_text = title_elem.text if title_elem is not None and title_elem.text is not None else ""
+                    section_title = title_text + " > " + parent_section_title
                 
                 itertext = " ".join(p.itertext()).strip()
                 self.logger.debug(f"Paragraph itertext length: {len(itertext)} chars")
@@ -183,7 +231,7 @@ class XMLParser(LLMParser):
             self.logger.error(f"Error parsing XML: {e}")
             return None
 
-    def from_sections_to_corpus(self, sections):
+    def from_sections_to_corpus(self, sections, max_tokens=None, skip_rule_based_retrieved_elm=False):
         """
         Convert structured XML sections to a flat corpus of documents for embeddings retrieval.
         This method takes the output from extract_sections_from_xml (list of dicts) and converts it
@@ -195,17 +243,18 @@ class XMLParser(LLMParser):
         self.logger.info(f"Converting {len(sections)} XML sections to embeddings corpus")
 
         # Get model token limits from the initialized retriever
-        max_tokens = None
-        try:
+        if max_tokens is None:
             max_tokens = self.embeddings_retriever.model.get_max_seq_length()
             self.logger.debug(f"Using model max sequence length: {max_tokens} tokens")
-        except Exception as e:
-            self.logger.warning(f"Could not get model token limit: {e}. Using default of 512")
-            max_tokens = 512
+        effective_max_tokens = int(max_tokens * 0.95)
+        self.logger.debug(f"Effective max tokens per section: {effective_max_tokens}")
         
         # Reserve some tokens for the query and model overhead (typically 10-20% buffer)
         effective_max_tokens = int(max_tokens * 0.95)  # 95% of max to be safe
         self.logger.debug(f"Effective max tokens per section: {effective_max_tokens}")
+
+        self.skip_text_matching = self.data_availability_cont_str if skip_rule_based_retrieved_elm else []
+        self.logger.debug(f"Skipping rule-based retrieved elements: {len(self.skip_text_matching)}")
         
         corpus_documents = []
         for i, section_dict in enumerate(sections):
@@ -220,10 +269,17 @@ class XMLParser(LLMParser):
                 self.logger.debug(f"Skipping empty section '{section_title}' (i:{i})")
                 continue
 
+            if skip_rule_based_retrieved_elm:
+                self.logger.debug(f"Skipping rule-based retrieved elements: {len(self.skip_text_matching)}")
+                sec_cont = section_dict.get('sec_txt', '')
+                if sec_cont in self.skip_text_matching:
+                    self.logger.info(f"Skipping section at index {i} as it matches rule-based retrieved elements")
+                    continue
+
             chunks_created = []
             self.logger.debug(f"Starting chunk creation for section '{section_title}'")
             for p_idx, paragraph in enumerate(section_paragraphs):
-                self.logger.info(f"Processing paragraph {p_idx + 1}/{len(section_paragraphs)} in section '{section_title}', type: {type(paragraph)}")
+                self.logger.debug(f"Processing paragraph {p_idx + 1}/{len(section_paragraphs)} in section '{section_title}', type: {type(paragraph)}")
                 
                 try:
                     if hasattr(paragraph, 'itertext'):
@@ -261,11 +317,13 @@ class XMLParser(LLMParser):
                     chunk_doc['sec_txt_clean'] = section_title + "\n" + chunk_text
                     chunk_doc['text'] = section_title + "\n" + chunk_text
                     chunk_doc['chunk_id'] = len(chunks_created) + 1
+                    chunk_doc['contains_id_pattern'] = any(re.search(pattern, chunk_text, re.IGNORECASE) for pattern in self.id_patterns)
                     chunks_created.append(chunk_doc)
                     self.logger.debug(f"chunks_created now has {len(chunks_created)} items")
 
             corpus_documents.extend(chunks_created)
-            self.logger.info(f"Section '{section_title}' split into {len(chunks_created)} chunks from {len(section_paragraphs)} paragraphs")
+            diff_chunk = len(chunks_created) != len(section_paragraphs)
+            self.logger.info(f"Section '{section_title}' split into {len(chunks_created)} chunks from {len(section_paragraphs)} paragraphs") if diff_chunk else None
         
         # Remove duplicates based on normalized text content and merge section titles
         self.logger.info(f"Pre-deduplication: {len(corpus_documents)} corpus documents")
@@ -336,7 +394,8 @@ class XMLParser(LLMParser):
     def parse_data(self, api_data, publisher=None, current_url_address=None,
                    raw_data_format='XML', article_file_dir='tmp/raw_files/', section_filter=None,
                    prompt_name='GPT_FewShot', use_portkey=True, semantic_retrieval=False, top_k=2, 
-                   response_format=dataset_response_schema_gpt):
+                   response_format=dataset_response_schema_gpt, dedup=True, brute_force_RegEx_ID_ptrs=False,
+                   article_id=None):
         """
         Parse the API data and extract relevant links and metadata.
 
@@ -347,6 +406,10 @@ class XMLParser(LLMParser):
         :param current_url_address: The current URL address being processed.
 
         :param raw_data_format: The format of the raw data ('XML' or 'HTML').
+
+        :param dedup: Whether to deduplicate the extracted snippets.
+
+        :param brute_force_RegEx_ID_ptrs: Whether to use brute force regular expression matching for ID patterns.
 
         :return: A DataFrame containing the extracted links and links to metadata - if repo is supported. Add support for unsupported repos in the ontology.
 
@@ -392,17 +455,26 @@ class XMLParser(LLMParser):
 
             if not self.full_document_read:
                 if filter_das is None or filter_das:
-                    data_availability_cont = self.get_data_availability_text(api_data)
+                    output_fmt = 'list' if 'local' in self.llm_name.lower() else 'text'
+                    data_availability_cont = self.retrieve_relevant_content(
+                                api_data,
+                                semantic_retrieval=semantic_retrieval,
+                                top_k=top_k,
+                                article_id=article_id,
+                                skip_rule_based_retrieved_elm=dedup,
+                                include_snippets_with_ID_patterns=brute_force_RegEx_ID_ptrs,
+                                output_format=output_fmt
+                            )
+                    
+                    augmented_dataset_links = []
+                    if isinstance(data_availability_cont, list):
+                        for das_content in data_availability_cont:
+                            augmented_dataset_links.extend(self.extract_datasets_info_from_content(
+                                das_content, self.open_data_repos_ontology['repos'], model=self.llm_name,
+                                temperature=0, prompt_name=prompt_name, response_format=response_format))
 
-                    if semantic_retrieval:
-                        self.logger.info(f"Using semantic retrieval for data availability sections.")
-                        sections = self.extract_sections_from_xml(api_data)
-                        corpus = self.from_sections_to_corpus(sections)
-                        top_k_sections = self.semantic_retrieve_from_corpus(corpus, topk_docs_to_retrieve=top_k, model_name=self.embeddings_retriever.model_name)
-                        top_k_sections_text = [item['text'] for item in top_k_sections]
-                        data_availability_cont.extend(top_k_sections_text)
-
-                    augmented_dataset_links = self.process_data_availability_text(data_availability_cont,
+                    else:
+                        augmented_dataset_links = self.process_data_availability_text(data_availability_cont,
                                                                                   prompt_name=prompt_name,
                                                                                   response_format=response_format)
 
@@ -414,12 +486,10 @@ class XMLParser(LLMParser):
                         f"Skipping data availability statement extraction as per section_filter: {section_filter}")
                     dataset_links_w_target_pages = []
 
+                available_data = pd.DataFrame(dataset_links_w_target_pages)
                 # Create a DataFrame from the dataset links union supplementary material links
-                out_df = pd.concat([pd.DataFrame(dataset_links_w_target_pages).rename(
-                    columns={'dataset_id': 'dataset_identifier', 'repository_reference': 'data_repository'}),
-                    supplementary_material_metadata])  # check index error here
-                self.logger.info(
-                    f"Dataset Links type: {type(out_df)} of len {len(out_df)}, with cols: {out_df.columns}")
+                out_df = pd.concat([available_data,supplementary_material_metadata], ignore_index=True)  # check index error here
+                self.logger.info(f"Dataset Links type: {type(out_df)} of len {len(out_df)}, with cols: {out_df.columns}")
                 self.logger.debug(f"Datasets: {out_df}")
 
                 # Extract file extensions from download links if possible, and add to the dataframe out_df as column
@@ -432,9 +502,14 @@ class XMLParser(LLMParser):
                 if 'dataset_identifier' in out_df.columns and 'download_link' in out_df.columns:
                     out_df = out_df.drop_duplicates(subset=['download_link', 'dataset_identifier'], keep='first')
 
-                out_df['pub_title'] = self.title
-                out_df['source_url'] = current_url_address
-                out_df['raw_data_format'] = raw_data_format
+                # Only set metadata if DataFrame is not empty
+                if len(out_df) > 0:
+                    out_df['pub_title'] = self.title
+                    out_df['source_url'] = current_url_address
+                    out_df['raw_data_format'] = raw_data_format
+                else:
+                    out_df = pd.DataFrame(columns=['pub_title', 'source_url', 'raw_data_format'])
+                    self.logger.warning(f"No datasets found in the document")
 
                 return out_df
 
@@ -480,9 +555,14 @@ class XMLParser(LLMParser):
                 elif 'download_link' in out_df.columns:
                     out_df = out_df.drop_duplicates(subset=['download_link'], keep='first')
 
-                out_df['source_url'] = current_url_address
-                out_df['pub_title'] = self.title
-                out_df['raw_data_format'] = raw_data_format
+                # Only set metadata if DataFrame is not empty
+                if len(out_df) > 0:
+                    out_df['source_url'] = current_url_address
+                    out_df['pub_title'] = self.title
+                    out_df['raw_data_format'] = raw_data_format
+                else:
+                    out_df = pd.DataFrame(columns=['source_url', 'pub_title', 'raw_data_format'])
+                    self.logger.warning(f"No datasets found in the document")
 
                 return out_df
         else:
@@ -878,6 +958,7 @@ class XMLParser(LLMParser):
         :return: List of strings from sections that match the data availability section patterns.
 
         """
+        self.logger.debug(f"Function call: get_data_availability_text(api_xml({type(api_xml)})")
 
         data_availability_sections = self.retriever.get_data_availability_sections(api_xml)
 
@@ -892,20 +973,20 @@ class XMLParser(LLMParser):
         for sect in data_availability_sections:
             cont = ""
             for elem in sect.iter():
-                if elem.text:
+                if elem.text and elem.text is not None:
                     cont += ' '
                     cont += elem.text
                     cont += ' '
-                if elem.tail:
+                if elem.tail and elem.tail is not None:
                     cont += ' '
                     cont += elem.tail
                     cont += ' '
                 # also include the links in the data availability section
-                if elem.tag == 'ext-link':
+                if elem.tag == 'ext-link' and elem.get('{http://www.w3.org/1999/xlink}href') is not None:
                     cont += ' '
                     cont += elem.get('{http://www.w3.org/1999/xlink}href')
                     cont += ' '
-                if elem.tag == 'xref':
+                if elem.tag == 'xref' and elem.text is not None:
                     cont += ' '
                     cont += elem.text
                     cont += ' '
@@ -945,6 +1026,7 @@ class XMLParser(LLMParser):
         self.logger.info(f"Data Availability len: {len(data_availability_cont)}, type: {type(data_availability_cont)}")
         self.logger.debug(f"Found data availability content: {data_availability_cont}")
 
+        self.data_availability_cont_str = ''.join(data_availability_cont)
         return data_availability_cont
 
     def table_to_text(self, table_wrap):
@@ -1208,7 +1290,8 @@ class TEI_XMLParser(XMLParser):
     def parse_data(self, api_data, publisher=None, current_url_address=None,
                    raw_data_format='XML', article_file_dir='tmp/raw_files/', section_filter=None,
                    prompt_name='GPT_FewShot', use_portkey=True, semantic_retrieval=False, top_k=2, 
-                   response_format=dataset_response_schema_gpt):
+                   response_format=dataset_response_schema_gpt, dedup=True, brute_force_RegEx_ID_ptrs=False,
+                   article_id=None):
         """
         Parse the API data and extract relevant links and metadata.
 
@@ -1219,6 +1302,12 @@ class TEI_XMLParser(XMLParser):
         :param current_url_address: The current URL address being processed.
 
         :param raw_data_format: The format of the raw data ('XML' or 'HTML').
+
+        :param dedup: Whether to deduplicate the extracted snippets.
+
+        :param brute_force_RegEx_ID_ptrs: Whether to use brute force regular expression matching for ID patterns.
+
+        :param article_id: PMCID/DOI for tracing / cache save.
 
         :return: A DataFrame containing the extracted links and links to metadata - if repo is supported. Add support for unsupported repos in the ontology.
 
@@ -1264,17 +1353,26 @@ class TEI_XMLParser(XMLParser):
 
             if not self.full_document_read:
                 if filter_das is None or filter_das:
-                    data_availability_cont = self.get_data_availability_text(api_data)
+                    output_fmt = 'list' if 'local' in self.llm_name.lower() else 'text'
+                    data_availability_cont = self.retrieve_relevant_content(
+                                api_data,
+                                semantic_retrieval=semantic_retrieval,
+                                top_k=top_k,
+                                article_id=article_id,
+                                skip_rule_based_retrieved_elm=dedup,
+                                include_snippets_with_ID_patterns=brute_force_RegEx_ID_ptrs,
+                                output_format=output_fmt
+                            )
+                    
+                    augmented_dataset_links = []
+                    if isinstance(data_availability_cont, list):
+                        for das_content in data_availability_cont:
+                            augmented_dataset_links.extend(self.extract_datasets_info_from_content(
+                                das_content, self.open_data_repos_ontology['repos'], model=self.llm_name,
+                                temperature=0, prompt_name=prompt_name, response_format=response_format))
 
-                    if semantic_retrieval:
-                        self.logger.info(f"Using semantic retrieval for data availability sections.")
-                        sections = self.extract_sections_from_xml(api_data)
-                        corpus = self.from_sections_to_corpus(sections)
-                        top_k_sections = self.semantic_retrieve_from_corpus(corpus, topk_docs_to_retrieve=top_k, model_name=self.embeddings_retriever.model_name)
-                        top_k_sections_text = [item['text'] for item in top_k_sections]
-                        data_availability_cont.extend(top_k_sections_text)
-
-                    augmented_dataset_links = self.process_data_availability_text(data_availability_cont,
+                    else:
+                        augmented_dataset_links = self.process_data_availability_text(data_availability_cont,
                                                                                   prompt_name=prompt_name,
                                                                                   response_format=response_format)
 
@@ -1287,11 +1385,8 @@ class TEI_XMLParser(XMLParser):
                     dataset_links_w_target_pages = []
 
                 # Create a DataFrame from the dataset links union supplementary material links
-                out_df = pd.concat([pd.DataFrame(dataset_links_w_target_pages).rename(
-                    columns={'dataset_id': 'dataset_identifier', 'repository_reference': 'data_repository'}),
-                    supplementary_material_metadata])  # check index error here
-                self.logger.info(
-                    f"Dataset Links type: {type(out_df)} of len {len(out_df)}, with cols: {out_df.columns}")
+                out_df = pd.concat([pd.DataFrame(dataset_links_w_target_pages), supplementary_material_metadata], ignore_index=True)  # check index error here
+                self.logger.info(f"Dataset Links type: {type(out_df)} of len {len(out_df)}, with cols: {out_df.columns}")
                 self.logger.debug(f"Datasets: {out_df}")
 
                 # Extract file extensions from download links if possible, and add to the dataframe out_df as column
@@ -1350,8 +1445,13 @@ class TEI_XMLParser(XMLParser):
                 elif 'download_link' in out_df.columns:
                     out_df = out_df.drop_duplicates(subset=['download_link'], keep='first')
 
-                out_df['source_url'] = current_url_address
-                out_df['pub_title'] = self.title
+                # Only set metadata if DataFrame is not empty
+                if len(out_df) > 0:
+                    out_df['source_url'] = current_url_address
+                    out_df['pub_title'] = self.title
+                else:
+                    out_df = pd.DataFrame(columns=['source_url', 'pub_title'])
+                    self.logger.warning(f"No datasets found in the document")
 
                 return out_df
         else:

@@ -1,10 +1,14 @@
 from data_gatherer.data_fetcher import *
+from data_gatherer.data_gatherer import DataGatherer
+from lxml import etree
+from conftest import get_test_data_path
 from unittest.mock import patch, Mock
 import logging
 
 class DummyFetcher(DataFetcher):
     def fetch_data(self, *args, **kwargs):
         pass  # Minimal implementation for testing
+
 @patch("requests.get")
 def test_PMCID_to_doi(mock_get):
     mock_response = Mock()
@@ -18,3 +22,10 @@ def test_PMCID_to_doi(mock_get):
     assert isinstance(doi, str)
     assert doi == "10.1093/nar/gks1195"
 
+def test_is_full_text_complete(get_test_data_path):
+    dg = DataGatherer(log_level='DEBUG')
+    checker = DataCompletenessChecker(logger=dg.logger)
+
+    xml_cont = etree.parse(get_test_data_path("pmc_element_set_1.xml"))
+
+    assert checker.is_fulltext_complete(xml_cont,'test_url') is True

@@ -1,0 +1,1402 @@
+
+
+
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+  <head>
+  
+    
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="google-site-verification" content="5fPGCLllnWrvFxH9QWI0l1TadV7byeEvfPcyK2VkS_s"/>
+    <meta name="google-site-verification" content="Rp5zp04IKW-s1IbpTOGB7Z6XY60oloZD5C3kTM-AiY4"/>
+
+    
+    
+    <meta name="generator" content="InvenioRDM 14.0"/>
+
+    
+    
+    
+  
+    <meta name="description" content="This dataset including the RDS files, including meta data, labeled assays, and reduction map information in order to ensure the reproducibility of the scRNA-seq data of human MSCs. The research &#34;Multi-omics analysis of human mesenchymal stem cells shows cell aging that alters immunomodulatory activity through the downregulation of PD-L1&#34; has been published on Nature Communications (https://doi.org/10.1038/s41467-023-39958-5)." />
+    <meta name="citation_title" content="Single cell analysis of human mesenchymal stem cells" />
+    <meta name="citation_author" content="Yuchen Gao" />
+    <meta name="citation_author" content="Lei Zhang" />
+    <meta name="citation_doi" content="10.5281/zenodo.8026174" />
+    <meta name="citation_abstract_html_url" content="https://zenodo.org/records/8026174" />
+    <meta property="og:title" content="Single cell analysis of human mesenchymal stem cells" />
+    <meta property="og:description" content="This dataset including the RDS files, including meta data, labeled assays, and reduction map information in order to ensure the reproducibility of the scRNA-seq data of human MSCs. The research &#34;Multi-omics analysis of human mesenchymal stem cells shows cell aging that alters immunomodulatory activity through the downregulation of PD-L1&#34; has been published on Nature Communications (https://doi.org/10.1038/s41467-023-39958-5)." />
+    <meta property="og:url" content="https://zenodo.org/records/8026174" />
+    <meta property="og:site_name" content="Zenodo" />
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:site" content="@zenodo_org" />
+    <meta name="twitter:title" content="Single cell analysis of human mesenchymal stem cells" />
+    <meta name="twitter:description" content="This dataset including the RDS files, including meta data, labeled assays, and reduction map information in order to ensure the reproducibility of the scRNA-seq data of human MSCs. The research &#34;Multi-omics analysis of human mesenchymal stem cells shows cell aging that alters immunomodulatory activity through the downregulation of PD-L1&#34; has been published on Nature Communications (https://doi.org/10.1038/s41467-023-39958-5)." />
+    
+    <link rel="alternate" type="text/csv" href="https://zenodo.org/records/8026174/files/Adult_Perinatal_MSCs_ReductionMapInfo.csv">
+    <link rel="item" type="text/csv" href="https://zenodo.org/records/8026174/files/Adult_Perinatal_MSCs_ReductionMapInfo.csv">
+    
+    <link rel="alternate" type="text/csv" href="https://zenodo.org/records/8026174/files/Young_Aged_BM-MSCs_ReductionMapInfo.csv">
+    <link rel="item" type="text/csv" href="https://zenodo.org/records/8026174/files/Young_Aged_BM-MSCs_ReductionMapInfo.csv">
+    
+    <link rel="alternate" type="application/octet-stream" href="https://zenodo.org/records/8026174/files/Young_Aged_BM-MSCs_Transferanchor.rds">
+    <link rel="item" type="application/octet-stream" href="https://zenodo.org/records/8026174/files/Young_Aged_BM-MSCs_Transferanchor.rds">
+    
+    <link rel="alternate" type="text/csv" href="https://zenodo.org/records/8026174/files/Young_Aged_BM-MSCs_metadata.csv">
+    <link rel="item" type="text/csv" href="https://zenodo.org/records/8026174/files/Young_Aged_BM-MSCs_metadata.csv">
+    
+    <link rel="alternate" type="application/octet-stream" href="https://zenodo.org/records/8026174/files/Adult_Perinatal_MSCs.rds">
+    <link rel="item" type="application/octet-stream" href="https://zenodo.org/records/8026174/files/Adult_Perinatal_MSCs.rds">
+    
+    <link rel="alternate" type="text/csv" href="https://zenodo.org/records/8026174/files/Adult_Perinatal_MSCs_metadata.csv">
+    <link rel="item" type="text/csv" href="https://zenodo.org/records/8026174/files/Adult_Perinatal_MSCs_metadata.csv">
+
+
+<link rel="canonical" href="https://zenodo.org/records/8026174">
+      <title>Single cell analysis of human mesenchymal stem cells</title>
+      <link rel="shortcut icon" type="image/x-icon" href="/static/favicon.ico"/>
+          <link rel="apple-touch-icon" sizes="120x120" href="/static/apple-touch-icon-120.png"/>
+          <link rel="apple-touch-icon" sizes="152x152" href="/static/apple-touch-icon-152.png"/>
+          <link rel="apple-touch-icon" sizes="167x167" href="/static/apple-touch-icon-167.png"/>
+          <link rel="apple-touch-icon" sizes="180x180" href="/static/apple-touch-icon-180.png"/>
+    
+      <link rel="stylesheet" href="/static/dist/css/3526.c82d2078f608b8374912.css" />
+      <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
+      <!--[if lt IE 9]>
+        <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
+        <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+      <![endif]-->
+    
+  </head>
+
+  <body data-invenio-config='{"isMathJaxEnabled": "//cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-mml-chtml.js?config=TeX-AMS-MML_HTMLorMML"}'  itemscope itemtype="http://schema.org/WebPage" data-spy="scroll" data-target=".scrollspy-target">
+      <a id="skip-to-main" class="ui button primary ml-5 mt-5 skip-link" href="#main">Skip to main</a>
+      <!--[if lt IE 8]>
+        <p class="browserupgrade">You are using an <strong>outdated</strong> browser. Please <a href="http://browsehappy.com/">upgrade your browser</a> to improve your experience.</p>
+      <![endif]-->
+    
+
+<div>
+  <header class="theme header">
+
+    <div class="outer-navbar">
+      <div class="ui container invenio-header-container">
+        <nav id="invenio-nav" class="ui inverted menu borderless p-0">
+          <div class="item logo p-0">
+                    <a class="logo-link" href="/">
+                      <img class="ui image rdm-logo"
+                            src="/static/images/invenio-rdm.svg"
+                            alt="Zenodo home"/>
+                    </a>
+          </div>
+
+          <div id="rdm-burger-toggle">
+            <button
+              id="rdm-burger-menu-icon"
+              class="ui button transparent"
+              aria-label="Menu"
+              aria-haspopup="menu"
+              aria-expanded="false"
+              aria-controls="invenio-menu"
+            >
+              <span class="navicon" aria-hidden="true"></span>
+            </button>
+          </div>
+
+          <nav
+            id="invenio-menu"
+            aria-labelledby="rdm-burger-menu-icon"
+            class="ui fluid menu borderless mobile-hidden"
+          >
+            <button
+              id="rdm-close-burger-menu-icon"
+              class="ui button transparent"
+              aria-label="Close menu"
+            >
+              <span class="navicon" aria-hidden="true"></span>
+            </button>
+    
+    
+    
+      <div class="item p-0 search-bar">
+        <div id="header-search-bar" data-options='[{"key": "records", "text": "All Zenodo", "value": "/search"}]'>
+          <div class="ui fluid search">
+            <div class="ui icon input">
+              <input
+                autocomplete="off"
+                aria-label="Search records"
+                placeholder="Search records..."
+                type="text"
+                tabindex="0"
+                class="prompt"
+                value=""
+              >
+              <i aria-hidden="true" class="search icon"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+
+                  <div class="item">
+                    <a href="/communities">Communities</a>
+                  </div>
+
+              
+                <div class="item">
+                  <a href="/me/uploads">My dashboard</a>
+                </div>
+              
+              <div class="right menu item">
+    <form>
+      <a
+        href="/login/?next=/records/8026174"
+        class="ui button auth-button" aria-busy="false" aria-live="polite" aria-label="Log in"
+      >
+        <i class="sign-in icon auth-icon" aria-hidden="true"></i>
+        Log in
+      </a>
+      
+        <a href="/signup/" class="ui button signup">
+          <i class="edit outline icon"></i>
+          Sign up
+        </a>
+      
+    </form>
+              </div>
+          </nav>
+        </nav>
+      </div>
+    </div>
+      
+      
+    
+      
+    
+    
+  </header>
+</div>
+
+  <main id="main">
+    <div class="invenio-page-body">
+  <section id="banners" class="banners" aria-label="Information banner">
+    <!-- COMMUNITY HEADER: hide it when displaying the submission request -->
+    
+      
+    
+    <!-- /COMMUNITY HEADER -->
+
+    <!-- PREVIEW HEADER -->
+    
+    <!-- /PREVIEW HEADER -->
+
+    
+  </section>
+
+
+  <div class="ui container">
+    <div class="ui relaxed grid mt-5">
+      <div class="two column row top-padded">
+
+        
+        <article
+          class="sixteen wide tablet eleven wide computer column main-record-content">
+          
+
+              
+
+              
+
+              <section id="record-info"
+                       aria-label="Publication date and version number">
+                <div class="ui grid middle aligned">
+                  <div class="two column row">
+                    <div class="left floated left aligned column">
+                      <span class="ui" title="Publication date">
+                        Published June 14, 2023
+                      </span>
+                      <span
+                        class="label text-muted"> | Version v1</span>
+                    </div>
+                    <div class="right floated right aligned column">
+
+                      
+                        <span role="note"
+                              class="ui label horizontal small neutral mb-5"
+                              aria-label="Resource type"
+                        >
+                          Dataset
+                        </span>
+                      
+
+                      <span role="note"
+                            class="ui label horizontal small access-status open mb-5"
+                            data-tooltip="The record and files are publicly accessible."
+                            data-inverted=""
+                            aria-label="Access status"
+                      >
+                        
+                          <i class="icon unlock"
+                             aria-hidden="true"></i>
+                        
+                        <span
+                          aria-label="The record and files are publicly accessible.">
+                          Open
+                        </span>
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </section>
+              <div class="ui divider hidden"></div><section id="record-title-section"
+                       aria-label="Record title and creators">
+                <h1 id="record-title"
+                    class="wrap-overflowing-text">Single cell analysis of human mesenchymal stem cells</h1>
+
+                
+                  <section id="creatibutors"
+                           aria-label="Creators and contributors">
+
+<div class="ui grid">
+  
+    <div class="row ui accordion affiliations">
+      <div class="sixteen wide mobile twelve wide tablet thirteen wide computer column">
+          <h3 class="sr-only">Creators</h3>
+          <ul class="creatibutors">
+            
+  
+  <li class="creatibutor-wrap separated">
+    <a class="ui creatibutor-link"
+      
+        data-tooltip="Institute of Hematology and Blood Diseases Hospital, Chinese Academy of Medical Sciences"
+      
+      href="/search?q=metadata.creators.person_or_org.name:%22Yuchen+Gao%22"
+    >
+
+      <span class="creatibutor-name">Yuchen Gao</span><sup class="font-tiny">1</sup></a>
+  
+
+  
+    
+      
+        
+        <a href="https://orcid.org/0000-0002-0619-1595"
+           aria-label="Yuchen Gao's ORCID profile"
+           title="Yuchen Gao's ORCID profile">
+          <img class="ml-5 inline-id-icon"
+               src="/static/images/orcid.svg"
+               alt="ORCID icon"/>
+        </a>
+      
+    
+      
+    
+      
+    
+      
+    
+  
+
+  
+  
+</li>
+  
+  <li class="creatibutor-wrap separated">
+    <a class="ui creatibutor-link"
+      
+        data-tooltip="Institute of Hematology and Blood Diseases Hospital, Chinese Academy of Medical Sciences"
+      
+      href="/search?q=metadata.creators.person_or_org.name:%22Lei+Zhang%22"
+    >
+
+      <span class="creatibutor-name">Lei Zhang</span><sup class="font-tiny">1</sup></a>
+  
+
+  
+    
+      
+    
+      
+    
+      
+    
+      
+    
+  
+
+  
+  
+    
+      <i class="user icon"></i>
+    
+  
+</li>
+  
+          </ul>
+      </div>
+
+        
+        
+          
+<div class="ui sixteen wide tablet three wide computer column title right aligned bottom aligned">
+  <button class="ui affiliations-button trigger button mini mr-0"
+          aria-controls="creators-affiliations"
+          data-open-text="Show affiliations"
+          data-close-text="Hide affiliations"
+          aria-expanded="false"
+  >
+    Show affiliations
+  </button>
+</div>
+
+<section class="ui sixteen wide column content" id="creators-affiliations" aria-label="Affiliations for creators">
+  <ul>
+    
+    <li>
+      1.
+
+      
+
+      Institute of Hematology and Blood Diseases Hospital, Chinese Academy of Medical Sciences
+    </li>
+  
+
+    </ul>
+</section>
+
+        
+
+    </div>
+  
+
+  
+</div>
+                  </section>
+                
+              </section>
+
+
+
+  <section id="description" class="rel-mt-2 rich-input-content" aria-label="Record description">
+    <h2 id="description-heading" class="sr-only">Description</h2>
+    
+    <div style="word-wrap: break-word;">
+      <p>This dataset including the RDS files, including meta data, labeled assays, and reduction map information in order to ensure the reproducibility of the scRNA-seq data of human MSCs.</p>
+
+<p>The&nbsp;research &quot;Multi-omics analysis of human mesenchymal stem cells shows cell aging that alters immunomodulatory activity through the downregulation of PD-L1&quot; has been published on Nature Communications (https://doi.org/10.1038/s41467-023-39958-5).</p>
+    </div>
+  </section>
+
+
+<section
+      id="record-files" class="rel-mt-2 rel-mb-3"
+      aria-label="Files"
+    ><h2 id="files-heading">Files</h2>
+            
+  <div class="ui accordion panel mb-10 open" href="#files-preview-accordion-panel">
+    <h3 class="active title panel-heading open m-0">
+      <div
+        role="button"
+        id="files-preview-accordion-trigger"
+        aria-controls="files-preview-accordion-panel"
+        aria-expanded="true"
+        tabindex="0"
+        class="trigger"
+        aria-label="File preview"
+      >
+        <span id="preview-file-title">Adult_Perinatal_MSCs_metadata.csv</span>
+        <i class="angle right icon" aria-hidden="true"></i>
+      </div>
+    </h3>
+    <div
+      role="region"
+      id="files-preview-accordion-panel"
+      aria-labelledby="files-preview-accordion-trigger"
+      class="active content preview-container pt-0 open"
+    >
+      <div>
+        
+  
+  <iframe
+    title="Preview"
+    class="preview-iframe"
+    id="preview-iframe"
+    name="preview-iframe"
+    src="/records/8026174/preview/Adult_Perinatal_MSCs_metadata.csv?include_deleted=0"
+  >
+  </iframe>
+      </div>
+    </div>
+  </div>
+  <div class="ui accordion panel mb-10 open" href="#files-list-accordion-panel">
+    <h3 class="active title panel-heading open m-0">
+      <div role="button" id="files-list-accordion-trigger" aria-controls="files-list-accordion-panel" aria-expanded="true" tabindex="0" class="trigger">
+        Files
+        <small class="text-muted"> (3.1 GB)</small>
+        <i class="angle right icon" aria-hidden="true"></i>
+      </div>
+    </h3>
+
+    <div role="region" id="files-list-accordion-panel" aria-labelledby="files-list-accordion-trigger" class="active content pt-0">
+      
+      <div>
+        
+  <table class="ui striped table files fluid open">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Size</th>
+        <th class>
+            
+            <a role="button" class="ui compact mini button right floated archive-link" href="https://zenodo.org/api/records/8026174/files-archive">
+              <i class="file archive icon button" aria-hidden="true"></i> Download all
+            </a>
+        </th>
+      </tr>
+    </thead>
+    <tbody>
+    
+      
+        
+        
+        <tr>
+          <td class="ten wide">
+            <div>
+              <a href="/records/8026174/files/Adult_Perinatal_MSCs.rds?download=1">Adult_Perinatal_MSCs.rds</a>
+            </div>
+            <small class="ui text-muted font-tiny">md5:80ea1f9a5e3eaaa4a635e8c54b03d9e0
+            <div class="ui icon inline-block" data-tooltip="This is the file fingerprint (checksum), which can be used to verify the file integrity.">
+              <i class="question circle checksum icon"></i>
+            </div>
+            </small>
+          </td>
+          <td>2.3 GB</td>
+          <td class="right aligned">
+            <span>
+              
+              <a role="button" class="ui compact mini button" href="/records/8026174/files/Adult_Perinatal_MSCs.rds?download=1">
+                <i class="download icon" aria-hidden="true"></i>Download
+              </a>
+            </span>
+          </td>
+        </tr>
+      
+    
+      
+        
+        
+        <tr>
+          <td class="ten wide">
+            <div>
+              <a href="/records/8026174/files/Adult_Perinatal_MSCs_metadata.csv?download=1">Adult_Perinatal_MSCs_metadata.csv</a>
+            </div>
+            <small class="ui text-muted font-tiny">md5:73a4ccd11d545faed0525d1db0968bf9
+            <div class="ui icon inline-block" data-tooltip="This is the file fingerprint (checksum), which can be used to verify the file integrity.">
+              <i class="question circle checksum icon"></i>
+            </div>
+            </small>
+          </td>
+          <td>3.4 MB</td>
+          <td class="right aligned">
+            <span>
+              
+                <a role="button" class="ui compact mini button preview-link" href="/records/8026174/preview/Adult_Perinatal_MSCs_metadata.csv?include_deleted=0" target="preview-iframe" data-file-key="Adult_Perinatal_MSCs_metadata.csv">
+                  <i class="eye icon" aria-hidden="true"></i>Preview
+                </a>
+              
+              <a role="button" class="ui compact mini button" href="/records/8026174/files/Adult_Perinatal_MSCs_metadata.csv?download=1">
+                <i class="download icon" aria-hidden="true"></i>Download
+              </a>
+            </span>
+          </td>
+        </tr>
+      
+    
+      
+        
+        
+        <tr>
+          <td class="ten wide">
+            <div>
+              <a href="/records/8026174/files/Adult_Perinatal_MSCs_ReductionMapInfo.csv?download=1">Adult_Perinatal_MSCs_ReductionMapInfo.csv</a>
+            </div>
+            <small class="ui text-muted font-tiny">md5:defdcdd89a20597773c6347b9dacc927
+            <div class="ui icon inline-block" data-tooltip="This is the file fingerprint (checksum), which can be used to verify the file integrity.">
+              <i class="question circle checksum icon"></i>
+            </div>
+            </small>
+          </td>
+          <td>2.2 MB</td>
+          <td class="right aligned">
+            <span>
+              
+                <a role="button" class="ui compact mini button preview-link" href="/records/8026174/preview/Adult_Perinatal_MSCs_ReductionMapInfo.csv?include_deleted=0" target="preview-iframe" data-file-key="Adult_Perinatal_MSCs_ReductionMapInfo.csv">
+                  <i class="eye icon" aria-hidden="true"></i>Preview
+                </a>
+              
+              <a role="button" class="ui compact mini button" href="/records/8026174/files/Adult_Perinatal_MSCs_ReductionMapInfo.csv?download=1">
+                <i class="download icon" aria-hidden="true"></i>Download
+              </a>
+            </span>
+          </td>
+        </tr>
+      
+    
+      
+        
+        
+        <tr>
+          <td class="ten wide">
+            <div>
+              <a href="/records/8026174/files/Young_Aged_BM-MSCs_metadata.csv?download=1">Young_Aged_BM-MSCs_metadata.csv</a>
+            </div>
+            <small class="ui text-muted font-tiny">md5:4ae4bde9709fe2d6fa99f9c3429702fb
+            <div class="ui icon inline-block" data-tooltip="This is the file fingerprint (checksum), which can be used to verify the file integrity.">
+              <i class="question circle checksum icon"></i>
+            </div>
+            </small>
+          </td>
+          <td>3.0 MB</td>
+          <td class="right aligned">
+            <span>
+              
+                <a role="button" class="ui compact mini button preview-link" href="/records/8026174/preview/Young_Aged_BM-MSCs_metadata.csv?include_deleted=0" target="preview-iframe" data-file-key="Young_Aged_BM-MSCs_metadata.csv">
+                  <i class="eye icon" aria-hidden="true"></i>Preview
+                </a>
+              
+              <a role="button" class="ui compact mini button" href="/records/8026174/files/Young_Aged_BM-MSCs_metadata.csv?download=1">
+                <i class="download icon" aria-hidden="true"></i>Download
+              </a>
+            </span>
+          </td>
+        </tr>
+      
+    
+      
+        
+        
+        <tr>
+          <td class="ten wide">
+            <div>
+              <a href="/records/8026174/files/Young_Aged_BM-MSCs_ReductionMapInfo.csv?download=1">Young_Aged_BM-MSCs_ReductionMapInfo.csv</a>
+            </div>
+            <small class="ui text-muted font-tiny">md5:72bb0241c66f40f30785084e92f811a0
+            <div class="ui icon inline-block" data-tooltip="This is the file fingerprint (checksum), which can be used to verify the file integrity.">
+              <i class="question circle checksum icon"></i>
+            </div>
+            </small>
+          </td>
+          <td>1.7 MB</td>
+          <td class="right aligned">
+            <span>
+              
+                <a role="button" class="ui compact mini button preview-link" href="/records/8026174/preview/Young_Aged_BM-MSCs_ReductionMapInfo.csv?include_deleted=0" target="preview-iframe" data-file-key="Young_Aged_BM-MSCs_ReductionMapInfo.csv">
+                  <i class="eye icon" aria-hidden="true"></i>Preview
+                </a>
+              
+              <a role="button" class="ui compact mini button" href="/records/8026174/files/Young_Aged_BM-MSCs_ReductionMapInfo.csv?download=1">
+                <i class="download icon" aria-hidden="true"></i>Download
+              </a>
+            </span>
+          </td>
+        </tr>
+      
+    
+      
+        
+        
+        <tr>
+          <td class="ten wide">
+            <div>
+              <a href="/records/8026174/files/Young_Aged_BM-MSCs_Transferanchor.rds?download=1">Young_Aged_BM-MSCs_Transferanchor.rds</a>
+            </div>
+            <small class="ui text-muted font-tiny">md5:d0ddf2317b496a5065302c0463d6ea0d
+            <div class="ui icon inline-block" data-tooltip="This is the file fingerprint (checksum), which can be used to verify the file integrity.">
+              <i class="question circle checksum icon"></i>
+            </div>
+            </small>
+          </td>
+          <td>717.2 MB</td>
+          <td class="right aligned">
+            <span>
+              
+              <a role="button" class="ui compact mini button" href="/records/8026174/files/Young_Aged_BM-MSCs_Transferanchor.rds?download=1">
+                <i class="download icon" aria-hidden="true"></i>Download
+              </a>
+            </span>
+          </td>
+        </tr>
+      
+    
+    </tbody>
+  </table>
+      </div>
+    </div>
+  </div>
+
+    </section>
+              
+
+  <section id="additional-details" class="rel-mt-2" aria-label="Additional record details">
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  </section>
+    
+    <section
+      id="citations-search"
+      data-record-pids='{"doi": {"client": "datacite", "identifier": "10.5281/zenodo.8026174", "provider": "datacite"}, "oai": {"identifier": "oai:zenodo.org:8026174", "provider": "oai"}}'
+      data-record-parent-pids='{"doi": {"client": "datacite", "identifier": "10.5281/zenodo.8026173", "provider": "datacite"}}'
+      data-citations-endpoint="https://zenodo-broker.web.cern.ch/api/relationships"
+      aria-label="Record citations"
+      class="rel-mb-1"
+    >
+    </section>
+  
+        </article>
+
+        
+        <aside class="sixteen wide tablet five wide computer column sidebar"
+               aria-label="Record details">
+          
+
+
+
+
+<section id="metrics" aria-label="Metrics" class="ui segment rdm-sidebar sidebar-container">
+
+
+<div class="ui tiny two statistics rel-mt-1">
+  
+  
+
+  <div class="ui statistic">
+    <div class="value">491</div>
+    <div class="label">
+      <i aria-hidden="true" class="eye icon"></i>
+      Views
+    </div>
+  </div>
+
+  <div class="ui statistic">
+    <div class="value">761</div>
+    <div class="label">
+      <i aria-hidden="true" class="download icon"></i>
+      Downloads
+    </div>
+  </div>
+</div>
+
+<div class="ui accordion rel-mt-1 centered">
+  <div class="title trigger" tabindex="0">
+    <i class="caret right icon" aria-hidden="true"></i>
+    <span
+      data-open-text="Show more details"
+      data-close-text="Show less details"
+    >
+      Show more details
+    </span>
+  </div>
+
+  <div class="content">
+    <table id="record-statistics" class="ui definition table fluid">
+      <thead>
+        <tr>
+          <th></th>
+          <th class="right aligned">All versions</th>
+          <th class="right aligned">This version</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>
+            Views
+            <i
+              tabindex="0"
+              role="button"
+              style="position:relative"
+              class="popup-trigger question circle small icon"
+              aria-expanded="false"
+              aria-label="More info"
+              data-variation="mini inverted"
+            >
+            </i>
+            <p role="tooltip" class="popup-content ui flowing popup transition hidden">
+              Total views
+            </p>
+          </td>
+          <td data-label="All versions" class="right aligned">
+  
+    491
+  
+</td>
+          <td data-label="This version" class="right aligned">
+  
+    480
+  
+</td>
+        </tr>
+        <tr>
+          <td>
+            Downloads
+            <i
+              tabindex="0"
+              role="button"
+              style="position:relative"
+              class="popup-trigger question circle small icon"
+              aria-expanded="false"
+              aria-label="More info"
+              data-variation="mini inverted"
+            >
+            </i>
+            <p role="tooltip" class="popup-content ui flowing popup transition hidden">
+              Total downloads
+            </p>
+          </td>
+          <td data-label="All versions" class="right aligned">
+  
+    761
+  
+</td>
+          <td data-label="This version" class="right aligned">
+  
+    753
+  
+</td>
+        </tr>
+        <tr>
+          <td>
+            Data volume
+            <i
+              tabindex="0"
+              role="button"
+              style="position:relative"
+              class="popup-trigger question circle small icon"
+              aria-expanded="false"
+              aria-label="More info"
+              data-variation="mini inverted"
+            >
+            </i>
+            <p role="tooltip" class="popup-content ui flowing popup transition hidden">
+              Total data volume
+            </p>
+          </td>
+
+          <td data-label="All versions" class="right aligned">508.4 GB</td>
+          <td data-label="This version" class="right aligned">503.0 GB</td>
+        </tr>
+      </tbody>
+    </table>
+    <p class="text-align-center rel-mt-1">
+      <small>
+        <a href="/help/statistics">More info on how stats are collected....</a>
+      </small>
+    </p>
+  </div>
+
+</div>
+
+</section>
+
+<div class="sidebar-container">
+  <h2 class="ui medium top attached header mt-0">Versions</h2>
+  <div id="record-versions" class="ui segment rdm-sidebar bottom attached pl-0 pr-0 pt-0">
+    <div class="versions">
+      <div id="recordVersions" data-record='{"access": {"embargo": {"active": false, "reason": null}, "files": "public", "record": "public", "status": "open"}, "created": "2023-06-12T09:52:12.538595+00:00", "custom_fields": {}, "deletion_status": {"is_deleted": false, "status": "P"}, "expanded": {"parent": {"access": {"owned_by": {"active": null, "blocked_at": null, "confirmed_at": null, "email": "", "id": "567434", "is_current_user": false, "links": {"avatar": "https://zenodo.org/api/users/567434/avatar.svg", "records_html": "https://zenodo.org/search/records?q=parent.access.owned_by.user:567434", "self": "https://zenodo.org/api/users/567434"}, "profile": {"affiliations": "", "full_name": ""}, "username": "GaoYuchenPUMC", "verified_at": null}}}}, "files": {"count": 6, "enabled": true, "entries": {"Adult_Perinatal_MSCs.rds": {"access": {"hidden": false}, "checksum": "md5:80ea1f9a5e3eaaa4a635e8c54b03d9e0", "ext": "rds", "id": "77b4ec80-94a1-4fc9-9375-ec5dca1141a2", "key": "Adult_Perinatal_MSCs.rds", "links": {"content": "https://zenodo.org/api/records/8026174/files/Adult_Perinatal_MSCs.rds/content", "self": "https://zenodo.org/api/records/8026174/files/Adult_Perinatal_MSCs.rds"}, "metadata": null, "mimetype": "application/octet-stream", "size": 2335314140, "storage_class": "L"}, "Adult_Perinatal_MSCs_ReductionMapInfo.csv": {"access": {"hidden": false}, "checksum": "md5:defdcdd89a20597773c6347b9dacc927", "ext": "csv", "id": "be83e6dc-ff83-4ca6-874f-5b8280205d85", "key": "Adult_Perinatal_MSCs_ReductionMapInfo.csv", "links": {"content": "https://zenodo.org/api/records/8026174/files/Adult_Perinatal_MSCs_ReductionMapInfo.csv/content", "self": "https://zenodo.org/api/records/8026174/files/Adult_Perinatal_MSCs_ReductionMapInfo.csv"}, "metadata": null, "mimetype": "text/csv", "size": 2151552, "storage_class": "L"}, "Adult_Perinatal_MSCs_metadata.csv": {"access": {"hidden": false}, "checksum": "md5:73a4ccd11d545faed0525d1db0968bf9", "ext": "csv", "id": "45c2cffe-dbf9-4370-b31f-ccef13b08197", "key": "Adult_Perinatal_MSCs_metadata.csv", "links": {"content": "https://zenodo.org/api/records/8026174/files/Adult_Perinatal_MSCs_metadata.csv/content", "self": "https://zenodo.org/api/records/8026174/files/Adult_Perinatal_MSCs_metadata.csv"}, "metadata": null, "mimetype": "text/csv", "size": 3371657, "storage_class": "L"}, "Young_Aged_BM-MSCs_ReductionMapInfo.csv": {"access": {"hidden": false}, "checksum": "md5:72bb0241c66f40f30785084e92f811a0", "ext": "csv", "id": "484be1d8-5396-4866-bc70-1fb4895b0dbe", "key": "Young_Aged_BM-MSCs_ReductionMapInfo.csv", "links": {"content": "https://zenodo.org/api/records/8026174/files/Young_Aged_BM-MSCs_ReductionMapInfo.csv/content", "self": "https://zenodo.org/api/records/8026174/files/Young_Aged_BM-MSCs_ReductionMapInfo.csv"}, "metadata": null, "mimetype": "text/csv", "size": 1710533, "storage_class": "L"}, "Young_Aged_BM-MSCs_Transferanchor.rds": {"access": {"hidden": false}, "checksum": "md5:d0ddf2317b496a5065302c0463d6ea0d", "ext": "rds", "id": "640a4e94-fc42-469c-987a-0d8eff7a0224", "key": "Young_Aged_BM-MSCs_Transferanchor.rds", "links": {"content": "https://zenodo.org/api/records/8026174/files/Young_Aged_BM-MSCs_Transferanchor.rds/content", "self": "https://zenodo.org/api/records/8026174/files/Young_Aged_BM-MSCs_Transferanchor.rds"}, "metadata": null, "mimetype": "application/octet-stream", "size": 717191801, "storage_class": "L"}, "Young_Aged_BM-MSCs_metadata.csv": {"access": {"hidden": false}, "checksum": "md5:4ae4bde9709fe2d6fa99f9c3429702fb", "ext": "csv", "id": "ca815088-e557-4ae1-80bf-53648a946ad7", "key": "Young_Aged_BM-MSCs_metadata.csv", "links": {"content": "https://zenodo.org/api/records/8026174/files/Young_Aged_BM-MSCs_metadata.csv/content", "self": "https://zenodo.org/api/records/8026174/files/Young_Aged_BM-MSCs_metadata.csv"}, "metadata": null, "mimetype": "text/csv", "size": 2955217, "storage_class": "L"}}, "order": [], "total_bytes": 3062694900}, "id": "8026174", "is_draft": false, "is_published": true, "links": {"access": "https://zenodo.org/api/records/8026174/access", "access_grants": "https://zenodo.org/api/records/8026174/access/grants", "access_links": "https://zenodo.org/api/records/8026174/access/links", "access_request": "https://zenodo.org/api/records/8026174/access/request", "access_users": "https://zenodo.org/api/records/8026174/access/users", "archive": "https://zenodo.org/api/records/8026174/files-archive", "archive_media": "https://zenodo.org/api/records/8026174/media-files-archive", "communities": "https://zenodo.org/api/records/8026174/communities", "communities-suggestions": "https://zenodo.org/api/records/8026174/communities-suggestions", "doi": "https://doi.org/10.5281/zenodo.8026174", "draft": "https://zenodo.org/api/records/8026174/draft", "files": "https://zenodo.org/api/records/8026174/files", "latest": "https://zenodo.org/api/records/8026174/versions/latest", "latest_html": "https://zenodo.org/records/8026174/latest", "media_files": "https://zenodo.org/api/records/8026174/media-files", "parent": "https://zenodo.org/api/records/8026173", "parent_doi": "https://doi.org/10.5281/zenodo.8026173", "parent_doi_html": "https://zenodo.org/doi/10.5281/zenodo.8026173", "parent_html": "https://zenodo.org/records/8026173", "preview_html": "https://zenodo.org/records/8026174?preview=1", "request_deletion": "https://zenodo.org/api/records/8026174/request-deletion", "requests": "https://zenodo.org/api/records/8026174/requests", "reserve_doi": "https://zenodo.org/api/records/8026174/draft/pids/doi", "self": "https://zenodo.org/api/records/8026174", "self_doi": "https://doi.org/10.5281/zenodo.8026174", "self_doi_html": "https://zenodo.org/doi/10.5281/zenodo.8026174", "self_html": "https://zenodo.org/records/8026174", "self_iiif_manifest": "https://zenodo.org/api/iiif/record:8026174/manifest", "self_iiif_sequence": "https://zenodo.org/api/iiif/record:8026174/sequence/default", "versions": "https://zenodo.org/api/records/8026174/versions"}, "media_files": {"count": 0, "enabled": false, "entries": {}, "order": [], "total_bytes": 0}, "metadata": {"creators": [{"affiliations": [{"name": "Institute of Hematology and Blood Diseases Hospital, Chinese Academy of Medical Sciences"}], "person_or_org": {"family_name": "Yuchen Gao", "identifiers": [{"identifier": "0000-0002-0619-1595", "scheme": "orcid"}], "name": "Yuchen Gao", "type": "personal"}}, {"affiliations": [{"name": "Institute of Hematology and Blood Diseases Hospital, Chinese Academy of Medical Sciences"}], "person_or_org": {"family_name": "Lei Zhang", "name": "Lei Zhang", "type": "personal"}}], "description": "\u003cp\u003eThis dataset including the RDS files, including meta data, labeled assays, and reduction map information in order to ensure the reproducibility of the scRNA-seq data of human MSCs.\u003c/p\u003e\n\n\u003cp\u003eThe\u0026nbsp;research \u0026quot;Multi-omics analysis of human mesenchymal stem cells shows cell aging that alters immunomodulatory activity through the downregulation of PD-L1\u0026quot; has been published on Nature Communications (https://doi.org/10.1038/s41467-023-39958-5).\u003c/p\u003e", "publication_date": "2023-06-14", "publisher": "Zenodo", "resource_type": {"id": "dataset", "title": {"de": "Datensatz", "en": "Dataset"}}, "rights": [{"description": {"en": "The Creative Commons Attribution license allows re-distribution and re-use of a licensed work on the condition that the creator is appropriately credited."}, "icon": "cc-by-icon", "id": "cc-by-4.0", "props": {"scheme": "spdx", "url": "https://creativecommons.org/licenses/by/4.0/legalcode"}, "title": {"en": "Creative Commons Attribution 4.0 International"}}], "title": "Single cell analysis of human mesenchymal stem cells"}, "parent": {"access": {"owned_by": {"user": "567434"}, "settings": {"accept_conditions_text": null, "allow_guest_requests": false, "allow_user_requests": false, "secret_link_expiration": 0}}, "communities": {}, "id": "8026173", "pids": {"doi": {"client": "datacite", "identifier": "10.5281/zenodo.8026173", "provider": "datacite"}}}, "pids": {"doi": {"client": "datacite", "identifier": "10.5281/zenodo.8026174", "provider": "datacite"}, "oai": {"identifier": "oai:zenodo.org:8026174", "provider": "oai"}}, "revision_id": 3, "stats": {"all_versions": {"data_volume": 508439851079.0, "downloads": 1074, "unique_downloads": 761, "unique_views": 491, "views": 535}, "this_version": {"data_volume": 503015916333.0, "downloads": 1057, "unique_downloads": 753, "unique_views": 480, "views": 524}}, "status": "published", "swh": {}, "ui": {"access_status": {"description_l10n": "The record and files are publicly accessible.", "embargo_date_l10n": null, "icon": "unlock", "id": "open", "message_class": "", "title_l10n": "Open"}, "created_date_l10n_long": "June 12, 2023", "creators": {"affiliations": [[1, "Institute of Hematology and Blood Diseases Hospital, Chinese Academy of Medical Sciences", null]], "creators": [{"affiliations": [[1, "Institute of Hematology and Blood Diseases Hospital, Chinese Academy of Medical Sciences"]], "person_or_org": {"family_name": "Yuchen Gao", "identifiers": [{"identifier": "0000-0002-0619-1595", "scheme": "orcid"}], "name": "Yuchen Gao", "type": "personal"}}, {"affiliations": [[1, "Institute of Hematology and Blood Diseases Hospital, Chinese Academy of Medical Sciences"]], "person_or_org": {"family_name": "Lei Zhang", "name": "Lei Zhang", "type": "personal"}}]}, "custom_fields": {}, "description_stripped": "This dataset including the RDS files, including meta data, labeled assays, and reduction map information in order to ensure the reproducibility of the scRNA-seq data of human MSCs.\n\n\nThe\u00a0research \"Multi-omics analysis of human mesenchymal stem cells shows cell aging that alters immunomodulatory activity through the downregulation of PD-L1\" has been published on Nature Communications (https://doi.org/10.1038/s41467-023-39958-5).", "is_draft": false, "publication_date_l10n_long": "June 14, 2023", "publication_date_l10n_medium": "Jun 14, 2023", "resource_type": {"id": "dataset", "title_l10n": "Dataset"}, "rights": [{"description_l10n": "The Creative Commons Attribution license allows re-distribution and re-use of a licensed work on the condition that the creator is appropriately credited.", "icon": "cc-by-icon", "id": "cc-by-4.0", "props": {"scheme": "spdx", "url": "https://creativecommons.org/licenses/by/4.0/legalcode"}, "title_l10n": "Creative Commons Attribution 4.0 International"}], "updated_date_l10n_long": "July 22, 2023", "version": "v1"}, "updated": "2023-07-22T05:31:08.078501+00:00", "versions": {"index": 1, "is_latest": true}}' data-preview='false'>
+        <div class="rel-p-1"></div>
+        <div class="ui fluid placeholder rel-mr-1 rel-ml-1"></div>
+        <div class="header">
+          <div class="line"></div>
+          <div class="line"></div>
+          <div class="line"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div><div class="sidebar-container">
+  <h2 class="ui small top attached header">External resources</h2>
+  <dl id="external-resource" aria-label="External resources" class="ui bottom attached segment rdm-sidebar external resource details-list">
+
+    <dt class="ui tiny header">Indexed in</dt>
+      <ul class="ui list no-bullet m-0">
+              <li class="item flex align-items-center">
+
+                
+                  <img class="ui image" src="/static/images/openaire.svg" alt="" width="32">
+                
+
+                <div class="content">
+                  <a
+                    class="header"
+                    href="https://explore.openaire.eu/search/result?pid=10.5281/zenodo.8026174"
+                    target="_blank"
+                    rel="noreferrer"
+                  >OpenAIRE
+                  </a>
+
+                  </div>
+              </li></ul></dl>
+</div><div
+  id="sidebar-communities-manage"
+  data-user-communities-memberships='{}'
+  data-record-community-endpoint='https://zenodo.org/api/records/8026174/communities'
+  data-record-community-search-endpoint='https://zenodo.org/api/records/8026174/communities-suggestions'
+  data-record-community-search-config='{"aggs": [{"aggName": "type", "field": "type", "title": "Type"}, {"aggName": "funder", "field": "metadata.funding.funder", "title": "Funders"}, {"aggName": "organization", "field": "metadata.organizations", "title": "Organizations"}], "appId": "InvenioAppRdm.RecordCommunitiesSuggestions", "defaultSortingOnEmptyQueryString": [{"sortBy": "newest"}], "initialQueryState": {"filters": [], "hiddenParams": null, "layout": "list", "page": 1, "size": 10, "sortBy": "bestmatch"}, "layoutOptions": {"gridView": false, "listView": true}, "paginationOptions": {"defaultValue": 10, "maxTotalResults": 10000, "resultsPerPage": [{"text": "10", "value": 10}, {"text": "20", "value": 20}]}, "searchApi": {"axios": {"headers": {"Accept": "application/vnd.inveniordm.v1+json"}, "url": "https://zenodo.org/api/records/8026174/communities-suggestions", "withCredentials": true}, "invenio": {"requestSerializer": "InvenioRecordsResourcesRequestSerializer"}}, "sortOptions": [{"sortBy": "bestmatch", "text": "Best match"}, {"sortBy": "newest", "text": "Newest"}, {"sortBy": "oldest", "text": "Oldest"}], "sortOrderDisabled": true}'
+  data-record-user-community-search-endpoint=''
+  data-record-user-community-search-config='{"aggs": [{"aggName": "type", "field": "type", "title": "Type"}, {"aggName": "funder", "field": "metadata.funding.funder", "title": "Funders"}, {"aggName": "organization", "field": "metadata.organizations", "title": "Organizations"}], "appId": "InvenioAppRdm.RecordUserCommunitiesSuggestions", "defaultSortingOnEmptyQueryString": [{"sortBy": "newest"}], "initialQueryState": {"filters": [], "hiddenParams": [["membership", "true"]], "layout": "list", "page": 1, "size": 10, "sortBy": "bestmatch"}, "layoutOptions": {"gridView": false, "listView": true}, "paginationOptions": {"defaultValue": 10, "maxTotalResults": 10000, "resultsPerPage": [{"text": "10", "value": 10}, {"text": "20", "value": 20}]}, "searchApi": {"axios": {"headers": {"Accept": "application/vnd.inveniordm.v1+json"}, "url": "https://zenodo.org/api/records/8026174/communities-suggestions", "withCredentials": true}, "invenio": {"requestSerializer": "InvenioRecordsResourcesRequestSerializer"}}, "sortOptions": [{"sortBy": "bestmatch", "text": "Best match"}, {"sortBy": "newest", "text": "Newest"}, {"sortBy": "oldest", "text": "Oldest"}], "sortOrderDisabled": true}'
+  data-pending-communities-search-config='{"aggs": [{"aggName": "type", "field": "type", "title": "Type"}, {"aggName": "status", "field": "status", "title": "Status"}], "appId": "InvenioAppRdm.RecordRequests", "defaultSortingOnEmptyQueryString": [{"sortBy": "newest"}], "initialQueryState": {"filters": [], "hiddenParams": [["expand", "1"], ["is_open", "true"], ["type", "community-inclusion"], ["type", "community-submission"]], "layout": "list", "page": 1, "size": 10, "sortBy": "bestmatch"}, "layoutOptions": {"gridView": false, "listView": true}, "paginationOptions": {"defaultValue": 10, "maxTotalResults": 10000, "resultsPerPage": [{"text": "10", "value": 10}, {"text": "20", "value": 20}, {"text": "50", "value": 50}]}, "searchApi": {"axios": {"headers": {"Accept": "application/json"}, "url": "https://zenodo.org/api/records/8026174/requests", "withCredentials": true}, "invenio": {"requestSerializer": "InvenioRecordsResourcesRequestSerializer"}}, "sortOptions": [{"sortBy": "bestmatch", "text": "Best match"}, {"sortBy": "newest", "text": "Newest"}, {"sortBy": "oldest", "text": "Oldest"}, {"sortBy": "newestactivity", "text": "Newest activity"}, {"sortBy": "oldestactivity", "text": "Oldest activity"}], "sortOrderDisabled": true}'
+  data-permissions='{"can_edit": false, "can_immediately_delete": false, "can_manage": false, "can_media_read_files": true, "can_moderate": false, "can_new_version": false, "can_read_files": true, "can_request_deletion": false, "can_review": false, "can_update_draft": false, "can_view": false}'
+  data-record='{"access": {"embargo": {"active": false, "reason": null}, "files": "public", "record": "public", "status": "open"}, "created": "2023-06-12T09:52:12.538595+00:00", "custom_fields": {}, "deletion_status": {"is_deleted": false, "status": "P"}, "expanded": {"parent": {"access": {"owned_by": {"active": null, "blocked_at": null, "confirmed_at": null, "email": "", "id": "567434", "is_current_user": false, "links": {"avatar": "https://zenodo.org/api/users/567434/avatar.svg", "records_html": "https://zenodo.org/search/records?q=parent.access.owned_by.user:567434", "self": "https://zenodo.org/api/users/567434"}, "profile": {"affiliations": "", "full_name": ""}, "username": "GaoYuchenPUMC", "verified_at": null}}}}, "files": {"count": 6, "enabled": true, "entries": {"Adult_Perinatal_MSCs.rds": {"access": {"hidden": false}, "checksum": "md5:80ea1f9a5e3eaaa4a635e8c54b03d9e0", "ext": "rds", "id": "77b4ec80-94a1-4fc9-9375-ec5dca1141a2", "key": "Adult_Perinatal_MSCs.rds", "links": {"content": "https://zenodo.org/api/records/8026174/files/Adult_Perinatal_MSCs.rds/content", "self": "https://zenodo.org/api/records/8026174/files/Adult_Perinatal_MSCs.rds"}, "metadata": null, "mimetype": "application/octet-stream", "size": 2335314140, "storage_class": "L"}, "Adult_Perinatal_MSCs_ReductionMapInfo.csv": {"access": {"hidden": false}, "checksum": "md5:defdcdd89a20597773c6347b9dacc927", "ext": "csv", "id": "be83e6dc-ff83-4ca6-874f-5b8280205d85", "key": "Adult_Perinatal_MSCs_ReductionMapInfo.csv", "links": {"content": "https://zenodo.org/api/records/8026174/files/Adult_Perinatal_MSCs_ReductionMapInfo.csv/content", "self": "https://zenodo.org/api/records/8026174/files/Adult_Perinatal_MSCs_ReductionMapInfo.csv"}, "metadata": null, "mimetype": "text/csv", "size": 2151552, "storage_class": "L"}, "Adult_Perinatal_MSCs_metadata.csv": {"access": {"hidden": false}, "checksum": "md5:73a4ccd11d545faed0525d1db0968bf9", "ext": "csv", "id": "45c2cffe-dbf9-4370-b31f-ccef13b08197", "key": "Adult_Perinatal_MSCs_metadata.csv", "links": {"content": "https://zenodo.org/api/records/8026174/files/Adult_Perinatal_MSCs_metadata.csv/content", "self": "https://zenodo.org/api/records/8026174/files/Adult_Perinatal_MSCs_metadata.csv"}, "metadata": null, "mimetype": "text/csv", "size": 3371657, "storage_class": "L"}, "Young_Aged_BM-MSCs_ReductionMapInfo.csv": {"access": {"hidden": false}, "checksum": "md5:72bb0241c66f40f30785084e92f811a0", "ext": "csv", "id": "484be1d8-5396-4866-bc70-1fb4895b0dbe", "key": "Young_Aged_BM-MSCs_ReductionMapInfo.csv", "links": {"content": "https://zenodo.org/api/records/8026174/files/Young_Aged_BM-MSCs_ReductionMapInfo.csv/content", "self": "https://zenodo.org/api/records/8026174/files/Young_Aged_BM-MSCs_ReductionMapInfo.csv"}, "metadata": null, "mimetype": "text/csv", "size": 1710533, "storage_class": "L"}, "Young_Aged_BM-MSCs_Transferanchor.rds": {"access": {"hidden": false}, "checksum": "md5:d0ddf2317b496a5065302c0463d6ea0d", "ext": "rds", "id": "640a4e94-fc42-469c-987a-0d8eff7a0224", "key": "Young_Aged_BM-MSCs_Transferanchor.rds", "links": {"content": "https://zenodo.org/api/records/8026174/files/Young_Aged_BM-MSCs_Transferanchor.rds/content", "self": "https://zenodo.org/api/records/8026174/files/Young_Aged_BM-MSCs_Transferanchor.rds"}, "metadata": null, "mimetype": "application/octet-stream", "size": 717191801, "storage_class": "L"}, "Young_Aged_BM-MSCs_metadata.csv": {"access": {"hidden": false}, "checksum": "md5:4ae4bde9709fe2d6fa99f9c3429702fb", "ext": "csv", "id": "ca815088-e557-4ae1-80bf-53648a946ad7", "key": "Young_Aged_BM-MSCs_metadata.csv", "links": {"content": "https://zenodo.org/api/records/8026174/files/Young_Aged_BM-MSCs_metadata.csv/content", "self": "https://zenodo.org/api/records/8026174/files/Young_Aged_BM-MSCs_metadata.csv"}, "metadata": null, "mimetype": "text/csv", "size": 2955217, "storage_class": "L"}}, "order": [], "total_bytes": 3062694900}, "id": "8026174", "is_draft": false, "is_published": true, "links": {"access": "https://zenodo.org/api/records/8026174/access", "access_grants": "https://zenodo.org/api/records/8026174/access/grants", "access_links": "https://zenodo.org/api/records/8026174/access/links", "access_request": "https://zenodo.org/api/records/8026174/access/request", "access_users": "https://zenodo.org/api/records/8026174/access/users", "archive": "https://zenodo.org/api/records/8026174/files-archive", "archive_media": "https://zenodo.org/api/records/8026174/media-files-archive", "communities": "https://zenodo.org/api/records/8026174/communities", "communities-suggestions": "https://zenodo.org/api/records/8026174/communities-suggestions", "doi": "https://doi.org/10.5281/zenodo.8026174", "draft": "https://zenodo.org/api/records/8026174/draft", "files": "https://zenodo.org/api/records/8026174/files", "latest": "https://zenodo.org/api/records/8026174/versions/latest", "latest_html": "https://zenodo.org/records/8026174/latest", "media_files": "https://zenodo.org/api/records/8026174/media-files", "parent": "https://zenodo.org/api/records/8026173", "parent_doi": "https://doi.org/10.5281/zenodo.8026173", "parent_doi_html": "https://zenodo.org/doi/10.5281/zenodo.8026173", "parent_html": "https://zenodo.org/records/8026173", "preview_html": "https://zenodo.org/records/8026174?preview=1", "request_deletion": "https://zenodo.org/api/records/8026174/request-deletion", "requests": "https://zenodo.org/api/records/8026174/requests", "reserve_doi": "https://zenodo.org/api/records/8026174/draft/pids/doi", "self": "https://zenodo.org/api/records/8026174", "self_doi": "https://doi.org/10.5281/zenodo.8026174", "self_doi_html": "https://zenodo.org/doi/10.5281/zenodo.8026174", "self_html": "https://zenodo.org/records/8026174", "self_iiif_manifest": "https://zenodo.org/api/iiif/record:8026174/manifest", "self_iiif_sequence": "https://zenodo.org/api/iiif/record:8026174/sequence/default", "versions": "https://zenodo.org/api/records/8026174/versions"}, "media_files": {"count": 0, "enabled": false, "entries": {}, "order": [], "total_bytes": 0}, "metadata": {"creators": [{"affiliations": [{"name": "Institute of Hematology and Blood Diseases Hospital, Chinese Academy of Medical Sciences"}], "person_or_org": {"family_name": "Yuchen Gao", "identifiers": [{"identifier": "0000-0002-0619-1595", "scheme": "orcid"}], "name": "Yuchen Gao", "type": "personal"}}, {"affiliations": [{"name": "Institute of Hematology and Blood Diseases Hospital, Chinese Academy of Medical Sciences"}], "person_or_org": {"family_name": "Lei Zhang", "name": "Lei Zhang", "type": "personal"}}], "description": "\u003cp\u003eThis dataset including the RDS files, including meta data, labeled assays, and reduction map information in order to ensure the reproducibility of the scRNA-seq data of human MSCs.\u003c/p\u003e\n\n\u003cp\u003eThe\u0026nbsp;research \u0026quot;Multi-omics analysis of human mesenchymal stem cells shows cell aging that alters immunomodulatory activity through the downregulation of PD-L1\u0026quot; has been published on Nature Communications (https://doi.org/10.1038/s41467-023-39958-5).\u003c/p\u003e", "publication_date": "2023-06-14", "publisher": "Zenodo", "resource_type": {"id": "dataset", "title": {"de": "Datensatz", "en": "Dataset"}}, "rights": [{"description": {"en": "The Creative Commons Attribution license allows re-distribution and re-use of a licensed work on the condition that the creator is appropriately credited."}, "icon": "cc-by-icon", "id": "cc-by-4.0", "props": {"scheme": "spdx", "url": "https://creativecommons.org/licenses/by/4.0/legalcode"}, "title": {"en": "Creative Commons Attribution 4.0 International"}}], "title": "Single cell analysis of human mesenchymal stem cells"}, "parent": {"access": {"owned_by": {"user": "567434"}, "settings": {"accept_conditions_text": null, "allow_guest_requests": false, "allow_user_requests": false, "secret_link_expiration": 0}}, "communities": {}, "id": "8026173", "pids": {"doi": {"client": "datacite", "identifier": "10.5281/zenodo.8026173", "provider": "datacite"}}}, "pids": {"doi": {"client": "datacite", "identifier": "10.5281/zenodo.8026174", "provider": "datacite"}, "oai": {"identifier": "oai:zenodo.org:8026174", "provider": "oai"}}, "revision_id": 3, "stats": {"all_versions": {"data_volume": 508439851079.0, "downloads": 1074, "unique_downloads": 761, "unique_views": 491, "views": 535}, "this_version": {"data_volume": 503015916333.0, "downloads": 1057, "unique_downloads": 753, "unique_views": 480, "views": 524}}, "status": "published", "swh": {}, "ui": {"access_status": {"description_l10n": "The record and files are publicly accessible.", "embargo_date_l10n": null, "icon": "unlock", "id": "open", "message_class": "", "title_l10n": "Open"}, "created_date_l10n_long": "June 12, 2023", "creators": {"affiliations": [[1, "Institute of Hematology and Blood Diseases Hospital, Chinese Academy of Medical Sciences", null]], "creators": [{"affiliations": [[1, "Institute of Hematology and Blood Diseases Hospital, Chinese Academy of Medical Sciences"]], "person_or_org": {"family_name": "Yuchen Gao", "identifiers": [{"identifier": "0000-0002-0619-1595", "scheme": "orcid"}], "name": "Yuchen Gao", "type": "personal"}}, {"affiliations": [[1, "Institute of Hematology and Blood Diseases Hospital, Chinese Academy of Medical Sciences"]], "person_or_org": {"family_name": "Lei Zhang", "name": "Lei Zhang", "type": "personal"}}]}, "custom_fields": {}, "description_stripped": "This dataset including the RDS files, including meta data, labeled assays, and reduction map information in order to ensure the reproducibility of the scRNA-seq data of human MSCs.\n\n\nThe\u00a0research \"Multi-omics analysis of human mesenchymal stem cells shows cell aging that alters immunomodulatory activity through the downregulation of PD-L1\" has been published on Nature Communications (https://doi.org/10.1038/s41467-023-39958-5).", "is_draft": false, "publication_date_l10n_long": "June 14, 2023", "publication_date_l10n_medium": "Jun 14, 2023", "resource_type": {"id": "dataset", "title_l10n": "Dataset"}, "rights": [{"description_l10n": "The Creative Commons Attribution license allows re-distribution and re-use of a licensed work on the condition that the creator is appropriately credited.", "icon": "cc-by-icon", "id": "cc-by-4.0", "props": {"scheme": "spdx", "url": "https://creativecommons.org/licenses/by/4.0/legalcode"}, "title_l10n": "Creative Commons Attribution 4.0 International"}], "updated_date_l10n_long": "July 22, 2023", "version": "v1"}, "updated": "2023-07-22T05:31:08.078501+00:00", "versions": {"index": 1, "is_latest": true}}'
+  class='sidebar-container'
+>
+
+  <h2 class="ui medium top attached header">Communities</h2>
+
+  <div class="ui segment bottom attached rdm-sidebar">
+    <div class="ui fluid placeholder">
+      <div class="image header">
+        <div class="line"></div>
+        <div class="line"></div>
+      </div>
+      <div class="image header">
+        <div class="line"></div>
+        <div class="line"></div>
+      </div>
+      <div class="image header">
+        <div class="line"></div>
+        <div class="line"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+<div class="sidebar-container">
+  <h2 class="ui medium top attached header mt-0">Details</h2>
+  <div id="record-details" class="ui segment bottom attached rdm-sidebar">
+
+    <dl class="details-list">
+      
+
+ 
+  <dt class="ui tiny header">DOI
+    
+  </dt>
+  <dd>
+    <span class="get-badge details-doi-section" data-toggle="tooltip" data-placement="bottom">
+      <img id='record-doi-badge' data-target="[data-modal='10.5281/zenodo.8026174']" title="Get the DOI badge!"
+        src="/badge/DOI/10.5281/zenodo.8026174.svg" alt="10.5281/zenodo.8026174" />
+      <div id="copy-button-record-doi-badge" class="copy-doi-button" data-value=https://doi.org/10.5281/zenodo.8026174 data-size="mini"></div>
+    </span>
+
+    <div id="doi-modal" class="ui modal fade badge-modal" data-modal="10.5281/zenodo.8026174">
+      <div class="header">DOI Badge</div>
+      <div class="content">
+        <h4>
+          <small>DOI</small>
+        </h4>
+        <h4>
+          <pre>10.5281/zenodo.8026174</pre>
+        </h4>
+        
+        
+
+    <h3 class="ui small header">
+      Markdown
+    </h3>
+    <div class="ui message code">
+      <pre>[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.8026174.svg)](https://doi.org/10.5281/zenodo.8026174)</pre>
+    </div>
+
+    <h3 class="ui small header">
+      reStructuredText
+    </h3>
+      <div class="ui message code">
+        <pre>.. image:: https://zenodo.org/badge/DOI/10.5281/zenodo.8026174.svg
+  :target: https://doi.org/10.5281/zenodo.8026174</pre>
+      </div>
+
+    <h3 class="ui small header">
+      HTML
+    </h3>
+    <div class="ui message code">
+      <pre>&lt;a href="https://doi.org/10.5281/zenodo.8026174"&gt;&lt;img src="https://zenodo.org/badge/DOI/10.5281/zenodo.8026174.svg" alt="DOI"&gt;&lt;/a&gt;</pre>
+    </div>
+
+    <h3 class="ui small header">
+      Image URL
+    </h3>
+    <div class="ui message code">
+      <pre>https://zenodo.org/badge/DOI/10.5281/zenodo.8026174.svg</pre>
+    </div>
+
+    <h3 class="ui small header">
+    Target URL
+    </h3>
+    <div class="ui message code">
+      <pre>https://doi.org/10.5281/zenodo.8026174</pre>
+    </div>
+      </div>
+    </div>
+  </dd>
+
+      
+      
+  <dt class="ui tiny header">Resource type</dt>
+  <dd>Dataset</dd>
+      
+      
+  <dt class="ui tiny header">Publisher</dt>
+  <dd>Zenodo</dd>
+      
+      
+      
+      
+      
+      
+      
+    </dl>
+  </div>
+</div>
+
+
+
+
+
+
+
+
+  <div class="sidebar-container">
+    <h2 class="ui medium top attached header mt-0">Rights</h2>
+    <div id="licenses" class="ui segment bottom attached rdm-sidebar">
+      <dl class="details-list">
+      
+        <dt class="ui tiny header">License</dt><dd id="license-cc-by-4.0-1" class="has-popup">
+              <div id="title-cc-by-4.0-1"
+                   class="license clickable"
+                   tabindex="0"
+                   aria-haspopup="dialog"
+                   aria-expanded="false"
+                   role="button"
+                   aria-label="Creative Commons Attribution 4.0 International"
+              >
+                
+                  
+                  <span class="icon-wrap">
+                  <img class="icon" src="/static/icons/licenses/cc-by-icon.svg"
+                       alt="cc-by-4.0 icon"/>
+                </span>
+                
+                <span class="title-text">
+                Creative Commons Attribution 4.0 International
+              </span>
+              </div>
+              <div id="description-cc-by-4.0-1"
+                   class="licenses-description ui flowing popup transition hidden"
+                   role="dialog"
+                   aria-labelledby="title-cc-by-4.0-1"
+              >
+                <i role="button" tabindex="0" class="close icon text-muted"
+                   aria-label="Close"></i>
+                <div id="license-description-1" class="description">
+                <span class="text-muted">
+                  The Creative Commons Attribution license allows re-distribution and re-use of a licensed work on the condition that the creator is appropriately credited.
+                </span>
+                  
+  
+    <a class="license-link" href="https://creativecommons.org/licenses/by/4.0/legalcode" target="_blank"
+       title="Opens in new tab">Read more</a>
+  
+
+                </div>
+              </div>
+            </dd>
+          
+      
+      
+      </dl>
+    </div>
+  </div>
+<div class="sidebar-container">
+  <h2 class="ui medium top attached header mt-0">Citation</h2>
+  <div id="citation" class="ui segment bottom attached rdm-sidebar">
+
+<div id="recordCitation" data-record-links='{"access": "https://zenodo.org/api/records/8026174/access", "access_grants": "https://zenodo.org/api/records/8026174/access/grants", "access_links": "https://zenodo.org/api/records/8026174/access/links", "access_request": "https://zenodo.org/api/records/8026174/access/request", "access_users": "https://zenodo.org/api/records/8026174/access/users", "archive": "https://zenodo.org/api/records/8026174/files-archive", "archive_media": "https://zenodo.org/api/records/8026174/media-files-archive", "communities": "https://zenodo.org/api/records/8026174/communities", "communities-suggestions": "https://zenodo.org/api/records/8026174/communities-suggestions", "doi": "https://doi.org/10.5281/zenodo.8026174", "draft": "https://zenodo.org/api/records/8026174/draft", "files": "https://zenodo.org/api/records/8026174/files", "latest": "https://zenodo.org/api/records/8026174/versions/latest", "latest_html": "https://zenodo.org/records/8026174/latest", "media_files": "https://zenodo.org/api/records/8026174/media-files", "parent": "https://zenodo.org/api/records/8026173", "parent_doi": "https://doi.org/10.5281/zenodo.8026173", "parent_doi_html": "https://zenodo.org/doi/10.5281/zenodo.8026173", "parent_html": "https://zenodo.org/records/8026173", "preview_html": "https://zenodo.org/records/8026174?preview=1", "request_deletion": "https://zenodo.org/api/records/8026174/request-deletion", "requests": "https://zenodo.org/api/records/8026174/requests", "reserve_doi": "https://zenodo.org/api/records/8026174/draft/pids/doi", "self": "https://zenodo.org/api/records/8026174", "self_doi": "https://doi.org/10.5281/zenodo.8026174", "self_doi_html": "https://zenodo.org/doi/10.5281/zenodo.8026174", "self_html": "https://zenodo.org/records/8026174", "self_iiif_manifest": "https://zenodo.org/api/iiif/record:8026174/manifest", "self_iiif_sequence": "https://zenodo.org/api/iiif/record:8026174/sequence/default", "versions": "https://zenodo.org/api/records/8026174/versions"}'
+  data-styles='[["apa", "APA"], ["harvard-cite-them-right", "Harvard"], ["modern-language-association", "MLA"], ["vancouver", "Vancouver"], ["chicago-fullnote-bibliography", "Chicago"], ["ieee", "IEEE"]]'
+  data-defaultstyle='"apa"'
+  data-include-deleted='false'>
+</div>
+  </div>
+</div>
+  <div class="sidebar-container">
+    <h2 class="ui medium top attached header mt-0">Export</h2>
+    <div id="export-record" class="ui segment bottom attached exports rdm-sidebar">
+
+      
+      
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+
+        <div id="recordExportDownload" data-formats='[{"export_url": "/records/8026174/export/json", "name": "JSON"}, {"export_url": "/records/8026174/export/json-ld", "name": "JSON-LD"}, {"export_url": "/records/8026174/export/csl", "name": "CSL"}, {"export_url": "/records/8026174/export/datacite-json", "name": "DataCite JSON"}, {"export_url": "/records/8026174/export/datacite-xml", "name": "DataCite XML"}, {"export_url": "/records/8026174/export/dublincore", "name": "Dublin Core XML"}, {"export_url": "/records/8026174/export/marcxml", "name": "MARCXML"}, {"export_url": "/records/8026174/export/bibtex", "name": "BibTeX"}, {"export_url": "/records/8026174/export/geojson", "name": "GeoJSON"}, {"export_url": "/records/8026174/export/dcat-ap", "name": "DCAT"}, {"export_url": "/records/8026174/export/codemeta", "name": "Codemeta"}, {"export_url": "/records/8026174/export/cff", "name": "Citation File Format"}, {"export_url": "/records/8026174/export/datapackage", "name": "Data Package JSON"}]'></div>
+    </div>
+  </div>
+<section
+  id="upload-info"
+  role="note"
+  aria-label="Upload information"
+  class="sidebar-container ui segment rdm-sidebar text-muted"
+>
+  <h2 class="ui small header text-muted p-0 mb-5"><small>Technical metadata</small></h2>
+  <dl class="m-0">
+    <dt class="inline"><small>Created</small></dt>
+    <dd class="inline">
+      <small>June 12, 2023</small>
+    </dd>
+    <div>
+      <dt class="rel-mt-1 inline"><small>Modified</small></dt>
+      <dd class="inline">
+        <small>July 22, 2023</small>
+      </dd>
+    </div>
+  </dl>
+</section>
+          
+        </aside>
+      </div>
+    </div>
+
+    <div class="ui container">
+      <div class="ui relaxed grid">
+        <div class="two column row">
+          <div class="sixteen wide tablet eleven wide computer column">
+            <div class="ui grid">
+                <div class="centered row rel-mt-1">
+                  <button id="jump-btn" class="jump-to-top ui button labeled icon"
+                          aria-label="Jump to top of page">
+                    <i class="arrow alternate circle up outline icon"></i>
+                    Jump up
+                  </button>
+                </div>
+              </div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+    </div>
+  </main>
+    <footer id="rdm-footer-element">
+        
+
+  <div class="footer-top">
+    <div class="ui container app-rdm-footer">
+<div class="ui equal width stackable grid zenodo-footer">
+  <div class="column">
+    <h2 class="ui inverted tiny header">About</h2>
+    <ul class="ui inverted link list">
+      <li class="item">
+        <a href="https://about.zenodo.org">About</a>
+      </li>
+      <li class="item">
+        <a href="https://about.zenodo.org/policies">Policies</a>
+      </li>
+      <li class="item">
+        <a href="https://about.zenodo.org/infrastructure">Infrastructure</a>
+      </li>
+      <li class="item">
+        <a href="https://about.zenodo.org/principles">Principles</a>
+      </li>
+      <li class="item">
+        <a href="https://about.zenodo.org/projects/">Projects</a>
+      </li>
+      <li class="item">
+        <a href="https://about.zenodo.org/roadmap/">Roadmap</a>
+      </li>
+      <li class="item">
+        <a href="https://about.zenodo.org/contact">Contact</a>
+      </li>
+    </ul>
+  </div>
+  <div class="column">
+    <h2 class="ui inverted tiny header">Blog</h2>
+    <ul class="ui inverted link list">
+      <li class="item">
+        <a href="https://blog.zenodo.org">Blog</a>
+      </li>
+    </ul>
+  </div>
+  <div class="column">
+    <h2 class="ui inverted tiny header">Help</h2>
+    <ul class="ui inverted link list">
+      <li class="item">
+        <a href="https://help.zenodo.org">FAQ</a>
+      </li>
+      <li class="item">
+        <a href="https://help.zenodo.org/docs/">Docs</a>
+      </li>
+      <li class="item">
+        <a href="https://help.zenodo.org/guides/">Guides</a>
+      </li>
+      <li class="item">
+        <a href="https://zenodo.org/support">Support</a>
+      </li>
+    </ul>
+  </div>
+  <div class="column">
+    <h2 class="ui inverted tiny header">Developers</h2>
+    <ul class="ui inverted link list">
+      <li class="item">
+        <a href="https://developers.zenodo.org">REST API</a>
+      </li>
+      <li class="item">
+        <a href="https://developers.zenodo.org#oai-pmh">OAI-PMH</a>
+      </li>
+    </ul>
+  </div>
+  <div class="column">
+    <h2 class="ui inverted tiny header">Contribute</h2>
+    <ul class="ui inverted link list">
+      <li class="item">
+        <a href="https://github.com/zenodo/zenodo-rdm">
+          <i class="icon external" aria-hidden="true"></i>
+          GitHub
+        </a>
+      </li>
+      <li class="item">
+        <a href="/donate">
+          <i class="icon external" aria-hidden="true"></i>
+          Donate
+        </a>
+      </li>
+    </ul>
+  </div>
+      <div class="six wide column right aligned">
+  <h2 class="ui inverted tiny header">Funded by</h2>
+  <ul class="ui horizontal link list">
+    <li class="item">
+      <a href="https://home.cern" aria-label="CERN">
+        <img src="/static/images/cern.png" width="60" height="60" alt="" />
+      </a>
+    </li>
+    <li class="item">
+      <a href="https://www.openaire.eu" aria-label="OpenAIRE">
+        <img src="/static/images/openaire.png" width="60" height="60" alt="" />
+      </a>
+    </li>
+    <li class="item">
+      <a href="https://commission.europa.eu/index_en" aria-label="European Commission">
+        <img src="/static/images/eu.png" width="88" height="60" alt="" />
+      </a>
+    </li>
+  </ul>
+      </div>
+      </div>
+    </div>
+
+  </div>
+        <div class="footer-bottom">
+  <div class="ui inverted container">
+    <div class="ui grid">
+      <div class="eight wide column left middle aligned">
+        <p class="m-0">
+          Powered by
+          <a href="https://home.cern/science/computing/data-centre">CERN Data Centre</a> & <a href="https://inveniordm.docs.cern.ch/">InvenioRDM</a>
+        </p>
+      </div>
+      <div class="eight wide column right aligned">
+        <ul class="ui inverted horizontal link list">
+          <li class="item">
+            <a href="https://stats.uptimerobot.com/vlYOVuWgM/">Status</a>
+          </li>
+          <li class="item">
+            <a href="https://about.zenodo.org/privacy-policy">Privacy policy</a>
+          </li>
+          <li class="item">
+            <a href="https://about.zenodo.org/cookie-policy">Cookie policy</a>
+          </li>
+          <li class="item">
+            <a href="https://about.zenodo.org/terms">Terms of Use</a>
+          </li>
+          <li class="item">
+            <a href="/support">Support</a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+    </footer>
+  
+  
+    
+
+        
+          <script type="text/javascript">
+            window.MathJax = {
+              tex: {
+                inlineMath: [['$', '$'], ['\\(', '\\)']],
+                processEscapes: true // Allows escaping $ signs if needed
+              }
+            };
+          </script>
+          <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-mml-chtml.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        
+
+        
+<script src="/static/dist/js/manifest.bdd5b6341b96873b1242.js"></script>
+<script src="/static/dist/js/73.ee054761a3db5cfd8abb.js"></script>
+<script src="/static/dist/js/3526.00866bd4cccca2015db0.js"></script>
+<script src="/static/dist/js/theme.5691745f47becd2fa2b0.js"></script>
+<script src="/static/dist/js/3378.05fe835b7bd6e3d5b441.js"></script>
+<script src="/static/dist/js/1057.00e067c89956b326b983.js"></script>
+<script src="/static/dist/js/7655.ca3155748eb2854b11f8.js"></script>
+<script src="/static/dist/js/5092.8df828aba646b3033359.js"></script>
+<script src="/static/dist/js/8871.2c4fb5e1ea78ea66bd27.js"></script>
+<script src="/static/dist/js/278.0d2c6e29db078dbff635.js"></script>
+<script src="/static/dist/js/9025.63368c68d61269c95f3c.js"></script>
+<script src="/static/dist/js/4157.f6b25a3a2639b4ad6b42.js"></script>
+<script src="/static/dist/js/base-theme-rdm.2d52ef10c0a771c8310e.js"></script>
+<script src="/static/dist/js/i18n_app.5c23c2017905f5199e7d.js"></script>
+<script src="/static/dist/js/5941.ce0bb1265ef04145c917.js"></script>
+<script src="/static/dist/js/9736.ec1b759049e3c8d2c656.js"></script>
+<script src="/static/dist/js/4683.f930cc1ea5add1575eb4.js"></script>
+<script src="/static/dist/js/4848.4f283675c3cef6327894.js"></script>
+<script src="/static/dist/js/2301.0e4989cca38521de5774.js"></script>
+<script src="/static/dist/js/4252.de1c5fe042b1049674bc.js"></script>
+<script src="/static/dist/js/8585.76f0ee0d785e23b7c535.js"></script>
+<script src="/static/dist/js/5002.4f1fb54c87e05c6fe960.js"></script>
+<script src="/static/dist/js/7114.7582e9c635706abf2d61.js"></script>
+<script src="/static/dist/js/overridable-registry.d48fc2bee89fe968742c.js"></script>
+  
+    
+      <script type='application/ld+json'>{"@context": "http://schema.org", "@id": "https://doi.org/10.5281/zenodo.8026174", "@type": "https://schema.org/Dataset", "author": [{"@id": "https://orcid.org/0000-0002-0619-1595", "@type": "Person", "affiliation": [{"@type": "Organization", "name": "Institute of Hematology and Blood Diseases Hospital, Chinese Academy of Medical Sciences"}], "familyName": "Yuchen Gao", "name": "Yuchen Gao"}, {"@type": "Person", "affiliation": [{"@type": "Organization", "name": "Institute of Hematology and Blood Diseases Hospital, Chinese Academy of Medical Sciences"}], "familyName": "Lei Zhang", "name": "Lei Zhang"}], "contentSize": "2.85 GB", "creator": [{"@id": "https://orcid.org/0000-0002-0619-1595", "@type": "Person", "affiliation": [{"@type": "Organization", "name": "Institute of Hematology and Blood Diseases Hospital, Chinese Academy of Medical Sciences"}], "familyName": "Yuchen Gao", "name": "Yuchen Gao"}, {"@type": "Person", "affiliation": [{"@type": "Organization", "name": "Institute of Hematology and Blood Diseases Hospital, Chinese Academy of Medical Sciences"}], "familyName": "Lei Zhang", "name": "Lei Zhang"}], "dateCreated": "2023-06-12T09:52:12.538595+00:00", "dateModified": "2023-07-22T05:31:08.078501+00:00", "datePublished": "2023-06-14", "description": "\u003cp\u003eThis dataset including the RDS files, including meta data, labeled assays, and reduction map information in order to ensure the reproducibility of the scRNA-seq data of human MSCs.\u003c/p\u003e\n\n\u003cp\u003eThe\u0026nbsp;research \u0026quot;Multi-omics analysis of human mesenchymal stem cells shows cell aging that alters immunomodulatory activity through the downregulation of PD-L1\u0026quot; has been published on Nature Communications (https://doi.org/10.1038/s41467-023-39958-5).\u003c/p\u003e", "distribution": [{"@type": "DataDownload", "contentUrl": "https://zenodo.org/api/records/8026174/files/Adult_Perinatal_MSCs_ReductionMapInfo.csv/content", "encodingFormat": "text/csv"}, {"@type": "DataDownload", "contentUrl": "https://zenodo.org/api/records/8026174/files/Young_Aged_BM-MSCs_ReductionMapInfo.csv/content", "encodingFormat": "text/csv"}, {"@type": "DataDownload", "contentUrl": "https://zenodo.org/api/records/8026174/files/Young_Aged_BM-MSCs_Transferanchor.rds/content", "encodingFormat": "application/octet-stream"}, {"@type": "DataDownload", "contentUrl": "https://zenodo.org/api/records/8026174/files/Young_Aged_BM-MSCs_metadata.csv/content", "encodingFormat": "text/csv"}, {"@type": "DataDownload", "contentUrl": "https://zenodo.org/api/records/8026174/files/Adult_Perinatal_MSCs.rds/content", "encodingFormat": "application/octet-stream"}, {"@type": "DataDownload", "contentUrl": "https://zenodo.org/api/records/8026174/files/Adult_Perinatal_MSCs_metadata.csv/content", "encodingFormat": "text/csv"}], "identifier": "https://doi.org/10.5281/zenodo.8026174", "license": "https://creativecommons.org/licenses/by/4.0/legalcode", "name": "Single cell analysis of human mesenchymal stem cells", "publisher": {"@type": "Organization", "name": "Zenodo"}, "size": "2.85 GB", "url": "https://zenodo.org/records/8026174"}</script>
+
+  <script src="/static/dist/js/invenio-app-rdm-landing-page-theme.cf9562a50db86521bcd8.js"></script>
+  <script src="/static/dist/js/6471.51368cd7797783e47c38.js"></script>
+<script src="/static/dist/js/7302.902011ae7b864a222771.js"></script>
+<script src="/static/dist/js/1357.31d0a66d97136552d675.js"></script>
+<script src="/static/dist/js/1644.450e69a9a2adba06e9d3.js"></script>
+<script src="/static/dist/js/8962.09b1d28d99cfb6bed488.js"></script>
+<script src="/static/dist/js/5097.cfca882b87c60e1752af.js"></script>
+<script src="/static/dist/js/5680.e3e03979e5b2023987c2.js"></script>
+<script src="/static/dist/js/invenio-app-rdm-landing-page.08526b07cc086cb7e246.js"></script>
+  <script src="/static/dist/js/previewer_theme.92e934b8a3a7d92a5d88.js"></script>
+  <script src="/static/dist/js/zenodo-rdm-citations.14dbfc946a5bdd3f5ea4.js"></script>
+  
+
+        <div class="ui container info message cookie-banner hidden">
+  <i class="close icon"></i>
+  <div>
+    <i aria-hidden="true" class="info icon"></i>
+    <p class="inline">This site uses cookies. Find out more on <a href="https://about.zenodo.org/cookie-policy">how we use cookies</a></p>
+  </div>
+  <div class="buttons">
+    <button class="ui button small primary" id="cookies-all">Accept all cookies</button>
+    <button class="ui button small" id="cookies-essential">Accept only essential cookies</button>
+  </div>
+</div>
+
+<script>
+  var _paq = window._paq = window._paq || [];
+  _paq.push(['requireCookieConsent']);
+
+  (function() {
+    var u="https://webanalytics.web.cern.ch/";
+    _paq.push(['setTrackerUrl', u+'matomo.php']);
+    _paq.push(['setSiteId', '366']);
+    var d=document, g=d.createElement('script'), s=d.getElementsByTagName('script')[0];
+    g.async=true; g.src=u+'matomo.js'; s.parentNode.insertBefore(g,s);
+  })();
+
+  const cookieConsent = document.cookie
+    .split("; ")
+    .find((row) => row.startsWith("cookie_consent="))
+    ?.split("=")[1];
+
+  if (cookieConsent) {
+    if (cookieConsent === "all") {
+      matomo();
+    }
+  } else {
+    document.querySelector(".cookie-banner").classList.remove("hidden")
+    _paq.push(['forgetConsentGiven']);
+  }
+
+  $('.cookie-banner .close')
+    .on('click', function () {
+      $(this)
+        .closest('.message')
+        .transition('fade');
+      setCookie("cookie_consent","essential");
+    });
+
+  $('#cookies-essential')
+    .on('click', function () {
+      $(this)
+        .closest('.message')
+        .transition('fade');
+      setCookie("cookie_consent","essential");
+    });
+
+  $('#cookies-all')
+    .on('click', function () {
+      $(this)
+        .closest('.message')
+        .transition('fade');
+      setCookie("cookie_consent","all");
+      _paq.push(['rememberCookieConsentGiven']);
+      matomo();
+    });
+
+  function matomo() {
+    /* tracker methods like "setCustomDimension" should be called before "trackPageView" */
+    _paq.push(['trackPageView']);
+    _paq.push(['enableLinkTracking']);
+  }
+
+  function setCookie(cname, cvalue) {
+    var d = new Date();
+    d.setTime(d.getTime() + (365 * 24 * 60 * 60 * 1000)); // one year
+    var expires = "expires=" + d.toUTCString();
+    var cookie = cname + "=" + cvalue + ";" + expires + ";"
+    cookie += "Domain=zenodo.org;Path=/;SameSite=None; Secure";
+    document.cookie = cookie;
+  }
+</script>
+  </body>
+</html>
