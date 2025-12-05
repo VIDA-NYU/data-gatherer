@@ -1,6 +1,42 @@
-## Version 0.1.1 - 2025-08-25
+## Release (v0.1.7) - 2025-12-04
 
-- Initial release to PyPI
+- Added ground truth generation and T5 finetuning pipeline
+- Updated the UI to have Select + Dig Deeper framework
+- Refactored code to simplify extraction
+- Added Playwright Fetcher
+- Added support for schema.org metadata pull from schema compliant dataset pages
+- Enhanced Retrieval of Sections with rule-based id_pattern matching
+
+## Release (v0.1.6) - 2025-10-31
+
+- Integrated core process_url with MCP
+- Added support for semantic retrieval in core parse_data
+- Clearer documentation generation
+- Deprecated unused/obsolete parameters and methods
+- Fixed section chunking for EmbeddingsRetriever
+
+## Release (v0.1.5) - 2025-10-17
+
+- Added support for OpenAI Batch API and Description Generation from context
+- Refactored LLM Client for easier model change
+- Enhanced Embedding Retriever (more regular/granular section chunking)
+
+## Release (v0.1.4.1) - 2025-09-26
+
+- Optimized data_gatherer.fetch_data function
+- Added support for multiple users in Streamlit app
+- Migrated publish.yml setup from setup.py to pyproject.toml
+
+## Release (v0.1.3) - 2025-09-15
+
+- Added local LLM support (Ollama)
+- Modular parsers (Grobid, XMLRouter)
+- Dataset ontology extensions (Synapse, PDB)
+- Improved prompt format/context-sourcing (schema, top-k)
+
+## Initial Release (v0.1.2) - 2025-08-25
+
+- Initial release to PyPI with Description
 - Core functionality implemented: Dataset metadata extraction from scientific articles
-- Supports Python 3.11
+- Supports Python>=3.11
 - Documentation and examples included
