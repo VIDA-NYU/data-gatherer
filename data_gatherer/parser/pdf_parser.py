@@ -279,7 +279,8 @@ class PDFParser(LLMParser):
 
     def parse_data(self, file_path, publisher=None, current_url_address=None, raw_data_format='PDF',
                    file_path_is_temp=False, article_file_dir='tmp/raw_files/', prompt_name='GPT_FewShot', use_portkey=True, 
-                   semantic_retrieval=False, top_k=2, section_filter=None, response_format=dataset_response_schema_gpt):
+                   semantic_retrieval=False, top_k=2, section_filter=None, response_format=dataset_response_schema_gpt, 
+                   dedup=True, brute_force_RegEx_ID_ptrs=False, article_id=None):
         """
         Parse the PDF file and extract metadata of the relevant datasets.
 

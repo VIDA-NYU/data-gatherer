@@ -81,13 +81,23 @@ class GrobidPDFParser(PDFParser):
 
     def extract_full_text_xml(self, pdf_path):
         grobid_url = f"http://localhost:{self.grobid_port}/api/processFulltextDocument"
-        with open(pdf_path, 'rb') as f:
-            files = {'input': (os.path.basename(pdf_path), f, 'application/pdf')}
-            response = requests.post(grobid_url, files=files)
-        if response.status_code != 200:
-            raise RuntimeError(f"GROBID failed: {response.status_code} {response.text}")
-        self.logger.debug(f"Extracted full text XML {response.text}.")
-        return response.text
+        try:
+            with open(pdf_path, 'rb') as f:
+                files = {'input': (os.path.basename(pdf_path), f, 'application/pdf')}
+                response = requests.post(grobid_url, files=files, timeout=60)
+            
+            if response.status_code != 200:
+                error_msg = f"GROBID failed: {response.status_code} {response.text}"
+                self.logger.warning(error_msg)
+                raise RuntimeError(error_msg)
+            
+            self.logger.debug(f"Successfully extracted TEI XML from {pdf_path}")
+            return response.text
+            
+        except requests.exceptions.Timeout:
+            raise RuntimeError(f"GROBID request timed out for {pdf_path}")
+        except Exception as e:
+            raise RuntimeError(f"GROBID processing failed for {pdf_path}: {str(e)}")
 
     def extract_refs_xml(self, pdf_path):
         grobid_url = f"http://localhost:{self.grobid_port}/api/processReferences"
@@ -102,11 +112,24 @@ class GrobidPDFParser(PDFParser):
         if self.grobid_process:
             self.grobid_process.terminate()
 
-    def parse_data(self, file_path, publisher=None, current_url_address=None, raw_data_format='PDF',
-                   file_path_is_temp=False, article_file_dir='tmp/raw_files/', prompt_name='GPT_FewShot', use_portkey=True, 
-                   semantic_retrieval=False, top_k=2, section_filter=None, response_format=None, 
-                   dedup=True, brute_force_RegEx_ID_ptrs=False
-                   ):
+    def parse_data(
+        self, 
+        file_path, 
+        publisher=None, 
+        current_url_address=None, 
+        raw_data_format='PDF',
+        file_path_is_temp=False, 
+        article_file_dir='tmp/raw_files/',
+        prompt_name='GPT_FewShot', 
+        use_portkey=True, 
+        semantic_retrieval=False, 
+        top_k=2, 
+        section_filter=None, 
+        response_format=None, 
+        dedup=True, 
+        brute_force_RegEx_ID_ptrs=False,
+        article_id=None
+        ):
         """
         Parse the PDF file and extract metadata of the relevant datasets.
         """
@@ -159,6 +182,28 @@ class GrobidPDFParser(PDFParser):
 
         except Exception as e:
             self.logger.error(f"GROBID failed on {file_path}: {e}")
+            
+            # Check if PDF file exists and is readable
+            if not os.path.exists(file_path):
+                self.logger.error(f"PDF file does not exist: {file_path}")
+                return pd.DataFrame()
+            
+            file_size = os.path.getsize(file_path)
+            self.logger.info(f"PDF file size: {file_size} bytes")
+            
+            if file_size == 0:
+                self.logger.error(f"PDF file is empty: {file_path}")
+                return pd.DataFrame()
+            
+            # Check if file is a valid PDF
+            try:
+                with open(file_path, 'rb') as f:
+                    header = f.read(5)
+                    if header != b'%PDF-':
+                        self.logger.warning(f"File does not appear to be a valid PDF (header: {header})")
+            except Exception as check_error:
+                self.logger.warning(f"Could not verify PDF header: {check_error}")
+            
             self.logger.info("Attempting fallback with PyMuPDF parser...")
 
             try:

@@ -79,10 +79,11 @@ class DataGatherer:
         data_resource_preview=False,
         download_previewed_data_resources=False,
         embeds_cache_read=False,
-        embeds_cache_write=False
+        embeds_cache_write=False,
+        data_repos_config='open_bio_data_repos.json'
         ):
 
-        self.open_data_repos_ontology = load_config('open_bio_data_repos.json')
+        self.open_data_repos_ontology = load_config(data_repos_config)
 
         log_file = log_file_override or 'logs/data_gatherer.log'
         self.logger = setup_logging('orchestrator', log_file, level=log_level,
@@ -141,8 +142,9 @@ class DataGatherer:
         HTML_fallback=False,
         local_fetch_file=None,
         write_htmls_xmls=False,
-        article_file_dir='tmp/raw_files/',
-        write_df_to_path=False):
+        article_file_dir='scripts/tmp/raw_files/',
+        write_df_to_path=False,
+        sects_required=5):
         """
         Fetches data from the given URL using the configured data fetcher (WebScraper or EntrezFetcher).
 
@@ -165,6 +167,8 @@ class DataGatherer:
         :param article_file_dir: Directory to save the raw HTML/XML/PDF files. Overwrites the default setting.
 
         :param write_df_to_path: Optional path to save the fetched data as a DataFrame in Parquet format.
+
+        :param sects_required: List or Int indicating required sections to consider the fetched HTML data complete.
 
         :return: Dictionary with URLs as keys and raw data as values.
 
@@ -202,9 +206,14 @@ class DataGatherer:
                 )
 
                 # Fetch data
-                fetched_data = self.data_fetcher.fetch_data(pub_link)
+                fetched_data = self.data_fetcher.fetch_data(pub_link, write_raw_data=write_htmls_xmls)
                 self.logger.info(f"Raw_data_format: {self.data_fetcher.raw_data_format}, Type of fetched data: {type(fetched_data)}")
-                self.completeness_check = self.data_checker.is_fulltext_complete(fetched_data, pub_link, self.data_fetcher.raw_data_format, required_sections=5)
+                
+                if fetched_data is None:
+                    self.logger.warning(f"Failed to fetch data from {pub_link}. Skipping.")
+                    continue
+                
+                self.completeness_check = self.data_checker.is_fulltext_complete(fetched_data, pub_link, self.data_fetcher.raw_data_format, required_sections=sects_required)
 
                 if self.completeness_check:
                     self.logger.info(f"Fetch complete {self.data_fetcher.raw_data_format} data from {pub_link}.")
@@ -501,7 +510,8 @@ class DataGatherer:
         grobid_for_pdf=False, 
         write_htmls_xmls=False,
         dedup=True,
-        brute_force_RegEx_ID_ptrs=False
+        brute_force_RegEx_ID_ptrs=False,
+        sects_required=5,
         ):
         """
         Orchestrates the process for a single given source URL (publication).
@@ -545,6 +555,8 @@ class DataGatherer:
         :param grobid_for_pdf: Flag to indicate if GROBID should be used for PDF processing.
 
         :param write_htmls_xmls: Flag to indicate if raw HTML/XML files should be saved. Overwrites the default setting.
+
+        :param sects_required: List or Int indicating required sections to consider the fetched HTML data complete.
 
         :return: DataFrame of classified links or None if an error occurs.
         """
@@ -590,7 +602,7 @@ class DataGatherer:
                 self.logger.info(f"Fetched raw data format: {self.raw_data_format} from {url}")
             
             if filepath is None:
-                fulltext_complete = self.data_checker.is_fulltext_complete(raw_data, url, self.raw_data_format)
+                fulltext_complete = self.data_checker.is_fulltext_complete(raw_data, url, self.raw_data_format, required_sections=sects_required)
                 if not (self.data_fetcher.local_data_used) and not (fulltext_complete) and not (self.data_fetcher.__class__.__name__ == "WebScraper"):
                     self.logger.info(f"Fallback to Selenium WebScraper data fetcher.")
                     self.raw_data_format = "HTML"
@@ -1503,7 +1515,9 @@ class DataGatherer:
         grobid_for_pdf=False,
         use_portkey=True,
         dedup=True,
-        brute_force_RegEx_ID_ptrs=False
+        brute_force_RegEx_ID_ptrs=False,
+        write_htmls_xmls=False,
+        article_file_dir='scripts/tmp/raw_files/',
         ):
         """
         Complete integrated batch processing using LLMClient batch functionality.
@@ -1541,6 +1555,18 @@ class DataGatherer:
 
         :param batch_description: Optional description for the batch job
 
+        :param grobid_for_pdf: Whether to use GROBID for PDF processing
+
+        :param use_portkey: Whether to use Portkey for Gemini LLM
+
+        :param dedup: Whether to deduplicate rule-based retrieved elements
+
+        :param brute_force_RegEx_ID_ptrs: Whether to include snippets with ID patterns using brute-force regex
+
+        :param write_htmls_xmls: Whether to write HTML and XML files during processing
+
+        :param article_file_dir: Directory to save raw HTML/XML/PDF files
+
         :return: Dictionary with batch information and results
         """
 
@@ -1549,7 +1575,7 @@ class DataGatherer:
         try:
             # Step 1: Fetch data
             self.logger.info("Step 1: Fetching data...")
-            fetched_data = self.fetch_data(url_list)
+            fetched_data = self.fetch_data(url_list, write_htmls_xmls=write_htmls_xmls, article_file_dir=article_file_dir)
             
             # Count raw_data_format frequencies and store URLs for parser reuse optimization
             format_counts = {}

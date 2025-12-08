@@ -171,7 +171,7 @@ class DataFetcher(ABC):
         return html
 
     @abstractmethod
-    def fetch_data(self, url, retries=3, delay=2):
+    def fetch_data(self, url, retries=3, delay=2, **kwargs):
         """
         Abstract method to fetch data from a given URL.
 
@@ -438,6 +438,20 @@ class DataFetcher(ABC):
             return True
         elif re.search(r'arxiv\.org/pdf/', url, re.IGNORECASE):
             return True
+        elif re.search(r'aclanthology\.org/', url, re.IGNORECASE):
+            return True
+        elif re.search(r'doi\.org/10\.18653', url, re.IGNORECASE):
+            return True
+        elif re.search(r'doi\.org/10\.48550', url, re.IGNORECASE):
+            return True
+        elif re.search(r'doi\.org/10\.23977', url, re.IGNORECASE):
+            return True
+        elif re.search(r'doi\.org/10\.5121', url, re.IGNORECASE):
+            return True
+        elif re.search(r'publica.fraunhofer.de', url, re.IGNORECASE):
+            return True
+        elif re.search(r'ojs.aaai.org', url, re.IGNORECASE):
+            return True
         return False
 
     def download_file_from_url(self, url, output_root="scripts/downloads/suppl_files", paper_id=None):
@@ -482,7 +496,7 @@ class HttpGetRequest(DataFetcher):
         self.logger.debug("HttpGetRequest initialized.")
         self.raw_data_format = 'HTML'
 
-    def fetch_data(self, url, retries=3, delay=0.2):
+    def fetch_data(self, url, retries=3, delay=0.2, **kwargs):
         """
         Fetches data from the given URL. First tries backup data (fast), then HTTP GET if needed.
 
@@ -502,6 +516,12 @@ class HttpGetRequest(DataFetcher):
         
         # Fallback to live HTTP fetch (slow path)
         self.logger.info(f"Local data not found, fetching live from {url}")
+
+        if self.url_is_pdf(url):
+            self.logger.info(f"URL {url} is a PDF. Using PdfFetcher.")
+            pdf_fetcher = PdfFetcher(self.logger)
+            return pdf_fetcher.fetch_data(url, retries=retries, delay=delay)
+            
         attempt = 0
         while attempt < retries:
             time.sleep(delay/2)
@@ -542,9 +562,10 @@ class HttpGetRequest(DataFetcher):
         if directory[-1] != '/':
             directory += '/'
 
-        pmcid = self.url_to_pmcid(url)
+        article_id = self.url_to_filename(self.url_to_pmcid(url))
+        pub_fname = self.url_to_filename(pub_name)
 
-        fn = directory + f"{pmcid}__{pub_name}.html"
+        fn = directory + f"{article_id}__{pub_fname}.html"
         self.logger.info(f"Downloading HTML page source to {fn}")
 
         with open(fn, 'w', encoding='utf-8') as f:
@@ -621,7 +642,7 @@ class WebScraper(DataFetcher):
         self.headless = headless
         self.logger.debug("WebScraper initialized.")
 
-    def fetch_data(self, url, retries=3, delay=2):
+    def fetch_data(self, url, retries=3, delay=2, **kwargs):
         """
         Fetches data from the given URL. First tries backup data (fast), then live web scraping if needed.
 
@@ -854,7 +875,7 @@ class DatabaseFetcher(DataFetcher):
         stats = self.backup_store.get_stats()
         self.logger.debug(f"DatabaseFetcher initialized with {stats['size']} publications (valid: {stats['valid']}).")
 
-    def fetch_data(self, url_key, retries=3, delay=2, local_fetch_file=None):
+    def fetch_data(self, url_key, retries=3, delay=2, local_fetch_file=None, **kwargs):
         """
         Fetches data from the backup data store.
 
@@ -907,7 +928,7 @@ class EntrezFetcher(DataFetcher):
         self.logger.debug("EntrezFetcher initialized.")
 
 
-    def fetch_data(self, article_id, retries=3, delay=2):
+    def fetch_data(self, article_id, retries=3, delay=2, **kwargs):
         """
         Fetches data from the API. First tries backup data (fast), then live API call if needed.
 
@@ -1108,7 +1129,7 @@ class PlaywrightFetcher(DataFetcher):
             self.page = await self.context.new_page()
             self.logger.info(f"Playwright {self.browser_type} browser started (async)")
     
-    def fetch_data(self, url, retries=3, delay=2, wait_for_selector=None, wait_time=2000):
+    def fetch_data(self, url, retries=3, delay=2, wait_for_selector=None, wait_time=2000, **kwargs):
         """
         Fetches data from the given URL using Playwright.
         First tries backup data (fast), then live fetching if needed.
@@ -1509,13 +1530,15 @@ class PdfFetcher(DataFetcher):
         super().__init__(logger, src='PdfFetcher', driver_path=driver_path, browser=browser, headless=headless)
         self.logger.debug("PdfFetcher initialized.")
 
-    def fetch_data(self, url, return_temp=True, **kwargs):
+    def fetch_data(self, url, return_temp=True, retries=3, delay=2, **kwargs):
         """
-        Fetches PDF data from the given URL.
+        Fetches PDF data from the given URL with retry logic.
 
         :param url: The URL to fetch data from.
-
-        :return: The raw content of the PDF file.
+        :param return_temp: Whether to return a temporary file path or raw bytes.
+        :param retries: Number of retry attempts for failed requests.
+        :param delay: Delay between retries in seconds.
+        :return: The raw content of the PDF file or temporary file path.
         """
         self.raw_data_format = 'PDF'
         self.logger.info(f"Fetching PDF data from {url}")
@@ -1524,24 +1547,70 @@ class PdfFetcher(DataFetcher):
             self.logger.info(f"URL is a local file path. Reading PDF from {url}")
             return url
 
-        response = requests.get(url)
-        if response.status_code == 200:
-            if return_temp:
-                # Write the PDF content to a temporary file
-                with tempfile.NamedTemporaryFile(delete=False, suffix='.pdf') as temp_file:
-                    temp_file.write(response.content)
-                    self.logger.info(f"PDF data written to temporary file: {temp_file.name}")
-                    return temp_file.name
-            else:
-                return response.content
-        else:
-            self.logger.error(f"Failed to fetch PDF data from {url}, status code: {response.status_code}")
-            return None
+        # Retry logic for network errors
+        for attempt in range(retries):
+            try:
+                self.logger.debug(f"PDF fetch attempt {attempt + 1}/{retries} for {url}")
+                response = requests.get(
+                    url, 
+                    timeout=30,  # 30 second timeout
+                    headers={"User-Agent": "Mozilla/5.0"}
+                )
+                
+                if response.status_code == 200:
+                    if kwargs.get('write_raw_data', False):
+                        return response.content
+                    if return_temp:
+                        # Write the PDF content to a temporary file
+                        with tempfile.NamedTemporaryFile(delete=False, suffix='.pdf') as temp_file:
+                            temp_file.write(response.content)
+                            self.logger.info(f"PDF data written to temporary file: {temp_file.name}")
+                            return temp_file.name
+                    else:
+                        return response.content
+                elif response.status_code == 403:
+                    self.logger.warning(f"403 Forbidden for {url} - likely paywall or anti-bot protection")
+                    return None
+                else:
+                    self.logger.warning(f"Attempt {attempt + 1}: Status code {response.status_code} for {url}")
+                    if attempt < retries - 1:
+                        time.sleep(delay)
+                    
+            except requests.exceptions.ConnectionError as e:
+                self.logger.warning(f"Attempt {attempt + 1}: Connection error for {url}: {e}")
+                if attempt < retries - 1:
+                    time.sleep(delay * 2)  # Longer delay for connection errors
+                else:
+                    self.logger.error(f"Failed to fetch PDF from {url} after {retries} attempts")
+                    return None
+                    
+            except requests.exceptions.Timeout as e:
+                self.logger.warning(f"Attempt {attempt + 1}: Timeout for {url}: {e}")
+                if attempt < retries - 1:
+                    time.sleep(delay)
+                else:
+                    self.logger.error(f"Timeout fetching PDF from {url} after {retries} attempts")
+                    return None
+                    
+            except Exception as e:
+                self.logger.error(f"Unexpected error fetching PDF from {url}: {e}")
+                return None
+        
+        self.logger.error(f"Failed to fetch PDF data from {url} after {retries} attempts")
+        return None
 
     def download_pdf(self, directory, raw_data, src_url):
         """
         Downloads the PDF data to a specified directory.
         """
+        # Validate that raw_data is bytes (PDF content)
+        if not isinstance(raw_data, bytes):
+            self.logger.error(f"PDF data from {src_url} is not bytes (got {type(raw_data).__name__}). Cannot save PDF.")
+            return
+        
+        # Create directory if it doesn't exist
+        os.makedirs(directory, exist_ok=True)
+        
         fn = os.path.join(directory, f"{self.url_to_filename(src_url)}.pdf")
 
         self.logger.info(f"Downloading PDF from {src_url}")
@@ -1621,20 +1690,31 @@ class DataCompletenessChecker:
     
             :return: True if all required sections are present, False otherwise.
             """
-            if isinstance(raw_data, str):
-                self.logger.debug(f"Raw data is a string of length {len(raw_data)}")
-                raw_data_format = 'HTML'
-            elif isinstance(raw_data, ET._Element) or isinstance(raw_data, ET._ElementTree):
-                self.logger.debug(f"Raw data is of type {type(raw_data)}")
-                raw_data_format = 'XML'
-            else:
-                self.logger.error(f"Unsupported raw data type: {type(raw_data)}")
+
+            if raw_data is None:
+                self.logger.error("Raw data is None, cannot check completeness.")
                 return False
+
+            if raw_data_format is None:
+                if isinstance(raw_data, str):
+                    self.logger.debug(f"Raw data is a string of length {len(raw_data)}")
+                    raw_data_format = 'HTML'
+                elif isinstance(raw_data, ET._Element) or isinstance(raw_data, ET._ElementTree):
+                    self.logger.debug(f"Raw data is of type {type(raw_data)}")
+                    raw_data_format = 'XML'
+                else:
+                    self.logger.error(f"Unsupported raw data type: {type(raw_data)}")
+                    return False
+            
+            if required_sections is None:
+                required_sections = ["data_availability_sections", "supplementary_data_sections"]
 
             if raw_data_format.upper() == 'XML':
                 return self.is_xml_data_complete(raw_data, url, required_sections)
             elif raw_data_format.upper() == 'HTML':
                 return self.is_html_data_complete(raw_data, url, required_sections)
+            elif raw_data_format.upper() == 'PDF':
+                return True # Assume PDFs are complete for this check
             else:
                 self.logger.error(f"Unsupported raw data format: {raw_data_format}")
                 return False

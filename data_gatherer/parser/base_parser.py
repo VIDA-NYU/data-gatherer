@@ -928,6 +928,10 @@ Files:
         This function checks for hallucinations, i.e. if the dataset identifier is a known repository name.
         """
         self.logger.info(f"Validating accession ID: {dataset_identifier}")
+        if "(" in dataset_identifier:
+            self.logger.warning(f"ID contains parenthesis, maybe malformed: {dataset_identifier}")
+            dataset_identifier = re.sub(r'\s*\(.*\)\s*', '', dataset_identifier)
+            self.logger.info(f"Dataset Identifier: {dataset_identifier}")
         if dataset_identifier.lower() in self.get_all_repo_names(uncased=True):
             self.logger.info(f"Accession ID {dataset_identifier} is a known repository --> invalid, returning 'n/a'")
             return 'n/a'
