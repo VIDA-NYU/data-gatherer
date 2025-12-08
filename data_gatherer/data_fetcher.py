@@ -1617,6 +1617,8 @@ class PdfFetcher(DataFetcher):
         with open(fn, 'wb') as file:
             file.write(raw_data)
             self.logger.info(f"PDF data written to file: {file}")
+        
+        return fn
 
 class DataCompletenessChecker:
     """

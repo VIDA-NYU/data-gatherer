@@ -974,7 +974,7 @@ Files:
         self.logger.info(f"Validating Dataset Page: {dataset_webpage_url}, resolved_repo {resolved_repo}, dataset_id {dataset_id}")
         resolved_dataset_page = self.resolve_url(dataset_webpage_url, req_timeout=req_timeout)
         dataset_id = dataset_id[0] if isinstance(dataset_id, list) else dataset_id
-
+        self.logger.info(f"Type of self.open_data_repos_ontology = {type(self.open_data_repos_ontology)}")
         if resolved_repo in self.open_data_repos_ontology['repos']:
             if 'dataset_webpage_url_ptr' in self.open_data_repos_ontology['repos'][resolved_repo].keys():
                 dataset_webpage_url_ptr = self.open_data_repos_ontology['repos'][resolved_repo]['dataset_webpage_url_ptr']

@@ -80,7 +80,8 @@ class DataGatherer:
         download_previewed_data_resources=False,
         embeds_cache_read=False,
         embeds_cache_write=False,
-        data_repos_config='open_bio_data_repos.json'
+        data_repos_config='open_bio_data_repos.json',
+        grobid_for_pdf=False
         ):
 
         self.open_data_repos_ontology = load_config(data_repos_config)
@@ -129,6 +130,8 @@ class DataGatherer:
         self.logger.info(f"DataGatherer orchestrator initialized. Extraction Model: {llm_name}")
 
         self.input_tokens_total = 0
+
+        self.grobid_for_pdf = grobid_for_pdf
 
         os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
@@ -244,7 +247,13 @@ class DataGatherer:
                     elif self.data_fetcher.raw_data_format == "XML" and self.completeness_check:
                         self.data_fetcher.download_xml(directory, fetched_data, pub_link)
                     elif self.data_fetcher.raw_data_format == "PDF":
-                        self.data_fetcher.download_pdf(directory, fetched_data, pub_link)
+                        fn = self.data_fetcher.download_pdf(directory, fetched_data, pub_link)
+                        if self.grobid_for_pdf:
+                            self.logger.info(f"GROBID PDF fetch the final fulltext {pub_link}.")
+                            complete_publication_fetches[pub_link] = {
+                                'fetched_data': fn, 
+                                'raw_data_format': self.data_fetcher.raw_data_format
+                                }
                     else:
                         self.logger.warning(f"Unsupported raw data format: {self.data_fetcher.raw_data_format}.")
 
@@ -1606,7 +1615,7 @@ class DataGatherer:
                         else:
                             self.logger.info(f"Creating new parser for format: {url_raw_data_format}")
                             self.init_parser_by_input_type(url_raw_data_format, fetched_data[url], embeddings_retriever_model, 
-                            use_portkey, grobid_for_pdf, full_document_read)
+                            use_portkey, grobid_for_pdf, self.full_document_read)
                                          
                         data = fetched_data[url]
                         
@@ -1627,7 +1636,12 @@ class DataGatherer:
                                                 if hasattr(self.parser, 'normalize_HTML') 
                                                 else data['fetched_data'])
                             elif url_raw_data_format.upper() == 'PDF':
-                                normalized_input = data['fetched_data']
+                                if grobid_for_pdf:
+                                    self.logger.info("Using GROBID for PDF to XML conversion")
+                                    xml_root = self.parser.pdf_to_xml(data['fetched_data'], url, article_file_dir)
+                                    normalized_input = (self.parser.normalize_XML(xml_root))
+                                else:
+                                    normalized_input = data['fetched_data']
                             else:
                                 raise ValueError(f"Unsupported raw data format: {url_raw_data_format}")
                         
