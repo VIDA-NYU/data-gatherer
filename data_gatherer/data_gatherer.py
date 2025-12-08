@@ -144,7 +144,9 @@ class DataGatherer:
         write_htmls_xmls=False,
         article_file_dir='scripts/tmp/raw_files/',
         write_df_to_path=False,
-        sects_required=5):
+        sects_required=5,
+        HTML_fallback_priority_list=['HTTPGetRequest', 'Selenium']
+        ):
         """
         Fetches data from the given URL using the configured data fetcher (WebScraper or EntrezFetcher).
 
@@ -184,12 +186,13 @@ class DataGatherer:
 
         complete_publication_fetches = {}
         i = None
-        HTML_fallback_priority_list = ['HTTPGetRequest', 'Selenium']
 
         while len(complete_publication_fetches) < len(urls):
             HTML_fallback = False if i is None else HTML_fallback_priority_list[i]
             self.logger.info(f"Fetch attempt with HTML_fallback={HTML_fallback}...")
             i = 0 if i is None else i + 1
+            if i >= len(HTML_fallback_priority_list):
+                break
             for pub_link in urls:
                 self.logger.info(f"length of complete fetches < urls: {len(complete_publication_fetches)} < {len(urls)}")
                 if pub_link in complete_publication_fetches:
