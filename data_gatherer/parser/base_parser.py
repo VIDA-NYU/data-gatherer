@@ -587,11 +587,16 @@ Files:
                                                             dataset_id, dataset, req_timeout=req_timeout)
         self.logger.info(f"Final schema validation vals: {dataset_id}, {data_repository}, {dataset_webpage}")
 
-        if dataset_id == 'n/a' and data_repository in self.open_data_repos_ontology['repos']:
+        # Handle list repositories for validation checks
+        repo_check = data_repository
+        if isinstance(data_repository, list):
+            repo_check = data_repository[0] if len(data_repository) > 0 else 'n/a'
+
+        if dataset_id == 'n/a' and repo_check in self.open_data_repos_ontology['repos']:
             self.logger.info(f"Dataset ID is 'n/a' and repository name from prompt")
             return None, None, None
 
-        elif data_repository == 'n/a' and dataset_webpage == 'n/a':
+        elif (data_repository == 'n/a' or (isinstance(data_repository, list) and all(r == 'n/a' for r in data_repository))) and dataset_webpage == 'n/a':
             self.logger.info(f"Data repository is 'n/a', skipping dataset")
             return None, None, None
 
@@ -967,11 +972,26 @@ Files:
         This function checks for hallucinations, i.e. if the dataset identifier is a known repository name.
         Input:
         dataset_webpage_url: str - the URL to be validated
-        resolved_repo: str - the resolved repository name
+        resolved_repo: str or list - the resolved repository name (can be list for multi-repo datasets)
         dataset_id: str - the dataset identifier
         old_metadata: dict - the old metadata dictionary (optional)
         """
         self.logger.info(f"Validating Dataset Page: {dataset_webpage_url}, resolved_repo {resolved_repo}, dataset_id {dataset_id}")
+        
+        # Handle list repositories - use first one for validation
+        if isinstance(resolved_repo, list):
+            if len(resolved_repo) > 0:
+                self.logger.warning(f"Repository is a list: {resolved_repo}. Using first element for validation.")
+                resolved_repo = resolved_repo[0]
+            else:
+                self.logger.error(f"Repository list is empty, cannot validate dataset webpage.")
+                return 'n/a'
+        
+        # Validate URL format before attempting to resolve
+        if not dataset_webpage_url or dataset_webpage_url == 'n/a':
+            self.logger.warning(f"Invalid dataset webpage URL: {dataset_webpage_url}")
+            return 'n/a'
+        
         resolved_dataset_page = self.resolve_url(dataset_webpage_url, req_timeout=req_timeout)
         dataset_id = dataset_id[0] if isinstance(dataset_id, list) else dataset_id
         self.logger.info(f"Type of self.open_data_repos_ontology = {type(self.open_data_repos_ontology)}")
@@ -1028,6 +1048,22 @@ Files:
     def resolve_url(self, url, req_timeout=0.5):
         if req_timeout is None:
             return url
+        
+        # Validate URL format before attempting to resolve
+        if not isinstance(url, str):
+            self.logger.warning(f"URL is not a string: {type(url)}")
+            return url
+        
+        # Check for whitespace or other invalid URL characters
+        if ' ' in url or not url.strip():
+            self.logger.warning(f"URL contains whitespace or is empty: '{url}'")
+            return url.strip() if url.strip() else url
+        
+        # Basic URL format validation
+        if not url.startswith(('http://', 'https://')):
+            self.logger.warning(f"URL does not start with http:// or https://: {url}")
+            return url
+        
         try:
             response = requests.get(url, allow_redirects=True, timeout=req_timeout)
             self.logger.info(f"Resolved URL: {response.url}")

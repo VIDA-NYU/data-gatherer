@@ -1610,6 +1610,8 @@ class PdfFetcher(DataFetcher):
         
         # Create directory if it doesn't exist
         os.makedirs(directory, exist_ok=True)
+
+        src_url = re.sub('\.pdf\s*$', '', src_url)
         
         fn = os.path.join(directory, f"{self.url_to_filename(src_url)}.pdf")
 

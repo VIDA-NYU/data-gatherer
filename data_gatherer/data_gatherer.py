@@ -1530,6 +1530,7 @@ class DataGatherer:
         brute_force_RegEx_ID_ptrs=False,
         write_htmls_xmls=False,
         article_file_dir='scripts/tmp/raw_files/',
+        url2id_mapping=None,
         ):
         """
         Complete integrated batch processing using LLMClient batch functionality.
@@ -1619,13 +1620,16 @@ class DataGatherer:
                                          
                         data = fetched_data[url]
                         
-                        # Generate unique custom_id
-                        article_id = self.url_to_page_id(url)
+                        article_title = ''
                         pmcid = self.data_fetcher.url_to_pmcid(url)
+                        article_id = self.url_to_page_id(url)
                         timestamp = int(time.time() * 1000)
-                        custom_id = f"{self.llm}_{article_id}_{timestamp}"
-                        custom_id = re.sub(r'[^a-zA-Z0-9_-]', '_', custom_id)[:64]
-                        
+                        if url2id_mapping is None:                            
+                            custom_id = f"{self.llm}_{article_id}_{timestamp}"
+                            custom_id = re.sub(r'[^a-zA-Z0-9_-]', '_', custom_id)[:64]
+                        else:
+                            custom_id = url2id_mapping[url]
+
                         if self.full_document_read:
                             if url_raw_data_format.upper() == 'XML':
                                 normalized_input = (self.parser.normalize_XML(data['fetched_data']) 
@@ -1640,6 +1644,7 @@ class DataGatherer:
                                     self.logger.info("Using GROBID for PDF to XML conversion")
                                     xml_root = self.parser.pdf_to_xml(data['fetched_data'], url, article_file_dir)
                                     normalized_input = (self.parser.normalize_XML(xml_root))
+                                    article_title = self.parser._tei_parser.extract_publication_title(xml_root)
                                 else:
                                     normalized_input = data['fetched_data']
                             else:
@@ -1674,7 +1679,8 @@ class DataGatherer:
                             'metadata': {
                                 'url': url,
                                 'article_id': article_id,
-                                'raw_data_format': url_raw_data_format
+                                'raw_data_format': url_raw_data_format,
+                                'title': article_title
                             }
                         }
                         
@@ -1879,6 +1885,7 @@ class DataGatherer:
                 # Extract metadata
                 custom_id = batch_item.get('custom_id', 'N/A')
                 status = batch_item.get('status', 'unknown')
+                metadata = batch_item.get('metadata', {})
                 
                 if status != 'success':
                     self.logger.warning(f"Skipping failed batch item {custom_id}: {batch_item.get('error', 'Unknown error')}")
@@ -1892,6 +1899,9 @@ class DataGatherer:
                 for dataset in datasets:
                     # Add custom_id to track source
                     dataset['custom_id'] = custom_id
+                    
+                    for key, value in metadata.items():
+                        dataset[key] = value
                     
                     # Reconstruct source URL if it's a PMC article
                     if re.search(r'_PMC\d+', custom_id, re.IGNORECASE):

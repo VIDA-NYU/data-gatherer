@@ -263,7 +263,7 @@ class GrobidPDFParser(PDFParser):
                 self.logger.error(f"Fallback parser also failed: {fallback_error}")
                 return pd.DataFrame()
 
-    def pdf_to_xml(self, pdf_path, current_url_address, article_file_dir):
+    def pdf_to_xml(self, pdf_path, current_url_address=None, article_file_dir=None):
         """
         Convert a PDF file to TEI XML using GROBID and save to output directory.
 
@@ -283,7 +283,7 @@ class GrobidPDFParser(PDFParser):
             xml_root = etree.fromstring(full_cont_xml.encode('utf-8'))
 
             # 3. Optionally save XML to file
-            if self.write_XML:
+            if self.write_XML and article_file_dir is not None:
                 xml_output_path = os.path.join(article_file_dir, os.path.basename(pdf_path) + '.xml')
                 os.makedirs(article_file_dir, exist_ok=True)
                 with open(xml_output_path, 'wb') as xml_file:
@@ -295,3 +295,6 @@ class GrobidPDFParser(PDFParser):
         except Exception as e:
             self.logger.error(f"Failed to convert PDF to XML for {pdf_path}: {e}")
             return None
+
+    def extract_publication_title(self, root):
+        return self._tei_parser.extract_publication_title(root)
