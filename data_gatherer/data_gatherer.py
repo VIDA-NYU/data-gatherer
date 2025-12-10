@@ -1859,7 +1859,7 @@ class DataGatherer:
         
         return result
 
-    def from_batch_resp_file_to_df(self, batch_results_file: str, output_file_path: str = None) -> pd.DataFrame:
+    def from_batch_resp_file_to_df(self, batch_results_file: str, output_file_path: str = None, skip_validation: bool = False) -> pd.DataFrame:
         """
         Convert a batch response JSONL file to a pandas DataFrame.
         This method processes batch API results and converts them to the standard DataFrame format.
@@ -1893,7 +1893,7 @@ class DataGatherer:
                 
                 # Process the LLM response using parser's post-processing method
                 processed_response = batch_item.get('processed_response', [])
-                datasets = self.parser.process_datasets_response(processed_response)
+                datasets = self.parser.process_datasets_response(processed_response, skip_validation=skip_validation)
                 
                 # Enhance each dataset with metadata
                 for dataset in datasets:

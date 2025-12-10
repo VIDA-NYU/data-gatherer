@@ -269,7 +269,8 @@ Files:
                                            temperature: float = 0.0,
                                            prompt_name: str = 'GPT_FewShot',
                                            full_document_read=True,
-                                           response_format = dataset_response_schema_gpt) -> list:
+                                           response_format = dataset_response_schema_gpt,
+                                           skip_validation: bool = False) -> list:
         """
         Extract datasets from the given content using a specified LLM model.
         Uses a static prompt template and dynamically injects the required content.
@@ -381,7 +382,7 @@ Files:
                 self.prompt_manager.save_response(prompt_id, resps)
 
         # Process the response content using extracted method
-        result = self.process_datasets_response(resps)
+        result = self.process_datasets_response(resps, skip_validation=skip_validation)
 
         return result
     
@@ -413,7 +414,7 @@ Files:
         return ret
 
 
-    def process_datasets_response(self, resps):
+    def process_datasets_response(self, resps, skip_validation=False):
         """
         Process the LLM response containing datasets and extract structured dataset information.
         This method handles different response formats (lists, strings, dicts) and performs validation.
@@ -444,7 +445,7 @@ Files:
                 # Process each valid dataset found in the list
                 for valid_dataset in valid_datasets:
                     try:
-                        dataset_id, data_repository, dataset_webpage = self.schema_validation(valid_dataset)
+                        dataset_id, data_repository, dataset_webpage = self.schema_validation(valid_dataset, skip=skip_validation)
                         if dataset_id and data_repository:
                             # Start with all fields from valid_dataset
                             dataset_result = valid_dataset.copy()
@@ -476,7 +477,7 @@ Files:
             elif type(dataset) == dict:
                 self.logger.info(f"Dataset is a dictionary")
 
-                dataset_id, data_repository, dataset_webpage = self.schema_validation(dataset)
+                dataset_id, data_repository, dataset_webpage = self.schema_validation(dataset, skip=skip_validation)
                 
             else:
                 self.logger.warning(f"Dataset is unexpected type {type(dataset)}, skipping: {dataset}")
@@ -502,7 +503,7 @@ Files:
         self.logger.debug(f"Final result: {result}")
         return result
 
-    def schema_validation(self, dataset, req_timeout=0.5):
+    def schema_validation(self, dataset, req_timeout=0.5, skip=False):
         """
         Validate and extract dataset information based on the schema.
 
@@ -510,95 +511,106 @@ Files:
 
         :return: tuple — (dataset_id, data_repository, dataset_webpage) or (None, None, None) if invalid.
         """
-        self.logger.info(f"Schema validation called with dataset: {dataset}")
-        dataset['data_repository'] = dataset.pop('repository_references') if 'repository_references' in dataset and 'data_repository' not in dataset else dataset.get('data_repository', 'n/a')
+        if skip:
+            dataset_id, data_repository, dataset_webpage = dataset.get('dataset_identifier'), dataset.get('data_repository'), 'n/a'
+            if 'http' in data_repository:
+                str_match = re.search(r"(https?://[^\s<>\"']+|www\.[^\s<>\"']+)", data_repository)
+                dataset_webpage = str_match.group(0) if str_match else dataset_webpage
+            elif 'http' in dataset_id:
+                str_match = re.search(r"(https?://[^\s<>\"']+|www\.[^\s<>\"']+)", dataset_id)
+                dataset_webpage = str_match.group(0) if str_match else dataset_webpage
+            if '(' in dataset_id:
+                dataset_id = re.sub(r"\s*\(.*", '', dataset_id)
+        else:
+            self.logger.info(f"Schema validation called with dataset: {dataset}")
+            dataset['data_repository'] = dataset.pop('repository_references') if 'repository_references' in dataset and 'data_repository' not in dataset else dataset.get('data_repository', 'n/a')
 
-        self.logger.debug(f"Validating dataset schema for dataset: {dataset}")
+            self.logger.debug(f"Validating dataset schema for dataset: {dataset}")
 
-        dataset_id, data_repository, dataset_webpage = None, None, None
+            dataset_id, data_repository, dataset_webpage = None, None, None
 
-        for repo_key, repo_vals in self.open_data_repos_ontology['repos'].items():
-            for key, val in dataset.items():
-                if 'dataset_webpage_url_ptr' in repo_vals and type(val) == str:
-                    ptr_search = re.sub('__ID__', '', repo_vals['dataset_webpage_url_ptr'])
-                    if re.search(ptr_search, val, re.IGNORECASE):
-                        self.logger.info(f"Matched dataset_webpage_url_ptr: {repo_vals['dataset_webpage_url_ptr']} to value: {val}")
-                        if dataset_webpage is None:
-                            self.logger.info(f"Candidate dataset_webpage: {val}")
-                            dataset_webpage = val
-                        if data_repository is None:
-                            self.logger.info(f"Candidate data_repository: {repo_key}")
-                            data_repository = self.resolve_data_repository(dataset.get('data_repository', 'n/a'),
-                                                           identifier=dataset.get('dataset_identifier', 'n/a'),
-                                                           dataset_page=dataset_webpage,
-                                                           candidate_repo=repo_key)
-                                                           
-                if 'id_pattern' in repo_vals and type(val) == str:
-                    if re.search(repo_vals['id_pattern'], val, re.IGNORECASE):
-                        self.logger.info(f"Matched id_pattern: {repo_vals['id_pattern']} to value: {val}")
-                        if val.startswith('http'):
+            for repo_key, repo_vals in self.open_data_repos_ontology['repos'].items():
+                for key, val in dataset.items():
+                    if 'dataset_webpage_url_ptr' in repo_vals and type(val) == str:
+                        ptr_search = re.sub('__ID__', '', repo_vals['dataset_webpage_url_ptr'])
+                        if re.search(ptr_search, val, re.IGNORECASE):
+                            self.logger.info(f"Matched dataset_webpage_url_ptr: {repo_vals['dataset_webpage_url_ptr']} to value: {val}")
                             if dataset_webpage is None:
-                                self.logger.info(f"Setting dataset_webpage to value: {val}")
+                                self.logger.info(f"Candidate dataset_webpage: {val}")
                                 dataset_webpage = val
-                            ptr_sub = f'\b({repo_vals["id_pattern"]})'
-                            self.logger.info(f"Using id_pattern to extract ID: {ptr_sub}")
-                            match = re.search(ptr_sub, val, re.IGNORECASE)
-                            if match and dataset_id is None:
-                                self.logger.info(f"Setting dataset_id to value: {match.group(1)}")
-                                dataset_id = match.group(1)
-                            self.logger.info(f"Extracted ID: {dataset_id}")
-                        else:
-                            if (val.startswith('10.') or val.startswith('doi:10.')) and dataset_webpage is None:
-                                self.logger.info(f"Setting dataset_webpage to DOI URL value: https://doi.org/{val}")
-                                dataset_webpage = f"https://doi.org/{val}"
-                                dataset_id = val
-                            if dataset_id is None:
-                                self.logger.info(f"Setting dataset_id to value: {val}")
-                                dataset_id = val
                             if data_repository is None:
                                 self.logger.info(f"Candidate data_repository: {repo_key}")
                                 data_repository = self.resolve_data_repository(dataset.get('data_repository', 'n/a'),
-                                                           identifier=dataset.get('dataset_identifier', 'n/a'),
-                                                           dataset_page=dataset_webpage,
-                                                           candidate_repo=repo_key)
+                                                            identifier=dataset.get('dataset_identifier', 'n/a'),
+                                                            dataset_page=dataset_webpage,
+                                                            candidate_repo=repo_key)
+                                                            
+                    if 'id_pattern' in repo_vals and type(val) == str:
+                        if re.search(repo_vals['id_pattern'], val, re.IGNORECASE):
+                            self.logger.info(f"Matched id_pattern: {repo_vals['id_pattern']} to value: {val}")
+                            if val.startswith('http'):
+                                if dataset_webpage is None:
+                                    self.logger.info(f"Setting dataset_webpage to value: {val}")
+                                    dataset_webpage = val
+                                ptr_sub = f'\b({repo_vals["id_pattern"]})'
+                                self.logger.info(f"Using id_pattern to extract ID: {ptr_sub}")
+                                match = re.search(ptr_sub, val, re.IGNORECASE)
+                                if match and dataset_id is None:
+                                    self.logger.info(f"Setting dataset_id to value: {match.group(1)}")
+                                    dataset_id = match.group(1)
+                                self.logger.info(f"Extracted ID: {dataset_id}")
+                            else:
+                                if (val.startswith('10.') or val.startswith('doi:10.')) and dataset_webpage is None:
+                                    self.logger.info(f"Setting dataset_webpage to DOI URL value: https://doi.org/{val}")
+                                    dataset_webpage = f"https://doi.org/{val}"
+                                    dataset_id = val
+                                if dataset_id is None:
+                                    self.logger.info(f"Setting dataset_id to value: {val}")
+                                    dataset_id = val
+                                if data_repository is None:
+                                    self.logger.info(f"Candidate data_repository: {repo_key}")
+                                    data_repository = self.resolve_data_repository(dataset.get('data_repository', 'n/a'),
+                                                            identifier=dataset.get('dataset_identifier', 'n/a'),
+                                                            dataset_page=dataset_webpage,
+                                                            candidate_repo=repo_key)
 
-        self.logger.info(f"Schema validation vals: {dataset_id}, {data_repository}, {dataset_webpage}")
+            self.logger.info(f"Schema validation vals: {dataset_id}, {data_repository}, {dataset_webpage}")
 
-        if dataset_id is None:
-            dataset_id = self.validate_dataset_id(dataset.get('dataset_identifier', 'n/a'))
-        else:
-            self.logger.info(f"Dataset ID found via pattern matching: {dataset_id}")
+            if dataset_id is None:
+                dataset_id = self.validate_dataset_id(dataset.get('dataset_identifier', 'n/a'))
+            else:
+                self.logger.info(f"Dataset ID found via pattern matching: {dataset_id}")
 
-        if data_repository is None:
-            data_repository = self.resolve_data_repository(dataset.get('data_repository','n/a'),
-                                                           identifier=dataset_id,
-                                                           dataset_page=dataset_webpage)
-        else:
-            self.logger.info(f"Data repository found via pattern matching: {data_repository}")
+            if data_repository is None:
+                data_repository = self.resolve_data_repository(dataset.get('data_repository','n/a'),
+                                                            identifier=dataset_id,
+                                                            dataset_page=dataset_webpage)
+            else:
+                self.logger.info(f"Data repository found via pattern matching: {data_repository}")
 
-        if dataset_webpage is None and 'dataset_webpage' in dataset:
-            dataset_webpage = self.validate_dataset_webpage(dataset['dataset_webpage'], data_repository,
-                                                            dataset_id, dataset, req_timeout=req_timeout)
-        elif dataset_webpage is None:
-            self.logger.info(f"Dataset webpage not extracted")
-        else:
-            self.logger.info(f"Dataset webpage found via pattern matching: {dataset_webpage}")
-            dataset_webpage = self.validate_dataset_webpage(dataset_webpage, data_repository,
-                                                            dataset_id, dataset, req_timeout=req_timeout)
-        self.logger.info(f"Final schema validation vals: {dataset_id}, {data_repository}, {dataset_webpage}")
+            if dataset_webpage is None and 'dataset_webpage' in dataset:
+                dataset_webpage = self.validate_dataset_webpage(dataset['dataset_webpage'], data_repository,
+                                                                dataset_id, dataset, req_timeout=req_timeout)
+            elif dataset_webpage is None:
+                self.logger.info(f"Dataset webpage not extracted")
+            else:
+                self.logger.info(f"Dataset webpage found via pattern matching: {dataset_webpage}")
+                dataset_webpage = self.validate_dataset_webpage(dataset_webpage, data_repository,
+                                                                dataset_id, dataset, req_timeout=req_timeout)
+            self.logger.info(f"Final schema validation vals: {dataset_id}, {data_repository}, {dataset_webpage}")
 
-        # Handle list repositories for validation checks
-        repo_check = data_repository
-        if isinstance(data_repository, list):
-            repo_check = data_repository[0] if len(data_repository) > 0 else 'n/a'
+            # Handle list repositories for validation checks
+            repo_check = data_repository
+            if isinstance(data_repository, list):
+                repo_check = data_repository[0] if len(data_repository) > 0 else 'n/a'
 
-        if dataset_id == 'n/a' and repo_check in self.open_data_repos_ontology['repos']:
-            self.logger.info(f"Dataset ID is 'n/a' and repository name from prompt")
-            return None, None, None
+            if dataset_id == 'n/a' and repo_check in self.open_data_repos_ontology['repos']:
+                self.logger.info(f"Dataset ID is 'n/a' and repository name from prompt")
+                return None, None, None
 
-        elif (data_repository == 'n/a' or (isinstance(data_repository, list) and all(r == 'n/a' for r in data_repository))) and dataset_webpage == 'n/a':
-            self.logger.info(f"Data repository is 'n/a', skipping dataset")
-            return None, None, None
+            elif (data_repository == 'n/a' or (isinstance(data_repository, list) and all(r == 'n/a' for r in data_repository))) and dataset_webpage == 'n/a':
+                self.logger.info(f"Data repository is 'n/a', skipping dataset")
+                return None, None, None
 
         return dataset_id, data_repository, dataset_webpage
 
