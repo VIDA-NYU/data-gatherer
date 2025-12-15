@@ -229,6 +229,7 @@ class DataFetcher(ABC):
         """
         match = re.search(r'PMC(\d+)', url, re.IGNORECASE)
         doi = re.search(r'(10\.\d{4,9}/[-._;()/:A-Z0-9]+)', url, re.IGNORECASE)
+        pmid = re.search(r'pubmed\.ncbi\.nlm\.nih\.gov/(\d+)', url, re.IGNORECASE)
         if match:
             pmcid = f"PMC{match.group(1)}"
             self.logger.info(f"Extracted PMC ID: {pmcid}")
@@ -238,6 +239,10 @@ class DataFetcher(ABC):
         elif doi:
             self.current_article_id = doi.group(1)
             return doi.group(1)
+
+        elif pmid:
+            self.current_article_id = pmid.group(1)
+            return pmid.group(1)
 
         else:
             self.logger.warning(f"No PMC ID found in URL: {url}")
@@ -433,6 +438,8 @@ class DataFetcher(ABC):
         :return: True if the URL points to a PDF file, False otherwise.
         """
         self.logger.debug(f"Checking if URL is a PDF: {url}")
+        if not url:
+            return None
         if url.lower().endswith('.pdf'):
             self.logger.info(f"URL {url} ends with .pdf")
             return True

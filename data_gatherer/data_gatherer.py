@@ -1928,4 +1928,13 @@ class DataGatherer:
         except Exception as e:
             self.logger.error(f"Error converting batch response file to DataFrame: {e}", exc_info=True)
             raise
+    
+    def get_params(self) -> Dict[str, Any]:
+        """
+        Get all public attributes and their values from the DataGatherer instance.
+        Uses introspection to dynamically retrieve all non-private attributes.
+
+        :return: Dictionary of all public attributes and their values.
+        """
+        return {attr: getattr(self, attr) for attr in dir(self) if not attr.startswith('_') and not callable(getattr(self, attr))}
         
