@@ -514,7 +514,16 @@ if st.session_state.get("results_ready", False):
                     
                     with col_id:
                         id_text = str(dataset["Dataset ID"])
-                        st.text(id_text[:40] + "..." if len(id_text) > 40 else id_text)
+                        webpage_url = dataset.get("webpage", "")
+                        
+                        # Create clickable link if webpage exists and is valid
+                        if webpage_url and webpage_url != "n/a" and pd.notna(webpage_url):
+                            # Truncate display text if too long
+                            display_text = id_text[:40] + "..." if len(id_text) > 40 else id_text
+                            st.markdown(f"[{display_text}]({webpage_url})", unsafe_allow_html=True)
+                        else:
+                            # Fallback to plain text if no valid URL
+                            st.text(id_text[:40] + "..." if len(id_text) > 40 else id_text)
                     
                     # Parse keywords into list if it's a string
                     desc_value = dataset["Description"]

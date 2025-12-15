@@ -1065,6 +1065,7 @@ class DataGatherer:
                 metadata['access_mode'] = row.get('access_mode', None)
                 metadata['source_section'] = row.get('source_section', row.get('section_class', None))
                 metadata['download_link'] = row.get('download_link', None)
+                metadata['citation_type'] = row.get('citation_type', None)
                 metadata['accession_id'] = row.get('dataset_identifier', None)
                 metadata['data_repository'] = repo_mapping_key
                 metadata['metadata_schema_org'] = metadata_schema_org

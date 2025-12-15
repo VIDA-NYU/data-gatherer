@@ -174,3 +174,4 @@ scripts/output/semantic_search/Train_results.csv
 # Fine-tuned models
 scripts/Local_model_finetuning/flan-t5-models/
 *.safetensors
+scripts/Knowledge_graph/*
