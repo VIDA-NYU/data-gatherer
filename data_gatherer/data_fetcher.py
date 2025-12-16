@@ -306,7 +306,7 @@ class DataFetcher(ABC):
         :param HTML_fallback: If False, use simple HTTP. If True, use Selenium. If 'HTTPGetRequest', force HTTP. If 'Playwright', force Playwright.
         :return: An instance of the appropriate data fetcher with backup capability.
         """
-        self.logger.debug(f"update_DataFetcher_settings for URL: {url}, current instance: {self.__class__.__name__}")
+        self.logger.info(f"update_DataFetcher_settings for URL: {url}, current instance: {self.__class__.__name__}, HTML_fallback={HTML_fallback}")
         self.local_data_used = False
 
         # Determine backup data file
@@ -329,7 +329,7 @@ class DataFetcher(ABC):
         API = None
         if not HTML_fallback:
             API = self.url_to_api_root(url)
-        self.logger.info(f"API detected: {API}")
+        self.logger.info(f"API detected: {API} ")
 
         # Choose fetcher based on content type and availability, all with backup support
         if API == 'PMC':
@@ -407,6 +407,9 @@ class DataFetcher(ABC):
             r'PMC\d+': 'PMC'
         }
 
+        if not url:
+            return None
+
         if not url.startswith('http'):
             for ptr, src in API_ptrs.items():
                 match = re.match(ptr, url, re.IGNORECASE)
@@ -415,9 +418,10 @@ class DataFetcher(ABC):
                     return src
 
         API_supported_url_patterns = {
-            'https://www.ncbi.nlm.nih.gov/pmc/articles/': 'PMC',
-            'https://pmc.ncbi.nlm.nih.gov/': 'PMC',
-            'https://ncbi.nlm.nih.gov/pmc/': 'PMC',
+            r'https*://www.ncbi.nlm.nih.gov/pmc/articles/': 'PMC',
+            r'https*://www.ncbi.nlm.nih.gov/labs/pmc/': 'PMC',
+            r'https*://pmc.ncbi.nlm.nih.gov/': 'PMC',
+            r'https*://ncbi.nlm.nih.gov/pmc/': 'PMC',
         }
 
         # Check if the URL corresponds to any API_supported_url_patterns
@@ -494,13 +498,74 @@ class DataFetcher(ABC):
             self.logger.info("No cookie pattern 1 found in HTML")
         return html
 
+    def get_PMCID_from_pubmed_html(self, html):
+        try:
+            soup = BeautifulSoup(html, 'html.parser')
+            # Extract PMC ID
+            pmc_tag = soup.find("a", {"data-ga-action": "PMCID"})
+            pmc_id = pmc_tag.text.strip() if pmc_tag else None  # Extract text safely
+            self.logger.info(f"PMCID: {pmc_id}")
+            return pmc_id
+        except Exception as e:
+            self.logger.error(f"Error extracting PMCID from HTML: {e}")
+            return None
+
+    def get_doi_from_pubmed_html(self, html):
+        try:
+            soup = BeautifulSoup(html, 'html.parser')
+            # Extract DOI
+            doi_tag = soup.find("a", {"data-ga-action": "DOI"})
+            doi = doi_tag.text.strip() if doi_tag else None  # Extract text safely
+            self.logger.info(f"DOI: {doi}")
+            return doi
+        except Exception as e:
+            self.logger.error(f"Error extracting DOI from HTML: {e}")
+            return None
+
+    def redirect_if_needed(self, url):
+        """
+        Follows redirects for the given URL and returns the final URL.
+
+        :param url: The initial URL.
+        :return: The final URL after following redirects.
+        """
+        # Handle None or empty URLs
+        if not url:
+            return url
+        
+        # if pumbmed url, follow redirects to get final URL
+        if re.match(r'^https?://pubmed\.ncbi\.nlm\.nih\.gov/[\d]+', url):
+            try:
+                response = requests.get(url, timeout=1)
+                html = response.text
+                pmc_id = self.get_PMCID_from_pubmed_html(html)
+                if pmc_id:
+                    final_url = self.PMCID_to_url(pmc_id)
+                    self.logger.info(f"Redirected PubMed URL to PMC URL: {final_url}")
+                    return final_url
+                doi = self.get_doi_from_pubmed_html(html)
+                if doi:
+                    final_url = f"https://doi.org/{doi}"
+                    self.logger.info(f"Redirected PubMed URL to DOI URL: {final_url}")
+                    return final_url
+
+            except requests.RequestException as e:
+                self.logger.warning(f"Failed to follow redirects for PubMed URL {url}: {e}")
+        elif re.match(r'^https?://www\.ncbi\.nlm\.nih\.gov/pmc/articles/pmid/[\d]+', url):
+            try:
+                return requests.get(url, allow_redirects=True, timeout=0.2).url
+            except requests.RequestException as e:
+                self.logger.warning(f"Failed to follow redirects for PMC URL {url}: {e}")
+        return url
 
 class HttpGetRequest(DataFetcher):
     "class for fetching data via HTTP GET requests using the requests library."
     def __init__(self, logger):
         super().__init__(logger, src='HttpGetRequest')
         self.session = requests.Session()
-        self.logger.debug("HttpGetRequest initialized.")
+        # Keep default requests User-Agent - many sites (like PubMed) allow it
+        # but block fake browser User-Agents with incomplete fingerprints
+        self.logger.debug("HttpGetRequest initialized with default requests headers.")
         self.raw_data_format = 'HTML'
 
     def fetch_data(self, url, retries=3, delay=0.2, **kwargs):
@@ -534,7 +599,8 @@ class HttpGetRequest(DataFetcher):
             time.sleep(delay/2)
             try:
                 self.logger.info(f"HTTP GET attempt {attempt + 1} of {retries}")
-                response = self.session.get(url, headers={"User-Agent": "Mozilla/5.0"})
+                # Session already has headers set in __init__, no need to override
+                response = self.session.get(url, timeout=30)
                 response.raise_for_status()  # Raise an error for bad responses
                 self.raw_data_format = 'HTML' if 'text/html' in response.headers.get('Content-Type', '') else 'Other'
                 return response.text
@@ -795,22 +861,6 @@ class WebScraper(DataFetcher):
         except Exception as e:
             self.logger.error(f"Error extracting publication title: {e}")
             return "No title found"
-
-    def get_PMCID_from_pubmed_html(self, html):
-        soup = BeautifulSoup(html, 'html.parser')
-        # Extract PMC ID
-        pmc_tag = soup.find("a", {"data-ga-action": "PMCID"})
-        pmc_id = pmc_tag.text.strip() if pmc_tag else None  # Extract text safely
-        self.logger.info(f"PMCID: {pmc_id}")
-        return pmc_id
-
-    def get_doi_from_pubmed_html(self, html):
-        soup = BeautifulSoup(html, 'html.parser')
-        # Extract DOI
-        doi_tag = soup.find("a", {"data-ga-action": "DOI"})
-        doi = doi_tag.text.strip() if doi_tag else None  # Extract text safely
-        self.logger.info(f"DOI: {doi}")
-        return doi
 
     def get_opendata_from_pubmed_id(self, pmid):
         """
@@ -1618,7 +1668,7 @@ class PdfFetcher(DataFetcher):
         # Create directory if it doesn't exist
         os.makedirs(directory, exist_ok=True)
 
-        src_url = re.sub('\.pdf\s*$', '', src_url)
+        src_url = re.sub(r'\.pdf\s*$', '', src_url)
         
         fn = os.path.join(directory, f"{self.url_to_filename(src_url)}.pdf")
 

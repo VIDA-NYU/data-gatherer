@@ -147,7 +147,7 @@ class DataGatherer:
         write_htmls_xmls=False,
         article_file_dir='scripts/tmp/raw_files/',
         write_df_to_path=False,
-        sects_required=5,
+        sects_required=1,
         HTML_fallback_priority_list=['HTTPGetRequest', 'Selenium']
         ):
         """
@@ -200,6 +200,8 @@ class DataGatherer:
                 self.logger.info(f"length of complete fetches < urls: {len(complete_publication_fetches)} < {len(urls)}")
                 if pub_link in complete_publication_fetches:
                     continue
+                
+                pub_link = self.data_fetcher.redirect_if_needed(pub_link)
 
                 # Update fetcher settings for this method and publication
                 self.data_fetcher = self.data_fetcher.update_DataFetcher_settings(
