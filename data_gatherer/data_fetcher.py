@@ -219,7 +219,7 @@ class DataFetcher(ABC):
             self.logger.warning("No valid root extracted from URL. This may cause issues with data gathering.")
             return 'Unknown Publisher'
 
-    def url_to_pmcid(self, url):
+    def url_to_article_id(self, url, return_only_known_ids=False):
         """
         Extracts the PMC ID from a given URL.
 
@@ -229,7 +229,7 @@ class DataFetcher(ABC):
         """
         match = re.search(r'PMC(\d+)', url, re.IGNORECASE)
         doi = re.search(r'(10\.\d{4,9}/[-._;()/:A-Z0-9]+)', url, re.IGNORECASE)
-        pmid = re.search(r'pubmed\.ncbi\.nlm\.nih\.gov/(\d+)', url, re.IGNORECASE)
+        pmid = re.search(r'ncbi\.nlm\.nih\.gov/.*/(\d+)', url, re.IGNORECASE) 
         if match:
             pmcid = f"PMC{match.group(1)}"
             self.logger.info(f"Extracted PMC ID: {pmcid}")
@@ -245,6 +245,9 @@ class DataFetcher(ABC):
             return pmid.group(1)
 
         else:
+            if not return_only_known_ids:
+                self.current_article_id = url.split("/")[-1] if not url.endswith('/') else url.split("/")[-2] 
+                return self.current_article_id
             self.logger.warning(f"No PMC ID found in URL: {url}")
             self.current_article_id = None
             return None
@@ -534,7 +537,9 @@ class DataFetcher(ABC):
             return url
         
         # if pumbmed url, follow redirects to get final URL
-        if re.match(r'^https?://pubmed\.ncbi\.nlm\.nih\.gov/[\d]+', url):
+        if re.match(r'^https?://pubmed\.ncbi\.nlm\.nih\.gov/[\d]+', url) or re.match(
+            r'^https?://www\.ncbi\.nlm\.nih\.gov/pubmed/[\d]+', url) or re.match(
+                r'^https?://www\.ncbi\.nlm\.nih\.gov/pmc/articles/pmid/[\d]+', url):
             try:
                 response = requests.get(url, timeout=1)
                 html = response.text
@@ -551,11 +556,7 @@ class DataFetcher(ABC):
 
             except requests.RequestException as e:
                 self.logger.warning(f"Failed to follow redirects for PubMed URL {url}: {e}")
-        elif re.match(r'^https?://www\.ncbi\.nlm\.nih\.gov/pmc/articles/pmid/[\d]+', url):
-            try:
-                return requests.get(url, allow_redirects=True, timeout=0.2).url
-            except requests.RequestException as e:
-                self.logger.warning(f"Failed to follow redirects for PMC URL {url}: {e}")
+
         return url
 
 class HttpGetRequest(DataFetcher):
@@ -578,7 +579,7 @@ class HttpGetRequest(DataFetcher):
         :return: The raw content of the page.
         """
         # Try backup data FIRST (microsecond lookup)
-        article_id = self.url_to_pmcid(url)
+        article_id = self.url_to_article_id(url)
         self.article_id = article_id
         if article_id and hasattr(self, 'backup_store') and self.backup_store is not None:
             backup_data = self.try_backup_fetch(article_id)
@@ -635,7 +636,7 @@ class HttpGetRequest(DataFetcher):
         if directory[-1] != '/':
             directory += '/'
 
-        article_id = self.url_to_filename(self.url_to_pmcid(url))
+        article_id = self.url_to_filename(self.url_to_article_id(url))
         pub_fname = self.url_to_filename(pub_name)
 
         fn = directory + f"{article_id}__{pub_fname}.html"
@@ -727,7 +728,7 @@ class WebScraper(DataFetcher):
         self.raw_data_format = 'HTML'  # Default format for web scraping
         
         # Try backup data FIRST (microsecond lookup)
-        article_id = self.url_to_pmcid(url)
+        article_id = self.url_to_article_id(url)
         self.article_id = article_id
         if article_id and hasattr(self, 'backup_store') and self.backup_store is not None:
             backup_data = self.try_backup_fetch(article_id)
@@ -805,7 +806,7 @@ class WebScraper(DataFetcher):
         if directory[-1] != '/':
             directory += '/'
 
-        pmcid = self.url_to_pmcid(pub_link)
+        pmcid = self.url_to_article_id(pub_link)
 
         fn = directory + f"{pmcid}__{pub_name}.html"
         self.logger.info(f"Downloading HTML page source to {fn}")
@@ -1071,7 +1072,7 @@ class EntrezFetcher(DataFetcher):
 
         os.makedirs(directory, exist_ok=True)  # Ensure directory exists
         # Construct the file path
-        pmcid = self.url_to_pmcid(pub_link)
+        pmcid = self.url_to_article_id(pub_link)
         title = self.extract_publication_title(api_data)
         title = re.sub(r'[\\/:*?"<>|]', '_', title)  # Replace invalid characters in filename
 
@@ -1202,7 +1203,7 @@ class PlaywrightFetcher(DataFetcher):
         self.raw_data_format = 'HTML'
         
         # Try backup data FIRST (microsecond lookup)
-        article_id = self.url_to_pmcid(url)
+        article_id = self.url_to_article_id(url)
         self.article_id = article_id
         if article_id and hasattr(self, 'backup_store') and self.backup_store is not None:
             backup_data = self.try_backup_fetch(article_id)
@@ -1492,7 +1493,7 @@ class PlaywrightFetcher(DataFetcher):
         pub_name = re.sub(r'[\s-]+PMC\s*$', '', pub_name)
         
         # Get PMCID
-        pmcid = self.url_to_pmcid(pub_link) if pub_link else "unknown"
+        pmcid = self.url_to_article_id(pub_link) if pub_link else "unknown"
         
         if directory[-1] != '/':
             directory += '/'

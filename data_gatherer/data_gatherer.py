@@ -188,14 +188,12 @@ class DataGatherer:
             single_article = True
 
         complete_publication_fetches = {}
-        i = None
+        i = 0
 
-        while len(complete_publication_fetches) < len(urls):
-            HTML_fallback = False if i is None else HTML_fallback_priority_list[i]
-            self.logger.info(f"Fetch attempt with HTML_fallback={HTML_fallback}...")
-            i = 0 if i is None else i + 1
-            if i >= len(HTML_fallback_priority_list):
-                break
+        while len(complete_publication_fetches) < len(urls) and i <= len(HTML_fallback_priority_list):
+            current_fallback = False if i == 0 else HTML_fallback_priority_list[i - 1]
+            self.logger.info(f"Fetch attempt with HTML_fallback={current_fallback}...")
+            
             for pub_link in urls:
                 self.logger.info(f"length of complete fetches < urls: {len(complete_publication_fetches)} < {len(urls)}")
                 if pub_link in complete_publication_fetches:
@@ -207,18 +205,22 @@ class DataGatherer:
                 self.data_fetcher = self.data_fetcher.update_DataFetcher_settings(
                     pub_link,
                     local_fetch_file=local_fetch_file,
-                    HTML_fallback=HTML_fallback,
+                    HTML_fallback=current_fallback,
                     driver_path=driver_path,
                     browser=browser,
                     headless=headless
                 )
 
-                # Fetch data
-                fetched_data = self.data_fetcher.fetch_data(pub_link, write_raw_data=write_htmls_xmls)
-                self.logger.info(f"Raw_data_format: {self.data_fetcher.raw_data_format}, Type of fetched data: {type(fetched_data)}")
+                # Fetch data with error handling
+                try:
+                    fetched_data = self.data_fetcher.fetch_data(pub_link, write_raw_data=write_htmls_xmls)
+                    self.logger.info(f"Raw_data_format: {self.data_fetcher.raw_data_format}, Type of fetched data: {type(fetched_data)}")
+                except Exception as e:
+                    self.logger.error(f"Error fetching data from {pub_link} with {current_fallback}: {e}")
+                    fetched_data = None
                 
                 if fetched_data is None:
-                    self.logger.warning(f"Failed to fetch data from {pub_link}. Skipping.")
+                    self.logger.warning(f"Failed to fetch data from {pub_link}. Will try next fallback method if available.")
                     continue
                 
                 self.completeness_check = self.data_checker.is_fulltext_complete(fetched_data, pub_link, self.data_fetcher.raw_data_format, required_sections=sects_required)
@@ -229,7 +231,7 @@ class DataGatherer:
                         'fetched_data': fetched_data,
                         'raw_data_format': self.data_fetcher.raw_data_format
                     }
-                elif HTML_fallback == 'Selenium':
+                elif current_fallback == 'Selenium':
                     self.logger.info(f"Selenium fetch the final fulltext {pub_link}.")
                     complete_publication_fetches[pub_link] = {
                         'fetched_data': fetched_data, 
@@ -242,7 +244,7 @@ class DataGatherer:
                 if write_htmls_xmls and not self.data_fetcher.local_data_used:
                     publisher = self.data_fetcher.url_to_publisher_domain(pub_link)
                     directory = os.path.join(article_file_dir, publisher)
-                    if HTML_fallback == 'Selenium':
+                    if current_fallback == 'Selenium':
                         self.data_fetcher.html_page_source_download(directory, pub_link)
                     elif self.data_fetcher.raw_data_format == "HTML" and self.completeness_check:
                         self.data_fetcher.html_page_source_download(directory, pub_link, fetched_data)
@@ -258,6 +260,9 @@ class DataGatherer:
                                 }
                     else:
                         self.logger.warning(f"Unsupported raw data format: {self.data_fetcher.raw_data_format}.")
+            
+            # Move to next fallback method
+            i += 1
 
         # Clean up driver if needed
         if hasattr(self.data_fetcher, 'scraper_tool'):
@@ -436,7 +441,7 @@ class DataGatherer:
                                       response_format=response_format,
                                       dedup=dedup,
                                       brute_force_RegEx_ID_ptrs=brute_force_RegEx_ID_ptrs,
-                                      article_id=self.data_fetcher.url_to_pmcid(current_url_address)
+                                      article_id=self.data_fetcher.url_to_article_id(current_url_address)
                                       )
 
         if isinstance(ret, pd.DataFrame):
@@ -581,11 +586,12 @@ class DataGatherer:
         self.publisher = self.data_fetcher.url_to_publisher_domain(url)
         self.full_document_read = full_document_read or self.full_document_read or (self.parser is not None and self.parser.full_document_read)
 
+        url = self.data_fetcher.redirect_if_needed(url)
         self.data_fetcher = self.data_fetcher.update_DataFetcher_settings(url, driver_path=driver_path, browser=browser,
                                                                           headless=headless, HTML_fallback=HTML_fallback)
         self.logger.info(f"Type of data_fetcher {self.data_fetcher.__class__.__name__}")
 
-        article_id = self.url_to_article_id(url)
+        article_id = self.data_fetcher.url_to_article_id(url)
         if self.full_document_read:
             process_id = self.llm + "-FDR-" + article_id
         elif semantic_retrieval:
@@ -995,7 +1001,7 @@ class DataGatherer:
             dataset_webpage, download_link = self.metadata_parser.extract_normalized_dataset_urls(row)
 
             dataset_webpage_id = self.url_to_page_id(dataset_webpage) if dataset_webpage is not None else None
-            paper_id = self.url_to_article_id(row['source_url']) if 'source_url' in row else 'unknown_paper_id'
+            paper_id = self.data_fetcher.url_to_article_id(row['source_url']) if 'source_url' in row else 'unknown_paper_id'
 
             if dataset_webpage is None and download_link is None:
                 self.logger.info(f"Row {i} does not contain 'dataset_webpage' or 'download_link'. Skipping...")
@@ -1283,17 +1289,6 @@ class DataGatherer:
             article_id = article_id[:-1]
         return article_id
     
-    def url_to_article_id(self, url):
-        if self.data_fetcher:
-            pmcid = self.data_fetcher.url_to_pmcid(url)
-            if pmcid:
-                return pmcid
-            doi = self.data_fetcher.url_to_doi(url)
-            if doi:
-                return self.url_to_page_id(doi)
-        
-        self.logger.warning(f"Could not extract article ID from URL: {url}")
-
     def save_func_output_to_cache(self, output, process_id, function_name):
         """
         Save output to cache file in a thread/process-safe and atomic way.
@@ -1623,7 +1618,7 @@ class DataGatherer:
                         data = fetched_data[url]
                         
                         article_title = ''
-                        pmcid = self.data_fetcher.url_to_pmcid(url)
+                        pmcid = self.data_fetcher.url_to_article_id(url)
                         article_id = self.url_to_page_id(url)
                         timestamp = int(time.time() * 1000)
                         if url2id_mapping is None:                            
@@ -1659,7 +1654,7 @@ class DataGatherer:
                                 top_k=top_k,
                                 skip_rule_based_retrieved_elm=dedup,
                                 include_snippets_with_ID_patterns=brute_force_RegEx_ID_ptrs,
-                                article_id=self.data_fetcher.url_to_pmcid(url)
+                                article_id=self.data_fetcher.url_to_article_id(url)
                             )
                             normalized_input = data_availability_str
 
