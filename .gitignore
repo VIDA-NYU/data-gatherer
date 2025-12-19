@@ -177,3 +177,4 @@ scripts/Local_model_finetuning/flan-t5-models/
 scripts/Knowledge_graph/*
 scripts/NYU_data_catalog/*.jsonl
 scripts/NYU_data_catalog/*.csv
+scripts/Local_model_finetuning/ground_truth/gt_dataset_info_no_dspage_extraction_from_snippet.csv
