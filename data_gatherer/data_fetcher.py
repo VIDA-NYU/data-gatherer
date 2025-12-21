@@ -105,6 +105,7 @@ class DataFetcher(ABC):
         self.headless = headless
         self.src = src
         self.local_data_used = False
+        self.redirect_mapping = {}
         
         if hasattr(self, 'backup_store') and self.backup_store is not None:
             self.logger.debug("Using existing BackupDataStore instance.")
@@ -503,6 +504,7 @@ class DataFetcher(ABC):
 
     def get_PMCID_from_pubmed_html(self, html):
         try:
+            self.logger.info(f"html: {html}")
             soup = BeautifulSoup(html, 'html.parser')
             # Extract PMC ID
             pmc_tag = soup.find("a", {"data-ga-action": "PMCID"})
@@ -536,22 +538,29 @@ class DataFetcher(ABC):
         if not url:
             return url
         
+        self.logger.info(f"url to redirect: {url}")
+        
         # if pumbmed url, follow redirects to get final URL
         if re.match(r'^https?://pubmed\.ncbi\.nlm\.nih\.gov/[\d]+', url) or re.match(
             r'^https?://www\.ncbi\.nlm\.nih\.gov/pubmed/[\d]+', url) or re.match(
-                r'^https?://www\.ncbi\.nlm\.nih\.gov/pmc/articles/pmid/[\d]+', url):
+            r'^https?://www\.ncbi\.nlm\.nih\.gov/pmc/articles/pmid/[\d]+', url) or re.match(
+            r'^https?://pmc\.ncbi\.nlm\.nih\.gov/pmc/articles/pmid/[\d]+', url):
             try:
-                response = requests.get(url, timeout=1)
+                self.logger.info(f"1")
+                response = requests.get(url, timeout=0.3)
+                self.logger.info(f"2: {response.url}")
                 html = response.text
                 pmc_id = self.get_PMCID_from_pubmed_html(html)
                 if pmc_id:
                     final_url = self.PMCID_to_url(pmc_id)
                     self.logger.info(f"Redirected PubMed URL to PMC URL: {final_url}")
+                    self.redirect_mapping[url] = final_url
                     return final_url
                 doi = self.get_doi_from_pubmed_html(html)
                 if doi:
                     final_url = f"https://doi.org/{doi}"
                     self.logger.info(f"Redirected PubMed URL to DOI URL: {final_url}")
+                    self.redirect_mapping[url] = final_url
                     return final_url
 
             except requests.RequestException as e:

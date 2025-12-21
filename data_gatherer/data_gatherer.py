@@ -503,12 +503,20 @@ class DataGatherer:
     def preprocess_url(self, url):
         if url.upper().startswith("PMC"):
             return self.PMCID_to_URL(url)
-        elif url.lower().startswith("https://"):
+        elif url.lower().startswith("https://") or url.lower().startswith("http://"):
             return url
+        elif url.startswith("10."):
+            return "https://doi.org/" + url
         elif os.path.isfile(url):
             return url
         else:
-            raise ValueError(f"Invalid URL format: {url}. Must start with 'PMC' or 'https://'.")
+            raise ValueError(f"Invalid URL format: {url}. Must start with 'PMC' or 'http' or 10. (doi) or be a valid file path.")
+
+    def retrieve_dataset_context(self, full_paper, dataset_ID_ptrs=None, dataset_info=None, force_include_DAS=False):
+        """
+        Retrieve context for datasets using the parser's retrieval method. Use-case: AutoDDG
+        """
+        return self.parser.retrieve_relevant_content(full_paper, ID_patterns=dataset_ID_ptrs, query=dataset_info, force_include_DAS=force_include_DAS)
 
     def process_url(
         self, 
@@ -580,13 +588,13 @@ class DataGatherer:
         :return: DataFrame of classified links or None if an error occurs.
         """
         self.logger.info(f"Processing URL: {url}")
+        url = self.data_fetcher.redirect_if_needed(url)
         url = self.preprocess_url(url)
         self.current_url = url
         self.write_htmls_xmls = write_htmls_xmls or self.write_htmls_xmls
         self.publisher = self.data_fetcher.url_to_publisher_domain(url)
         self.full_document_read = full_document_read or self.full_document_read or (self.parser is not None and self.parser.full_document_read)
 
-        url = self.data_fetcher.redirect_if_needed(url)
         self.data_fetcher = self.data_fetcher.update_DataFetcher_settings(url, driver_path=driver_path, browser=browser,
                                                                           headless=headless, HTML_fallback=HTML_fallback)
         self.logger.info(f"Type of data_fetcher {self.data_fetcher.__class__.__name__}")

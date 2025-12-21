@@ -120,7 +120,7 @@ class LLMParser(ABC):
     def reconstruct_download_link(self, href, content_type, current_url_address):
         download_link = None
         self.logger.debug(f"Function_call: reconstruct_download_link({href}, {content_type}, {current_url_address})")
-        if self.publisher == 'PMC' and 'pmc' in current_url_address.lower():
+        if self.publisher == 'PMC' and re.search(r'PMC(\d+)', current_url_address, re.IGNORECASE):
             PMCID = re.search(r'PMC(\d+)', current_url_address, re.IGNORECASE).group(1)
             self.logger.debug(
                 f"Inputs to reconstruct_download_link: {href}, {content_type}, {current_url_address}, {PMCID}")
@@ -293,8 +293,8 @@ Files:
         n_tokens_static_prompt = self.count_tokens(static_prompt, model)
 
         if 'gpt' in model:
-            tokens_cnt = self.count_tokens(content)
-            if tokens_cnt > int(1.2 * 128000):
+            tokens_cnt = self.count_tokens(content, model) + n_tokens_static_prompt
+            if tokens_cnt > int(1.25 * 128000):
                 return self.extract_datasets_info_from_chunks(
                     content, tokens_cnt, repos, model, temperature, prompt_name,full_document_read,response_format)
                 
@@ -1351,16 +1351,18 @@ Files:
 
     def tokens_over_limit(self, html_cont: str, model="gpt-4", limit=128000, allowance_static_prompt=200):
         # Use tiktoken only for OpenAI models, fallback to rough estimate for others
-        if 'gpt-4' in model:
+        if 'gpt' in model:
             encoding = tiktoken.encoding_for_model(model)
             tokens = encoding.encode(html_cont)
             self.logger.info(f"Number of tokens: {len(tokens)}")
-            return len(tokens) + int(allowance_static_prompt * 1.25) > limit
-        else:
-            # Rough estimate: 1 token ≈ 4 characters
-            n_tokens = len(html_cont) // 4
-            self.logger.info(f"Estimated number of tokens for model '{model}': {n_tokens}")
-            return n_tokens + int(allowance_static_prompt * 1.25) > limit
+            # Use 1.5x allowance to account for message formatting overhead
+            return len(tokens) + int(allowance_static_prompt * 1.5) > limit - 2000
+        elif 'gemini' in model:
+            limit = 1000000
+        # Rough estimate: 1 token ≈ 4 characters
+        n_tokens = len(html_cont) // 4
+        self.logger.info(f"Estimated number of tokens for model '{model}': {n_tokens}")
+        return n_tokens + int(allowance_static_prompt * 1.5) > limit - 2000
 
     def count_tokens(self, prompt, model="gpt-4o-mini") -> int:
         """
@@ -1517,11 +1519,12 @@ Files:
         return result
 
     def retrieve_relevant_content(self, data, semantic_retrieval=True, top_k=5, article_id=None, max_tokens=None, skip_rule_based_retrieved_elm=False,
-                                  include_snippets_with_ID_patterns=False, output_format='text'):
+                                  include_snippets_with_ID_patterns=False, output_format='text', query=None, ID_patterns=None, force_include_DAS=True):
 
         self.logger.debug(f"Function call: retrieve_relevant_content(semantic_retrieval={semantic_retrieval}, top_k={top_k}, article_id={article_id}, max_tokens={max_tokens}, skip_rule_based_retrieved_elm={skip_rule_based_retrieved_elm}, include_snippets_with_ID_patterns={include_snippets_with_ID_patterns}, output_format={output_format})")
 
-        data_avail_cont = self.get_data_availability_text(data)
+        data_avail_cont = self.get_data_availability_text(data) if force_include_DAS else []
+        self.id_patterns = ID_patterns if ID_patterns is not None else self.id_patterns
         ret_lst = data_avail_cont.copy()
         top_k_sections, docs_matching_id_ptr = [], []
 
@@ -1529,7 +1532,7 @@ Files:
             self.logger.info(f"Performing semantic retrieval for relevant content")
             all_sections = self.extract_sections_from_text(data)
             corpus = self.from_sections_to_corpus(all_sections, max_tokens=max_tokens, skip_rule_based_retrieved_elm=skip_rule_based_retrieved_elm)
-            top_k_sections = self.semantic_retrieve_from_corpus(corpus, topk_docs_to_retrieve=top_k, src=article_id)
+            top_k_sections = self.semantic_retrieve_from_corpus(corpus, topk_docs_to_retrieve=top_k, src=article_id, query=query)
             top_k_sections_text = [item['text'] for item in top_k_sections if item['text'] not in ret_lst]
             ret_lst.extend(top_k_sections_text)  # Use extend() instead of append() to add individual strings
         
