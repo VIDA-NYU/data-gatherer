@@ -504,7 +504,7 @@ class DataFetcher(ABC):
 
     def get_PMCID_from_pubmed_html(self, html):
         try:
-            self.logger.info(f"html: {html}")
+            self.logger.debug(f"html: {html}")
             soup = BeautifulSoup(html, 'html.parser')
             # Extract PMC ID
             pmc_tag = soup.find("a", {"data-ga-action": "PMCID"})
@@ -547,7 +547,7 @@ class DataFetcher(ABC):
             r'^https?://pmc\.ncbi\.nlm\.nih\.gov/pmc/articles/pmid/[\d]+', url):
             try:
                 self.logger.info(f"1")
-                response = requests.get(url, timeout=0.3)
+                response = requests.get(url, timeout=3)
                 self.logger.info(f"2: {response.url}")
                 html = response.text
                 pmc_id = self.get_PMCID_from_pubmed_html(html)

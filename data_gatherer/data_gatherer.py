@@ -1589,6 +1589,7 @@ class DataGatherer:
         """
 
         self.logger.info(f"Starting integrated batch processing for {len(url_list)} URLs")
+        self.custom_id_to_source_url = {}
         
         try:
             # Step 1: Fetch data
@@ -1611,10 +1612,11 @@ class DataGatherer:
             self.logger.debug(f"Detailed fetched data: {fetched_data}")
             
             # Step 2: Prepare batch requests for LLMClient (parser per URL)
-            
+            supplementary_material_metadata = pd.DataFrame()
             batch_requests, cnt, last_url_raw_data_format = [], 0, False
             for url_raw_data_format, vals in format_counts.items():
                 for url in vals['urls']:
+                    url = self.data_fetcher.redirect_mapping.get(url, url)
                     try:                        
                         if cnt != 0 and url_raw_data_format == last_url_raw_data_format:
                             self.logger.info(f"Reusing existing parser of name: {self.parser.__class__.__name__}")
@@ -1622,6 +1624,9 @@ class DataGatherer:
                             self.logger.info(f"Creating new parser for format: {url_raw_data_format}")
                             self.init_parser_by_input_type(url_raw_data_format, fetched_data[url], embeddings_retriever_model, 
                             use_portkey, grobid_for_pdf, self.full_document_read)
+                        
+                        self.parser.publisher = self.data_fetcher.url_to_publisher_domain(url)
+
                                          
                         data = fetched_data[url]
                         
@@ -1634,6 +1639,8 @@ class DataGatherer:
                             custom_id = re.sub(r'[^a-zA-Z0-9_-]', '_', custom_id)[:64]
                         else:
                             custom_id = url2id_mapping[url]
+                        
+                        self.custom_id_to_source_url[custom_id] = url
 
                         if self.full_document_read:
                             if url_raw_data_format.upper() == 'XML':
@@ -1689,6 +1696,11 @@ class DataGatherer:
                             }
                         }
                         
+                        supplementary_material_links = self.parser.extract_href_from_supplementary_material(data['fetched_data'], url)
+                        concat_df = self.parser.extract_supplementary_material_refs(data['fetched_data'], supplementary_material_links)
+                        concat_df['url'] = url
+                        supplementary_material_metadata = pd.concat([concat_df,supplementary_material_metadata])
+                        
                         batch_requests.append(batch_request)
                         
                     except Exception as e:
@@ -1698,7 +1710,11 @@ class DataGatherer:
                     last_url_raw_data_format = url_raw_data_format
                     cnt+=1
             
+            supplementary_material_metadata.to_csv('scripts/NYU_data_catalog/supplementary_materials_metadata.csv', index=False)
             self.logger.info(f"Prepared {len(batch_requests)} batch requests")
+
+            with open("scripts/NYU_data_catalog/custom_id_src_mapping.json", "w") as f:
+                 json.dump(self.custom_id_to_source_url, f, indent=4)
             
             # Step 3: Use LLMClient to handle batch processing
             self.logger.info("Step 3: Creating batch file using LLMClient...")
@@ -1913,6 +1929,8 @@ class DataGatherer:
                         pmc_match = re.search(r'PMC(\d+)', custom_id, re.IGNORECASE)
                         if pmc_match:
                             dataset['source_url'] = f'https://www.ncbi.nlm.nih.gov/pmc/articles/PMC{pmc_match.group(1)}/'
+                    elif custom_id in self.custom_id_to_source_url:
+                        dataset['source_url'] = self.custom_id_to_source_url[custom_id]
                     
                     processed_datasets.append(dataset)
             
