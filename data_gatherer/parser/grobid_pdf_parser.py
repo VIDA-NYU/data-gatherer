@@ -298,3 +298,13 @@ class GrobidPDFParser(PDFParser):
 
     def extract_publication_title(self, root):
         return self._tei_parser.extract_publication_title(root)
+
+    def extract_href_from_supplementary_material(self, root, current_url_address):
+        if isinstance(root, str):
+            root = etree.fromstring(root.encode('utf-8'))
+        return self._tei_parser.extract_href_from_supplementary_material(root, current_url_address)
+
+    def extract_supplementary_material_refs(self, root, supplementary_material_links):
+        if isinstance(root, str):
+            root = etree.fromstring(root.encode('utf-8'))
+        return self._tei_parser.extract_supplementary_material_refs(root, supplementary_material_links)

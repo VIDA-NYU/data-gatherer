@@ -97,7 +97,7 @@ class BackupDataStore:
 # Abstract base class for fetching data
 class DataFetcher(ABC):
     def __init__(self, logger, src='WebScraper', driver_path=None, browser='firefox', headless=True, 
-                 backup_data_file='scripts/exp_input/Local_fulltext_pub_REV.parquet'):
+                 backup_file='scripts/exp_input/Local_fulltext_pub_REV.parquet'):
         self.logger = logger
         self.logger.debug(f"DataFetcher ({src}) initialized.")
         self.driver_path = driver_path
@@ -106,16 +106,18 @@ class DataFetcher(ABC):
         self.src = src
         self.local_data_used = False
         self.redirect_mapping = {}
+
+        self.logger.debug(f"Setting up BackupDataStore with file: {backup_file}")
         
         if hasattr(self, 'backup_store') and self.backup_store is not None:
             self.logger.debug("Using existing BackupDataStore instance.")
         else:
-            if backup_data_file and os.path.exists(backup_data_file):
-                self.backup_store = BackupDataStore(filepath=backup_data_file, logger=self.logger)
+            if backup_file and os.path.exists(backup_file):
+                self.backup_store = BackupDataStore(filepath=backup_file, logger=self.logger)
                 stats = self.backup_store.get_stats()
                 self.logger.info(f"Backup data store initialized: {stats['size']} publications, valid: {stats['valid']}")
             else:
-                self.logger.info(f"No backup data available at {backup_data_file}")
+                self.logger.info(f"No backup data available at {backup_file}")
     
     def try_backup_fetch(self, identifier):
         """
@@ -247,7 +249,13 @@ class DataFetcher(ABC):
 
         else:
             if not return_only_known_ids:
-                self.current_article_id = url.split("/")[-1] if not url.endswith('/') else url.split("/")[-2] 
+                article_id, i = '', 0
+                while len(article_id) < 6:
+                    i+=1
+                    article_id = url.split("/")[-i]
+
+                self.current_article_id = article_id
+                
                 return self.current_article_id
             self.logger.warning(f"No PMC ID found in URL: {url}")
             self.current_article_id = None
@@ -310,11 +318,13 @@ class DataFetcher(ABC):
         :param HTML_fallback: If False, use simple HTTP. If True, use Selenium. If 'HTTPGetRequest', force HTTP. If 'Playwright', force Playwright.
         :return: An instance of the appropriate data fetcher with backup capability.
         """
-        self.logger.info(f"update_DataFetcher_settings for URL: {url}, current instance: {self.__class__.__name__}, HTML_fallback={HTML_fallback}")
+        self.logger.info(f"update_DataFetcher_settings for URL: {url}, current instance: {self.__class__.__name__}, HTML_fallback={HTML_fallback}, BackupDataFile={local_fetch_file}")
         self.local_data_used = False
 
         # Determine backup data file
         backup_file = local_fetch_file or 'scripts/exp_input/Local_fulltext_pub_REV.parquet'
+
+        self.logger.debug(f"Using backup data file: {backup_file}, current backup store file: {getattr(self, 'backup_store', None)}")
 
         if hasattr(self, 'backup_store') and (self.backup_store is None or self.backup_store._filepath != backup_file):
             self.backup_store = BackupDataStore(filepath=backup_file, logger=self.logger)
@@ -327,7 +337,7 @@ class DataFetcher(ABC):
             if isinstance(self, PdfFetcher):
                 self.logger.info(f"Reusing existing PdfFetcher instance.")
                 return self
-            return PdfFetcher(self.logger, driver_path=driver_path, browser=browser, headless=headless)
+            return PdfFetcher(self.logger, driver_path=driver_path, browser=browser, headless=headless, backup_file=local_fetch_file)
 
         # Detect API type for optimal fetcher selection
         API = None
@@ -342,7 +352,7 @@ class DataFetcher(ABC):
                 self.logger.info(f"Reusing existing EntrezFetcher instance with backup support.")
                 return self
             self.logger.info(f"Creating EntrezFetcher with backup support")
-            return EntrezFetcher(requests, self.logger)
+            return EntrezFetcher(requests, self.logger, backup_file=local_fetch_file)
 
         # For HTTP GET requests (simpler, faster for static content)
         if type(HTML_fallback) == str and HTML_fallback == 'HTTPGetRequest':
@@ -350,7 +360,7 @@ class DataFetcher(ABC):
             if isinstance(self, HttpGetRequest):
                 self.logger.info(f"Reusing existing HttpGetRequest instance.")
                 return self
-            return HttpGetRequest(self.logger)
+            return HttpGetRequest(self.logger, backup_file=local_fetch_file)
         
         use_playwright = False
         if type(HTML_fallback) == str and HTML_fallback == 'Playwright':
@@ -360,7 +370,7 @@ class DataFetcher(ABC):
         if not HTML_fallback:
             # Start with simple HTTP GET (faster, backup-first)
             self.logger.info(f"Using HttpGetRequest (backup-first) for URL: {url}")
-            return HttpGetRequest(self.logger)
+            return HttpGetRequest(self.logger, backup_file=local_fetch_file)
 
         # For complex dynamic content, use Playwright (with asyncio detection)
         if use_playwright:
@@ -378,7 +388,7 @@ class DataFetcher(ABC):
                 return self
             
             self.logger.info(f"Creating new PlaywrightFetcher with backup support: {browser}, headless={headless}, async={in_event_loop}")
-            return PlaywrightFetcher(self.logger, browser_type=browser, headless=headless, use_async=in_event_loop)
+            return PlaywrightFetcher(self.logger, browser_type=browser, headless=headless, use_async=in_event_loop, backup_file=local_fetch_file)
         
         # Default: Use traditional Selenium WebScraper with backup support
         # Reuse existing driver if available
@@ -388,9 +398,9 @@ class DataFetcher(ABC):
 
         self.logger.info(f"Creating new WebScraper with backup support: {browser}, headless={headless}")
         driver = create_driver(driver_path, browser, headless, self.logger)
-        return WebScraper(driver, self.logger, driver_path=driver_path, browser=browser, headless=headless)
+        return WebScraper(driver, self.logger, driver_path=driver_path, browser=browser, headless=headless, backup_file=local_fetch_file)
 
-    def url_in_dataframe(self, url):
+    def url_in_dataframe(self, url, idx='pmcid'):
         """
         Checks if the given doi / pmcid is present in the backup data store.
 
@@ -399,10 +409,19 @@ class DataFetcher(ABC):
         """
         if not self.backup_store:
             return False
-            
-        pmcid = re.search(r'PMC\d+', url, re.IGNORECASE)
-        if pmcid:
-            return self.backup_store.has_publication(pmcid.group(0))
+        
+        if idx == 'pmcid':
+            pmcid = re.search(r'PMC\d+', url, re.IGNORECASE)
+            if pmcid:
+                return self.backup_store.has_publication(pmcid.group(0))
+        elif idx == 'doi':
+            doi = re.search(r'(10\.\d{4,9}/[-._;()/:A-Z0-9]+)', url, re.IGNORECASE)
+            if doi:
+                return self.backup_store.has_publication(doi.group(1))
+        else:
+            # using url as i
+            return self.backup_store.has_publication(url)
+        
         return False
     
     def url_to_api_root(self, url):
@@ -570,8 +589,8 @@ class DataFetcher(ABC):
 
 class HttpGetRequest(DataFetcher):
     "class for fetching data via HTTP GET requests using the requests library."
-    def __init__(self, logger):
-        super().__init__(logger, src='HttpGetRequest')
+    def __init__(self, logger, backup_file='scripts/exp_input/Local_fulltext_pub_REV.parquet'):
+        super().__init__(logger, src='HttpGetRequest', backup_file=backup_file)
         self.session = requests.Session()
         # Keep default requests User-Agent - many sites (like PubMed) allow it
         # but block fake browser User-Agents with incomplete fingerprints
@@ -717,12 +736,13 @@ class WebScraper(DataFetcher):
     Class for fetching data from web pages using Selenium.
     """
     def __init__(self, scraper_tool, logger, retrieval_patterns_file=None, driver_path=None, browser='firefox',
-                 headless=True):
-        super().__init__(logger, src='WebScraper', driver_path=driver_path, browser=browser, headless=headless)
+                 headless=True, backup_file='scripts/exp_input/Local_fulltext_pub_REV.parquet'):
+        super().__init__(logger, src='WebScraper', driver_path=driver_path, browser=browser, headless=headless, backup_file=backup_file)
         self.scraper_tool = scraper_tool  # Inject your scraping tool (Selenium)
         self.driver_path = driver_path
         self.browser = browser
         self.headless = headless
+        self.backup_file = backup_file
         self.logger.debug("WebScraper initialized.")
 
     def fetch_data(self, url, retries=3, delay=2, **kwargs):
@@ -930,8 +950,8 @@ class DatabaseFetcher(DataFetcher):
     Now just a direct interface to the BackupDataStore.
     """
     def __init__(self, logger, raw_HTML_data_filepath=None):
-        # Call parent with backup_data_file parameter
-        super().__init__(logger, src='DatabaseFetcher', backup_data_file=raw_HTML_data_filepath)
+        # Call parent with backup_file parameter
+        super().__init__(logger, src='DatabaseFetcher', backup_file=raw_HTML_data_filepath)
         
         if not raw_HTML_data_filepath or not os.path.exists(raw_HTML_data_filepath):
             raise ValueError("DatabaseFetcher requires a valid raw_HTML_data_filepath.")
@@ -971,7 +991,7 @@ class EntrezFetcher(DataFetcher):
     """
     Class for fetching data from an API using the requests library for ncbi e-utilities API.
     """
-    def __init__(self, api_client, logger):
+    def __init__(self, api_client, logger, backup_file='scripts/exp_input/Local_fulltext_pub_REV.parquet'):
         """
         Initializes the EntrezFetcher with the specified API client.
 
@@ -980,7 +1000,7 @@ class EntrezFetcher(DataFetcher):
         :param logger: The logger instance for logging messages.
 
         """
-        super().__init__(logger, src='EntrezFetcher')
+        super().__init__(logger, src='EntrezFetcher', backup_file=backup_file)
         self.api_client = api_client.Session()
         self.raw_data_format = 'XML'
         self.logger.info(f"Raw_data_format: {self.raw_data_format}")
@@ -1130,7 +1150,7 @@ class PlaywrightFetcher(DataFetcher):
     Modern, faster alternative to Selenium with better JavaScript handling.
     Automatically detects and adapts to asyncio event loops (Jupyter notebooks).
     """
-    def __init__(self, logger, browser_type='chromium', headless=True, use_async=False):
+    def __init__(self, logger, browser_type='chromium', headless=True, use_async=False, backup_file='scripts/exp_input/Local_fulltext_pub_REV.parquet'):
         """
         Initializes the PlaywrightFetcher.
         
@@ -1139,7 +1159,7 @@ class PlaywrightFetcher(DataFetcher):
         :param headless: Whether to run in headless mode
         :param use_async: Whether to use async API (auto-detected for Jupyter)
         """
-        super().__init__(logger, src='PlaywrightFetcher', browser=browser_type, headless=headless)
+        super().__init__(logger, src='PlaywrightFetcher', browser=browser_type, headless=headless, backup_file=backup_file)
         self.browser_type = browser_type
         self.headless = headless
         self.use_async = use_async
@@ -1593,8 +1613,8 @@ class PdfFetcher(DataFetcher):
     """
     Class for fetching PDF files from URLs.
     """
-    def __init__(self, logger, driver_path=None, browser='firefox', headless=True):
-        super().__init__(logger, src='PdfFetcher', driver_path=driver_path, browser=browser, headless=headless)
+    def __init__(self, logger, driver_path=None, browser='firefox', headless=True, backup_file='scripts/exp_input/Local_fulltext_pub_REV.parquet'):
+        super().__init__(logger, src='PdfFetcher', driver_path=driver_path, browser=browser, headless=headless, backup_file=backup_file)
         self.logger.debug("PdfFetcher initialized.")
 
     def fetch_data(self, url, return_temp=True, retries=3, delay=2, **kwargs):

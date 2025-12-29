@@ -81,7 +81,8 @@ class DataGatherer:
         embeds_cache_read=False,
         embeds_cache_write=False,
         data_repos_config='open_bio_data_repos.json',
-        grobid_for_pdf=False
+        grobid_for_pdf=False,
+        raw_data_df_parquet_filepath=None
         ):
 
         self.open_data_repos_ontology = load_config(data_repos_config)
@@ -94,7 +95,7 @@ class DataGatherer:
         self.data_fetcher = None
         self.parser = None
         self.raw_data_format = None
-        self.setup_data_fetcher(driver_path=driver_path)
+        self.setup_data_fetcher(driver_path=driver_path, backup_file=raw_data_df_parquet_filepath)
         self.fetcher_driver_path = driver_path
         self.data_checker = DataCompletenessChecker(self.logger)
         
@@ -455,7 +456,7 @@ class DataGatherer:
         return ret
 
     def setup_data_fetcher(self, search_method='url_list', driver_path='', browser='Firefox', headless=True,
-                           raw_HTML_data_fp=None):
+                           backup_file=None):
         """
         Sets up either an empty web scraper, one with scraper_tool, or an API client based on the config.
         """
@@ -475,16 +476,16 @@ class DataGatherer:
 
         elif self.search_method == 'url_list':
             self.data_fetcher = WebScraper(None, self.logger, driver_path=driver_path, browser=browser,
-                                           headless=headless)
+                                           headless=headless, backup_file=backup_file)
 
         elif self.search_method == 'cloudscraper':
             driver = cloudscraper.create_scraper()
-            self.data_fetcher = WebScraper(driver, self.logger)
+            self.data_fetcher = WebScraper(driver, self.logger, backup_file=backup_file)
 
         elif self.search_method == 'google_scholar':
             driver = create_driver(driver_path, browser, headless, self.logger)
             self.data_fetcher = WebScraper(driver, self.logger, driver_path=driver_path, browser=browser,
-                                           headless=headless)
+                                           headless=headless, backup_file=backup_file)
 
         else:
             raise ValueError(f"Invalid search method: {self.search_method}")
@@ -1536,6 +1537,7 @@ class DataGatherer:
         write_htmls_xmls=False,
         article_file_dir='scripts/tmp/raw_files/',
         url2id_mapping=None,
+        local_fetch_file=None,
         ):
         """
         Complete integrated batch processing using LLMClient batch functionality.
@@ -1585,6 +1587,10 @@ class DataGatherer:
 
         :param article_file_dir: Directory to save raw HTML/XML/PDF files
 
+        :param url2id_mapping: Optional mapping from URL to custom ID
+
+        :param local_fetch_file: Optional local file for fetching data
+
         :return: Dictionary with batch information and results
         """
 
@@ -1594,7 +1600,7 @@ class DataGatherer:
         try:
             # Step 1: Fetch data
             self.logger.info("Step 1: Fetching data...")
-            fetched_data = self.fetch_data(url_list, write_htmls_xmls=write_htmls_xmls, article_file_dir=article_file_dir)
+            fetched_data = self.fetch_data(url_list, write_htmls_xmls=write_htmls_xmls, article_file_dir=article_file_dir, local_fetch_file=local_fetch_file)
             
             # Count raw_data_format frequencies and store URLs for parser reuse optimization
             format_counts = {}
@@ -1696,8 +1702,10 @@ class DataGatherer:
                             }
                         }
                         
-                        supplementary_material_links = self.parser.extract_href_from_supplementary_material(data['fetched_data'], url)
-                        concat_df = self.parser.extract_supplementary_material_refs(data['fetched_data'], supplementary_material_links)
+                        # Use xml_root for PDFs processed with GROBID, otherwise use fetched_data
+                        data_for_extraction = xml_root if (url_raw_data_format.upper() == 'PDF' and grobid_for_pdf and xml_root is not None) else data['fetched_data']
+                        supplementary_material_links = self.parser.extract_href_from_supplementary_material(data_for_extraction, url)
+                        concat_df = self.parser.extract_supplementary_material_refs(data_for_extraction, supplementary_material_links)
                         concat_df['url'] = url
                         supplementary_material_metadata = pd.concat([concat_df,supplementary_material_metadata])
                         
