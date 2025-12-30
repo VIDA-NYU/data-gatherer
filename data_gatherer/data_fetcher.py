@@ -97,7 +97,7 @@ class BackupDataStore:
 # Abstract base class for fetching data
 class DataFetcher(ABC):
     def __init__(self, logger, src='WebScraper', driver_path=None, browser='firefox', headless=True, 
-                 backup_data_file='scripts/exp_input/Local_fulltext_pub_REV.parquet'):
+                 backup_file='scripts/exp_input/Local_fulltext_pub_REV.parquet'):
         self.logger = logger
         self.logger.debug(f"DataFetcher ({src}) initialized.")
         self.driver_path = driver_path
@@ -105,16 +105,19 @@ class DataFetcher(ABC):
         self.headless = headless
         self.src = src
         self.local_data_used = False
+        self.redirect_mapping = {}
+
+        self.logger.debug(f"Setting up BackupDataStore with file: {backup_file}")
         
         if hasattr(self, 'backup_store') and self.backup_store is not None:
             self.logger.debug("Using existing BackupDataStore instance.")
         else:
-            if backup_data_file and os.path.exists(backup_data_file):
-                self.backup_store = BackupDataStore(filepath=backup_data_file, logger=self.logger)
+            if backup_file and os.path.exists(backup_file):
+                self.backup_store = BackupDataStore(filepath=backup_file, logger=self.logger)
                 stats = self.backup_store.get_stats()
                 self.logger.info(f"Backup data store initialized: {stats['size']} publications, valid: {stats['valid']}")
             else:
-                self.logger.info(f"No backup data available at {backup_data_file}")
+                self.logger.info(f"No backup data available at {backup_file}")
     
     def try_backup_fetch(self, identifier):
         """
@@ -171,7 +174,7 @@ class DataFetcher(ABC):
         return html
 
     @abstractmethod
-    def fetch_data(self, url, retries=3, delay=2):
+    def fetch_data(self, url, retries=3, delay=2, **kwargs):
         """
         Abstract method to fetch data from a given URL.
 
@@ -219,7 +222,7 @@ class DataFetcher(ABC):
             self.logger.warning("No valid root extracted from URL. This may cause issues with data gathering.")
             return 'Unknown Publisher'
 
-    def url_to_pmcid(self, url):
+    def url_to_article_id(self, url, return_only_known_ids=False):
         """
         Extracts the PMC ID from a given URL.
 
@@ -229,6 +232,7 @@ class DataFetcher(ABC):
         """
         match = re.search(r'PMC(\d+)', url, re.IGNORECASE)
         doi = re.search(r'(10\.\d{4,9}/[-._;()/:A-Z0-9]+)', url, re.IGNORECASE)
+        pmid = re.search(r'ncbi\.nlm\.nih\.gov/.*/(\d+)', url, re.IGNORECASE) 
         if match:
             pmcid = f"PMC{match.group(1)}"
             self.logger.info(f"Extracted PMC ID: {pmcid}")
@@ -239,7 +243,20 @@ class DataFetcher(ABC):
             self.current_article_id = doi.group(1)
             return doi.group(1)
 
+        elif pmid:
+            self.current_article_id = pmid.group(1)
+            return pmid.group(1)
+
         else:
+            if not return_only_known_ids:
+                article_id, i = '', 0
+                while len(article_id) < 6:
+                    i+=1
+                    article_id = url.split("/")[-i]
+
+                self.current_article_id = article_id
+                
+                return self.current_article_id
             self.logger.warning(f"No PMC ID found in URL: {url}")
             self.current_article_id = None
             return None
@@ -301,11 +318,13 @@ class DataFetcher(ABC):
         :param HTML_fallback: If False, use simple HTTP. If True, use Selenium. If 'HTTPGetRequest', force HTTP. If 'Playwright', force Playwright.
         :return: An instance of the appropriate data fetcher with backup capability.
         """
-        self.logger.debug(f"update_DataFetcher_settings for URL: {url}, current instance: {self.__class__.__name__}")
+        self.logger.info(f"update_DataFetcher_settings for URL: {url}, current instance: {self.__class__.__name__}, HTML_fallback={HTML_fallback}, BackupDataFile={local_fetch_file}")
         self.local_data_used = False
 
         # Determine backup data file
         backup_file = local_fetch_file or 'scripts/exp_input/Local_fulltext_pub_REV.parquet'
+
+        self.logger.debug(f"Using backup data file: {backup_file}, current backup store file: {getattr(self, 'backup_store', None)}")
 
         if hasattr(self, 'backup_store') and (self.backup_store is None or self.backup_store._filepath != backup_file):
             self.backup_store = BackupDataStore(filepath=backup_file, logger=self.logger)
@@ -318,13 +337,13 @@ class DataFetcher(ABC):
             if isinstance(self, PdfFetcher):
                 self.logger.info(f"Reusing existing PdfFetcher instance.")
                 return self
-            return PdfFetcher(self.logger, driver_path=driver_path, browser=browser, headless=headless)
+            return PdfFetcher(self.logger, driver_path=driver_path, browser=browser, headless=headless, backup_file=local_fetch_file)
 
         # Detect API type for optimal fetcher selection
         API = None
         if not HTML_fallback:
             API = self.url_to_api_root(url)
-        self.logger.info(f"API detected: {API}")
+        self.logger.info(f"API detected: {API} ")
 
         # Choose fetcher based on content type and availability, all with backup support
         if API == 'PMC':
@@ -333,7 +352,7 @@ class DataFetcher(ABC):
                 self.logger.info(f"Reusing existing EntrezFetcher instance with backup support.")
                 return self
             self.logger.info(f"Creating EntrezFetcher with backup support")
-            return EntrezFetcher(requests, self.logger)
+            return EntrezFetcher(requests, self.logger, backup_file=local_fetch_file)
 
         # For HTTP GET requests (simpler, faster for static content)
         if type(HTML_fallback) == str and HTML_fallback == 'HTTPGetRequest':
@@ -341,7 +360,7 @@ class DataFetcher(ABC):
             if isinstance(self, HttpGetRequest):
                 self.logger.info(f"Reusing existing HttpGetRequest instance.")
                 return self
-            return HttpGetRequest(self.logger)
+            return HttpGetRequest(self.logger, backup_file=local_fetch_file)
         
         use_playwright = False
         if type(HTML_fallback) == str and HTML_fallback == 'Playwright':
@@ -351,7 +370,7 @@ class DataFetcher(ABC):
         if not HTML_fallback:
             # Start with simple HTTP GET (faster, backup-first)
             self.logger.info(f"Using HttpGetRequest (backup-first) for URL: {url}")
-            return HttpGetRequest(self.logger)
+            return HttpGetRequest(self.logger, backup_file=local_fetch_file)
 
         # For complex dynamic content, use Playwright (with asyncio detection)
         if use_playwright:
@@ -369,7 +388,7 @@ class DataFetcher(ABC):
                 return self
             
             self.logger.info(f"Creating new PlaywrightFetcher with backup support: {browser}, headless={headless}, async={in_event_loop}")
-            return PlaywrightFetcher(self.logger, browser_type=browser, headless=headless, use_async=in_event_loop)
+            return PlaywrightFetcher(self.logger, browser_type=browser, headless=headless, use_async=in_event_loop, backup_file=local_fetch_file)
         
         # Default: Use traditional Selenium WebScraper with backup support
         # Reuse existing driver if available
@@ -379,9 +398,9 @@ class DataFetcher(ABC):
 
         self.logger.info(f"Creating new WebScraper with backup support: {browser}, headless={headless}")
         driver = create_driver(driver_path, browser, headless, self.logger)
-        return WebScraper(driver, self.logger, driver_path=driver_path, browser=browser, headless=headless)
+        return WebScraper(driver, self.logger, driver_path=driver_path, browser=browser, headless=headless, backup_file=local_fetch_file)
 
-    def url_in_dataframe(self, url):
+    def url_in_dataframe(self, url, idx='pmcid'):
         """
         Checks if the given doi / pmcid is present in the backup data store.
 
@@ -390,10 +409,19 @@ class DataFetcher(ABC):
         """
         if not self.backup_store:
             return False
-            
-        pmcid = re.search(r'PMC\d+', url, re.IGNORECASE)
-        if pmcid:
-            return self.backup_store.has_publication(pmcid.group(0))
+        
+        if idx == 'pmcid':
+            pmcid = re.search(r'PMC\d+', url, re.IGNORECASE)
+            if pmcid:
+                return self.backup_store.has_publication(pmcid.group(0))
+        elif idx == 'doi':
+            doi = re.search(r'(10\.\d{4,9}/[-._;()/:A-Z0-9]+)', url, re.IGNORECASE)
+            if doi:
+                return self.backup_store.has_publication(doi.group(1))
+        else:
+            # using url as i
+            return self.backup_store.has_publication(url)
+        
         return False
     
     def url_to_api_root(self, url):
@@ -401,6 +429,9 @@ class DataFetcher(ABC):
         API_ptrs = {
             r'PMC\d+': 'PMC'
         }
+
+        if not url:
+            return None
 
         if not url.startswith('http'):
             for ptr, src in API_ptrs.items():
@@ -410,9 +441,10 @@ class DataFetcher(ABC):
                     return src
 
         API_supported_url_patterns = {
-            'https://www.ncbi.nlm.nih.gov/pmc/articles/': 'PMC',
-            'https://pmc.ncbi.nlm.nih.gov/': 'PMC',
-            'https://ncbi.nlm.nih.gov/pmc/': 'PMC',
+            r'https*://www.ncbi.nlm.nih.gov/pmc/articles/': 'PMC',
+            r'https*://www.ncbi.nlm.nih.gov/labs/pmc/': 'PMC',
+            r'https*://pmc.ncbi.nlm.nih.gov/': 'PMC',
+            r'https*://ncbi.nlm.nih.gov/pmc/': 'PMC',
         }
 
         # Check if the URL corresponds to any API_supported_url_patterns
@@ -433,10 +465,26 @@ class DataFetcher(ABC):
         :return: True if the URL points to a PDF file, False otherwise.
         """
         self.logger.debug(f"Checking if URL is a PDF: {url}")
+        if not url:
+            return None
         if url.lower().endswith('.pdf'):
             self.logger.info(f"URL {url} ends with .pdf")
             return True
         elif re.search(r'arxiv\.org/pdf/', url, re.IGNORECASE):
+            return True
+        elif re.search(r'aclanthology\.org/', url, re.IGNORECASE):
+            return True
+        elif re.search(r'doi\.org/10\.18653', url, re.IGNORECASE):
+            return True
+        elif re.search(r'doi\.org/10\.48550', url, re.IGNORECASE):
+            return True
+        elif re.search(r'doi\.org/10\.23977', url, re.IGNORECASE):
+            return True
+        elif re.search(r'doi\.org/10\.5121', url, re.IGNORECASE):
+            return True
+        elif re.search(r'publica.fraunhofer.de', url, re.IGNORECASE):
+            return True
+        elif re.search(r'ojs.aaai.org', url, re.IGNORECASE):
             return True
         return False
 
@@ -473,16 +521,84 @@ class DataFetcher(ABC):
             self.logger.info("No cookie pattern 1 found in HTML")
         return html
 
+    def get_PMCID_from_pubmed_html(self, html):
+        try:
+            self.logger.debug(f"html: {html}")
+            soup = BeautifulSoup(html, 'html.parser')
+            # Extract PMC ID
+            pmc_tag = soup.find("a", {"data-ga-action": "PMCID"})
+            pmc_id = pmc_tag.text.strip() if pmc_tag else None  # Extract text safely
+            self.logger.info(f"PMCID: {pmc_id}")
+            return pmc_id
+        except Exception as e:
+            self.logger.error(f"Error extracting PMCID from HTML: {e}")
+            return None
+
+    def get_doi_from_pubmed_html(self, html):
+        try:
+            soup = BeautifulSoup(html, 'html.parser')
+            # Extract DOI
+            doi_tag = soup.find("a", {"data-ga-action": "DOI"})
+            doi = doi_tag.text.strip() if doi_tag else None  # Extract text safely
+            self.logger.info(f"DOI: {doi}")
+            return doi
+        except Exception as e:
+            self.logger.error(f"Error extracting DOI from HTML: {e}")
+            return None
+
+    def redirect_if_needed(self, url):
+        """
+        Follows redirects for the given URL and returns the final URL.
+
+        :param url: The initial URL.
+        :return: The final URL after following redirects.
+        """
+        # Handle None or empty URLs
+        if not url:
+            return url
+        
+        self.logger.info(f"url to redirect: {url}")
+        
+        # if pumbmed url, follow redirects to get final URL
+        if re.match(r'^https?://pubmed\.ncbi\.nlm\.nih\.gov/[\d]+', url) or re.match(
+            r'^https?://www\.ncbi\.nlm\.nih\.gov/pubmed/[\d]+', url) or re.match(
+            r'^https?://www\.ncbi\.nlm\.nih\.gov/pmc/articles/pmid/[\d]+', url) or re.match(
+            r'^https?://pmc\.ncbi\.nlm\.nih\.gov/pmc/articles/pmid/[\d]+', url) or re.match(
+            r'^https?://www\.ncbi\.nlm\.nih\.gov/labs/pmc/articles/', url):
+            try:
+                self.logger.info(f"1")
+                response = requests.get(url, timeout=3)
+                self.logger.info(f"2: {response.url}")
+                html = response.text
+                pmc_id = self.get_PMCID_from_pubmed_html(html)
+                if pmc_id:
+                    final_url = self.PMCID_to_url(pmc_id)
+                    self.logger.info(f"Redirected PubMed URL to PMC URL: {final_url}")
+                    self.redirect_mapping[url] = final_url
+                    return final_url
+                doi = self.get_doi_from_pubmed_html(html)
+                if doi:
+                    final_url = f"https://doi.org/{doi}"
+                    self.logger.info(f"Redirected PubMed URL to DOI URL: {final_url}")
+                    self.redirect_mapping[url] = final_url
+                    return final_url
+
+            except requests.RequestException as e:
+                self.logger.warning(f"Failed to follow redirects for PubMed URL {url}: {e}")
+
+        return url
 
 class HttpGetRequest(DataFetcher):
     "class for fetching data via HTTP GET requests using the requests library."
-    def __init__(self, logger):
-        super().__init__(logger, src='HttpGetRequest')
+    def __init__(self, logger, backup_file='scripts/exp_input/Local_fulltext_pub_REV.parquet'):
+        super().__init__(logger, src='HttpGetRequest', backup_file=backup_file)
         self.session = requests.Session()
-        self.logger.debug("HttpGetRequest initialized.")
+        # Keep default requests User-Agent - many sites (like PubMed) allow it
+        # but block fake browser User-Agents with incomplete fingerprints
+        self.logger.debug("HttpGetRequest initialized with default requests headers.")
         self.raw_data_format = 'HTML'
 
-    def fetch_data(self, url, retries=3, delay=0.2):
+    def fetch_data(self, url, retries=3, delay=0.2, **kwargs):
         """
         Fetches data from the given URL. First tries backup data (fast), then HTTP GET if needed.
 
@@ -492,7 +608,7 @@ class HttpGetRequest(DataFetcher):
         :return: The raw content of the page.
         """
         # Try backup data FIRST (microsecond lookup)
-        article_id = self.url_to_pmcid(url)
+        article_id = self.url_to_article_id(url)
         self.article_id = article_id
         if article_id and hasattr(self, 'backup_store') and self.backup_store is not None:
             backup_data = self.try_backup_fetch(article_id)
@@ -502,12 +618,19 @@ class HttpGetRequest(DataFetcher):
         
         # Fallback to live HTTP fetch (slow path)
         self.logger.info(f"Local data not found, fetching live from {url}")
+
+        if self.url_is_pdf(url):
+            self.logger.info(f"URL {url} is a PDF. Using PdfFetcher.")
+            pdf_fetcher = PdfFetcher(self.logger)
+            return pdf_fetcher.fetch_data(url, retries=retries, delay=delay)
+            
         attempt = 0
         while attempt < retries:
             time.sleep(delay/2)
             try:
                 self.logger.info(f"HTTP GET attempt {attempt + 1} of {retries}")
-                response = self.session.get(url, headers={"User-Agent": "Mozilla/5.0"})
+                # Session already has headers set in __init__, no need to override
+                response = self.session.get(url, timeout=30)
                 response.raise_for_status()  # Raise an error for bad responses
                 self.raw_data_format = 'HTML' if 'text/html' in response.headers.get('Content-Type', '') else 'Other'
                 return response.text
@@ -542,9 +665,10 @@ class HttpGetRequest(DataFetcher):
         if directory[-1] != '/':
             directory += '/'
 
-        pmcid = self.url_to_pmcid(url)
+        article_id = self.url_to_filename(self.url_to_article_id(url))
+        pub_fname = self.url_to_filename(pub_name)
 
-        fn = directory + f"{pmcid}__{pub_name}.html"
+        fn = directory + f"{article_id}__{pub_fname}.html"
         self.logger.info(f"Downloading HTML page source to {fn}")
 
         with open(fn, 'w', encoding='utf-8') as f:
@@ -613,15 +737,16 @@ class WebScraper(DataFetcher):
     Class for fetching data from web pages using Selenium.
     """
     def __init__(self, scraper_tool, logger, retrieval_patterns_file=None, driver_path=None, browser='firefox',
-                 headless=True):
-        super().__init__(logger, src='WebScraper', driver_path=driver_path, browser=browser, headless=headless)
+                 headless=True, backup_file='scripts/exp_input/Local_fulltext_pub_REV.parquet'):
+        super().__init__(logger, src='WebScraper', driver_path=driver_path, browser=browser, headless=headless, backup_file=backup_file)
         self.scraper_tool = scraper_tool  # Inject your scraping tool (Selenium)
         self.driver_path = driver_path
         self.browser = browser
         self.headless = headless
+        self.backup_file = backup_file
         self.logger.debug("WebScraper initialized.")
 
-    def fetch_data(self, url, retries=3, delay=2):
+    def fetch_data(self, url, retries=3, delay=2, update_redirect_map=False, **kwargs):
         """
         Fetches data from the given URL. First tries backup data (fast), then live web scraping if needed.
 
@@ -633,7 +758,7 @@ class WebScraper(DataFetcher):
         self.raw_data_format = 'HTML'  # Default format for web scraping
         
         # Try backup data FIRST (microsecond lookup)
-        article_id = self.url_to_pmcid(url)
+        article_id = self.url_to_article_id(url)
         self.article_id = article_id
         if article_id and hasattr(self, 'backup_store') and self.backup_store is not None:
             backup_data = self.try_backup_fetch(article_id)
@@ -649,6 +774,11 @@ class WebScraper(DataFetcher):
             self.logger.debug(f"http get complete, now waiting {delay} seconds for page to load")
             self.simulate_user_scroll(delay)
             self.title = self.extract_publication_title()
+            if update_redirect_map:
+                final_url = self.scraper_tool.current_url
+                if final_url != url and url not in self.redirect_mapping:
+                    self.logger.info(f"URL redirected from {url} to {final_url}")
+                    self.redirect_mapping[url] = final_url
             return self.scraper_tool.page_source
         
         except Exception as e:
@@ -711,7 +841,7 @@ class WebScraper(DataFetcher):
         if directory[-1] != '/':
             directory += '/'
 
-        pmcid = self.url_to_pmcid(pub_link)
+        pmcid = self.url_to_article_id(pub_link)
 
         fn = directory + f"{pmcid}__{pub_name}.html"
         self.logger.info(f"Downloading HTML page source to {fn}")
@@ -767,22 +897,6 @@ class WebScraper(DataFetcher):
         except Exception as e:
             self.logger.error(f"Error extracting publication title: {e}")
             return "No title found"
-
-    def get_PMCID_from_pubmed_html(self, html):
-        soup = BeautifulSoup(html, 'html.parser')
-        # Extract PMC ID
-        pmc_tag = soup.find("a", {"data-ga-action": "PMCID"})
-        pmc_id = pmc_tag.text.strip() if pmc_tag else None  # Extract text safely
-        self.logger.info(f"PMCID: {pmc_id}")
-        return pmc_id
-
-    def get_doi_from_pubmed_html(self, html):
-        soup = BeautifulSoup(html, 'html.parser')
-        # Extract DOI
-        doi_tag = soup.find("a", {"data-ga-action": "DOI"})
-        doi = doi_tag.text.strip() if doi_tag else None  # Extract text safely
-        self.logger.info(f"DOI: {doi}")
-        return doi
 
     def get_opendata_from_pubmed_id(self, pmid):
         """
@@ -842,8 +956,8 @@ class DatabaseFetcher(DataFetcher):
     Now just a direct interface to the BackupDataStore.
     """
     def __init__(self, logger, raw_HTML_data_filepath=None):
-        # Call parent with backup_data_file parameter
-        super().__init__(logger, src='DatabaseFetcher', backup_data_file=raw_HTML_data_filepath)
+        # Call parent with backup_file parameter
+        super().__init__(logger, src='DatabaseFetcher', backup_file=raw_HTML_data_filepath)
         
         if not raw_HTML_data_filepath or not os.path.exists(raw_HTML_data_filepath):
             raise ValueError("DatabaseFetcher requires a valid raw_HTML_data_filepath.")
@@ -854,7 +968,7 @@ class DatabaseFetcher(DataFetcher):
         stats = self.backup_store.get_stats()
         self.logger.debug(f"DatabaseFetcher initialized with {stats['size']} publications (valid: {stats['valid']}).")
 
-    def fetch_data(self, url_key, retries=3, delay=2, local_fetch_file=None):
+    def fetch_data(self, url_key, retries=3, delay=2, local_fetch_file=None, **kwargs):
         """
         Fetches data from the backup data store.
 
@@ -883,7 +997,7 @@ class EntrezFetcher(DataFetcher):
     """
     Class for fetching data from an API using the requests library for ncbi e-utilities API.
     """
-    def __init__(self, api_client, logger):
+    def __init__(self, api_client, logger, backup_file='scripts/exp_input/Local_fulltext_pub_REV.parquet'):
         """
         Initializes the EntrezFetcher with the specified API client.
 
@@ -892,7 +1006,7 @@ class EntrezFetcher(DataFetcher):
         :param logger: The logger instance for logging messages.
 
         """
-        super().__init__(logger, src='EntrezFetcher')
+        super().__init__(logger, src='EntrezFetcher', backup_file=backup_file)
         self.api_client = api_client.Session()
         self.raw_data_format = 'XML'
         self.logger.info(f"Raw_data_format: {self.raw_data_format}")
@@ -907,7 +1021,7 @@ class EntrezFetcher(DataFetcher):
         self.logger.debug("EntrezFetcher initialized.")
 
 
-    def fetch_data(self, article_id, retries=3, delay=2):
+    def fetch_data(self, article_id, retries=3, delay=2, **kwargs):
         """
         Fetches data from the API. First tries backup data (fast), then live API call if needed.
 
@@ -993,7 +1107,7 @@ class EntrezFetcher(DataFetcher):
 
         os.makedirs(directory, exist_ok=True)  # Ensure directory exists
         # Construct the file path
-        pmcid = self.url_to_pmcid(pub_link)
+        pmcid = self.url_to_article_id(pub_link)
         title = self.extract_publication_title(api_data)
         title = re.sub(r'[\\/:*?"<>|]', '_', title)  # Replace invalid characters in filename
 
@@ -1042,7 +1156,7 @@ class PlaywrightFetcher(DataFetcher):
     Modern, faster alternative to Selenium with better JavaScript handling.
     Automatically detects and adapts to asyncio event loops (Jupyter notebooks).
     """
-    def __init__(self, logger, browser_type='chromium', headless=True, use_async=False):
+    def __init__(self, logger, browser_type='chromium', headless=True, use_async=False, backup_file='scripts/exp_input/Local_fulltext_pub_REV.parquet'):
         """
         Initializes the PlaywrightFetcher.
         
@@ -1051,7 +1165,7 @@ class PlaywrightFetcher(DataFetcher):
         :param headless: Whether to run in headless mode
         :param use_async: Whether to use async API (auto-detected for Jupyter)
         """
-        super().__init__(logger, src='PlaywrightFetcher', browser=browser_type, headless=headless)
+        super().__init__(logger, src='PlaywrightFetcher', browser=browser_type, headless=headless, backup_file=backup_file)
         self.browser_type = browser_type
         self.headless = headless
         self.use_async = use_async
@@ -1108,7 +1222,7 @@ class PlaywrightFetcher(DataFetcher):
             self.page = await self.context.new_page()
             self.logger.info(f"Playwright {self.browser_type} browser started (async)")
     
-    def fetch_data(self, url, retries=3, delay=2, wait_for_selector=None, wait_time=2000):
+    def fetch_data(self, url, retries=3, delay=2, wait_for_selector=None, wait_time=2000, **kwargs):
         """
         Fetches data from the given URL using Playwright.
         First tries backup data (fast), then live fetching if needed.
@@ -1124,7 +1238,7 @@ class PlaywrightFetcher(DataFetcher):
         self.raw_data_format = 'HTML'
         
         # Try backup data FIRST (microsecond lookup)
-        article_id = self.url_to_pmcid(url)
+        article_id = self.url_to_article_id(url)
         self.article_id = article_id
         if article_id and hasattr(self, 'backup_store') and self.backup_store is not None:
             backup_data = self.try_backup_fetch(article_id)
@@ -1414,7 +1528,7 @@ class PlaywrightFetcher(DataFetcher):
         pub_name = re.sub(r'[\s-]+PMC\s*$', '', pub_name)
         
         # Get PMCID
-        pmcid = self.url_to_pmcid(pub_link) if pub_link else "unknown"
+        pmcid = self.url_to_article_id(pub_link) if pub_link else "unknown"
         
         if directory[-1] != '/':
             directory += '/'
@@ -1505,17 +1619,19 @@ class PdfFetcher(DataFetcher):
     """
     Class for fetching PDF files from URLs.
     """
-    def __init__(self, logger, driver_path=None, browser='firefox', headless=True):
-        super().__init__(logger, src='PdfFetcher', driver_path=driver_path, browser=browser, headless=headless)
+    def __init__(self, logger, driver_path=None, browser='firefox', headless=True, backup_file='scripts/exp_input/Local_fulltext_pub_REV.parquet'):
+        super().__init__(logger, src='PdfFetcher', driver_path=driver_path, browser=browser, headless=headless, backup_file=backup_file)
         self.logger.debug("PdfFetcher initialized.")
 
-    def fetch_data(self, url, return_temp=True, **kwargs):
+    def fetch_data(self, url, return_temp=True, retries=3, delay=2, **kwargs):
         """
-        Fetches PDF data from the given URL.
+        Fetches PDF data from the given URL with retry logic.
 
         :param url: The URL to fetch data from.
-
-        :return: The raw content of the PDF file.
+        :param return_temp: Whether to return a temporary file path or raw bytes.
+        :param retries: Number of retry attempts for failed requests.
+        :param delay: Delay between retries in seconds.
+        :return: The raw content of the PDF file or temporary file path.
         """
         self.raw_data_format = 'PDF'
         self.logger.info(f"Fetching PDF data from {url}")
@@ -1524,30 +1640,80 @@ class PdfFetcher(DataFetcher):
             self.logger.info(f"URL is a local file path. Reading PDF from {url}")
             return url
 
-        response = requests.get(url)
-        if response.status_code == 200:
-            if return_temp:
-                # Write the PDF content to a temporary file
-                with tempfile.NamedTemporaryFile(delete=False, suffix='.pdf') as temp_file:
-                    temp_file.write(response.content)
-                    self.logger.info(f"PDF data written to temporary file: {temp_file.name}")
-                    return temp_file.name
-            else:
-                return response.content
-        else:
-            self.logger.error(f"Failed to fetch PDF data from {url}, status code: {response.status_code}")
-            return None
+        # Retry logic for network errors
+        for attempt in range(retries):
+            try:
+                self.logger.debug(f"PDF fetch attempt {attempt + 1}/{retries} for {url}")
+                response = requests.get(
+                    url, 
+                    timeout=30,  # 30 second timeout
+                    headers={"User-Agent": "Mozilla/5.0"}
+                )
+                
+                if response.status_code == 200:
+                    if kwargs.get('write_raw_data', False):
+                        return response.content
+                    if return_temp:
+                        # Write the PDF content to a temporary file
+                        with tempfile.NamedTemporaryFile(delete=False, suffix='.pdf') as temp_file:
+                            temp_file.write(response.content)
+                            self.logger.info(f"PDF data written to temporary file: {temp_file.name}")
+                            return temp_file.name
+                    else:
+                        return response.content
+                elif response.status_code == 403:
+                    self.logger.warning(f"403 Forbidden for {url} - likely paywall or anti-bot protection")
+                    return None
+                else:
+                    self.logger.warning(f"Attempt {attempt + 1}: Status code {response.status_code} for {url}")
+                    if attempt < retries - 1:
+                        time.sleep(delay)
+                    
+            except requests.exceptions.ConnectionError as e:
+                self.logger.warning(f"Attempt {attempt + 1}: Connection error for {url}: {e}")
+                if attempt < retries - 1:
+                    time.sleep(delay * 2)  # Longer delay for connection errors
+                else:
+                    self.logger.error(f"Failed to fetch PDF from {url} after {retries} attempts")
+                    return None
+                    
+            except requests.exceptions.Timeout as e:
+                self.logger.warning(f"Attempt {attempt + 1}: Timeout for {url}: {e}")
+                if attempt < retries - 1:
+                    time.sleep(delay)
+                else:
+                    self.logger.error(f"Timeout fetching PDF from {url} after {retries} attempts")
+                    return None
+                    
+            except Exception as e:
+                self.logger.error(f"Unexpected error fetching PDF from {url}: {e}")
+                return None
+        
+        self.logger.error(f"Failed to fetch PDF data from {url} after {retries} attempts")
+        return None
 
     def download_pdf(self, directory, raw_data, src_url):
         """
         Downloads the PDF data to a specified directory.
         """
+        # Validate that raw_data is bytes (PDF content)
+        if not isinstance(raw_data, bytes):
+            self.logger.error(f"PDF data from {src_url} is not bytes (got {type(raw_data).__name__}). Cannot save PDF.")
+            return
+        
+        # Create directory if it doesn't exist
+        os.makedirs(directory, exist_ok=True)
+
+        src_url = re.sub(r'\.pdf\s*$', '', src_url)
+        
         fn = os.path.join(directory, f"{self.url_to_filename(src_url)}.pdf")
 
         self.logger.info(f"Downloading PDF from {src_url}")
         with open(fn, 'wb') as file:
             file.write(raw_data)
             self.logger.info(f"PDF data written to file: {file}")
+        
+        return fn
 
 class DataCompletenessChecker:
     """
@@ -1621,20 +1787,31 @@ class DataCompletenessChecker:
     
             :return: True if all required sections are present, False otherwise.
             """
-            if isinstance(raw_data, str):
-                self.logger.debug(f"Raw data is a string of length {len(raw_data)}")
-                raw_data_format = 'HTML'
-            elif isinstance(raw_data, ET._Element) or isinstance(raw_data, ET._ElementTree):
-                self.logger.debug(f"Raw data is of type {type(raw_data)}")
-                raw_data_format = 'XML'
-            else:
-                self.logger.error(f"Unsupported raw data type: {type(raw_data)}")
+
+            if raw_data is None:
+                self.logger.error("Raw data is None, cannot check completeness.")
                 return False
+
+            if raw_data_format is None:
+                if isinstance(raw_data, str):
+                    self.logger.debug(f"Raw data is a string of length {len(raw_data)}")
+                    raw_data_format = 'HTML'
+                elif isinstance(raw_data, ET._Element) or isinstance(raw_data, ET._ElementTree):
+                    self.logger.debug(f"Raw data is of type {type(raw_data)}")
+                    raw_data_format = 'XML'
+                else:
+                    self.logger.error(f"Unsupported raw data type: {type(raw_data)}")
+                    return False
+            
+            if required_sections is None:
+                required_sections = ["data_availability_sections", "supplementary_data_sections"]
 
             if raw_data_format.upper() == 'XML':
                 return self.is_xml_data_complete(raw_data, url, required_sections)
             elif raw_data_format.upper() == 'HTML':
                 return self.is_html_data_complete(raw_data, url, required_sections)
+            elif raw_data_format.upper() == 'PDF':
+                return True # Assume PDFs are complete for this check
             else:
                 self.logger.error(f"Unsupported raw data format: {raw_data_format}")
                 return False

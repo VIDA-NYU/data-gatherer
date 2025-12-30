@@ -388,12 +388,19 @@ class LLMClient_dev:
             self.logger.debug(f"raw_response type: {type(raw_response)}, length: {len(str(raw_response))}, response: {raw_response}")
             if from_batch_mode:
                 self.logger.debug(f"From batch mode, raw_response type: {type(raw_response)}, length: {len(raw_response)}")
-                for item in raw_response:
+                for i, item in enumerate(raw_response):
                     self.logger.debug(f"Batch item type: {type(item)}, content (first 100 chars): {str(item)[:100]}")
                     if item['type'] == 'reasoning':
                         continue
                     elif item['type'] == 'message':
-                        raw_response = item['content'][0]['text']
+                        if len(item['content']) == 1:
+                            raw_response = item['content'][0]['text']
+                            self.logger.debug(f"Using single message content for processing: {raw_response[:100]}")
+                            break
+                        elif len(item['content'][i]['text']) == 0:
+                            self.logger.debug(f"Empty content in batch item {i}, skipping")
+                            continue
+                        raw_response = item['content'][i]['text']
                         self.logger.debug(f"Using message content for processing: {raw_response[:100]}")
                         break
 

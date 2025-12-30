@@ -208,7 +208,7 @@ if st.button("🚀 Run Extraction", type="primary"):
                     log_placeholder.info(f"Processing article {idx+1} of {len(pmcids)}: {article_id}")
                     orch.logger.info(f"[FLOW] Processing article {idx+1}/{len(pmcids)}: {article_id}")
                     try:
-                        pmcid = orch.data_fetcher.url_to_pmcid(article_id)
+                        pmcid = orch.data_fetcher.url_to_article_id(article_id)
                         doi = orch.data_fetcher.url_to_doi(article_id, pmcid)
                         url = orch.preprocess_url(article_id)
                         orch.logger.info(f"[FLOW] Preprocessed URL: {url}")

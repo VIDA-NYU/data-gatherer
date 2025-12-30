@@ -6,11 +6,12 @@ import requests
 import shutil
 from lxml import etree
 from .pdf_parser import PDFParser
-from .xml_parser import XMLRouter
+from .xml_parser import XMLRouter, TEI_XMLParser
 
 class GrobidPDFParser(PDFParser):
     """
     PDFParser subclass that uses a local GROBID server to extract structured text and metadata from PDFs.
+    Uses a cached TEI_XMLParser instance for XML normalization and processing.
     """
     def __init__(self, open_data_repos_ontology, logger, log_file_override=None, full_document_read=True,
                  prompt_dir="data_gatherer/prompts/prompt_templates", write_XML=False,
@@ -26,6 +27,21 @@ class GrobidPDFParser(PDFParser):
 
         self.logger = logger
         self.write_XML = write_XML
+        
+        # Initialize TEI XML parser as a helper (not replacing self as parser)
+        self._tei_parser = TEI_XMLParser(
+            open_data_repos_ontology=open_data_repos_ontology,
+            logger=logger,
+            log_file_override=log_file_override,
+            full_document_read=full_document_read,
+            prompt_dir=prompt_dir,
+            llm_name=llm_name,
+            save_dynamic_prompts=save_dynamic_prompts,
+            save_responses_to_cache=save_responses_to_cache,
+            use_cached_responses=use_cached_responses,
+            use_portkey=use_portkey
+        )
+        self.logger.debug("Initialized TEI_XMLParser helper for GROBID XML processing")
 
         if grobid_home is None:
             BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -81,13 +97,23 @@ class GrobidPDFParser(PDFParser):
 
     def extract_full_text_xml(self, pdf_path):
         grobid_url = f"http://localhost:{self.grobid_port}/api/processFulltextDocument"
-        with open(pdf_path, 'rb') as f:
-            files = {'input': (os.path.basename(pdf_path), f, 'application/pdf')}
-            response = requests.post(grobid_url, files=files)
-        if response.status_code != 200:
-            raise RuntimeError(f"GROBID failed: {response.status_code} {response.text}")
-        self.logger.debug(f"Extracted full text XML {response.text}.")
-        return response.text
+        try:
+            with open(pdf_path, 'rb') as f:
+                files = {'input': (os.path.basename(pdf_path), f, 'application/pdf')}
+                response = requests.post(grobid_url, files=files, timeout=60)
+            
+            if response.status_code != 200:
+                error_msg = f"GROBID failed: {response.status_code} {response.text}"
+                self.logger.warning(error_msg)
+                raise RuntimeError(error_msg)
+            
+            self.logger.debug(f"Successfully extracted TEI XML from {pdf_path}")
+            return response.text
+            
+        except requests.exceptions.Timeout:
+            raise RuntimeError(f"GROBID request timed out for {pdf_path}")
+        except Exception as e:
+            raise RuntimeError(f"GROBID processing failed for {pdf_path}: {str(e)}")
 
     def extract_refs_xml(self, pdf_path):
         grobid_url = f"http://localhost:{self.grobid_port}/api/processReferences"
@@ -102,43 +128,63 @@ class GrobidPDFParser(PDFParser):
         if self.grobid_process:
             self.grobid_process.terminate()
 
-    def parse_data(self, file_path, publisher=None, current_url_address=None, raw_data_format='PDF',
-                   file_path_is_temp=False, article_file_dir='tmp/raw_files/', prompt_name='GPT_FewShot', use_portkey=True, 
-                   semantic_retrieval=False, top_k=2, section_filter=None, response_format=None, 
-                   dedup=True, brute_force_RegEx_ID_ptrs=False
-                   ):
+    def normalize_XML(self, xml_data):
+        """
+        Normalize TEI XML using the helper TEI_XMLParser.
+        This delegates to the cached TEI parser instance for modular XML processing.
+        
+        Args:
+            xml_data: XML data (string, bytes, or Element)
+            
+        Returns:
+            Normalized XML string
+        """
+        return self._tei_parser.normalize_XML(xml_data)
+
+    def parse_data(
+        self, 
+        file_path, 
+        publisher=None, 
+        current_url_address=None, 
+        raw_data_format='PDF',
+        file_path_is_temp=False, 
+        article_file_dir='tmp/raw_files/',
+        prompt_name='GPT_FewShot', 
+        use_portkey=True, 
+        semantic_retrieval=False, 
+        top_k=2, 
+        section_filter=None, 
+        response_format=None, 
+        dedup=True, 
+        brute_force_RegEx_ID_ptrs=False,
+        article_id=None
+        ):
         """
         Parse the PDF file and extract metadata of the relevant datasets.
         """
-        out_df = None
-        self.logger.info(f"Function call: parse_data({file_path}, {current_url_address}, "
-                         f"{raw_data_format})")
+        self.logger.info(f"Function call: parse_data({file_path}, {current_url_address}, {raw_data_format})")
 
         try:
-            # 1. Extract TEI XML from PDF
-            full_cont_xml = self.extract_full_text_xml(file_path)
-            self.logger.info(f"Parsing full text TEI XML from GROBID response.")
-
-            # 2. Parse TEI XML using XMLRouter (which will use TEI_XMLParser)
-            xml_root = etree.fromstring(full_cont_xml.encode('utf-8'))
-
-            if self.write_XML:
-                xml_output_path = os.path.join(article_file_dir, os.path.basename(file_path) + '.xml')
-                os.makedirs(article_file_dir, exist_ok=True)
-                with open(xml_output_path, 'wb') as xml_file:
-                    xml_file.write(full_cont_xml.encode('utf-8'))
-                self.logger.info(f"Saved TEI XML to {xml_output_path}")
-
-            router = XMLRouter(self.open_data_repos_ontology, self.logger, 
-                             llm_name=self.llm_name, 
-                             full_document_read=self.full_document_read,
-                             use_portkey=use_portkey,
-                             save_dynamic_prompts=self.save_dynamic_prompts,
-                             save_responses_to_cache=self.save_responses_to_cache,
-                             use_cached_responses=self.use_cached_responses)
+            # 1. Convert PDF to XML using the dedicated method
+            xml_root = self.pdf_to_xml(file_path, current_url_address, article_file_dir)
+            
+            if xml_root is None:
+                raise RuntimeError("PDF to XML conversion failed")
+            
+            # 2. Create XML parser using XMLRouter
+            router = XMLRouter(
+                self.open_data_repos_ontology, 
+                self.logger, 
+                llm_name=self.llm_name, 
+                full_document_read=self.full_document_read,
+                use_portkey=use_portkey,
+                save_dynamic_prompts=self.save_dynamic_prompts,
+                save_responses_to_cache=self.save_responses_to_cache,
+                use_cached_responses=self.use_cached_responses
+            )
             xml_parser = router.get_parser(xml_root)
 
-            # 3. Use the XML parser's parse_data method
+            # 3. Parse XML to extract dataset metadata
             out_df = xml_parser.parse_data(
                 xml_root,
                 publisher=publisher,
@@ -151,37 +197,114 @@ class GrobidPDFParser(PDFParser):
                 semantic_retrieval=semantic_retrieval,
                 top_k=top_k,
                 response_format=response_format,
-                dedup=True,
-                brute_force_RegEx_ID_ptrs=False
+                dedup=dedup,
+                brute_force_RegEx_ID_ptrs=brute_force_RegEx_ID_ptrs
             )
 
             return out_df
 
         except Exception as e:
             self.logger.error(f"GROBID failed on {file_path}: {e}")
+            
+            # Validate PDF file before fallback
+            if not os.path.exists(file_path):
+                self.logger.error(f"PDF file does not exist: {file_path}")
+                return pd.DataFrame()
+            
+            file_size = os.path.getsize(file_path)
+            self.logger.info(f"PDF file size: {file_size} bytes")
+            
+            if file_size == 0:
+                self.logger.error(f"PDF file is empty: {file_path}")
+                return pd.DataFrame()
+            
+            # Check if file is a valid PDF
+            try:
+                with open(file_path, 'rb') as f:
+                    header = f.read(5)
+                    if header != b'%PDF-':
+                        self.logger.warning(f"File does not appear to be a valid PDF (header: {header})")
+            except Exception as check_error:
+                self.logger.warning(f"Could not verify PDF header: {check_error}")
+            
+            # Fallback to PyMuPDF parser
             self.logger.info("Attempting fallback with PyMuPDF parser...")
 
             try:
                 from .pdf_parser import PDFParser
-                fallback_parser = PDFParser(self.open_data_repos_ontology, self.logger, 
-                                            full_document_read=self.full_document_read, 
-                                            prompt_dir=self.prompt_manager.prompt_dir,
-                                            llm_name=self.llm_name, save_dynamic_prompts=self.save_dynamic_prompts,
-                                            save_responses_to_cache=self.save_responses_to_cache,
-                                            use_cached_responses=self.use_cached_responses,
-                                            use_portkey=self.use_portkey)
+                fallback_parser = PDFParser(
+                    self.open_data_repos_ontology, 
+                    self.logger, 
+                    full_document_read=self.full_document_read, 
+                    prompt_dir=self.prompt_manager.prompt_dir,
+                    llm_name=self.llm_name, 
+                    save_dynamic_prompts=self.save_dynamic_prompts,
+                    save_responses_to_cache=self.save_responses_to_cache,
+                    use_cached_responses=self.use_cached_responses,
+                    use_portkey=self.use_portkey
+                )
 
-                return fallback_parser.parse_data(file_path, publisher=publisher,
-                                                  current_url_address=current_url_address,
-                                                  raw_data_format=raw_data_format,
-                                                  file_path_is_temp=file_path_is_temp,
-                                                  article_file_dir=article_file_dir,
-                                                  prompt_name=prompt_name,
-                                                  use_portkey=use_portkey,
-                                                  semantic_retrieval=semantic_retrieval, top_k=top_k,
-                                                  section_filter=section_filter, response_format=response_format,
-                                                  dedup=dedup, brute_force_RegEx_ID_ptrs=brute_force_RegEx_ID_ptrs)
+                return fallback_parser.parse_data(
+                    file_path, 
+                    publisher=publisher,
+                    current_url_address=current_url_address,
+                    raw_data_format=raw_data_format,
+                    file_path_is_temp=file_path_is_temp,
+                    article_file_dir=article_file_dir,
+                    prompt_name=prompt_name,
+                    use_portkey=use_portkey,
+                    semantic_retrieval=semantic_retrieval,
+                    section_filter=section_filter,
+                    response_format=response_format,
+                    dedup=dedup, 
+                    brute_force_RegEx_ID_ptrs=brute_force_RegEx_ID_ptrs)
 
             except Exception as fallback_error:
                 self.logger.error(f"Fallback parser also failed: {fallback_error}")
                 return pd.DataFrame()
+
+    def pdf_to_xml(self, pdf_path, current_url_address=None, article_file_dir=None):
+        """
+        Convert a PDF file to TEI XML using GROBID and save to output directory.
+
+        :param pdf_path: Path to the PDF file
+        :param current_url_address: URL or identifier for the document
+        :param article_file_dir: Directory to save the XML file
+        :return: lxml Element tree of the TEI XML, or None on failure
+        """
+        self.logger.info(f"Function call: pdf_to_xml({pdf_path}, {current_url_address})")
+
+        try:
+            # 1. Extract TEI XML from PDF
+            full_cont_xml = self.extract_full_text_xml(pdf_path)
+            self.logger.info(f"Parsing full text TEI XML from GROBID response.")
+
+            # 2. Parse TEI XML into lxml Element tree
+            xml_root = etree.fromstring(full_cont_xml.encode('utf-8'))
+
+            # 3. Optionally save XML to file
+            if self.write_XML and article_file_dir is not None:
+                xml_output_path = os.path.join(article_file_dir, os.path.basename(pdf_path) + '.xml')
+                os.makedirs(article_file_dir, exist_ok=True)
+                with open(xml_output_path, 'wb') as xml_file:
+                    xml_file.write(full_cont_xml.encode('utf-8'))
+                self.logger.info(f"Saved TEI XML to {xml_output_path}")
+
+            return xml_root
+            
+        except Exception as e:
+            self.logger.error(f"Failed to convert PDF to XML for {pdf_path}: {e}")
+            return None
+
+    def extract_publication_title(self, root):
+        return self._tei_parser.extract_publication_title(root)
+
+    def extract_href_from_supplementary_material(self, root, current_url_address):
+        if isinstance(root, str):
+            root = etree.fromstring(root.encode('utf-8'))
+        return self._tei_parser.extract_href_from_supplementary_material(root, current_url_address)
+
+    def extract_supplementary_material_refs(self, root, supplementary_material_links):
+        if isinstance(root, str):
+            root = etree.fromstring(root.encode('utf-8'))
+        return self._tei_parser.extract_supplementary_material_refs(root, supplementary_material_links)

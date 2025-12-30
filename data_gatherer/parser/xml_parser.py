@@ -1280,9 +1280,11 @@ class TEI_XMLParser(XMLParser):
     def extract_publication_title(self, root):
         ns = {'tei': 'http://www.tei-c.org/ns/1.0'}
         title_el = root.find('.//tei:analytic/tei:title', namespaces=ns)
+        self.logger.info(f"Extracting publication title. Found element: {title_el}")
         if title_el is not None and title_el.text:
             return title_el.text.strip()
         title_el = root.find('.//tei:monogr/tei:title', namespaces=ns)
+        self.logger.info(f"Extracting publication title. Found element: {title_el}")
         if title_el is not None and title_el.text:
             return title_el.text.strip()
         return ""
