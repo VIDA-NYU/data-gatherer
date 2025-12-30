@@ -393,7 +393,11 @@ class LLMClient_dev:
                     if item['type'] == 'reasoning':
                         continue
                     elif item['type'] == 'message':
-                        if len(item['content'][i]['text']) == 0:
+                        if len(item['content']) == 1:
+                            raw_response = item['content'][0]['text']
+                            self.logger.debug(f"Using single message content for processing: {raw_response[:100]}")
+                            break
+                        elif len(item['content'][i]['text']) == 0:
                             self.logger.debug(f"Empty content in batch item {i}, skipping")
                             continue
                         raw_response = item['content'][i]['text']

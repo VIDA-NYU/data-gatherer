@@ -563,7 +563,8 @@ class DataFetcher(ABC):
         if re.match(r'^https?://pubmed\.ncbi\.nlm\.nih\.gov/[\d]+', url) or re.match(
             r'^https?://www\.ncbi\.nlm\.nih\.gov/pubmed/[\d]+', url) or re.match(
             r'^https?://www\.ncbi\.nlm\.nih\.gov/pmc/articles/pmid/[\d]+', url) or re.match(
-            r'^https?://pmc\.ncbi\.nlm\.nih\.gov/pmc/articles/pmid/[\d]+', url):
+            r'^https?://pmc\.ncbi\.nlm\.nih\.gov/pmc/articles/pmid/[\d]+', url) or re.match(
+            r'^https?://www\.ncbi\.nlm\.nih\.gov/labs/pmc/articles/', url):
             try:
                 self.logger.info(f"1")
                 response = requests.get(url, timeout=3)
@@ -745,7 +746,7 @@ class WebScraper(DataFetcher):
         self.backup_file = backup_file
         self.logger.debug("WebScraper initialized.")
 
-    def fetch_data(self, url, retries=3, delay=2, **kwargs):
+    def fetch_data(self, url, retries=3, delay=2, update_redirect_map=False, **kwargs):
         """
         Fetches data from the given URL. First tries backup data (fast), then live web scraping if needed.
 
@@ -773,6 +774,11 @@ class WebScraper(DataFetcher):
             self.logger.debug(f"http get complete, now waiting {delay} seconds for page to load")
             self.simulate_user_scroll(delay)
             self.title = self.extract_publication_title()
+            if update_redirect_map:
+                final_url = self.scraper_tool.current_url
+                if final_url != url and url not in self.redirect_mapping:
+                    self.logger.info(f"URL redirected from {url} to {final_url}")
+                    self.redirect_mapping[url] = final_url
             return self.scraper_tool.page_source
         
         except Exception as e:
