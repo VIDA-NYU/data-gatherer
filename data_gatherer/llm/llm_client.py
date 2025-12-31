@@ -79,6 +79,13 @@ class LLMClient_dev:
             from data_gatherer.llm.local_model_client import LocalModelClient
             self.llm_client = LocalModelClient(model_path, logger=self.logger)
             self.llm_client.load_model()
+        
+        elif model.startswith('hf-'):
+            self.logger.debug(f"Initializing Hugging Face model client for model: {model}")
+            hf_model_name = model[len('hf-'):]
+            from data_gatherer.llm.hf_model_client import HFModelClient
+            self.llm_client = HFModelClient(hf_model_name, logger=self.logger)
+            self.llm_client.load_model()
 
         else:
             self.logger.debug(f"Unsupported model: {model}")
@@ -128,7 +135,7 @@ class LLMClient_dev:
         self.logger.info(f"Resolved local model path: {model_path}")
         return str(model_path)
 
-    def _call_local_model(self, messages, temperature=0.0):
+    def _call_ft_model(self, messages, temperature=0.0):
         # Extract content from messages format
         if isinstance(messages, list):
             content = messages[-1].get('content', messages[-1])
@@ -342,7 +349,10 @@ class LLMClient_dev:
                     raise RuntimeError(f"Gemini response processing failed: {e}")
         
         elif self.model.startswith('local-flan-t5'):
-            return self._call_local_model(messages, temperature=temperature)
+            return self._call_ft_model(messages, temperature=temperature)
+
+        elif self.model.startswith('hf-'):
+            return self._call_ft_model(messages, temperature=temperature)
 
         else:
             raise ValueError(f"Unsupported model: {self.model}. Please use a supported LLM model.")
@@ -445,6 +455,11 @@ class LLMClient_dev:
         elif self.model.startswith('local-flan-t5'):
             parsed_response = self.safe_parse_json(raw_response)
             self.logger.debug(f"Processing local Flan-T5 model response: {parsed_response}")
+            return parsed_response
+
+        elif self.model.startswith('hf-'):
+            parsed_response = self.safe_parse_json(raw_response)
+            self.logger.debug(f"Processing Hugging Face model response: {parsed_response}")
             return parsed_response
 
         else:

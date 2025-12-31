@@ -455,7 +455,7 @@ class XMLParser(LLMParser):
 
             if not self.full_document_read:
                 if filter_das is None or filter_das:
-                    output_fmt = 'list' if 'local' in self.llm_name.lower() else 'text'
+                    output_fmt = 'list' if ('local' in self.llm_name.lower() or 'hf-' in self.llm_name.lower()) else 'text'
                     data_availability_cont = self.retrieve_relevant_content(
                                 api_data,
                                 semantic_retrieval=semantic_retrieval,
@@ -1355,7 +1355,7 @@ class TEI_XMLParser(XMLParser):
 
             if not self.full_document_read:
                 if filter_das is None or filter_das:
-                    output_fmt = 'list' if 'local' in self.llm_name.lower() else 'text'
+                    output_fmt = 'list' if ('local' in self.llm_name.lower() or 'hf-' in self.llm_name.lower()) else 'text'
                     data_availability_cont = self.retrieve_relevant_content(
                                 api_data,
                                 semantic_retrieval=semantic_retrieval,

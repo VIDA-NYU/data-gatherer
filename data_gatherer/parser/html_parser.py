@@ -502,7 +502,7 @@ class HTMLParser(LLMParser):
             out_df = pd.concat([pd.DataFrame(dataset_links_w_target_pages), supplementary_material_metadata])
 
         elif filter_das is None or filter_das is True:
-            output_fmt = 'list' if 'local' in self.llm_name.lower() else 'text'
+            output_fmt = 'list' if ('local' in self.llm_name.lower() or 'hf-' in self.llm_name.lower()) else 'text'
 
             self.logger.info(f"Chunking the HTML content for the parsing step.")
 
