@@ -693,115 +693,6 @@ Files:
         self.logger.debug(f"Parser safe_parse_json wrapper called, delegating to client")
         return self.llm_client.safe_parse_json(response_text)
 
-    def process_data_availability_links(self, dataset_links):
-        """
-        Given the link, the article title, and the text around the link, create a column (identifier),
-        and a column for the dataset.
-
-        :param dataset_links: List of dictionaries containing href links and their context.
-
-        :return: List of dictionaries containing processed dataset information.
-
-        """
-        self.logger.info(f"Analyzing data availability statement with {len(dataset_links)} links")
-        self.logger.debug(f"Text from data-availability: {dataset_links}")
-
-        model = self.llm_name
-        temperature = 0.0
-
-        ret = []
-        progress = 0
-
-        for link in dataset_links:
-            self.logger.info(f"Processing link: {link['href']}")
-
-            if progress > len(dataset_links):
-                break
-
-            ret_element = {}
-
-            # Detect if the link is already a dataset webpage
-            detected = self.dataset_webpage_url_check(link['href'])
-            if detected is not None:
-                self.logger.info(f"Link {link['href']} points to dataset webpage")
-                ret.append(detected)
-                progress += 1
-                continue
-
-            # Prepare the dynamic prompt
-            dynamic_content = {
-                "href": link['href'],
-                "surrounding_text": link['surrounding_text']
-            }
-            static_prompt = self.prompt_manager.load_prompt("GEMINI_RTR_FewShot")
-            messages = self.prompt_manager.render_prompt(static_prompt, self.full_document_read, **dynamic_content)
-
-            # Generate a unique checksum for the prompt
-            prompt_id = f"{model}-{temperature}-{self.prompt_manager._calculate_checksum(str(messages))}"
-            self.logger.info(f"Prompt ID: {prompt_id}")
-
-            # Check if the response exists
-            cached_response = self.prompt_manager.retrieve_response(prompt_id) if self.use_cached_responses else None
-            if cached_response:
-                self.logger.info("Using cached response.")
-                resp = cached_response.split("\n") if isinstance(cached_response, str) else cached_response
-            else:
-                # Make the request using the unified LLM client
-                self.logger.info(f"Requesting datasets using model: {model}, messages: {messages}")
-                
-                # Use the generic make_llm_call method
-                raw_response = self.llm_client.make_llm_call(
-                    messages=messages, 
-                    temperature=0.0, 
-                    full_document_read=False
-                )
-                
-                # Process response and save to cache
-                resp = raw_response.split("\n") if isinstance(raw_response, str) else [raw_response]
-                if self.save_responses_to_cache:
-                    self.prompt_manager.save_response(prompt_id, raw_response)
-                self.logger.info(f"Response saved to cache")
-
-            # Process the response
-            ret_element['link'] = link['href']
-            ret_element['content_type'] = 'data_link'
-
-            if type(resp) == list:
-                for r in resp:
-                    append_item = ret_element.copy()
-                    self.logger.info(f"Response: '{r}', len: {len(r)}")
-                    # string that is less than 1 char + 1 comma + 1 char
-                    if len(r) < 3:
-                        continue
-                    # skip strings that do not conform to expected output
-                    if r.count(',') != 1:
-                        continue
-                    append_item['dataset_identifier'], append_item['data_repository'] = r.split(
-                        ',')
-                    append_item['dataset_identifier'] = append_item['dataset_identifier'].strip()
-                    append_item['data_repository'] = append_item['data_repository'].strip()
-                    append_item['source_section'] = link['source_section']
-                    append_item['retrieval_pattern'] = link[
-                        'retrieval_pattern'] if 'retrieval_pattern' in link.keys() else None
-                    ret.append(append_item)
-                    self.logger.info(f"Response appended to df {append_item}")
-                    progress += 1
-                self.logger.info(f"Updated ret: {ret}")
-            else:
-                self.logger.info(f"Response: '{resp}', len: {len(resp)}. Response appended to df")
-                ret_element['dataset_identifier'], ret_element['data_repository'] = (
-                    response['message']['content'].split(','))
-                # trim leading and trailing whitespaces
-                ret_element['dataset_identifier'] = ret_element['dataset_identifier'].strip()
-                ret_element['data_repository'] = ret_element['data_repository'].strip()
-                ret_element['source_section'] = link['source_section']
-                ret_element['retrieval_pattern'] = link[
-                    'retrieval_pattern'] if 'retrieval_pattern' in link.keys() else None
-                ret.append(ret_element)
-                progress += 1
-
-        return ret
-
     def brute_force_dataset_webpage_url_check(self, url):
         """
         Iterate over all the known data repositories and check if the URL matches any of their dataset webpage patterns.
@@ -1440,9 +1331,9 @@ Files:
         return dict(items)
 
     def extract_dataset_info(self, metadata, subdir='', model=None, use_portkey=True,
-                             prompt_name='gpt_metadata_extract'):
+                             prompt_name='gpt_metadata_extract', response_schema=dataset_metadata_response_schema_gpt):
         """
-        Given the metadata, extract the dataset information using the LLM.
+        Given the metadata source (dataset page), extract information using the LLM.
 
         :param model: str — the model to be used for parsing (default: self.llm_name).
 
@@ -1463,16 +1354,105 @@ Files:
         )
         
         # Load and render the prompt using the unified client
-        static_prompt = llm.prompt_manager.load_prompt("gpt_metadata_extract", subdir=subdir)
+        static_prompt = llm.prompt_manager.load_prompt(prompt_name, subdir=subdir)
         messages = llm.prompt_manager.render_prompt(static_prompt, entire_doc=True, content=metadata)
         
         # Make the LLM call using the unified interface
-        response = llm.make_llm_call(messages=messages, temperature=0.0)
+        response = llm.make_llm_call(messages=messages, temperature=0.0, response_format=response_schema)
 
         # Post-process response into structured dict
         dataset_info = self.safe_parse_json(response)
         self.logger.info(f"Extracted dataset info: {dataset_info}")
         return dataset_info
+
+    def extract_dataset_description(self, full_text, target_dataset_metadata, subdir='metadata_prompts', prompt_name='GPT_F2DR_FewShot_Descr',
+                                    response_schema=autoDDG_from_context_schema, temperature=0.0, article_id=None) -> str:
+        """
+        Given the metadata, and target dataset details, extract the dataset description from the paper.
+
+        :param full_text: str — the source to be parsed.
+
+        :param target_dataset_metadata: dict — the target dataset metadata to extract description for.
+
+        :param prompt_name: str — the name of the prompt template to use (default: 'GPT_F2DR_FewShot_Descr').
+
+        :param response_schema: dict — the response schema for the LLM output (default: autoDDG_from_context_schema).
+
+        :return: str — the extracted dataset description.
+
+        """
+        self.input_tokens = 0
+        self.logger.info(f"Extracting dataset description for dataset: {target_dataset_metadata}")
+        static_prompt = self.prompt_manager.load_prompt(prompt_name, subdir=subdir)
+
+        if 'gpt' in self.llm_name:
+            tokens_cnt = self.count_tokens(full_text, self.llm_name) + len(str(static_prompt)) // 4
+            if tokens_cnt > int(1.25 * 128000):
+                return self.extract_dataset_description(full_text=full_text[:-2000], target_dataset_metadata=target_dataset_metadata, subdir=subdir,
+                    prompt_name=prompt_name, response_schema=response_schema, temperature=temperature, article_id=article_id)
+                
+            while self.tokens_over_limit(full_text, self.llm_name, allowance_static_prompt=len(str(static_prompt)) // 4):
+                full_text = full_text[:-2000]
+
+        messages = self.prompt_manager.render_prompt(
+            static_prompt,
+            entire_doc=self.full_document_read,
+            content=full_text,
+            target_dataset_metadata=target_dataset_metadata
+        )
+
+        tokens_cnt = self.count_tokens(messages, self.llm_name)
+        self.logger.info(f"Prompt messages total length: {tokens_cnt} tokens")
+        self.logger.debug(f"Prompt messages: {messages}")
+
+        self.logger.debug(
+            f"Requesting datasets from content using self.llm_name: {self.llm_name}, temperature: {temperature}, "
+            f"messages length: {tokens_cnt} tokens, schema: {response_schema}")
+
+        self.input_tokens += tokens_cnt
+
+        self.logger.info(f"Generating process_id: {self.llm_name}-FDR-{article_id}")
+        process_id = self.llm_name + "-FDR-" + article_id
+
+        if self.use_cached_responses:
+            cached_response = self.prompt_manager.retrieve_response(process_id)
+
+        cached_response = self.prompt_manager.retrieve_response(process_id) if self.use_cached_responses else None
+
+        if cached_response:
+            self.logger.info(f"Using cached response {type(cached_response)} from model: {self.llm_name}")
+            if isinstance(cached_response, str) and 'gpt' in self.llm_name:
+                resp = [json.loads(cached_response)]
+            elif isinstance(cached_response, str):
+                resp = cached_response.split("\n")
+            elif isinstance(cached_response, list):
+                resp = cached_response
+            else:
+                resp = cached_response
+        else:
+            raw_response = self.llm_client.make_llm_call(
+                messages=messages, 
+                temperature=temperature, 
+                response_format=response_schema,
+                full_document_read=self.full_document_read
+            )
+
+            self.logger.debug(f"Calling process_llm_response with raw_response type: {type(raw_response)}")
+            resp = self.llm_client.process_llm_response(
+                raw_response=raw_response,
+                response_format=response_schema
+            )
+            self.logger.debug(f"process_llm_response returned: {resp} (type: {type(resp)})")
+                
+            self.logger.debug(f"Applying normalize_response_type to: {resp}")
+            resp = self.normalize_response_type(resp)
+            self.logger.debug(f"normalize_response_type returned: {resp} (type: {type(resp)})")
+
+            if self.save_responses_to_cache:
+                self.logger.debug(f"Saving response to cache with process_id: {process_id}")
+                self.prompt_manager.save_response(process_id, resp)
+
+        return resp
 
     def semantic_retrieve_from_corpus(self, corpus, model_name='sentence-transformers/all-MiniLM-L6-v2',
                                       topk_docs_to_retrieve=5, query=None, src=None, embedding_encode_batch_size=128):

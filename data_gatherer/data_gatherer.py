@@ -297,8 +297,10 @@ class DataGatherer:
             else:
                 self.logger.info("Dataframe must be written to parquet file. Please provide a valid path ending with .parquet")
 
-        if single_article:
+        if single_article and urls[0] in complete_publication_fetches:
             return complete_publication_fetches[urls[0]]['fetched_data']
+        elif single_article:
+            return ''
 
         return complete_publication_fetches
 
@@ -518,6 +520,18 @@ class DataGatherer:
         Retrieve context for datasets using the parser's retrieval method. Use-case: AutoDDG
         """
         return self.parser.retrieve_relevant_content(full_paper, ID_patterns=dataset_ID_ptrs, query=dataset_info, force_include_DAS=force_include_DAS)
+
+    def normalize_fulltext_input(self, fulltext):
+        """
+        Normalize the fulltext input to ensure it's a string.
+        """
+        if self.data_fetcher.raw_data_format.upper() == "XML":
+            fulltext = self.parser.normalize_XML(fulltext)
+        elif self.data_fetcher.raw_data_format.upper() == "HTML":
+            fulltext = self.parser.normalize_HTML(fulltext)
+        elif self.data_fetcher.raw_data_format.upper() == "PDF" and self.grobid_for_pdf:
+            fulltext = self.parser.normalize_XML(self.parser.extract_full_text_xml(fulltext))
+        return fulltext
 
     def process_url(
         self, 
