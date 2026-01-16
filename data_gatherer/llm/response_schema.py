@@ -197,6 +197,32 @@ dataset_response_schema_with_use_description_and_short = {
     }
 }
 
+autoDDG_from_context_schema = {
+    "type": "json_schema",
+    "name": "autoDDG_from_context_schema",
+    "schema": {
+        "type": "object",
+        "properties": {
+            "dataset_description": {
+                "type": "string",
+                "description": "Description of the dataset extracted from context."
+            },
+            "citation_type": {
+                "type": "string",
+                "description": "Type of citation used for this dataset.",
+                "enum": ["Primary", "Secondary"]
+            },
+            "reuse_potential": {
+                "type": "string",
+                "description": "A brief explanation of the potential for reusing this dataset in future research."
+            }
+        },
+        "additionalProperties": False,
+        "required": ["dataset_description", "citation_type", "reuse_potential"]
+    }
+}
+
+
 dataset_response_schema_with_use_description = {
     "type": "json_schema",
     "name": "PaperMiner_dataset_provenance_schema",
@@ -333,6 +359,15 @@ class Dataset_w_Use_Description(BaseModel):
     dataset_identifier: str
     data_repository: str
     dataset_context_from_paper: str  # Rich description of how this dataset was used in the paper - enables data reuse
+
+class Single_Target_Dataset_Context(BaseModel):
+    dataset_identifier: str
+    data_repository: str
+    dataset_context_from_paper: str  # Relevant text passages describing how this specific dataset was used
+    citation_type: str  # "Primary" or "Secondary"
+
+class Array_Single_Target_Dataset_Context(BaseModel):
+    datasets: list[Single_Target_Dataset_Context]
 
 
 

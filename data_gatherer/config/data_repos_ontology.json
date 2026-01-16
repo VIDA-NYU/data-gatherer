@@ -173,7 +173,7 @@
     },
     "pdb": {
         "repo_name": "Protein Data Bank",
-        "id_pattern": "[1-9][a-zA-Z0-9]{3}",
+        "id_pattern": "\\bpdb[1-9][a-zA-Z0-9]{3}\\b",
         "dataset_webpage_url_ptr": "https://www.rcsb.org/structure/__ID__"
     },
     "data.mendeley.com": {
@@ -205,6 +205,10 @@
       "repo_name": "BioProject",
       "id_pattern": "\\b(PRJNA\\d+|PRJEB\\d+|PRJDB\\d+)\\b",
       "dataset_webpage_url_ptr": "https://www.ncbi.nlm.nih.gov/bioproject/__ID__"
+    },
+    "github.com": {
+      "repo_name": "GitHub",
+      "dataset_webpage_url_ptr": "https://github.com/__ID__"
     }
   }
 }

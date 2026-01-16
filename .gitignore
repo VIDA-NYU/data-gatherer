@@ -173,4 +173,14 @@ scripts/output/semantic_search/Train_results.csv
 
 # Fine-tuned models
 scripts/Local_model_finetuning/flan-t5-models/
+scripts/Local_model_finetuning/qwen*
 *.safetensors
+scripts/Knowledge_graph/*
+scripts/NYU_data_catalog/*.jsonl
+scripts/NYU_data_catalog/*.csv
+scripts/Local_model_finetuning/ground_truth/gt_dataset_info_no_dspage_extraction_from_snippet.csv
+scripts/exp_input/nyu_data_catalog_publications.parquet
+scripts/NYC Open Data/*.csv
+.gitignore
+scripts/NYU_data_catalog/Searches_Insights_2025-01-04.textClipping
+scripts/NYU_data_catalog/Figure.pptx
