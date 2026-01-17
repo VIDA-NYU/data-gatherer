@@ -1,3 +1,9 @@
+## Release (v0.1.8) - 2026-16-01
+
+- Added Qwen finetuning pipeline with checkpoints
+- Profiling of NYU Data Catalog and potential use as ground truth
+- Added support for sample NYC Open Data datasets for AutoDDG enhancement
+
 ## Release (v0.1.7) - 2025-12-04
 
 - Added ground truth generation and T5 finetuning pipeline
