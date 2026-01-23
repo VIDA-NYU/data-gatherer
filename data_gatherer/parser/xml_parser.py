@@ -125,12 +125,15 @@ class XMLParser(LLMParser):
         if not isinstance(xml_root, etree._Element):
             raise TypeError(f"Invalid XML root type: {type(xml_root)}. Expected lxml.etree.Element.")
 
-        # Find all section-like elements (sec, notes, ack)
+        # Find all section-like elements (sec, notes, ack, app, fn-group)
         sec_elements = xml_root.findall(".//sec")
         notes_elements = xml_root.findall(".//notes")
+        ack_elements = xml_root.findall(".//ack")
+        app_elements = xml_root.findall(".//app")
+        fn_group_elements = xml_root.findall(".//fn-group")
         
-        all_sections = sec_elements + notes_elements
-        self.logger.debug(f"Found {len(sec_elements)} <sec> blocks, {len(notes_elements)} <notes> blocks")
+        all_sections = sec_elements + notes_elements + ack_elements + app_elements + fn_group_elements
+        self.logger.debug(f"Found {len(sec_elements)} <sec>, {len(notes_elements)} <notes>, {len(ack_elements)} <ack>, {len(app_elements)} <app>, {len(fn_group_elements)} <fn-group> blocks")
         self.logger.debug(f"Total {len(all_sections)} section-like blocks in XML")
 
         # Iterate over all section blocks
@@ -142,6 +145,12 @@ class XMLParser(LLMParser):
                 sec_type = sec.get("sec-type", "unknown")
             elif sec.tag == "notes":
                 sec_type = sec.get("notes-type", "notes")
+            elif sec.tag == "ack":
+                sec_type = "acknowledgments"
+            elif sec.tag == "app":
+                sec_type = "appendix"
+            elif sec.tag == "fn-group":
+                sec_type = "footnotes"
             else:
                 sec_type = sec.tag
                 
@@ -163,10 +172,21 @@ class XMLParser(LLMParser):
                 self.logger.debug(f"Processing paragraph {p_idx + 1}/{len(paragraphs)} in section '{section_title}'")
                 parent_section = p.getparent()
                 grandparent_section = parent_section.getparent() if parent_section is not None else None
+                
+                # Check if we've entered a different logical section (not just a structural wrapper)
+                # Allow one level of nesting for structural elements like <fn>, <table-wrap>, <fig>, etc.
                 if parent_section is not None and parent_section != sec:
-                    self.logger.debug(f"We've entered a different section: {parent_section} != {sec}, so break out of the loop")
-                    break
-                elif grandparent_section is not None and grandparent_section.find("title") is not None:
+                    # If grandparent matches sec, this is just a structural wrapper - continue processing
+                    if grandparent_section is not None and grandparent_section == sec:
+                        self.logger.debug(f"Paragraph parent is {parent_section.tag}, but grandparent matches section - continuing")
+                    # Otherwise, we've entered a different section-level element - break
+                    elif parent_section.tag in ['sec', 'ack', 'app', 'notes', 'fn-group']:
+                        self.logger.debug(f"We've entered a different section: {parent_section} != {sec}, so break out of the loop")
+                        break
+                    else:
+                        self.logger.debug(f"Paragraph in structural element {parent_section.tag} - continuing")
+                
+                if grandparent_section is not None and grandparent_section.find("title") is not None:
                     title_elem = grandparent_section.find("title")
                     title_text = title_elem.text if title_elem is not None and title_elem.text is not None else ""
                     section_title = title_text + " > " + parent_section_title

@@ -62,10 +62,14 @@ class xmlRetriever(BaseRetriever):
                     return False
         
         if isinstance(required_sections, int):
-            # find all sections and count them
+            # find all sections and count them (including various section types in PMC XML)
             sec_elements = raw_data.findall(".//sec")
-            n_sections_found = len(sec_elements)
-            self.logger.info(f"Number of <sec> elements found: {n_sections_found}")
+            ack_elements = raw_data.findall(".//ack")
+            app_elements = raw_data.findall(".//app")
+            fn_group_elements = raw_data.findall(".//fn-group")
+            
+            n_sections_found = len(sec_elements) + len(ack_elements) + len(app_elements) + len(fn_group_elements)
+            self.logger.info(f"Number of sections found: {n_sections_found} (<sec>: {len(sec_elements)}, <ack>: {len(ack_elements)}, <app>: {len(app_elements)}, <fn-group>: {len(fn_group_elements)})")
             if n_sections_found < required_sections:
                 self.logger.info(f"Number of sections {n_sections_found} is less than the required threshold of {required_sections}.")
                 return False
