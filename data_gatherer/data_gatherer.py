@@ -118,7 +118,8 @@ class DataGatherer:
         self.download_data_for_description_generation = download_data_for_description_generation
 
         entire_document_models = ["gemini-1.5-flash", "gemini-1.5-pro", "gemini-2.0-flash-exp", "gemini-2.0-flash",
-                                  "gemini-2.5-flash", "gpt-4o", "gpt-4o-mini", "gpt-5-nano", "gpt-5-mini", "gpt-5"]
+                                  "gemini-2.5-flash", "gpt-4o", "gpt-4o-mini", "gpt-5-nano", "gpt-5-mini", "gpt-5",
+                                  "claude-haiku-4-5-20251001"]
         self.full_document_read = llm_name in entire_document_models and process_entire_document
         self.llm = llm_name
 
@@ -321,12 +322,14 @@ class DataGatherer:
 
         self.full_document_read = full_document_read if full_document_read is not None else self.full_document_read
 
+        self.logger.debug(f"Initializing parser for format: {raw_data_format} with FDR={self.full_document_read}")
+
         format_key = raw_data_format.upper()
         if grobid_for_pdf and format_key == "PDF":
             format_key = "PDF_GROBID"
         
         if self._cached_parsers.get(format_key) is not None and not force_reinit:
-            self.logger.info(f"Reusing cached parser for format: {format_key}")
+            self.logger.debug(f"Reusing cached parser for format: {format_key}")
             self.parser = self._cached_parsers[format_key]
             self.parser.full_document_read = self.full_document_read
             return
@@ -695,7 +698,7 @@ class DataGatherer:
 
             # Step 2: Use HTMLParser/XMLParser
             self.logger.info("Initializing parser based on raw data format")
-            self.init_parser_by_input_type(self.raw_data_format, raw_data, embeddings_retriever_model, use_portkey, grobid_for_pdf, full_document_read)
+            self.init_parser_by_input_type(self.raw_data_format, raw_data, embeddings_retriever_model, use_portkey, grobid_for_pdf, self.full_document_read)
 
             self.logger.info("Parsing Raw content from format: " + self.raw_data_format + " with parser " + self.parser.__class__.__name__)
             if self.raw_data_format.upper() == "XML" and raw_data is not None:

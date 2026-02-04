@@ -46,7 +46,8 @@ class LLMParser(ABC):
 
         self.llm_name = llm_name
         entire_document_models = ["gemini-1.5-flash", "gemini-1.5-pro", "gemini-2.0-flash-exp", "gemini-2.0-flash",
-                                  "gemini-2.5-flash", "gpt-4o", "gpt-4o-mini", "gpt-5-nano", "gpt-5-mini", "gpt-5"]
+                                  "gemini-2.5-flash", "gpt-4o", "gpt-4o-mini", "gpt-5-nano", "gpt-5-mini", "gpt-5",
+                                  "claude-haiku-4-5-20251001"]
 
         self.full_document_read = full_document_read and self.llm_name in entire_document_models
         self.title = None
@@ -296,10 +297,22 @@ Files:
             tokens_cnt = self.count_tokens(content, model) + n_tokens_static_prompt
             if tokens_cnt > int(1.25 * 128000):
                 return self.extract_datasets_info_from_chunks(
-                    content, tokens_cnt, repos, model, temperature, prompt_name,full_document_read,response_format)
-                
+                    content, tokens_cnt, repos, model, temperature, prompt_name, full_document_read, response_format)
+
             while self.tokens_over_limit(content, model, allowance_static_prompt=n_tokens_static_prompt):
                 content = content[:-2000]
+        
+        # Claude models have a 200k token limit
+        elif 'claude' in model:
+            tokens_cnt = self.count_tokens(content, model) + n_tokens_static_prompt
+            if tokens_cnt > int(1.25 * 200000):
+                return self.extract_datasets_info_from_chunks(
+                    content, tokens_cnt, repos, model, temperature, prompt_name, full_document_read, response_format)
+
+            while self.tokens_over_limit(content, model, allowance_static_prompt=n_tokens_static_prompt, limit=200000):
+                content = content[:-5000]
+                self.logger.info(f"Truncating content for Claude model. New length: {len(content)}")
+        
         self.logger.info(f"Content length: {len(content)}")
 
         if 'gemma' in model or 'qwen' in model:
@@ -1248,6 +1261,8 @@ Files:
             self.logger.info(f"Number of tokens: {len(tokens)}")
             # Use 1.5x allowance to account for message formatting overhead
             return len(tokens) + int(allowance_static_prompt * 1.5) > limit - 2000
+        elif 'claude' in model:
+            limit = 200000
         elif 'gemini' in model:
             limit = 1000000
         # Rough estimate: 1 token ≈ 4 characters
@@ -1281,13 +1296,24 @@ Files:
         if 'gpt' in model:
             encoding = tiktoken.encoding_for_model(model)
             n_tokens = len(encoding.encode(prompt))
-
+        
+        elif 'claude' in model:
+            token_count_result = self.llm_client.llm_client.messages.count_tokens(
+                messages=[{
+                    "content": prompt,
+                    "role": "user",
+                }],
+                model=model,
+            )
+            # Extract the integer value from the MessageTokensCount object
+            n_tokens = token_count_result.input_tokens
+        
         else:
             try:
-                n_tokens = len(prompt) // 4  # Adjust based on the response structure
-                self.logger.debug(f"Rough estimate of token count for Gemini model '{model}': {n_tokens}")
+                n_tokens = len(prompt) // 4  # Rough estimate for Gemini and other models
+                self.logger.debug(f"Rough estimate of token count for model '{model}': {n_tokens}")
             except Exception as e:
-                self.logger.error(f"Error counting tokens for Gemini model '{model}': {e}")
+                self.logger.error(f"Error counting tokens for model '{model}': {e}")
                 n_tokens = 0
 
         return n_tokens

@@ -440,6 +440,8 @@ class XMLParser(LLMParser):
                          f"{raw_data_format})")
         self.publisher = publisher
 
+        self.logger.info(f"FDR flag: {self.full_document_read}")
+
         if isinstance(api_data, str):
             try:
                 if os.path.exists(api_data):

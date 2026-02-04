@@ -319,6 +319,33 @@ dataset_response_schema_with_context = {
     }
 }
 
+dataset_schema_CARD = {
+    "type": "json_schema",
+    "schema": {
+        "type": "object",
+        "properties": {
+            "datasets": {
+                "type": "array",
+                "items": {
+                    "type": "object",
+                    "properties": {
+                        "dataset_identifier": {"type": "string"},
+                        "data_repository": {"type": "string"},
+                        "sample_size": {"type": "integer"},
+                        "accession_url": {"type": "string"},
+                        "FAIR_compliance_notes": {"type": "string"},
+                        "dataset_type": {"type": "string"}
+                    },
+                    "required": ["dataset_identifier", "data_repository", "sample_size", "accession_url", "FAIR_compliance_notes", "dataset_type"],
+                    "additionalProperties": False
+                },
+                "minItems": 1
+            }
+        },
+        "required": ["datasets"],
+        "additionalProperties": False
+    }
+}
 
 class Dataset(BaseModel):
     dataset_identifier: str
