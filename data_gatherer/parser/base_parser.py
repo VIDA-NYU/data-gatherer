@@ -294,20 +294,21 @@ Files:
         n_tokens_static_prompt = self.count_tokens(static_prompt, model)
 
         if 'gpt' in model:
-            tokens_cnt = self.count_tokens(content, model) + n_tokens_static_prompt
+            tokens_cnt = self.count_tokens(content, model)
             if tokens_cnt > int(1.25 * 128000):
                 return self.extract_datasets_info_from_chunks(
-                    content, tokens_cnt, repos, model, temperature, prompt_name, full_document_read, response_format)
+                    content, tokens_cnt, repos, model, temperature, prompt_name, full_document_read, response_format, token_chunk_size=128000)
 
             while self.tokens_over_limit(content, model, allowance_static_prompt=n_tokens_static_prompt):
                 content = content[:-2000]
         
         # Claude models have a 200k token limit
         elif 'claude' in model:
-            tokens_cnt = self.count_tokens(content, model) + n_tokens_static_prompt
+            tokens_cnt = self.count_tokens(content, model)
+            self.logger.info(f"Initial content tokens count for Claude model: {tokens_cnt} tokens")
             if tokens_cnt > int(1.25 * 200000):
                 return self.extract_datasets_info_from_chunks(
-                    content, tokens_cnt, repos, model, temperature, prompt_name, full_document_read, response_format)
+                    content, tokens_cnt, repos, model, temperature, prompt_name, full_document_read, response_format, token_chunk_size=200000)
 
             while self.tokens_over_limit(content, model, allowance_static_prompt=n_tokens_static_prompt, limit=200000):
                 content = content[:-5000]
@@ -399,14 +400,13 @@ Files:
 
         return result
     
-    def extract_datasets_info_from_chunks(self, content, tokens_cnt, repos, model, temperature, prompt_name,full_document_read,response_format):
+    def extract_datasets_info_from_chunks(self, content, tokens_cnt, repos, model, temperature, prompt_name,full_document_read,response_format, token_chunk_size=128000):
         '''
         This function splits the content into chunks based on token count, then calls extract_datasets_info_from_content for each chunk.
         '''
         ret = []
         # Determine chunk size (e.g., 128000 tokens per chunk for GPT-4o)
         # Estimate chunk size in string indices: 1 token ≈ 3.5 characters
-        token_chunk_size = 128000
         char_chunk_size = int(token_chunk_size * 3.5)
         # Split content into chunks
         chunks = []
@@ -421,7 +421,7 @@ Files:
             self.logger.info(f"Processing chunk {idx+1}/{len(chunks)}")
             chunk_results = self.extract_datasets_info_from_content(
                 chunk,
-                repos_elements=repos, model=model, temperature=temperature,prompt_name=prompt_name,response_format=response_format
+                repos=repos, model=model, temperature=temperature,prompt_name=prompt_name,response_format=response_format, full_document_read=full_document_read
             )
             ret.extend(chunk_results)
         return ret
@@ -1254,21 +1254,17 @@ Files:
         raise NotImplementedError("This method should be implemented in a subclass.")
 
     def tokens_over_limit(self, html_cont: str, model="gpt-4", limit=128000, allowance_static_prompt=200):
-        # Use tiktoken only for OpenAI models, fallback to rough estimate for others
+        tokens_cnt = self.count_tokens(html_cont, model=model)
         if 'gpt' in model:
-            encoding = tiktoken.encoding_for_model(model)
-            tokens = encoding.encode(html_cont)
-            self.logger.info(f"Number of tokens: {len(tokens)}")
-            # Use 1.5x allowance to account for message formatting overhead
-            return len(tokens) + int(allowance_static_prompt * 1.5) > limit - 2000
+            self.logger.info(f"Number of tokens: {tokens_cnt}")
+            return tokens_cnt + int(allowance_static_prompt * 1.5) > limit - 2000
         elif 'claude' in model:
-            limit = 200000
+            self.logger.info(f"Number of tokens: {tokens_cnt}")
+            return tokens_cnt + int(allowance_static_prompt * 1.5) > limit - 2000
         elif 'gemini' in model:
             limit = 1000000
-        # Rough estimate: 1 token ≈ 4 characters
-        n_tokens = len(html_cont) // 4
-        self.logger.info(f"Estimated number of tokens for model '{model}': {n_tokens}")
-        return n_tokens + int(allowance_static_prompt * 1.5) > limit - 2000
+        self.logger.info(f"Estimated number of tokens for model '{model}': {tokens_cnt}")
+        return tokens_cnt + int(allowance_static_prompt * 1.5) > limit - 2000
 
     def count_tokens(self, prompt, model="gpt-4o-mini") -> int:
         """
@@ -1298,11 +1294,19 @@ Files:
             n_tokens = len(encoding.encode(prompt))
         
         elif 'claude' in model:
-            token_count_result = self.llm_client.llm_client.messages.count_tokens(
-                messages=[{
+            # Handle both single string and message list formats
+            if isinstance(prompt, list):
+                # Already in message format
+                messages_for_count = prompt
+            else:
+                # Wrap string in message format
+                messages_for_count = [{
                     "content": prompt,
                     "role": "user",
-                }],
+                }]
+            
+            token_count_result = self.llm_client.llm_client.messages.count_tokens(
+                messages=messages_for_count,
                 model=model,
             )
             # Extract the integer value from the MessageTokensCount object

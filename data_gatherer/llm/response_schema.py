@@ -347,6 +347,31 @@ dataset_schema_CARD = {
     }
 }
 
+dataset_response_schema_claude = {
+    "type": "json_schema",
+    "schema": {
+        "type": "object",
+        "properties": {
+            "datasets": {
+                "type": "array",
+                "items": {
+                    "type": "object",
+                    "properties": {
+                        "dataset_identifier": {"type": "string"},
+                        "data_repository": {"type": "string"},
+                        "dataset_webpage": {"type": "string"},
+                    },
+                    "required": ["dataset_identifier", "data_repository", "dataset_webpage"],
+                    "additionalProperties": False
+                },
+                "minItems": 1
+            }
+        },
+        "required": ["datasets"],
+        "additionalProperties": False
+    }
+}
+
 class Dataset(BaseModel):
     dataset_identifier: str
     data_repository: str
