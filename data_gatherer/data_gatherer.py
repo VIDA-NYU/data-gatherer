@@ -972,6 +972,7 @@ class DataGatherer:
     def process_metadata(
         self,
         combined_df,
+        force_js_load=False,
         display_type='console', 
         interactive=True, 
         return_metadata=False,
@@ -979,6 +980,7 @@ class DataGatherer:
         article_file_dir='tmp/raw_files/', 
         use_portkey=True,
         prompt_name='gpt_metadata_extract', 
+        response_format=dataset_metadata_response_schema_gpt,
         timeout=1,
         ):
         """
@@ -986,11 +988,13 @@ class DataGatherer:
 
         :param combined_df: DataFrame containing the data to preview. It should contain columns like 'dataset_webpage', 'download_link', etc.
 
-        :param display_type: Type of display for the preview. Options are 'console', 'html', or 'json'.
+        :param force_js_load: If True, forces JavaScript loading for all dataset webpages.
+
+        :param display_type: Type of display for the preview. Options are 'console', 'ipynb'.
 
         :param interactive: If True, allows user interaction for displaying data previews.
 
-        :param return_metadata: If True, returns a list of metadata dictionaries instead of displaying them.
+        :param return_metadata: If True, returns a list of metadata dictionaries instead of just displaying them.
 
         :param write_raw_metadata: If True, saves raw metadata to the specified directory.
 
@@ -999,6 +1003,8 @@ class DataGatherer:
         :param use_portkey: If True, uses Portkey for Gemini LLM.
 
         :param prompt_name: Name of the prompt to use for LLM parsing.
+
+        :param response_format: The response schema to use for parsing the metadata.
 
         :param timeout: Timeout for requests to fetch dataset webpages.
 
@@ -1022,7 +1028,7 @@ class DataGatherer:
 
         for i, row in combined_df.iterrows():
             self.logger.info(f"Row # {i}")
-            self.logger.debug(f"Row keys: {row}")
+            self.logger.debug(f"Row key value pairs: {row}")
 
             dataset_webpage, download_link = self.metadata_parser.extract_normalized_dataset_urls(row)
 
@@ -1060,8 +1066,8 @@ class DataGatherer:
             else:
                 self.logger.info(f"LLM scraped metadata")
                 keep_tags = None
-                repo_mapping_key = row['data_repository'].lower()
-                repo_dict = self.open_data_repos_ontology['repos'][repo_mapping_key]
+                repo_mapping_key = row.get('data_repository', 'other').lower()
+                repo_dict = self.open_data_repos_ontology['repos'].get(repo_mapping_key, {})
 
                 # caching: load_from_cache
                 skip, cache = False, {}
@@ -1075,7 +1081,7 @@ class DataGatherer:
                     self.logger.info(f"Loading metadata from cache for process ID: {process_id}")
                     continue
 
-                if ('javascript_load_required' in repo_dict):
+                if ('javascript_load_required' in repo_dict) or force_js_load:
                     self.logger.info(f"JavaScript load required for {repo_mapping_key} dataset webpage. Using Selenium.")
                     # Switch to Selenium --> Playwright can be added later
                     self.data_fetcher = self.data_fetcher.update_DataFetcher_settings(
@@ -1118,7 +1124,7 @@ class DataGatherer:
 
                 html = self.metadata_parser.normalize_HTML(html, keep_tags=keep_tags)
 
-                metadata = self.metadata_parser.parse_datasets_metadata(html, use_portkey=use_portkey, prompt_name=prompt_name)
+                metadata = self.metadata_parser.parse_datasets_metadata(html, model=self.llm, use_portkey=use_portkey, prompt_name=prompt_name, response_format=response_format)
                 metadata['source_url_for_metadata'] = row['dataset_webpage']
                 metadata['access_mode'] = row.get('access_mode', None)
                 metadata['source_section'] = row.get('source_section', row.get('section_class', None))
@@ -1129,7 +1135,7 @@ class DataGatherer:
                 metadata['metadata_schema_org'] = metadata_schema_org
                 self.already_previewed.append(row['dataset_webpage'])
 
-            metadata['paper_with_dataset_citation'] = row['source_url']
+            metadata['paper_with_dataset_citation'] = row.get('source_url', None)
 
             if self.save_to_cache:
                 self.logger.debug(f"Saving metadata to cache for process ID: {process_id}")

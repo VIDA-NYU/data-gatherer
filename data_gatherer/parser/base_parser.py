@@ -1323,7 +1323,7 @@ Files:
         return n_tokens
 
     def parse_datasets_metadata(self, metadata: str, model='gemini-2.0-flash', use_portkey=True,
-                                prompt_name='gpt_metadata_extract') -> dict:
+                                prompt_name='gpt_metadata_extract', response_format=dataset_metadata_response_schema_gpt) -> dict:
         """
         Given the metadata, extract the dataset information using the LLM.
 
@@ -1335,9 +1335,11 @@ Files:
         """
         #metadata = self.normalize_full_DOM(metadata)
         self.logger.info(f"Parsing metadata len: {len(metadata)}")
+        self.logger.debug(f"Passed params: model={model}, prompt_name={prompt_name}, response_format={response_format.keys()}")
         dataset_info = self.extract_dataset_info(metadata, subdir='metadata_prompts',
                                                  use_portkey=use_portkey,
-                                                 prompt_name=prompt_name)
+                                                 prompt_name=prompt_name,
+                                                 response_format=response_format)
         return dataset_info
 
     def flatten_metadata_dict(self, metadata: dict, parent_key: str = '', sep: str = '.') -> dict:
@@ -1361,7 +1363,7 @@ Files:
         return dict(items)
 
     def extract_dataset_info(self, metadata, subdir='', model=None, use_portkey=True,
-                             prompt_name='gpt_metadata_extract', response_schema=dataset_metadata_response_schema_gpt):
+                             prompt_name='gpt_metadata_extract', response_format=dataset_metadata_response_schema_gpt):
         """
         Given the metadata source (dataset page), extract information using the LLM.
 
@@ -1380,7 +1382,7 @@ Files:
             model=model if model else self.llm_name,
             logger=self.logger,
             save_dynamic_prompts=self.save_dynamic_prompts,
-            use_portkey=use_portkey
+            use_portkey=use_portkey,
         )
         
         # Load and render the prompt using the unified client
@@ -1388,7 +1390,7 @@ Files:
         messages = llm.prompt_manager.render_prompt(static_prompt, entire_doc=True, content=metadata)
         
         # Make the LLM call using the unified interface
-        response = llm.make_llm_call(messages=messages, temperature=0.0, response_format=response_schema)
+        response = llm.make_llm_call(messages=messages, temperature=0.0, response_format=response_format)
 
         # Post-process response into structured dict
         dataset_info = self.safe_parse_json(response)
