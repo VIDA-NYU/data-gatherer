@@ -379,11 +379,11 @@ study_response_schema_claude = {
         "properties": {
             "coarse_data_modality": {
                 "type": "string",
-                "description": "High-level data modality category (e.g. Genomics, Clinical, Imaging, Proteomics). Return 'na' if not found."
+                "description": "High-level data modality categories (e.g. Genomics, Clinical, Imaging, Proteomics). Return 'na' if not found."
             },
             "granular_data_modality": {
                 "type": "string",
-                "description": "Specific data modality or assay type (e.g. RNA-seq, SNP Array, MRI, Whole Genome Sequencing). Return 'na' if not found."
+                "description": "Specific data modality or assay type included (e.g. RNA-seq, SNP Array, MRI, Whole Genome Sequencing). Return 'na' if not found."
             },
             "diseases_included": {
                 "type": "string",
@@ -412,7 +412,7 @@ study_response_schema_claude = {
                 "description": "Sample size of the study. Return 'na' if not found."
             }
         },
-        "required": ["coarse_data_modality", "granular_data_modality", "diseases_included"],
+        "required": ["coarse_data_modality", "granular_data_modality", "diseases_included", "publication_urls", "dataset_urls", "sample_size"],
         "additionalProperties": False
     }
 }

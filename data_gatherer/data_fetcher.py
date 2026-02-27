@@ -96,13 +96,14 @@ class BackupDataStore:
 
 # Abstract base class for fetching data
 class DataFetcher(ABC):
-    def __init__(self, logger, src='WebScraper', driver_path=None, browser='firefox', headless=True, 
-                 backup_file='scripts/exp_input/Local_fulltext_pub_REV.parquet'):
+    def __init__(self, logger, src='WebScraper', driver_path=None, browser='firefox', headless=True,
+                 backup_file='scripts/exp_input/Local_fulltext_pub_REV.parquet', profile_dir=None):
         self.logger = logger
         self.logger.debug(f"DataFetcher ({src}) initialized.")
         self.driver_path = driver_path
         self.browser = browser
         self.headless = headless
+        self.profile_dir = profile_dir
         self.src = src
         self.local_data_used = False
         self.redirect_mapping = {}
@@ -299,7 +300,7 @@ class DataFetcher(ABC):
         return f"https://www.ncbi.nlm.nih.gov/pmc/articles/{PMCID}"
 
     def update_DataFetcher_settings(self, url, HTML_fallback=False, driver_path=None,
-                                    browser='firefox', headless=True, local_fetch_file=None):
+                                    browser='firefox', headless=True, local_fetch_file=None, profile_dir=None):
         """
         Creates appropriate data fetcher with BackupDataStore integration. 
         All fetchers now automatically check backup data first, then fall back to live fetching.
@@ -383,12 +384,21 @@ class DataFetcher(ABC):
         # Default: Use traditional Selenium WebScraper with backup support
         # Reuse existing driver if available
         if isinstance(self, WebScraper) and hasattr(self, 'scraper_tool') and self.scraper_tool is not None:
+            if self.headless != headless or self.browser != browser:
+                # change settings of existing scraper if they differ from requested settings
+                self.logger.info(f"Updating existing WebScraper settings: headless {self.headless} -> {headless}, browser {self.browser} -> {browser}")
+                self.scraper_tool.quit()  # Close existing driver
+                self.scraper_tool = create_driver(self.driver_path, browser, headless, self.logger, profile_dir=self.profile_dir)
+                self.headless = headless
+                self.browser = browser
+                    
             self.logger.info(f"Reusing existing WebScraper driver with backup support")
             return self
 
-        self.logger.info(f"Creating new WebScraper with backup support: {browser}, headless={headless}")
-        driver = create_driver(driver_path, browser, headless, self.logger)
-        return WebScraper(driver, self.logger, driver_path=driver_path, browser=browser, headless=headless, backup_file=local_fetch_file)
+        self.logger.info(f"Creating new WebScraper with backup support: {browser}, headless={headless}, profile_dir={profile_dir}")
+        driver = create_driver(driver_path, browser, headless, self.logger, profile_dir=profile_dir)
+        return WebScraper(driver, self.logger, driver_path=driver_path, browser=browser, headless=headless,
+                          backup_file=local_fetch_file, profile_dir=profile_dir)
 
     def url_in_dataframe(self, url, idx='pmcid'):
         """
@@ -717,13 +727,15 @@ class WebScraper(DataFetcher):
     Class for fetching data from web pages using Selenium.
     """
     def __init__(self, scraper_tool, logger, retrieval_patterns_file=None, driver_path=None, browser='firefox',
-                 headless=True, backup_file='scripts/exp_input/Local_fulltext_pub_REV.parquet'):
-        super().__init__(logger, src='WebScraper', driver_path=driver_path, browser=browser, headless=headless, backup_file=backup_file)
+                 headless=True, backup_file='scripts/exp_input/Local_fulltext_pub_REV.parquet', profile_dir=None):
+        super().__init__(logger, src='WebScraper', driver_path=driver_path, browser=browser, headless=headless,
+                         backup_file=backup_file, profile_dir=profile_dir)
         self.scraper_tool = scraper_tool  # Inject your scraping tool (Selenium)
         self.driver_path = driver_path
         self.browser = browser
         self.headless = headless
         self.backup_file = backup_file
+        self.logged_in_domains = set()  # domains where login was already completed this run
         self.logger.debug("WebScraper initialized.")
 
     def fetch_data(self, url, retries=3, delay=2, update_redirect_map=False, **kwargs):
@@ -778,6 +790,118 @@ class WebScraper(DataFetcher):
             html = re.sub(pattern, 'img_alt_subst', html)
         else:
             self.logger.info("No cookie pattern 1 found in HTML")
+        return html
+
+    def detect_login_required(self, html: str, url: str = None) -> bool:
+        """
+        Heuristically detects if the fetched HTML is a login wall.
+
+        Checks for:
+        - Login/auth href patterns in anchor tags
+        - Common login prompt text
+        - Near-empty pages (JS-redirect to auth before content loads)
+
+        Skips detection entirely for domains already logged in this run.
+        """
+        if not html:
+            return False
+
+        if url:
+            domain = self.url_to_publisher_domain(url)
+            if domain in self.logged_in_domains:
+                self.logger.info(f"detect_login_required: skipping — domain '{domain}' already authenticated this run")
+
+        login_href_pattern = re.compile(
+            r'href=["\'][^"\']*/(login|signin|sign-in|auth|oauth|sso|oidc)[^"\']*["\']',
+            re.IGNORECASE
+        )
+        login_text_pattern = re.compile(
+            r'(please\s+log\s+in|sign\s+in\s+to\s+(continue|access|view)|you\s+must\s+be\s+logged\s+in|access\s+denied|unauthorized|authentication\s+required)',
+            re.IGNORECASE
+        )
+
+        href_match = login_href_pattern.search(html)
+        text_match = login_text_pattern.search(html)
+
+        if href_match:
+            self.logger.info(f"detect_login_required: found login href pattern — '{href_match.group(0)[:80]}'")
+            return True
+        if text_match:
+            self.logger.info(f"detect_login_required: found login text pattern — '{text_match.group(0)[:80]}'")
+            return True
+        if len(html.strip()) < 500:
+            self.logger.info(f"detect_login_required: page suspiciously short ({len(html.strip())} chars), likely auth redirect")
+            return True
+
+        return False
+
+    def handle_login_and_fetch(self, url, delay=5) -> str:
+        """
+        Ensures the browser is visible (non-headless), navigates to url, waits for
+        manual login (including MFA/auth app), then returns the page HTML.
+
+        Only restarts the driver if it is currently headless — if already non-headless
+        (e.g. from a previous login on the same run) it just navigates without restarting.
+        If profile_dir is set, the session is persisted to disk so subsequent Python runs
+        can skip login entirely and stay headless.
+        """
+        self.logger.info(f"handle_login_and_fetch: url={url}, currently headless={self.headless}, profile_dir={self.profile_dir}")
+
+        # Save pre-login HTML before we potentially quit the driver
+        pre_login_html = self.scraper_tool.page_source
+
+        if self.headless:
+            try:
+                self.scraper_tool.quit()
+            except Exception:
+                pass
+            self.scraper_tool = create_driver(
+                self.driver_path, self.browser, headless=False,
+                logger=self.logger, profile_dir=self.profile_dir
+            )
+            self.headless = False
+
+        self.scraper_tool.get(url)
+
+        user_input = input(
+            f"\n[data-gatherer] URL: {url}\n"
+            "Navigate/login in the browser, then:\n"
+            "  Enter      → fetch current page\n"
+            "  s + Enter  → skip (use pre-login HTML)\n"
+            "  <url>      → navigate to a different URL and fetch that instead\n"
+            "> "
+        )
+
+        user_input = user_input.strip()
+
+        if user_input.lower() == 's':
+            self.logger.info("handle_login_and_fetch: user skipped, returning pre-login HTML")
+            return pre_login_html
+
+        if user_input.startswith('http://') or user_input.startswith('https://'):
+            self.logger.info(f"handle_login_and_fetch: user redirected fetch to: {user_input}")
+            self.scraper_tool.get(user_input)
+            url = user_input  # update url for domain tracking and post-login check
+
+        self.simulate_user_scroll(delay)
+        html = self.scraper_tool.page_source
+        self.logger.info(f"handle_login_and_fetch: page fetched after login, len={len(html)}")
+
+        # Record domain as authenticated so subsequent pages skip the login check
+        domain = self.url_to_publisher_domain(url)
+        self.logged_in_domains.add(domain)
+        self.logger.info(f"handle_login_and_fetch: marked domain '{domain}' as authenticated (logged_in_domains={self.logged_in_domains})")
+
+        # Post-login sanity check — warn if login link is still present (session may not have saved)
+        if self.detect_login_required(html):
+            self.logger.warning(
+                f"⚠ handle_login_and_fetch: login link still present in HTML after login for {url} — "
+                f"session may not have persisted (profile_dir={self.profile_dir}). "
+                f"Check that profile_dir is correctly set and Firefox is writing cookies."
+            )
+        else:
+            self.logger.info("handle_login_and_fetch: ✓ post-login check passed — no login link in page HTML")
+
         return html
 
     def simulate_user_scroll(self, delay=2, scroll_wait=0.5):

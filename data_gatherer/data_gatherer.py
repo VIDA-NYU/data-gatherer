@@ -973,15 +973,16 @@ class DataGatherer:
         self,
         combined_df,
         force_js_load=False,
-        display_type='console', 
-        interactive=True, 
+        display_type='console',
+        interactive=True,
         return_metadata=False,
-        write_raw_metadata=False, 
-        article_file_dir='tmp/raw_files/', 
+        write_raw_metadata=False,
+        article_file_dir='tmp/raw_files/',
         use_portkey=True,
-        prompt_name='gpt_metadata_extract', 
+        prompt_name='gpt_metadata_extract',
         response_format=dataset_metadata_response_schema_gpt,
         timeout=1,
+        profile_dir=None,
         ):
         """
         This method iterates through the combined_df DataFrame, checks for dataset webpages or download links,
@@ -1008,6 +1009,11 @@ class DataGatherer:
 
         :param timeout: Timeout for requests to fetch dataset webpages.
 
+        :param profile_dir: Path to a persistent Firefox profile directory. If set, the browser
+            session (cookies, auth tokens) is saved to disk so that login only needs to happen
+            once. On subsequent runs with the same profile_dir, headless mode is maintained
+            automatically once the session is still valid.
+
         :return: If return_metadata is True, returns a list of metadata dictionaries. Otherwise, displays the data preview.
         """
 
@@ -1015,7 +1021,9 @@ class DataGatherer:
 
         self.already_previewed = []
 
-        self.data_fetcher = self.data_fetcher.update_DataFetcher_settings('any_url', HTML_fallback='Selenium')
+        self.data_fetcher = self.data_fetcher.update_DataFetcher_settings(
+            'any_url', HTML_fallback='Selenium', profile_dir=profile_dir
+        )
 
         self.metadata_parser = HTMLParser(self.open_data_repos_ontology, self.logger, full_document_read=True,
                                           llm_name=self.llm, use_portkey=use_portkey)
@@ -1084,11 +1092,18 @@ class DataGatherer:
                 if ('javascript_load_required' in repo_dict) or force_js_load:
                     self.logger.info(f"JavaScript load required for {repo_mapping_key} dataset webpage. Using Selenium.")
                     # Switch to Selenium --> Playwright can be added later
+                    current_headless = getattr(self.data_fetcher, 'headless', True)
                     self.data_fetcher = self.data_fetcher.update_DataFetcher_settings(
-                        row['dataset_webpage'], 
-                        HTML_fallback='Selenium'  # Use Selenium --> Playwright can be added later
+                        row['dataset_webpage'],
+                        HTML_fallback='Selenium',  # Use Selenium --> Playwright can be added later
+                        headless=current_headless   # preserve current headless state (don't restart driver if user already logged in)
                     )
                     html = self.data_fetcher.fetch_data(row['dataset_webpage'], delay=2)
+                    if html and self.data_fetcher.detect_login_required(html, url=row['dataset_webpage']):
+                        self.logger.warning(f"⚠ Login may be required for {row['dataset_webpage']} — HTML contains auth/login indicators")
+                        # update DataFetcher settings to handle login and fetch HTML with Selenium Non-Headless
+                        self.data_fetcher = self.data_fetcher.update_DataFetcher_settings(row['dataset_webpage'], HTML_fallback='Selenium', headless=False)
+                        html = self.data_fetcher.handle_login_and_fetch(row['dataset_webpage'], delay=5)
                     if "informative_html_metadata_tags" in repo_dict:
                         keep_tags = repo_dict['informative_html_metadata_tags']
                     if write_raw_metadata:
