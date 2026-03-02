@@ -972,6 +972,7 @@ class DataGatherer:
     def process_metadata(
         self,
         combined_df,
+        pass_cols_to_prompt=[],
         force_js_load=False,
         display_type='console',
         interactive=True,
@@ -990,6 +991,8 @@ class DataGatherer:
         :param combined_df: DataFrame containing the data to preview. It should contain columns like 'dataset_webpage', 'download_link', etc.
 
         :param force_js_load: If True, forces JavaScript loading for all dataset webpages.
+
+        :param pass_cols_to_prompt: A list of column names in combined_df to pass to the prompt for metadata extraction.
 
         :param display_type: Type of display for the preview. Options are 'console', 'ipynb'.
 
@@ -1078,15 +1081,16 @@ class DataGatherer:
                 repo_dict = self.open_data_repos_ontology['repos'].get(repo_mapping_key, {})
 
                 # caching: load_from_cache
-                skip, cache = False, {}
+                skip_and_append_cached_res, cache = False, {}
                 process_id = self.llm + "-" + dataset_webpage_id
                 if self.load_from_cache and os.path.exists(os.path.join(CACHE_BASE_DIR, "process_metadata_cache.json")):
                     cache = json.load(open(os.path.join(CACHE_BASE_DIR, "process_metadata_cache.json"), 'r'))
                     if process_id in cache:
-                        metadata, skip = cache[process_id], True
+                        metadata, skip_and_append_cached_res = cache[process_id], True
                 
-                if skip:
+                if skip_and_append_cached_res:
                     self.logger.info(f"Loading metadata from cache for process ID: {process_id}")
+                    ret_list.append(self.metadata_parser.flatten_metadata_dict(metadata | row.to_dict()))
                     continue
 
                 if ('javascript_load_required' in repo_dict) or force_js_load:
@@ -1116,6 +1120,8 @@ class DataGatherer:
 
                     html = self.data_fetcher.fetch_data(row['dataset_webpage'])
                 
+                # self.data_fetcher.get_sitemap(row['dataset_webpage']) if self.logger.isEnabledFor(logging.DEBUG) else None
+                
                 # Check if HTML was successfully fetched
                 if html is None:
                     self.logger.error(f"Failed to fetch HTML from {row['dataset_webpage']}, skipping metadata extraction")
@@ -1136,10 +1142,18 @@ class DataGatherer:
                         self.logger.warning("⚠ No description field in extracted Schema.org metadata")
                 else:
                     self.logger.warning("⚠ normalize_schema_org_metadata returned None - no structured data found")
+                    metadata_schema_org = {}
 
                 html = self.metadata_parser.normalize_HTML(html, keep_tags=keep_tags)
 
-                metadata = self.metadata_parser.parse_datasets_metadata(html, model=self.llm, use_portkey=use_portkey, prompt_name=prompt_name, response_format=response_format)
+                metadata = self.metadata_parser.parse_datasets_metadata(
+                    html, 
+                    structured_metadata=row[pass_cols_to_prompt].to_dict() | metadata_schema_org,
+                    model=self.llm, 
+                    use_portkey=use_portkey,
+                    prompt_name=prompt_name,
+                    response_format=response_format
+                    )
                 metadata['source_url_for_metadata'] = row['dataset_webpage']
                 metadata['access_mode'] = row.get('access_mode', None)
                 metadata['source_section'] = row.get('source_section', row.get('section_class', None))

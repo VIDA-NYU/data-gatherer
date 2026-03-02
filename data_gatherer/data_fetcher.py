@@ -578,6 +578,35 @@ class DataFetcher(ABC):
 
         return url
 
+    def get_sitemap(self, base_url: str) -> str:
+        import io
+        from contextlib import redirect_stdout
+        from urllib.parse import urlparse
+
+        from usp.tree import sitemap_tree_for_homepage
+
+        tree = sitemap_tree_for_homepage(base_url)
+
+        b = urlparse(base_url)
+        origin = f"{b.scheme}://{b.netloc}"
+        prefix = b.path.rstrip("/") or "/"
+
+        def keep(u: str) -> bool:
+            if not u.startswith(origin):
+                return False
+            p = urlparse(u).path
+            return prefix == "/" or p == prefix or p.startswith(prefix + "/")
+
+        buf = io.StringIO()
+        with redirect_stdout(buf):
+            for p in tree.all_pages():
+                if keep(p.url):
+                    print(p.url)
+
+        result = buf.getvalue()
+        self.logger.debug("Filtered sitemap for %s:\n%s", base_url, result)
+        return result
+
 class HttpGetRequest(DataFetcher):
     "class for fetching data via HTTP GET requests using the requests library."
     def __init__(self, logger, backup_file='scripts/exp_input/Local_fulltext_pub_REV.parquet'):
@@ -775,7 +804,7 @@ class WebScraper(DataFetcher):
         
         except Exception as e:
             self.logger.error(f"Live web scraping failed for {url}: {e}")
-            raise e
+            # raise e
 
     def remove_cookie_patterns(self, html: str):
         pattern = r'<img\s+alt=""\s+src="https://www\.ncbi\.nlm\.nih\.gov/stat\?.*?"\s*>'
@@ -803,16 +832,17 @@ class WebScraper(DataFetcher):
 
         Skips detection entirely for domains already logged in this run.
         """
+        self.logger.info("Function detect_login_required called.")
         if not html:
             return False
 
         if url:
             domain = self.url_to_publisher_domain(url)
             if domain in self.logged_in_domains:
-                self.logger.info(f"detect_login_required: skipping — domain '{domain}' already authenticated this run")
+                self.logger.info(f"Function detect_login_required: domain '{domain}' already authenticated this run")
 
         login_href_pattern = re.compile(
-            r'href=["\'][^"\']*/(login|signin|sign-in|auth|oauth|sso|oidc)[^"\']*["\']',
+            r'href=["\'][^"\']*/(login|signin|sign-in|auth|oauth|sso|oidc)(?=[/?#"\'])',
             re.IGNORECASE
         )
         login_text_pattern = re.compile(
@@ -824,13 +854,13 @@ class WebScraper(DataFetcher):
         text_match = login_text_pattern.search(html)
 
         if href_match:
-            self.logger.info(f"detect_login_required: found login href pattern — '{href_match.group(0)[:80]}'")
+            self.logger.info(f"Found login href pattern — '{href_match.group(0)[:80]}'")
             return True
         if text_match:
-            self.logger.info(f"detect_login_required: found login text pattern — '{text_match.group(0)[:80]}'")
+            self.logger.info(f"Found login text pattern — '{text_match.group(0)[:80]}'")
             return True
         if len(html.strip()) < 500:
-            self.logger.info(f"detect_login_required: page suspiciously short ({len(html.strip())} chars), likely auth redirect")
+            self.logger.info(f"Page suspiciously short ({len(html.strip())} chars), likely auth redirect")
             return True
 
         return False
@@ -846,6 +876,7 @@ class WebScraper(DataFetcher):
         can skip login entirely and stay headless.
         """
         self.logger.info(f"handle_login_and_fetch: url={url}, currently headless={self.headless}, profile_dir={self.profile_dir}")
+        user_input = None
 
         # Save pre-login HTML before we potentially quit the driver
         pre_login_html = self.scraper_tool.page_source
@@ -865,10 +896,10 @@ class WebScraper(DataFetcher):
 
         user_input = input(
             f"\n[data-gatherer] URL: {url}\n"
-            "Navigate/login in the browser, then:\n"
-            "  Enter      → fetch current page\n"
-            "  s + Enter  → skip (use pre-login HTML)\n"
-            "  <url>      → navigate to a different URL and fetch that instead\n"
+            "Navigate/login in the browser, then: ==== \n"
+            "  Enter      → fetch current page ==== \n"
+            "  s + Enter  → skip (use pre-login HTML) ==== \n"
+            "  <url>      → navigate to a different URL and fetch that instead ==== \n"
             "> "
         )
 
@@ -881,7 +912,6 @@ class WebScraper(DataFetcher):
         if user_input.startswith('http://') or user_input.startswith('https://'):
             self.logger.info(f"handle_login_and_fetch: user redirected fetch to: {user_input}")
             self.scraper_tool.get(user_input)
-            url = user_input  # update url for domain tracking and post-login check
 
         self.simulate_user_scroll(delay)
         html = self.scraper_tool.page_source
@@ -902,6 +932,7 @@ class WebScraper(DataFetcher):
         else:
             self.logger.info("handle_login_and_fetch: ✓ post-login check passed — no login link in page HTML")
 
+        self.redirect_mapping[url] = user_input if user_input else url
         return html
 
     def simulate_user_scroll(self, delay=2, scroll_wait=0.5):

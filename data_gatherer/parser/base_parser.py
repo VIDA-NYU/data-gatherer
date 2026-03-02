@@ -306,12 +306,12 @@ Files:
         elif 'claude' in model:
             tokens_cnt = self.count_tokens(content, model)
             self.logger.info(f"Initial content tokens count for Claude model: {tokens_cnt} tokens")
-            if tokens_cnt > int(1.25 * 200000):
+            if tokens_cnt > int(1.25 * 20000):
                 return self.extract_datasets_info_from_chunks(
-                    content, tokens_cnt, repos, model, temperature, prompt_name, full_document_read, response_format, token_chunk_size=200000)
+                    content, tokens_cnt, repos, model, temperature, prompt_name, full_document_read, response_format, token_chunk_size=150000)
 
             while self.tokens_over_limit(content, model, allowance_static_prompt=n_tokens_static_prompt, limit=200000):
-                content = content[:-5000]
+                content = content[:-4800]
                 self.logger.info(f"Truncating content for Claude model. New length: {len(content)}")
         
         self.logger.info(f"Content length: {len(content)}")
@@ -1253,7 +1253,7 @@ Files:
             """
         raise NotImplementedError("This method should be implemented in a subclass.")
 
-    def tokens_over_limit(self, html_cont: str, model="gpt-4", limit=128000, allowance_static_prompt=200):
+    def tokens_over_limit(self, html_cont: str, model="gpt-4", limit=128000, allowance_static_prompt=400):
         tokens_cnt = self.count_tokens(html_cont, model=model)
         if 'gpt' in model:
             self.logger.info(f"Number of tokens: {tokens_cnt}")
@@ -1322,7 +1322,7 @@ Files:
 
         return n_tokens
 
-    def parse_datasets_metadata(self, metadata: str, model='gemini-2.0-flash', use_portkey=True,
+    def parse_datasets_metadata(self, metadata: str, structured_metadata: dict=None, model='gemini-2.0-flash', use_portkey=True,
                                 prompt_name='gpt_metadata_extract', response_format=dataset_metadata_response_schema_gpt) -> dict:
         """
         Given the metadata, extract the dataset information using the LLM.
@@ -1336,7 +1336,7 @@ Files:
         #metadata = self.normalize_full_DOM(metadata)
         self.logger.info(f"Parsing metadata len: {len(metadata)}")
         self.logger.debug(f"Passed params: model={model}, prompt_name={prompt_name}, response_format={response_format.keys()}")
-        dataset_info = self.extract_dataset_info(metadata, subdir='metadata_prompts',
+        dataset_info = self.extract_dataset_info(metadata, structured_metadata=structured_metadata, subdir='metadata_prompts',
                                                  use_portkey=use_portkey,
                                                  prompt_name=prompt_name,
                                                  response_format=response_format)
@@ -1362,7 +1362,7 @@ Files:
                 items.append((new_key, v))
         return dict(items)
 
-    def extract_dataset_info(self, metadata, subdir='', model=None, use_portkey=True,
+    def extract_dataset_info(self, metadata, structured_metadata={}, subdir='', model=None, use_portkey=True,
                              prompt_name='gpt_metadata_extract', response_format=dataset_metadata_response_schema_gpt):
         """
         Given the metadata source (dataset page), extract information using the LLM.
@@ -1387,7 +1387,11 @@ Files:
         
         # Load and render the prompt using the unified client
         static_prompt = llm.prompt_manager.load_prompt(prompt_name, subdir=subdir)
-        messages = llm.prompt_manager.render_prompt(static_prompt, entire_doc=True, content=metadata)
+
+        content = metadata
+        while self.tokens_over_limit(content, llm.model, allowance_static_prompt=len(str(static_prompt)) // 4):
+            content = content[:-2000]
+        messages = llm.prompt_manager.render_prompt(static_prompt, entire_doc=True, content=content, structured_metadata=structured_metadata)
         
         # Make the LLM call using the unified interface
         response = llm.make_llm_call(messages=messages, temperature=0.0, response_format=response_format)
