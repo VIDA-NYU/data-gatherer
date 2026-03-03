@@ -454,6 +454,47 @@ study_sanity_check_schema_claude = {
     }
 }
 
+study_sanity_check_w_rationale_schema_claude = {
+    "type": "json_schema",
+    "schema": {
+        "type": "object",
+        "properties": {
+            "coarse_data_modality": {
+                "type": "string",
+                "description": "Verified high-level data modality category (e.g. Genomics, Clinical, Imaging, Transcriptomics). Return 'na' if not determinable from the page."
+            },
+            "granular_data_modality": {
+                "type": "string",
+                "description": "Verified specific assay or data type (e.g. RNA-seq, SNP Array, MRI, Whole Genome Sequencing). Return 'na' if not determinable."
+            },
+            "diseases_included": {
+                "type": "string",
+                "description": "Verified disease(s) or condition(s) covered by the study. Return 'na' if not determinable."
+            },
+            "sample_size": {
+                "type": "string",
+                "description": "Verified number of subjects, participants, or samples. Return 'na' if not found."
+            },
+            "publication_urls": {
+                "type": "array",
+                "items": {"type": "string", "format": "uri"},
+                "description": "URLs of publications describing the study, if found on the page."
+            },
+            "dataset_urls": {
+                "type": "array",
+                "items": {"type": "string", "format": "uri"},
+                "description": "URLs linking to datasets or data access pages, if found on the page."
+            },
+            "changes_from_curated": {
+                "type": "string",
+                "description": "Per-field explanation of whether each extracted value agrees with or differs from the curated metadata, citing specific text from the HTML as evidence."
+            }
+        },
+        "required": ["coarse_data_modality", "granular_data_modality", "diseases_included", "sample_size", "changes_from_curated"],
+        "additionalProperties": False
+    }
+}
+
 class Dataset(BaseModel):
     dataset_identifier: str
     data_repository: str
