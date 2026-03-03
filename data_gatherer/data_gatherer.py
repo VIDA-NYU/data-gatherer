@@ -119,7 +119,7 @@ class DataGatherer:
 
         entire_document_models = ["gemini-1.5-flash", "gemini-1.5-pro", "gemini-2.0-flash-exp", "gemini-2.0-flash",
                                   "gemini-2.5-flash", "gpt-4o", "gpt-4o-mini", "gpt-5-nano", "gpt-5-mini", "gpt-5",
-                                  "claude-haiku-4-5-20251001"]
+                                  "claude-haiku-4-5-20251001", "claude-sonnet-4-5"]
         self.full_document_read = llm_name in entire_document_models and process_entire_document
         self.llm = llm_name
 

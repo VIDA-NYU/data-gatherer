@@ -30,7 +30,7 @@ class LLMClient_dev:
         # Determine full document read capability
         entire_document_models = ["gemini-1.5-flash", "gemini-1.5-pro", "gemini-2.0-flash-exp", "gemini-2.0-flash",
                                   "gemini-2.5-flash", "gpt-4o", "gpt-4o-mini", "gpt-5-nano", "gpt-5-mini", "gpt-5",
-                                  "claude-haiku-4-5-20251001"]
+                                  "claude-haiku-4-5-20251001", "claude-sonnet-4-5"]
         self.full_document_read = model in entire_document_models
         
         self._initialize_client(model)
@@ -201,7 +201,7 @@ class LLMClient_dev:
         )
         return response.text
     
-    def _call_anthropic(self, messages, response_format, temperature=0.0, max_tokens=4096):
+    def _call_anthropic(self, messages, response_format, temperature=0.0, max_tokens=8192):
         self.logger.info(f"Calling Anthropic Claude model with {len(str(messages))} chars.")
         self.logger.debug(f"Messages: {messages}")
         if self.save_prompts:
