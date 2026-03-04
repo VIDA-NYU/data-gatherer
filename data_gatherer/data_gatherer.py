@@ -984,6 +984,8 @@ class DataGatherer:
         response_format=dataset_metadata_response_schema_gpt,
         timeout=1,
         profile_dir=None,
+        add_sitemap_to_prompt=False,
+        redirect_url=None
         ):
         """
         This method iterates through the combined_df DataFrame, checks for dataset webpages or download links,
@@ -1016,6 +1018,8 @@ class DataGatherer:
             session (cookies, auth tokens) is saved to disk so that login only needs to happen
             once. On subsequent runs with the same profile_dir, headless mode is maintained
             automatically once the session is still valid.
+        
+        :param add_sitemap_to_prompt: If True, adds a sitemap of the dataset webpage to the prompt for navigation.
 
         :return: If return_metadata is True, returns a list of metadata dictionaries. Otherwise, displays the data preview.
         """
@@ -1120,7 +1124,9 @@ class DataGatherer:
 
                     html = self.data_fetcher.fetch_data(row['dataset_webpage'])
                 
-                # self.data_fetcher.get_sitemap(row['dataset_webpage']) if self.logger.isEnabledFor(logging.DEBUG) else None
+                sitemap = None
+                if len(repo_dict) == 0 and add_sitemap_to_prompt:  # Unknown repos --> Navigation step
+                    sitemap = self.data_fetcher.get_sitemap(row['dataset_webpage'])
                 
                 # Check if HTML was successfully fetched
                 if html is None:
@@ -1146,14 +1152,24 @@ class DataGatherer:
 
                 html = self.metadata_parser.normalize_HTML(html, keep_tags=keep_tags)
 
-                metadata = self.metadata_parser.parse_datasets_metadata(
-                    html, 
-                    structured_metadata=row[pass_cols_to_prompt].to_dict() | metadata_schema_org,
-                    model=self.llm, 
-                    use_portkey=use_portkey,
-                    prompt_name=prompt_name,
-                    response_format=response_format
+                structured_metadata = row[pass_cols_to_prompt].to_dict() | metadata_schema_org
+
+                if add_sitemap_to_prompt and sitemap:
+                    metadata = self.two_hop_extract(html, row['dataset_webpage'], structured_metadata, use_portkey,
+                        response_format=response_format,
+                        max_k=5,
+                        sitemap=sitemap
                     )
+
+                else:
+                    metadata = self.metadata_parser.parse_datasets_metadata(
+                        html,
+                        structured_metadata=structured_metadata,
+                        model=self.llm, 
+                        use_portkey=use_portkey,
+                        prompt_name=prompt_name,
+                        response_format=response_format
+                        )
                 metadata['source_url_for_metadata'] = row['dataset_webpage']
                 metadata['access_mode'] = row.get('access_mode', None)
                 metadata['source_section'] = row.get('source_section', row.get('section_class', None))
@@ -1177,6 +1193,48 @@ class DataGatherer:
             self.logger.info(f"Processed metadata from dataset page {dataset_webpage}")
 
         return ret_list if return_metadata else None
+
+    def two_hop_extract(self, html, url, structured_metadata, use_portkey, response_format, max_k, sitemap):
+
+        self.logger.info(f"Performing two-hop extraction with sitemap for {url}")
+
+        self.logger.error(f"No sitemap provided for {url}") if not sitemap else 1
+        hop1_content = html + ("\n\n--- SITEMAP (internal links) ---\n" + sitemap)
+        hop1_result = self.metadata_parser.extract_dataset_info(
+            hop1_content,
+            structured_metadata=structured_metadata,
+            subdir='metadata_prompts',
+            prompt_name='Claude_StudyPage_SanityCheck_multi_hop',
+            response_format=study_hop1_schema_claude,
+            use_portkey=use_portkey,
+            max_k=max_k,
+        )
+        
+        suggested_urls = hop1_result.pop('suggested_urls', [])
+        reasoning = hop1_result.pop('reasoning', None)
+        if reasoning:
+            self.logger.debug(f"[multi-hop] navigation reasoning: {reasoning}")
+        self.logger.info(f"[multi-hop] hop1 suggests {len(suggested_urls)} pages: {suggested_urls}")
+
+        # 3. Fetch suggested pages (skip auth walls)
+        additional_html = ""
+        for nav_url in suggested_urls:
+            nav_html = self.data_fetcher.fetch_data(nav_url)
+            additional_html += f"\n\n--- Page: {nav_url} ---\n{nav_html}"
+
+        # 4. Hop 2
+        hop2_content = (
+            f"DRAFT OUTPUT FROM MAIN PAGE:\n{json.dumps(hop1_result)}\n\n"
+            f"ADDITIONAL PAGES HTML:\n{additional_html if additional_html else '(none fetched)'}"
+        )
+        return self.metadata_parser.extract_dataset_info(
+            hop2_content,
+            structured_metadata=structured_metadata,
+            subdir='metadata_prompts',
+            prompt_name='Claude_StudyPage_SanityCheck_finalize',
+            response_format=response_format,
+            use_portkey=use_portkey,
+        )
 
     def flatten_json(self, y, parent_key='', sep='.'):
         """

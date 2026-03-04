@@ -15,7 +15,9 @@ import pandas as pd
 from data_gatherer.retriever.xml_retriever import xmlRetriever
 from data_gatherer.retriever.html_retriever import htmlRetriever
 import tempfile
-
+import io
+from contextlib import redirect_stdout
+from usp.tree import sitemap_tree_for_homepage
 
 # Singleton backup data store for all fetchers
 class BackupDataStore:
@@ -579,12 +581,6 @@ class DataFetcher(ABC):
         return url
 
     def get_sitemap(self, base_url: str) -> str:
-        import io
-        from contextlib import redirect_stdout
-        from urllib.parse import urlparse
-
-        from usp.tree import sitemap_tree_for_homepage
-
         tree = sitemap_tree_for_homepage(base_url)
 
         b = urlparse(base_url)
@@ -597,13 +593,7 @@ class DataFetcher(ABC):
             p = urlparse(u).path
             return prefix == "/" or p == prefix or p.startswith(prefix + "/")
 
-        buf = io.StringIO()
-        with redirect_stdout(buf):
-            for p in tree.all_pages():
-                if keep(p.url):
-                    print(p.url)
-
-        result = buf.getvalue()
+        result = "\n".join(p.url for p in tree.all_pages() if keep(p.url))
         self.logger.debug("Filtered sitemap for %s:\n%s", base_url, result)
         return result
 

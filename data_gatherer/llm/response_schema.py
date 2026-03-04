@@ -417,6 +417,63 @@ study_response_schema_claude = {
     }
 }
 
+study_hop1_schema_claude = {
+    "type": "json_schema",
+    "schema": {
+        "type": "object",
+        "properties": {
+            "coarse_data_modality": {
+                "type": "string",
+                "description": "High-level data modality categories (e.g. Genomics, Clinical, Imaging, Proteomics). Return 'na' if not found."
+            },
+            "granular_data_modality": {
+                "type": "string",
+                "description": "Specific data modality or assay type included (e.g. RNA-seq, SNP Array, MRI, Whole Genome Sequencing). Return 'na' if not found."
+            },
+            "diseases_included": {
+                "type": "string",
+                "description": "Disease(s) or condition(s) covered by the study (e.g. Alzheimer's disease, Lewy Body Dementia). Return 'na' if not found."
+            },
+            "publication_urls": {
+                "type": "array",
+                "items": {
+                    "type": "string",
+                    "format": "uri",
+                    "description": "URLs of the publications describing the study."
+                },
+                "description": "URLs of the publications describing the study."
+            },
+            "dataset_urls": {
+                "type": "array",
+                "items": {
+                    "type": "string",
+                    "format": "uri",
+                    "description": "URLs of the datasets used in the study."
+                },
+                "description": "URLs of the datasets used in the study."
+            },
+            "sample_size": {
+                "type": "string",
+                "description": "Sample size of the study. Return 'na' if not found."
+            },
+            "suggested_urls": {
+                "type": "array",
+                "items": {
+                    "type": "string",
+                    "format": "uri"
+                },
+                "description": "Top-k internal URLs from the sitemap most likely to provide additional context, richer detail, or verification for any of the six fields."
+            },
+            "reasoning": {
+                "type": "string",
+                "description": "Optional brief explanation of why the suggested_urls were selected."
+            }
+        },
+        "required": ["coarse_data_modality", "granular_data_modality", "diseases_included", "publication_urls", "dataset_urls", "sample_size", "suggested_urls"],
+        "additionalProperties": False
+    }
+}
+
 study_sanity_check_schema_claude = {
     "type": "json_schema",
     "schema": {

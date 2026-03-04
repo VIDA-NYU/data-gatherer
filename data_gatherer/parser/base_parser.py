@@ -1364,7 +1364,8 @@ Files:
         return dict(items)
 
     def extract_dataset_info(self, metadata, structured_metadata={}, subdir='', model=None, use_portkey=True,
-                             prompt_name='gpt_metadata_extract', response_format=dataset_metadata_response_schema_gpt):
+                             prompt_name='gpt_metadata_extract', response_format=dataset_metadata_response_schema_gpt,
+                             **prompt_kwargs):
         """
         Given the metadata source (dataset page), extract information using the LLM.
 
@@ -1392,7 +1393,7 @@ Files:
         content = metadata
         while self.tokens_over_limit(content, llm.model, allowance_static_prompt=len(str(static_prompt)) // 4):
             content = content[:-2000]
-        messages = llm.prompt_manager.render_prompt(static_prompt, entire_doc=True, content=content, structured_metadata=structured_metadata)
+        messages = llm.prompt_manager.render_prompt(static_prompt, entire_doc=True, content=content, structured_metadata=structured_metadata, **prompt_kwargs)
         
         # Make the LLM call using the unified interface
         response = llm.make_llm_call(messages=messages, temperature=0.0, response_format=response_format)
