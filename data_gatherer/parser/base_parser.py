@@ -269,9 +269,11 @@ Files:
     def extract_datasets_info_from_content(self, content: str, repos: list, model: str = 'gpt-4o-mini',
                                            temperature: float = 0.0,
                                            prompt_name: str = 'GPT_FewShot',
+                                           subdir: str = 'dataset_prompts',
                                            full_document_read=True,
                                            response_format = dataset_response_schema_gpt,
-                                           skip_validation: bool = False) -> list:
+                                           skip_validation: bool = False,
+                                           **kwargs) -> list:
         """
         Extract datasets from the given content using a specified LLM model.
         Uses a static prompt template and dynamically injects the required content.
@@ -290,14 +292,15 @@ Files:
         self.input_tokens = 0
         self.logger.info(f"Function_call: extract_datasets_info_from_content(...)")
         self.logger.debug(f"Loading prompt: {prompt_name} for model {model}")
-        static_prompt = self.prompt_manager.load_prompt(prompt_name)
+        static_prompt = self.prompt_manager.load_prompt(prompt_name, subdir=subdir)
         n_tokens_static_prompt = self.count_tokens(static_prompt, model)
 
         if 'gpt' in model:
             tokens_cnt = self.count_tokens(content, model)
             if tokens_cnt > int(1.25 * 128000):
                 return self.extract_datasets_info_from_chunks(
-                    content, tokens_cnt, repos, model, temperature, prompt_name, full_document_read, response_format, token_chunk_size=128000)
+                    content, tokens_cnt, repos=repos, model=model, temperature=temperature, prompt_name=prompt_name, subdir=subdir,
+                    full_document_read=full_document_read, response_format=response_format, token_chunk_size=128000, **kwargs)
 
             while self.tokens_over_limit(content, model, allowance_static_prompt=n_tokens_static_prompt):
                 content = content[:-2000]
@@ -308,7 +311,8 @@ Files:
             self.logger.info(f"Initial content tokens count for Claude model: {tokens_cnt} tokens")
             if tokens_cnt > int(1.25 * 200000):
                 return self.extract_datasets_info_from_chunks(
-                    content, tokens_cnt, repos, model, temperature, prompt_name, full_document_read, response_format, token_chunk_size=150000)
+                    content, tokens_cnt, repos=repos, model=model, temperature=temperature, prompt_name=prompt_name, subdir=subdir,
+                    full_document_read=full_document_read, response_format=response_format, token_chunk_size=150000, **kwargs)
 
             while self.tokens_over_limit(content, model, allowance_static_prompt=n_tokens_static_prompt, limit=200000):
                 content = content[:-4800]
@@ -329,7 +333,8 @@ Files:
             static_prompt,
             entire_doc=self.full_document_read,
             content=content,
-            repos=', '.join(repos)
+            repos=', '.join(repos),
+            **kwargs
         )
         tokens_cnt = self.count_tokens(messages, model)
         self.logger.info(f"Prompt messages total length: {tokens_cnt} tokens")
@@ -400,10 +405,14 @@ Files:
 
         return result
     
-    def extract_datasets_info_from_chunks(self, content, tokens_cnt, repos, model, temperature, prompt_name,full_document_read,response_format, token_chunk_size=128000):
+    def extract_datasets_info_from_chunks(self, content, tokens_cnt, repos=None, model=None, temperature=0,
+                                        prompt_name=None, full_document_read=None ,response_format=None, token_chunk_size=128000,
+                                        subdir='dataset_prompts', **prompt_kwargs):
         '''
         This function splits the content into chunks based on token count, then calls extract_datasets_info_from_content for each chunk.
         '''
+        self.logger.info(f"Function_call: extract_datasets_info_from_chunks(...) with content of {len(content)} characters and {tokens_cnt} tokens. Splitting into chunks of approximately {token_chunk_size} tokens.")
+        self.logger.info(f"Params - repos: {repos}, model: {model}, temperature: {temperature}, prompt_name: {prompt_name}, subdir: {subdir}, full_document_read: {full_document_read}, response_format: {response_format}, token_chunk_size: {token_chunk_size}")
         ret = []
         # Determine chunk size (e.g., 128000 tokens per chunk for GPT-4o)
         # Estimate chunk size in string indices: 1 token ≈ 3.5 characters
@@ -420,8 +429,8 @@ Files:
         for idx, chunk in enumerate(chunks):
             self.logger.info(f"Processing chunk {idx+1}/{len(chunks)}")
             chunk_results = self.extract_datasets_info_from_content(
-                chunk,
-                repos=repos, model=model, temperature=temperature,prompt_name=prompt_name,response_format=response_format, full_document_read=full_document_read
+                chunk, repos=repos, model=model, temperature=temperature, subdir=subdir, prompt_name=prompt_name, 
+                response_format=response_format, full_document_read=full_document_read, **prompt_kwargs
             )
             ret.extend(chunk_results)
         return ret
@@ -1363,7 +1372,7 @@ Files:
                 items.append((new_key, v))
         return dict(items)
 
-    def extract_dataset_info(self, metadata, structured_metadata={}, subdir='', model=None, use_portkey=True,
+    def extract_dataset_info(self, metadata, structured_metadata={}, subdir='metadata_prompts', model=None, use_portkey=True,
                              prompt_name='gpt_metadata_extract', response_format=dataset_metadata_response_schema_gpt,
                              **prompt_kwargs):
         """
@@ -1391,6 +1400,15 @@ Files:
         static_prompt = llm.prompt_manager.load_prompt(prompt_name, subdir=subdir)
 
         content = metadata
+
+        tokens_cnt = self.count_tokens(content, llm.model) + len(str(static_prompt)) // 4
+
+        if tokens_cnt > int(1.25 * llm.token_limit):
+                return self.extract_datasets_info_from_chunks(
+                    content, tokens_cnt, self.repo_names, model=model or self.llm_name, prompt_name=prompt_name, full_document_read=self.full_document_read, 
+                    response_format=response_format, token_chunk_size=llm.token_limit, subdir=subdir, structured_metadata=structured_metadata, **prompt_kwargs
+                    )
+
         while self.tokens_over_limit(content, llm.model, allowance_static_prompt=len(str(static_prompt)) // 4):
             content = content[:-2000]
         messages = llm.prompt_manager.render_prompt(static_prompt, entire_doc=True, content=content, structured_metadata=structured_metadata, **prompt_kwargs)

@@ -1199,18 +1199,30 @@ class DataGatherer:
         self.logger.info(f"Performing two-hop extraction with sitemap for {url}")
 
         self.logger.error(f"No sitemap provided for {url}") if not sitemap else 1
-        hop1_content = html + ("\n\n--- SITEMAP (internal links) ---\n" + sitemap)
         hop1_result = self.metadata_parser.extract_dataset_info(
-            hop1_content,
+            html,
             structured_metadata=structured_metadata,
             subdir='metadata_prompts',
             prompt_name='Claude_StudyPage_SanityCheck_multi_hop',
             response_format=study_hop1_schema_claude,
             use_portkey=use_portkey,
             max_k=max_k,
+            sitemap=sitemap
         )
         
-        suggested_urls = hop1_result.pop('suggested_urls', [])
+        if isinstance(hop1_result, list):
+            suggested_urls = []
+            for item in hop1_result:
+                suggested_urls.extend(item.pop('suggested_urls', []))
+            suggested_urls = list(set(suggested_urls))
+            hop1_result = hop1_result[0] if hop1_result else {}
+        else:
+            suggested_urls = hop1_result.pop('suggested_urls', [])
+        sitemap_set = set(sitemap.splitlines())
+        hallucinated = [u for u in suggested_urls if u not in sitemap_set]
+        if hallucinated:
+            self.logger.warning(f"[multi-hop] dropping {len(hallucinated)} hallucinated URLs not in sitemap: {hallucinated}")
+        suggested_urls = [u for u in suggested_urls if u in sitemap_set][:max_k]
         reasoning = hop1_result.pop('reasoning', None)
         if reasoning:
             self.logger.debug(f"[multi-hop] navigation reasoning: {reasoning}")
@@ -1227,7 +1239,7 @@ class DataGatherer:
                 nav_url = sanitized_url
             nav_html = self.data_fetcher.fetch_data(nav_url) or ""
             clean_nav_html = self.metadata_parser.normalize_HTML(nav_html)
-            additional_html += f"\n\n--- Page: {nav_url} ---\n{nav_html}"
+            additional_html += f"\n\n--- Page: {nav_url} ---\n{clean_nav_html}"
 
         # 4. Hop 2 — draft and additional HTML are passed as separate template variables
         return self.metadata_parser.extract_dataset_info(

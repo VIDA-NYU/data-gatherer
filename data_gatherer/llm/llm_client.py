@@ -69,15 +69,18 @@ class LLMClient_dev:
         elif 'claude' in model:
             self.logger.debug(f"Initializing Anthropic: {model}")
             self.llm_client = Anthropic()
+            self.token_limit = 200000
 
         elif model.startswith('gpt'):
             self.logger.debug(f"Initializing OpenAI client for model: {model}")
             self.llm_client = OpenAI(api_key=GPT_API_KEY)
+            self.token_limit = 128000
 
         elif model.startswith('gemini') and not self.use_portkey:
             self.logger.debug(f"Initializing direct Gemini client for model: {model}")
             genai.configure(api_key=GEMINI_KEY)
             self.llm_client = genai.GenerativeModel(model)
+            self.token_limit = 1000000
         
         elif model.startswith('local-flan-t5'):
             self.logger.debug(f"Initializing local Flan-T5 model: {model}")
@@ -201,7 +204,7 @@ class LLMClient_dev:
         )
         return response.text
     
-    def _call_anthropic(self, messages, response_format, temperature=0.0, max_tokens=8192):
+    def _call_anthropic(self, messages, response_format, temperature=0.0, max_tokens=2048):
         self.logger.info(f"Calling Anthropic Claude model with {len(str(messages))} chars.")
         if self.save_prompts:
             self.prompt_manager.save_prompt(prompt_id='abc', prompt_content=messages)

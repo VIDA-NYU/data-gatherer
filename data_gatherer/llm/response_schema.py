@@ -458,7 +458,7 @@ study_hop1_schema_claude = {
                 "type": "array",
                 "items": {
                     "type": "string",
-                    "format": "uri"
+                    "maxLength": 300
                 },
                 "description": "Top-k internal URLs from the sitemap most likely to provide additional context, richer detail, or verification for any of the six fields."
             },
@@ -540,12 +540,12 @@ study_sanity_check_w_rationale_schema_claude = {
                 "items": {"type": "string", "format": "uri"},
                 "description": "Optionally include here the URLs linking to datasets or data access pages, if found on the page."
             },
-            "changes_from_curated": {
+            "rationale": {
                 "type": "string",
-                "description": "Per-field explanation of whether each extracted value agrees with or differs from the curated metadata, citing specific text from the HTML as evidence."
+                "description": "Rationale of the output given the input you were provided and the content of the page. Explain briefly."
             }
         },
-        "required": ["coarse_data_modality", "granular_data_modality", "diseases_included", "sample_size", "changes_from_curated"],
+        "required": ["coarse_data_modality", "granular_data_modality", "diseases_included", "sample_size", "rationale"],
         "additionalProperties": False
     }
 }
