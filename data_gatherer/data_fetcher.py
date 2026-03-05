@@ -10,7 +10,7 @@ import requests
 from lxml import etree as ET
 from data_gatherer.selenium_setup import create_driver
 from bs4 import BeautifulSoup
-from urllib.parse import urlparse
+from urllib.parse import urlparse, urljoin, urlunparse
 import pandas as pd
 from data_gatherer.retriever.xml_retriever import xmlRetriever
 from data_gatherer.retriever.html_retriever import htmlRetriever
@@ -580,7 +580,24 @@ class DataFetcher(ABC):
 
         return url
 
+    def is_url_reachable(self, url: str, timeout: int = 5) -> str | bool:
+        """Returns the (sanitized) URL if reachable, False otherwise.
+        Strips trailing /https or /http artefacts before checking.
+        Tries HEAD first; falls back to streaming GET on 405."""
+        url = re.sub(r'/https?$', '', url)
+        try:
+            r = requests.head(url, timeout=timeout, allow_redirects=True)
+            if r.status_code == 405:
+                r = requests.get(url, timeout=timeout, allow_redirects=True, stream=True)
+                r.close()
+            self.logger.info(f"URL {url} is reachable with status code {r.status_code}. r.ok={r.ok}")
+            return url if r.ok else False
+        except Exception as e:
+            self.logger.debug("is_url_reachable: check failed for %s — %s", url, e)
+            return False
+
     def get_sitemap(self, base_url: str) -> str:
+        self.logger.info(f"Getting sitemap for {base_url} using usp library")
         tree = sitemap_tree_for_homepage(base_url)
 
         b = urlparse(base_url)
@@ -594,7 +611,14 @@ class DataFetcher(ABC):
             return prefix == "/" or p == prefix or p.startswith(prefix + "/")
 
         result = "\n".join(p.url for p in tree.all_pages() if keep(p.url))
-        self.logger.debug("Filtered sitemap for %s:\n%s", base_url, result)
+
+        if not result.strip() and hasattr(self, 'crawl_sitemap'):
+            self.logger.info("usp found no sitemap for %s — falling back to crawl_sitemap", base_url)
+            urls = self.crawl_sitemap(base_url)
+            result = "\n".join(u for u in urls)
+
+        self.logger.info(f"Filtered sitemap for {base_url}:\n{result[:500]}...")
+        self.logger.debug(f"Filtered sitemap for {base_url}:\n{result}")
         return result
 
 class HttpGetRequest(DataFetcher):
@@ -795,6 +819,29 @@ class WebScraper(DataFetcher):
         except Exception as e:
             self.logger.error(f"Live web scraping failed for {url}: {e}")
             # raise e
+
+    def crawl_sitemap(self, start_url: str) -> list[str]:
+        """Extracts all same-domain <a href> links from start_url using the active Selenium driver.
+        Selenium returns fully resolved absolute URLs — no parsing or urljoin needed.
+        Does NOT navigate beyond the start page."""
+        self.logger.info(f"Crawling sitemap for {start_url} using Selenium")
+        b = urlparse(start_url)
+        self.logger.info(f"Parsed URL: {b}")
+        origin = f"{b.scheme}://{b.netloc}"
+        self.logger.info(f"Origin for sitemap crawl: {origin}")
+
+        self.scraper_tool.get(start_url)
+        found = []
+        seen = set()
+        for el in self.scraper_tool.find_elements(By.TAG_NAME, "a"):
+            href = (el.get_attribute("href") or "").split("#")[0].split("?")[0].rstrip("/")
+            self.logger.debug(f"Found link: {href}")
+            if href.startswith(origin) and href not in seen:
+                seen.add(href)
+                found.append(href)
+
+        self.logger.info("crawl_sitemap found %d links on %s", len(found), start_url)
+        return found
 
     def remove_cookie_patterns(self, html: str):
         pattern = r'<img\s+alt=""\s+src="https://www\.ncbi\.nlm\.nih\.gov/stat\?.*?"\s*>'

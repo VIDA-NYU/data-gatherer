@@ -203,7 +203,6 @@ class LLMClient_dev:
     
     def _call_anthropic(self, messages, response_format, temperature=0.0, max_tokens=8192):
         self.logger.info(f"Calling Anthropic Claude model with {len(str(messages))} chars.")
-        self.logger.debug(f"Messages: {messages}")
         if self.save_prompts:
             self.prompt_manager.save_prompt(prompt_id='abc', prompt_content=messages)
         response = self.llm_client.messages.create(

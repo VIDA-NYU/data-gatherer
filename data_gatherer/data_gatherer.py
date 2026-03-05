@@ -1157,7 +1157,7 @@ class DataGatherer:
                 if add_sitemap_to_prompt and sitemap:
                     metadata = self.two_hop_extract(html, row['dataset_webpage'], structured_metadata, use_portkey,
                         response_format=response_format,
-                        max_k=5,
+                        max_k=4,
                         sitemap=sitemap
                     )
 
@@ -1216,24 +1216,28 @@ class DataGatherer:
             self.logger.debug(f"[multi-hop] navigation reasoning: {reasoning}")
         self.logger.info(f"[multi-hop] hop1 suggests {len(suggested_urls)} pages: {suggested_urls}")
 
-        # 3. Fetch suggested pages (skip auth walls)
+        # 3. Fetch suggested pages — skip unreachable or auth-gated pages
         additional_html = ""
         for nav_url in suggested_urls:
-            nav_html = self.data_fetcher.fetch_data(nav_url)
+            sanitized_url = self.data_fetcher.is_url_reachable(nav_url)
+            if not sanitized_url:
+                self.logger.debug(f"[multi-hop] skipping unreachable: {nav_url}")
+                continue
+            else:
+                nav_url = sanitized_url
+            nav_html = self.data_fetcher.fetch_data(nav_url) or ""
+            clean_nav_html = self.metadata_parser.normalize_HTML(nav_html)
             additional_html += f"\n\n--- Page: {nav_url} ---\n{nav_html}"
 
-        # 4. Hop 2
-        hop2_content = (
-            f"DRAFT OUTPUT FROM MAIN PAGE:\n{json.dumps(hop1_result)}\n\n"
-            f"ADDITIONAL PAGES HTML:\n{additional_html if additional_html else '(none fetched)'}"
-        )
+        # 4. Hop 2 — draft and additional HTML are passed as separate template variables
         return self.metadata_parser.extract_dataset_info(
-            hop2_content,
+            additional_html if additional_html else "(none fetched)",
             structured_metadata=structured_metadata,
             subdir='metadata_prompts',
             prompt_name='Claude_StudyPage_SanityCheck_finalize',
             response_format=response_format,
             use_portkey=use_portkey,
+            hop1_draft=json.dumps(hop1_result),
         )
 
     def flatten_json(self, y, parent_key='', sep='.'):

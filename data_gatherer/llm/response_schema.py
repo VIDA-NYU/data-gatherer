@@ -393,10 +393,9 @@ study_response_schema_claude = {
                 "type": "array",
                 "items": {
                     "type": "string",
-                    "format": "uri",
-                    "description": "URLs of the publications describing the study."
+                    "description": "URLs, DOIs, PMIDs, or PMCIDs for publications describing the study."
                 },
-                "description": "URLs of the publications describing the study."
+                "description": "URLs, DOIs, PMIDs, or PMCIDs for publications describing the study."
             },
             "dataset_urls": {
                 "type": "array",
@@ -438,10 +437,9 @@ study_hop1_schema_claude = {
                 "type": "array",
                 "items": {
                     "type": "string",
-                    "format": "uri",
-                    "description": "URLs of the publications describing the study."
+                    "description": "URLs, DOIs, PMIDs, or PMCIDs for publications describing the study."
                 },
-                "description": "URLs of the publications describing the study."
+                "description": "URLs, DOIs, PMIDs, or PMCIDs for publications describing the study."
             },
             "dataset_urls": {
                 "type": "array",
@@ -497,13 +495,13 @@ study_sanity_check_schema_claude = {
             },
             "publication_urls": {
                 "type": "array",
-                "items": {"type": "string", "format": "uri"},
-                "description": "URLs of publications describing the study, if found on the page."
+                "items": {"type": "string"},
+                "description": "Optionally include here the identifiers (URLs, DOIs, PMIDs, or PMCIDs) for publications from the study, if found on the page."
             },
             "dataset_urls": {
                 "type": "array",
                 "items": {"type": "string", "format": "uri"},
-                "description": "URLs linking to datasets or data access pages, if found on the page."
+                "description": "Optionally include here the URLs linking to datasets or data access pages, if found on the page."
             }
         },
         "required": ["coarse_data_modality", "granular_data_modality", "diseases_included", "sample_size"],
@@ -534,13 +532,13 @@ study_sanity_check_w_rationale_schema_claude = {
             },
             "publication_urls": {
                 "type": "array",
-                "items": {"type": "string", "format": "uri"},
-                "description": "URLs of publications describing the study, if found on the page."
+                "items": {"type": "string"},
+                "description": "Optionally include here the identifiers (URLs, DOIs, PMIDs, or PMCIDs) for publications from the study, if found on the page."
             },
             "dataset_urls": {
                 "type": "array",
                 "items": {"type": "string", "format": "uri"},
-                "description": "URLs linking to datasets or data access pages, if found on the page."
+                "description": "Optionally include here the URLs linking to datasets or data access pages, if found on the page."
             },
             "changes_from_curated": {
                 "type": "string",
