@@ -28,6 +28,7 @@ xlsxwriter
 sentence-transformers
 pymupdf
 json_repair
+ultimate-sitemap-parser
 mcp
 nest-asyncio
 playwright
