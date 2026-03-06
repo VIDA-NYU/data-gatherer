@@ -984,6 +984,7 @@ class DataGatherer:
         response_format=dataset_metadata_response_schema_gpt,
         timeout=1,
         profile_dir=None,
+        browser='Firefox',
         add_sitemap_to_prompt=False,
         redirect_url=None,
         from_metadata_to_publication_corpus=False,
@@ -1030,7 +1031,7 @@ class DataGatherer:
         self.already_previewed = []
 
         self.data_fetcher = self.data_fetcher.update_DataFetcher_settings(
-            'any_url', HTML_fallback='Selenium', profile_dir=profile_dir
+            'any_url', HTML_fallback='Selenium', profile_dir=profile_dir, browser=browser
         )
 
         self.metadata_parser = HTMLParser(self.open_data_repos_ontology, self.logger, full_document_read=True,
@@ -1105,7 +1106,9 @@ class DataGatherer:
                     self.data_fetcher = self.data_fetcher.update_DataFetcher_settings(
                         row['dataset_webpage'],
                         HTML_fallback='Selenium',  # Use Selenium --> Playwright can be added later
-                        headless=current_headless   # preserve current headless state (don't restart driver if user already logged in)
+                        headless=current_headless,   # preserve current headless state (don't restart driver if user already logged in)
+                        browser=browser,
+                        profile_dir=profile_dir
                     )
                     html = self.data_fetcher.fetch_data(row['dataset_webpage'], delay=3, wait_for_page_load=True)
                     if html and self.data_fetcher.detect_login_required(html, url=row['dataset_webpage']):
