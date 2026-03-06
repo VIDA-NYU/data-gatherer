@@ -1503,6 +1503,7 @@ class DataGatherer:
                     cache = {}
             if process_id not in cache:
                 self.logger.info(f"Saving results to cache with process_id: {process_id}")
+                output['wrote_to_cache'] = time.time()
                 cache[process_id] = output
                 try:
                     with open(tmp_file, 'w') as f:
