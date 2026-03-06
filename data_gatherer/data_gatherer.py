@@ -1153,6 +1153,7 @@ class DataGatherer:
                     metadata_schema_org = {}
 
                 html = self.metadata_parser.normalize_HTML(html, keep_tags=keep_tags)
+                self.logger.info(f"Normalized HTML for metadata extraction, len: {len(html)} characters. Keep tags: {keep_tags if keep_tags else 'None'}")
 
                 structured_metadata = row[pass_cols_to_prompt].to_dict() | metadata_schema_org
 
@@ -1172,6 +1173,8 @@ class DataGatherer:
                         prompt_name=prompt_name,
                         response_format=response_format
                         )
+                if isinstance(metadata, list):
+                    metadata = metadata[0] if metadata else {}
                 metadata['source_url_for_metadata'] = row['dataset_webpage']
                 metadata['access_mode'] = row.get('access_mode', None)
                 metadata['source_section'] = row.get('source_section', row.get('section_class', None))

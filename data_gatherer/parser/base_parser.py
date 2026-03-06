@@ -293,7 +293,7 @@ Files:
         self.logger.info(f"Function_call: extract_datasets_info_from_content(...)")
         self.logger.debug(f"Loading prompt: {prompt_name} for model {model}")
         static_prompt = self.prompt_manager.load_prompt(prompt_name, subdir=subdir)
-        n_tokens_static_prompt = self.count_tokens(static_prompt, model)
+        n_tokens_static_prompt = self.count_tokens(static_prompt, model) + len(kwargs.get('sitemap', '')) // 4
 
         if 'gpt' in model:
             tokens_cnt = self.count_tokens(content, model)
@@ -415,15 +415,29 @@ Files:
         self.logger.info(f"Params - repos: {repos}, model: {model}, temperature: {temperature}, prompt_name: {prompt_name}, subdir: {subdir}, full_document_read: {full_document_read}, response_format: {response_format}, token_chunk_size: {token_chunk_size}")
         ret = []
         # Determine chunk size (e.g., 128000 tokens per chunk for GPT-4o)
-        # Estimate chunk size in string indices: 1 token ≈ 3.5 characters
-        char_chunk_size = int(token_chunk_size * 3.5)
+        # Estimate chunk size in string indices: 1 token ≈ 4 characters
+        sitemap = prompt_kwargs.get('sitemap', '')
+        if sitemap:
+            # Reserve token budget for sitemap — injected into every chunk's prompt
+            sitemap_tokens_est = len(sitemap) // 4
+            max_sitemap_tokens = int(token_chunk_size * 0.25)  # sitemap gets at most a quarter of the budget
+            if sitemap_tokens_est > max_sitemap_tokens:
+                self.logger.warning(f"Sitemap too large ({sitemap_tokens_est} est. tokens), truncating to {max_sitemap_tokens} tokens")
+                prompt_kwargs = {**prompt_kwargs, 'sitemap': sitemap[:int(max_sitemap_tokens * 4)]}
+                sitemap_tokens_est = max_sitemap_tokens
+            content_token_budget = max(token_chunk_size - sitemap_tokens_est, token_chunk_size // 4)
+            self.logger.info(f"Sitemap-aware chunking: total={token_chunk_size}, sitemap={sitemap_tokens_est}, content={content_token_budget} tokens/chunk")
+        else:
+            content_token_budget = token_chunk_size
+        char_chunk_size = int(content_token_budget * 3)
         # Split content into chunks
+        overlap = 100
         chunks = []
         start = 0
         while start < len(content):
             end = start + char_chunk_size
             chunks.append(content[start:end])
-            start = end
+            start = end - overlap
         self.logger.info(f"Splitting content into {len(chunks)} chunks of size {char_chunk_size} characters (approx {token_chunk_size} tokens per chunk).")
         # Call extract_datasets_info_from_content for each chunk
         for idx, chunk in enumerate(chunks):
@@ -1400,16 +1414,17 @@ Files:
         static_prompt = llm.prompt_manager.load_prompt(prompt_name, subdir=subdir)
 
         content = metadata
+        extra_tokens = len(prompt_kwargs.get('sitemap', '') + str(structured_metadata) + str(static_prompt)) // 4
 
-        tokens_cnt = self.count_tokens(content, llm.model) + len(str(static_prompt)) // 4
+        tokens_cnt = self.count_tokens(content, llm.model) + extra_tokens
 
         if tokens_cnt > int(1.25 * llm.token_limit):
                 return self.extract_datasets_info_from_chunks(
-                    content, tokens_cnt, self.repo_names, model=model or self.llm_name, prompt_name=prompt_name, full_document_read=self.full_document_read, 
+                    content, tokens_cnt, self.repo_names, model=model or self.llm_name, prompt_name=prompt_name, full_document_read=self.full_document_read,
                     response_format=response_format, token_chunk_size=llm.token_limit, subdir=subdir, structured_metadata=structured_metadata, **prompt_kwargs
                     )
 
-        while self.tokens_over_limit(content, llm.model, allowance_static_prompt=len(str(static_prompt)) // 4):
+        while self.tokens_over_limit(content, llm.model, allowance_static_prompt=extra_tokens):
             content = content[:-2000]
         messages = llm.prompt_manager.render_prompt(static_prompt, entire_doc=True, content=content, structured_metadata=structured_metadata, **prompt_kwargs)
         
