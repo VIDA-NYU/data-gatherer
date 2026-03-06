@@ -3,6 +3,7 @@ import re
 import logging
 import numpy as np
 from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
 import asyncio
 import os
 import time
@@ -580,6 +581,26 @@ class DataFetcher(ABC):
 
         return url
 
+    def detect_login_required(self, html: str, url: str = None) -> bool:
+        """Base implementation: heuristic login-wall detection without session tracking."""
+        if not html:
+            return False
+        login_href_pattern = re.compile(
+            r'href=["\'][^"\']*/(login|signin|sign-in|auth|oauth|sso|oidc)(?=[/?#"\'])',
+            re.IGNORECASE
+        )
+        login_text_pattern = re.compile(
+            r'(please\s+log\s+in|sign\s+in\s+to\s+(continue|access|view)|you\s+must\s+be\s+logged\s+in|access\s+denied|unauthorized|authentication\s+required)',
+            re.IGNORECASE
+        )
+        if login_href_pattern.search(html):
+            return True
+        if login_text_pattern.search(html):
+            return True
+        if len(html.strip()) < 500:
+            return True
+        return False
+
     def is_url_reachable(self, url: str, timeout: int = 5) -> str | bool:
         """Returns the (sanitized) URL if reachable, False otherwise.
         Strips trailing /https or /http artefacts before checking.
@@ -596,28 +617,40 @@ class DataFetcher(ABC):
             self.logger.debug("is_url_reachable: check failed for %s — %s", url, e)
             return False
 
+    def _limit_sitemaps(self, sitemap_urls: list, recursion_level: int, parent_urls: set) -> list:
+        if len(sitemap_urls) > 10:
+            self.logger.warning(f"get_sitemap: {len(sitemap_urls)} sub-sitemaps found, site too large, skipping")
+            raise ValueError("Too many sitemaps")
+        return sitemap_urls
+
     def get_sitemap(self, base_url: str) -> str:
+        base_url = self.redirect_mapping.get(base_url, base_url)
         self.logger.info(f"Getting sitemap for {base_url} using usp library")
-        tree = sitemap_tree_for_homepage(base_url)
+        try:
+            tree = sitemap_tree_for_homepage(base_url, recurse_list_callback=self._limit_sitemaps)
+            self.logger.info(f"usp found {len(list(tree.sub_sitemaps))} pages in sitemap for {base_url}")
+            b = urlparse(base_url)
+            origin = f"{b.scheme}://{b.netloc}"
+            prefix = b.path.rstrip("/") or "/"
 
-        b = urlparse(base_url)
-        origin = f"{b.scheme}://{b.netloc}"
-        prefix = b.path.rstrip("/") or "/"
+            def keep(u: str) -> bool:
+                if not u.startswith(origin):
+                    return False
+                p = urlparse(u).path
+                return prefix == "/" or p == prefix or p.startswith(prefix + "/")
 
-        def keep(u: str) -> bool:
-            if not u.startswith(origin):
-                return False
-            p = urlparse(u).path
-            return prefix == "/" or p == prefix or p.startswith(prefix + "/")
+            result = "\n".join(p.url for p in tree.all_pages() if keep(p.url))
 
-        result = "\n".join(p.url for p in tree.all_pages() if keep(p.url))
+        except Exception as e:
+            self.logger.warning(f"get_sitemap: usp failed for {base_url}: {e}")
+            result = ""
 
         if not result.strip() and hasattr(self, 'crawl_sitemap'):
             self.logger.info("usp found no sitemap for %s — falling back to crawl_sitemap", base_url)
             urls = self.crawl_sitemap(base_url)
             result = "\n".join(u for u in urls)
 
-        self.logger.info(f"Filtered sitemap for {base_url}:\n{result[:500]}...")
+        self.logger.info(f"Filtered sitemap ({len(result.splitlines())} URLs) for {base_url}:\n{result[:500]}...")
         self.logger.debug(f"Filtered sitemap for {base_url}:\n{result}")
         return result
 
@@ -781,7 +814,7 @@ class WebScraper(DataFetcher):
         self.logged_in_domains = set()  # domains where login was already completed this run
         self.logger.debug("WebScraper initialized.")
 
-    def fetch_data(self, url, retries=3, delay=2, update_redirect_map=False, **kwargs):
+    def fetch_data(self, url, retries=3, delay=2, update_redirect_map=False, timeout=10, wait_page_load=False, **kwargs):
         """
         Fetches data from the given URL. First tries backup data (fast), then live web scraping if needed.
 
@@ -806,14 +839,23 @@ class WebScraper(DataFetcher):
         try:
             self.logger.debug(f"Fetching data with function call: self.scraper_tool.get(url)")
             self.scraper_tool.get(url)
-            self.logger.debug(f"http get complete, now waiting {delay} seconds for page to load")
+            self.logger.debug(f"http get complete")
+
+            if wait_page_load:
+                self.logger.info(f"Waiting for page to reach readyState=complete with timeout {timeout}s")
+                try:
+                    WebDriverWait(self.scraper_tool, timeout=timeout).until(
+                        lambda d: d.execute_script("return document.readyState") == "complete"
+                    )
+                except Exception:
+                    self.logger.warning(f"Page did not reach readyState=complete within {timeout}s for {url}, proceeding anyway")
+            
             self.simulate_user_scroll(delay)
             self.title = self.extract_publication_title()
-            if update_redirect_map:
-                final_url = self.scraper_tool.current_url
-                if final_url != url and url not in self.redirect_mapping:
-                    self.logger.info(f"URL redirected from {url} to {final_url}")
-                    self.redirect_mapping[url] = final_url
+            final_url = self.scraper_tool.current_url
+            if final_url != url and url not in self.redirect_mapping:
+                self.logger.info(f"URL redirected from {url} to {final_url}")
+                self.redirect_mapping[url] = final_url
             return self.scraper_tool.page_source
         
         except Exception as e:
@@ -830,15 +872,28 @@ class WebScraper(DataFetcher):
         origin = f"{b.scheme}://{b.netloc}"
         self.logger.info(f"Origin for sitemap crawl: {origin}")
 
-        self.scraper_tool.get(start_url)
+        try:
+            self.scraper_tool.get(start_url)
+        except Exception as e:
+            self.logger.warning(f"crawl_sitemap: failed to navigate to {start_url}: {e}")
+            return []
+        # Collect all hrefs in one JS call to avoid StaleElementReferenceException
+        # (DOM can be mutated by JS between find_elements() and get_attribute())
+        raw_hrefs = self.scraper_tool.execute_script(
+            "return Array.from(document.querySelectorAll('a[href]')).map(a => a.href);"
+        ) or []
         found = []
         seen = set()
-        for el in self.scraper_tool.find_elements(By.TAG_NAME, "a"):
-            href = (el.get_attribute("href") or "").split("#")[0].split("?")[0].rstrip("/")
+        for href in raw_hrefs:
+            href = (href or "").split("#")[0].split("?")[0].rstrip("/")
             self.logger.debug(f"Found link: {href}")
-            if href.startswith(origin) and href not in seen:
-                seen.add(href)
-                found.append(href)
+            if not href.startswith(origin) or href in seen:
+                continue
+            segments = [s for s in urlparse(href).path.split("/") if s]
+            if len(segments) != len(set(segments)):  # looping path — skip
+                continue
+            seen.add(href)
+            found.append(href)
 
         self.logger.info("crawl_sitemap found %d links on %s", len(found), start_url)
         return found
@@ -972,8 +1027,17 @@ class WebScraper(DataFetcher):
         self.redirect_mapping[url] = user_input if user_input else url
         return html
 
-    def simulate_user_scroll(self, delay=2, scroll_wait=0.5):
+    def simulate_user_scroll(self, delay=2, scroll_wait=0.5, spa_timeout=8):
         time.sleep(delay)
+        # For SPAs: poll until body has visible text or spa_timeout is reached
+        deadline = time.time() + spa_timeout
+        while time.time() < deadline:
+            body_text = self.scraper_tool.execute_script("return document.body.innerText.trim()")
+            if body_text:
+                break
+            time.sleep(0.5)
+        else:
+            self.logger.warning("simulate_user_scroll: body still empty after %.0fs — proceeding anyway", delay + spa_timeout)
         last_height = self.scraper_tool.execute_script("return document.body.scrollHeight")
         while True:
             # Scroll down to bottom

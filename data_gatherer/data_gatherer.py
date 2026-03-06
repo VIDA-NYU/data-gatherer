@@ -1107,12 +1107,13 @@ class DataGatherer:
                         HTML_fallback='Selenium',  # Use Selenium --> Playwright can be added later
                         headless=current_headless   # preserve current headless state (don't restart driver if user already logged in)
                     )
-                    html = self.data_fetcher.fetch_data(row['dataset_webpage'], delay=2)
+                    html = self.data_fetcher.fetch_data(row['dataset_webpage'], delay=3, wait_for_page_load=True)
                     if html and self.data_fetcher.detect_login_required(html, url=row['dataset_webpage']):
                         self.logger.warning(f"⚠ Login may be required for {row['dataset_webpage']} — HTML contains auth/login indicators")
-                        # update DataFetcher settings to handle login and fetch HTML with Selenium Non-Headless
-                        self.data_fetcher = self.data_fetcher.update_DataFetcher_settings(row['dataset_webpage'], HTML_fallback='Selenium', headless=False)
-                        html = self.data_fetcher.handle_login_and_fetch(row['dataset_webpage'], delay=5)
+                        if hasattr(self.data_fetcher, 'handle_login_and_fetch'):
+                            # update DataFetcher settings to handle login and fetch HTML with Selenium Non-Headless
+                            self.data_fetcher = self.data_fetcher.update_DataFetcher_settings(row['dataset_webpage'], HTML_fallback='Selenium', headless=False)
+                            html = self.data_fetcher.handle_login_and_fetch(row['dataset_webpage'], delay=5)
                     if "informative_html_metadata_tags" in repo_dict:
                         keep_tags = repo_dict['informative_html_metadata_tags']
                     if write_raw_metadata:
@@ -1155,7 +1156,7 @@ class DataGatherer:
 
                 structured_metadata = row[pass_cols_to_prompt].to_dict() | metadata_schema_org
 
-                if add_sitemap_to_prompt and sitemap:
+                if add_sitemap_to_prompt and sitemap and len(sitemap) > 0:
                     metadata = self.two_hop_extract(html, row['dataset_webpage'], structured_metadata, use_portkey,
                         response_format=response_format,
                         max_k=4,
