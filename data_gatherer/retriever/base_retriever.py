@@ -1,6 +1,7 @@
 # retrievers/base.py
 from abc import ABC, abstractmethod
 from data_gatherer.resources_loader import load_config
+from urllib.parse import urlparse
 
 
 class BaseRetriever(ABC):
@@ -51,3 +52,24 @@ class BaseRetriever(ABC):
 
         else:
             self.logger.warning(f"Publisher '{self.publisher}' not found in retrieval patterns. Using default patterns.")
+
+    def filter_publication_urls(self, urls: list, base_url: str) -> list:
+        """Return URLs whose path contains at least one publication keyword."""
+        keywords = self.retrieval_patterns.get('general', {}).get('pub_page_keywords', [])
+        
+        kw_set = set(k.lower() for k in keywords)
+
+        result = []
+        for url in urls:
+            url = url.strip()
+            if not url:
+                continue
+            segments = set(urlparse(url).path.lower().split("/"))
+            segments_base = set(urlparse(base_url).path.lower().split("/"))
+            if segments & kw_set:
+                if segments_base & kw_set:
+                    self.logger.warning(f"Skip URL because base_url already contains publication keywords: {url}")
+                else:
+                    result.append(url)
+        return result
+

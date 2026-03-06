@@ -1401,6 +1401,11 @@ class HTMLParser(LLMParser):
             return [self._normalize_person_org(e) for e in entity]
         return None
 
+    def extract_publication_corpus_from_webpage(self, html: str) -> list:
+        """Extract publication identifiers (PMIDs, PMCIDs, DOIs) from a study HTML page."""
+        self.logger.info("Extracting publication identifiers from HTML webpage")
+        return self.retriever.extract_publication_ids(html)
+
     def extract_normalized_dataset_urls(self, row):
         self.logger.info("Extracting normalized dataset URL from row data")
 

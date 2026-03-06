@@ -985,7 +985,8 @@ class DataGatherer:
         timeout=1,
         profile_dir=None,
         add_sitemap_to_prompt=False,
-        redirect_url=None
+        redirect_url=None,
+        from_metadata_to_publication_corpus=False,
         ):
         """
         This method iterates through the combined_df DataFrame, checks for dataset webpages or download links,
@@ -1180,6 +1181,9 @@ class DataGatherer:
                 metadata['metadata_schema_org'] = metadata_schema_org
                 self.already_previewed.append(row['dataset_webpage'])
 
+                if sitemap and from_metadata_to_publication_corpus:
+                    metadata['new_corpus'] = self.create_publication_corpus(metadata, sitemap)
+
             metadata['paper_with_dataset_citation'] = row.get('source_url', None)
 
             if self.save_to_cache:
@@ -1251,6 +1255,51 @@ class DataGatherer:
             use_portkey=use_portkey,
             hop1_draft=json.dumps(hop1_result),
         )
+
+    def create_publication_corpus(self, metadata, sitemap: str):
+        """
+        Create a corpus of publications from the dataset/study page and sitemap.
+
+        :param metadata: Extracted metadata for the dataset.
+
+        :param sitemap: Sitemap of the dataset/study website containing internal links.
+
+        :return: A corpus of publications related to the dataset.
+        """
+        base_url = metadata.get('source_url_for_metadata', '')
+        self.logger.info(f"Creating publication corpus from sitemap for dataset page {base_url}")
+
+        # If the base URL itself is a publication page, use it directly — no need to search
+        pub_id_patterns = self.metadata_parser.retriever.retrieval_patterns.get('general', {}).get('pub_id_patterns', [])
+        if any(re.search(p, base_url) for p in pub_id_patterns):
+            self.logger.info(f"Base URL is a publication page, skipping corpus search: {base_url}")
+            return {base_url: [base_url]}
+
+        # 1. Find publication-related pages from sitemap by path-segment keyword match
+        pub_urls = self.metadata_parser.retriever.filter_publication_urls(sitemap.splitlines(), base_url=base_url)
+        self.logger.info(f"Matched {len(pub_urls)} publication pages: {pub_urls}")
+
+        if not pub_urls:
+            self.logger.info("No publication pages found in sitemap")
+            return []
+
+        # 2. Fetch each publication page and extract identifiers
+        result = dict()
+        for url in pub_urls:
+            self.logger.info(f"Processing candidate publication page: {url}")
+            sanitized = self.data_fetcher.is_url_reachable(url)
+            if not sanitized:
+                self.logger.debug(f"Unreachable: {url}")
+                continue
+            page_html = self.data_fetcher.fetch_data(sanitized) or ""
+            pub_is = self.metadata_parser.extract_publication_corpus_from_webpage(page_html)
+            result[url] = pub_is
+
+        # flatten result and log
+        flat_result = [item for sublist in result.values() for item in sublist]
+        self.logger.info(f"Extracted {len(flat_result)} publication identifiers: {result}")
+        return result
+
 
     def flatten_json(self, y, parent_key='', sep='.'):
         """
