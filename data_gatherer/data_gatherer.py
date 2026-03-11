@@ -118,7 +118,8 @@ class DataGatherer:
         self.download_data_for_description_generation = download_data_for_description_generation
 
         entire_document_models = ["gemini-1.5-flash", "gemini-1.5-pro", "gemini-2.0-flash-exp", "gemini-2.0-flash",
-                                  "gemini-2.5-flash", "gpt-4o", "gpt-4o-mini", "gpt-5-nano", "gpt-5-mini", "gpt-5"]
+                                  "gemini-2.5-flash", "gpt-4o", "gpt-4o-mini", "gpt-5-nano", "gpt-5-mini", "gpt-5",
+                                  "claude-haiku-4-5-20251001", "claude-sonnet-4-5"]
         self.full_document_read = llm_name in entire_document_models and process_entire_document
         self.llm = llm_name
 
@@ -321,12 +322,14 @@ class DataGatherer:
 
         self.full_document_read = full_document_read if full_document_read is not None else self.full_document_read
 
+        self.logger.debug(f"Initializing parser for format: {raw_data_format} with FDR={self.full_document_read}")
+
         format_key = raw_data_format.upper()
         if grobid_for_pdf and format_key == "PDF":
             format_key = "PDF_GROBID"
         
         if self._cached_parsers.get(format_key) is not None and not force_reinit:
-            self.logger.info(f"Reusing cached parser for format: {format_key}")
+            self.logger.debug(f"Reusing cached parser for format: {format_key}")
             self.parser = self._cached_parsers[format_key]
             self.parser.full_document_read = self.full_document_read
             return
@@ -695,7 +698,7 @@ class DataGatherer:
 
             # Step 2: Use HTMLParser/XMLParser
             self.logger.info("Initializing parser based on raw data format")
-            self.init_parser_by_input_type(self.raw_data_format, raw_data, embeddings_retriever_model, use_portkey, grobid_for_pdf, full_document_read)
+            self.init_parser_by_input_type(self.raw_data_format, raw_data, embeddings_retriever_model, use_portkey, grobid_for_pdf, self.full_document_read)
 
             self.logger.info("Parsing Raw content from format: " + self.raw_data_format + " with parser " + self.parser.__class__.__name__)
             if self.raw_data_format.upper() == "XML" and raw_data is not None:
@@ -828,7 +831,8 @@ class DataGatherer:
         headless=True, 
         use_portkey=True, 
         grobid_for_pdf=False,
-        brute_force_RegEx_ID_ptrs=False
+        brute_force_RegEx_ID_ptrs=False,
+        return_df_joint=False
         ):
         """
         Processes a list of article URLs and returns parsed data.
@@ -866,6 +870,8 @@ class DataGatherer:
         :param grobid_for_pdf: Flag to indicate if GROBID should be used for PDF processing.
         
         :param brute_force_RegEx_ID_ptrs: Flag to indicate if brute force RegEx ID pointers should be used.
+
+        :param return_df_joint: If True, returns a joint DataFrame of all parsed data instead of a dictionary of DataFrames per URL.
 
         :return: Dictionary with URLs as keys and DataFrames of classified data as values.
         """
@@ -909,6 +915,11 @@ class DataGatherer:
                     f"| Elapsed: {time.strftime('%H:%M:%S', time.gmtime(elapsed))} "
                     f"| ETA: {time.strftime('%H:%M:%S', time.gmtime(estimated_remaining))}\n"
                 )
+        if return_df_joint:
+            self.logger.info("Combining individual DataFrames into a joint DataFrame...")
+            combined_df = pd.concat(results.values(), ignore_index=True)
+            self.logger.info(f"Combined DataFrame created with {len(combined_df)} total records.")
+            return combined_df
         self.logger.debug("Completed processing all URLs.")
         return results
     
@@ -969,25 +980,37 @@ class DataGatherer:
     def process_metadata(
         self,
         combined_df,
-        display_type='console', 
-        interactive=True, 
+        pass_cols_to_prompt=[],
+        force_js_load=False,
+        display_type='console',
+        interactive=True,
         return_metadata=False,
-        write_raw_metadata=False, 
-        article_file_dir='tmp/raw_files/', 
+        write_raw_metadata=False,
+        article_file_dir='tmp/raw_files/',
         use_portkey=True,
-        prompt_name='gpt_metadata_extract', 
+        prompt_name='gpt_metadata_extract',
+        response_format=dataset_metadata_response_schema_gpt,
         timeout=1,
+        profile_dir=None,
+        browser='Firefox',
+        add_sitemap_to_prompt=False,
+        redirect_url=None,
+        from_metadata_to_publication_corpus=False,
         ):
         """
         This method iterates through the combined_df DataFrame, checks for dataset webpages or download links,
 
         :param combined_df: DataFrame containing the data to preview. It should contain columns like 'dataset_webpage', 'download_link', etc.
 
-        :param display_type: Type of display for the preview. Options are 'console', 'html', or 'json'.
+        :param force_js_load: If True, forces JavaScript loading for all dataset webpages.
+
+        :param pass_cols_to_prompt: A list of column names in combined_df to pass to the prompt for metadata extraction.
+
+        :param display_type: Type of display for the preview. Options are 'console', 'ipynb'.
 
         :param interactive: If True, allows user interaction for displaying data previews.
 
-        :param return_metadata: If True, returns a list of metadata dictionaries instead of displaying them.
+        :param return_metadata: If True, returns a list of metadata dictionaries instead of just displaying them.
 
         :param write_raw_metadata: If True, saves raw metadata to the specified directory.
 
@@ -997,7 +1020,16 @@ class DataGatherer:
 
         :param prompt_name: Name of the prompt to use for LLM parsing.
 
+        :param response_format: The response schema to use for parsing the metadata.
+
         :param timeout: Timeout for requests to fetch dataset webpages.
+
+        :param profile_dir: Path to a persistent Firefox profile directory. If set, the browser
+            session (cookies, auth tokens) is saved to disk so that login only needs to happen
+            once. On subsequent runs with the same profile_dir, headless mode is maintained
+            automatically once the session is still valid.
+        
+        :param add_sitemap_to_prompt: If True, adds a sitemap of the dataset webpage to the prompt for navigation.
 
         :return: If return_metadata is True, returns a list of metadata dictionaries. Otherwise, displays the data preview.
         """
@@ -1006,7 +1038,9 @@ class DataGatherer:
 
         self.already_previewed = []
 
-        self.data_fetcher = self.data_fetcher.update_DataFetcher_settings('any_url', HTML_fallback='Selenium')
+        self.data_fetcher = self.data_fetcher.update_DataFetcher_settings(
+            'any_url', HTML_fallback='Selenium', profile_dir=profile_dir, browser=browser
+        )
 
         self.metadata_parser = HTMLParser(self.open_data_repos_ontology, self.logger, full_document_read=True,
                                           llm_name=self.llm, use_portkey=use_portkey)
@@ -1019,7 +1053,7 @@ class DataGatherer:
 
         for i, row in combined_df.iterrows():
             self.logger.info(f"Row # {i}")
-            self.logger.debug(f"Row keys: {row}")
+            self.logger.debug(f"Row key value pairs: {row}")
 
             dataset_webpage, download_link = self.metadata_parser.extract_normalized_dataset_urls(row)
 
@@ -1057,29 +1091,40 @@ class DataGatherer:
             else:
                 self.logger.info(f"LLM scraped metadata")
                 keep_tags = None
-                repo_mapping_key = row['data_repository'].lower()
-                repo_dict = self.open_data_repos_ontology['repos'][repo_mapping_key]
+                repo_mapping_key = row.get('data_repository', 'other').lower()
+                repo_dict = self.open_data_repos_ontology['repos'].get(repo_mapping_key, {})
 
                 # caching: load_from_cache
-                skip, cache = False, {}
+                skip_and_append_cached_res, cache = False, {}
                 process_id = self.llm + "-" + dataset_webpage_id
                 if self.load_from_cache and os.path.exists(os.path.join(CACHE_BASE_DIR, "process_metadata_cache.json")):
                     cache = json.load(open(os.path.join(CACHE_BASE_DIR, "process_metadata_cache.json"), 'r'))
                     if process_id in cache:
-                        metadata, skip = cache[process_id], True
+                        metadata, skip_and_append_cached_res = cache[process_id], True
                 
-                if skip:
+                if skip_and_append_cached_res:
                     self.logger.info(f"Loading metadata from cache for process ID: {process_id}")
+                    ret_list.append(self.metadata_parser.flatten_metadata_dict(metadata | row.to_dict()))
                     continue
 
-                if ('javascript_load_required' in repo_dict):
+                if ('javascript_load_required' in repo_dict) or force_js_load:
                     self.logger.info(f"JavaScript load required for {repo_mapping_key} dataset webpage. Using Selenium.")
                     # Switch to Selenium --> Playwright can be added later
+                    current_headless = getattr(self.data_fetcher, 'headless', True)
                     self.data_fetcher = self.data_fetcher.update_DataFetcher_settings(
-                        row['dataset_webpage'], 
-                        HTML_fallback='Selenium'  # Use Selenium --> Playwright can be added later
+                        row['dataset_webpage'],
+                        HTML_fallback='Selenium',  # Use Selenium --> Playwright can be added later
+                        headless=current_headless,   # preserve current headless state (don't restart driver if user already logged in)
+                        browser=browser,
+                        profile_dir=profile_dir
                     )
-                    html = self.data_fetcher.fetch_data(row['dataset_webpage'], delay=2)
+                    html = self.data_fetcher.fetch_data(row['dataset_webpage'], delay=3, wait_for_page_load=True)
+                    if html and self.data_fetcher.detect_login_required(html, url=row['dataset_webpage']):
+                        self.logger.warning(f"⚠ Login may be required for {row['dataset_webpage']} — HTML contains auth/login indicators")
+                        if hasattr(self.data_fetcher, 'handle_login_and_fetch'):
+                            # update DataFetcher settings to handle login and fetch HTML with Selenium Non-Headless
+                            self.data_fetcher = self.data_fetcher.update_DataFetcher_settings(row['dataset_webpage'], HTML_fallback='Selenium', headless=False)
+                            html = self.data_fetcher.handle_login_and_fetch(row['dataset_webpage'], delay=5)
                     if "informative_html_metadata_tags" in repo_dict:
                         keep_tags = repo_dict['informative_html_metadata_tags']
                     if write_raw_metadata:
@@ -1091,6 +1136,10 @@ class DataGatherer:
                         keep_tags = repo_dict['informative_html_metadata_tags']
 
                     html = self.data_fetcher.fetch_data(row['dataset_webpage'])
+                
+                sitemap = None
+                if len(repo_dict) == 0 and add_sitemap_to_prompt:  # Unknown repos --> Navigation step
+                    sitemap = self.data_fetcher.get_sitemap(row['dataset_webpage'])
                 
                 # Check if HTML was successfully fetched
                 if html is None:
@@ -1112,10 +1161,31 @@ class DataGatherer:
                         self.logger.warning("⚠ No description field in extracted Schema.org metadata")
                 else:
                     self.logger.warning("⚠ normalize_schema_org_metadata returned None - no structured data found")
+                    metadata_schema_org = {}
 
                 html = self.metadata_parser.normalize_HTML(html, keep_tags=keep_tags)
+                self.logger.info(f"Normalized HTML for metadata extraction, len: {len(html)} characters. Keep tags: {keep_tags if keep_tags else 'None'}")
 
-                metadata = self.metadata_parser.parse_datasets_metadata(html, use_portkey=use_portkey, prompt_name=prompt_name)
+                structured_metadata = row[pass_cols_to_prompt].to_dict() | metadata_schema_org
+
+                if add_sitemap_to_prompt and sitemap and len(sitemap) > 0:
+                    metadata = self.two_hop_extract(html, row['dataset_webpage'], structured_metadata, use_portkey,
+                        response_format=response_format,
+                        max_k=4,
+                        sitemap=sitemap
+                    )
+
+                else:
+                    metadata = self.metadata_parser.parse_datasets_metadata(
+                        html,
+                        structured_metadata=structured_metadata,
+                        model=self.llm, 
+                        use_portkey=use_portkey,
+                        prompt_name=prompt_name,
+                        response_format=response_format
+                        )
+                if isinstance(metadata, list):
+                    metadata = metadata[0] if metadata else {}
                 metadata['source_url_for_metadata'] = row['dataset_webpage']
                 metadata['access_mode'] = row.get('access_mode', None)
                 metadata['source_section'] = row.get('source_section', row.get('section_class', None))
@@ -1126,7 +1196,10 @@ class DataGatherer:
                 metadata['metadata_schema_org'] = metadata_schema_org
                 self.already_previewed.append(row['dataset_webpage'])
 
-            metadata['paper_with_dataset_citation'] = row['source_url']
+                if sitemap and from_metadata_to_publication_corpus:
+                    metadata['new_corpus'] = self.create_publication_corpus(metadata, sitemap)
+
+            metadata['paper_with_dataset_citation'] = row.get('source_url', None)
 
             if self.save_to_cache:
                 self.logger.debug(f"Saving metadata to cache for process ID: {process_id}")
@@ -1139,6 +1212,109 @@ class DataGatherer:
             self.logger.info(f"Processed metadata from dataset page {dataset_webpage}")
 
         return ret_list if return_metadata else None
+
+    def two_hop_extract(self, html, url, structured_metadata, use_portkey, response_format, max_k, sitemap):
+
+        self.logger.info(f"Performing two-hop extraction with sitemap for {url}")
+
+        self.logger.error(f"No sitemap provided for {url}") if not sitemap else 1
+        hop1_result = self.metadata_parser.extract_dataset_info(
+            html,
+            structured_metadata=structured_metadata,
+            subdir='metadata_prompts',
+            prompt_name='Claude_StudyPage_SanityCheck_multi_hop',
+            response_format=study_hop1_schema_claude,
+            use_portkey=use_portkey,
+            max_k=max_k,
+            sitemap=sitemap
+        )
+        
+        if isinstance(hop1_result, list):
+            suggested_urls = []
+            for item in hop1_result:
+                suggested_urls.extend(item.pop('suggested_urls', []))
+            suggested_urls = list(set(suggested_urls))
+            hop1_result = hop1_result[0] if hop1_result else {}
+        else:
+            suggested_urls = hop1_result.pop('suggested_urls', [])
+        sitemap_set = set(sitemap.splitlines())
+        hallucinated = [u for u in suggested_urls if u not in sitemap_set]
+        if hallucinated:
+            self.logger.warning(f"[multi-hop] dropping {len(hallucinated)} hallucinated URLs not in sitemap: {hallucinated}")
+        suggested_urls = [u for u in suggested_urls if u in sitemap_set][:max_k]
+        reasoning = hop1_result.pop('reasoning', None)
+        if reasoning:
+            self.logger.debug(f"[multi-hop] navigation reasoning: {reasoning}")
+        self.logger.info(f"[multi-hop] hop1 suggests {len(suggested_urls)} pages: {suggested_urls}")
+
+        # 3. Fetch suggested pages — skip unreachable or auth-gated pages
+        additional_html = ""
+        for nav_url in suggested_urls:
+            sanitized_url = self.data_fetcher.is_url_reachable(nav_url)
+            if not sanitized_url:
+                self.logger.debug(f"[multi-hop] skipping unreachable: {nav_url}")
+                continue
+            else:
+                nav_url = sanitized_url
+            nav_html = self.data_fetcher.fetch_data(nav_url) or ""
+            clean_nav_html = self.metadata_parser.normalize_HTML(nav_html)
+            additional_html += f"\n\n--- Page: {nav_url} ---\n{clean_nav_html}"
+
+        # 4. Hop 2 — draft and additional HTML are passed as separate template variables
+        return self.metadata_parser.extract_dataset_info(
+            additional_html if additional_html else "(none fetched)",
+            structured_metadata=structured_metadata,
+            subdir='metadata_prompts',
+            prompt_name='Claude_StudyPage_SanityCheck_finalize',
+            response_format=response_format,
+            use_portkey=use_portkey,
+            hop1_draft=json.dumps(hop1_result),
+        )
+
+    def create_publication_corpus(self, metadata, sitemap: str):
+        """
+        Create a corpus of publications from the dataset/study page and sitemap.
+
+        :param metadata: Extracted metadata for the dataset.
+
+        :param sitemap: Sitemap of the dataset/study website containing internal links.
+
+        :return: A corpus of publications related to the dataset.
+        """
+        base_url = metadata.get('source_url_for_metadata', '')
+        self.logger.info(f"Creating publication corpus from sitemap for dataset page {base_url}")
+
+        # If the base URL itself is a publication page, use it directly — no need to search
+        pub_id_patterns = self.metadata_parser.retriever.retrieval_patterns.get('general', {}).get('pub_id_patterns', [])
+        if any(re.search(p, base_url) for p in pub_id_patterns):
+            self.logger.info(f"Base URL is a publication page, skipping corpus search: {base_url}")
+            return {base_url: [base_url]}
+
+        # 1. Find publication-related pages from sitemap by path-segment keyword match
+        pub_urls = self.metadata_parser.retriever.filter_publication_urls(sitemap.splitlines(), base_url=base_url)
+        self.logger.info(f"Matched {len(pub_urls)} publication pages: {pub_urls}")
+
+        if not pub_urls:
+            self.logger.info("No publication pages found in sitemap")
+            return []
+
+        # 2. Fetch each publication page and extract identifiers
+        result = dict()
+        for url in pub_urls:
+            self.logger.info(f"Processing candidate publication page: {url}")
+            sanitized = self.data_fetcher.is_url_reachable(url)
+            if not sanitized:
+                self.logger.debug(f"Unreachable: {url}")
+                continue
+            page_html = self.data_fetcher.fetch_data(sanitized) or ""
+            pub_is = self.metadata_parser.extract_publication_corpus_from_webpage(page_html)
+            result[url] = pub_is
+
+        # flatten result and log
+        flat_result = [item for sublist in result.values() for item in sublist]
+        self.logger.info(f"Extracted {len(flat_result)} publication identifiers: {result}")
+        return result
+
 
     def flatten_json(self, y, parent_key='', sep='.'):
         """
@@ -1335,6 +1511,7 @@ class DataGatherer:
                     cache = {}
             if process_id not in cache:
                 self.logger.info(f"Saving results to cache with process_id: {process_id}")
+                output['wrote_to_cache'] = time.time()
                 cache[process_id] = output
                 try:
                     with open(tmp_file, 'w') as f:

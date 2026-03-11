@@ -12,7 +12,17 @@
     ],
     "skip_llm_classification_patterns": {
             "scholar.google.com": "Related Works"
-    }
+    },
+    "pub_page_keywords": [
+      "publication", "publications", "papers", "pubs", "articles", "journal", "preprint"
+    ],
+    "pub_id_patterns": [
+      "\\b(PMC\\d{4,})\\b",
+      "(?i)\\bPMID\\s*:?\\s*(\\d{7,8})\\b",
+      "pubmed\\.ncbi\\.nlm\\.nih\\.gov/(\\d{7,8})",
+      "(10\\.\\d{4,}/[^\\s<>\"']{4,})",
+      "doi\\.org/(10\\.[^\\s<>\"']{4,})"
+    ]
   },
   "nature": {
     "css_selectors": {

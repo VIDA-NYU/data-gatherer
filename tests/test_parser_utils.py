@@ -290,10 +290,10 @@ def test_from_section_to_corpus(get_test_data_path):
         xml_root = etree.fromstring(f.read())
     sections = parser.extract_sections_from_xml(xml_root)
     assert isinstance(sections, list)
-    assert len(sections) == 28
+    assert len(sections) == 34  # Updated: now extracts <ack>, <app>, <fn-group> sections
     corpus = parser.from_sections_to_corpus(sections)
     assert isinstance(corpus, list)
-    assert len(corpus) == 83
+    assert len(corpus) == 161  # Updated: more sections → more chunks
     print('\n')
 
 def test_normalize_text_from_pdf(get_test_data_path):

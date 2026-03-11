@@ -25,7 +25,7 @@ def load_config(filename, user_config_dir=None):
     with pkg_resources.files('data_gatherer.config').joinpath(filename).open('r') as f:
         return json.load(f)
 
-def load_prompt(prompt_name, user_prompt_dir=None, subdir = ''):
+def load_prompt(prompt_name, user_prompt_dir=None, subdir = 'dataset_prompts'):
     """
     Load prompt JSON file.
     Priority:

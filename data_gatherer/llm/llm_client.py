@@ -7,6 +7,7 @@ from ollama import Client
 from openai import OpenAI
 import google.generativeai as genai
 from portkey_ai import Portkey
+from anthropic import Anthropic
 from json_repair import repair_json
 from data_gatherer.prompts.prompt_manager import PromptManager
 from data_gatherer.env import PORTKEY_GATEWAY_URL, PORTKEY_API_KEY, PORTKEY_ROUTE, PORTKEY_CONFIG, OLLAMA_CLIENT, GPT_API_KEY, GEMINI_KEY, DATA_GATHERER_USER_NAME
@@ -28,7 +29,8 @@ class LLMClient_dev:
         
         # Determine full document read capability
         entire_document_models = ["gemini-1.5-flash", "gemini-1.5-pro", "gemini-2.0-flash-exp", "gemini-2.0-flash",
-                                  "gemini-2.5-flash", "gpt-4o", "gpt-4o-mini", "gpt-5-nano", "gpt-5-mini", "gpt-5"]
+                                  "gemini-2.5-flash", "gpt-4o", "gpt-4o-mini", "gpt-5-nano", "gpt-5-mini", "gpt-5",
+                                  "claude-haiku-4-5-20251001", "claude-sonnet-4-5"]
         self.full_document_read = model in entire_document_models
         
         self._initialize_client(model)
@@ -64,14 +66,21 @@ class LLMClient_dev:
             self.logger.debug(f"Initializing Ollama client for gemma2:9b")
             self.llm_client = Client(host=OLLAMA_CLIENT)  # env variable
 
+        elif 'claude' in model:
+            self.logger.debug(f"Initializing Anthropic: {model}")
+            self.llm_client = Anthropic()
+            self.token_limit = 200000
+
         elif model.startswith('gpt'):
             self.logger.debug(f"Initializing OpenAI client for model: {model}")
             self.llm_client = OpenAI(api_key=GPT_API_KEY)
+            self.token_limit = 128000
 
         elif model.startswith('gemini') and not self.use_portkey:
             self.logger.debug(f"Initializing direct Gemini client for model: {model}")
             genai.configure(api_key=GEMINI_KEY)
             self.llm_client = genai.GenerativeModel(model)
+            self.token_limit = 1000000
         
         elif model.startswith('local-flan-t5'):
             self.logger.debug(f"Initializing local Flan-T5 model: {model}")
@@ -153,6 +162,8 @@ class LLMClient_dev:
                 return self._call_portkey_gemini(content, **kwargs)
             else:
                 return self._call_gemini(content, **kwargs)
+        elif self.model.startswith('claude'):
+            return self._call_anthropic(content, response_format)
         elif self.model.startswith('gemma') or "qwen" in self.model:
             return self._call_ollama(content, response_format, temperature=temperature)
         else:
@@ -192,6 +203,22 @@ class LLMClient_dev:
             )
         )
         return response.text
+    
+    def _call_anthropic(self, messages, response_format, temperature=0.0, max_tokens=2048):
+        self.logger.info(f"Calling Anthropic Claude model with {len(str(messages))} chars.")
+        if self.save_prompts:
+            self.prompt_manager.save_prompt(prompt_id='abc', prompt_content=messages)
+        response = self.llm_client.messages.create(
+            model=self.model,
+            max_tokens=max_tokens,
+            messages=messages,
+            temperature=temperature,
+            output_config={
+                "format": response_format
+            }
+        )
+        self.logger.info(f"Anthropic response: {response}")
+        return response.content[0].text
 
     def _call_ollama(self, messages, response_format, temperature=0.0):
         self.logger.info(f"Calling Ollama with messages: {messages}")
@@ -266,7 +293,10 @@ class LLMClient_dev:
                 return self.api_call(messages, response_format=response_format.model_json_schema(), temperature=temperature)
             else:
                 return self.api_call(messages, response_format={}, temperature=temperature)
-                
+
+        elif 'claude' in self.model:
+            return self._call_anthropic(messages, response_format, temperature=temperature)
+
         elif 'gpt' in self.model:
             response = None
             if 'gpt-5' in self.model:
@@ -451,6 +481,19 @@ class LLMClient_dev:
                     self.logger.debug(f"Gemini JSON decoding error: {e}")
                     self.logger.error(f"JSON decoding error: {e}")
                     return []
+            
+        elif 'claude' in self.model:
+            parsed_response = self.safe_parse_json(raw_response)
+            self.logger.debug(f"Processing Claude model response: {parsed_response}")
+            if self.full_document_read and isinstance(parsed_response, dict) and expected_key in parsed_response:
+                result = parsed_response.get(expected_key, []) if expected_key else parsed_response
+                self.logger.debug(f"Claude full_document_read=True, extracted result: {result}")
+            else:
+                result = parsed_response or []
+                self.logger.debug(f"Claude full_document_read=False, result: {result}")
+            final_result = self.normalize_response_format(result)
+            self.logger.debug(f"Claude final normalized result: {final_result}")
+            return final_result
         
         elif self.model.startswith('local-flan-t5'):
             parsed_response = self.safe_parse_json(raw_response)

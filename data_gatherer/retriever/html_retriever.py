@@ -3,6 +3,7 @@ from data_gatherer.resources_loader import load_config
 from bs4 import BeautifulSoup
 from lxml import html
 import pandas as pd
+import re
 
 
 class htmlRetriever(BaseRetriever):
@@ -241,6 +242,19 @@ class htmlRetriever(BaseRetriever):
         if not found:
             self.logger.info(f"No section found for {section_name}.")
         return found
+
+    def extract_publication_ids(self, html: str) -> list:
+        """Extract publication identifiers (PMIDs, PMCIDs, DOIs) from raw HTML using patterns from retrieval_patterns.json."""
+        self.logger.info("Extracting publication identifiers from HTML")
+        raw_patterns = self.retrieval_patterns.get('general', {}).get('pub_id_patterns', [])
+        compiled = [re.compile(p) for p in raw_patterns]
+        found = set()
+        for pattern in compiled:
+            self.logger.info(f"Using pattern: {pattern.pattern} to search for publication IDs.")
+            for match in pattern.findall(html):
+                self.logger.info(f"Found publication ID match: {match}")
+                found.add(match.strip().rstrip(".,;)"))
+        return sorted(found)
 
     def is_html_data_complete(self, raw_data, url,
                              required_sections=("data_availability_sections", "supplementary_data_sections")) -> bool:

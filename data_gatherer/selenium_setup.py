@@ -9,7 +9,7 @@ from selenium.webdriver.chrome.options import Options as ChromeOptions
 from webdriver_manager.firefox import GeckoDriverManager
 from webdriver_manager.chrome import ChromeDriverManager
 
-def create_driver(driver_path=None, browser="Firefox", headless=True, logger=None, download_dir="scripts/downloads"):
+def create_driver(driver_path=None, browser="Firefox", headless=True, logger=None, download_dir="scripts/downloads", profile_dir=None):
     logger.info(f"Creating WebDriver for browser: {browser}, with driver located at driver_path: {driver_path}")
 
     if browser is None or browser.lower() == 'firefox':
@@ -17,6 +17,13 @@ def create_driver(driver_path=None, browser="Firefox", headless=True, logger=Non
 
         if headless:
             firefox_options.add_argument("-headless")
+
+        if profile_dir:
+            profile_dir = os.path.abspath(os.path.expanduser(profile_dir))
+            os.makedirs(profile_dir, exist_ok=True)
+            firefox_options.add_argument("-profile")
+            firefox_options.add_argument(profile_dir)
+            logger.info(f"Using persistent Firefox profile at: {profile_dir}")
 
         # Set preferences directly in FirefoxOptions (not using FirefoxProfile)
         firefox_options.set_preference("browser.download.folderList", 2)

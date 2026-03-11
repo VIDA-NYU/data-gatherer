@@ -184,3 +184,4 @@ scripts/NYC Open Data/*.csv
 .gitignore
 scripts/NYU_data_catalog/Searches_Insights_2025-01-04.textClipping
 scripts/NYU_data_catalog/Figure.pptx
+scripts/CARD/*

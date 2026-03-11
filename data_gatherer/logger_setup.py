@@ -46,4 +46,8 @@ def setup_logging(logger_name, log_file=None, level=logging.WARNING, clear_previ
         file_handler.setFormatter(logfile_formatter)
         logger.addHandler(file_handler)
 
+    # Suppress noisy third-party loggers
+    logging.getLogger("usp.helpers").setLevel(logging.ERROR)
+    logging.getLogger("usp.tree").setLevel(logging.ERROR)
+
     return logger

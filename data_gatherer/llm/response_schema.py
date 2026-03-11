@@ -319,6 +319,236 @@ dataset_response_schema_with_context = {
     }
 }
 
+dataset_schema_CARD = {
+    "type": "json_schema",
+    "schema": {
+        "type": "object",
+        "properties": {
+            "datasets": {
+                "type": "array",
+                "items": {
+                    "type": "object",
+                    "properties": {
+                        "dataset_identifier": {"type": "string"},
+                        "data_repository": {"type": "string"},
+                        "sample_size": {"type": "integer"},
+                        "accession_url": {"type": "string"},
+                        "FAIR_compliance_notes": {"type": "string"},
+                        "dataset_type": {"type": "string"}
+                    },
+                    "required": ["dataset_identifier", "data_repository", "sample_size", "accession_url", "FAIR_compliance_notes", "dataset_type"],
+                    "additionalProperties": False
+                },
+                "minItems": 1
+            }
+        },
+        "required": ["datasets"],
+        "additionalProperties": False
+    }
+}
+
+dataset_response_schema_claude = {
+    "type": "json_schema",
+    "schema": {
+        "type": "object",
+        "properties": {
+            "datasets": {
+                "type": "array",
+                "items": {
+                    "type": "object",
+                    "properties": {
+                        "dataset_identifier": {"type": "string"},
+                        "data_repository": {"type": "string"},
+                        "dataset_webpage": {"type": "string"},
+                    },
+                    "required": ["dataset_identifier", "data_repository", "dataset_webpage"],
+                    "additionalProperties": False
+                },
+                "minItems": 1
+            }
+        },
+        "required": ["datasets"],
+        "additionalProperties": False
+    }
+}
+
+study_response_schema_claude = {
+    "type": "json_schema",
+    "schema": {
+        "type": "object",
+        "properties": {
+            "coarse_data_modality": {
+                "type": "string",
+                "description": "High-level data modality categories (e.g. Genomics, Clinical, Imaging, Proteomics). Return 'na' if not found."
+            },
+            "granular_data_modality": {
+                "type": "string",
+                "description": "Specific data modality or assay type included (e.g. RNA-seq, SNP Array, MRI, Whole Genome Sequencing). Return 'na' if not found."
+            },
+            "diseases_included": {
+                "type": "string",
+                "description": "Disease(s) or condition(s) covered by the study (e.g. Alzheimer's disease, Lewy Body Dementia). Return 'na' if not found."
+            },
+            "publication_urls": {
+                "type": "array",
+                "items": {
+                    "type": "string",
+                    "description": "URLs, DOIs, PMIDs, or PMCIDs for publications describing the study."
+                },
+                "description": "URLs, DOIs, PMIDs, or PMCIDs for publications describing the study."
+            },
+            "dataset_urls": {
+                "type": "array",
+                "items": {
+                    "type": "string",
+                    "format": "uri",
+                    "description": "URLs of the datasets used in the study."
+                },
+                "description": "URLs of the datasets used in the study."
+            },
+            "sample_size": {
+                "type": "string",
+                "description": "Sample size of the study. Return 'na' if not found."
+            }
+        },
+        "required": ["coarse_data_modality", "granular_data_modality", "diseases_included", "publication_urls", "dataset_urls", "sample_size"],
+        "additionalProperties": False
+    }
+}
+
+study_hop1_schema_claude = {
+    "type": "json_schema",
+    "schema": {
+        "type": "object",
+        "properties": {
+            "coarse_data_modality": {
+                "type": "string",
+                "description": "High-level data modality categories (e.g. Genomics, Clinical, Imaging, Proteomics). Return 'na' if not found."
+            },
+            "granular_data_modality": {
+                "type": "string",
+                "description": "Specific data modality or assay type included (e.g. RNA-seq, SNP Array, MRI, Whole Genome Sequencing). Return 'na' if not found."
+            },
+            "diseases_included": {
+                "type": "string",
+                "description": "Disease(s) or condition(s) covered by the study (e.g. Alzheimer's disease, Lewy Body Dementia). Return 'na' if not found."
+            },
+            "publication_urls": {
+                "type": "array",
+                "items": {
+                    "type": "string",
+                    "description": "URLs, DOIs, PMIDs, or PMCIDs for publications describing the study."
+                },
+                "description": "URLs, DOIs, PMIDs, or PMCIDs for publications describing the study."
+            },
+            "dataset_urls": {
+                "type": "array",
+                "items": {
+                    "type": "string",
+                    "format": "uri",
+                    "description": "URLs of the datasets used in the study."
+                },
+                "description": "URLs of the datasets used in the study."
+            },
+            "sample_size": {
+                "type": "string",
+                "description": "Sample size of the study. Return 'na' if not found."
+            },
+            "suggested_urls": {
+                "type": "array",
+                "items": {
+                    "type": "string",
+                    "maxLength": 300
+                },
+                "description": "Top-k internal URLs from the sitemap most likely to provide additional context, richer detail, or verification for any of the six fields."
+            },
+            "reasoning": {
+                "type": "string",
+                "description": "Optional brief explanation of why the suggested_urls were selected."
+            }
+        },
+        "required": ["coarse_data_modality", "granular_data_modality", "diseases_included", "publication_urls", "dataset_urls", "sample_size", "suggested_urls"],
+        "additionalProperties": False
+    }
+}
+
+study_sanity_check_schema_claude = {
+    "type": "json_schema",
+    "schema": {
+        "type": "object",
+        "properties": {
+            "coarse_data_modality": {
+                "type": "string",
+                "description": "Verified high-level data modality category (e.g. Genomics, Clinical, Imaging, Transcriptomics). Return 'na' if not determinable from the page."
+            },
+            "granular_data_modality": {
+                "type": "string",
+                "description": "Verified specific assay or data type (e.g. RNA-seq, SNP Array, MRI, Whole Genome Sequencing). Return 'na' if not determinable."
+            },
+            "diseases_included": {
+                "type": "string",
+                "description": "Verified disease(s) or condition(s) covered by the study. Return 'na' if not determinable."
+            },
+            "sample_size": {
+                "type": "string",
+                "description": "Verified number of subjects, participants, or samples. Return 'na' if not found."
+            },
+            "publication_urls": {
+                "type": "array",
+                "items": {"type": "string"},
+                "description": "Optionally include here the identifiers (URLs, DOIs, PMIDs, or PMCIDs) for publications from the study, if found on the page."
+            },
+            "dataset_urls": {
+                "type": "array",
+                "items": {"type": "string", "format": "uri"},
+                "description": "Optionally include here the URLs linking to datasets or data access pages, if found on the page."
+            }
+        },
+        "required": ["coarse_data_modality", "granular_data_modality", "diseases_included", "sample_size"],
+        "additionalProperties": False
+    }
+}
+
+study_sanity_check_w_rationale_schema_claude = {
+    "type": "json_schema",
+    "schema": {
+        "type": "object",
+        "properties": {
+            "coarse_data_modality": {
+                "type": "string",
+                "description": "Verified high-level data modality category (e.g. Genomics, Clinical, Imaging, Transcriptomics). Return 'na' if not determinable from the page."
+            },
+            "granular_data_modality": {
+                "type": "string",
+                "description": "Verified specific assay or data type (e.g. RNA-seq, SNP Array, MRI, Whole Genome Sequencing). Return 'na' if not determinable."
+            },
+            "diseases_included": {
+                "type": "string",
+                "description": "Verified disease(s) or condition(s) covered by the study. Return 'na' if not determinable."
+            },
+            "sample_size": {
+                "type": "string",
+                "description": "Verified number of subjects, participants, or samples. Return 'na' if not found."
+            },
+            "publication_urls": {
+                "type": "array",
+                "items": {"type": "string"},
+                "description": "Optionally include here the identifiers (URLs, DOIs, PMIDs, or PMCIDs) for publications from the study, if found on the page."
+            },
+            "dataset_urls": {
+                "type": "array",
+                "items": {"type": "string", "format": "uri"},
+                "description": "Optionally include here the URLs linking to datasets or data access pages, if found on the page."
+            },
+            "rationale": {
+                "type": "string",
+                "description": "Rationale of the output given the input you were provided and the content of the page. Explain briefly."
+            }
+        },
+        "required": ["coarse_data_modality", "granular_data_modality", "diseases_included", "sample_size", "rationale"],
+        "additionalProperties": False
+    }
+}
 
 class Dataset(BaseModel):
     dataset_identifier: str

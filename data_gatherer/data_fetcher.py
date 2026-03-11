@@ -3,6 +3,7 @@ import re
 import logging
 import numpy as np
 from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
 import asyncio
 import os
 import time
@@ -10,12 +11,14 @@ import requests
 from lxml import etree as ET
 from data_gatherer.selenium_setup import create_driver
 from bs4 import BeautifulSoup
-from urllib.parse import urlparse
+from urllib.parse import urlparse, urljoin, urlunparse
 import pandas as pd
 from data_gatherer.retriever.xml_retriever import xmlRetriever
 from data_gatherer.retriever.html_retriever import htmlRetriever
 import tempfile
-
+import io
+from contextlib import redirect_stdout
+from usp.tree import sitemap_tree_for_homepage
 
 # Singleton backup data store for all fetchers
 class BackupDataStore:
@@ -96,13 +99,14 @@ class BackupDataStore:
 
 # Abstract base class for fetching data
 class DataFetcher(ABC):
-    def __init__(self, logger, src='WebScraper', driver_path=None, browser='firefox', headless=True, 
-                 backup_file='scripts/exp_input/Local_fulltext_pub_REV.parquet'):
+    def __init__(self, logger, src='WebScraper', driver_path=None, browser='firefox', headless=True,
+                 backup_file='scripts/exp_input/Local_fulltext_pub_REV.parquet', profile_dir=None):
         self.logger = logger
         self.logger.debug(f"DataFetcher ({src}) initialized.")
         self.driver_path = driver_path
         self.browser = browser
         self.headless = headless
+        self.profile_dir = profile_dir
         self.src = src
         self.local_data_used = False
         self.redirect_mapping = {}
@@ -152,16 +156,6 @@ class DataFetcher(ABC):
             else:
                 return data['content']
         return None
-
-    def remove_cookie_patterns(self, html: str):
-        pattern = r'<img\s+alt=""\s+src="https://www\.ncbi\.nlm\.nih\.gov/stat\?.*?"\s*>'
-
-        if re.search(pattern, html):
-            self.logger.info("Removing cookie pattern 1 from HTML")
-            html = re.sub(pattern, 'img_alt_subst', html)
-        else:
-            self.logger.info("No cookie pattern 1 found in HTML")
-        return html
 
     def remove_cookie_patterns(self, html: str):
         pattern = r'<img\s+alt=""\s+src="https://www\.ncbi\.nlm\.nih\.gov/stat\?.*?"\s*>'
@@ -309,7 +303,7 @@ class DataFetcher(ABC):
         return f"https://www.ncbi.nlm.nih.gov/pmc/articles/{PMCID}"
 
     def update_DataFetcher_settings(self, url, HTML_fallback=False, driver_path=None,
-                                    browser='firefox', headless=True, local_fetch_file=None):
+                                    browser='firefox', headless=True, local_fetch_file=None, profile_dir=None):
         """
         Creates appropriate data fetcher with BackupDataStore integration. 
         All fetchers now automatically check backup data first, then fall back to live fetching.
@@ -393,12 +387,21 @@ class DataFetcher(ABC):
         # Default: Use traditional Selenium WebScraper with backup support
         # Reuse existing driver if available
         if isinstance(self, WebScraper) and hasattr(self, 'scraper_tool') and self.scraper_tool is not None:
+            if self.headless != headless or self.browser != browser:
+                # change settings of existing scraper if they differ from requested settings
+                self.logger.info(f"Updating existing WebScraper settings: headless {self.headless} -> {headless}, browser {self.browser} -> {browser}")
+                self.scraper_tool.quit()  # Close existing driver
+                self.scraper_tool = create_driver(self.driver_path, browser, headless, self.logger, profile_dir=self.profile_dir)
+                self.headless = headless
+                self.browser = browser
+                    
             self.logger.info(f"Reusing existing WebScraper driver with backup support")
             return self
 
-        self.logger.info(f"Creating new WebScraper with backup support: {browser}, headless={headless}")
-        driver = create_driver(driver_path, browser, headless, self.logger)
-        return WebScraper(driver, self.logger, driver_path=driver_path, browser=browser, headless=headless, backup_file=local_fetch_file)
+        self.logger.info(f"Creating new WebScraper with backup support: {browser}, headless={headless}, profile_dir={profile_dir}")
+        driver = create_driver(driver_path, browser, headless, self.logger, profile_dir=profile_dir)
+        return WebScraper(driver, self.logger, driver_path=driver_path, browser=browser, headless=headless,
+                          backup_file=local_fetch_file, profile_dir=profile_dir)
 
     def url_in_dataframe(self, url, idx='pmcid'):
         """
@@ -511,16 +514,6 @@ class DataFetcher(ABC):
 
         return path
 
-    def remove_cookie_patterns(self, html: str):
-        pattern = r'<img\s+alt=""\s+src="https://www\.ncbi\.nlm\.nih\.gov/stat\?.*?"\s*>'
-
-        if re.search(pattern, html):
-            self.logger.info("Removing cookie pattern 1 from HTML")
-            html = re.sub(pattern, 'img_alt_subst', html)
-        else:
-            self.logger.info("No cookie pattern 1 found in HTML")
-        return html
-
     def get_PMCID_from_pubmed_html(self, html):
         try:
             self.logger.debug(f"html: {html}")
@@ -587,6 +580,79 @@ class DataFetcher(ABC):
                 self.logger.warning(f"Failed to follow redirects for PubMed URL {url}: {e}")
 
         return url
+
+    def detect_login_required(self, html: str, url: str = None) -> bool:
+        """Base implementation: heuristic login-wall detection without session tracking."""
+        if not html:
+            return False
+        login_href_pattern = re.compile(
+            r'href=["\'][^"\']*/(login|signin|sign-in|auth|oauth|sso|oidc)(?=[/?#"\'])',
+            re.IGNORECASE
+        )
+        login_text_pattern = re.compile(
+            r'(please\s+log\s+in|sign\s+in\s+to\s+(continue|access|view)|you\s+must\s+be\s+logged\s+in|access\s+denied|unauthorized|authentication\s+required)',
+            re.IGNORECASE
+        )
+        if login_href_pattern.search(html):
+            return True
+        if login_text_pattern.search(html):
+            return True
+        if len(html.strip()) < 500:
+            return True
+        return False
+
+    def is_url_reachable(self, url: str, timeout: int = 5) -> str | bool:
+        """Returns the (sanitized) URL if reachable, False otherwise.
+        Strips trailing /https or /http artefacts before checking.
+        Tries HEAD first; falls back to streaming GET on 405."""
+        url = re.sub(r'/https?$', '', url)
+        try:
+            r = requests.head(url, timeout=timeout, allow_redirects=True)
+            if r.status_code == 405:
+                r = requests.get(url, timeout=timeout, allow_redirects=True, stream=True)
+                r.close()
+            self.logger.info(f"URL {url} is reachable with status code {r.status_code}. r.ok={r.ok}")
+            return url if r.ok else False
+        except Exception as e:
+            self.logger.debug("is_url_reachable: check failed for %s — %s", url, e)
+            return False
+
+    def _limit_sitemaps(self, sitemap_urls: list, recursion_level: int, parent_urls: set) -> list:
+        if len(sitemap_urls) > 10:
+            self.logger.warning(f"get_sitemap: {len(sitemap_urls)} sub-sitemaps found, site too large, skipping")
+            raise ValueError("Too many sitemaps")
+        return sitemap_urls
+
+    def get_sitemap(self, base_url: str) -> str:
+        base_url = self.redirect_mapping.get(base_url, base_url)
+        self.logger.info(f"Getting sitemap for {base_url} using usp library")
+        try:
+            tree = sitemap_tree_for_homepage(base_url, recurse_list_callback=self._limit_sitemaps)
+            self.logger.info(f"usp found {len(list(tree.sub_sitemaps))} pages in sitemap for {base_url}")
+            b = urlparse(base_url)
+            origin = f"{b.scheme}://{b.netloc}"
+            prefix = b.path.rstrip("/") or "/"
+
+            def keep(u: str) -> bool:
+                if not u.startswith(origin):
+                    return False
+                p = urlparse(u).path
+                return prefix == "/" or p == prefix or p.startswith(prefix + "/")
+
+            result = "\n".join(p.url for p in tree.all_pages() if keep(p.url))
+
+        except Exception as e:
+            self.logger.warning(f"get_sitemap: usp failed for {base_url}: {e}")
+            result = ""
+
+        if not result.strip() and hasattr(self, 'crawl_sitemap'):
+            self.logger.info("usp found no sitemap for %s — falling back to crawl_sitemap", base_url)
+            urls = self.crawl_sitemap(base_url)
+            result = "\n".join(u for u in urls)
+
+        self.logger.info(f"Filtered sitemap ({len(result.splitlines())} URLs) for {base_url}:\n{result[:500]}...")
+        self.logger.debug(f"Filtered sitemap for {base_url}:\n{result}")
+        return result
 
 class HttpGetRequest(DataFetcher):
     "class for fetching data via HTTP GET requests using the requests library."
@@ -737,16 +803,18 @@ class WebScraper(DataFetcher):
     Class for fetching data from web pages using Selenium.
     """
     def __init__(self, scraper_tool, logger, retrieval_patterns_file=None, driver_path=None, browser='firefox',
-                 headless=True, backup_file='scripts/exp_input/Local_fulltext_pub_REV.parquet'):
-        super().__init__(logger, src='WebScraper', driver_path=driver_path, browser=browser, headless=headless, backup_file=backup_file)
+                 headless=True, backup_file='scripts/exp_input/Local_fulltext_pub_REV.parquet', profile_dir=None):
+        super().__init__(logger, src='WebScraper', driver_path=driver_path, browser=browser, headless=headless,
+                         backup_file=backup_file, profile_dir=profile_dir)
         self.scraper_tool = scraper_tool  # Inject your scraping tool (Selenium)
         self.driver_path = driver_path
         self.browser = browser
         self.headless = headless
         self.backup_file = backup_file
+        self.logged_in_domains = set()  # domains where login was already completed this run
         self.logger.debug("WebScraper initialized.")
 
-    def fetch_data(self, url, retries=3, delay=2, update_redirect_map=False, **kwargs):
+    def fetch_data(self, url, retries=3, delay=2, update_redirect_map=False, timeout=10, wait_page_load=False, **kwargs):
         """
         Fetches data from the given URL. First tries backup data (fast), then live web scraping if needed.
 
@@ -771,19 +839,64 @@ class WebScraper(DataFetcher):
         try:
             self.logger.debug(f"Fetching data with function call: self.scraper_tool.get(url)")
             self.scraper_tool.get(url)
-            self.logger.debug(f"http get complete, now waiting {delay} seconds for page to load")
+            self.logger.debug(f"http get complete")
+
+            if wait_page_load:
+                self.logger.info(f"Waiting for page to reach readyState=complete with timeout {timeout}s")
+                try:
+                    WebDriverWait(self.scraper_tool, timeout=timeout).until(
+                        lambda d: d.execute_script("return document.readyState") == "complete"
+                    )
+                except Exception:
+                    self.logger.warning(f"Page did not reach readyState=complete within {timeout}s for {url}, proceeding anyway")
+            
             self.simulate_user_scroll(delay)
             self.title = self.extract_publication_title()
-            if update_redirect_map:
-                final_url = self.scraper_tool.current_url
-                if final_url != url and url not in self.redirect_mapping:
-                    self.logger.info(f"URL redirected from {url} to {final_url}")
-                    self.redirect_mapping[url] = final_url
+            final_url = self.scraper_tool.current_url
+            if final_url != url and url not in self.redirect_mapping:
+                self.logger.info(f"URL redirected from {url} to {final_url}")
+                self.redirect_mapping[url] = final_url
             return self.scraper_tool.page_source
         
         except Exception as e:
             self.logger.error(f"Live web scraping failed for {url}: {e}")
-            raise e
+            # raise e
+
+    def crawl_sitemap(self, start_url: str) -> list[str]:
+        """Extracts all same-domain <a href> links from start_url using the active Selenium driver.
+        Selenium returns fully resolved absolute URLs — no parsing or urljoin needed.
+        Does NOT navigate beyond the start page."""
+        self.logger.info(f"Crawling sitemap for {start_url} using Selenium")
+        b = urlparse(start_url)
+        self.logger.info(f"Parsed URL: {b}")
+        origin = f"{b.scheme}://{b.netloc}"
+        self.logger.info(f"Origin for sitemap crawl: {origin}")
+
+        try:
+            self.scraper_tool.get(start_url)
+        except Exception as e:
+            self.logger.warning(f"crawl_sitemap: failed to navigate to {start_url}: {e}")
+            return []
+        # Collect all hrefs in one JS call to avoid StaleElementReferenceException
+        # (DOM can be mutated by JS between find_elements() and get_attribute())
+        raw_hrefs = self.scraper_tool.execute_script(
+            "return Array.from(document.querySelectorAll('a[href]')).map(a => a.href);"
+        ) or []
+        found = []
+        seen = set()
+        for href in raw_hrefs:
+            href = (href or "").split("#")[0].split("?")[0].rstrip("/")
+            self.logger.debug(f"Found link: {href}")
+            if not href.startswith(origin) or href in seen:
+                continue
+            segments = [s for s in urlparse(href).path.split("/") if s]
+            if len(segments) != len(set(segments)):  # looping path — skip
+                continue
+            seen.add(href)
+            found.append(href)
+
+        self.logger.info("crawl_sitemap found %d links on %s", len(found), start_url)
+        return found
 
     def remove_cookie_patterns(self, html: str):
         pattern = r'<img\s+alt=""\s+src="https://www\.ncbi\.nlm\.nih\.gov/stat\?.*?"\s*>'
@@ -800,8 +913,131 @@ class WebScraper(DataFetcher):
             self.logger.info("No cookie pattern 1 found in HTML")
         return html
 
-    def simulate_user_scroll(self, delay=2, scroll_wait=0.5):
+    def detect_login_required(self, html: str, url: str = None) -> bool:
+        """
+        Heuristically detects if the fetched HTML is a login wall.
+
+        Checks for:
+        - Login/auth href patterns in anchor tags
+        - Common login prompt text
+        - Near-empty pages (JS-redirect to auth before content loads)
+
+        Skips detection entirely for domains already logged in this run.
+        """
+        self.logger.info("Function detect_login_required called.")
+        if not html:
+            return False
+
+        if url:
+            domain = self.url_to_publisher_domain(url)
+            if domain in self.logged_in_domains:
+                self.logger.info(f"Function detect_login_required: domain '{domain}' already authenticated this run")
+
+        login_href_pattern = re.compile(
+            r'href=["\'][^"\']*/(login|signin|sign-in|auth|oauth|sso|oidc)(?=[/?#"\'])',
+            re.IGNORECASE
+        )
+        login_text_pattern = re.compile(
+            r'(please\s+log\s+in|sign\s+in\s+to\s+(continue|access|view)|you\s+must\s+be\s+logged\s+in|access\s+denied|unauthorized|authentication\s+required)',
+            re.IGNORECASE
+        )
+
+        href_match = login_href_pattern.search(html)
+        text_match = login_text_pattern.search(html)
+
+        if href_match:
+            self.logger.info(f"Found login href pattern — '{href_match.group(0)[:80]}'")
+            return True
+        if text_match:
+            self.logger.info(f"Found login text pattern — '{text_match.group(0)[:80]}'")
+            return True
+        if len(html.strip()) < 500:
+            self.logger.info(f"Page suspiciously short ({len(html.strip())} chars), likely auth redirect")
+            return True
+
+        return False
+
+    def handle_login_and_fetch(self, url, delay=5) -> str:
+        """
+        Ensures the browser is visible (non-headless), navigates to url, waits for
+        manual login (including MFA/auth app), then returns the page HTML.
+
+        Only restarts the driver if it is currently headless — if already non-headless
+        (e.g. from a previous login on the same run) it just navigates without restarting.
+        If profile_dir is set, the session is persisted to disk so subsequent Python runs
+        can skip login entirely and stay headless.
+        """
+        self.logger.info(f"handle_login_and_fetch: url={url}, currently headless={self.headless}, profile_dir={self.profile_dir}")
+        user_input = None
+
+        # Save pre-login HTML before we potentially quit the driver
+        pre_login_html = self.scraper_tool.page_source
+
+        if self.headless:
+            try:
+                self.scraper_tool.quit()
+            except Exception:
+                pass
+            self.scraper_tool = create_driver(
+                self.driver_path, self.browser, headless=False,
+                logger=self.logger, profile_dir=self.profile_dir
+            )
+            self.headless = False
+
+        self.scraper_tool.get(url)
+
+        user_input = input(
+            f"\n[data-gatherer] URL: {url}\n"
+            "Navigate/login in the browser, then: ==== \n"
+            "  Enter      → fetch current page ==== \n"
+            "  s + Enter  → skip (use pre-login HTML) ==== \n"
+            "  <url>      → navigate to a different URL and fetch that instead ==== \n"
+            "> "
+        )
+
+        user_input = user_input.strip()
+
+        if user_input.lower() == 's':
+            self.logger.info("handle_login_and_fetch: user skipped, returning pre-login HTML")
+            return pre_login_html
+
+        if user_input.startswith('http://') or user_input.startswith('https://'):
+            self.logger.info(f"handle_login_and_fetch: user redirected fetch to: {user_input}")
+            self.scraper_tool.get(user_input)
+
+        self.simulate_user_scroll(delay)
+        html = self.scraper_tool.page_source
+        self.logger.info(f"handle_login_and_fetch: page fetched after login, len={len(html)}")
+
+        # Record domain as authenticated so subsequent pages skip the login check
+        domain = self.url_to_publisher_domain(url)
+        self.logged_in_domains.add(domain)
+        self.logger.info(f"handle_login_and_fetch: marked domain '{domain}' as authenticated (logged_in_domains={self.logged_in_domains})")
+
+        # Post-login sanity check — warn if login link is still present (session may not have saved)
+        if self.detect_login_required(html):
+            self.logger.warning(
+                f"⚠ handle_login_and_fetch: login link still present in HTML after login for {url} — "
+                f"session may not have persisted (profile_dir={self.profile_dir}). "
+                f"Check that profile_dir is correctly set and Firefox is writing cookies."
+            )
+        else:
+            self.logger.info("handle_login_and_fetch: ✓ post-login check passed — no login link in page HTML")
+
+        self.redirect_mapping[url] = user_input if user_input else url
+        return html
+
+    def simulate_user_scroll(self, delay=2, scroll_wait=0.5, spa_timeout=8):
         time.sleep(delay)
+        # For SPAs: poll until body has visible text or spa_timeout is reached
+        deadline = time.time() + spa_timeout
+        while time.time() < deadline:
+            body_text = self.scraper_tool.execute_script("return document.body.innerText.trim()")
+            if body_text:
+                break
+            time.sleep(0.5)
+        else:
+            self.logger.warning("simulate_user_scroll: body still empty after %.0fs — proceeding anyway", delay + spa_timeout)
         last_height = self.scraper_tool.execute_script("return document.body.scrollHeight")
         while True:
             # Scroll down to bottom

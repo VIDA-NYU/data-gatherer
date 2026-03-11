@@ -46,7 +46,8 @@ class LLMParser(ABC):
 
         self.llm_name = llm_name
         entire_document_models = ["gemini-1.5-flash", "gemini-1.5-pro", "gemini-2.0-flash-exp", "gemini-2.0-flash",
-                                  "gemini-2.5-flash", "gpt-4o", "gpt-4o-mini", "gpt-5-nano", "gpt-5-mini", "gpt-5"]
+                                  "gemini-2.5-flash", "gpt-4o", "gpt-4o-mini", "gpt-5-nano", "gpt-5-mini", "gpt-5",
+                                  "claude-haiku-4-5-20251001", "claude-sonnet-4-5"]
 
         self.full_document_read = full_document_read and self.llm_name in entire_document_models
         self.title = None
@@ -268,9 +269,11 @@ Files:
     def extract_datasets_info_from_content(self, content: str, repos: list, model: str = 'gpt-4o-mini',
                                            temperature: float = 0.0,
                                            prompt_name: str = 'GPT_FewShot',
+                                           subdir: str = 'dataset_prompts',
                                            full_document_read=True,
                                            response_format = dataset_response_schema_gpt,
-                                           skip_validation: bool = False) -> list:
+                                           skip_validation: bool = False,
+                                           **kwargs) -> list:
         """
         Extract datasets from the given content using a specified LLM model.
         Uses a static prompt template and dynamically injects the required content.
@@ -289,17 +292,32 @@ Files:
         self.input_tokens = 0
         self.logger.info(f"Function_call: extract_datasets_info_from_content(...)")
         self.logger.debug(f"Loading prompt: {prompt_name} for model {model}")
-        static_prompt = self.prompt_manager.load_prompt(prompt_name)
-        n_tokens_static_prompt = self.count_tokens(static_prompt, model)
+        static_prompt = self.prompt_manager.load_prompt(prompt_name, subdir=subdir)
+        n_tokens_static_prompt = self.count_tokens(static_prompt, model) + len(kwargs.get('sitemap', '')) // 4
 
         if 'gpt' in model:
-            tokens_cnt = self.count_tokens(content, model) + n_tokens_static_prompt
+            tokens_cnt = self.count_tokens(content, model)
             if tokens_cnt > int(1.25 * 128000):
                 return self.extract_datasets_info_from_chunks(
-                    content, tokens_cnt, repos, model, temperature, prompt_name,full_document_read,response_format)
-                
+                    content, tokens_cnt, repos=repos, model=model, temperature=temperature, prompt_name=prompt_name, subdir=subdir,
+                    full_document_read=full_document_read, response_format=response_format, token_chunk_size=128000, **kwargs)
+
             while self.tokens_over_limit(content, model, allowance_static_prompt=n_tokens_static_prompt):
                 content = content[:-2000]
+        
+        # Claude models have a 200k token limit
+        elif 'claude' in model:
+            tokens_cnt = self.count_tokens(content, model)
+            self.logger.info(f"Initial content tokens count for Claude model: {tokens_cnt} tokens")
+            if tokens_cnt > int(1.25 * 200000):
+                return self.extract_datasets_info_from_chunks(
+                    content, tokens_cnt, repos=repos, model=model, temperature=temperature, prompt_name=prompt_name, subdir=subdir,
+                    full_document_read=full_document_read, response_format=response_format, token_chunk_size=150000, **kwargs)
+
+            while self.tokens_over_limit(content, model, allowance_static_prompt=n_tokens_static_prompt, limit=200000):
+                content = content[:-4800]
+                self.logger.info(f"Truncating content for Claude model. New length: {len(content)}")
+        
         self.logger.info(f"Content length: {len(content)}")
 
         if 'gemma' in model or 'qwen' in model:
@@ -315,7 +333,8 @@ Files:
             static_prompt,
             entire_doc=self.full_document_read,
             content=content,
-            repos=', '.join(repos)
+            repos=', '.join(repos),
+            **kwargs
         )
         tokens_cnt = self.count_tokens(messages, model)
         self.logger.info(f"Prompt messages total length: {tokens_cnt} tokens")
@@ -386,29 +405,46 @@ Files:
 
         return result
     
-    def extract_datasets_info_from_chunks(self, content, tokens_cnt, repos, model, temperature, prompt_name,full_document_read,response_format):
+    def extract_datasets_info_from_chunks(self, content, tokens_cnt, repos=None, model=None, temperature=0,
+                                        prompt_name=None, full_document_read=None ,response_format=None, token_chunk_size=128000,
+                                        subdir='dataset_prompts', **prompt_kwargs):
         '''
         This function splits the content into chunks based on token count, then calls extract_datasets_info_from_content for each chunk.
         '''
+        self.logger.info(f"Function_call: extract_datasets_info_from_chunks(...) with content of {len(content)} characters and {tokens_cnt} tokens. Splitting into chunks of approximately {token_chunk_size} tokens.")
+        self.logger.info(f"Params - repos: {repos}, model: {model}, temperature: {temperature}, prompt_name: {prompt_name}, subdir: {subdir}, full_document_read: {full_document_read}, response_format: {response_format}, token_chunk_size: {token_chunk_size}")
         ret = []
         # Determine chunk size (e.g., 128000 tokens per chunk for GPT-4o)
-        # Estimate chunk size in string indices: 1 token ≈ 3.5 characters
-        token_chunk_size = 128000
-        char_chunk_size = int(token_chunk_size * 3.5)
+        # Estimate chunk size in string indices: 1 token ≈ 4 characters
+        sitemap = prompt_kwargs.get('sitemap', '')
+        if sitemap:
+            # Reserve token budget for sitemap — injected into every chunk's prompt
+            sitemap_tokens_est = len(sitemap) // 4
+            max_sitemap_tokens = int(token_chunk_size * 0.25)  # sitemap gets at most a quarter of the budget
+            if sitemap_tokens_est > max_sitemap_tokens:
+                self.logger.warning(f"Sitemap too large ({sitemap_tokens_est} est. tokens), truncating to {max_sitemap_tokens} tokens")
+                prompt_kwargs = {**prompt_kwargs, 'sitemap': sitemap[:int(max_sitemap_tokens * 4)]}
+                sitemap_tokens_est = max_sitemap_tokens
+            content_token_budget = max(token_chunk_size - sitemap_tokens_est, token_chunk_size // 4)
+            self.logger.info(f"Sitemap-aware chunking: total={token_chunk_size}, sitemap={sitemap_tokens_est}, content={content_token_budget} tokens/chunk")
+        else:
+            content_token_budget = token_chunk_size
+        char_chunk_size = int(content_token_budget * 3)
         # Split content into chunks
+        overlap = 100
         chunks = []
         start = 0
         while start < len(content):
             end = start + char_chunk_size
             chunks.append(content[start:end])
-            start = end
+            start = end - overlap
         self.logger.info(f"Splitting content into {len(chunks)} chunks of size {char_chunk_size} characters (approx {token_chunk_size} tokens per chunk).")
         # Call extract_datasets_info_from_content for each chunk
         for idx, chunk in enumerate(chunks):
             self.logger.info(f"Processing chunk {idx+1}/{len(chunks)}")
             chunk_results = self.extract_datasets_info_from_content(
-                chunk,
-                repos_elements=repos, model=model, temperature=temperature,prompt_name=prompt_name,response_format=response_format
+                chunk, repos=repos, model=model, temperature=temperature, subdir=subdir, prompt_name=prompt_name, 
+                response_format=response_format, full_document_read=full_document_read, **prompt_kwargs
             )
             ret.extend(chunk_results)
         return ret
@@ -1240,20 +1276,19 @@ Files:
             """
         raise NotImplementedError("This method should be implemented in a subclass.")
 
-    def tokens_over_limit(self, html_cont: str, model="gpt-4", limit=128000, allowance_static_prompt=200):
-        # Use tiktoken only for OpenAI models, fallback to rough estimate for others
+    def tokens_over_limit(self, html_cont: str, model="gpt-4", limit=128000, allowance_static_prompt=400):
+        tokens_cnt = self.count_tokens(html_cont, model=model)
         if 'gpt' in model:
-            encoding = tiktoken.encoding_for_model(model)
-            tokens = encoding.encode(html_cont)
-            self.logger.info(f"Number of tokens: {len(tokens)}")
-            # Use 1.5x allowance to account for message formatting overhead
-            return len(tokens) + int(allowance_static_prompt * 1.5) > limit - 2000
+            self.logger.info(f"Number of tokens: {tokens_cnt}")
+            return tokens_cnt + int(allowance_static_prompt * 1.5) > limit - 2000
+        elif 'claude' in model:
+            limit = 200000
+            self.logger.info(f"Number of tokens: {tokens_cnt}")
+            return tokens_cnt + int(allowance_static_prompt * 1.5) > limit - 2000
         elif 'gemini' in model:
             limit = 1000000
-        # Rough estimate: 1 token ≈ 4 characters
-        n_tokens = len(html_cont) // 4
-        self.logger.info(f"Estimated number of tokens for model '{model}': {n_tokens}")
-        return n_tokens + int(allowance_static_prompt * 1.5) > limit - 2000
+        self.logger.info(f"Estimated number of tokens for model '{model}': {tokens_cnt}")
+        return tokens_cnt + int(allowance_static_prompt * 1.5) > limit - 2000
 
     def count_tokens(self, prompt, model="gpt-4o-mini") -> int:
         """
@@ -1281,19 +1316,38 @@ Files:
         if 'gpt' in model:
             encoding = tiktoken.encoding_for_model(model)
             n_tokens = len(encoding.encode(prompt))
-
+        
+        elif 'claude' in model:
+            # Handle both single string and message list formats
+            if isinstance(prompt, list):
+                # Already in message format
+                messages_for_count = prompt
+            else:
+                # Wrap string in message format
+                messages_for_count = [{
+                    "content": prompt,
+                    "role": "user",
+                }]
+            
+            token_count_result = self.llm_client.llm_client.messages.count_tokens(
+                messages=messages_for_count,
+                model=model,
+            )
+            # Extract the integer value from the MessageTokensCount object
+            n_tokens = token_count_result.input_tokens
+        
         else:
             try:
-                n_tokens = len(prompt) // 4  # Adjust based on the response structure
-                self.logger.debug(f"Rough estimate of token count for Gemini model '{model}': {n_tokens}")
+                n_tokens = len(prompt) // 4  # Rough estimate for Gemini and other models
+                self.logger.debug(f"Rough estimate of token count for model '{model}': {n_tokens}")
             except Exception as e:
-                self.logger.error(f"Error counting tokens for Gemini model '{model}': {e}")
+                self.logger.error(f"Error counting tokens for model '{model}': {e}")
                 n_tokens = 0
 
         return n_tokens
 
-    def parse_datasets_metadata(self, metadata: str, model='gemini-2.0-flash', use_portkey=True,
-                                prompt_name='gpt_metadata_extract') -> dict:
+    def parse_datasets_metadata(self, metadata: str, structured_metadata: dict=None, model='gemini-2.0-flash', use_portkey=True,
+                                prompt_name='gpt_metadata_extract', response_format=dataset_metadata_response_schema_gpt) -> dict:
         """
         Given the metadata, extract the dataset information using the LLM.
 
@@ -1305,9 +1359,11 @@ Files:
         """
         #metadata = self.normalize_full_DOM(metadata)
         self.logger.info(f"Parsing metadata len: {len(metadata)}")
-        dataset_info = self.extract_dataset_info(metadata, subdir='metadata_prompts',
+        self.logger.debug(f"Passed params: model={model}, prompt_name={prompt_name}, response_format={response_format.keys()}")
+        dataset_info = self.extract_dataset_info(metadata, structured_metadata=structured_metadata, subdir='metadata_prompts',
                                                  use_portkey=use_portkey,
-                                                 prompt_name=prompt_name)
+                                                 prompt_name=prompt_name,
+                                                 response_format=response_format)
         return dataset_info
 
     def flatten_metadata_dict(self, metadata: dict, parent_key: str = '', sep: str = '.') -> dict:
@@ -1330,8 +1386,9 @@ Files:
                 items.append((new_key, v))
         return dict(items)
 
-    def extract_dataset_info(self, metadata, subdir='', model=None, use_portkey=True,
-                             prompt_name='gpt_metadata_extract', response_schema=dataset_metadata_response_schema_gpt):
+    def extract_dataset_info(self, metadata, structured_metadata={}, subdir='metadata_prompts', model=None, use_portkey=True,
+                             prompt_name='gpt_metadata_extract', response_format=dataset_metadata_response_schema_gpt,
+                             **prompt_kwargs):
         """
         Given the metadata source (dataset page), extract information using the LLM.
 
@@ -1350,15 +1407,29 @@ Files:
             model=model if model else self.llm_name,
             logger=self.logger,
             save_dynamic_prompts=self.save_dynamic_prompts,
-            use_portkey=use_portkey
+            use_portkey=use_portkey,
         )
         
         # Load and render the prompt using the unified client
         static_prompt = llm.prompt_manager.load_prompt(prompt_name, subdir=subdir)
-        messages = llm.prompt_manager.render_prompt(static_prompt, entire_doc=True, content=metadata)
+
+        content = metadata
+        extra_tokens = len(prompt_kwargs.get('sitemap', '') + str(structured_metadata) + str(static_prompt)) // 4
+
+        tokens_cnt = self.count_tokens(content, llm.model) + extra_tokens
+
+        if tokens_cnt > int(1.25 * llm.token_limit):
+                return self.extract_datasets_info_from_chunks(
+                    content, tokens_cnt, self.repo_names, model=model or self.llm_name, prompt_name=prompt_name, full_document_read=self.full_document_read,
+                    response_format=response_format, token_chunk_size=llm.token_limit, subdir=subdir, structured_metadata=structured_metadata, **prompt_kwargs
+                    )
+
+        while self.tokens_over_limit(content, llm.model, allowance_static_prompt=extra_tokens):
+            content = content[:-2000]
+        messages = llm.prompt_manager.render_prompt(static_prompt, entire_doc=True, content=content, structured_metadata=structured_metadata, **prompt_kwargs)
         
         # Make the LLM call using the unified interface
-        response = llm.make_llm_call(messages=messages, temperature=0.0, response_format=response_schema)
+        response = llm.make_llm_call(messages=messages, temperature=0.0, response_format=response_format)
 
         # Post-process response into structured dict
         dataset_info = self.safe_parse_json(response)
