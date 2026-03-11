@@ -831,7 +831,8 @@ class DataGatherer:
         headless=True, 
         use_portkey=True, 
         grobid_for_pdf=False,
-        brute_force_RegEx_ID_ptrs=False
+        brute_force_RegEx_ID_ptrs=False,
+        return_df_joint=False
         ):
         """
         Processes a list of article URLs and returns parsed data.
@@ -869,6 +870,8 @@ class DataGatherer:
         :param grobid_for_pdf: Flag to indicate if GROBID should be used for PDF processing.
         
         :param brute_force_RegEx_ID_ptrs: Flag to indicate if brute force RegEx ID pointers should be used.
+
+        :param return_df_joint: If True, returns a joint DataFrame of all parsed data instead of a dictionary of DataFrames per URL.
 
         :return: Dictionary with URLs as keys and DataFrames of classified data as values.
         """
@@ -912,6 +915,11 @@ class DataGatherer:
                     f"| Elapsed: {time.strftime('%H:%M:%S', time.gmtime(elapsed))} "
                     f"| ETA: {time.strftime('%H:%M:%S', time.gmtime(estimated_remaining))}\n"
                 )
+        if return_df_joint:
+            self.logger.info("Combining individual DataFrames into a joint DataFrame...")
+            combined_df = pd.concat(results.values(), ignore_index=True)
+            self.logger.info(f"Combined DataFrame created with {len(combined_df)} total records.")
+            return combined_df
         self.logger.debug("Completed processing all URLs.")
         return results
     
