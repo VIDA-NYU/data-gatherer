@@ -1,4 +1,10 @@
-## Release (v0.1.8) - 2026-16-01
+## Release (v0.2.00) - 2026-03-29
+
+- Added support for Claude 4.5 haiku and sonnet
+- Enhanced metadata processing step (2-hop from study pages, get_sitemap or crawl it, chunk if too long, corpus assembly)
+- Modified output format of multiple urls processed at the same time to pd.DataFrame
+
+## Release (v0.1.8) - 2026-01-16
 
 - Added Qwen finetuning pipeline with checkpoints
 - Profiling of NYU Data Catalog and potential use as ground truth
