@@ -76,6 +76,6 @@ include-package-data = true
 data_gatherer = [
     "config/*.json",
     "prompts/*.json",
-    "prompts/prompt_templates/dataset_prompts/*.json"
+    "prompts/prompt_templates/dataset_prompts/*.json",
     "prompts/prompt_templates/metadata_prompts/*.json",
 ]
