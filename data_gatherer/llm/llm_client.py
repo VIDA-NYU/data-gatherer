@@ -5,7 +5,8 @@ import time
 from typing import Dict, List, Any, Optional, Union
 from ollama import Client
 from openai import OpenAI
-import google.generativeai as genai
+from google import genai
+from google.genai import types
 from portkey_ai import Portkey
 from anthropic import Anthropic
 from json_repair import repair_json
@@ -78,8 +79,7 @@ class LLMClient_dev:
 
         elif model.startswith('gemini') and not self.use_portkey:
             self.logger.debug(f"Initializing direct Gemini client for model: {model}")
-            genai.configure(api_key=GEMINI_KEY)
-            self.llm_client = genai.GenerativeModel(model)
+            self.llm_client = genai.Client(api_key=GEMINI_KEY)
             self.token_limit = 1000000
         
         elif model.startswith('local-flan-t5'):
@@ -195,9 +195,10 @@ class LLMClient_dev:
         self.logger.info(f"Calling Gemini")
         if self.save_prompts:
             self.prompt_manager.save_prompt(prompt_id='abc', prompt_content=messages)
-        response = self.llm_client.generate_content(
-            messages,
-            generation_config=genai.GenerationConfig(
+        response = self.llm_client.models.generate_content(
+            model=self.model,
+            contents=messages,
+            config=types.GenerateContentConfig(
                 response_mime_type="application/json",
                 temperature=temperature,
             )
@@ -347,18 +348,19 @@ class LLMClient_dev:
             else:
                 # Direct Gemini call
                 if 'gemini' in self.model and 'flash' in self.model:
-                    response = self.llm_client.generate_content(
-                        messages,
-                        generation_config=genai.GenerationConfig(
+                    response = self.llm_client.models.generate_content(
+                        model=self.model,
+                        contents=messages,
+                        config=types.GenerateContentConfig(
                             response_mime_type="application/json",
                             response_schema=list[Dataset] if response_format else None
                         )
                     )
                 elif self.model == 'gemini-1.5-pro':
-                    response = self.llm_client.generate_content(
-                        messages,
-                        request_options={"timeout": 1200},
-                        generation_config=genai.GenerationConfig(
+                    response = self.llm_client.models.generate_content(
+                        model=self.model,
+                        contents=messages,
+                        config=types.GenerateContentConfig(
                             response_mime_type="application/json",
                             response_schema=list[Dataset] if response_format else None
                         )
