@@ -487,12 +487,12 @@ class LLMClient_dev:
         elif 'claude' in self.model:
             parsed_response = self.safe_parse_json(raw_response)
             self.logger.debug(f"Processing Claude model response: {parsed_response}")
-            if self.full_document_read and isinstance(parsed_response, dict) and expected_key in parsed_response:
-                result = parsed_response.get(expected_key, []) if expected_key else parsed_response
-                self.logger.debug(f"Claude full_document_read=True, extracted result: {result}")
+            if isinstance(parsed_response, dict) and expected_key and expected_key in parsed_response:
+                result = parsed_response.get(expected_key, [])
+                self.logger.debug(f"Claude extracted key '{expected_key}': {result}")
             else:
                 result = parsed_response or []
-                self.logger.debug(f"Claude full_document_read=False, result: {result}")
+                self.logger.debug(f"Claude result: {result}")
             final_result = self.normalize_response_format(result)
             self.logger.debug(f"Claude final normalized result: {final_result}")
             return final_result
