@@ -1183,13 +1183,20 @@ class TEI_XMLParser(XMLParser):
         # Find all <div> elements in TEI namespace
         divs = root.findall(".//{http://www.tei-c.org/ns/1.0}div")
         for div in divs:
-            # Section title: text node of <div> before any children
-            section_title = (div.text or "").strip() or "No Title"
+            # Prefer <head> text as section title in TEI; fallback to div text.
+            head = div.find("{http://www.tei-c.org/ns/1.0}head")
+            section_title = (
+                (" ".join(head.itertext()).strip() if head is not None else "")
+                or (div.text or "").strip()
+                or "No Title"
+            )
             sec_type = "tei_div"
             section_text_from_paragraphs = section_title + "\n"
             section_rawtxt_from_paragraphs = ""
+            section_paragraphs = []
             # Find all <p> in this <div>
             for p in div.findall(".//{http://www.tei-c.org/ns/1.0}p"):
+                section_paragraphs.append(p)
                 itertext = " ".join(p.itertext()).strip()
                 if len(itertext) >= 5:
                     section_text_from_paragraphs += "\n" + itertext + "\n"
@@ -1202,7 +1209,8 @@ class TEI_XMLParser(XMLParser):
                     "sec_txt": section_rawtxt_from_paragraphs,
                     "section_title": section_title,
                     "sec_type": sec_type,
-                    "sec_txt_clean": section_text_from_paragraphs
+                    "sec_txt_clean": section_text_from_paragraphs,
+                    "sec_txt_objs": section_paragraphs,
                 })
         self.logger.info(f"Extracted {len(sections)} sections from TEI XML.")
         return sections
