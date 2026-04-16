@@ -1526,7 +1526,8 @@ Files:
         return resp
 
     def semantic_retrieve_from_corpus(self, corpus, model_name='sentence-transformers/all-MiniLM-L6-v2',
-                                      topk_docs_to_retrieve=5, query=None, src=None, embedding_encode_batch_size=128):
+                                      topk_docs_to_retrieve=5, query=None, src=None, embedding_encode_batch_size=128,
+                                      include_section_title=False):
         """
         Given a corpus of text, retrieve the most relevant documents using semantic search.
 
@@ -1558,8 +1559,8 @@ Files:
         if not self.embeddings_retriever.corpus or len(self.embeddings_retriever.corpus) == 0:
             raise ValueError("Corpus is empty after converting sections to documents.")
         
-        self.embeddings = self.embeddings_retriever.embed_corpus(batch_size=embedding_encode_batch_size, read_cache=True, 
-        write_cache=True, src=src)
+        self.embeddings = self.embeddings_retriever.embed_corpus(batch_size=embedding_encode_batch_size, read_cache=True,
+        write_cache=True, src=src, include_section_title=include_section_title)
 
         result = self.embeddings_retriever.search(
             query=query,
@@ -1570,7 +1571,8 @@ Files:
         return result
 
     def retrieve_relevant_content(self, data, semantic_retrieval=True, top_k=5, article_id=None, max_tokens=None, skip_rule_based_retrieved_elm=False,
-                                  include_snippets_with_ID_patterns=False, output_format='text', query=None, ID_patterns=None, force_include_DAS=True):
+                                  include_snippets_with_ID_patterns=False, output_format='text', query=None, ID_patterns=None, force_include_DAS=True,
+                                  include_section_title=False):
 
         self.logger.debug(f"Function call: retrieve_relevant_content(semantic_retrieval={semantic_retrieval}, top_k={top_k}, article_id={article_id}, max_tokens={max_tokens}, skip_rule_based_retrieved_elm={skip_rule_based_retrieved_elm}, include_snippets_with_ID_patterns={include_snippets_with_ID_patterns}, output_format={output_format})")
 
@@ -1582,8 +1584,8 @@ Files:
         if semantic_retrieval:
             self.logger.info(f"Performing semantic retrieval for relevant content")
             all_sections = self.extract_sections_from_text(data)
-            corpus = self.from_sections_to_corpus(all_sections, max_tokens=max_tokens, skip_rule_based_retrieved_elm=skip_rule_based_retrieved_elm)
-            top_k_sections = self.semantic_retrieve_from_corpus(corpus, topk_docs_to_retrieve=top_k, src=article_id, query=query)
+            corpus = self.from_sections_to_corpus(all_sections, max_tokens=max_tokens, skip_rule_based_retrieved_elm=skip_rule_based_retrieved_elm, include_section_title=include_section_title)
+            top_k_sections = self.semantic_retrieve_from_corpus(corpus, topk_docs_to_retrieve=top_k, src=article_id, query=query, include_section_title=include_section_title)
             top_k_sections_text = [item['text'] for item in top_k_sections if item['text'] not in ret_lst]
             ret_lst.extend(top_k_sections_text)  # Use extend() instead of append() to add individual strings
         

@@ -93,7 +93,7 @@ class EmbeddingsRetriever(BaseRetriever):
         return len(tokens['input_ids'])
 
     def embed_corpus(self, corpus=None, enable_chunking=True, chunk_size=None, chunk_overlap=20, batch_size=32, src=None, read_cache=False, write_cache=False,
-                    fmt=None):
+                    fmt=None, include_section_title=False):
         """
         Embed the corpus using the initialized model with intelligent chunking to prevent truncation.
         
@@ -126,10 +126,25 @@ class EmbeddingsRetriever(BaseRetriever):
             raise ValueError("Corpus should be a list of documents, not a single string")
         elif isinstance(self.corpus, list):
             self.logger.info(f"Corpus contains {len(self.corpus)} documents of type ({type(self.corpus[0])})")
-            corpus_texts = self.corpus
+            if self.corpus and isinstance(self.corpus[0], dict):
+                if include_section_title:
+                    corpus_texts = [
+                        (doc.get('section_title', '') + "\n" + (doc['sec_txt'] if 'sec_txt' in doc else doc['text'])).strip()
+                        for doc in self.corpus
+                    ]
+                else:
+                    corpus_texts = [doc['sec_txt'] if 'sec_txt' in doc else doc['text'] for doc in self.corpus]
+            else:
+                corpus_texts = self.corpus
         elif isinstance(self.corpus, dict):
             self.logger.info(f"Corpus is a dict with {len(self.corpus)} entries.")
-            corpus_texts = [doc['sec_txt'] if 'sec_txt' in doc else doc['text'] for doc in self.corpus]
+            if include_section_title:
+                corpus_texts = [
+                    (doc.get('section_title', '') + "\n" + (doc['sec_txt'] if 'sec_txt' in doc else doc['text'])).strip()
+                    for doc in self.corpus
+                ]
+            else:
+                corpus_texts = [doc['sec_txt'] if 'sec_txt' in doc else doc['text'] for doc in self.corpus]
         else:
             raise ValueError("Corpus should be a list or dict of documents")
 

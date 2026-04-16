@@ -768,7 +768,7 @@ class HTMLParser(LLMParser):
         surrounding_text = " ".join(parent_text)
         return re.sub(r"[\s\n]+", " ", surrounding_text)
     
-    def from_sections_to_corpus(self, sections, max_tokens=None, skip_rule_based_retrieved_elm=False):
+    def from_sections_to_corpus(self, sections, max_tokens=None, skip_rule_based_retrieved_elm=False, include_section_title=False):
         """
         Convert structured HTML sections to a flat corpus of documents for embeddings retrieval.
         This method takes the output from extract_sections_from_html (list of dicts) and converts it
@@ -806,6 +806,9 @@ class HTMLParser(LLMParser):
             sec_type = section_dict.get('sec_type', '')
             doc_base = section_dict.copy()
 
+            title_tokens = self.embeddings_retriever.cnt_tokens(section_title) if (include_section_title and section_title) else 0
+            chunk_budget = effective_max_tokens - title_tokens
+
             chunk_texts = []
             chunk_token_count = 0
             chunk_paragraphs = []
@@ -816,7 +819,7 @@ class HTMLParser(LLMParser):
                 if len(para_text) < 8:
                     continue
                 para_tokens = self.embeddings_retriever.cnt_tokens(para_text)
-                if chunk_token_count + para_tokens > effective_max_tokens and chunk_texts:
+                if chunk_token_count + para_tokens > chunk_budget and chunk_texts:
                     # Save current chunk
                     chunk_doc = doc_base.copy()
                     chunk_doc['sec_txt_clean'] = "\n".join(chunk_texts)
@@ -1058,7 +1061,7 @@ class HTMLParser(LLMParser):
 
     def semantic_retrieve_from_corpus(self, corpus, model_name='sentence-transformers/all-MiniLM-L6-v2',
                                       topk_docs_to_retrieve=5, query=None, embedding_encode_batch_size=32,
-                                      src=None):
+                                      src=None, include_section_title=False):
         """
         Given a pre-extracted HTML corpus (list of sections), normalize for embeddings and retrieve relevant documents.
         This override provides HTML-specific corpus normalization before semantic search.
@@ -1082,8 +1085,8 @@ class HTMLParser(LLMParser):
         if not self.embeddings_retriever.corpus or len(self.embeddings_retriever.corpus) == 0:
             raise ValueError("Corpus is empty after converting sections to documents.")
         
-        self.embeddings = self.embeddings_retriever.embed_corpus(batch_size=embedding_encode_batch_size, read_cache=True, 
-        write_cache=True, src=src)
+        self.embeddings = self.embeddings_retriever.embed_corpus(batch_size=embedding_encode_batch_size, read_cache=True,
+        write_cache=True, src=src, include_section_title=include_section_title)
 
         result = self.embeddings_retriever.search(
             query=query,

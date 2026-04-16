@@ -251,7 +251,7 @@ class XMLParser(LLMParser):
             self.logger.error(f"Error parsing XML: {e}")
             return None
 
-    def from_sections_to_corpus(self, sections, max_tokens=None, skip_rule_based_retrieved_elm=False):
+    def from_sections_to_corpus(self, sections, max_tokens=None, skip_rule_based_retrieved_elm=False, include_section_title=False):
         """
         Convert structured XML sections to a flat corpus of documents for embeddings retrieval.
         This method takes the output from extract_sections_from_xml (list of dicts) and converts it
@@ -296,11 +296,14 @@ class XMLParser(LLMParser):
                     self.logger.info(f"Skipping section at index {i} as it matches rule-based retrieved elements")
                     continue
 
+            title_tokens = self.embeddings_retriever.cnt_tokens(section_title) if (include_section_title and section_title) else 0
+            chunk_budget = effective_max_tokens - title_tokens
+
             chunks_created = []
             self.logger.debug(f"Starting chunk creation for section '{section_title}'")
             for p_idx, paragraph in enumerate(section_paragraphs):
                 self.logger.debug(f"Processing paragraph {p_idx + 1}/{len(section_paragraphs)} in section '{section_title}', type: {type(paragraph)}")
-                
+
                 try:
                     if hasattr(paragraph, 'itertext'):
                         para_text = " ".join(paragraph.itertext()).strip()
@@ -321,10 +324,10 @@ class XMLParser(LLMParser):
                     para_tokens = self.embeddings_retriever.cnt_tokens(normalized_para)
                 except Exception:
                     para_tokens = len(normalized_para) // 4
-                    
-                if para_tokens > effective_max_tokens:
-                    self.logger.debug(f"Paragraph {p_idx} in section '{section_title}' exceeds token limit ({para_tokens} > {effective_max_tokens}), splitting...")
-                    para_chunks = self._intelligent_chunk_section(normalized_para, effective_max_tokens)
+
+                if para_tokens > chunk_budget:
+                    self.logger.debug(f"Paragraph {p_idx} in section '{section_title}' exceeds token limit ({para_tokens} > {chunk_budget}), splitting...")
+                    para_chunks = self._intelligent_chunk_section(normalized_para, chunk_budget)
                     self.logger.debug(f"para_chunks for paragraph {p_idx}: {para_chunks}")
                 else:
                     para_chunks = [normalized_para]
@@ -333,9 +336,9 @@ class XMLParser(LLMParser):
                 for chunk_text in para_chunks:
                     self.logger.debug(f"Creating chunk {len(chunks_created) + 1} for paragraph {p_idx}: '{chunk_text[:80]}...' (tokens: {self.embeddings_retriever.cnt_tokens(chunk_text) if hasattr(self.embeddings_retriever, 'cnt_tokens') else 'N/A'})")
                     chunk_doc = section_dict.copy()
-                    chunk_doc['sec_txt'] = section_title + "\n" + chunk_text
-                    chunk_doc['sec_txt_clean'] = section_title + "\n" + chunk_text
-                    chunk_doc['text'] = section_title + "\n" + chunk_text
+                    chunk_doc['sec_txt'] = chunk_text
+                    chunk_doc['sec_txt_clean'] = chunk_text
+                    chunk_doc['text'] = chunk_text
                     chunk_doc['chunk_id'] = len(chunks_created) + 1
                     chunk_doc['contains_id_pattern'] = any(re.search(pattern, chunk_text, re.IGNORECASE) for pattern in self.id_patterns)
                     chunks_created.append(chunk_doc)
