@@ -36,6 +36,7 @@ Citation
 --------
 If you use Data Gatherer  in your research or project, please cite our paper:
 
+```bibtex
 @inproceedings{marini_data_2025,
 	title = {Data {Gatherer}: {LLM}-{Powered} {Dataset} {Reference} {Extraction} from {Scientific} {Literature}},
 	url = {https://aclanthology.org/2025.sdp-1.10},
