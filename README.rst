@@ -34,17 +34,22 @@ Use Cases
 
 Citation
 --------
+
 If you use Data Gatherer  in your research or project, please cite our paper:
 
-```bibtex
-@inproceedings{marini_data_2025,
-	title = {Data {Gatherer}: {LLM}-{Powered} {Dataset} {Reference} {Extraction} from {Scientific} {Literature}},
-	url = {https://aclanthology.org/2025.sdp-1.10},
-	doi = {10.18653/v1/2025.sdp-1.10},
-	booktitle = {Proceedings of the {Fifth} {Workshop} on {Scholarly} {Document} {Processing} ({SDP} 2025)},
-	publisher = {Association for Computational Linguistics},
-	author = {Marini, Pietro and Santos, Aécio and Contaxis, Nicole and Freire, Juliana},
-	year = {2025},
-	pages = {114--123},
-}
+.. code-block:: bibtex
+
+	@inproceedings{marini_data_2025,
+		title = {Data {Gatherer}: {LLM}-{Powered} {Dataset} {Reference} {Extraction} from {Scientific} {Literature}},
+		url = {https://aclanthology.org/2025.sdp-1.10},
+		doi = {10.18653/v1/2025.sdp-1.10},
+		booktitle = {Proceedings of the {Fifth} {Workshop} on {Scholarly} {Document} {Processing} ({SDP} 2025)},
+		publisher = {Association for Computational Linguistics},
+		author = {Marini, Pietro and Santos, Aécio and Contaxis, Nicole and Freire, Juliana},
+		year = {2025},
+		pages = {114--123},
+	}
+
+
+
 
