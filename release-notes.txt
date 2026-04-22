@@ -1,4 +1,4 @@
-## Release (v0.2.1) - 2026-04-14
+## Release (v0.2.1) - 2026-04-22
 
 - Added dataset prompts to modules and new Claude prompt
 - fixed profile dir option
