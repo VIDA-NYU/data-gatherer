@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "data_gatherer"
-version = "0.2.00"
+version = "0.2.1"
 description = "DataGatherer Library"
 readme = "README.rst"
 license = {text = "MIT"}
@@ -44,7 +44,7 @@ dependencies = [
     "transformers",
     "typing_extensions",
     "webdriver-manager",
-    "google-generativeai",
+    "google-genai",
     "tiktoken",
     "cloudscraper",
     "pyui",
@@ -76,6 +76,6 @@ include-package-data = true
 data_gatherer = [
     "config/*.json",
     "prompts/*.json",
-    "prompts/prompt_templates/*.json",
+    "prompts/prompt_templates/dataset_prompts/*.json",
     "prompts/prompt_templates/metadata_prompts/*.json",
 ]

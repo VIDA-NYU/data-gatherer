@@ -293,7 +293,7 @@ def test_from_section_to_corpus(get_test_data_path):
     assert len(sections) == 34  # Updated: now extracts <ack>, <app>, <fn-group> sections
     corpus = parser.from_sections_to_corpus(sections)
     assert isinstance(corpus, list)
-    assert len(corpus) == 161  # Updated: more sections → more chunks
+    assert len(corpus) == 94  # Updated: deduplication now effective since title no longer baked into sec_txt
     print('\n')
 
 def test_normalize_text_from_pdf(get_test_data_path):

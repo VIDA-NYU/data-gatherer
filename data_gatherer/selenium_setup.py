@@ -21,8 +21,7 @@ def create_driver(driver_path=None, browser="Firefox", headless=True, logger=Non
         if profile_dir:
             profile_dir = os.path.abspath(os.path.expanduser(profile_dir))
             os.makedirs(profile_dir, exist_ok=True)
-            firefox_options.add_argument("-profile")
-            firefox_options.add_argument(profile_dir)
+            firefox_options.profile = profile_dir
             logger.info(f"Using persistent Firefox profile at: {profile_dir}")
 
         # Set preferences directly in FirefoxOptions (not using FirefoxProfile)

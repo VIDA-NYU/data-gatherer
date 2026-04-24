@@ -16,7 +16,7 @@ tokenizers
 transformers
 typing_extensions
 webdriver-manager
-google.generativeai
+google-genai
 tiktoken
 cloudscraper
 pyui
