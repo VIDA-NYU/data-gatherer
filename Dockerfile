@@ -1,11 +1,18 @@
 # syntax=docker/dockerfile:1
-FROM python:3.11-slim
+FROM --platform=linux/amd64 nvidia/cuda:12.1.0-runtime-ubuntu22.04
 
 WORKDIR /app
 
-# Install system dependencies in one layer and clean up
+# Install Python 3.11, Firefox ESR (via Mozilla PPA), and system dependencies
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends wget firefox-esr \
+    && apt-get install -y --no-install-recommends software-properties-common wget \
+    && add-apt-repository ppa:mozillateam/ppa \
+    && apt-get update \
+    && apt-get install -y --no-install-recommends \
+        python3.11 python3.11-dev python3-pip \
+        firefox-esr \
+    && ln -sf /usr/bin/python3.11 /usr/bin/python3 \
+    && ln -sf /usr/bin/python3.11 /usr/bin/python \
     && rm -rf /var/lib/apt/lists/*
 
 # Download and install geckodriver
@@ -22,7 +29,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy the rest of the app
 COPY . .
 
-RUN pip install --no-cache-dir -e .
+RUN pip install --no-cache-dir .
 
 EXPOSE 8501
 
