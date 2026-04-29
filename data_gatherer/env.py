@@ -19,3 +19,4 @@ CACHE_BASE_DIR: str = os.getenv("XDG_CACHE_HOME") or os.path.join(os.path.expand
 GH_TOKEN: str = os.getenv("GH_TOKEN")
 GITHUB_USERNAME: str = os.getenv("GITHUB_USERNAME")
 NCBI_API_KEY: str = os.getenv("NCBI_API_KEY")
+HF_TOKEN: str = os.getenv("HF_TOKEN")

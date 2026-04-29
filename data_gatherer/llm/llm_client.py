@@ -11,7 +11,7 @@ from portkey_ai import Portkey
 from anthropic import Anthropic
 from json_repair import repair_json
 from data_gatherer.prompts.prompt_manager import PromptManager
-from data_gatherer.env import PORTKEY_GATEWAY_URL, PORTKEY_API_KEY, PORTKEY_ROUTE, PORTKEY_CONFIG, OLLAMA_CLIENT, GPT_API_KEY, GEMINI_KEY, DATA_GATHERER_USER_NAME
+from data_gatherer.env import PORTKEY_GATEWAY_URL, PORTKEY_API_KEY, PORTKEY_ROUTE, PORTKEY_CONFIG, OLLAMA_CLIENT, GPT_API_KEY, GEMINI_KEY, DATA_GATHERER_USER_NAME, HF_TOKEN
 from data_gatherer.llm.response_schema import *
 from data_gatherer.llm.batch_storage import BatchStorageManager, BatchRequestBuilder
 
@@ -93,7 +93,7 @@ class LLMClient_dev:
             self.logger.debug(f"Initializing Hugging Face model client for model: {model}")
             hf_model_name = model[len('hf-'):]
             from data_gatherer.llm.hf_model_client import HFModelClient
-            self.llm_client = HFModelClient(hf_model_name, logger=self.logger)
+            self.llm_client = HFModelClient(hf_model_name, logger=self.logger, use_auth_token=HF_TOKEN or True)
             self.llm_client.load_model()
 
         else:

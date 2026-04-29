@@ -21,6 +21,9 @@ RUN wget -O /tmp/geckodriver.tar.gz "https://github.com/mozilla/geckodriver/rele
     && chmod +x /usr/local/bin/geckodriver \
     && rm /tmp/geckodriver.tar.gz
 
+# Install CUDA-enabled PyTorch before other requirements so it isn't overridden
+RUN pip install --no-cache-dir torch --index-url https://download.pytorch.org/whl/cu121
+
 # Copy only requirements first for better caching
 COPY requirements.txt .
 
