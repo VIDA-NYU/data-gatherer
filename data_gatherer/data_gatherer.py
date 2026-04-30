@@ -1,5 +1,6 @@
 import os.path
 import os
+os.environ.setdefault("TOKENIZERS_PARALLELISM", "false")
 import re
 import json
 import time
@@ -180,7 +181,7 @@ class DataGatherer:
         :return: Dictionary with URLs as keys and raw data as values.
 
         """
-        single_article = False
+        single_article, pmcids_only = False, False
 
         if not isinstance(urls, str) and not isinstance(urls, list):
             raise ValueError("URL must be a string or a list of strings.")
@@ -192,35 +193,52 @@ class DataGatherer:
         complete_publication_fetches = {}
         i = 0
 
+        # Fast path: batch Entrez fetch for all-PMC URL lists
+        pmc_urls = [u for u in urls if re.search(r'PMC\d+', u, re.IGNORECASE)]
+        if len(pmc_urls) == len(urls) and not local_fetch_file:
+            pmcids = [self.data_fetcher.url_to_article_id(u) for u in urls]
+            pmcids = [p for p in pmcids if p]
+            pmcids_only = True
+            
         while len(complete_publication_fetches) < len(urls) and i <= len(HTML_fallback_priority_list):
             current_fallback = False if i == 0 else HTML_fallback_priority_list[i - 1]
             self.logger.info(f"Fetch attempt with HTML_fallback={current_fallback}...")
+
+            if pmcids_only:
+                self.logger.info(f"Performing batch Entrez fetch for {len(pmcids)} PMCIDs.")
+                self.data_fetcher = EntrezFetcher(requests, self.logger)
+                batch_results = self.data_fetcher.batch_fetch_data(pmcids)
             
             for pub_link in urls:
                 self.logger.info(f"length of complete fetches < urls: {len(complete_publication_fetches)} < {len(urls)}")
                 if pub_link in complete_publication_fetches:
                     continue
                 
-                pub_link = self.data_fetcher.redirect_if_needed(pub_link)
+                pmcid = self.data_fetcher.url_to_article_id(pub_link)
+                if pmcid and pmcid in batch_results:
+                    fetched_data = batch_results[pmcid]
 
-                # Update fetcher settings for this method and publication
-                self.data_fetcher = self.data_fetcher.update_DataFetcher_settings(
-                    pub_link,
-                    local_fetch_file=local_fetch_file,
-                    HTML_fallback=current_fallback,
-                    driver_path=driver_path,
-                    browser=browser,
-                    headless=headless
-                )
+                else:
+                    pub_link = self.data_fetcher.redirect_if_needed(pub_link)
 
-                # Fetch data with error handling
-                try:
-                    fetched_data = self.data_fetcher.fetch_data(pub_link, write_raw_data=write_htmls_xmls)
-                    self.logger.info(f"Raw_data_format: {self.data_fetcher.raw_data_format}, Type of fetched data: {type(fetched_data)}")
-                except Exception as e:
-                    self.logger.error(f"Error fetching data from {pub_link} with {current_fallback}: {e}")
-                    fetched_data = None
-                
+                    # Update fetcher settings for this method and publication
+                    self.data_fetcher = self.data_fetcher.update_DataFetcher_settings(
+                        pub_link,
+                        local_fetch_file=local_fetch_file,
+                        HTML_fallback=current_fallback,
+                        driver_path=driver_path,
+                        browser=browser,
+                        headless=headless
+                    )
+
+                    # Fetch data with error handling
+                    try:
+                        fetched_data = self.data_fetcher.fetch_data(pub_link, write_raw_data=write_htmls_xmls)
+                        self.logger.info(f"Raw_data_format: {self.data_fetcher.raw_data_format}, Type of fetched data: {type(fetched_data)}")
+                    except Exception as e:
+                        self.logger.error(f"Error fetching data from {pub_link} with {current_fallback}: {e}")
+                        fetched_data = None
+                    
                 if fetched_data is None:
                     self.logger.warning(f"Failed to fetch data from {pub_link}. Will try next fallback method if available.")
                     continue
@@ -1882,15 +1900,22 @@ class DataGatherer:
                             section_filter=section_filter
                         )
                         
+                        # Capture retrieval stats now — parser may be replaced for the next format group
+                        retrieval_stats = {}
+                        if hasattr(self.parser, 'retrieval_stats'):
+                            retrieval_stats = self.parser.retrieval_stats.get(pmcid, {})
+
                         # Create batch request for LLMClient
                         batch_request = {
                             'custom_id': custom_id,
                             'messages': messages,
                             'metadata': {
                                 'url': url,
-                                'article_id': article_id,
+                                'article_id': pmcid,
+                                'page_id': article_id,
                                 'raw_data_format': url_raw_data_format,
-                                'title': article_title
+                                'title': article_title,
+                                'retrieval_stats': retrieval_stats,
                             }
                         }
                         

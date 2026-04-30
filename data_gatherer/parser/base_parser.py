@@ -492,7 +492,7 @@ Files:
                 pub_title = metadata.get('title', '')
                 raw_data_format = metadata.get('raw_data_format', 'XML')
                 article_id = metadata.get('article_id')
-                stats = getattr(self, 'retrieval_stats', {}).get(article_id, {})
+                stats = metadata.get('retrieval_stats') or getattr(self, 'retrieval_stats', {}).get(article_id, {})
 
                 resps = self.llm_client.process_llm_response(
                     raw_response=raw_output,

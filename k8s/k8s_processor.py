@@ -21,11 +21,20 @@ import logging
 
 import pandas as pd
 
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s [%(levelname)s] %(message)s",
-    handlers=[logging.StreamHandler(sys.stdout)],
-)
+LOG_FMT = "%(asctime)s - %(filename)s:%(lineno)d - %(levelname)s - %(message)s"
+
+def setup_logging(output_dir):
+    os.makedirs(output_dir, exist_ok=True)
+    fmt = logging.Formatter(LOG_FMT)
+    root = logging.getLogger()
+    root.setLevel(logging.INFO)
+    sh = logging.StreamHandler(sys.stdout)
+    sh.setFormatter(fmt)
+    root.addHandler(sh)
+    fh = logging.FileHandler(os.path.join(output_dir, "run.log"), mode="a")
+    fh.setFormatter(fmt)
+    root.addHandler(fh)
+
 logger = logging.getLogger(__name__)
 
 PMC_URL_TEMPLATE = "https://pmc.ncbi.nlm.nih.gov/articles/{pmcid}/"
@@ -55,7 +64,7 @@ def append_to_csv(batch_df: pd.DataFrame, output_csv: str) -> None:
     if batch_df.empty:
         return
     write_header = not os.path.exists(output_csv)
-    batch_df.to_csv(output_csv, mode="a", index=False, header=write_header)
+    batch_df.to_csv(output_csv, mode="a", index=False, header=write_header, quoting=1)  # QUOTE_ALL
     logger.info(f"Checkpoint saved: appended {len(batch_df)} rows to {output_csv}")
 
 
@@ -78,7 +87,12 @@ def main():
     args = parser.parse_args()
 
     os.makedirs(args.output_dir, exist_ok=True)
+    setup_logging(args.output_dir)
     output_csv = os.path.join(args.output_dir, "dataset_citations.csv")
+
+    log_file = os.path.join(args.output_dir, "run.log")
+    logging.getLogger("httpx").setLevel(logging.WARNING)
+    logging.getLogger("httpcore").setLevel(logging.WARNING)
 
     # Load input PMCIDs
     input_df = pd.read_csv(args.input)
@@ -104,6 +118,7 @@ def main():
         llm_name=args.model,
         save_to_cache=True,
         load_from_cache=True,
+        log_file_override=log_file,
         log_level=logging.INFO,
     )
 
@@ -137,7 +152,7 @@ def main():
 
         if isinstance(batch_df, pd.DataFrame):
             append_to_csv(batch_df, output_csv)
-            log_cols = ['source_url', 'pub_title', 'raw_data_format', 'n_all_sections', 'n_corpus_sections', 'n_retrieved_sections', 'n_das_sections']
+            log_cols = ['source_url', 'pub_title', 'raw_data_format', 'n_all_sections', 'n_corpus_sections', 'retrieved_sections_title', 'top_k', 'n_das_sections']
             article_info = batch_df[[c for c in log_cols if c in batch_df.columns]].drop_duplicates('source_url') if not batch_df.empty else pd.DataFrame(columns=log_cols)
             log_df = pd.DataFrame({'source_url': batch}).merge(article_info, on='source_url', how='left')
             append_to_csv(log_df, os.path.join(args.output_dir, 'articles_log.csv'))

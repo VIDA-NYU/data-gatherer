@@ -13,7 +13,7 @@ spec:
         command: ["python", "k8s/k8s_processor.py"]
         args:
           - "--input"
-          - "/data/input/pmcids.csv"
+          - "/data/input/article_ids_1k.csv"
           - "--output-dir"
           - "/data/output"
           - "--model"

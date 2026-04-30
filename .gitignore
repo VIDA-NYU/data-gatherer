@@ -185,3 +185,5 @@ scripts/NYC Open Data/*.csv
 scripts/NYU_data_catalog/Searches_Insights_2025-01-04.textClipping
 scripts/NYU_data_catalog/Figure.pptx
 scripts/CARD/*
+k8s/output/*
+k8s/input/*
