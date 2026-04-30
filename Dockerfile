@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1
-FROM --platform=linux/amd64 nvidia/cuda:12.1.0-runtime-ubuntu22.04
+FROM --platform=linux/amd64 nvidia/cuda:12.6.3-runtime-ubuntu22.04
 
 WORKDIR /app
 
