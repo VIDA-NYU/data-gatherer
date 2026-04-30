@@ -443,12 +443,73 @@ Files:
         for idx, chunk in enumerate(chunks):
             self.logger.info(f"Processing chunk {idx+1}/{len(chunks)}")
             chunk_results = self.extract_datasets_info_from_content(
-                chunk, repos=repos, model=model, temperature=temperature, subdir=subdir, prompt_name=prompt_name, 
+                chunk, repos=repos, model=model, temperature=temperature, subdir=subdir, prompt_name=prompt_name,
                 response_format=response_format, full_document_read=full_document_read, **prompt_kwargs
             )
             ret.extend(chunk_results)
         return ret
 
+    def batch_extract_from_prompts(self, batch_requests, response_format=None, temperature=0.0, gpu_batch_size=16):
+        """
+        Run batch inference for HF/local models, bypassing the OpenAI batch API.
+        Returns a DataFrame with the same schema as parse_data.
+
+        Uses raw_content from metadata (the retrieved article text before prompt rendering)
+        because HF/T5 models take plain text — batch_generate adds its own prefix.
+
+        :param batch_requests: list of {custom_id, messages, metadata} dicts from run_integrated_batch_processing
+        :param gpu_batch_size: prompts per GPU forward pass — reduce if OOM
+        """
+        def _get_content(req):
+            # Prefer raw_content stored in metadata — the plain retrieved text,
+            # not the rendered chat prompt which causes T5 to echo the instructions back.
+            raw = req.get('metadata', {}).get('raw_content')
+            if raw is not None:
+                return raw if isinstance(raw, str) else "\n\n".join(raw)
+            # Fallback: extract last message content from rendered messages
+            messages = req['messages']
+            if isinstance(messages, list):
+                return messages[-1].get('content', str(messages[-1]))
+            return str(messages)
+
+        all_rows = []
+
+        for start in range(0, len(batch_requests), gpu_batch_size):
+            sub_batch = batch_requests[start:start + gpu_batch_size]
+            contents = [_get_content(req) for req in sub_batch]
+
+            self.logger.info(
+                f"batch_extract_from_prompts: GPU pass {start}–{start + len(sub_batch)} of {len(batch_requests)}"
+            )
+
+            raw_outputs = self.llm_client.llm_client.batch_generate(
+                contents, temperature=temperature
+            )
+
+            for req, raw_output in zip(sub_batch, raw_outputs):
+                metadata = req.get('metadata', {})
+                source_url = metadata.get('url', '')
+                pub_title = metadata.get('title', '')
+                raw_data_format = metadata.get('raw_data_format', 'XML')
+                article_id = metadata.get('article_id')
+                stats = getattr(self, 'retrieval_stats', {}).get(article_id, {})
+
+                resps = self.llm_client.process_llm_response(
+                    raw_response=raw_output,
+                    response_format=response_format,
+                    expected_key='datasets'
+                )
+                resps = self.normalize_response_type(resps)
+                datasets = self.process_datasets_response(resps)
+
+                for ds in datasets:
+                    ds['source_url'] = source_url
+                    ds['pub_title'] = pub_title
+                    ds['raw_data_format'] = raw_data_format
+                    ds.update(stats)
+                    all_rows.append(ds)
+
+        return pd.DataFrame(all_rows) if all_rows else pd.DataFrame()
 
     def process_datasets_response(self, resps, skip_validation=False):
         """
@@ -1567,7 +1628,7 @@ Files:
             k=topk_docs_to_retrieve
         )
 
-        self.logger.info(f"Semantic retrieval completed: found {len(result)} relevant sections")
+        self.logger.info(f"Semantic retrieval completed: found {len(result)} relevant sections, with attributes {result[0].keys() if len(result) > 0 else 'n/a'}")
         return result
 
     def retrieve_relevant_content(self, data, semantic_retrieval=True, top_k=5, article_id=None, max_tokens=None, skip_rule_based_retrieved_elm=False,
@@ -1603,6 +1664,17 @@ Files:
             normalized_input = data_avail_cont + top_k_sections + docs_matching_id_ptr
         else:
             normalized_input = ret_lst
+
+        if not hasattr(self, 'retrieval_stats'):
+            self.retrieval_stats = {}
+        self.retrieval_stats[article_id] = {
+            'n_all_sections': len(all_sections) if semantic_retrieval else None,
+            'n_corpus_sections': len(corpus) if semantic_retrieval else None,
+            'retrieved_sections_title': [item.get('section_title', 'n/a') for item in top_k_sections] if semantic_retrieval else None,
+            'top_k': top_k,
+            'n_das_sections': len(data_avail_cont),
+        }
+
         return normalized_input
 
     def regex_match_id_patterns(self, document, id_patterns=None):

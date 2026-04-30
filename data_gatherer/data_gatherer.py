@@ -1910,12 +1910,31 @@ class DataGatherer:
                     last_url_raw_data_format = url_raw_data_format
                     cnt+=1
             
-            supplementary_material_metadata.to_csv('scripts/NYU_data_catalog/supplementary_materials_metadata.csv', index=False)
+            if output_file_path:
+                base = output_file_path.rsplit('.', 1)[0]
+                suppl_path, custom_id_path = f"{base}_suppl.csv", f"{base}_custom_id_src_mapping.json"
+            else:
+                suppl_path = 'scripts/NYU_data_catalog/supplementary_materials_metadata.csv'
+                custom_id_path = 'scripts/NYU_data_catalog/custom_id_src_mapping.json'
+
+            supplementary_material_metadata.to_csv(suppl_path, index=False)
             self.logger.info(f"Prepared {len(batch_requests)} batch requests")
 
-            with open("scripts/NYU_data_catalog/custom_id_src_mapping.json", "w") as f:
-                 json.dump(self.custom_id_to_source_url, f, indent=4)
+            with open(custom_id_path, "w") as f:
+                json.dump(self.custom_id_to_source_url, f, indent=4)
             
+            # HF / local model: bypass batch API, run direct GPU inference
+            if self.parser.llm_client.model.startswith(('hf-', 'local-')):
+                df = self.parser.batch_extract_from_prompts(
+                    batch_requests=batch_requests,
+                    response_format=response_format,
+                    temperature=temperature,
+                )
+                if output_file_path:
+                    df.to_csv(output_file_path, index=False)
+                    self.logger.info(f"HF inference results saved to: {output_file_path}")
+                return df
+
             # Step 3: Use LLMClient to handle batch processing
             self.logger.info("Step 3: Creating batch file using LLMClient...")
             

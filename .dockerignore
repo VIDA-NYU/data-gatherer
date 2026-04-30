@@ -5,6 +5,7 @@
 **/*.env
 
 # Exclude non-core directories
+.venv/
 data_gatherer.egg-info/
 docs/
 drivers/

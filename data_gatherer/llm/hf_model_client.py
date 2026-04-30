@@ -70,6 +70,47 @@ class HFModelClient:
             self.logger.error(f"Error loading model {self.model_id} from HuggingFace Hub: {e}")
             raise
         
+    def batch_generate(self, input_texts, max_output_length=512, temperature=0.0):
+        """
+        Generate outputs for a list of input strings in a single GPU pass.
+
+        :param input_texts: List of plain content strings (already extracted from rendered prompts)
+        :param max_output_length: Max tokens to generate per output
+        :param temperature: 0.0 = greedy decoding (fastest); >0 enables sampling
+        :return: List of generated JSON strings, one per input
+        """
+        if self.model is None or self.tokenizer is None:
+            raise RuntimeError("Model not loaded. Call load_model() first.")
+
+        # T5 input prefix used during fine-tuning — must match training convention
+        formatted = [f"Extract dataset information: {t}" for t in input_texts]
+        self.logger.debug(f"batch_generate: {len(formatted)} inputs")
+
+        # max_length here caps INPUT tokens (T5's context window is 1024)
+        inputs = self.tokenizer(
+            formatted, return_tensors="pt",
+            max_length=1024, truncation=True, padding=True
+        )
+        inputs = {k: v.to(self.device) for k, v in inputs.items()}
+
+        # num_beams=1 → greedy decoding: fastest, no beam search overhead
+        generation_kwargs = {"max_length": max_output_length, "num_beams": 1}
+        if temperature > 0:
+            generation_kwargs.update({"do_sample": True, "temperature": temperature, "top_p": 0.95})
+
+        with torch.no_grad():
+            outputs = self.model.generate(**inputs, **generation_kwargs)
+
+        results = [self.tokenizer.decode(o, skip_special_tokens=True) for o in outputs]
+
+        if self.device.type == "cuda":
+            torch.cuda.empty_cache()
+        elif self.device.type == "mps":
+            torch.mps.empty_cache()
+
+        self.logger.debug(f"batch_generate: {len(results)} outputs")
+        return results
+
     def generate(self, input_text, max_length=512, temperature=0.0):
         """
         Generate output for a single input text.

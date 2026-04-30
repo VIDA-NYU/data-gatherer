@@ -1,0 +1,40 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: data-gatherer-batch
+  namespace: data-gatherer
+spec:
+  template:
+    spec:
+      containers:
+      - name: data-gatherer
+        image: pietromarini/data-gatherer-nvidia:20260430
+        imagePullPolicy: Always
+        command: ["python", "k8s/k8s_processor.py"]
+        args:
+          - "--input"
+          - "/data/input/pmcids.csv"
+          - "--output-dir"
+          - "/data/output"
+          - "--model"
+          - "hf-vida-nyu/flan-t5-base-dataref-info-extract"
+        resources:
+          limits:
+            nvidia.com/gpu: "1"
+            memory: "16Gi"
+            cpu: "4"
+          requests:
+            nvidia.com/gpu: "1"
+            memory: "16Gi"
+            cpu: "4"
+        envFrom:
+        - secretRef:
+            name: data-gatherer-env-secret
+        volumeMounts:
+        - name: data-pvc
+          mountPath: /data
+      volumes:
+      - name: data-pvc
+        persistentVolumeClaim:
+          claimName: data-gatherer-pvc
+      restartPolicy: OnFailure
