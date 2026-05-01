@@ -47,15 +47,26 @@ def create_driver(driver_path=None, browser="Firefox", headless=True, logger=Non
         firefox_options.add_argument("--width=1920")
         firefox_options.add_argument("--height=1080")
 
+        # Determine where to write geckodriver logs. Prefer the mounted /data/logs so they persist to the PVC.
+        logs_dir = None
+        if os.path.exists("/data"):
+            logs_dir = "/data/logs"
+        else:
+            logs_dir = os.path.join(os.getcwd(), "logs")
+
+        os.makedirs(logs_dir, exist_ok=True)
+
+        geckodriver_log_path = os.path.join(logs_dir, "geckodriver.log")
+
         if driver_path:
             os.chmod(driver_path, 0o755)
-            service = FirefoxService(executable_path=driver_path, log_path="logs/geckodriver.log")
+            service = FirefoxService(executable_path=driver_path, log_path=geckodriver_log_path)
             logger.info(f"Using provided Firefox driver path: {driver_path}")
         else:
             if os.path.exists("/usr/local/bin/geckodriver"):
                 driver_path = "/usr/local/bin/geckodriver"
                 os.chmod(driver_path, 0o755)
-                service = FirefoxService(executable_path=driver_path, log_path="logs/geckodriver.log")
+                service = FirefoxService(executable_path=driver_path, log_path=geckodriver_log_path)
                 logger.info("Using baked-in geckodriver at /usr/local/bin/geckodriver")
             else:
                 logger.info("No driver path provided, using GeckoDriverManager to auto-install Firefox driver.")
@@ -83,7 +94,7 @@ def create_driver(driver_path=None, browser="Firefox", headless=True, logger=Non
                             logger.warning(f"Could not remove extended attributes: {e}")
                 except Exception as e:
                     logger.warning(f"Error setting geckodriver permissions: {e}")
-                service = FirefoxService(executable_path=geckodriver_path, log_path="logs/geckodriver.log")
+                service = FirefoxService(executable_path=geckodriver_path, log_path=geckodriver_log_path)
                 logger.info(f"Using GeckoDriverManager to auto-install Firefox driver {service}.")
 
         driver = webdriver.Firefox(service=service, options=firefox_options)
