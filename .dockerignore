@@ -19,3 +19,18 @@ tmp/
 
 # Exclude specific files
 test_refactor.ipynb
+
+# Common Python project ignores
+__pycache__/
+*.pyc
+.pytest_cache/
+.vscode/
+.idea/
+.DS_Store
+.mypy_cache/
+.coverage
+.ipynb_checkpoints/
+.cache/
+pip-wheel-metadata/
+dist/
+build/

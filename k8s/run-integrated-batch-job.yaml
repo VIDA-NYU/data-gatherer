@@ -8,7 +8,7 @@ spec:
     spec:
       containers:
       - name: data-gatherer
-        image: pietromarini/data-gatherer-nvidia:20260430
+        image: pietromarini/data-gatherer-nvidia:20260501
         imagePullPolicy: Always
         command: ["python", "k8s/k8s_processor.py"]
         args:
