@@ -1530,7 +1530,13 @@ class DataGatherer:
                     cache = {}
             if process_id not in cache:
                 self.logger.info(f"Saving results to cache with process_id: {process_id}")
-                output['wrote_to_cache'] = time.time() if isinstance(output, dict) else True
+                if isinstance(output, dict):
+                    output['wrote_to_cache'] = time.time()
+                elif isinstance(output, list) and isinstance(output[0], dict):
+                    for item in output:
+                        item['wrote_to_cache'] = time.time()
+                else:
+                    self.logger.warning(f"Output is not a dict or list of dicts. Caching without timestamp. Output type: {type(output)}")
                 cache[process_id] = output
                 try:
                     with open(tmp_file, 'w') as f:
