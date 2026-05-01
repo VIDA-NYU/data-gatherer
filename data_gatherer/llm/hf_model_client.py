@@ -84,7 +84,9 @@ class HFModelClient:
 
         # T5 input prefix used during fine-tuning — must match training convention
         formatted = [f"Extract dataset information: {t}" for t in input_texts]
-        self.logger.debug(f"batch_generate: {len(formatted)} inputs")
+        self.logger.info(f"batch_generate: {len(formatted)} inputs")
+        for i, t in enumerate(input_texts):
+            self.logger.info(f"batch_generate T5 input [{i}] (first 300 chars): {t[:300]!r}")
 
         # max_length here caps INPUT tokens (T5's context window is 1024)
         inputs = self.tokenizer(
@@ -108,7 +110,8 @@ class HFModelClient:
         elif self.device.type == "mps":
             torch.mps.empty_cache()
 
-        self.logger.debug(f"batch_generate: {len(results)} outputs")
+        for i, r in enumerate(results):
+            self.logger.info(f"batch_generate T5 output [{i}]: {r!r}")
         return results
 
     def generate(self, input_text, max_length=512, temperature=0.0):
@@ -125,8 +128,8 @@ class HFModelClient:
         
         # Add "Extract dataset information: " prefix (same as training)
         formatted_input = f"Extract dataset information: {input_text}"
-        
-        self.logger.debug(f"Generating output for input length: {len(input_text)} characters")
+
+        self.logger.info(f"generate T5 input (first 300 chars): {input_text[:300]!r}")
         
         try:
             inputs = self.tokenizer(formatted_input, return_tensors="pt", 
@@ -150,12 +153,12 @@ class HFModelClient:
                 outputs = self.model.generate(**inputs, **generation_kwargs)
             
             result = self.tokenizer.decode(outputs[0], skip_special_tokens=True)
-            
+
             # Clear MPS cache if using MPS to prevent memory buildup
             if self.device.type == "mps":
                 torch.mps.empty_cache()
-            
-            self.logger.debug(f"Generated output length: {len(result)} characters")
+
+            self.logger.info(f"generate T5 output: {result!r}")
             return result  # Should be JSON string
             
         except Exception as e:

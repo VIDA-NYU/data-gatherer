@@ -191,6 +191,7 @@ class DataGatherer:
             single_article = True
 
         complete_publication_fetches = {}
+        batch_results = {}
         i = 0
 
         # Fast path: batch Entrez fetch for all-PMC URL lists
@@ -204,7 +205,7 @@ class DataGatherer:
             current_fallback = False if i == 0 else HTML_fallback_priority_list[i - 1]
             self.logger.info(f"Fetch attempt with HTML_fallback={current_fallback}...")
 
-            if pmcids_only:
+            if pmcids_only and not batch_results:
                 self.logger.info(f"Performing batch Entrez fetch for {len(pmcids)} PMCIDs.")
                 self.data_fetcher = EntrezFetcher(requests, self.logger)
                 batch_results = self.data_fetcher.batch_fetch_data(pmcids)
@@ -215,7 +216,7 @@ class DataGatherer:
                     continue
                 
                 pmcid = self.data_fetcher.url_to_article_id(pub_link)
-                if pmcid and pmcid in batch_results:
+                if pmcid and pmcid in batch_results and not current_fallback:
                     fetched_data = batch_results[pmcid]
 
                 else:
@@ -1529,7 +1530,7 @@ class DataGatherer:
                     cache = {}
             if process_id not in cache:
                 self.logger.info(f"Saving results to cache with process_id: {process_id}")
-                output['wrote_to_cache'] = time.time()
+                output['wrote_to_cache'] = time.time() if isinstance(output, dict) else True
                 cache[process_id] = output
                 try:
                     with open(tmp_file, 'w') as f:

@@ -187,3 +187,4 @@ scripts/NYU_data_catalog/Figure.pptx
 scripts/CARD/*
 k8s/output/*
 k8s/input/*
+scripts/Local_model_finetuning/result.csv
