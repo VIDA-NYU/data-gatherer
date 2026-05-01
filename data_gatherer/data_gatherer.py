@@ -665,14 +665,24 @@ class DataGatherer:
                 raw_data = self.data_fetcher.fetch_data(url)
                 self.raw_data_format = self.data_fetcher.raw_data_format
                 self.logger.info(f"Fetched raw data format: {self.raw_data_format} from {url}")
-            
+
             if filepath is None:
                 fulltext_complete = self.data_checker.is_fulltext_complete(raw_data, url, self.raw_data_format, required_sections=sects_required)
+
+                # First fallback: try HTTPGetRequest if data incomplete and not already WebScraper or local
+                if not (self.data_fetcher.local_data_used) and not (fulltext_complete) and not (self.data_fetcher.__class__.__name__ == "WebScraper"):
+                    self.logger.info(f"Fallback to HTTPGetRequest data fetcher.")
+                    self.raw_data_format = "HTML"
+                    self.data_fetcher = self.data_fetcher.update_DataFetcher_settings(url, HTML_fallback='HTTPGetRequest')
+                    raw_data = self.data_fetcher.fetch_data(url)
+                    # Re-check completeness after HTTPGetRequest fallback
+                    fulltext_complete = self.data_checker.is_fulltext_complete(raw_data, url, self.raw_data_format, required_sections=sects_required)
+
+                # Second fallback: try WebScraper if still incomplete
                 if not (self.data_fetcher.local_data_used) and not (fulltext_complete) and not (self.data_fetcher.__class__.__name__ == "WebScraper"):
                     self.logger.info(f"Fallback to Selenium WebScraper data fetcher.")
                     self.raw_data_format = "HTML"
-                    self.data_fetcher = self.data_fetcher.update_DataFetcher_settings(url,
-                                                                                        HTML_fallback=True,
+                    self.data_fetcher = self.data_fetcher.update_DataFetcher_settings(url, HTML_fallback='Selenium',
                                                                                         driver_path=driver_path,
                                                                                         browser=browser,
                                                                                         headless=headless)
@@ -681,12 +691,6 @@ class DataGatherer:
                 elif self.data_fetcher.local_data_used:
                     self.logger.info(f"Assuming the Local Data contains only full-text papers, {self.raw_data_format} data is complete for {url}.")
 
-                elif not (fulltext_complete):
-                    self.logger.info(f"Fallback to HTTPGetRequest data fetcher.")
-                    self.raw_data_format = "HTML"
-                    self.data_fetcher = self.data_fetcher.update_DataFetcher_settings(url, HTML_fallback='HTTPGetRequest')
-                    raw_data = self.data_fetcher.fetch_data(url)
-                
                 else:
                     self.logger.info(f"Full-text {self.raw_data_format} data fetched from {url} is complete.")
 

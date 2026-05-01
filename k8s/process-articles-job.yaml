@@ -36,8 +36,14 @@ spec:
         volumeMounts:
         - name: data-pvc
           mountPath: /data
+        - name: shm
+          mountPath: /dev/shm
       volumes:
       - name: data-pvc
         persistentVolumeClaim:
           claimName: data-gatherer-pvc
+      - name: shm
+        emptyDir:
+          medium: Memory
+          sizeLimit: 2Gi
       restartPolicy: OnFailure
