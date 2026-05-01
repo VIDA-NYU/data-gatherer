@@ -1,7 +1,7 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: data-gatherer-batch
+  name: data-gatherer-run-integrated
   namespace: data-gatherer
 spec:
   template:
@@ -10,7 +10,7 @@ spec:
       - name: data-gatherer
         image: pietromarini/data-gatherer-nvidia:20260430
         imagePullPolicy: Always
-        command: ["python", "k8s/k8s_processor_base.py"]
+        command: ["python", "k8s/k8s_processor.py"]
         args:
           - "--input"
           - "/data/input/article_ids_eval.csv"
@@ -18,6 +18,8 @@ spec:
           - "/data/output"
           - "--model"
           - "hf-vida-nyu/flan-t5-base-dataref-info-extract"
+          - "--batch-size"
+          - "50"
         resources:
           limits:
             nvidia.com/gpu: "1"
@@ -27,6 +29,9 @@ spec:
             nvidia.com/gpu: "1"
             memory: "16Gi"
             cpu: "4"
+        env:
+        - name: MOZ_DISABLE_CONTENT_SANDBOX
+          value: "1"
         envFrom:
         - secretRef:
             name: data-gatherer-env-secret

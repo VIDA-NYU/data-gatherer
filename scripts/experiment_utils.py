@@ -478,7 +478,8 @@ def evaluate_performance(predict_df, ground_truth, orchestrator, false_positives
         num_sources += 1
 
         # Extract evaluation datasets for this source page
-        eval_data = predict_df[predict_df['source_url'].str.lower() == source_page.lower()]
+        eval_data = predict_df[predict_df['source_url'].fillna('').str.lower().str.contains(pub_id, regex=False)]
+        
         eval_datasets = set(eval_data['dataset_identifier'].dropna().str.lower())
         # Remove invalid entries
         eval_datasets.discard('n/a')

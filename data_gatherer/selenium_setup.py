@@ -33,6 +33,9 @@ def create_driver(driver_path=None, browser="Firefox", headless=True, logger=Non
         firefox_options.set_preference("pdfjs.disabled", True)
         firefox_options.set_preference("browser.download.manager.showWhenStarting", False)
 
+        # Disable Firefox sandbox for containerized environments
+        firefox_options.set_preference("security.sandbox.content.level", 0)
+
         # Additional stealth preferences
         firefox_options.set_preference("dom.webdriver.enabled", False)
         firefox_options.set_preference("useAutomationExtension", False)

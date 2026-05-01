@@ -15,6 +15,7 @@ RUN apt-get update \
         > /etc/apt/sources.list.d/mozilla.list \
     && apt-get update \
     && apt-get install -y --no-install-recommends firefox \
+        libgtk-3-0 libdbus-glib-1-2 libasound2 libx11-xcb1 \
     && ln -sf /usr/bin/python3.11 /usr/bin/python3 \
     && ln -sf /usr/bin/python3.11 /usr/bin/python \
     && curl -LsSf https://astral.sh/uv/install.sh | sh \
