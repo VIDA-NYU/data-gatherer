@@ -20,9 +20,12 @@ def create_driver(driver_path=None, browser="Firefox", headless=True, logger=Non
 
         if profile_dir:
             profile_dir = os.path.abspath(os.path.expanduser(profile_dir))
-            os.makedirs(profile_dir, exist_ok=True)
-            firefox_options.profile = profile_dir
-            logger.info(f"Using persistent Firefox profile at: {profile_dir}")
+        else:
+            profile_dir = "/tmp/firefox_profile"
+            
+        os.makedirs(profile_dir, exist_ok=True)
+        firefox_options.profile = profile_dir
+        logger.info(f"Using Firefox profile at: {profile_dir}")
 
         # Set preferences directly in FirefoxOptions (not using FirefoxProfile)
         firefox_options.set_preference("browser.download.folderList", 2)
