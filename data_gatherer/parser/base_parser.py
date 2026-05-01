@@ -1635,9 +1635,12 @@ Files:
         self.logger.info(f"Semantic retrieval completed: found {len(result)} relevant sections, with attributes {result[0].keys() if len(result) > 0 else 'n/a'}")
         return result
 
+    def _p_fallback_corpus(self, data) -> list:
+        return []
+
     def retrieve_relevant_content(self, data, semantic_retrieval=True, top_k=5, article_id=None, max_tokens=None, skip_rule_based_retrieved_elm=False,
                                   include_snippets_with_ID_patterns=False, output_format='text', query=None, ID_patterns=None, force_include_DAS=True,
-                                  include_section_title=False):
+                                  include_section_title=False, skip_p_fallback=True):
 
         self.logger.debug(f"Function call: retrieve_relevant_content(semantic_retrieval={semantic_retrieval}, top_k={top_k}, article_id={article_id}, max_tokens={max_tokens}, skip_rule_based_retrieved_elm={skip_rule_based_retrieved_elm}, include_snippets_with_ID_patterns={include_snippets_with_ID_patterns}, output_format={output_format})")
 
@@ -1646,13 +1649,25 @@ Files:
         ret_lst = data_avail_cont.copy()
         top_k_sections, docs_matching_id_ptr = [], []
 
+        _used_p_fallback = False
         if semantic_retrieval:
             self.logger.info(f"Performing semantic retrieval for relevant content")
             all_sections = self.extract_sections_from_text(data)
             corpus = self.from_sections_to_corpus(all_sections, max_tokens=max_tokens, skip_rule_based_retrieved_elm=skip_rule_based_retrieved_elm, include_section_title=include_section_title)
-            top_k_sections = self.semantic_retrieve_from_corpus(corpus, topk_docs_to_retrieve=top_k, src=article_id, query=query, include_section_title=include_section_title)
-            top_k_sections_text = [item['text'] for item in top_k_sections if item['text'] not in ret_lst]
-            ret_lst.extend(top_k_sections_text)  # Use extend() instead of append() to add individual strings
+
+            if not corpus and not skip_p_fallback:
+                corpus = self._p_fallback_corpus(data)
+                if corpus:
+                    _used_p_fallback = True
+                    self.logger.info(f"<p> fallback: built corpus from {len(corpus)} body paragraphs (article_id={article_id})")
+                else:
+                    self.logger.warning(f"Semantic retrieval skipped: corpus empty even after <p> fallback (article_id={article_id})")
+
+            if corpus:
+                effective_top_k = min(top_k, len(corpus))
+                top_k_sections = self.semantic_retrieve_from_corpus(corpus, topk_docs_to_retrieve=effective_top_k, src=article_id, query=query, include_section_title=include_section_title)
+                top_k_sections_text = [item['text'] for item in top_k_sections if item['text'] not in ret_lst]
+                ret_lst.extend(top_k_sections_text)
         
         if include_snippets_with_ID_patterns:
             docs_matching_id_ptr = [item for item in corpus if item.get('contains_id_pattern', False)]
@@ -1677,6 +1692,7 @@ Files:
             'retrieved_sections_title': [item.get('section_title', 'n/a') for item in top_k_sections] if semantic_retrieval else None,
             'top_k': top_k,
             'n_das_sections': len(data_avail_cont),
+            'used_paragraph_fallback': _used_p_fallback,
         }
 
         return normalized_input

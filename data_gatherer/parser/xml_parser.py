@@ -1087,6 +1087,29 @@ class XMLParser(LLMParser):
             text_content = xml_element
         return super().regex_match_id_patterns(text_content, id_patterns)
 
+    def _p_fallback_corpus(self, data) -> list:
+        try:
+            root = data if not isinstance(data, str) else etree.fromstring(data.encode('utf-8'))
+            body = root.find('.//body')
+            if body is None:
+                return []
+            p_elements = body.findall('p') or body.findall('.//p')
+            corpus = []
+            for i, p in enumerate(p_elements):
+                text = ''.join(p.itertext()).strip()
+                if text:
+                    corpus.append({
+                        'text': text,
+                        'section_title': 'body-paragraph',
+                        'sec_type': 'p-fallback',
+                        'contains_id_pattern': False,
+                        'chunk_id': i,
+                    })
+            return corpus
+        except Exception as e:
+            self.logger.warning(f"_p_fallback_corpus failed: {e}")
+            return []
+
     def extract_citations(self, xml_root):
         """
         Extract citations from XML reference sections.

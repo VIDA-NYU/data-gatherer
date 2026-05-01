@@ -1426,3 +1426,24 @@ class HTMLParser(LLMParser):
             dataset_webpage = None
 
         return dataset_webpage, download_link
+
+    def _p_fallback_corpus(self, data) -> list:
+        try:
+            soup = MyBeautifulSoup(data, 'html.parser') if isinstance(data, str) else data
+            body = soup.find('body') or soup
+            p_elements = body.find_all('p', recursive=False) or body.find_all('p')
+            corpus = []
+            for i, p in enumerate(p_elements):
+                text = p.get_text(separator=' ', strip=True)
+                if text:
+                    corpus.append({
+                        'text': text,
+                        'section_title': 'body-paragraph',
+                        'sec_type': 'p-fallback',
+                        'contains_id_pattern': False,
+                        'chunk_id': i,
+                    })
+            return corpus
+        except Exception as e:
+            self.logger.warning(f"_p_fallback_corpus failed: {e}")
+            return []
