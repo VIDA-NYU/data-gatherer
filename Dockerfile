@@ -4,17 +4,19 @@ FROM --platform=linux/amd64 nvidia/cuda:12.6.3-runtime-ubuntu22.04
 WORKDIR /app
 ENV PYTHONPATH=/app
 
-# Install Python 3.11, Firefox ESR (via Mozilla PPA), uv, and system dependencies
+# Install Python 3.11, Firefox ESR, uv, and system dependencies
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends software-properties-common wget curl \
-    && add-apt-repository ppa:mozillateam/ppa \
-    && apt-get update \
-    && apt-get install -y --no-install-recommends \
+    && apt-get install -y --no-install-recommends wget curl gnupg ca-certificates \
         python3.11 python3.11-dev \
-        firefox-esr \
+    && install -d -m 0755 /etc/apt/keyrings \
+    && curl -fsSL https://packages.mozilla.org/apt/repo-signing-key.gpg \
+        -o /etc/apt/keyrings/packages.mozilla.org.asc \
+    && echo "deb [signed-by=/etc/apt/keyrings/packages.mozilla.org.asc] https://packages.mozilla.org/apt mozilla main" \
+        > /etc/apt/sources.list.d/mozilla.list \
+    && apt-get update \
+    && apt-get install -y --no-install-recommends firefox \
     && ln -sf /usr/bin/python3.11 /usr/bin/python3 \
     && ln -sf /usr/bin/python3.11 /usr/bin/python \
-    && ln -sf /usr/bin/firefox-esr /usr/bin/firefox \
     && curl -LsSf https://astral.sh/uv/install.sh | sh \
     && rm -rf /var/lib/apt/lists/*
 
