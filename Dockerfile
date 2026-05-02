@@ -4,11 +4,18 @@ FROM --platform=linux/amd64 nvidia/cuda:12.6.3-runtime-ubuntu22.04
 WORKDIR /app
 
 # Install system dependencies
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends wget firefox python3.11 python3.11-dev python3-pip \
-    && ln -sf /usr/bin/python3.11 /usr/bin/python3 \
-    && ln -sf /usr/bin/python3.11 /usr/bin/python \
-    && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+      wget xz-utils ca-certificates \
+      python3.11 python3.11-dev python3-pip \
+      libgtk-3-0 libdbus-glib-1-2 libasound2 libx11-xcb1 libxcomposite1 \
+      libxrender1 libxrandr2 libxtst6 libglib2.0-0 libgconf-2-4 libnss3 \
+      libgdk-pixbuf2.0-0 libxss1 libpangocairo-1.0-0 fonts-liberation && \
+    rm -rf /var/lib/apt/lists/* && \
+    wget -O /tmp/firefox.tar.xz "https://download.mozilla.org/?product=firefox-latest&os=linux64&lang=en-US" && \
+    tar -xJf /tmp/firefox.tar.xz -C /opt && \
+    ln -sf /opt/firefox/firefox /usr/bin/firefox && \
+    rm /tmp/firefox.tar.xz
 
 # Download and install geckodriver
 RUN wget -O /tmp/geckodriver.tar.gz "https://github.com/mozilla/geckodriver/releases/download/v0.36.0/geckodriver-v0.36.0-linux64.tar.gz" \
