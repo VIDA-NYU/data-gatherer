@@ -14,7 +14,7 @@ spec:
         - /bin/sh
         - -c
         - |
-          python k8s/k8s_processor.py --input /data/input/article_ids_eval.csv --output-dir /data/output --model hf-vida-nyu/flan-t5-base-dataref-info-extract --batch-size 50; echo "job finished, sleeping for debug"; tail -f /dev/null
+          python3 k8s/k8s_processor.py --input /data/input/article_ids_eval.csv --output-dir /data/output --model hf-vida-nyu/flan-t5-base-dataref-info-extract --batch-size 50; echo "job finished, sleeping for debug"; tail -f /dev/null
         resources:
           limits:
             nvidia.com/gpu: "1"
