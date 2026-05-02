@@ -47,16 +47,26 @@ def create_driver(driver_path=None, browser="Firefox", headless=True, logger=Non
         firefox_options.add_argument("--width=1920")
         firefox_options.add_argument("--height=1080")
 
-        # Determine where to write geckodriver logs. Prefer the mounted /data/logs so they persist to the PVC.
-        logs_dir = None
-        if os.path.exists("/data"):
-            logs_dir = "/data/logs"
+        # Determine where to write geckodriver logs. Honor GECKODRIVER_LOG_PATH env var.
+        # If GECKODRIVER_LOG_PATH=STDOUT (case-insensitive) we'll write to the container stdout
+        env_log = os.environ.get("GECKODRIVER_LOG_PATH", "").strip()
+        if env_log and env_log.upper() == "STDOUT":
+            # Use PID 1 stdout (container main process)
+            geckodriver_log_path = "/proc/1/fd/1"
+        elif env_log:
+            # Use explicit path from environment
+            geckodriver_log_path = env_log
         else:
-            logs_dir = os.path.join(os.getcwd(), "logs")
+            # Default: prefer the mounted /data/logs so they persist to the PVC.
+            if os.path.exists("/data"):
+                logs_dir = "/data/logs"
+            else:
+                # fall back to in-app logs directory
+                logs_dir = os.path.join(os.getcwd(), "logs")
 
-        os.makedirs(logs_dir, exist_ok=True)
+            os.makedirs(logs_dir, exist_ok=True)
 
-        geckodriver_log_path = os.path.join(logs_dir, "geckodriver.log")
+            geckodriver_log_path = os.path.join(logs_dir, "geckodriver.log")
 
         if driver_path:
             os.chmod(driver_path, 0o755)
