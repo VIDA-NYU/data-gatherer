@@ -223,6 +223,12 @@ class EmbeddingsRetriever(BaseRetriever):
         # Compute squared L2 distances
         self.logger.info("Computing L2 distances using numpy.")
         dists = np.sum((self.embeddings - query_emb) ** 2, axis=1)
+        n = dists.shape[0]
+        # If requested k is >= corpus size, return all sorted indices
+        if k >= n:
+            self.logger.warning(f"Requested top-{k} but corpus has only {n} items; returning all sorted results")
+            sorted_idxs = np.argsort(dists)
+            return sorted_idxs, dists[sorted_idxs]
         idxs = np.argpartition(dists, k)[:k]
         # Sort the top-k indices by distance
         sorted_idxs = idxs[np.argsort(dists[idxs])]

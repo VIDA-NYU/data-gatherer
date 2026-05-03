@@ -1,0 +1,54 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: data-gatherer-deterministic-test
+  namespace: data-gatherer
+spec:
+  template:
+    spec:
+      containers:
+      - name: data-gatherer
+        image: pietromarini/data-gatherer-nvidia:20260501
+        imagePullPolicy: Always
+        command:
+        - /bin/sh
+        - -c
+        - |
+          python3 k8s/k8s_processor.py --input /data/input/article_ids_eval_10.csv --output-dir /data/output --model hf-vida-nyu/flan-t5-base-dataref-info-extract --batch-size 10; echo "job finished, sleeping for debug"; tail -f /dev/null
+        resources:
+          limits:
+            nvidia.com/gpu: "1"
+            memory: "16Gi"
+            cpu: "4"
+          requests:
+            nvidia.com/gpu: "1"
+            memory: "16Gi"
+            cpu: "4"
+        env:
+        - name: MOZ_DISABLE_CONTENT_SANDBOX
+          value: "1"
+        - name: GECKODRIVER_LOG_PATH
+          value: "/app/logs/geckodriver.log"
+        - name: LLM_PROMPTS_LOG_PATH
+          value: "/app/logs/llm_prompts.log"
+        - name: EMBEDDINGS_DEVICE
+          value: "cuda"
+        envFrom:
+        - secretRef:
+            name: data-gatherer-env-secret
+        volumeMounts:
+        - name: data-pvc
+          mountPath: /data
+        - name: data-pvc
+          mountPath: /app/logs
+        - name: shm
+          mountPath: /dev/shm
+      volumes:
+      - name: data-pvc
+        persistentVolumeClaim:
+          claimName: data-gatherer-pvc
+      - name: shm
+        emptyDir:
+          medium: Memory
+          sizeLimit: 2Gi
+      restartPolicy: OnFailure
