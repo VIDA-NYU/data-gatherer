@@ -484,8 +484,9 @@ Files:
 
             for i, c in enumerate(contents):
                 self.logger.info(f"batch_extract T5 input [{start+i}] (first 300 chars): {c[:300]!r}")
+            metadata_list = [req.get('metadata', {}) for req in sub_batch]
             raw_outputs = self.llm_client.llm_client.batch_generate(
-                contents, temperature=temperature
+                contents, temperature=temperature, metadata=metadata_list
             )
             for i, o in enumerate(raw_outputs):
                 self.logger.info(f"batch_extract T5 output [{start+i}]: {o!r}")

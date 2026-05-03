@@ -70,13 +70,14 @@ class HFModelClient:
             self.logger.error(f"Error loading model {self.model_id} from HuggingFace Hub: {e}")
             raise
         
-    def batch_generate(self, input_texts, max_output_length=512, temperature=0.0):
+    def batch_generate(self, input_texts, max_output_length=512, temperature=0.0, metadata=None):
         """
         Generate outputs for a list of input strings in a single GPU pass.
 
         :param input_texts: List of plain content strings (already extracted from rendered prompts)
         :param max_output_length: Max tokens to generate per output
         :param temperature: 0.0 = greedy decoding (fastest); >0 enables sampling
+        :param metadata: Optional list of metadata dicts or strings parallel to input_texts (e.g., containing 'url' or 'source')
         :return: List of generated JSON strings, one per input
         """
         if self.model is None or self.tokenizer is None:
@@ -86,7 +87,14 @@ class HFModelClient:
         formatted = [f"Extract dataset information: {t}" for t in input_texts]
         self.logger.info(f"batch_generate: {len(formatted)} inputs")
         for i, t in enumerate(input_texts):
-            self.logger.info(f"batch_generate T5 input [{i}] (first 300 chars): {t[:300]!r}")
+            src = ''
+            if metadata and i < len(metadata):
+                m = metadata[i]
+                if isinstance(m, dict):
+                    src = m.get('url') or m.get('source_url') or m.get('source') or ''
+                else:
+                    src = str(m)
+            self.logger.info(f"batch_generate T5 input [{i}] src={src!r} (first 300 chars): {t[:300]!r}")
 
         # max_length here caps INPUT tokens (T5's context window is 1024)
         inputs = self.tokenizer(

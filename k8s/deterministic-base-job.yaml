@@ -1,7 +1,7 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: data-gatherer-deterministic-test
+  name: data-gatherer-deterministic-base
   namespace: data-gatherer
 spec:
   template:
@@ -14,7 +14,7 @@ spec:
         - /bin/sh
         - -c
         - |
-          python3 k8s/k8s_processor.py --input /data/input/article_ids_eval.csv --output-dir /data/output --model hf-vida-nyu/flan-t5-base-dataref-info-extract --batch-size 10; echo "job finished, sleeping for debug"; tail -f /dev/null
+          python3 k8s/k8s_processor_base.py --input /data/input/article_ids_eval.csv --output-dir /data/output/base --model hf-vida-nyu/flan-t5-base-dataref-info-extract; echo "base job finished, sleeping for debug"; tail -f /dev/null
         resources:
           limits:
             nvidia.com/gpu: "1"
@@ -29,8 +29,6 @@ spec:
           value: "1"
         - name: GECKODRIVER_LOG_PATH
           value: "/app/logs/geckodriver.log"
-        - name: LLM_PROMPTS_LOG_PATH
-          value: "/app/logs/llm_prompts.log"
         - name: EMBEDDINGS_DEVICE
           value: "cuda"
         envFrom:
