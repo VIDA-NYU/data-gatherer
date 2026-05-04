@@ -94,7 +94,7 @@ class HFModelClient:
                     src = m.get('url') or m.get('source_url') or m.get('source') or ''
                 else:
                     src = str(m)
-            self.logger.info(f"batch_generate T5 input [{i}] src={src!r} (first 300 chars): {t[:300]!r}")
+            self.logger.info(f"batch_generate T5 input [{i}] src={src!r}: {t!r}")
 
         # max_length here caps INPUT tokens (T5's context window is 1024)
         inputs = self.tokenizer(

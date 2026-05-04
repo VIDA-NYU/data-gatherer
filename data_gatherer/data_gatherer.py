@@ -1742,6 +1742,7 @@ class DataGatherer:
         api_provider='openai',
         prompt_name='GPT_FewShot',
         response_format=None,
+        relevant_cont_fmt='lst',
         temperature=0.0,
         semantic_retrieval=False,
         top_k=5,
@@ -1777,6 +1778,8 @@ class DataGatherer:
         :param prompt_name: Name of the prompt template
 
         :param response_format: Response schema
+
+        :param relevant_cont_fmt: Format for relevant content retrieval (e.g., 'json', 'lst', 'text')
 
         :param temperature: Model temperature
 
@@ -1890,55 +1893,65 @@ class DataGatherer:
                                 raise ValueError(f"Unsupported raw data format: {url_raw_data_format}")
                         
                         else:
-                            data_availability_str = self.parser.retrieve_relevant_content(
+                            data_availability_cont = self.parser.retrieve_relevant_content(
                                 data['fetched_data'],
                                 semantic_retrieval=semantic_retrieval,
                                 top_k=top_k,
+                                output_format=relevant_cont_fmt,
                                 skip_rule_based_retrieved_elm=dedup,
                                 include_snippets_with_ID_patterns=brute_force_RegEx_ID_ptrs,
                                 article_id=self.data_fetcher.url_to_article_id(url)
                             )
-                            normalized_input = data_availability_str
+                            normalized_input = data_availability_cont
 
-                        # Render prompt using the correct parser
-                        static_prompt = self.parser.prompt_manager.load_prompt(prompt_name)
-                        messages = self.parser.prompt_manager.render_prompt(
-                            static_prompt,
-                            entire_doc=self.full_document_read,
-                            content=normalized_input,
-                            repos=', '.join(self.parser.repo_names) if hasattr(self.parser, 'repo_names') else '',
-                            url=url,
-                            section_filter=section_filter
-                        )
-                        
+                        if isinstance(normalized_input, str):
+                            normalized_input = [normalized_input]
+                        elif isinstance(normalized_input, list):
+                            self.logger.info(f"Retrieved relevant content in list format with {len(normalized_input)} items for URL: {url}")
+                        else:
+                            self.logger.warning(f"Retrieved relevant content in unexpected format ({type(normalized_input)}) for URL: {url}. Converting to list[string].")
+                            normalized_input = [str(normalized_input)]
+
                         # Capture retrieval stats now — parser may be replaced for the next format group
                         retrieval_stats = {}
                         if hasattr(self.parser, 'retrieval_stats'):
                             retrieval_stats = self.parser.retrieval_stats.get(pmcid, {})
 
-                        # Create batch request for LLMClient
-                        batch_request = {
-                            'custom_id': custom_id,
-                            'messages': messages,
-                            'metadata': {
-                                'url': url,
-                                'article_id': pmcid,
-                                'page_id': article_id,
-                                'raw_data_format': url_raw_data_format,
-                                'title': article_title,
-                                'retrieval_stats': retrieval_stats,
+                        for idx, item in enumerate(normalized_input):
+                            # Render prompt using the correct parser
+                            static_prompt = self.parser.prompt_manager.load_prompt(prompt_name)
+                            messages = self.parser.prompt_manager.render_prompt(
+                                static_prompt,
+                                entire_doc=self.full_document_read,
+                                content=normalized_input,
+                                repos=', '.join(self.parser.repo_names) if hasattr(self.parser, 'repo_names') else '',
+                                url=url,
+                                section_filter=section_filter
+                            )
+
+                            # Create batch request for LLMClient
+                            batch_request = {
+                                'custom_id': custom_id,
+                                'messages': messages,
+                                'metadata': {
+                                    'url': url,
+                                    'article_id': pmcid,
+                                    'page_id': article_id,
+                                    'raw_data_format': url_raw_data_format,
+                                    'title': article_title,
+                                    'retrieval_stats': retrieval_stats,
+                                }
                             }
-                        }
-                        
-                        # Use xml_root for PDFs processed with GROBID, otherwise use fetched_data
-                        data_for_extraction = xml_root if (url_raw_data_format.upper() == 'PDF' and grobid_for_pdf and xml_root is not None) else data['fetched_data']
-                        supplementary_material_links = self.parser.extract_href_from_supplementary_material(data_for_extraction, url)
-                        concat_df = self.parser.extract_supplementary_material_refs(data_for_extraction, supplementary_material_links)
-                        concat_df['url'] = url
-                        supplementary_material_metadata = pd.concat([concat_df,supplementary_material_metadata])
-                        
-                        batch_requests.append(batch_request)
-                        
+                            
+                            # Use xml_root for PDFs processed with GROBID, otherwise use fetched_data
+                            data_for_extraction = xml_root if (url_raw_data_format.upper() == 'PDF' and grobid_for_pdf and xml_root is not None) else data['fetched_data']
+                            supplementary_material_links = self.parser.extract_href_from_supplementary_material(data_for_extraction, url)
+                            concat_df = self.parser.extract_supplementary_material_refs(data_for_extraction, supplementary_material_links)
+                            concat_df['url'] = url
+                            supplementary_material_metadata = pd.concat([concat_df,supplementary_material_metadata])
+                            
+                            batch_requests.append(batch_request)
+                            
                     except Exception as e:
                         self.logger.error(f"Error preparing request for {url}: {e}")
                         continue

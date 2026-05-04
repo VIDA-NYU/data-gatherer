@@ -449,7 +449,7 @@ Files:
             ret.extend(chunk_results)
         return ret
 
-    def batch_extract_from_prompts(self, batch_requests, response_format=None, temperature=0.0, gpu_batch_size=16):
+    def batch_extract_from_prompts(self, batch_requests, response_format=None, temperature=0.0, gpu_batch_size=64):
         """
         Run batch inference for HF/local models, bypassing the OpenAI batch API.
         Returns a DataFrame with the same schema as parse_data.
@@ -460,6 +460,10 @@ Files:
         :param batch_requests: list of {custom_id, messages, metadata} dicts from run_integrated_batch_processing
         :param gpu_batch_size: prompts per GPU forward pass — reduce if OOM
         """
+        self.logger.info(f"""Function_call: batch_extract_from_prompts(...) with {len(batch_requests)} requests, 
+                                gpu_batch_size={gpu_batch_size},
+                                request schema: {batch_requests[0].keys() if batch_requests else 'N/A'}
+                                """)
         def _get_content(req):
             # Prefer raw_content stored in metadata — the plain retrieved text,
             # not the rendered chat prompt which causes T5 to echo the instructions back.
@@ -479,11 +483,9 @@ Files:
             contents = [_get_content(req) for req in sub_batch]
 
             self.logger.info(
-                f"batch_extract_from_prompts: GPU pass {start}–{start + len(sub_batch)} of {len(batch_requests)}"
+                f"GPU pass {start}–{start + len(sub_batch)} of {len(batch_requests)}"
             )
 
-            for i, c in enumerate(contents):
-                self.logger.info(f"batch_extract T5 input [{start+i}] (first 300 chars): {c[:300]!r}")
             metadata_list = [req.get('metadata', {}) for req in sub_batch]
             raw_outputs = self.llm_client.llm_client.batch_generate(
                 contents, temperature=temperature, metadata=metadata_list
@@ -513,6 +515,21 @@ Files:
                     ds['raw_data_format'] = raw_data_format
                     ds.update(stats)
                     all_rows.append(ds)
+
+        # Log aggregation diagnostics
+        try:
+            self.logger.info(f"batch_extract_from_prompts: aggregated {len(all_rows)} dataset rows")
+            if all_rows:
+                # union of keys
+                ukeys = set()
+                for r in all_rows:
+                    if isinstance(r, dict):
+                        ukeys.update(r.keys())
+                sample_keys = sorted(list(ukeys))[:50]
+                self.logger.info(f"batch_extract_from_prompts: union_keys (sample 50): {sample_keys}")
+                self.logger.debug(f"batch_extract_from_prompts sample rows: {all_rows[:3]}")
+        except Exception:
+            self.logger.exception("Error while logging batch aggregation summary")
 
         return pd.DataFrame(all_rows) if all_rows else pd.DataFrame()
 
@@ -603,6 +620,16 @@ Files:
             self.logger.info(f"Extracted dataset: {result[-1]}")
 
         self.logger.debug(f"Final result: {result}")
+        try:
+            keys = set()
+            for r in result:
+                if isinstance(r, dict):
+                    keys.update(r.keys())
+            self.logger.info(f"process_datasets_response: extracted {len(result)} dataset dicts; union_keys={sorted(list(keys))[:30]}")
+            if len(result) > 0:
+                self.logger.debug(f"process_datasets_response sample rows: {result[:5]}")
+        except Exception:
+            self.logger.exception("Error while logging process_datasets_response summary")
         return result
 
     def schema_validation(self, dataset, req_timeout=0.5, skip=False):
@@ -1642,7 +1669,26 @@ Files:
     def retrieve_relevant_content(self, data, semantic_retrieval=True, top_k=5, article_id=None, max_tokens=None, skip_rule_based_retrieved_elm=False,
                                   include_snippets_with_ID_patterns=False, output_format='text', query=None, ID_patterns=None, force_include_DAS=True,
                                   include_section_title=False, skip_p_fallback=True):
+        
+        """Given the full text of the article, retrieve the most relevant content related to data availability using a combination
+        of semantic retrieval and rule-based methods.
 
+        :param data: str - the full text of the article to retrieve content from.
+        :param semantic_retrieval: bool - whether to perform semantic retrieval (default: True
+        :param top_k: int - the number of top relevant sections to retrieve (default: 5)
+        :param article_id: str - the identifier for the article (used for logging and caching
+        :param max_tokens: int - the maximum number of tokens to consider for semantic retrieval (default: None, meaning no limit)
+        :param skip_rule_based_retrieved_elm: bool - whether to skip elements that were retrieved by rule-based methods when building the corpus for semantic retrieval (default: False)
+        :param include_snippets_with_ID_patterns: bool - whether to include snippets that match dataset identifier patterns in the final output (default: False)
+        :param output_format: str - the format of the output, either 'text' for concatenated string or 'json' for structured data (default: 'text')
+        :param query: str - the query to use for semantic retrieval (default: None, meaning a predefined query focused on data availability will be used)
+        :param ID_patterns: list - optional list of regex patterns to identify dataset identifiers in the text (default: None, meaning patterns will be loaded from ontology)
+        :param force_include_DAS: bool - whether to force include the data availability statement content in the retrieved content (default: True)
+        :param include_section_title: bool - whether to include section titles in the corpus for semantic retrieval (default: False)
+        :param skip_p_fallback: bool - whether to skip the fallback method of building corpus from <p> tags if semantic retrieval returns an empty corpus (default: True)
+
+        :return: str or list - the retrieved relevant content in the specified output format
+        """
         self.logger.debug(f"Function call: retrieve_relevant_content(semantic_retrieval={semantic_retrieval}, top_k={top_k}, article_id={article_id}, max_tokens={max_tokens}, skip_rule_based_retrieved_elm={skip_rule_based_retrieved_elm}, include_snippets_with_ID_patterns={include_snippets_with_ID_patterns}, output_format={output_format})")
 
         data_avail_cont = self.get_data_availability_text(data) if force_include_DAS else []
