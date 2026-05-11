@@ -20,6 +20,7 @@ import time
 import logging
 
 import pandas as pd
+import json
 
 LOG_FMT = "%(asctime)s - %(filename)s:%(lineno)d - %(levelname)s - %(message)s"
 
@@ -63,9 +64,35 @@ def load_checkpoint(output_csv: str) -> set:
 def append_to_csv(batch_df: pd.DataFrame, output_csv: str) -> None:
     if batch_df.empty:
         return
-    write_header = not os.path.exists(output_csv)
-    batch_df.to_csv(output_csv, mode="a", index=False, header=write_header, quoting=1)  # QUOTE_ALL
-    logger.info(f"Checkpoint saved: appended {len(batch_df)} rows to {output_csv}")
+    # Some columns may contain unhashable types (lists/dicts). Normalize them to
+    # deterministic JSON strings for deduplication purposes only.
+    def _normalize_value(v):
+        if isinstance(v, (list, dict)):
+            try:
+                return json.dumps(v, sort_keys=True)
+            except Exception:
+                return str(v)
+        return v
+
+    new_rows = batch_df.copy()
+    # Normalize for dedupe
+    normalized_new = new_rows.applymap(_normalize_value)
+    # Keep only unique rows from the new batch (preserve original types in new_rows)
+    keep_mask = ~normalized_new.duplicated()
+    dedup_new_rows = new_rows.loc[keep_mask].reset_index(drop=True)
+
+    if os.path.exists(output_csv):
+        existing_df = pd.read_csv(output_csv)
+        # Normalize existing + new for global dedupe
+        merged = pd.concat([existing_df, dedup_new_rows], ignore_index=True)
+        normalized_merged = merged.applymap(_normalize_value)
+        merged_unique = merged.loc[~normalized_merged.duplicated()].reset_index(drop=True)
+        merged_unique.to_csv(output_csv, index=False, quoting=1)  # QUOTE_ALL
+        added = len(merged_unique) - len(existing_df)
+        logger.info(f"Checkpoint saved: added {added} deduplicated rows to {output_csv}")
+    else:
+        dedup_new_rows.to_csv(output_csv, index=False, quoting=1)  # QUOTE_ALL
+        logger.info(f"Checkpoint saved: wrote {len(dedup_new_rows)} deduplicated rows to {output_csv}")
 
 
 def main():

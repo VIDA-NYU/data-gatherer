@@ -16,6 +16,12 @@ from json_repair import repair_json
 from data_gatherer.llm.llm_client import LLMClient_dev
 from data_gatherer.llm.response_schema import *
 
+DATASET_OUTPUT_COLS = [
+    'dataset_identifier', 'repository_reference', 'data_repository', 'dataset_webpage', 'access_mode',
+    'link', 'source_url', 'download_link', 'title', 'content_type', 'id', 'caption', 'description',
+    'source_section', 'retrieval_pattern', 'context_description', 'file_extension', 'pub_title', 'raw_data_format',
+]
+
 # Abstract base class for parsing data
 class LLMParser(ABC):
     """

@@ -533,10 +533,9 @@ class XMLParser(LLMParser):
                     out_df['source_url'] = current_url_address
                     out_df['raw_data_format'] = raw_data_format
                 else:
-                    out_df = pd.DataFrame(columns=['pub_title', 'source_url', 'raw_data_format'])
                     self.logger.warning(f"No datasets found in the document")
 
-                return out_df
+                return out_df.reindex(columns=DATASET_OUTPUT_COLS)
 
             else:
                 # Extract links from entire webpage
@@ -586,10 +585,9 @@ class XMLParser(LLMParser):
                     out_df['pub_title'] = self.title
                     out_df['raw_data_format'] = raw_data_format
                 else:
-                    out_df = pd.DataFrame(columns=['source_url', 'pub_title', 'raw_data_format'])
                     self.logger.warning(f"No datasets found in the document")
 
-                return out_df
+                return out_df.reindex(columns=DATASET_OUTPUT_COLS)
         else:
             raise TypeError(f"Invalid API data type: {type(api_data)}. Expected lxml.etree.Element.")
 
@@ -1459,7 +1457,7 @@ class TEI_XMLParser(XMLParser):
 
                 out_df['pub_title'] = self.title
 
-                return out_df
+                return out_df.reindex(columns=DATASET_OUTPUT_COLS)
 
             else:
                 # Extract links from entire webpage
@@ -1508,10 +1506,9 @@ class TEI_XMLParser(XMLParser):
                     out_df['source_url'] = current_url_address
                     out_df['pub_title'] = self.title
                 else:
-                    out_df = pd.DataFrame(columns=['source_url', 'pub_title'])
                     self.logger.warning(f"No datasets found in the document")
 
-                return out_df
+                return out_df.reindex(columns=DATASET_OUTPUT_COLS)
         else:
             raise TypeError(f"Invalid API data type: {type(api_data)}. Expected lxml.etree.Element.")
 

@@ -1864,13 +1864,11 @@ class DataGatherer:
                         pmcid = self.data_fetcher.url_to_article_id(url)
                         article_id = self.url_to_page_id(url)
                         timestamp = int(time.time() * 1000)
-                        if url2id_mapping is None:                            
-                            custom_id = f"{self.llm}_{article_id}_{timestamp}"
-                            custom_id = re.sub(r'[^a-zA-Z0-9_-]', '_', custom_id)[:64]
+                        if url2id_mapping is None:
+                            base_custom_id = f"{self.llm}_{article_id}_{timestamp}"
+                            base_custom_id = re.sub(r'[^a-zA-Z0-9_-]', '_', base_custom_id)[:58]
                         else:
-                            custom_id = url2id_mapping[url]
-                        
-                        self.custom_id_to_source_url[custom_id] = url
+                            base_custom_id = str(url2id_mapping[url])[:58]
 
                         if self.full_document_read:
                             if url_raw_data_format.upper() == 'XML':
@@ -1918,12 +1916,16 @@ class DataGatherer:
                             retrieval_stats = self.parser.retrieval_stats.get(pmcid, {})
 
                         for idx, item in enumerate(normalized_input):
+                            # Each request needs a distinct ID to avoid collisions in batch mode.
+                            custom_id = f"{base_custom_id}_{idx}"
+                            self.custom_id_to_source_url[custom_id] = url
+
                             # Render prompt using the correct parser
                             static_prompt = self.parser.prompt_manager.load_prompt(prompt_name)
                             messages = self.parser.prompt_manager.render_prompt(
                                 static_prompt,
                                 entire_doc=self.full_document_read,
-                                content=normalized_input,
+                                content=[item],
                                 repos=', '.join(self.parser.repo_names) if hasattr(self.parser, 'repo_names') else '',
                                 url=url,
                                 section_filter=section_filter

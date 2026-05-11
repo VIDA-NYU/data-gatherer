@@ -34,6 +34,10 @@ class HFModelClient:
             # Auto-detect best available device
             if torch.cuda.is_available():
                 self.logger.info("CUDA available - using GPU")
+                # TF32 reduces mantissa precision on Ampere+ GPUs and causes T5 to hallucinate
+                # on ambiguous inputs compared to CPU/MPS (float32) inference
+                torch.backends.cuda.matmul.allow_tf32 = False
+                torch.backends.cudnn.allow_tf32 = False
                 return torch.device("cuda")
             elif torch.backends.mps.is_available():
                 self.logger.info("MPS (Metal Performance Shaders) available - using MPS device")
@@ -44,6 +48,9 @@ class HFModelClient:
         else:
             # Use specified device
             self.logger.info(f"Using specified device: {device}")
+            if device == 'cuda':
+                torch.backends.cuda.matmul.allow_tf32 = False
+                torch.backends.cudnn.allow_tf32 = False
             return torch.device(device)
         
     def load_model(self):
