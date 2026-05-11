@@ -1,0 +1,69 @@
+{"idx": 200, "url": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6514073", "identifier": "Yin et al. dataset", "decision": "d", "corrected_entries": []}
+{"idx": 379, "url": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC9837615", "identifier": "PXD029921", "decision": "d", "corrected_entries": []}
+{"idx": 388, "url": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC9945973", "identifier": "PXD029921", "decision": "d", "corrected_entries": []}
+{"idx": 912, "url": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC9171396", "identifier": "No. 22074158", "decision": "d", "corrected_entries": []}
+{"idx": 912, "url": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC9171396", "identifier": "No. 21904008", "decision": "d", "corrected_entries": []}
+{"idx": 912, "url": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC9171396", "identifier": "No. 2021YFA1301601", "decision": "d", "corrected_entries": []}
+{"idx": 927, "url": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC9928017", "identifier": "PXD029921", "decision": "d", "corrected_entries": []}
+{"idx": 1059, "url": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5064990", "identifier": "PXD029921", "decision": "d", "corrected_entries": []}
+{"idx": 1132, "url": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11290456", "identifier": "PXD029921", "decision": "d", "corrected_entries": []}
+{"idx": 1595, "url": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC7567827", "identifier": "not applicable", "decision": "d", "corrected_entries": []}
+{"idx": 1595, "url": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC7567827", "identifier": "not applicable", "decision": "d", "corrected_entries": []}
+{"idx": 1688, "url": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5830451", "identifier": "PXD029921", "decision": "d", "corrected_entries": []}
+{"idx": 1693, "url": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC10176268", "identifier": "PXD029921", "decision": "d", "corrected_entries": []}
+{"idx": 1883, "url": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC10390045", "identifier": "EGAS00893672193", "decision": "d", "corrected_entries": []}
+{"idx": 1883, "url": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC10390045", "identifier": "PXD029921", "decision": "d", "corrected_entries": []}
+{"idx": 1883, "url": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC10390045", "identifier": "phs011366.v1.p1", "decision": "d", "corrected_entries": []}
+{"idx": 2059, "url": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC9742198", "identifier": "PDB: 8A99, 8A94, 8A96, EMDB: EMD-15273, EMD-15269, EMD-15271", "decision": "e", "corrected_entries": [{"dataset_identifier": "8A99", "repository_reference": "PDB"}, {"dataset_identifier": "8A94", "repository_reference": "PDB"}, {"dataset_identifier": "8A96", "repository_reference": "PDB"}, {"dataset_identifier": "EMD-15273", "repository_reference": "EMDB"}, {"dataset_identifier": "EMDB:EMD-15269", "repository_reference": ""}, {"dataset_identifier": "EMD-15271", "repository_reference": "EMDB"}]}
+{"idx": 2059, "url": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC9742198", "identifier": "Mendeley Data: 10.17632/mg7p5msrfs.1", "decision": "e", "corrected_entries": [{"dataset_identifier": "10.17632/mg7p5msrfs.1", "repository_reference": ""}]}
+{"idx": 2075, "url": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11334222", "identifier": "GSExxxxxx", "decision": "d", "corrected_entries": []}
+{"idx": 2075, "url": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11334222", "identifier": "PXDxxxxxx", "decision": "d", "corrected_entries": []}
+{"idx": 2417, "url": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6518875", "identifier": "sRNA-Seq data", "decision": "d", "corrected_entries": []}
+{"idx": 2545, "url": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4406733", "identifier": "DAVID 6.7", "decision": "e", "corrected_entries": [{"dataset_identifier": "DAVID 6.7", "repository_reference": "http://david.abcc.ncifcrf.gov/"}]}
+{"idx": 2597, "url": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8467347", "identifier": "STRING v11.0", "decision": "e", "corrected_entries": [{"dataset_identifier": "STRING v11.0", "repository_reference": "https://string-db.org/"}]}
+{"idx": 2601, "url": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5495070", "identifier": "3' UTR extensions", "decision": "d", "corrected_entries": []}
+{"idx": 2658, "url": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8233286", "identifier": "Perseus 1.6.10.0", "decision": "d", "corrected_entries": []}
+{"idx": 2670, "url": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC9451529", "identifier": "dbGaP", "decision": "e", "corrected_entries": [{"dataset_identifier": "STRING", "repository_reference": "STRING"}, {"dataset_identifier": "Kyoto Encyclopedia of Genes and Genomes", "repository_reference": "KEGG"}, {"dataset_identifier": "version 6.8", "repository_reference": "DAVID"}]}
+{"idx": 2791, "url": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC7615535", "identifier": "[18 F]FSPG", "decision": "d", "corrected_entries": []}
+{"idx": 3105, "url": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC9465852", "identifier": "X. laevis genome UCSC version 9.2", "decision": "e", "corrected_entries": [{"dataset_identifier": "xenLae2", "repository_reference": "UCSC Genome Browser"}]}
+{"idx": 3266, "url": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8145422", "identifier": "InterPro version 5.33", "decision": "d", "corrected_entries": []}
+{"idx": 3326, "url": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11035372", "identifier": "GEO: GSE231534", "decision": "e", "corrected_entries": [{"dataset_identifier": "GSE231534", "repository_reference": "GEO"}]}
+{"idx": 3452, "url": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8996547", "identifier": "Laursiatheria", "decision": "d", "corrected_entries": []}
+{"idx": 3532, "url": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4707178", "identifier": "PXD029921", "decision": "d", "corrected_entries": []}
+{"idx": 3604, "url": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC7053513", "identifier": "GSE110712", "decision": "e", "corrected_entries": [{"dataset_identifier": "GSE110712", "repository_reference": "GEO"}]}
+{"idx": 3628, "url": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC10668077", "identifier": "Maxquant:v1.6.15.0", "decision": "e", "corrected_entries": [{"dataset_identifier": "STRING v.11.0", "repository_reference": "http://cn.string-db.org/"}]}
+{"idx": 3628, "url": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC10668077", "identifier": "STRING:v.11.0", "decision": "e", "corrected_entries": [{"dataset_identifier": "STRING v.11.0", "repository_reference": "http://cn.string-db.org/"}]}
+{"idx": 3677, "url": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC9527456", "identifier": "Diana-miRPath v3.0", "decision": "d", "corrected_entries": []}
+{"idx": 3738, "url": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6373471", "identifier": "Data S6", "decision": "d", "corrected_entries": []}
+{"idx": 3774, "url": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11042736", "identifier": "GitHub repository", "decision": "e", "corrected_entries": [{"dataset_identifier": "10.5061/dryad.sqv9s4n9w", "repository_reference": "Dryad"}, {"dataset_identifier": "10.5281/zenodo.10595868", "repository_reference": "Zenodo"}, {"dataset_identifier": "LshCas13a_RNA_cleavage", "repository_reference": "https://github.com/matveykolesnik/LshCas13a_RNA_cleavage"}]}
+{"idx": 3836, "url": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11293339", "identifier": "GEO: GSE221231", "decision": "e", "corrected_entries": [{"dataset_identifier": "GSE221231", "repository_reference": "GEO"}]}
+{"idx": 3888, "url": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC7037369", "identifier": "not available", "decision": "d", "corrected_entries": []}
+{"idx": 3926, "url": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC9222197", "identifier": "GO", "decision": "d", "corrected_entries": []}
+{"idx": 4003, "url": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC9804898", "identifier": "PXD029921", "decision": "d", "corrected_entries": []}
+{"idx": 4069, "url": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8136324", "identifier": "Prochlorococcus_sp_MED4", "decision": "e", "corrected_entries": [{"dataset_identifier": "Prochlorococcus sp. MED4", "repository_reference": "UniProt"}]}
+{"idx": 4070, "url": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8136324", "identifier": "nTiO_2", "decision": "d", "corrected_entries": []}
+{"idx": 4178, "url": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5724358", "identifier": "iTRAQ dataset 1", "decision": "d", "corrected_entries": []}
+{"idx": 4178, "url": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5724358", "identifier": "iTRAQ dataset 2", "decision": "d", "corrected_entries": []}
+{"idx": 4209, "url": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC10184674", "identifier": "DESeq v1.18.0", "decision": "d", "corrected_entries": []}
+{"idx": 4216, "url": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8091538", "identifier": "RefSeq_hg38", "decision": "e", "corrected_entries": [{"dataset_identifier": "hg38", "repository_reference": "RefSeq"}]}
+{"idx": 4464, "url": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6613042", "identifier": "PXD:010379", "decision": "e", "corrected_entries": [{"dataset_identifier": "PXD010379", "repository_reference": ""}]}
+{"idx": 4591, "url": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5860813", "identifier": "Galaxydataset", "decision": "d", "corrected_entries": []}
+{"idx": 4690, "url": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC9525122", "identifier": "DESeq2 v1.16.1", "decision": "d", "corrected_entries": []}
+{"idx": 4840, "url": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11095832", "identifier": "PXD029921", "decision": "d", "corrected_entries": []}
+{"idx": 4920, "url": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC7363571", "identifier": "PXD029921", "decision": "d", "corrected_entries": []}
+{"idx": 5054, "url": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6125187", "identifier": "PXD029921", "decision": "d", "corrected_entries": []}
+{"idx": 5119, "url": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6146045", "identifier": "PXD029921", "decision": "d", "corrected_entries": []}
+{"idx": 5136, "url": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5538769", "identifier": "PXD029921", "decision": "d", "corrected_entries": []}
+{"idx": 5389, "url": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4683213", "identifier": "Affymetrix_microarrays_mpkCCD", "decision": "d", "corrected_entries": []}
+{"idx": 5389, "url": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4683213", "identifier": "proteomic_data_mpkCCD", "decision": "d", "corrected_entries": []}
+{"idx": 5389, "url": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4683213", "identifier": "kinase_target_specificities", "decision": "d", "corrected_entries": []}
+{"idx": 5389, "url": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4683213", "identifier": "regulation_by_vasopressin", "decision": "d", "corrected_entries": []}
+{"idx": 5408, "url": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8631601", "identifier": "TCGA skin cutaneous melanoma (SKCM)", "decision": "e", "corrected_entries": [{"dataset_identifier": "TCGA-SKCM", "repository_reference": "TCGA"}]}
+{"idx": 5417, "url": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3837936", "identifier": "21193", "decision": "d", "corrected_entries": []}
+{"idx": 5687, "url": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11090616", "identifier": "Cite Us Dataset", "decision": "d", "corrected_entries": []}
+{"idx": 5751, "url": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5840869", "identifier": "ERC Advanced Grants 670821", "decision": "d", "corrected_entries": []}
+{"idx": 5780, "url": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8923057", "identifier": "GSE159411", "decision": "d", "corrected_entries": []}
+{"idx": 5780, "url": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8923057", "identifier": "PXD022091", "decision": "d", "corrected_entries": []}
+{"idx": 5975, "url": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC10466730", "identifier": "MOLM-13_DEG-35", "decision": "d", "corrected_entries": []}
+{"idx": 5992, "url": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6823859", "identifier": "MaxQuant 1.5.8.3", "decision": "d", "corrected_entries": []}
+{"idx": 5992, "url": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6823859", "identifier": "human UniProt/Swiss-Prot database (release 27-07-18)", "decision": "d", "corrected_entries": []}

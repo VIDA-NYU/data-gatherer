@@ -1,0 +1,54 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: flan-t5-finetune
+  namespace: data-gatherer
+spec:
+  template:
+    spec:
+      containers:
+      - name: flan-t5-finetune
+        image: pietromarini/data-gatherer-nvidia:20260501
+        imagePullPolicy: Always
+        command:
+        - /bin/sh
+        - -c
+        - |
+          python3 /app/scripts/Local_model_finetuning/train_seq2seq.py \
+            --pmc_links    /app/scripts/exp_input/REV.txt \
+            --ground_truth /app/scripts/Local_model_finetuning/ground_truth/gt_dataset_info_no_dspage_extraction_from_snippet.xlsx \
+            --output_dir   /data/flan-t5-models \
+            --epochs       5 \
+            --lr           3e-4 \
+            --train_batch  2 \
+            --eval_batch   2 \
+            --grad_accum   8
+        resources:
+          limits:
+            nvidia.com/gpu: "1"
+            memory: "32Gi"
+            cpu: "8"
+          requests:
+            nvidia.com/gpu: "1"
+            memory: "32Gi"
+            cpu: "8"
+        env:
+        - name: EMBEDDINGS_DEVICE
+          value: "cuda"
+        envFrom:
+        - secretRef:
+            name: data-gatherer-env-secret
+        volumeMounts:
+        - name: data-pvc
+          mountPath: /data
+        - name: shm
+          mountPath: /dev/shm
+      volumes:
+      - name: data-pvc
+        persistentVolumeClaim:
+          claimName: data-gatherer-pvc
+      - name: shm
+        emptyDir:
+          medium: Memory
+          sizeLimit: 8Gi
+      restartPolicy: Never
