@@ -41,3 +41,4 @@ openpyxl
 rouge-score
 scikit-learn
 sentencepiece
+boto3

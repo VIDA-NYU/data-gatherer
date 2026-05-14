@@ -82,11 +82,12 @@ class DataGatherer:
         embeds_cache_read=False,
         embeds_cache_write=False,
         data_repos_config='open_bio_data_repos.json',
+        user_config_dir=None,
         grobid_for_pdf=False,
         raw_data_df_parquet_filepath=None
         ):
 
-        self.open_data_repos_ontology = load_config(data_repos_config)
+        self.open_data_repos_ontology = load_config(data_repos_config, user_config_dir=user_config_dir)
 
         log_file = log_file_override or 'logs/data_gatherer.log'
         self.logger = setup_logging('orchestrator', log_file, level=log_level,

@@ -21,6 +21,8 @@ import logging
 
 import pandas as pd
 import json
+import boto3
+from botocore.exceptions import BotoCoreError, ClientError
 
 LOG_FMT = "%(asctime)s - %(filename)s:%(lineno)d - %(levelname)s - %(message)s"
 
@@ -95,6 +97,39 @@ def append_to_csv(batch_df: pd.DataFrame, output_csv: str) -> None:
         logger.info(f"Checkpoint saved: wrote {len(dedup_new_rows)} deduplicated rows to {output_csv}")
 
 
+def s3_client():
+    return boto3.client("s3")
+
+
+def download_from_s3(s3_key: str, local_path: str) -> bool:
+    bucket = os.environ.get("S3_OUTPUT_BUCKET")
+    if not bucket or not s3_key:
+        return False
+    try:
+        os.makedirs(os.path.dirname(local_path) or ".", exist_ok=True)
+        s3_client().download_file(bucket, s3_key, local_path)
+        logger.info(f"Downloaded s3://{bucket}/{s3_key} → {local_path}")
+        return True
+    except (BotoCoreError, ClientError) as e:
+        logger.warning(f"S3 download failed for {s3_key}: {e}")
+        return False
+
+
+def upload_to_s3(local_path: str, s3_key: str) -> None:
+    bucket = os.environ.get("S3_OUTPUT_BUCKET")
+    if not bucket:
+        return
+    if not os.path.exists(local_path):
+        logger.warning(f"S3 upload skipped: {local_path} not found")
+        return
+    try:
+        s3 = boto3.client("s3")
+        s3.upload_file(local_path, bucket, s3_key)
+        logger.info(f"Uploaded {local_path} → s3://{bucket}/{s3_key}")
+    except (BotoCoreError, ClientError) as e:
+        logger.error(f"S3 upload failed for {local_path}: {e}")
+
+
 def main():
     parser = argparse.ArgumentParser(description="Run data-gatherer batch extraction on k8s")
     parser.add_argument("--input", required=True, help="Path to CSV with 'pmcid' column")
@@ -105,6 +140,14 @@ def main():
         help="LLM model name (must start with 'hf-')",
     )
     parser.add_argument("--batch-size", type=int, default=50, help="URLs per batch call")
+    parser.add_argument("--max-articles", type=int, default=None,
+                        help="Stop after processing this many new articles (for iterative enrichment)")
+    parser.add_argument("--ontology-path", default=None,
+                        help="Directory containing open_bio_data_repos.json to use instead of the bundled config")
+    parser.add_argument("--s3-input-key", default=None,
+                        help="S3 key to download the input CSV from (e.g. input/slice_1.csv)")
+    parser.add_argument("--s3-ontology-key", default=None,
+                        help="S3 key to download the ontology JSON from (e.g. ontology/open_bio_data_repos.json)")
     parser.add_argument(
         "--section-filter",
         default=None,
@@ -116,6 +159,16 @@ def main():
     os.makedirs(args.output_dir, exist_ok=True)
     setup_logging(args.output_dir)
     output_csv = os.path.join(args.output_dir, "dataset_citations.csv")
+
+    # Download input CSV from S3 if provided and not already present
+    if args.s3_input_key and not os.path.exists(args.input):
+        download_from_s3(args.s3_input_key, args.input)
+
+    # Download ontology from S3 into output_dir so it can be found by user_config_dir
+    if args.s3_ontology_key:
+        ontology_local = os.path.join(args.output_dir, "open_bio_data_repos.json")
+        if download_from_s3(args.s3_ontology_key, ontology_local):
+            args.ontology_path = args.output_dir
 
     log_file = os.path.join(args.output_dir, "run.log")
     logging.getLogger("httpx").setLevel(logging.WARNING)
@@ -138,6 +191,10 @@ def main():
         logger.info("All URLs already processed. Nothing to do.")
         return
 
+    if args.max_articles is not None and len(pending_urls) > args.max_articles:
+        logger.info(f"--max-articles {args.max_articles}: capping pending from {len(pending_urls)} to {args.max_articles}")
+        pending_urls = pending_urls[:args.max_articles]
+
     # Import here so the module is importable even without GPU during syntax checks
     from data_gatherer.data_gatherer import DataGatherer
 
@@ -147,6 +204,7 @@ def main():
         load_from_cache=True,
         log_file_override=log_file,
         log_level=logging.INFO,
+        user_config_dir=args.ontology_path,
     )
 
     total = len(pending_urls)
@@ -195,6 +253,17 @@ def main():
         )
 
     logger.info(f"Done. Results at {output_csv}")
+
+    # Ensure output CSV exists even when no citations were found, so S3 always has a file
+    if not os.path.exists(output_csv):
+        pd.DataFrame().to_csv(output_csv, index=False)
+        logger.info(f"No citations found — wrote empty CSV to {output_csv}")
+
+    # Upload outputs to S3 (key prefix = output dir basename, e.g. slice_1)
+    prefix = os.path.basename(args.output_dir.rstrip("/"))
+    upload_to_s3(output_csv, f"{prefix}/dataset_citations.csv")
+    upload_to_s3(os.path.join(args.output_dir, "articles_log.csv"), f"{prefix}/articles_log.csv")
+    upload_to_s3(os.path.join(args.output_dir, "run.log"), f"{prefix}/run.log")
 
 
 if __name__ == "__main__":

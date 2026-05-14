@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1
-FROM --platform=linux/amd64 nvidia/cuda:12.6.3-runtime-ubuntu22.04
+FROM --platform=linux/amd64 nvidia/cuda:11.8.0-runtime-ubuntu22.04
 
 WORKDIR /app
 
@@ -29,6 +29,8 @@ RUN mkdir -p /tmp/firefox_profile && chmod 777 /tmp/firefox_profile
 # Copy requirements and install
 COPY requirements.txt .
 RUN python3 -m pip install --upgrade pip && \
+    python3 -m pip install --no-cache-dir \
+        torch torchvision --index-url https://download.pytorch.org/whl/cu118 && \
     python3 -m pip install --no-cache-dir -r requirements.txt
 
 # Copy app

@@ -1,0 +1,816 @@
+#!/usr/bin/env python3
+"""
+Ontology enrichment script — runs between k8s batch jobs.
+
+Pipeline:
+  1. Load dataset_citations.csv from the completed batch run
+  2. Filter FP candidates: data_repository=NaN AND identifier doesn't match
+     any existing id_pattern in the current ontology
+  3. 2D embed: char n-gram TF-IDF on dataset_identifier +
+               MiniLM on repository_reference, concatenated
+  4. HDBSCAN cluster (noise discarded)
+  5. Claude reviews each cluster ranked by #articles: induces regex,
+     self-verifies coverage and false-match rate, decides whether to promote
+  6. Write new ontology JSON to --output
+
+Usage:
+    python scripts/enrich_ontology.py \\
+        --citations k8s/output/dataset_citations.csv \\
+        --current-ontology data_gatherer/config/open_bio_data_repos_seed.json \\
+        --ground-truth scripts/exp_input/Full_REV_dataset_citation_records_Table.parquet \\
+        --output /data/ontology/open_bio_data_repos.json
+"""
+
+import argparse
+import json
+import logging
+import re
+import sys
+import numpy as np
+import pandas as pd
+from pathlib import Path
+
+
+class _Tee:
+    """Write to multiple streams simultaneously."""
+    def __init__(self, *streams):
+        self._streams = streams
+
+    def write(self, data):
+        for s in self._streams:
+            s.write(data)
+
+    def flush(self):
+        for s in self._streams:
+            s.flush()
+
+    def fileno(self):
+        return self._streams[0].fileno()
+
+    def isatty(self):
+        return False
+
+import anthropic
+import hdbscan
+from sentence_transformers import SentenceTransformer
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.preprocessing import normalize
+
+try:
+    import umap
+    import plotly.express as px
+    _PLOT_AVAILABLE = True
+except ImportError:
+    _PLOT_AVAILABLE = False
+
+
+# ---------------------------------------------------------------------------
+# Plotting
+# ---------------------------------------------------------------------------
+
+def plot_clusters(
+    embeddings: np.ndarray,
+    labels: np.ndarray,
+    candidates_df: pd.DataFrame,
+    agent_results: dict[int, dict],
+    output_path: str,
+) -> None:
+    """Reduce embeddings to 2D via UMAP and write an interactive plotly scatter."""
+    if not _PLOT_AVAILABLE:
+        print("[plot] umap-learn or plotly not installed — skipping plot.")
+        return
+
+    print("\nReducing to 2D for plot (UMAP)...")
+    reducer = umap.UMAP(n_components=2, random_state=42, min_dist=0.1, n_neighbors=15)
+    coords = reducer.fit_transform(embeddings)
+
+    df = candidates_df.copy().reset_index(drop=True)
+    df["x"] = coords[:, 0]
+    df["y"] = coords[:, 1]
+    df["cluster"] = labels
+
+    # Cluster label: promoted repo name > top repo_ref > cluster id > "noise"
+    def cluster_label(cid):
+        if cid == -1:
+            return "noise"
+        res = agent_results.get(cid, {})
+        if res.get("promote") and res.get("repo_name"):
+            return f"✓ {res['repo_name']} ({res.get('id_pattern','')})"
+        return f"cluster {cid}"
+
+    df["label"] = df["cluster"].apply(cluster_label)
+
+    # Sample IDs for hover (truncate long lists)
+    df["hover_id"] = df["dataset_identifier"].fillna("").astype(str)
+    df["hover_ref"] = df["repository_reference"].fillna("").astype(str)
+
+    fig = px.scatter(
+        df,
+        x="x", y="y",
+        color="label",
+        hover_data={"hover_id": True, "hover_ref": True, "x": False, "y": False},
+        title="FP candidate clusters (UMAP projection)",
+        labels={"hover_id": "identifier", "hover_ref": "repo_reference", "label": "cluster"},
+        opacity=0.7,
+        width=1100, height=750,
+    )
+    fig.update_traces(marker=dict(size=5))
+    fig.write_html(output_path)
+    print(f"  Plot written to {output_path}")
+
+
+# ---------------------------------------------------------------------------
+# Ontology helpers
+# ---------------------------------------------------------------------------
+
+def load_ontology(path: str) -> dict:
+    with open(path) as f:
+        return json.load(f)
+
+
+def get_id_patterns(ontology: dict) -> list[re.Pattern]:
+    patterns = []
+    for repo in ontology["repos"].values():
+        pat = repo.get("id_pattern")
+        if pat:
+            try:
+                patterns.append(re.compile(pat, re.IGNORECASE))
+            except re.error:
+                pass
+    return patterns
+
+
+def matches_any_pattern(identifier: str, patterns: list[re.Pattern]) -> bool:
+    if not isinstance(identifier, str) or not identifier.strip():
+        return False
+    return any(p.search(identifier) for p in patterns)
+
+
+def pattern_examples(ontology: dict) -> dict:
+    """Returns {ontology_key: {repo_name, id_pattern}} for use in agent prompts."""
+    return {
+        key: {"repo_name": data.get("repo_name", key), "id_pattern": data["id_pattern"]}
+        for key, data in ontology["repos"].items()
+        if data.get("id_pattern")
+    }
+
+
+# ---------------------------------------------------------------------------
+# Filtering
+# ---------------------------------------------------------------------------
+
+def filter_candidates(df: pd.DataFrame, patterns: list[re.Pattern]) -> pd.DataFrame:
+    """Keep rows that are genuine unknowns: no resolved repo, no pattern match,
+    but the model did extract a repository name from the article text."""
+    mask = (
+        df["data_repository"].isna()
+        & df["dataset_identifier"].notna()
+        & df["repository_reference"].notna()
+        & ~df["dataset_identifier"].apply(lambda x: matches_any_pattern(x, patterns))
+    )
+    return df[mask].copy().reset_index(drop=True)
+
+
+# ---------------------------------------------------------------------------
+# Embedding
+# ---------------------------------------------------------------------------
+
+def embed_candidates(df: pd.DataFrame) -> np.ndarray:
+    identifiers = df["dataset_identifier"].fillna("").tolist()
+    repo_refs = df["repository_reference"].fillna("").tolist()
+
+    # Char n-gram TF-IDF captures structural prefix patterns (GSE*, PXD*, syn*)
+    tfidf = TfidfVectorizer(analyzer="char_wb", ngram_range=(2, 4), max_features=512)
+    id_vecs = normalize(tfidf.fit_transform(identifiers).toarray())
+
+    # Sentence transformer for free-text repo names
+    model = SentenceTransformer("all-MiniLM-L6-v2")
+    repo_vecs = normalize(model.encode(repo_refs, batch_size=128, show_progress_bar=True))
+
+    return np.hstack([id_vecs, repo_vecs])
+
+
+# ---------------------------------------------------------------------------
+# Clustering
+# ---------------------------------------------------------------------------
+
+def cluster(embeddings: np.ndarray, min_cluster_size: int) -> np.ndarray:
+    clusterer = hdbscan.HDBSCAN(
+        min_cluster_size=min_cluster_size,
+        min_samples=3,
+        metric="euclidean",
+        cluster_selection_method="eom",
+    )
+    return clusterer.fit_predict(embeddings)
+
+
+def build_summaries(df: pd.DataFrame, labels: np.ndarray) -> list[dict]:
+    df = df.copy()
+    df["_cluster"] = labels
+    clustered = df[df["_cluster"] != -1]
+
+    summaries = []
+    for cid, grp in clustered.groupby("_cluster"):
+        n_articles = grp["source_url"].nunique() if "source_url" in grp.columns else len(grp)
+        sample_webpages = (
+            grp["dataset_webpage"].dropna().unique().tolist()[:3]
+            if "dataset_webpage" in grp.columns else []
+        )
+        summaries.append({
+            "cluster_id": int(cid),
+            "n_articles": n_articles,
+            "n_ids": int(grp["dataset_identifier"].nunique()),
+            "top_repo_refs": grp["repository_reference"].value_counts().head(5).to_dict(),
+            "sample_ids": grp["dataset_identifier"].dropna().unique().tolist()[:30],
+            "sample_webpages": sample_webpages,
+        })
+
+    summaries.sort(key=lambda x: x["n_articles"], reverse=True)
+    return summaries
+
+
+def build_group_summaries(df: pd.DataFrame) -> list[dict]:
+    """Group candidates by repository_reference, sorted by article evidence desc."""
+    summaries = []
+    for repo_ref, grp in df.groupby("repository_reference", sort=False):
+        n_articles = grp["source_url"].nunique() if "source_url" in grp.columns else len(grp)
+        sample_webpages = (
+            grp["dataset_webpage"].dropna().unique().tolist()[:3]
+            if "dataset_webpage" in grp.columns else []
+        )
+        summaries.append({
+            "repository_reference": str(repo_ref),
+            "n_articles": n_articles,
+            "n_ids": int(grp["dataset_identifier"].nunique()),
+            "n_webpages": int(grp["dataset_webpage"].dropna().nunique()) if "dataset_webpage" in grp.columns else 0,
+            "sample_ids": grp["dataset_identifier"].dropna().unique().tolist()[:20],
+            "sample_webpages": sample_webpages,
+        })
+    summaries.sort(key=lambda x: x["n_articles"], reverse=True)
+    return summaries
+
+
+# ---------------------------------------------------------------------------
+# Agent review
+# ---------------------------------------------------------------------------
+
+REVIEW_PROMPT = """\
+You are auditing a cluster of dataset identifiers extracted from biomedical articles.
+Decide the correct action for this cluster relative to the ontology.
+
+## Existing ontology entries (key → repo_name + id_pattern):
+{examples}
+
+## Cluster:
+- Distinct articles citing these IDs: {n_articles}
+- Distinct IDs in cluster: {n_ids}
+- Repository names mentioned in articles (extracted verbatim): {repo_refs}
+- Sample identifiers: {sample_ids}
+- Sample dataset webpage URLs: {sample_webpages}
+
+## Instructions:
+Choose exactly one action:
+
+**"promote"** — cluster is a real, previously-unknown repository with a stable ID format
+  not yet in the ontology. Write a new `id_pattern` regex for it.
+
+**"update_pattern"** — cluster is a real repository ALREADY in the ontology, but the sample
+  IDs include variants NOT matched by the existing pattern. Extend the existing pattern with
+  the new alternatives (existing_pattern|new_alternatives). Set `existing_repo_key` to the
+  ontology key (e.g. "geo", "synapse.org") that should be updated.
+
+**"skip"** — cluster is noise, a funding body, too heterogeneous, or has no stable ID format.
+
+CRITICAL consistency rules:
+- If your reason says a repo "should be added" or "is not yet in the ontology" → action MUST be "promote".
+- If your reason says IDs belong to an existing repo but aren't matched → action MUST be "update_pattern".
+- A reason that recommends promotion/update while action is "skip" is a logical error.
+
+Respond with JSON only — no markdown fences:
+{{
+  "action": "promote" | "update_pattern" | "skip",
+  "reason": "...",
+  "repo_name": "...",
+  "existing_repo_key": "...",
+  "id_pattern": "...",
+  "pattern_coverage": 0.0,
+  "over_broad": false,
+  "confidence": "high" | "medium" | "low"
+}}"""
+
+
+def agent_review(client: anthropic.Anthropic, cluster_summary: dict, examples: dict) -> dict:
+    prompt = REVIEW_PROMPT.format(
+        examples=json.dumps(examples, indent=2),
+        n_articles=cluster_summary["n_articles"],
+        n_ids=cluster_summary["n_ids"],
+        repo_refs=json.dumps(cluster_summary["top_repo_refs"], indent=2),
+        sample_ids=json.dumps(cluster_summary["sample_ids"], indent=2),
+        sample_webpages=json.dumps(cluster_summary.get("sample_webpages", []), indent=2),
+    )
+    response = client.messages.create(
+        model="claude-sonnet-4-6",
+        max_tokens=512,
+        messages=[{"role": "user", "content": prompt}],
+    )
+    text = response.content[0].text.strip()
+    try:
+        return json.loads(text)
+    except json.JSONDecodeError:
+        # Tolerate stray whitespace or a single markdown fence
+        cleaned = re.sub(r"^```[a-z]*\n?|```$", "", text, flags=re.MULTILINE).strip()
+        try:
+            return json.loads(cleaned)
+        except json.JSONDecodeError as e:
+            print(f"  [warn] Could not parse agent response: {e}\n  Raw: {text[:200]}")
+            return {"promote": False, "reason": f"parse error: {e}"}
+
+
+# ---------------------------------------------------------------------------
+# Bulk agent review (group pipeline)
+# ---------------------------------------------------------------------------
+
+BULK_REVIEW_PROMPT = """\
+You are enriching a biomedical data repository ontology.
+A literature mining system extracted dataset identifiers from PMC articles.
+The groups below contain identifiers that do NOT match any existing pattern — \
+grouped by the repository name mentioned in the article text.
+
+## Current ontology (key → repo_name + id_pattern):
+{existing_repos}
+
+## Candidate groups (sorted by article evidence, descending):
+{groups}
+
+## Task:
+For each group decide exactly one action:
+
+  "promote"        — real repository NOT in the ontology with a stable, structured ID format.
+                     Write a new id_pattern regex.
+
+  "update_pattern" — repository IS already in the ontology, but some sample IDs are NOT
+                     matched by the existing pattern. Extend the pattern with new alternatives.
+                     Set existing_repo_key to the exact ontology key (e.g. "geo").
+                     Provide the FULL new merged pattern (existing_pattern|new_alternatives).
+
+  "skip"           — noise, heterogeneous, funding body / grant numbers,
+                     no stable machine-readable ID format, or insufficient evidence.
+
+Rules:
+- If your reasoning says a repo "should be added" or "is not yet in the ontology" → action MUST be "promote".
+- If your reasoning says IDs belong to an existing repo but aren't matched → action MUST be "update_pattern".
+- Funding bodies (NIH, NSF, national foundations) are NEVER repositories — always skip.
+- Over-broad patterns (plain integers, single words) must never be promoted.
+- Groups with only 1 article need a very distinctive ID format to justify promotion.
+
+Return a JSON array — one object per group, same order as input — no markdown fences:
+[
+  {{
+    "repository_reference": "...",
+    "action": "promote" | "update_pattern" | "skip",
+    "repo_name": "...",
+    "existing_repo_key": "...",
+    "id_pattern": "...",
+    "over_broad": false,
+    "confidence": "high" | "medium" | "low",
+    "reason": "..."
+  }},
+  ...
+]"""
+
+
+def bulk_agent_review(
+    client: anthropic.Anthropic,
+    group_summaries: list[dict],
+    examples: dict,
+) -> list[dict]:
+    prompt = BULK_REVIEW_PROMPT.format(
+        existing_repos=json.dumps(examples, indent=2),
+        groups=json.dumps(group_summaries, indent=2),
+    )
+    response = client.messages.create(
+        model="claude-sonnet-4-6",
+        max_tokens=4096,
+        messages=[{"role": "user", "content": prompt}],
+    )
+    text = response.content[0].text.strip()
+    try:
+        return json.loads(text)
+    except json.JSONDecodeError:
+        cleaned = re.sub(r"^```[a-z]*\n?|```$", "", text, flags=re.MULTILINE).strip()
+        try:
+            return json.loads(cleaned)
+        except json.JSONDecodeError as e:
+            print(f"  [warn] Could not parse bulk response: {e}\n  Raw: {text[:400]}")
+            return []
+
+
+# ---------------------------------------------------------------------------
+# Webpage URL population
+# ---------------------------------------------------------------------------
+
+def update_webpage_urls(ontology: dict, df: pd.DataFrame) -> int:
+    """For repos missing dataset_webpage_url_ptr, populate from matched rows in df.
+    Returns number of repos updated."""
+    if "dataset_webpage" not in df.columns or "data_repository" not in df.columns:
+        return 0
+    updated = 0
+    for key, repo in ontology["repos"].items():
+        if repo.get("dataset_webpage_url_ptr"):
+            continue
+        matched = df[df["data_repository"] == key]["dataset_webpage"].dropna()
+        if matched.empty:
+            # Fallback: match by id_pattern against dataset_identifier
+            pat_str = repo.get("id_pattern")
+            if pat_str:
+                try:
+                    pat = re.compile(pat_str, re.IGNORECASE)
+                    mask = df["dataset_identifier"].fillna("").apply(
+                        lambda x: bool(pat.search(str(x)))
+                    )
+                    matched = df[mask]["dataset_webpage"].dropna()
+                except re.error:
+                    pass
+        if matched.empty:
+            continue
+        best_url = matched.value_counts().idxmax()
+        repo["dataset_webpage_url_ptr"] = best_url
+        print(f"  [webpage] {repo.get('repo_name', key)}: {best_url}")
+        updated += 1
+    return updated
+
+
+# ---------------------------------------------------------------------------
+# Self-verification
+# ---------------------------------------------------------------------------
+
+def verify(pattern_str: str, cluster_ids: list[str], all_ids: list[str]) -> tuple[float, float]:
+    """Returns (coverage_on_cluster, false_match_rate_on_non_cluster)."""
+    try:
+        pat = re.compile(pattern_str, re.IGNORECASE)
+    except re.error as e:
+        print(f"  [warn] Invalid regex '{pattern_str}': {e}")
+        return 0.0, 1.0
+
+    cluster_set = set(cluster_ids)
+    coverage = sum(1 for x in cluster_ids if pat.search(str(x))) / max(len(cluster_ids), 1)
+
+    non_cluster = [x for x in all_ids if x not in cluster_set][:2000]
+    false_rate = (
+        sum(1 for x in non_cluster if pat.search(str(x))) / len(non_cluster)
+        if non_cluster else 0.0
+    )
+    return coverage, false_rate
+
+
+# ---------------------------------------------------------------------------
+# Main
+# ---------------------------------------------------------------------------
+
+def main():
+    parser = argparse.ArgumentParser(description="Enrich the data-repos ontology from batch FP signal")
+    parser.add_argument("--citations", required=True, nargs="+", metavar="PATH",
+                        help="Path(s) to dataset_citations.csv. "
+                             "Pass multiple paths to merge across iterations (cumulative mode).")
+    parser.add_argument("--current-ontology", required=True,
+                        help="Current ontology JSON (seed or previous iteration)")
+    parser.add_argument("--output", required=True,
+                        help="Path to write the enriched ontology JSON")
+    parser.add_argument("--pipeline", choices=["cluster", "group"], default="cluster",
+                        help="'cluster': embed→HDBSCAN→per-cluster Claude (default); "
+                             "'group': group by repo_reference→Claude in batches")
+    parser.add_argument("--group-batch-size", type=int, default=10,
+                        help="Groups per Claude call in group pipeline (default: 10, 1 = one-by-one)")
+    parser.add_argument("--min-cluster-size", type=int, default=2,
+                        help="Min articles to review a cluster/group (default: 2)")
+    parser.add_argument("--coverage-threshold", type=float, default=0.5,
+                        help="Min regex coverage on cluster/group to accept (default: 0.5)")
+    parser.add_argument("--false-rate-threshold", type=float, default=0.05,
+                        help="Max false-match rate on non-cluster IDs to accept (default: 0.05)")
+    parser.add_argument("--plot", default=None, metavar="PATH",
+                        help="Write interactive cluster plot (cluster pipeline only; requires umap-learn + plotly)")
+    parser.add_argument("--log", default=None, metavar="PATH",
+                        help="Append all stdout output to this log file in addition to the console")
+    args = parser.parse_args()
+
+    if args.log:
+        log_path = Path(args.log)
+        log_path.parent.mkdir(parents=True, exist_ok=True)
+        log_file = open(log_path, "a")
+        sys.stdout = _Tee(sys.__stdout__, log_file)
+        sys.stderr = _Tee(sys.__stderr__, log_file)
+
+    # --- Load ---
+    print("Loading citations...")
+    if len(args.citations) == 1:
+        df = pd.read_csv(args.citations[0])
+        print(f"  {len(df)} rows from {args.citations[0]}")
+    else:
+        print(f"  Merging {len(args.citations)} citation files (cumulative)...")
+        dfs = []
+        for p in args.citations:
+            try:
+                _df = pd.read_csv(p)
+                dfs.append(_df)
+                print(f"    {len(_df):>6} rows  {p}")
+            except FileNotFoundError:
+                print(f"    [warn] {p} not found — skipping")
+        if not dfs:
+            print("No citation files loaded — aborting.")
+            sys.exit(1)
+        df = pd.concat(dfs, ignore_index=True)
+        before = len(df)
+        dedup_cols = [c for c in ["dataset_identifier", "source_url"] if c in df.columns]
+        if dedup_cols:
+            df = df.drop_duplicates(subset=dedup_cols, keep="first").reset_index(drop=True)
+        print(f"  Merged total: {len(df)} rows ({before - len(df)} duplicates dropped)")
+
+    ontology = load_ontology(args.current_ontology)
+    patterns = get_id_patterns(ontology)
+    examples = pattern_examples(ontology)
+    print(f"  Ontology has {len(ontology['repos'])} repos, {len(patterns)} id_patterns")
+
+    # --- Filter ---
+    print("\nFiltering FP candidates...")
+    candidates = filter_candidates(df, patterns)
+    print(f"  {len(candidates)} candidates (from {len(df)} total rows, "
+          f"{len(df) - len(candidates)} filtered out)")
+
+    if candidates.empty:
+        print("No candidates — ontology unchanged.")
+        import shutil; shutil.copy(args.current_ontology, args.output)
+        return
+
+    all_ids = candidates["dataset_identifier"].dropna().tolist()
+
+    # --- Webpage URLs for existing repos ---
+    print("\nUpdating webpage URLs for existing repos...")
+    n_wp = update_webpage_urls(ontology, df)
+    print(f"  {n_wp} repos updated with dataset_webpage_url_ptr")
+
+    new_entries: dict[str, dict] = {}
+    pattern_updates: dict[str, str] = {}
+    embeddings = labels = agent_results = None  # cluster pipeline only
+
+    # ------------------------------------------------------------------ #
+    # Pipeline A — embed → HDBSCAN → per-cluster Claude                   #
+    # ------------------------------------------------------------------ #
+    if args.pipeline == "cluster":
+        print("\nEmbedding candidates...")
+        embeddings = embed_candidates(candidates)
+
+        print("\nClustering...")
+        labels = cluster(embeddings, args.min_cluster_size)
+        n_clusters = len(set(labels)) - (1 if -1 in labels else 0)
+        n_noise = int((labels == -1).sum())
+        print(f"  {n_clusters} clusters found, {n_noise} noise points discarded")
+
+        if n_clusters == 0:
+            print("No clusters formed — ontology unchanged.")
+            import shutil; shutil.copy(args.current_ontology, args.output)
+            return
+
+        summaries = build_summaries(candidates, labels)
+        before_halluc = len(summaries)
+        summaries = [s for s in summaries if s["n_ids"] > 1]
+        if before_halluc - len(summaries):
+            print(f"  Hallucination filter: skipped {before_halluc - len(summaries)} clusters with single repeated identifier")
+        client = anthropic.Anthropic()
+        agent_results = {}
+
+        print(f"\nAgent reviewing {len(summaries)} clusters (ranked by #articles)...\n")
+        for i, summary in enumerate(summaries):
+            top_repo = list(summary["top_repo_refs"].keys())[:1]
+
+            print(f"[{i+1}/{len(summaries)}] cluster={summary['cluster_id']} "
+                  f"articles={summary['n_articles']} ids={summary['n_ids']} "
+                  f"top_ref={top_repo}")
+
+            result = agent_review(client, summary, examples)     
+            agent_results[summary["cluster_id"]] = result
+
+            action = result.get("action") or ("promote" if result.get("promote") else "skip")
+            reason = result.get("reason", "")
+            pattern_str = (result.get("id_pattern") or "").strip()
+            repo_name = (result.get("repo_name") or "").strip()
+            confidence = result.get("confidence", "?")
+            sample_ids = summary["sample_ids"]
+
+            if action == "skip":
+                print(f"  → skip: {reason}")
+                continue
+
+            if action == "update_pattern":
+                existing_key = (result.get("existing_repo_key") or "").strip()
+                if not existing_key or existing_key not in ontology["repos"]:
+                    print(f"  → skip: update_pattern but key '{existing_key}' not found")
+                    continue
+                if not pattern_str:
+                    print(f"  → skip: empty id_pattern")
+                    continue
+                coverage, false_rate = verify(pattern_str, sample_ids, all_ids)
+                existing_name = ontology["repos"][existing_key].get("repo_name", existing_key)
+                print(f"  → update_pattern: '{existing_name}' | {pattern_str} | "
+                      f"coverage={coverage:.0%} false_rate={false_rate:.2%}")
+                if coverage < args.coverage_threshold:
+                    print(f"  ✗ rejected: coverage {coverage:.0%} < {args.coverage_threshold:.0%}"); continue
+                if false_rate > args.false_rate_threshold:
+                    print(f"  ✗ rejected: false_rate {false_rate:.2%} > {args.false_rate_threshold:.2%}"); continue
+                pattern_updates[existing_key] = pattern_str
+                print(f"  ✓ queued")
+                continue
+
+            # promote
+            if not pattern_str or not repo_name:
+                print(f"  → skip: empty pattern or name"); continue
+            coverage, false_rate = verify(pattern_str, sample_ids, all_ids)
+            print(f"  → promote: '{repo_name}' | {pattern_str} | "
+                  f"coverage={coverage:.0%} false_rate={false_rate:.2%} confidence={confidence}")
+            if coverage < args.coverage_threshold:
+                print(f"  ✗ rejected: coverage {coverage:.0%} < {args.coverage_threshold:.0%}"); continue
+            if false_rate > args.false_rate_threshold:
+                print(f"  ✗ rejected: false_rate {false_rate:.2%} > {args.false_rate_threshold:.2%}"); continue
+            if result.get("over_broad"):
+                print(f"  ✗ rejected: over-broad"); continue
+            entry_key = repo_name.lower().replace(" ", "_")
+            mask = df["dataset_identifier"].isin(sample_ids)
+            webpage_url = (
+                df[mask]["dataset_webpage"].dropna().value_counts().idxmax()
+                if "dataset_webpage" in df.columns and mask.any() and df[mask]["dataset_webpage"].dropna().any()
+                else None
+            )
+            new_entries[entry_key] = {
+                "repo_name": repo_name, "id_pattern": pattern_str, "_sample_ids": sample_ids,
+                **({"dataset_webpage_url_ptr": webpage_url} if webpage_url else {}),
+            }
+            print(f"  ✓ added")
+
+    # ------------------------------------------------------------------ #
+    # Pipeline B — group by repo_reference → single bulk Claude call      #
+    # ------------------------------------------------------------------ #
+    else:
+        print("\nGrouping by repository_reference...")
+        summaries = build_group_summaries(candidates)
+        before = len(summaries)
+        summaries = [s for s in summaries if s["n_articles"] >= args.min_cluster_size]
+        print(f"  {len(summaries)} groups (filtered {before - len(summaries)} below min_cluster_size={args.min_cluster_size})")
+
+        # Hallucination filter: 1 unique ID repeated across many articles is a model artifact
+        before_halluc = len(summaries)
+        summaries = [s for s in summaries if s["n_ids"] > 1]
+        if before_halluc - len(summaries):
+            print(f"  {len(summaries)} groups after hallucination filter "
+                  f"({before_halluc - len(summaries)} skipped: single repeated identifier):")
+
+        print(f"  Groups to review:")
+        for s in summaries:
+            print(f"    {s['repository_reference']!r:50s}  articles={s['n_articles']}  ids={s['n_ids']}  webpages={s['n_webpages']}")
+
+        client = anthropic.Anthropic()
+        bs = args.group_batch_size
+        n_batches = (len(summaries) + bs - 1) // bs
+        print(f"\nReviewing {len(summaries)} groups in {n_batches} batch(es) of up to {bs}...")
+
+        decisions = []
+        for b in range(n_batches):
+            batch = summaries[b * bs:(b + 1) * bs]
+            refs = [s["repository_reference"] for s in batch]
+            print(f"\n  Batch {b+1}/{n_batches}: {refs}")
+            batch_decisions = bulk_agent_review(client, batch, examples)
+            decisions.extend(batch_decisions)
+
+        if not decisions:
+            print("  [warn] No decisions returned — ontology unchanged.")
+            import shutil; shutil.copy(args.current_ontology, args.output)
+            return
+
+        summary_by_ref = {s["repository_reference"]: s for s in summaries}
+        print()
+        for dec in decisions:
+            ref = dec.get("repository_reference", "")
+            action = dec.get("action", "skip")
+            reason = dec.get("reason", "")
+            pattern_str = (dec.get("id_pattern") or "").strip()
+            repo_name = (dec.get("repo_name") or "").strip()
+            confidence = dec.get("confidence", "?")
+            summary = summary_by_ref.get(ref, {})
+            sample_ids = summary.get("sample_ids", [])
+
+            print(f"[{ref}]  action={action}  confidence={confidence}")
+
+            if action == "skip":
+                print(f"  → skip: {reason}")
+                continue
+
+            if action == "update_pattern":
+                existing_key = (dec.get("existing_repo_key") or "").strip()
+                if not existing_key or existing_key not in ontology["repos"]:
+                    print(f"  → skip: update_pattern but key '{existing_key}' not found"); continue
+                if not pattern_str:
+                    print(f"  → skip: empty id_pattern"); continue
+                coverage, false_rate = verify(pattern_str, sample_ids, all_ids)
+                existing_name = ontology["repos"][existing_key].get("repo_name", existing_key)
+                print(f"  → update_pattern '{existing_name}': {pattern_str} | "
+                      f"coverage={coverage:.0%}  false_rate={false_rate:.2%}")
+                if coverage < args.coverage_threshold:
+                    print(f"  ✗ rejected: coverage {coverage:.0%} < {args.coverage_threshold:.0%}"); continue
+                if false_rate > args.false_rate_threshold:
+                    print(f"  ✗ rejected: false_rate {false_rate:.2%} > {args.false_rate_threshold:.2%}"); continue
+                pattern_updates[existing_key] = pattern_str
+                print(f"  ✓ queued")
+                continue
+
+            # promote
+            if not pattern_str or not repo_name:
+                print(f"  → skip: empty pattern or name"); continue
+            coverage, false_rate = verify(pattern_str, sample_ids, all_ids)
+            print(f"  → promote '{repo_name}': {pattern_str} | "
+                  f"coverage={coverage:.0%}  false_rate={false_rate:.2%}")
+            if coverage < args.coverage_threshold:
+                print(f"  ✗ rejected: coverage {coverage:.0%} < {args.coverage_threshold:.0%}"); continue
+            if false_rate > args.false_rate_threshold:
+                print(f"  ✗ rejected: false_rate {false_rate:.2%} > {args.false_rate_threshold:.2%}"); continue
+            if dec.get("over_broad"):
+                print(f"  ✗ rejected: over-broad"); continue
+            entry_key = repo_name.lower().replace(" ", "_")
+            webpage_url = (summary.get("sample_webpages") or [None])[0]
+            new_entries[entry_key] = {
+                "repo_name": repo_name, "id_pattern": pattern_str, "_sample_ids": sample_ids,
+                **({"dataset_webpage_url_ptr": webpage_url} if webpage_url else {}),
+            }
+            print(f"  ✓ added")
+
+    # --- Apply pattern updates to existing repos ---
+    for key, new_pat in pattern_updates.items():
+        ontology["repos"][key]["id_pattern"] = new_pat
+        print(f"  [updated] {ontology['repos'][key].get('repo_name', key)}: {new_pat}")
+
+    # --- Dedup: exact-match + intra-batch superset check ---
+    seen_patterns: dict[str, str] = {
+        repo.get("id_pattern"): repo.get("repo_name", key)
+        for key, repo in ontology["repos"].items()
+        if repo.get("id_pattern")
+    }
+    # First pass: exact-match dedup against ontology
+    deduped: dict[str, dict] = {}
+    for key, entry in new_entries.items():
+        pat = entry["id_pattern"]
+        if pat in seen_patterns:
+            print(f"  [dedup] '{entry['repo_name']}' has same pattern as '{seen_patterns[pat]}' — skipped")
+        else:
+            seen_patterns[pat] = entry["repo_name"]
+            deduped[key] = entry
+
+    # Second pass: intra-batch superset check (catches UniProt-style P ⊂ Q pairs)
+    new_keys = list(deduped.keys())
+    subsumed: set[str] = set()
+    for i, kA in enumerate(new_keys):
+        if kA in subsumed:
+            continue
+        for kB in new_keys[i + 1:]:
+            if kB in subsumed:
+                continue
+            try:
+                patB = re.compile(deduped[kB]["id_pattern"], re.IGNORECASE)
+            except re.error:
+                continue
+            ids_A = deduped[kA].get("_sample_ids", [])
+            if not ids_A:
+                continue
+            overlap = sum(1 for x in ids_A if patB.search(str(x))) / len(ids_A)
+            if overlap >= 0.8:
+                print(f"  [dedup] '{deduped[kA]['repo_name']}' subsumed by "
+                      f"'{deduped[kB]['repo_name']}' ({overlap:.0%} overlap) — dropped")
+                subsumed.add(kA)
+                break
+    new_entries = {k: v for k, v in deduped.items() if k not in subsumed}
+
+    # Remove internal field before writing
+    for entry in new_entries.values():
+        entry.pop("_sample_ids", None)
+
+
+    # --- Plot (cluster pipeline only) ---
+    if args.plot and args.pipeline == "cluster" and embeddings is not None:
+        plot_clusters(embeddings, labels, candidates, agent_results, args.plot)
+    elif args.plot and args.pipeline == "group":
+        print("[plot] --plot requires --pipeline cluster — skipping.")
+
+    # --- Write ---
+    ontology["repos"].update(new_entries)
+    output_path = Path(args.output)
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    with open(output_path, "w") as f:
+        json.dump(ontology, f, indent=2)
+
+    print(f"\n{'='*60}")
+    print(f"Done. {len(new_entries)} new repos added, {len(pattern_updates)} patterns updated.")
+    for entry in new_entries.values():
+        print(f"  + {entry['repo_name']}: {entry['id_pattern']}")
+    for key in pattern_updates:
+        print(f"  ~ {ontology['repos'][key].get('repo_name', key)}: {pattern_updates[key]}")
+    print(f"Ontology written to {args.output}")
+
+
+if __name__ == "__main__":
+    main()
