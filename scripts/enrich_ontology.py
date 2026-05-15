@@ -119,6 +119,89 @@ def plot_clusters(
     print(f"  Plot written to {output_path}")
 
 
+def plot_groups(
+    summaries: list[dict],
+    decisions: list[dict],
+    n_hallucination_filtered: int,
+    n_below_min: int,
+    output_path: str,
+) -> None:
+    """Bar chart of group sizes colored by agent decision."""
+    if not _PLOT_AVAILABLE:
+        print("[plot] plotly not installed — skipping plot.")
+        return
+
+    decision_map = {d["repository_reference"]: d for d in decisions}
+
+    COLOR = {
+        "promote":        "#2ecc71",
+        "update_pattern": "#f39c12",
+        "skip":           "#95a5a6",
+        "filtered_hallucination": "#e74c3c",
+        "filtered_min":   "#bdc3c7",
+        "no_decision":    "#d0d0d0",
+    }
+
+    rows = []
+    for s in summaries:
+        ref = s["repository_reference"]
+        dec = decision_map.get(ref, {})
+        action = dec.get("action", "no_decision")
+        rows.append({
+            "repository_reference": ref,
+            "n_articles": s["n_articles"],
+            "n_ids": s["n_ids"],
+            "n_webpages": s.get("n_webpages", 0),
+            "action": action,
+            "repo_name": dec.get("repo_name") or ref,
+            "id_pattern": dec.get("id_pattern") or "",
+            "reason": dec.get("reason") or "",
+            "color": COLOR.get(action, "#d0d0d0"),
+        })
+
+    rows.sort(key=lambda x: x["n_articles"], reverse=True)
+    plot_df = pd.DataFrame(rows)
+
+    import plotly.graph_objects as go
+    fig = go.Figure()
+    for action, color in COLOR.items():
+        sub = plot_df[plot_df["action"] == action]
+        if sub.empty:
+            continue
+        fig.add_trace(go.Bar(
+            x=sub["repository_reference"],
+            y=sub["n_articles"],
+            name=action,
+            marker_color=color,
+            customdata=sub[["n_ids", "n_webpages", "repo_name", "id_pattern", "reason"]].values,
+            hovertemplate=(
+                "<b>%{x}</b><br>"
+                "articles=%{y}  ids=%{customdata[0]}  webpages=%{customdata[1]}<br>"
+                "repo_name=%{customdata[2]}<br>"
+                "pattern=%{customdata[3]}<br>"
+                "reason=%{customdata[4]}<extra></extra>"
+            ),
+        ))
+
+    title = (
+        f"Group pipeline — {len(summaries)} groups reviewed  |  "
+        f"{n_hallucination_filtered} hallucination-filtered  |  "
+        f"{n_below_min} below min_cluster_size"
+    )
+    fig.update_layout(
+        title=title,
+        xaxis_title="repository_reference",
+        yaxis_title="n_articles",
+        barmode="stack",
+        xaxis_tickangle=-45,
+        width=max(900, len(rows) * 22),
+        height=550,
+        legend_title="agent decision",
+    )
+    fig.write_html(output_path)
+    print(f"  Plot written to {output_path}")
+
+
 # ---------------------------------------------------------------------------
 # Ontology helpers
 # ---------------------------------------------------------------------------
@@ -406,41 +489,6 @@ def bulk_agent_review(
 
 
 # ---------------------------------------------------------------------------
-# Webpage URL population
-# ---------------------------------------------------------------------------
-
-def update_webpage_urls(ontology: dict, df: pd.DataFrame) -> int:
-    """For repos missing dataset_webpage_url_ptr, populate from matched rows in df.
-    Returns number of repos updated."""
-    if "dataset_webpage" not in df.columns or "data_repository" not in df.columns:
-        return 0
-    updated = 0
-    for key, repo in ontology["repos"].items():
-        if repo.get("dataset_webpage_url_ptr"):
-            continue
-        matched = df[df["data_repository"] == key]["dataset_webpage"].dropna()
-        if matched.empty:
-            # Fallback: match by id_pattern against dataset_identifier
-            pat_str = repo.get("id_pattern")
-            if pat_str:
-                try:
-                    pat = re.compile(pat_str, re.IGNORECASE)
-                    mask = df["dataset_identifier"].fillna("").apply(
-                        lambda x: bool(pat.search(str(x)))
-                    )
-                    matched = df[mask]["dataset_webpage"].dropna()
-                except re.error:
-                    pass
-        if matched.empty:
-            continue
-        best_url = matched.value_counts().idxmax()
-        repo["dataset_webpage_url_ptr"] = best_url
-        print(f"  [webpage] {repo.get('repo_name', key)}: {best_url}")
-        updated += 1
-    return updated
-
-
-# ---------------------------------------------------------------------------
 # Self-verification
 # ---------------------------------------------------------------------------
 
@@ -493,6 +541,13 @@ def main():
                         help="Append all stdout output to this log file in addition to the console")
     args = parser.parse_args()
 
+    import os
+    if not os.environ.get("ANTHROPIC_API_KEY") and Path(".env").exists():
+        for line in Path(".env").read_text().splitlines():
+            if line.startswith("ANTHROPIC_API_KEY="):
+                os.environ["ANTHROPIC_API_KEY"] = line.split("=", 1)[1].strip()
+                break
+
     if args.log:
         log_path = Path(args.log)
         log_path.parent.mkdir(parents=True, exist_ok=True)
@@ -542,11 +597,6 @@ def main():
         return
 
     all_ids = candidates["dataset_identifier"].dropna().tolist()
-
-    # --- Webpage URLs for existing repos ---
-    print("\nUpdating webpage URLs for existing repos...")
-    n_wp = update_webpage_urls(ontology, df)
-    print(f"  {n_wp} repos updated with dataset_webpage_url_ptr")
 
     new_entries: dict[str, dict] = {}
     pattern_updates: dict[str, str] = {}
@@ -653,14 +703,16 @@ def main():
         summaries = build_group_summaries(candidates)
         before = len(summaries)
         summaries = [s for s in summaries if s["n_articles"] >= args.min_cluster_size]
-        print(f"  {len(summaries)} groups (filtered {before - len(summaries)} below min_cluster_size={args.min_cluster_size})")
+        n_below_min = before - len(summaries)
+        print(f"  {len(summaries)} groups (filtered {n_below_min} below min_cluster_size={args.min_cluster_size})")
 
         # Hallucination filter: 1 unique ID repeated across many articles is a model artifact
         before_halluc = len(summaries)
         summaries = [s for s in summaries if s["n_ids"] > 1]
-        if before_halluc - len(summaries):
+        n_hallucination_filtered = before_halluc - len(summaries)
+        if n_hallucination_filtered:
             print(f"  {len(summaries)} groups after hallucination filter "
-                  f"({before_halluc - len(summaries)} skipped: single repeated identifier):")
+                  f"({n_hallucination_filtered} skipped: single repeated identifier):")
 
         print(f"  Groups to review:")
         for s in summaries:
@@ -790,11 +842,11 @@ def main():
         entry.pop("_sample_ids", None)
 
 
-    # --- Plot (cluster pipeline only) ---
+    # --- Plot ---
     if args.plot and args.pipeline == "cluster" and embeddings is not None:
         plot_clusters(embeddings, labels, candidates, agent_results, args.plot)
     elif args.plot and args.pipeline == "group":
-        print("[plot] --plot requires --pipeline cluster — skipping.")
+        plot_groups(summaries, decisions, n_hallucination_filtered, n_below_min, args.plot)
 
     # --- Write ---
     ontology["repos"].update(new_entries)

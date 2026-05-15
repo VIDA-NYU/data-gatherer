@@ -24,6 +24,12 @@
 
 set -euo pipefail
 
+# Ensure ANTHROPIC_API_KEY is exported for subprocess (enrich_ontology.py)
+if [[ -f ".env" ]] && [[ -z "${ANTHROPIC_API_KEY:-}" ]]; then
+    export ANTHROPIC_API_KEY=$(grep -E "^ANTHROPIC_API_KEY=" .env | cut -d= -f2-)
+fi
+: "${ANTHROPIC_API_KEY:?ANTHROPIC_API_KEY is not set — set it or add it to .env}"
+
 # --- Defaults ---
 ITERATIONS=2
 START_ITER=1
@@ -228,11 +234,11 @@ fi
 # Split input and upload slices once
 split_and_upload_input
 
-# Upload seed ontology to S3
+# Upload starting ontology to S3 (prev iteration when resuming, seed on fresh start)
 BUCKET=$(kubectl get secret data-gatherer-s3-secret -n "$NAMESPACE" \
              -o jsonpath='{.data.S3_OUTPUT_BUCKET}' | base64 -d)
-echo "[loop] Uploading seed ontology to S3..."
-aws s3 cp "$SEED_ONTOLOGY" "s3://${BUCKET}/ontology/open_bio_data_repos.json"
+echo "[loop] Uploading ontology to S3: $PREV_ONTOLOGY"
+aws s3 cp "$PREV_ONTOLOGY" "s3://${BUCKET}/ontology/open_bio_data_repos.json"
 
 # Clean S3 output before first iteration if requested
 if [[ "$CLEAN" -eq 1 ]]; then
