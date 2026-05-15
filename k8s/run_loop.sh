@@ -26,6 +26,7 @@ set -euo pipefail
 
 # --- Defaults ---
 ITERATIONS=2
+START_ITER=1
 N_GPUS=1
 MAX_ARTICLES_PER_SLICE=250
 INPUT_FILE="article_ids_test_500.csv"
@@ -50,6 +51,8 @@ while [[ $# -gt 0 ]]; do
         --input)                   INPUT_FILE="$2";              shift 2 ;;
         --output-dir)              OUTPUT_BASE="$2";             shift 2 ;;
         --node)                    NODE_NAME="$2";               shift 2 ;;
+        --seed-ontology)           SEED_ONTOLOGY="$2";           shift 2 ;;
+        --start-iteration)         START_ITER="$2";              shift 2 ;;
         --clean)                   CLEAN=1;                      shift   ;;
         --cumulative)              CUMULATIVE=1;                 shift   ;;
         --plot)                    PLOT_FLAG="--plot";           shift   ;;
@@ -215,7 +218,12 @@ PYEOF
 # ============================================================
 # MAIN LOOP
 # ============================================================
-PREV_ONTOLOGY="$SEED_ONTOLOGY"
+if [[ "$START_ITER" -gt 1 ]]; then
+    PREV_ONTOLOGY="$OUTPUT_BASE/iter$((START_ITER - 1))/open_bio_data_repos_v$((START_ITER - 1)).json"
+    echo "[loop] Resuming from iteration $START_ITER — using ontology: $PREV_ONTOLOGY"
+else
+    PREV_ONTOLOGY="$SEED_ONTOLOGY"
+fi
 
 # Split input and upload slices once
 split_and_upload_input
@@ -235,7 +243,7 @@ if [[ "$CLEAN" -eq 1 ]]; then
     echo "[loop] S3 output cleared."
 fi
 
-for ITER in $(seq 1 "$ITERATIONS"); do
+for ITER in $(seq "$START_ITER" "$ITERATIONS"); do
     echo ""
     echo "=========================================="
     echo "  ITERATION $ITER / $ITERATIONS  ($N_GPUS parallel jobs)"

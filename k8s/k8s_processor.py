@@ -37,6 +37,8 @@ def setup_logging(output_dir):
     fh = logging.FileHandler(os.path.join(output_dir, "run.log"), mode="a")
     fh.setFormatter(fmt)
     root.addHandler(fh)
+    logging.getLogger("httpx").setLevel(logging.WARNING)
+    logging.getLogger("httpcore").setLevel(logging.WARNING)
 
 logger = logging.getLogger(__name__)
 
