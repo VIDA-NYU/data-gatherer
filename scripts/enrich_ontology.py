@@ -446,6 +446,12 @@ Rules:
 - Over-broad patterns (plain integers, single words) must never be promoted.
 - Groups with only 1 article need a very distinctive ID format to justify promotion.
 
+For "promote" actions, also set regex_match_eligible:
+- true  — the id_pattern starts with a repo-specific alphabetic prefix that makes false matches
+           in arbitrary text essentially impossible (e.g. PXD, GSE, syn, MTBLS, NCT, GLDS).
+- false — the pattern relies on character classes or generic formats that could match
+           unrelated text (e.g. plain integers, single uppercase letters, short alphanumeric codes).
+
 Return a JSON array — one object per group, same order as input — no markdown fences:
 [
   {{
@@ -454,6 +460,7 @@ Return a JSON array — one object per group, same order as input — no markdow
     "repo_name": "...",
     "existing_repo_key": "...",
     "id_pattern": "...",
+    "regex_match_eligible": true,
     "over_broad": false,
     "confidence": "high" | "medium" | "low",
     "reason": "..."
@@ -529,8 +536,10 @@ def main():
                              "'group': group by repo_reference→Claude in batches")
     parser.add_argument("--group-batch-size", type=int, default=10,
                         help="Groups per Claude call in group pipeline (default: 10, 1 = one-by-one)")
-    parser.add_argument("--min-cluster-size", type=int, default=2,
-                        help="Min articles to review a cluster/group (default: 2)")
+    parser.add_argument("--min-cluster-size", type=int, default=5,
+                        help="Min distinct articles to review a cluster/group (default: 5)")
+    parser.add_argument("--min-ids", type=int, default=3,
+                        help="Min distinct identifiers to review a group (default: 3)")
     parser.add_argument("--coverage-threshold", type=float, default=0.5,
                         help="Min regex coverage on cluster/group to accept (default: 0.5)")
     parser.add_argument("--false-rate-threshold", type=float, default=0.05,
@@ -678,10 +687,12 @@ def main():
                   f"coverage={coverage:.0%} false_rate={false_rate:.2%} confidence={confidence}")
             if coverage < args.coverage_threshold:
                 print(f"  ✗ rejected: coverage {coverage:.0%} < {args.coverage_threshold:.0%}"); continue
-            if false_rate > args.false_rate_threshold:
-                print(f"  ✗ rejected: false_rate {false_rate:.2%} > {args.false_rate_threshold:.2%}"); continue
             if result.get("over_broad"):
                 print(f"  ✗ rejected: over-broad"); continue
+            regex_eligible = bool(result.get("regex_match_eligible", False))
+            if false_rate > args.false_rate_threshold:
+                regex_eligible = False
+                print(f"  [warn] false_rate {false_rate:.2%} > {args.false_rate_threshold:.2%} → regex_match_eligible forced False")
             entry_key = repo_name.lower().replace(" ", "_")
             mask = df["dataset_identifier"].isin(sample_ids)
             webpage_url = (
@@ -690,10 +701,13 @@ def main():
                 else None
             )
             new_entries[entry_key] = {
-                "repo_name": repo_name, "id_pattern": pattern_str, "_sample_ids": sample_ids,
+                "repo_name": repo_name,
+                "id_pattern": pattern_str,
+                "regex_match_eligible": regex_eligible,
+                "_sample_ids": sample_ids,
                 **({"dataset_webpage_url_ptr": webpage_url} if webpage_url else {}),
             }
-            print(f"  ✓ added")
+            print(f"  ✓ added  regex_match_eligible={regex_eligible}")
 
     # ------------------------------------------------------------------ #
     # Pipeline B — group by repo_reference → single bulk Claude call      #
@@ -702,17 +716,48 @@ def main():
         print("\nGrouping by repository_reference...")
         summaries = build_group_summaries(candidates)
         before = len(summaries)
-        summaries = [s for s in summaries if s["n_articles"] >= args.min_cluster_size]
+        summaries = [
+            s for s in summaries
+            if s["n_articles"] >= args.min_cluster_size and s["n_ids"] >= args.min_ids
+        ]
         n_below_min = before - len(summaries)
-        print(f"  {len(summaries)} groups (filtered {n_below_min} below min_cluster_size={args.min_cluster_size})")
+        n_hallucination_filtered = 0  # folded into n_below_min
+        print(f"  {len(summaries)} groups after filtering "
+              f"({n_below_min} dropped: n_articles<{args.min_cluster_size} or n_ids<{args.min_ids})")
 
-        # Hallucination filter: 1 unique ID repeated across many articles is a model artifact
-        before_halluc = len(summaries)
-        summaries = [s for s in summaries if s["n_ids"] > 1]
-        n_hallucination_filtered = before_halluc - len(summaries)
-        if n_hallucination_filtered:
-            print(f"  {len(summaries)} groups after hallucination filter "
-                  f"({n_hallucination_filtered} skipped: single repeated identifier):")
+        # Drop groups whose repository_reference matches a known repo name AND whose
+        # sample IDs are already well-covered by that repo's id_pattern.
+        # Groups where the name matches but coverage is low are kept as update_pattern candidates.
+        def _covered_by_known_repo(summary: dict) -> bool:
+            ref = summary["repository_reference"].lower()
+            for repo in ontology["repos"].values():
+                known = repo.get("repo_name", "").lower()
+                if not known:
+                    continue
+                if known not in ref and ref not in known:
+                    continue
+                pat_str = repo.get("id_pattern")
+                if not pat_str:
+                    return True  # name match, no pattern → nothing to update
+                try:
+                    pat = re.compile(pat_str, re.IGNORECASE)
+                except re.error:
+                    continue
+                ids = summary.get("sample_ids", [])
+                if not ids:
+                    return True
+                coverage = sum(1 for x in ids if pat.search(str(x))) / len(ids)
+                if coverage >= args.coverage_threshold:
+                    return True  # already well-covered → filter out
+                return False  # low coverage → keep as update_pattern candidate
+            return False
+
+        before_known = len(summaries)
+        summaries = [s for s in summaries if not _covered_by_known_repo(s)]
+        n_known_filtered = before_known - len(summaries)
+        if n_known_filtered:
+            print(f"  {len(summaries)} groups after known-repo filter "
+                  f"({n_known_filtered} already covered by existing ontology — skipped)")
 
         print(f"  Groups to review:")
         for s in summaries:
@@ -780,17 +825,22 @@ def main():
                   f"coverage={coverage:.0%}  false_rate={false_rate:.2%}")
             if coverage < args.coverage_threshold:
                 print(f"  ✗ rejected: coverage {coverage:.0%} < {args.coverage_threshold:.0%}"); continue
-            if false_rate > args.false_rate_threshold:
-                print(f"  ✗ rejected: false_rate {false_rate:.2%} > {args.false_rate_threshold:.2%}"); continue
             if dec.get("over_broad"):
                 print(f"  ✗ rejected: over-broad"); continue
+            regex_eligible = bool(dec.get("regex_match_eligible", False))
+            if false_rate > args.false_rate_threshold:
+                regex_eligible = False
+                print(f"  [warn] false_rate {false_rate:.2%} > {args.false_rate_threshold:.2%} → regex_match_eligible forced False")
             entry_key = repo_name.lower().replace(" ", "_")
             webpage_url = (summary.get("sample_webpages") or [None])[0]
             new_entries[entry_key] = {
-                "repo_name": repo_name, "id_pattern": pattern_str, "_sample_ids": sample_ids,
+                "repo_name": repo_name,
+                "id_pattern": pattern_str,
+                "regex_match_eligible": regex_eligible,
+                "_sample_ids": sample_ids,
                 **({"dataset_webpage_url_ptr": webpage_url} if webpage_url else {}),
             }
-            print(f"  ✓ added")
+            print(f"  ✓ added  regex_match_eligible={regex_eligible}")
 
     # --- Apply pattern updates to existing repos ---
     for key, new_pat in pattern_updates.items():

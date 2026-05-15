@@ -47,6 +47,7 @@ CLEAN=0
 CUMULATIVE=0
 PLOT_FLAG=""
 NODE_NAME=""
+PREV_ONTOLOGY_OVERRIDE=""
 
 # --- Args ---
 while [[ $# -gt 0 ]]; do
@@ -59,6 +60,7 @@ while [[ $# -gt 0 ]]; do
         --node)                    NODE_NAME="$2";               shift 2 ;;
         --seed-ontology)           SEED_ONTOLOGY="$2";           shift 2 ;;
         --start-iteration)         START_ITER="$2";              shift 2 ;;
+        --prev-ontology)           PREV_ONTOLOGY_OVERRIDE="$2";  shift 2 ;;
         --clean)                   CLEAN=1;                      shift   ;;
         --cumulative)              CUMULATIVE=1;                 shift   ;;
         --plot)                    PLOT_FLAG="--plot";           shift   ;;
@@ -201,6 +203,12 @@ copy_and_merge_outputs() {
             sleep 10
         done
         [[ $ok -eq 0 ]] && echo "  [error] slice_${i} could not be downloaded after 3 attempts — skipping"
+
+        # articles_log — best-effort, no retry needed
+        aws s3 cp "s3://${bucket}/slice_${i}/articles_log.csv" \
+            "$iter_dir/slice_${i}_articles_log.csv" 2>/dev/null \
+            && echo "  downloaded slice_${i} articles_log" \
+            || echo "  [warn] slice_${i} articles_log not found — skipping"
     done
 
     echo "[loop] Merging outputs..."
@@ -224,7 +232,10 @@ PYEOF
 # ============================================================
 # MAIN LOOP
 # ============================================================
-if [[ "$START_ITER" -gt 1 ]]; then
+if [[ -n "$PREV_ONTOLOGY_OVERRIDE" ]]; then
+    PREV_ONTOLOGY="$PREV_ONTOLOGY_OVERRIDE"
+    echo "[loop] Starting from iteration $START_ITER — ontology override: $PREV_ONTOLOGY"
+elif [[ "$START_ITER" -gt 1 ]]; then
     PREV_ONTOLOGY="$OUTPUT_BASE/iter$((START_ITER - 1))/open_bio_data_repos_v$((START_ITER - 1)).json"
     echo "[loop] Resuming from iteration $START_ITER — using ontology: $PREV_ONTOLOGY"
 else
