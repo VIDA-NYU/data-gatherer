@@ -1,0 +1,37 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: scrape-annotations
+  namespace: data-gatherer
+spec:
+  template:
+    spec:
+      containers:
+      - name: scrape-annotations
+        image: pietromarini/data-gatherer-nvidia:20260501
+        imagePullPolicy: Always
+        command:
+        - /bin/sh
+        - -c
+        - |
+          python3 scripts/scrape_annotations.py \
+            --input     /tmp/input.csv \
+            --output    /tmp/annotations.json \
+            --batch-size 8 \
+            --pause      0.1 \
+            --resume \
+            --s3-bucket          ${S3_OUTPUT_BUCKET} \
+            --s3-input-key       input/article_ids_REV_pmc.csv \
+            --s3-output-key      annotations/annotations_accession.json \
+            --s3-checkpoint-key  annotations/checkpoint.json
+        resources:
+          limits:
+            memory: "4Gi"
+            cpu: "2"
+          requests:
+            memory: "2Gi"
+            cpu: "1"
+        envFrom:
+        - secretRef:
+            name: data-gatherer-s3-secret
+      restartPolicy: OnFailure
