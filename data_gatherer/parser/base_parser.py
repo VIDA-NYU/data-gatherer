@@ -933,10 +933,14 @@ Files:
         # Get all the id patterns from the config file. (all the repos in ontology)
         id_patterns = []
         for k, v in self.open_data_repos_ontology['repos'].items():
-            if 'id_pattern' in v.keys():
-                if k in ['zenodo.org']: # avoid adding generic patterns (7 digits can also be something other than a dataset. identifier)
-                    continue
-                id_patterns.append(v['id_pattern'])
+            if 'id_pattern' not in v:
+                continue
+            if k in ['zenodo.org']:  # avoid adding generic patterns (7 digits can also be something other than a dataset identifier)
+                continue
+            # Only include patterns safe for blind chunk scanning (repo-specific prefix, not over-broad)
+            if not v.get('regex_match_eligible', True):
+                continue
+            id_patterns.append(v['id_pattern'])
         self.logger.info(f"# of defined dataset ID patterns: {len(id_patterns)}")
         self.logger.debug(f"All ID patterns: {id_patterns}")
         return id_patterns

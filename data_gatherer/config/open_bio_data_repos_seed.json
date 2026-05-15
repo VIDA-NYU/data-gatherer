@@ -3,12 +3,14 @@
     "geo": {
       "repo_name": "Gene Expression Omnibus",
       "id_pattern": "GSE\\d+|GSM\\d+|GPL\\d+|GDS\\d+",
+      "regex_match_eligible": true,
       "dataset_webpage_url_ptr": "https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=__ID__",
       "access_mode": "Complex download"
     },
     "proteomecentral.proteomexchange.org": {
       "repo_name": "ProteomeCentral",
       "id_pattern": "\\bPXD\\d{5,10}",
+      "regex_match_eligible": true,
       "dataset_webpage_url_ptr": "https://proteomecentral.proteomexchange.org/cgi/GetDataset?ID=__ID__",
       "read_timeout": 3,
       "download_root": "",
@@ -18,6 +20,7 @@
       "repo_name": "Synapse",
       "repo_root": "www.synapse.org",
       "id_pattern": "syn\\d{7,12}",
+      "regex_match_eligible": true,
       "dataset_webpage_url_ptr": "https://www.synapse.org/[#!]*Synapse:__ID__",
       "access_mode": "Complex download or application to access"
     }
