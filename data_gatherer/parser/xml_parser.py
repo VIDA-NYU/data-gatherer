@@ -346,7 +346,7 @@ class XMLParser(LLMParser):
 
             corpus_documents.extend(chunks_created)
             diff_chunk = len(chunks_created) != len(section_paragraphs)
-            self.logger.info(f"Section '{section_title}' split into {len(chunks_created)} chunks from {len(section_paragraphs)} paragraphs") if diff_chunk else None
+            self.logger.debug(f"Section '{section_title}' split into {len(chunks_created)} chunks from {len(section_paragraphs)} paragraphs") if diff_chunk else None
         
         # Remove duplicates based on normalized text content and merge section titles
         self.logger.info(f"Pre-deduplication: {len(corpus_documents)} corpus documents")
@@ -758,15 +758,15 @@ class XMLParser(LLMParser):
             self.logger.debug(f"Searching for supplementary material sections using XPath: {ptr}")
             cont = api_xml.findall(ptr)
             if cont is not None and len(cont) != 0:
-                self.logger.info(f"Found {len(cont)} supplementary material sections {ptr}. cont: {cont}")
+                self.logger.debug(f"Found {len(cont)} supplementary material sections {ptr}. cont: {cont}")
                 supplementary_material_sections.append({"ptr": ptr, "cont": cont})
 
-        self.logger.debug(f"Found {len(supplementary_material_sections)} supplementary-material sections.")
+        self.logger.info(f"Found {len(supplementary_material_sections)} supplementary-material sections.")
 
         hrefs = []
 
         for section_element in supplementary_material_sections:
-            self.logger.info(f"Processing section: {section_element}")
+            self.logger.debug(f"Processing section: {section_element}")
             sections = section_element['cont']
             pattern = section_element['ptr']
             for section in sections:
@@ -871,7 +871,7 @@ class XMLParser(LLMParser):
                 if text_segment not in context_descr:
                     context_descr += text_segment + "\n"
             # Add the context description to the supplementary material links DataFrame
-            self.logger.info(f"Extracted context_descr for xref {href_id}: {context_descr}")
+            self.logger.info(f"Extracted context_descr for xref {href_id}: {context_descr[:100]}...")
             supplementary_material_links.at[i, 'context_description'] = context_descr.strip()
         return supplementary_material_links
 

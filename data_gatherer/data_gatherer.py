@@ -212,7 +212,7 @@ class DataGatherer:
                 batch_results = self.data_fetcher.batch_fetch_data(pmcids)
             
             for pub_link in urls:
-                self.logger.info(f"length of complete fetches < urls: {len(complete_publication_fetches)} < {len(urls)}")
+                self.logger.debug(f"length of complete fetches < urls: {len(complete_publication_fetches)} < {len(urls)}")
                 if pub_link in complete_publication_fetches:
                     continue
                 

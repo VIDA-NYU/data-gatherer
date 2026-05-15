@@ -12,6 +12,7 @@ drivers/
 logs/
 prompts/
 scripts/
+!scripts/scrape_annotations.py
 !scripts/Local_model_finetuning/train_flan_t5.py
 !scripts/Local_model_finetuning/train_seq2seq.py
 !scripts/Local_model_finetuning/ground_truth/gt_dataset_info_no_dspage_extraction_from_snippet.xlsx
