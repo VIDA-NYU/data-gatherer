@@ -48,6 +48,7 @@ CUMULATIVE=0
 PLOT_FLAG=""
 NODE_NAME=""
 PREV_ONTOLOGY_OVERRIDE=""
+RECOVER_ITER=""
 
 # --- Args ---
 while [[ $# -gt 0 ]]; do
@@ -61,6 +62,7 @@ while [[ $# -gt 0 ]]; do
         --seed-ontology)           SEED_ONTOLOGY="$2";           shift 2 ;;
         --start-iteration)         START_ITER="$2";              shift 2 ;;
         --prev-ontology)           PREV_ONTOLOGY_OVERRIDE="$2";  shift 2 ;;
+        --recover-iteration)       RECOVER_ITER="$2";            shift 2 ;;
         --clean)                   CLEAN=1;                      shift   ;;
         --cumulative)              CUMULATIVE=1;                 shift   ;;
         --plot)                    PLOT_FLAG="--plot";           shift   ;;
@@ -228,6 +230,48 @@ merged.to_csv("$iter_dir/dataset_citations.csv", index=False)
 print(f"  merged {len(merged)} rows from {len(files)} slices → $iter_dir/dataset_citations.csv")
 PYEOF
 }
+
+# ============================================================
+# OPTIONAL RECOVERY: finish a partially-completed iteration
+# before entering the main loop.
+#
+#   --recover-iteration N  download S3 outputs for iter N,
+#                          merge them, run enrichment, then
+#                          continue the loop from iter N+1.
+# ============================================================
+if [[ -n "$RECOVER_ITER" ]]; then
+    echo "[recover] Recovering iteration $RECOVER_ITER..."
+    RECOVER_DIR="$OUTPUT_BASE/iter${RECOVER_ITER}"
+    mkdir -p "$RECOVER_DIR"
+
+    # Download + merge (reuses the same function as the main loop)
+    copy_and_merge_outputs "$RECOVER_DIR"
+
+    # Build citations list (cumulative if requested)
+    recover_citations=("$RECOVER_DIR/dataset_citations.csv")
+    if [[ "$CUMULATIVE" -eq 1 ]]; then
+        for prev in $(seq 1 $((RECOVER_ITER - 1))); do
+            prev_csv="$OUTPUT_BASE/iter${prev}/dataset_citations.csv"
+            [[ -f "$prev_csv" ]] && recover_citations+=("$prev_csv")
+        done
+    fi
+
+    RECOVER_PREV="$OUTPUT_BASE/iter$((RECOVER_ITER - 1))/open_bio_data_repos_v$((RECOVER_ITER - 1)).json"
+    [[ "$RECOVER_ITER" -eq 1 ]] && RECOVER_PREV="$SEED_ONTOLOGY"
+    RECOVER_OUT="$RECOVER_DIR/open_bio_data_repos_v${RECOVER_ITER}.json"
+
+    echo "[recover] Running enrichment for iter $RECOVER_ITER..."
+    python3 scripts/enrich_ontology.py \
+        --citations "${recover_citations[@]}" \
+        --current-ontology "$RECOVER_PREV" \
+        --output "$RECOVER_OUT" \
+        --log "$RECOVER_DIR/enrich.log" \
+        --pipeline group \
+        $PLOT_FLAG
+
+    echo "[recover] Done. Continuing from iter $((RECOVER_ITER + 1))."
+    START_ITER=$((RECOVER_ITER + 1))
+fi
 
 # ============================================================
 # MAIN LOOP
