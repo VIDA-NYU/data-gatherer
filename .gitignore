@@ -187,3 +187,10 @@ scripts/CARD/*
 k8s/output/*
 k8s/input/*
 scripts/Local_model_finetuning/result.csv
+scripts/output/fp_fn_iter_i/
+scripts/output/recall_na.csv
+scripts/output/scilite_ground_truth.parquet
+scripts/output/annotations_subset.json
+scripts/output/annotations_accession.json
+scripts/output/f1_comparison.html
+scripts/output/scilite_vs_gold_eval.html

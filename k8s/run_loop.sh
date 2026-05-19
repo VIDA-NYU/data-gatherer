@@ -323,6 +323,34 @@ for ITER in $(seq "$START_ITER" "$ITERATIONS"); do
     # 3. Copy + merge all slice outputs
     copy_and_merge_outputs "$ITER_DIR"
 
+    # 3b. Build cumulative skip list and upload to S3 so next iteration skips these URLs
+    echo "[loop] Building skip list for next iteration..."
+    python3 - <<PYEOF
+import os, json, pandas as pd
+
+base   = "$OUTPUT_BASE"
+up_to  = $ITER
+done   = set()
+
+for i in range(1, up_to + 1):
+    p = os.path.join(base, f"iter{i}", "dataset_citations.csv")
+    if not os.path.exists(p):
+        continue
+    try:
+        df = pd.read_csv(p, low_memory=False, usecols=["source_url"])
+        done.update(df["source_url"].dropna().tolist())
+    except Exception as e:
+        print(f"  [warn] {p}: {e}")
+
+out = os.path.join(base, f"iter{up_to}", "skip_urls.json")
+with open(out, "w") as f:
+    json.dump(sorted(done), f)
+print(f"  skip list: {len(done):,} URLs → {out}")
+PYEOF
+    aws s3 cp "${OUTPUT_BASE}/iter${ITER}/skip_urls.json" \
+        "s3://${BUCKET}/input/skip_urls.json" \
+        && echo "[loop] Skip list uploaded to S3"
+
     # 4. Run enrichment on merged data
     ENRICHED_ONTOLOGY="$ITER_DIR/open_bio_data_repos_v${ITER}.json"
     PLOT_ARG=""

@@ -150,6 +150,8 @@ def main():
                         help="S3 key to download the input CSV from (e.g. input/slice_1.csv)")
     parser.add_argument("--s3-ontology-key", default=None,
                         help="S3 key to download the ontology JSON from (e.g. ontology/open_bio_data_repos.json)")
+    parser.add_argument("--s3-skip-urls-key", default=None,
+                        help="S3 key to a JSON file containing a list of source_urls already processed in prior iterations")
     parser.add_argument(
         "--section-filter",
         default=None,
@@ -184,8 +186,19 @@ def main():
     all_urls = [pmcid_to_url(p) for p in pmcids]
     logger.info(f"Loaded {len(all_urls)} URLs from {args.input}")
 
-    # Checkpoint: skip already-processed URLs
+    # Checkpoint: skip already-processed URLs (within this job run)
     done_urls = load_checkpoint(output_csv)
+
+    # Also skip URLs processed in previous iterations (downloaded from S3)
+    if args.s3_skip_urls_key:
+        skip_local = os.path.join(args.output_dir, "skip_urls.json")
+        if download_from_s3(args.s3_skip_urls_key, skip_local):
+            import json as _json
+            with open(skip_local) as _f:
+                prior_done = set(_json.load(_f))
+            logger.info(f"Loaded {len(prior_done)} skip URLs from S3 ({args.s3_skip_urls_key})")
+            done_urls = done_urls | prior_done
+
     pending_urls = [u for u in all_urls if u not in done_urls]
     logger.info(f"Checkpoint: {len(done_urls)} done, {len(pending_urls)} pending")
 

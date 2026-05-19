@@ -22,6 +22,7 @@ Usage:
 """
 
 import argparse
+import ast
 import json
 import logging
 import re
@@ -29,6 +30,9 @@ import sys
 import numpy as np
 import pandas as pd
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+from data_gatherer.prompts.prompt_manager import PromptManager
 
 
 class _Tee:
@@ -321,11 +325,42 @@ def build_group_summaries(df: pd.DataFrame) -> list[dict]:
             grp["dataset_webpage"].dropna().unique().tolist()[:3]
             if "dataset_webpage" in grp.columns else []
         )
+
+        # das_ratio: average fraction of sections that are Data Availability Statements,
+        # computed per article (deduped by source_url) to avoid inflating via multi-citation rows.
+        # High das_ratio (≥0.4) is strong evidence this is a data repository, not a reagent.
+        das_ratio = None
+        if {"n_das_sections", "n_corpus_sections", "source_url"}.issubset(grp.columns):
+            art = grp.drop_duplicates("source_url")
+            corpus = art["n_corpus_sections"].fillna(0).astype(float)
+            valid = corpus > 0
+            if valid.any():
+                das = art.loc[valid, "n_das_sections"].fillna(0).astype(float)
+                das_ratio = round(float((das / corpus[valid]).mean()), 3)
+
+        # top_sections: most frequent section types where these identifiers appeared.
+        # "Data Availability Statement" dominance confirms a data repository.
+        top_sections: list[str] = []
+        if "retrieved_sections_title" in grp.columns:
+            counts: dict[str, int] = {}
+            for val in grp["retrieved_sections_title"].dropna():
+                try:
+                    parsed = ast.literal_eval(str(val))
+                    if isinstance(parsed, list):
+                        for title in parsed:
+                            top = str(title).split(" > ")[0].strip()
+                            counts[top] = counts.get(top, 0) + 1
+                except Exception:
+                    pass
+            top_sections = [t for t, _ in sorted(counts.items(), key=lambda x: -x[1])[:5]]
+
         summaries.append({
             "repository_reference": str(repo_ref),
             "n_articles": n_articles,
             "n_ids": int(grp["dataset_identifier"].nunique()),
             "n_webpages": int(grp["dataset_webpage"].dropna().nunique()) if "dataset_webpage" in grp.columns else 0,
+            "das_ratio": das_ratio,
+            "top_sections": top_sections,
             "sample_ids": grp["dataset_identifier"].dropna().unique().tolist()[:20],
             "sample_webpages": sample_webpages,
         })
@@ -413,75 +448,22 @@ def agent_review(client: anthropic.Anthropic, cluster_summary: dict, examples: d
 # Bulk agent review (group pipeline)
 # ---------------------------------------------------------------------------
 
-BULK_REVIEW_PROMPT = """\
-You are enriching a biomedical data repository ontology.
-A literature mining system extracted dataset identifiers from PMC articles.
-The groups below contain identifiers that do NOT match any existing pattern — \
-grouped by the repository name mentioned in the article text.
-
-## Current ontology (key → repo_name + id_pattern):
-{existing_repos}
-
-## Candidate groups (sorted by article evidence, descending):
-{groups}
-
-## Task:
-For each group decide exactly one action:
-
-  "promote"        — real repository NOT in the ontology with a stable, structured ID format.
-                     Write a new id_pattern regex.
-
-  "update_pattern" — repository IS already in the ontology, but some sample IDs are NOT
-                     matched by the existing pattern. Extend the pattern with new alternatives.
-                     Set existing_repo_key to the exact ontology key (e.g. "geo").
-                     Provide the FULL new merged pattern (existing_pattern|new_alternatives).
-
-  "skip"           — noise, heterogeneous, funding body / grant numbers,
-                     no stable machine-readable ID format, or insufficient evidence.
-
-Rules:
-- If your reasoning says a repo "should be added" or "is not yet in the ontology" → action MUST be "promote".
-- If your reasoning says IDs belong to an existing repo but aren't matched → action MUST be "update_pattern".
-- Funding bodies (NIH, NSF, national foundations) are NEVER repositories — always skip.
-- Over-broad patterns (plain integers, single words) must never be promoted.
-- Groups with only 1 article need a very distinctive ID format to justify promotion.
-
-For "promote" actions, also set regex_match_eligible:
-- true  — the id_pattern starts with a repo-specific alphabetic prefix that makes false matches
-           in arbitrary text essentially impossible (e.g. PXD, GSE, syn, MTBLS, NCT, GLDS).
-- false — the pattern relies on character classes or generic formats that could match
-           unrelated text (e.g. plain integers, single uppercase letters, short alphanumeric codes).
-
-Return a JSON array — one object per group, same order as input — no markdown fences:
-[
-  {{
-    "repository_reference": "...",
-    "action": "promote" | "update_pattern" | "skip",
-    "repo_name": "...",
-    "existing_repo_key": "...",
-    "id_pattern": "...",
-    "regex_match_eligible": true,
-    "over_broad": false,
-    "confidence": "high" | "medium" | "low",
-    "reason": "..."
-  }},
-  ...
-]"""
-
-
 def bulk_agent_review(
     client: anthropic.Anthropic,
     group_summaries: list[dict],
     examples: dict,
+    pm: PromptManager,
 ) -> list[dict]:
-    prompt = BULK_REVIEW_PROMPT.format(
-        existing_repos=json.dumps(examples, indent=2),
-        groups=json.dumps(group_summaries, indent=2),
-    )
+    tmpl = pm.load_prompt("bulk_repo_review", subdir="agent_for_FP_analysis")
+    # Format directly (not via pm.render_prompt) because render_prompt escapes { in string
+    # values, which corrupts the JSON ontology block.
+    system_content = tmpl[0]["content"].format(existing_repos=json.dumps(examples, indent=2))
+    user_content = tmpl[1]["content"].format(groups=json.dumps(group_summaries, indent=2))
     response = client.messages.create(
         model="claude-sonnet-4-6",
         max_tokens=4096,
-        messages=[{"role": "user", "content": prompt}],
+        system=system_content,
+        messages=[{"role": "user", "content": user_content}],
     )
     text = response.content[0].text.strip()
     try:
@@ -764,6 +746,8 @@ def main():
             print(f"    {s['repository_reference']!r:50s}  articles={s['n_articles']}  ids={s['n_ids']}  webpages={s['n_webpages']}")
 
         client = anthropic.Anthropic()
+        pm = PromptManager(prompt_dir="data_gatherer/prompts/prompt_templates",
+                           logger=logging.getLogger(__name__))
         bs = args.group_batch_size
         n_batches = (len(summaries) + bs - 1) // bs
         print(f"\nReviewing {len(summaries)} groups in {n_batches} batch(es) of up to {bs}...")
@@ -773,7 +757,7 @@ def main():
             batch = summaries[b * bs:(b + 1) * bs]
             refs = [s["repository_reference"] for s in batch]
             print(f"\n  Batch {b+1}/{n_batches}: {refs}")
-            batch_decisions = bulk_agent_review(client, batch, examples)
+            batch_decisions = bulk_agent_review(client, batch, examples, pm)
             decisions.extend(batch_decisions)
 
         if not decisions:
