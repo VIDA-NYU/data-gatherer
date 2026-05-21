@@ -218,12 +218,13 @@ def load_ontology(path: str) -> dict:
 def get_id_patterns(ontology: dict) -> list[re.Pattern]:
     patterns = []
     for repo in ontology["repos"].values():
-        pat = repo.get("id_pattern")
-        if pat:
-            try:
-                patterns.append(re.compile(pat, re.IGNORECASE))
-            except re.error:
-                pass
+        for acc in repo.get("accessions", {}).values():
+            pat = acc.get("id_pattern")
+            if pat:
+                try:
+                    patterns.append(re.compile(pat, re.IGNORECASE))
+                except re.error:
+                    pass
     return patterns
 
 
@@ -234,12 +235,19 @@ def matches_any_pattern(identifier: str, patterns: list[re.Pattern]) -> bool:
 
 
 def pattern_examples(ontology: dict) -> dict:
-    """Returns {ontology_key: {repo_name, id_pattern}} for use in agent prompts."""
-    return {
-        key: {"repo_name": data.get("repo_name", key), "id_pattern": data["id_pattern"]}
-        for key, data in ontology["repos"].items()
-        if data.get("id_pattern")
-    }
+    """Returns flat {entry_key: {repo_name, id_pattern}} per accession type for agent prompts."""
+    examples = {}
+    for key, data in ontology["repos"].items():
+        name = data.get("name", key)
+        accessions = data.get("accessions", {})
+        for acc_name, acc in accessions.items():
+            pat = acc.get("id_pattern")
+            if not pat:
+                continue
+            entry_key = key if len(accessions) == 1 else f"{key}__{acc_name}"
+            display_name = name if len(accessions) == 1 else f"{name} ({acc_name})"
+            examples[entry_key] = {"repo_name": display_name, "id_pattern": pat}
+    return examples
 
 
 # ---------------------------------------------------------------------------
@@ -501,6 +509,114 @@ def verify(pattern_str: str, cluster_ids: list[str], all_ids: list[str]) -> tupl
 
 
 # ---------------------------------------------------------------------------
+# Decision application (DRO v2 schema)
+# ---------------------------------------------------------------------------
+
+def apply_agent_decisions(
+    decisions: list[dict],
+    summary_by_ref: dict[str, dict],
+    ontology: dict,
+    all_ids: list[str],
+    args,
+) -> tuple[dict, dict]:
+    """Process agent decisions and return new repos + accession updates.
+
+    Supported actions (new vocabulary):
+      new_repo       — entirely new repository
+      new_accession  — new accession type for an existing repo
+      update_pattern — fix/extend an existing accession's id_pattern
+      skip           — discard
+
+    Backward-compat alias: "promote" is treated as "new_repo".
+
+    Returns:
+        new_repos: {repo_key: repo_entry} to merge into ontology["repos"]
+        accession_updates: {(repo_key, acc_name): acc_dict} for existing repos
+    """
+    new_repos: dict[str, dict] = {}
+    accession_updates: dict[tuple, dict] = {}
+
+    for dec in decisions:
+        ref = dec.get("repository_reference", "")
+        action = dec.get("action", "skip")
+        if action == "promote":
+            action = "new_repo"  # backward-compat alias
+        reason = dec.get("reason", "")
+        pattern_str = (dec.get("id_pattern") or "").strip()
+        repo_name = (dec.get("repo_name") or "").strip()
+        confidence = dec.get("confidence", "?")
+        summary = summary_by_ref.get(ref, {})
+        sample_ids = summary.get("sample_ids", [])
+
+        print(f"[{ref}]  action={action}  confidence={confidence}")
+
+        if action == "skip":
+            print(f"  → skip: {reason}")
+            continue
+
+        if action in ("update_pattern", "new_accession"):
+            existing_key = (dec.get("existing_repo_key") or "").strip()
+            acc_name = (dec.get("accession_name") or "dataset").strip()
+            if not existing_key or existing_key not in ontology["repos"]:
+                print(f"  → skip: key '{existing_key}' not found in ontology"); continue
+            if not pattern_str:
+                print(f"  → skip: empty id_pattern"); continue
+            coverage, false_rate = verify(pattern_str, sample_ids, all_ids)
+            existing_name = ontology["repos"][existing_key].get("name", existing_key)
+            print(f"  → {action} '{existing_name}'.{acc_name}: {pattern_str} | "
+                  f"coverage={coverage:.0%}  false_rate={false_rate:.2%}")
+            if coverage < args.coverage_threshold:
+                print(f"  ✗ rejected: coverage {coverage:.0%} < {args.coverage_threshold:.0%}"); continue
+            if false_rate > args.false_rate_threshold:
+                print(f"  ✗ rejected: false_rate {false_rate:.2%} > {args.false_rate_threshold:.2%}"); continue
+            accession_updates[(existing_key, acc_name)] = {
+                "id_pattern": pattern_str,
+                "level": dec.get("level", "dataset"),
+                "scan_eligible": bool(dec.get("scan_eligible", False)),
+                "_sample_ids": sample_ids,
+                **({"url_template": dec["url_template"]} if dec.get("url_template") else {}),
+            }
+            print(f"  ✓ queued")
+            continue
+
+        if action == "new_repo":
+            if not pattern_str or not repo_name:
+                print(f"  → skip: empty pattern or name"); continue
+            coverage, false_rate = verify(pattern_str, sample_ids, all_ids)
+            print(f"  → new_repo '{repo_name}': {pattern_str} | "
+                  f"coverage={coverage:.0%}  false_rate={false_rate:.2%}")
+            if coverage < args.coverage_threshold:
+                print(f"  ✗ rejected: coverage {coverage:.0%} < {args.coverage_threshold:.0%}"); continue
+            if dec.get("over_broad"):
+                print(f"  ✗ rejected: over-broad"); continue
+            scan_eligible = bool(dec.get("scan_eligible", dec.get("regex_match_eligible", False)))
+            if false_rate > args.false_rate_threshold:
+                scan_eligible = False
+                print(f"  [warn] false_rate {false_rate:.2%} > {args.false_rate_threshold:.2%} → scan_eligible forced False")
+            repo_key = (dec.get("repo_key") or repo_name.lower().replace(" ", "_")).strip()
+            if repo_key in ontology["repos"] or repo_key in new_repos:
+                repo_key = repo_key + "_2"
+            acc_name = (dec.get("accession_name") or "dataset").strip()
+            acc_entry: dict = {
+                "id_pattern": pattern_str,
+                "level": (dec.get("level") or "dataset").strip(),
+                "scan_eligible": scan_eligible,
+                "_sample_ids": sample_ids,
+            }
+            if dec.get("url_template"):
+                acc_entry["url_template"] = dec["url_template"]
+            new_repos[repo_key] = {"name": repo_name, "accessions": {acc_name: acc_entry}}
+            webpage_url = (summary.get("sample_webpages") or [None])[0]
+            if webpage_url:
+                new_repos[repo_key]["retrieval"] = {"download_root": webpage_url}
+            print(f"  ✓ added  scan_eligible={scan_eligible}")
+        else:
+            print(f"  → skip: unrecognised action '{action}'")
+
+    return new_repos, accession_updates
+
+
+# ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
 
@@ -589,8 +705,8 @@ def main():
 
     all_ids = candidates["dataset_identifier"].dropna().tolist()
 
-    new_entries: dict[str, dict] = {}
-    pattern_updates: dict[str, str] = {}
+    new_repos: dict[str, dict] = {}
+    accession_updates: dict[tuple, dict] = {}
     embeddings = labels = agent_results = None  # cluster pipeline only
 
     # ------------------------------------------------------------------ #
@@ -627,69 +743,35 @@ def main():
                   f"articles={summary['n_articles']} ids={summary['n_ids']} "
                   f"top_ref={top_repo}")
 
-            result = agent_review(client, summary, examples)     
+            result = agent_review(client, summary, examples)
             agent_results[summary["cluster_id"]] = result
 
-            action = result.get("action") or ("promote" if result.get("promote") else "skip")
-            reason = result.get("reason", "")
-            pattern_str = (result.get("id_pattern") or "").strip()
-            repo_name = (result.get("repo_name") or "").strip()
-            confidence = result.get("confidence", "?")
-            sample_ids = summary["sample_ids"]
-
-            if action == "skip":
-                print(f"  → skip: {reason}")
-                continue
-
-            if action == "update_pattern":
-                existing_key = (result.get("existing_repo_key") or "").strip()
-                if not existing_key or existing_key not in ontology["repos"]:
-                    print(f"  → skip: update_pattern but key '{existing_key}' not found")
-                    continue
-                if not pattern_str:
-                    print(f"  → skip: empty id_pattern")
-                    continue
-                coverage, false_rate = verify(pattern_str, sample_ids, all_ids)
-                existing_name = ontology["repos"][existing_key].get("repo_name", existing_key)
-                print(f"  → update_pattern: '{existing_name}' | {pattern_str} | "
-                      f"coverage={coverage:.0%} false_rate={false_rate:.2%}")
-                if coverage < args.coverage_threshold:
-                    print(f"  ✗ rejected: coverage {coverage:.0%} < {args.coverage_threshold:.0%}"); continue
-                if false_rate > args.false_rate_threshold:
-                    print(f"  ✗ rejected: false_rate {false_rate:.2%} > {args.false_rate_threshold:.2%}"); continue
-                pattern_updates[existing_key] = pattern_str
-                print(f"  ✓ queued")
-                continue
-
-            # promote
-            if not pattern_str or not repo_name:
-                print(f"  → skip: empty pattern or name"); continue
-            coverage, false_rate = verify(pattern_str, sample_ids, all_ids)
-            print(f"  → promote: '{repo_name}' | {pattern_str} | "
-                  f"coverage={coverage:.0%} false_rate={false_rate:.2%} confidence={confidence}")
-            if coverage < args.coverage_threshold:
-                print(f"  ✗ rejected: coverage {coverage:.0%} < {args.coverage_threshold:.0%}"); continue
-            if result.get("over_broad"):
-                print(f"  ✗ rejected: over-broad"); continue
-            regex_eligible = bool(result.get("regex_match_eligible", False))
-            if false_rate > args.false_rate_threshold:
-                regex_eligible = False
-                print(f"  [warn] false_rate {false_rate:.2%} > {args.false_rate_threshold:.2%} → regex_match_eligible forced False")
-            entry_key = repo_name.lower().replace(" ", "_")
-            mask = df["dataset_identifier"].isin(sample_ids)
-            webpage_url = (
-                df[mask]["dataset_webpage"].dropna().value_counts().idxmax()
-                if "dataset_webpage" in df.columns and mask.any() and df[mask]["dataset_webpage"].dropna().any()
-                else None
+            # Normalize cluster-pipeline result to the new-vocabulary dict
+            raw_action = result.get("action") or ("promote" if result.get("promote") else "skip")
+            top_ref = (
+                list(summary["top_repo_refs"].keys())[0]
+                if summary["top_repo_refs"]
+                else f"cluster_{summary['cluster_id']}"
             )
-            new_entries[entry_key] = {
-                "repo_name": repo_name,
-                "id_pattern": pattern_str,
-                "regex_match_eligible": regex_eligible,
-                "_sample_ids": sample_ids,
-                **({"dataset_webpage_url_ptr": webpage_url} if webpage_url else {}),
+            cluster_dec = {
+                "repository_reference": top_ref,
+                "action": raw_action,
+                "repo_name": result.get("repo_name", ""),
+                "repo_key": None,
+                "accession_name": "dataset",
+                "level": "dataset",
+                "id_pattern": result.get("id_pattern", ""),
+                "scan_eligible": result.get("regex_match_eligible", False),
+                "existing_repo_key": result.get("existing_repo_key", ""),
+                "over_broad": result.get("over_broad", False),
+                "confidence": result.get("confidence", "?"),
+                "reason": result.get("reason", ""),
             }
-            print(f"  ✓ added  regex_match_eligible={regex_eligible}")
+            batch_repos, batch_updates = apply_agent_decisions(
+                [cluster_dec], {top_ref: summary}, ontology, all_ids, args
+            )
+            new_repos.update(batch_repos)
+            accession_updates.update(batch_updates)
 
     # ------------------------------------------------------------------ #
     # Pipeline B — group by repo_reference → single bulk Claude call      #
@@ -713,25 +795,29 @@ def main():
         def _covered_by_known_repo(summary: dict) -> bool:
             ref = summary["repository_reference"].lower()
             for repo in ontology["repos"].values():
-                known = repo.get("repo_name", "").lower()
+                known = repo.get("name", "").lower()
                 if not known:
                     continue
                 if known not in ref and ref not in known:
                     continue
-                pat_str = repo.get("id_pattern")
-                if not pat_str:
-                    return True  # name match, no pattern → nothing to update
-                try:
-                    pat = re.compile(pat_str, re.IGNORECASE)
-                except re.error:
-                    continue
+                accessions = repo.get("accessions", {})
+                if not accessions:
+                    return True  # name match, no accessions → nothing to update
                 ids = summary.get("sample_ids", [])
                 if not ids:
                     return True
-                coverage = sum(1 for x in ids if pat.search(str(x))) / len(ids)
-                if coverage >= args.coverage_threshold:
-                    return True  # already well-covered → filter out
-                return False  # low coverage → keep as update_pattern candidate
+                for acc in accessions.values():
+                    pat_str = acc.get("id_pattern")
+                    if not pat_str:
+                        continue
+                    try:
+                        pat = re.compile(pat_str, re.IGNORECASE)
+                    except re.error:
+                        continue
+                    coverage = sum(1 for x in ids if pat.search(str(x))) / len(ids)
+                    if coverage >= args.coverage_threshold:
+                        return True  # already well-covered → filter out
+                return False  # low coverage on all accessions → keep
             return False
 
         before_known = len(summaries)
@@ -767,114 +853,75 @@ def main():
 
         summary_by_ref = {s["repository_reference"]: s for s in summaries}
         print()
-        for dec in decisions:
-            ref = dec.get("repository_reference", "")
-            action = dec.get("action", "skip")
-            reason = dec.get("reason", "")
-            pattern_str = (dec.get("id_pattern") or "").strip()
-            repo_name = (dec.get("repo_name") or "").strip()
-            confidence = dec.get("confidence", "?")
-            summary = summary_by_ref.get(ref, {})
-            sample_ids = summary.get("sample_ids", [])
-
-            print(f"[{ref}]  action={action}  confidence={confidence}")
-
-            if action == "skip":
-                print(f"  → skip: {reason}")
-                continue
-
-            if action == "update_pattern":
-                existing_key = (dec.get("existing_repo_key") or "").strip()
-                if not existing_key or existing_key not in ontology["repos"]:
-                    print(f"  → skip: update_pattern but key '{existing_key}' not found"); continue
-                if not pattern_str:
-                    print(f"  → skip: empty id_pattern"); continue
-                coverage, false_rate = verify(pattern_str, sample_ids, all_ids)
-                existing_name = ontology["repos"][existing_key].get("repo_name", existing_key)
-                print(f"  → update_pattern '{existing_name}': {pattern_str} | "
-                      f"coverage={coverage:.0%}  false_rate={false_rate:.2%}")
-                if coverage < args.coverage_threshold:
-                    print(f"  ✗ rejected: coverage {coverage:.0%} < {args.coverage_threshold:.0%}"); continue
-                if false_rate > args.false_rate_threshold:
-                    print(f"  ✗ rejected: false_rate {false_rate:.2%} > {args.false_rate_threshold:.2%}"); continue
-                pattern_updates[existing_key] = pattern_str
-                print(f"  ✓ queued")
-                continue
-
-            # promote
-            if not pattern_str or not repo_name:
-                print(f"  → skip: empty pattern or name"); continue
-            coverage, false_rate = verify(pattern_str, sample_ids, all_ids)
-            print(f"  → promote '{repo_name}': {pattern_str} | "
-                  f"coverage={coverage:.0%}  false_rate={false_rate:.2%}")
-            if coverage < args.coverage_threshold:
-                print(f"  ✗ rejected: coverage {coverage:.0%} < {args.coverage_threshold:.0%}"); continue
-            if dec.get("over_broad"):
-                print(f"  ✗ rejected: over-broad"); continue
-            regex_eligible = bool(dec.get("regex_match_eligible", False))
-            if false_rate > args.false_rate_threshold:
-                regex_eligible = False
-                print(f"  [warn] false_rate {false_rate:.2%} > {args.false_rate_threshold:.2%} → regex_match_eligible forced False")
-            entry_key = repo_name.lower().replace(" ", "_")
-            webpage_url = (summary.get("sample_webpages") or [None])[0]
-            new_entries[entry_key] = {
-                "repo_name": repo_name,
-                "id_pattern": pattern_str,
-                "regex_match_eligible": regex_eligible,
-                "_sample_ids": sample_ids,
-                **({"dataset_webpage_url_ptr": webpage_url} if webpage_url else {}),
-            }
-            print(f"  ✓ added  regex_match_eligible={regex_eligible}")
-
-    # --- Apply pattern updates to existing repos ---
-    for key, new_pat in pattern_updates.items():
-        ontology["repos"][key]["id_pattern"] = new_pat
-        print(f"  [updated] {ontology['repos'][key].get('repo_name', key)}: {new_pat}")
+        batch_repos, batch_updates = apply_agent_decisions(
+            decisions, summary_by_ref, ontology, all_ids, args
+        )
+        new_repos.update(batch_repos)
+        accession_updates.update(batch_updates)
 
     # --- Dedup: exact-match + intra-batch superset check ---
-    seen_patterns: dict[str, str] = {
-        repo.get("id_pattern"): repo.get("repo_name", key)
-        for key, repo in ontology["repos"].items()
-        if repo.get("id_pattern")
-    }
-    # First pass: exact-match dedup against ontology
-    deduped: dict[str, dict] = {}
-    for key, entry in new_entries.items():
-        pat = entry["id_pattern"]
-        if pat in seen_patterns:
-            print(f"  [dedup] '{entry['repo_name']}' has same pattern as '{seen_patterns[pat]}' — skipped")
-        else:
-            seen_patterns[pat] = entry["repo_name"]
-            deduped[key] = entry
+    seen_patterns: dict[str, str] = {}
+    for key, repo in ontology["repos"].items():
+        for acc_name, acc in repo.get("accessions", {}).items():
+            pat = acc.get("id_pattern")
+            if pat:
+                seen_patterns[pat] = f"{repo.get('name', key)} ({acc_name})"
 
-    # Second pass: intra-batch superset check (catches UniProt-style P ⊂ Q pairs)
+    deduped: dict[str, dict] = {}
+    for key, repo in new_repos.items():
+        keep = True
+        for acc_name, acc in repo.get("accessions", {}).items():
+            pat = acc.get("id_pattern", "")
+            if pat in seen_patterns:
+                print(f"  [dedup] '{repo['name']}' ({acc_name}) duplicates '{seen_patterns[pat]}' — skipped")
+                keep = False
+                break
+        if keep:
+            for acc_name, acc in repo.get("accessions", {}).items():
+                pat = acc.get("id_pattern", "")
+                if pat:
+                    seen_patterns[pat] = f"{repo['name']} ({acc_name})"
+            deduped[key] = repo
+
     new_keys = list(deduped.keys())
     subsumed: set[str] = set()
     for i, kA in enumerate(new_keys):
         if kA in subsumed:
             continue
+        ids_A: list = []
+        for acc in deduped[kA].get("accessions", {}).values():
+            ids_A = acc.get("_sample_ids", [])
+            if ids_A:
+                break
+        if not ids_A:
+            continue
         for kB in new_keys[i + 1:]:
             if kB in subsumed:
                 continue
-            try:
-                patB = re.compile(deduped[kB]["id_pattern"], re.IGNORECASE)
-            except re.error:
-                continue
-            ids_A = deduped[kA].get("_sample_ids", [])
-            if not ids_A:
-                continue
-            overlap = sum(1 for x in ids_A if patB.search(str(x))) / len(ids_A)
-            if overlap >= 0.8:
-                print(f"  [dedup] '{deduped[kA]['repo_name']}' subsumed by "
-                      f"'{deduped[kB]['repo_name']}' ({overlap:.0%} overlap) — dropped")
-                subsumed.add(kA)
+            for acc in deduped[kB].get("accessions", {}).values():
+                pat_str = acc.get("id_pattern", "")
+                if not pat_str:
+                    continue
+                try:
+                    patB = re.compile(pat_str, re.IGNORECASE)
+                except re.error:
+                    continue
+                overlap = sum(1 for x in ids_A if patB.search(str(x))) / len(ids_A)
+                if overlap >= 0.8:
+                    print(f"  [dedup] '{deduped[kA]['name']}' subsumed by "
+                          f"'{deduped[kB]['name']}' ({overlap:.0%} overlap) — dropped")
+                    subsumed.add(kA)
+                    break
+            if kA in subsumed:
                 break
-    new_entries = {k: v for k, v in deduped.items() if k not in subsumed}
+    new_repos = {k: v for k, v in deduped.items() if k not in subsumed}
 
-    # Remove internal field before writing
-    for entry in new_entries.values():
-        entry.pop("_sample_ids", None)
-
+    # Strip temp field before writing
+    for repo in new_repos.values():
+        for acc in repo.get("accessions", {}).values():
+            acc.pop("_sample_ids", None)
+    for acc_dict in accession_updates.values():
+        acc_dict.pop("_sample_ids", None)
 
     # --- Plot ---
     if args.plot and args.pipeline == "cluster" and embeddings is not None:
@@ -882,19 +929,36 @@ def main():
     elif args.plot and args.pipeline == "group":
         plot_groups(summaries, decisions, n_hallucination_filtered, n_below_min, args.plot)
 
+    # --- Apply accession updates to existing repos ---
+    for (repo_key, acc_name), acc_dict in accession_updates.items():
+        repo = ontology["repos"].get(repo_key)
+        if repo is None:
+            continue
+        existing_accs = repo.setdefault("accessions", {})
+        if acc_name in existing_accs:
+            existing_accs[acc_name]["id_pattern"] = acc_dict["id_pattern"]
+            if "scan_eligible" in acc_dict:
+                existing_accs[acc_name]["scan_eligible"] = acc_dict["scan_eligible"]
+            print(f"  [updated] {repo.get('name', repo_key)}.{acc_name}: {acc_dict['id_pattern']}")
+        else:
+            existing_accs[acc_name] = {k: v for k, v in acc_dict.items() if k != "_sample_ids"}
+            print(f"  [added acc] {repo.get('name', repo_key)}.{acc_name}: {acc_dict['id_pattern']}")
+
     # --- Write ---
-    ontology["repos"].update(new_entries)
+    ontology["repos"].update(new_repos)
     output_path = Path(args.output)
     output_path.parent.mkdir(parents=True, exist_ok=True)
     with open(output_path, "w") as f:
         json.dump(ontology, f, indent=2)
 
     print(f"\n{'='*60}")
-    print(f"Done. {len(new_entries)} new repos added, {len(pattern_updates)} patterns updated.")
-    for entry in new_entries.values():
-        print(f"  + {entry['repo_name']}: {entry['id_pattern']}")
-    for key in pattern_updates:
-        print(f"  ~ {ontology['repos'][key].get('repo_name', key)}: {pattern_updates[key]}")
+    print(f"Done. {len(new_repos)} new repos added, {len(accession_updates)} accessions updated.")
+    for repo in new_repos.values():
+        for acc_name, acc in repo.get("accessions", {}).items():
+            print(f"  + {repo['name']} ({acc_name}): {acc['id_pattern']}")
+    for (repo_key, acc_name), acc_dict in accession_updates.items():
+        repo_name = ontology["repos"].get(repo_key, {}).get("name", repo_key)
+        print(f"  ~ {repo_name}.{acc_name}: {acc_dict['id_pattern']}")
     print(f"Ontology written to {args.output}")
 
 
