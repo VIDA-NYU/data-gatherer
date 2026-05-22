@@ -21,8 +21,13 @@ import logging
 
 import pandas as pd
 import json
-import boto3
-from botocore.exceptions import BotoCoreError, ClientError
+from data_gatherer.llm.response_schema import dataset_response_schema_gpt, dataset_response_schema_claude, Dataset_w_Page
+try:
+    import boto3
+    from botocore.exceptions import BotoCoreError, ClientError
+except ImportError:
+    boto3 = None
+    BotoCoreError = ClientError = Exception
 
 LOG_FMT = "%(asctime)s - %(filename)s:%(lineno)d - %(levelname)s - %(message)s"
 
@@ -137,10 +142,21 @@ def _default_prompt(model: str) -> str:
     if m.startswith(("hf-", "local-")):
         return "T5_primer"
     if "claude" in m:
-        return "CLAUDE_FDR_FewShot"
+        return "CLAUDE_RTR_FewShot"
     if "gemini" in m:
-        return "GEMINI_FDR_FewShot"
-    return "GPT_FDR_FewShot"
+        return "GEMINI_RTR_FewShot"
+    return "GPT_FewShot"
+
+
+def _default_response_format(model: str):
+    m = model.lower()
+    if m.startswith("gpt") or m.startswith("openai"):
+        return dataset_response_schema_gpt
+    if "gemini" in m:
+        return Dataset_w_Page
+    if "claude" in m:
+        return dataset_response_schema_claude
+    return None
 
 
 def main():
@@ -188,6 +204,12 @@ def main():
     parser.add_argument(
         "--prompt-name", default=None,
         help="Prompt template name (auto-detected from model if not set)",
+    )
+    parser.add_argument(
+        "--use-batch-api",
+        type=lambda v: v.lower() not in ("false", "0", "no", "off"),
+        default=True, metavar="BOOL",
+        help="Use async Batch API (default: true). Set false for synchronous commercial API calls.",
     )
     args = parser.parse_args()
 
@@ -248,6 +270,8 @@ def main():
         llm_name=args.model,
         save_to_cache=True,
         load_from_cache=True,
+        embeds_cache_read=True,
+        embeds_cache_write=True,
         log_file_override=log_file,
         log_level=logging.INFO,
         user_config_dir=args.ontology_path,
@@ -273,10 +297,12 @@ def main():
                 output_file_path=batch_output_path,
                 section_filter=args.section_filter,
                 prompt_name=args.prompt_name or _default_prompt(args.model),
+                response_format=_default_response_format(args.model),
                 semantic_retrieval=args.semantic_retrieval,
                 top_k=args.top_k,
                 brute_force_RegEx_ID_ptrs=args.brute_force_regex,
                 use_portkey=False,
+                use_batch_api=args.use_batch_api,
             )
         except Exception as e:
             logger.error(f"Batch {batch_num} failed: {e}", exc_info=True)

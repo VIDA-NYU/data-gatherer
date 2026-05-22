@@ -156,12 +156,12 @@ class LLMClient_dev:
     def api_call(self, content, response_format, temperature=0.0, **kwargs):
         self.logger.info(f"Calling {self.model} with prompt length {len(content)}")
         if self.model.startswith('gpt'):
-            return self._call_openai(content, **kwargs)
+            return self._call_openai(content, response_format=response_format, **kwargs)
         elif self.model.startswith('gemini'):
             if self.use_portkey:
                 return self._call_portkey_gemini(content, **kwargs)
             else:
-                return self._call_gemini(content, **kwargs)
+                return self._call_gemini(content, response_format=response_format, **kwargs)
         elif self.model.startswith('claude'):
             return self._call_anthropic(content, response_format)
         elif self.model.startswith('gemma') or "qwen" in self.model:
@@ -195,11 +195,13 @@ class LLMClient_dev:
         self.logger.info(f"Calling Gemini")
         if self.save_prompts:
             self.prompt_manager.save_prompt(prompt_id='abc', prompt_content=messages)
+        response_schema = kwargs.get('response_format')
         response = self.llm_client.models.generate_content(
             model=self.model,
             contents=messages,
             config=types.GenerateContentConfig(
                 response_mime_type="application/json",
+                response_schema=response_schema,
                 temperature=temperature,
             )
         )

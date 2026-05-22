@@ -1,4 +1,0 @@
-config,articles,scilite_P,scilite_R,scilite_F1,gold_P,gold_R,gold_F1
-"c1 (no semantic, no regex)",195,0.138,0.267,0.182,0.278,0.48,0.352
-"c2 (semantic k=3, no regex)",229,0.276,0.493,0.354,0.404,0.805,0.538
-c3 (semantic k=3 + regex),235,0.308,0.583,0.404,0.426,0.915,0.581

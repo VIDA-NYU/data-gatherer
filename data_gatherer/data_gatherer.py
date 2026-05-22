@@ -1753,6 +1753,7 @@ class DataGatherer:
         wait_for_completion=False,
         poll_interval=60,
         batch_description=None,
+        use_batch_api=True,
         grobid_for_pdf=False,
         use_portkey=True,
         dedup=True,
@@ -1985,6 +1986,38 @@ class DataGatherer:
                 if output_file_path:
                     df.to_csv(output_file_path, index=False)
                     self.logger.info(f"HF inference results saved to: {output_file_path}")
+                return df
+
+            # Synchronous commercial API path: call each request directly, no Batch API
+            if not use_batch_api:
+                self.logger.info(f"Sync API path: calling {self.llm} for {len(batch_requests)} requests...")
+                all_rows = []
+                for req in batch_requests:
+                    try:
+                        raw_output = self.parser.llm_client.api_call(
+                            req['messages'], response_format=response_format, temperature=temperature
+                        )
+                        metadata = req.get('metadata', {})
+                        resps = self.parser.llm_client.process_llm_response(
+                            raw_response=raw_output,
+                            response_format=response_format,
+                            expected_key='datasets'
+                        )
+                        resps = self.parser.normalize_response_type(resps)
+                        datasets = self.parser.process_datasets_response(resps, skip_validation=True)
+                        stats = metadata.get('retrieval_stats') or {}
+                        for ds in datasets:
+                            ds['source_url'] = metadata.get('url', '')
+                            ds['pub_title'] = metadata.get('title', '')
+                            ds['raw_data_format'] = metadata.get('raw_data_format', 'XML')
+                            ds.update(stats)
+                            all_rows.append(ds)
+                    except Exception as e:
+                        self.logger.error(f"Sync call failed for {req.get('custom_id')}: {e}", exc_info=True)
+                df = pd.DataFrame(all_rows) if all_rows else pd.DataFrame()
+                if output_file_path:
+                    df.to_csv(output_file_path, index=False)
+                    self.logger.info(f"Sync results saved to: {output_file_path}")
                 return df
 
             # Step 3: Use LLMClient to handle batch processing

@@ -648,13 +648,13 @@ Files:
         """
         if skip:
             dataset_id, data_repository, dataset_webpage = dataset.get('dataset_identifier'), dataset.get('data_repository'), 'n/a'
-            if 'http' in data_repository:
+            if data_repository and 'http' in data_repository:
                 str_match = re.search(r"(https?://[^\s<>\"']+|www\.[^\s<>\"']+)", data_repository)
                 dataset_webpage = str_match.group(0) if str_match else dataset_webpage
-            elif 'http' in dataset_id:
+            elif dataset_id and 'http' in dataset_id:
                 str_match = re.search(r"(https?://[^\s<>\"']+|www\.[^\s<>\"']+)", dataset_id)
                 dataset_webpage = str_match.group(0) if str_match else dataset_webpage
-            if '(' in dataset_id:
+            if dataset_id and '(' in dataset_id:
                 dataset_id = re.sub(r"\s*\(.*", '', dataset_id)
         else:
             self.logger.info(f"Schema validation called with dataset: {dataset}")
