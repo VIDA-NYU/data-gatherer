@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 """
-Evaluate the 3 retrieval configs (tc1, tc2, tc3) against SciLite and Gold GT,
+Evaluate retrieval configs against SciLite and Gold GT,
 restricted to the REV test split (249 articles).
 
 Usage:
-    python scripts/eval_configs.py            # evaluate whatever is already local
-    python scripts/eval_configs.py --download # pull missing CSVs from S3 first
+    python scripts/BioDMS/eval_configs.py            # evaluate whatever is already local
+    python scripts/BioDMS/eval_configs.py --download # pull missing T5 CSVs from S3 first
 """
 
 import argparse
@@ -24,15 +24,28 @@ from scripts.experiment_utils import evaluate_performance
 # ---------------------------------------------------------------------------
 
 CONFIGS = {
-    "c1 (no semantic, no regex)": "k8s/output/rev_test_c1/iter1/dataset_citations.csv",
-    "c2 (semantic k=3, no regex)": "k8s/output/rev_test_c2/iter1/dataset_citations.csv",
-    "c3 (semantic k=3 + regex)": "k8s/output/rev_test_c3/iter1/dataset_citations.csv",
+    # Fine-tuned T5 (k8s, downloaded via --download or run_loop.sh)
+    "T5 · c1 (no semantic, no regex)":  "k8s/output/rev_test_c1/iter1/dataset_citations.csv",
+    "T5 · c2 (semantic k=3, no regex)": "k8s/output/rev_test_c2/iter1/dataset_citations.csv",
+    "T5 · c3 (semantic k=3 + regex)":   "k8s/output/rev_test_c3/iter1/dataset_citations.csv",
+    # Claude Haiku (run locally)
+    "Haiku · c1 (no semantic, no regex)":  "k8s/output/rev_test_haiku_c1/dataset_citations.csv",
+    "Haiku · c2 (semantic k=3, no regex)": "k8s/output/rev_test_haiku_c2/dataset_citations.csv",
+    "Haiku · c3 (semantic k=3 + regex)":   "k8s/output/rev_test_haiku_c3/dataset_citations.csv",
+    # GPT-5-mini (run locally)
+    "GPT-5-mini · c1 (no semantic, no regex)":  "k8s/output/rev_test_gpt5mini_c1/dataset_citations.csv",
+    "GPT-5-mini · c2 (semantic k=3, no regex)": "k8s/output/rev_test_gpt5mini_c2/dataset_citations.csv",
+    "GPT-5-mini · c3 (semantic k=3 + regex)":   "k8s/output/rev_test_gpt5mini_c3/dataset_citations.csv",
+    # Gemini 3 Flash (run locally)
+    "Gemini-3-flash · c1 (no semantic, no regex)":  "k8s/output/rev_test_gemini3_c1/dataset_citations.csv",
+    "Gemini-3-flash · c2 (semantic k=3, no regex)": "k8s/output/rev_test_gemini3_c2/dataset_citations.csv",
+    "Gemini-3-flash · c3 (semantic k=3 + regex)":   "k8s/output/rev_test_gemini3_c3/dataset_citations.csv",
 }
 
 S3_KEYS = {
-    "c1 (no semantic, no regex)": "slice_1-tc1/dataset_citations.csv",
-    "c2 (semantic k=3, no regex)": "slice_1-tc2/dataset_citations.csv",
-    "c3 (semantic k=3 + regex)": "slice_1-tc3/dataset_citations.csv",
+    "T5 · c1 (no semantic, no regex)":  "slice_1-tc1/dataset_citations.csv",
+    "T5 · c2 (semantic k=3, no regex)": "slice_1-tc2/dataset_citations.csv",
+    "T5 · c3 (semantic k=3 + regex)":   "slice_1-tc3/dataset_citations.csv",
 }
 
 TEST_PMCID_CSV = "k8s/input/article_ids_REV_test.csv"

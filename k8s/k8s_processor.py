@@ -132,6 +132,17 @@ def upload_to_s3(local_path: str, s3_key: str) -> None:
         logger.error(f"S3 upload failed for {local_path}: {e}")
 
 
+def _default_prompt(model: str) -> str:
+    m = model.lower()
+    if m.startswith(("hf-", "local-")):
+        return "T5_primer"
+    if "claude" in m:
+        return "CLAUDE_FDR_FewShot"
+    if "gemini" in m:
+        return "GEMINI_FDR_FewShot"
+    return "GPT_FDR_FewShot"
+
+
 def main():
     parser = argparse.ArgumentParser(description="Run data-gatherer batch extraction on k8s")
     parser.add_argument("--input", required=True, help="Path to CSV with 'pmcid' column")
@@ -173,6 +184,10 @@ def main():
     parser.add_argument(
         "--top-k", type=int, default=5,
         help="Top-k sections returned by semantic retrieval (default: 5)",
+    )
+    parser.add_argument(
+        "--prompt-name", default=None,
+        help="Prompt template name (auto-detected from model if not set)",
     )
     args = parser.parse_args()
 
@@ -257,7 +272,7 @@ def main():
                 batch_file_path=batch_file_path,
                 output_file_path=batch_output_path,
                 section_filter=args.section_filter,
-                prompt_name='T5_primer',
+                prompt_name=args.prompt_name or _default_prompt(args.model),
                 semantic_retrieval=args.semantic_retrieval,
                 top_k=args.top_k,
                 brute_force_RegEx_ID_ptrs=args.brute_force_regex,
