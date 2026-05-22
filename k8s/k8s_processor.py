@@ -158,6 +158,22 @@ def main():
         choices=["data_availability_statement", "supplementary_material"],
         help="Restrict extraction to one section type (default: both)",
     )
+    parser.add_argument(
+        "--semantic-retrieval",
+        type=lambda v: v.lower() not in ("false", "0", "no", "off"),
+        default=True, metavar="BOOL",
+        help="Enable semantic section retrieval (default: true)",
+    )
+    parser.add_argument(
+        "--brute-force-regex",
+        type=lambda v: v.lower() not in ("false", "0", "no", "off"),
+        default=True, metavar="BOOL",
+        help="Enable brute-force regex ID pointer scan (default: true)",
+    )
+    parser.add_argument(
+        "--top-k", type=int, default=5,
+        help="Top-k sections returned by semantic retrieval (default: 5)",
+    )
     args = parser.parse_args()
 
     os.makedirs(args.output_dir, exist_ok=True)
@@ -242,8 +258,9 @@ def main():
                 output_file_path=batch_output_path,
                 section_filter=args.section_filter,
                 prompt_name='T5_primer',
-                semantic_retrieval=True,
-                brute_force_RegEx_ID_ptrs=True,
+                semantic_retrieval=args.semantic_retrieval,
+                top_k=args.top_k,
+                brute_force_RegEx_ID_ptrs=args.brute_force_regex,
                 use_portkey=False,
             )
         except Exception as e:

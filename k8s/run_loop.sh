@@ -49,6 +49,10 @@ PLOT_FLAG=""
 NODE_NAME=""
 PREV_ONTOLOGY_OVERRIDE=""
 RECOVER_ITER=""
+JOB_SUFFIX=""
+SEMANTIC_RETRIEVAL="true"
+BRUTE_FORCE_REGEX="true"
+TOP_K="5"
 
 # --- Args ---
 while [[ $# -gt 0 ]]; do
@@ -63,6 +67,10 @@ while [[ $# -gt 0 ]]; do
         --start-iteration)         START_ITER="$2";              shift 2 ;;
         --prev-ontology)           PREV_ONTOLOGY_OVERRIDE="$2";  shift 2 ;;
         --recover-iteration)       RECOVER_ITER="$2";            shift 2 ;;
+        --job-suffix)              JOB_SUFFIX="$2";              shift 2 ;;
+        --semantic-retrieval)      SEMANTIC_RETRIEVAL="$2";      shift 2 ;;
+        --brute-force-regex)       BRUTE_FORCE_REGEX="$2";       shift 2 ;;
+        --top-k)                   TOP_K="$2";                   shift 2 ;;
         --clean)                   CLEAN=1;                      shift   ;;
         --cumulative)              CUMULATIVE=1;                 shift   ;;
         --plot)                    PLOT_FLAG="--plot";           shift   ;;
@@ -70,7 +78,7 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
-export NODE_NAME  # may be empty; envsubst leaves the block if blank
+export NODE_NAME JOB_SUFFIX SEMANTIC_RETRIEVAL BRUTE_FORCE_REGEX TOP_K
 
 # --- Helpers ---
 pvc_reader_ready() {
@@ -135,7 +143,7 @@ release_pvc_reader() {
 
 delete_slice_jobs() {
     for i in $(seq 1 "$N_GPUS"); do
-        kubectl delete job "data-gatherer-batch-slice-${i}" \
+        kubectl delete job "data-gatherer-batch-slice-${i}${JOB_SUFFIX}" \
             -n "$NAMESPACE" --ignore-not-found 2>/dev/null
     done
 }
@@ -160,9 +168,9 @@ wait_for_all_jobs() {
         n_complete=0; n_failed=0
         for i in $(seq 1 "$N_GPUS"); do
             local succeeded cond_failed
-            succeeded=$(kubectl get job "data-gatherer-batch-slice-${i}" -n "$NAMESPACE" \
+            succeeded=$(kubectl get job "data-gatherer-batch-slice-${i}${JOB_SUFFIX}" -n "$NAMESPACE" \
                 -o jsonpath='{.status.succeeded}' 2>/dev/null)
-            cond_failed=$(kubectl get job "data-gatherer-batch-slice-${i}" -n "$NAMESPACE" \
+            cond_failed=$(kubectl get job "data-gatherer-batch-slice-${i}${JOB_SUFFIX}" -n "$NAMESPACE" \
                 -o jsonpath='{.status.conditions[?(@.type=="Failed")].status}' 2>/dev/null)
             [[ "${succeeded:-0}" -ge 1 ]] && ((n_complete++)) || true
             [[ "$cond_failed" == "True" ]] && ((n_failed++)) || true
@@ -195,7 +203,7 @@ copy_and_merge_outputs() {
         local dest="$iter_dir/slice_${i}_citations.csv"
         local ok=0
         for attempt in 1 2 3; do
-            if aws s3 cp "s3://${bucket}/slice_${i}/dataset_citations.csv" "$dest"; then
+            if aws s3 cp "s3://${bucket}/slice_${i}${JOB_SUFFIX}/dataset_citations.csv" "$dest"; then
                 echo "  downloaded slice_${i}"
                 csv_list="$csv_list $dest"
                 ok=1
@@ -207,7 +215,7 @@ copy_and_merge_outputs() {
         [[ $ok -eq 0 ]] && echo "  [error] slice_${i} could not be downloaded after 3 attempts — skipping"
 
         # articles_log — best-effort, no retry needed
-        aws s3 cp "s3://${bucket}/slice_${i}/articles_log.csv" \
+        aws s3 cp "s3://${bucket}/slice_${i}${JOB_SUFFIX}/articles_log.csv" \
             "$iter_dir/slice_${i}_articles_log.csv" 2>/dev/null \
             && echo "  downloaded slice_${i} articles_log" \
             || echo "  [warn] slice_${i} articles_log not found — skipping"
