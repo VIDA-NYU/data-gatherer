@@ -52,8 +52,8 @@ class LLMParser(ABC):
 
         self.llm_name = llm_name
         entire_document_models = ["gemini-1.5-flash", "gemini-1.5-pro", "gemini-2.0-flash-exp", "gemini-2.0-flash",
-                                  "gemini-2.5-flash", "gpt-4o", "gpt-4o-mini", "gpt-5-nano", "gpt-5-mini", "gpt-5",
-                                  "claude-haiku-4-5-20251001", "claude-sonnet-4-5"]
+                                  "gemini-2.5-flash", "gemini-3-flash", "gpt-4o", "gpt-4o-mini", "gpt-5-nano",
+                                  "gpt-5-mini", "gpt-5", "claude-haiku-4-5-20251001", "claude-sonnet-4-5"]
 
         self.full_document_read = full_document_read and self.llm_name in entire_document_models
         self.title = None
