@@ -45,6 +45,7 @@ PVC_ONTOLOGY="/data/ontology/open_bio_data_repos.json"
 JOB_TIMEOUT="7200s"
 CLEAN=0
 CUMULATIVE=0
+NO_ENRICH=0
 PLOT_FLAG=""
 NODE_NAME=""
 PREV_ONTOLOGY_OVERRIDE=""
@@ -73,6 +74,7 @@ while [[ $# -gt 0 ]]; do
         --top-k)                   TOP_K="$2";                   shift 2 ;;
         --clean)                   CLEAN=1;                      shift   ;;
         --cumulative)              CUMULATIVE=1;                 shift   ;;
+        --no-enrich)               NO_ENRICH=1;                  shift   ;;
         --plot)                    PLOT_FLAG="--plot";           shift   ;;
         *) echo "Unknown arg: $1"; exit 1 ;;
     esac
@@ -359,40 +361,44 @@ PYEOF
         "s3://${BUCKET}/input/skip_urls.json" \
         && echo "[loop] Skip list uploaded to S3"
 
-    # 4. Run enrichment on merged data
-    ENRICHED_ONTOLOGY="$ITER_DIR/open_bio_data_repos_v${ITER}.json"
-    PLOT_ARG=""
-    if [[ -n "$PLOT_FLAG" ]]; then
-        PLOT_ARG="--plot $ITER_DIR/clusters_iter${ITER}.html"
+    # 4. Run enrichment on merged data (skip if --no-enrich)
+    if [[ "$NO_ENRICH" -eq 1 ]]; then
+        echo "[loop] --no-enrich: skipping enrichment. Iteration $ITER done."
+    else
+        ENRICHED_ONTOLOGY="$ITER_DIR/open_bio_data_repos_v${ITER}.json"
+        PLOT_ARG=""
+        if [[ -n "$PLOT_FLAG" ]]; then
+            PLOT_ARG="--plot $ITER_DIR/clusters_iter${ITER}.html"
+        fi
+
+        # Build citations list: marginal = current iter only; cumulative = all iters so far
+        citations_args=("$ITER_DIR/dataset_citations.csv")
+        if [[ "$CUMULATIVE" -eq 1 ]]; then
+            for prev_iter in $(seq 1 $((ITER - 1))); do
+                prev_csv="$OUTPUT_BASE/iter${prev_iter}/dataset_citations.csv"
+                [[ -f "$prev_csv" ]] && citations_args+=("$prev_csv")
+            done
+            echo "[loop] Cumulative mode: ${#citations_args[@]} citation file(s)"
+        fi
+
+        echo "[loop] Running enrichment..."
+        python3 scripts/enrich_ontology.py \
+            --citations "${citations_args[@]}" \
+            --current-ontology "$PREV_ONTOLOGY" \
+            --output "$ENRICHED_ONTOLOGY" \
+            --log "$ITER_DIR/enrich.log" \
+            --pipeline group \
+            $PLOT_ARG
+
+        # 5. Push enriched ontology to S3
+        BUCKET=$(kubectl get secret data-gatherer-s3-secret -n "$NAMESPACE" \
+                     -o jsonpath='{.data.S3_OUTPUT_BUCKET}' | base64 -d)
+        echo "[loop] Uploading enriched ontology to S3..."
+        aws s3 cp "$ENRICHED_ONTOLOGY" "s3://${BUCKET}/ontology/open_bio_data_repos.json"
+
+        PREV_ONTOLOGY="$ENRICHED_ONTOLOGY"
+        echo "[loop] Iteration $ITER done. Ontology: $ENRICHED_ONTOLOGY"
     fi
-
-    # Build citations list: marginal = current iter only; cumulative = all iters so far
-    citations_args=("$ITER_DIR/dataset_citations.csv")
-    if [[ "$CUMULATIVE" -eq 1 ]]; then
-        for prev_iter in $(seq 1 $((ITER - 1))); do
-            prev_csv="$OUTPUT_BASE/iter${prev_iter}/dataset_citations.csv"
-            [[ -f "$prev_csv" ]] && citations_args+=("$prev_csv")
-        done
-        echo "[loop] Cumulative mode: ${#citations_args[@]} citation file(s)"
-    fi
-
-    echo "[loop] Running enrichment..."
-    python3 scripts/enrich_ontology.py \
-        --citations "${citations_args[@]}" \
-        --current-ontology "$PREV_ONTOLOGY" \
-        --output "$ENRICHED_ONTOLOGY" \
-        --log "$ITER_DIR/enrich.log" \
-        --pipeline group \
-        $PLOT_ARG
-
-    # 5. Push enriched ontology to S3
-    BUCKET=$(kubectl get secret data-gatherer-s3-secret -n "$NAMESPACE" \
-                 -o jsonpath='{.data.S3_OUTPUT_BUCKET}' | base64 -d)
-    echo "[loop] Uploading enriched ontology to S3..."
-    aws s3 cp "$ENRICHED_ONTOLOGY" "s3://${BUCKET}/ontology/open_bio_data_repos.json"
-
-    PREV_ONTOLOGY="$ENRICHED_ONTOLOGY"
-    echo "[loop] Iteration $ITER done. Ontology: $ENRICHED_ONTOLOGY"
 done
 
 echo ""
