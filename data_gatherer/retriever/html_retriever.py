@@ -266,7 +266,7 @@ class htmlRetriever(BaseRetriever):
         :return: bool — True if data is considered complete, False otherwise.
 
         """
-        self.logger.info(f"Checking if HTML data is complete with required sections: {required_sections}")
+        self.logger.info(f"Checking if HTML data (len={len(raw_data)}) is complete with required sections: {required_sections}")
 
         if isinstance(required_sections, list):
             for section in required_sections:

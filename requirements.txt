@@ -33,3 +33,12 @@ mcp
 nest-asyncio
 playwright
 anthropic
+# fine-tuning dependencies
+accelerate
+datasets
+evaluate
+openpyxl
+rouge-score
+scikit-learn
+sentencepiece
+boto3

@@ -562,11 +562,9 @@ class HTMLParser(LLMParser):
             out_df.loc[:, 'pub_title'] = self.retriever.extract_publication_title(preprocessed_data)
             out_df['raw_data_format'] = raw_data_format
         else:
-            # Create empty DataFrame with proper columns
-            out_df = pd.DataFrame(columns=['source_url', 'pub_title', 'raw_data_format'])
             self.logger.warning(f"No datasets found in the document")
 
-        return out_df
+        return out_df.reindex(columns=DATASET_OUTPUT_COLS)
 
     def extract_href_from_supplementary_material(self, raw_html, current_url_address):
         """
@@ -681,6 +679,8 @@ class HTMLParser(LLMParser):
 
         # Drop duplicates based on link
         df_supp = df_supp.drop_duplicates(subset=['link'])
+        # Drop dynamic anchor-attribute columns — they vary per document and don't belong in the output schema
+        df_supp = df_supp[[c for c in df_supp.columns if not c.startswith('a_attr_')]]
         self.logger.info(f"Extracted {len(df_supp)} unique supplementary material links from HTML.")
 
         return df_supp
@@ -1426,3 +1426,24 @@ class HTMLParser(LLMParser):
             dataset_webpage = None
 
         return dataset_webpage, download_link
+
+    def _p_fallback_corpus(self, data) -> list:
+        try:
+            soup = MyBeautifulSoup(data, 'html.parser') if isinstance(data, str) else data
+            body = soup.find('body') or soup
+            p_elements = body.find_all('p', recursive=False) or body.find_all('p')
+            corpus = []
+            for i, p in enumerate(p_elements):
+                text = p.get_text(separator=' ', strip=True)
+                if text:
+                    corpus.append({
+                        'text': text,
+                        'section_title': 'body-paragraph',
+                        'sec_type': 'p-fallback',
+                        'contains_id_pattern': False,
+                        'chunk_id': i,
+                    })
+            return corpus
+        except Exception as e:
+            self.logger.warning(f"_p_fallback_corpus failed: {e}")
+            return []

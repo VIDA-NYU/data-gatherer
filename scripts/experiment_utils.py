@@ -463,23 +463,54 @@ def evaluate_performance(predict_df, ground_truth, orchestrator, false_positives
     if gt_base is None:
         gt_base = predict_df['source_url'].unique()
 
-    for source_page in gt_base:
+    # Pre-build GT index: pmcid (lower) → set of identifiers — avoids O(n) scan per article
+    gt_index = {}
+    for pmcid, identifier in zip(ground_truth['pmcid'].str.lower(), ground_truth['identifier'].fillna('').str.lower()):
+        if pmcid not in gt_index:
+            gt_index[pmcid] = set()
+        for id_part in identifier.split(','):
+            id_part = id_part.strip()
+            if id_part:
+                gt_index[pmcid].add(id_part)
+
+    # Pre-build predict index: pmcid → (set of identifiers, subset df for FP lookup)
+    predict_df = predict_df.copy()
+    predict_df['_pub_id'] = (
+        predict_df['source_url'].fillna('')
+        .str.lower()
+        .str.extract(r'(pmc\d+)', expand=False)
+    )
+    predict_df['_id_lower'] = predict_df['dataset_identifier'].fillna('').str.lower()
+    predict_index = {
+        pub_id: grp
+        for pub_id, grp in predict_df.groupby('_pub_id', sort=False)
+    }
+
+    t_start = time.time()
+    n_total = len(gt_base)
+
+    for i, source_page in enumerate(gt_base):
         pub_id = source_page.split('/')[-1].lower() if not source_page.endswith('/') else source_page.split('/')[-2].lower()
-        
-        orchestrator.logger.info(f"Evaluating pub_id: {pub_id}")
-        gt_data = ground_truth[ground_truth['pmcid'].str.lower() == pub_id.lower()]  # extract ground truth
 
-        gt_datasets = set()
-        for dataset_string in gt_data['identifier'].dropna().str.lower():
-            gt_datasets.update(dataset_string.split(','))  # Convert CSV string into set of IDs
+        if i % 500 == 0:
+            elapsed = time.time() - t_start
+            rate = i / elapsed if elapsed > 0 else 0
+            eta = (n_total - i) / rate if rate > 0 else float('inf')
+            orchestrator.logger.info(
+                f"[eval] {i}/{n_total} articles ({i/n_total:.0%})  "
+                f"elapsed={elapsed:.0f}s  ETA={eta:.0f}s"
+            )
 
-        orchestrator.logger.info(f"# of elements in gt_data: {len(gt_data)}. Element IDs: {gt_datasets}")
+        orchestrator.logger.debug(f"Evaluating pub_id: {pub_id}")
+        gt_datasets = gt_index.get(pub_id, set())
+
+        orchestrator.logger.debug(f"# of elements in gt_data: {len(gt_datasets)}. Element IDs: {gt_datasets}")
 
         num_sources += 1
 
-        # Extract evaluation datasets for this source page
-        eval_data = predict_df[predict_df['source_url'].str.lower() == source_page.lower()]
-        eval_datasets = set(eval_data['dataset_identifier'].dropna().str.lower())
+        # O(1) lookup via pre-built index
+        eval_data = predict_index.get(pub_id, predict_df.iloc[0:0])
+        eval_datasets = set(eval_data['_id_lower'].dropna())
         # Remove invalid entries
         eval_datasets.discard('n/a')
         eval_datasets.discard('')
@@ -515,7 +546,7 @@ def evaluate_performance(predict_df, ground_truth, orchestrator, false_positives
 
         # **False Positives (Unmatched extracted datasets)**
         FP = eval_datasets - matched_eval
-        false_positives_output.extend([false_p, eval_data[eval_data['dataset_identifier'].str.lower() == false_p]['data_repository'].values[0], pub_id] for false_p in FP)
+        false_positives_output.extend([false_p, eval_data[eval_data['_id_lower'] == false_p]['data_repository'].values[0] if 'data_repository' in eval_data.columns and len(eval_data[eval_data['_id_lower'] == false_p]) > 0 else 'unknown', pub_id] for false_p in FP)
 
         # **False Negatives (Unmatched ground truth datasets)**
         FN = gt_datasets - matched_gt
