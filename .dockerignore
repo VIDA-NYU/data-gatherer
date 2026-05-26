@@ -5,12 +5,18 @@
 **/*.env
 
 # Exclude non-core directories
+.venv/
 data_gatherer.egg-info/
 docs/
 drivers/
 logs/
 prompts/
 scripts/
+!scripts/scrape_annotations.py
+!scripts/Local_model_finetuning/train_flan_t5.py
+!scripts/Local_model_finetuning/train_seq2seq.py
+!scripts/Local_model_finetuning/ground_truth/gt_dataset_info_no_dspage_extraction_from_snippet.xlsx
+!scripts/exp_input/REV.txt
 tests/
 tmp/
 .git
@@ -18,3 +24,18 @@ tmp/
 
 # Exclude specific files
 test_refactor.ipynb
+
+# Common Python project ignores
+__pycache__/
+*.pyc
+.pytest_cache/
+.vscode/
+.idea/
+.DS_Store
+.mypy_cache/
+.coverage
+.ipynb_checkpoints/
+.cache/
+pip-wheel-metadata/
+dist/
+build/

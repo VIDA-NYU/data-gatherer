@@ -1262,6 +1262,8 @@ class EntrezFetcher(DataFetcher):
         Fetches data from the API. First tries backup data (fast), then live API call if needed.
 
         :param article_id: The URL of the article to fetch data for.
+
+        returns: The raw XML content of the article, or None if fetching failed.
         """
 
         self.raw_data_format = 'XML'
@@ -1331,6 +1333,49 @@ class EntrezFetcher(DataFetcher):
         # If all retries exhausted
         self.logger.error(f"Live API fetch failed for {pmcid} after {retries} attempts")
         return None
+
+    def batch_fetch_data(self, pmcids, batch_size=200, retries=3, delay=1):
+        """Fetch multiple PMC articles in a single Entrez efetch call.
+
+        Returns {pmcid: xml_element} for every article found in the response.
+        PMCIDs not returned by the API (not in OA, invalid, etc.) are omitted.
+        """
+        self.raw_data_format = 'XML'
+        results = {}
+        for start in range(0, len(pmcids), batch_size):
+            chunk = pmcids[start:start + batch_size]
+            api_call = re.sub(r'__PMCID__', ','.join(chunk), self.base)
+            self.logger.info(f"Entrez batch_fetch: {len(chunk)} PMCIDs (offset {start}), api_call={api_call}")
+            for attempt in range(retries):
+                try:
+                    response = self.api_client.get(api_call, timeout=60)
+                    if response.status_code == 200:
+                        root = ET.fromstring(response.content)
+                        children = list(root)
+                        for article in children:
+                            id_elem = (
+                                article.find('.//article-id[@pub-id-type="pmc"]') or
+                                article.find('.//article-id[@pub-id-type="pmcid"]')
+                            )
+                            if id_elem is not None:
+                                pmcid_key = id_elem.text.strip()
+                                if not pmcid_key.upper().startswith('PMC'):
+                                    pmcid_key = f"PMC{pmcid_key}"
+                                results[pmcid_key] = article
+                        self.logger.info(f"Entrez batch_fetch: got {len(results)} articles so far")
+                        break
+                    elif response.status_code == 429:
+                        self.logger.warning(f"Rate limited on batch, retrying in {delay}s...")
+                        time.sleep(delay)
+                    else:
+                        self.logger.error(f"Entrez batch_fetch failed: HTTP {response.status_code}")
+                        break
+                except Exception as e:
+                    self.logger.error(f"Entrez batch_fetch error (attempt {attempt + 1}): {e}")
+                    if attempt < retries - 1:
+                        time.sleep(delay)
+            time.sleep(0.1 if os.environ.get('NCBI_API_KEY') else 0.34)
+        return results
 
     def download_xml(self, directory, api_data, pub_link):
         """

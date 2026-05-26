@@ -69,7 +69,7 @@ Issues = "https://github.com/VIDA-NYU/data-gatherer/issues"
 data-gatherer-mcp = "data_gatherer.mcp:run_mcp_server"
 
 [tool.setuptools]
-packages = ["data_gatherer", "data_gatherer.llm", "data_gatherer.parser", "data_gatherer.retriever", "data_gatherer.prompts", "data_gatherer.config", "data_gatherer.prompts.prompt_templates", "data_gatherer.prompts.prompt_templates.metadata_prompts"]
+packages = ["data_gatherer", "data_gatherer.llm", "data_gatherer.parser", "data_gatherer.retriever", "data_gatherer.prompts", "data_gatherer.config", "data_gatherer.prompts.prompt_templates", "data_gatherer.prompts.prompt_templates.metadata_prompts", "data_gatherer.prompts.prompt_templates.agent_for_FP_analysis"]
 include-package-data = true
 
 [tool.setuptools.package-data]
@@ -78,4 +78,5 @@ data_gatherer = [
     "prompts/*.json",
     "prompts/prompt_templates/dataset_prompts/*.json",
     "prompts/prompt_templates/metadata_prompts/*.json",
+    "prompts/prompt_templates/agent_for_FP_analysis/*.json",
 ]

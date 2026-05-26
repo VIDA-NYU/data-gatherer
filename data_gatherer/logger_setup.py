@@ -19,13 +19,9 @@ def setup_logging(logger_name, log_file=None, level=logging.WARNING, clear_previ
 
     # Always show logs, even during tests (do not suppress logging)
 
-    WHITE = "\033[97m"
-    RESET = "\033[0m"
-    console_format = f"{WHITE}%(filename)s - line %(lineno)d - %(levelname)s - %(message)s{RESET}"
-
-    # Formatters
-    console_formatter = logging.Formatter(console_format)
-    logfile_formatter = logging.Formatter('%(asctime)s - %(filename)s - line %(lineno)d - %(levelname)s - %(message)s')
+    fmt = '%(asctime)s - %(filename)s:%(lineno)d - %(levelname)s - %(message)s'
+    console_formatter = logging.Formatter(fmt)
+    logfile_formatter = logging.Formatter(fmt)
 
     # Always add console handler
     console_handler = logging.StreamHandler()

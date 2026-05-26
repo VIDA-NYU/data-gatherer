@@ -1,0 +1,486 @@
+{
+  "meta": {
+    "name": "Data Repositories Ontology",
+    "version": "2.0",
+    "namespace": "https://github.com/VIDA-NYU/data-gatherer/ontology/dro#",
+    "description": "Controlled vocabulary to reconstruct dataset page URLs, match and filter sections that may contain dataset information, and clean dataset citations from literature"
+  },
+  "repos": {
+    "proteomexchange": {
+      "type": "consortium",
+      "name": "ProteomeXchange Consortium",
+      "domains": ["proteomecentral.proteomexchange.org", "www.proteomexchange.org"],
+      "members": ["pride", "massive", "iprox", "jpost", "peptideatlas", "panoramapublic"],
+      "accessions": {
+        "dataset": {
+          "id_pattern": "\\bPXD\\d{5,10}",
+          "level": "dataset",
+          "scan_eligible": true,
+          "url_template": "https://proteomecentral.proteomexchange.org/cgi/GetDataset?ID=__ID__"
+        }
+      }
+    },
+
+    "pride": {
+      "name": "PRIDE",
+      "consortium": "proteomexchange",
+      "domains": ["www.ebi.ac.uk"],
+      "retrieval": {
+        "javascript_load_required": true,
+        "access_mode": "Complex download",
+        "download_root": "https://ftp.pride.ebi.ac.uk/pride/data/archive/__ID__/"
+      }
+    },
+
+    "massive": {
+      "name": "MassIVE",
+      "consortium": "proteomexchange",
+      "domains": ["massive.ucsd.edu"],
+      "retrieval": {
+        "access_mode": "Complex download",
+        "download_root": "ftp://massive.ucsd.edu/v06/__ID__/"
+      },
+      "accessions": {
+        "dataset": {
+          "id_pattern": "MSV\\d{9}",
+          "level": "dataset",
+          "scan_eligible": true,
+          "url_template": "https://massive.ucsd.edu/ProteoSAFe/dataset.jsp?accession=__ID__"
+        }
+      }
+    },
+
+    "iprox": {
+      "name": "iProX",
+      "consortium": "proteomexchange",
+      "domains": ["www.iprox.cn"],
+      "retrieval": {
+        "access_mode": "Complex download"
+      },
+      "accessions": {
+        "dataset": {
+          "id_pattern": "IPX\\d{10}",
+          "level": "dataset",
+          "scan_eligible": false,
+          "url_template": "https://www.iprox.cn/page/project.html?id=__ID__"
+        }
+      }
+    },
+
+    "jpost": {
+      "name": "jPOST",
+      "consortium": "proteomexchange",
+      "domains": ["repository.jpostdb.org"],
+      "retrieval": {
+        "access_mode": "Complex download"
+      },
+      "accessions": {
+        "dataset": {
+          "id_pattern": "JPST\\d{6,7}",
+          "level": "dataset",
+          "scan_eligible": true,
+          "url_template": "https://repository.jpostdb.org/entry/__ID__"
+        }
+      }
+    },
+
+    "geo": {
+      "name": "Gene Expression Omnibus",
+      "domains": ["ncbi.nlm.nih.gov"],
+      "retrieval": {
+        "access_mode": "Complex download"
+      },
+      "accessions": {
+        "series": {
+          "id_pattern": "GSE\\d+",
+          "level": "dataset",
+          "scan_eligible": true,
+          "url_template": "https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=__ID__"
+        },
+        "sample": {
+          "id_pattern": "GSM\\d+",
+          "level": "record",
+          "scan_eligible": true
+        },
+        "platform": {
+          "id_pattern": "GPL\\d+",
+          "level": "record",
+          "scan_eligible": false
+        },
+        "dataset": {
+          "id_pattern": "GDS\\d+",
+          "level": "record",
+          "scan_eligible": false
+        }
+      }
+    },
+
+    "sra": {
+      "name": "NCBI Sequence Read Archive",
+      "retrieval": {
+        "javascript_load_required": true,
+        "access_mode": "Complex download",
+        "informative_html_metadata_tags": ["form"]
+      },
+      "accessions": {
+        "study": {
+          "id_pattern": "SRP\\d+",
+          "level": "dataset",
+          "scan_eligible": true,
+          "url_template": "https://www.ncbi.nlm.nih.gov/sra/__ID__"
+        },
+        "run": {
+          "id_pattern": "SRR\\d+",
+          "level": "record",
+          "scan_eligible": true
+        },
+        "experiment": {
+          "id_pattern": "SRX\\d+",
+          "level": "record",
+          "scan_eligible": true
+        },
+        "sample": {
+          "id_pattern": "SRS\\d+",
+          "level": "record",
+          "scan_eligible": false
+        }
+      }
+    },
+
+    "bioproject": {
+      "name": "NCBI BioProject",
+      "accessions": {
+        "project": {
+          "id_pattern": "PRJNA\\d+",
+          "level": "project",
+          "scan_eligible": true,
+          "url_template": "https://www.ncbi.nlm.nih.gov/bioproject/__ID__"
+        }
+      }
+    },
+
+    "biosamples": {
+      "name": "NCBI BioSamples",
+      "accessions": {
+        "sample": {
+          "id_pattern": "SAMN\\d+",
+          "level": "record",
+          "scan_eligible": true,
+          "url_template": "https://www.ncbi.nlm.nih.gov/biosample/__ID__"
+        }
+      }
+    },
+
+    "ena": {
+      "name": "European Nucleotide Archive",
+      "domains": ["www.ebi.ac.uk"],
+      "accessions": {
+        "project": {
+          "id_pattern": "PRJEB\\d+",
+          "level": "project",
+          "scan_eligible": true,
+          "url_template": "https://www.ebi.ac.uk/ena/browser/view/__ID__"
+        },
+        "study": {
+          "id_pattern": "ERP\\d+",
+          "level": "dataset",
+          "scan_eligible": false
+        },
+        "run": {
+          "id_pattern": "ERR\\d+",
+          "level": "record",
+          "scan_eligible": false
+        },
+        "experiment": {
+          "id_pattern": "ERX\\d+",
+          "level": "record",
+          "scan_eligible": false
+        },
+        "sample": {
+          "id_pattern": "ERS\\d+",
+          "level": "record",
+          "scan_eligible": false
+        },
+        "biosample": {
+          "id_pattern": "SAMEA\\d+",
+          "level": "record",
+          "scan_eligible": false
+        }
+      }
+    },
+
+    "dbgap": {
+      "name": "Database of Genotypes and Phenotypes",
+      "retrieval": {
+        "access_mode": "Application to access"
+      },
+      "accessions": {
+        "study": {
+          "id_pattern": "phs\\d{6}",
+          "level": "dataset",
+          "scan_eligible": true,
+          "url_template": "https://www.ncbi.nlm.nih.gov/projects/gap/cgi-bin/study.cgi?study_id=__ID__",
+          "default_id_suffix": ".v1.p1"
+        }
+      }
+    },
+
+    "ega": {
+      "name": "European Genome-phenome Archive",
+      "domains": ["ega-archive.org"],
+      "retrieval": {
+        "access_mode": "Contact to access"
+      },
+      "accessions": {
+        "study": {
+          "id_pattern": "EGAS\\d{11}",
+          "level": "dataset",
+          "scan_eligible": true,
+          "url_template": "https://ega-archive.org/studies/__ID__"
+        },
+        "dataset": {
+          "id_pattern": "EGAD\\d{11}",
+          "level": "dataset",
+          "scan_eligible": true,
+          "url_template": "https://ega-archive.org/datasets/__ID__"
+        }
+      }
+    },
+
+    "arrayexpress": {
+      "name": "ArrayExpress",
+      "domains": ["www.ebi.ac.uk"],
+      "retrieval": {
+        "javascript_load_required": true,
+        "access_mode": "Complex download"
+      },
+      "accessions": {
+        "experiment": {
+          "id_pattern": "E-[A-Z]{4}-\\d+",
+          "level": "dataset",
+          "scan_eligible": true,
+          "url_template": "https://www.ebi.ac.uk/biostudies/ArrayExpress/studies/__ID__"
+        }
+      }
+    },
+
+    "metabolights": {
+      "name": "MetaboLights",
+      "domains": ["www.ebi.ac.uk"],
+      "accessions": {
+        "study": {
+          "id_pattern": "MTBLS\\d+",
+          "level": "dataset",
+          "scan_eligible": true,
+          "url_template": "https://www.ebi.ac.uk/metabolights/__ID__"
+        }
+      }
+    },
+
+    "metabolomics_workbench": {
+      "name": "Metabolomics Workbench",
+      "accessions": {
+        "study": {
+          "id_pattern": "ST\\d{6}",
+          "level": "dataset",
+          "scan_eligible": true,
+          "url_template": "https://www.metabolomicsworkbench.org/data/DRCCMetadata.php?Mode=Study&StudyID=__ID__"
+        }
+      }
+    },
+
+    "synapse": {
+      "name": "Synapse",
+      "domains": ["www.synapse.org"],
+      "retrieval": {
+        "access_mode": "Complex download or application to access"
+      },
+      "accessions": {
+        "dataset": {
+          "id_pattern": "syn\\d{7,12}",
+          "level": "dataset",
+          "scan_eligible": true,
+          "url_template": "https://www.synapse.org/#!Synapse:__ID__"
+        }
+      }
+    },
+
+    "zenodo": {
+      "name": "Zenodo",
+      "domains": ["zenodo.org"],
+      "accessions": {
+        "record": {
+          "id_pattern": "10\\.5281/zenodo\\.\\d+",
+          "level": "dataset",
+          "scan_eligible": true,
+          "url_template": "https://zenodo.org/record/__ID__"
+        }
+      }
+    },
+
+    "figshare": {
+      "name": "figshare",
+      "domains": ["figshare.com"],
+      "accessions": {
+        "dataset": {
+          "id_pattern": "10\\.6084/m9\\.figshare\\.\\d+",
+          "level": "dataset",
+          "scan_eligible": true,
+          "url_template": "https://figshare.com/articles/__ID__"
+        }
+      }
+    },
+
+    "mendeley": {
+      "name": "Mendeley Data",
+      "domains": ["data.mendeley.com"],
+      "accessions": {
+        "dataset": {
+          "id_pattern": "10\\.17632/[a-z0-9]+\\.\\d+",
+          "level": "dataset",
+          "scan_eligible": true
+        }
+      }
+    },
+
+    "pdb": {
+      "name": "Protein Data Bank",
+      "accessions": {
+        "entry": {
+          "id_pattern": "\\bpdb[1-9][a-zA-Z0-9]{3}\\b",
+          "level": "dataset",
+          "scan_eligible": false,
+          "url_template": "https://www.rcsb.org/structure/__ID__"
+        }
+      }
+    },
+
+    "emdb": {
+      "name": "Electron Microscopy Data Bank",
+      "accessions": {
+        "entry": {
+          "id_pattern": "EMD-\\d{4,6}",
+          "level": "dataset",
+          "scan_eligible": true,
+          "url_template": "https://www.ebi.ac.uk/emdb/__ID__"
+        }
+      }
+    },
+
+    "encode": {
+      "name": "ENCODE",
+      "domains": ["encodeproject.org"],
+      "accessions": {
+        "experiment": {
+          "id_pattern": "ENC[A-Z]{2}[A-Z0-9]{6,}",
+          "level": "dataset",
+          "scan_eligible": true,
+          "url_template": "https://www.encodeproject.org/__ID__"
+        }
+      }
+    },
+
+    "pdc": {
+      "name": "Proteomic Data Commons",
+      "domains": ["pdc.cancer.gov"],
+      "retrieval": {
+        "javascript_load_required": true,
+        "access_mode": "Complex download or application to access"
+      },
+      "accessions": {
+        "study": {
+          "id_pattern": "PDC[0-9]+",
+          "level": "dataset",
+          "scan_eligible": true,
+          "url_template": "https://proteomic.datacommons.cancer.gov/pdc/study/__ID__"
+        }
+      }
+    },
+
+    "gdc": {
+      "name": "Genomic Data Commons",
+      "domains": ["gdc.cancer.gov"],
+      "retrieval": {
+        "access_mode": "Complex download"
+      }
+    },
+
+    "tcia": {
+      "name": "The Cancer Imaging Archive",
+      "domains": ["cancerimagingarchive.net"],
+      "retrieval": {
+        "access_mode": "Complex download"
+      }
+    },
+
+    "bigd": {
+      "name": "BIGD / NGDC",
+      "domains": ["bigd.big.ac.cn"],
+      "retrieval": {
+        "download_root": "https://download.cncb.ac.cn/gsa/__ID__"
+      },
+      "accessions": {
+        "dataset": {
+          "id_pattern": "CRA\\d+",
+          "level": "dataset",
+          "scan_eligible": true,
+          "url_template": "https://bigd.big.ac.cn/browse/__ID__"
+        }
+      }
+    },
+
+    "flowrepository": {
+      "name": "FlowRepository",
+      "accessions": {
+        "dataset": {
+          "id_pattern": "FR-FCM-[A-Z0-9]{4}",
+          "level": "dataset",
+          "scan_eligible": true,
+          "url_template": "https://flowrepository.org/id/__ID__"
+        }
+      }
+    },
+
+    "biostudies": {
+      "name": "BioStudies",
+      "domains": ["www.ebi.ac.uk"],
+      "accessions": {
+        "study": {
+          "id_pattern": "S-BSST\\d+",
+          "level": "dataset",
+          "scan_eligible": true,
+          "url_template": "https://www.ebi.ac.uk/biostudies/studies/__ID__"
+        }
+      }
+    },
+
+    "gisaid": {
+      "name": "GISAID",
+      "domains": ["gisaid.org"],
+      "retrieval": {
+        "access_mode": "Application to access"
+      },
+      "accessions": {
+        "sequence": {
+          "id_pattern": "EPI_ISL_\\d+",
+          "level": "dataset",
+          "scan_eligible": true
+        }
+      }
+    },
+
+    "nuccore": {
+      "name": "NCBI Nucleotide",
+      "domains": ["ncbi.nlm.nih.gov"],
+      "accessions": {
+        "sequence": {
+          "id_pattern": "[A-Z]{1,2}\\d{5,8}",
+          "level": "record",
+          "scan_eligible": false,
+          "url_template": "https://www.ncbi.nlm.nih.gov/nuccore/__ID__"
+        }
+      }
+    }
+
+  }
+}

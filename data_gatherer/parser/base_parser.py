@@ -16,6 +16,12 @@ from json_repair import repair_json
 from data_gatherer.llm.llm_client import LLMClient_dev
 from data_gatherer.llm.response_schema import *
 
+DATASET_OUTPUT_COLS = [
+    'dataset_identifier', 'repository_reference', 'data_repository', 'dataset_webpage', 'access_mode',
+    'link', 'source_url', 'download_link', 'title', 'content_type', 'id', 'caption', 'description',
+    'source_section', 'retrieval_pattern', 'context_description', 'file_extension', 'pub_title', 'raw_data_format',
+]
+
 # Abstract base class for parsing data
 class LLMParser(ABC):
     """
@@ -46,8 +52,8 @@ class LLMParser(ABC):
 
         self.llm_name = llm_name
         entire_document_models = ["gemini-1.5-flash", "gemini-1.5-pro", "gemini-2.0-flash-exp", "gemini-2.0-flash",
-                                  "gemini-2.5-flash", "gpt-4o", "gpt-4o-mini", "gpt-5-nano", "gpt-5-mini", "gpt-5",
-                                  "claude-haiku-4-5-20251001", "claude-sonnet-4-5"]
+                                  "gemini-2.5-flash", "gemini-3-flash", "gemini-3.5-flash", "gpt-4o", "gpt-4o-mini", "gpt-5-nano",
+                                  "gpt-5-mini", "gpt-5", "claude-haiku-4-5-20251001", "claude-sonnet-4-5"]
 
         self.full_document_read = full_document_read and self.llm_name in entire_document_models
         self.title = None
@@ -443,12 +449,95 @@ Files:
         for idx, chunk in enumerate(chunks):
             self.logger.info(f"Processing chunk {idx+1}/{len(chunks)}")
             chunk_results = self.extract_datasets_info_from_content(
-                chunk, repos=repos, model=model, temperature=temperature, subdir=subdir, prompt_name=prompt_name, 
+                chunk, repos=repos, model=model, temperature=temperature, subdir=subdir, prompt_name=prompt_name,
                 response_format=response_format, full_document_read=full_document_read, **prompt_kwargs
             )
             ret.extend(chunk_results)
         return ret
 
+    def batch_extract_from_prompts(self, batch_requests, response_format=None, temperature=0.0, gpu_batch_size=64):
+        """
+        Run batch inference for HF/local models, bypassing the OpenAI batch API.
+        Returns a DataFrame with the same schema as parse_data.
+
+        Uses raw_content from metadata (the retrieved article text before prompt rendering)
+        because HF/T5 models take plain text — batch_generate adds its own prefix.
+
+        :param batch_requests: list of {custom_id, messages, metadata} dicts from run_integrated_batch_processing
+        :param gpu_batch_size: prompts per GPU forward pass — reduce if OOM
+        """
+        self.logger.info(f"""Function_call: batch_extract_from_prompts(...) with {len(batch_requests)} requests, 
+                                gpu_batch_size={gpu_batch_size},
+                                request schema: {batch_requests[0].keys() if batch_requests else 'N/A'}
+                                """)
+        def _get_content(req):
+            # Prefer raw_content stored in metadata — the plain retrieved text,
+            # not the rendered chat prompt which causes T5 to echo the instructions back.
+            raw = req.get('metadata', {}).get('raw_content')
+            if raw is not None:
+                return raw if isinstance(raw, str) else "\n\n".join(raw)
+            # Fallback: extract last message content from rendered messages
+            messages = req['messages']
+            if isinstance(messages, list):
+                return messages[-1].get('content', str(messages[-1]))
+            return str(messages)
+
+        all_rows = []
+
+        for start in range(0, len(batch_requests), gpu_batch_size):
+            sub_batch = batch_requests[start:start + gpu_batch_size]
+            contents = [_get_content(req) for req in sub_batch]
+
+            self.logger.info(
+                f"GPU pass {start}–{start + len(sub_batch)} of {len(batch_requests)}"
+            )
+
+            metadata_list = [req.get('metadata', {}) for req in sub_batch]
+            raw_outputs = self.llm_client.llm_client.batch_generate(
+                contents, temperature=temperature, metadata=metadata_list
+            )
+            for i, o in enumerate(raw_outputs):
+                self.logger.info(f"batch_extract T5 output [{start+i}]: {o!r}")
+
+            for req, raw_output in zip(sub_batch, raw_outputs):
+                metadata = req.get('metadata', {})
+                source_url = metadata.get('url', '')
+                pub_title = metadata.get('title', '')
+                raw_data_format = metadata.get('raw_data_format', 'XML')
+                article_id = metadata.get('article_id')
+                stats = metadata.get('retrieval_stats') or getattr(self, 'retrieval_stats', {}).get(article_id, {})
+
+                resps = self.llm_client.process_llm_response(
+                    raw_response=raw_output,
+                    response_format=response_format,
+                    expected_key='datasets'
+                )
+                resps = self.normalize_response_type(resps)
+                datasets = self.process_datasets_response(resps)
+
+                for ds in datasets:
+                    ds['source_url'] = source_url
+                    ds['pub_title'] = pub_title
+                    ds['raw_data_format'] = raw_data_format
+                    ds.update(stats)
+                    all_rows.append(ds)
+
+        # Log aggregation diagnostics
+        try:
+            self.logger.info(f"batch_extract_from_prompts: aggregated {len(all_rows)} dataset rows")
+            if all_rows:
+                # union of keys
+                ukeys = set()
+                for r in all_rows:
+                    if isinstance(r, dict):
+                        ukeys.update(r.keys())
+                sample_keys = sorted(list(ukeys))[:50]
+                self.logger.info(f"batch_extract_from_prompts: union_keys (sample 50): {sample_keys}")
+                self.logger.debug(f"batch_extract_from_prompts sample rows: {all_rows[:3]}")
+        except Exception:
+            self.logger.exception("Error while logging batch aggregation summary")
+
+        return pd.DataFrame(all_rows) if all_rows else pd.DataFrame()
 
     def process_datasets_response(self, resps, skip_validation=False):
         """
@@ -537,6 +626,16 @@ Files:
             self.logger.info(f"Extracted dataset: {result[-1]}")
 
         self.logger.debug(f"Final result: {result}")
+        try:
+            keys = set()
+            for r in result:
+                if isinstance(r, dict):
+                    keys.update(r.keys())
+            self.logger.info(f"process_datasets_response: extracted {len(result)} dataset dicts; union_keys={sorted(list(keys))[:30]}")
+            if len(result) > 0:
+                self.logger.debug(f"process_datasets_response sample rows: {result[:5]}")
+        except Exception:
+            self.logger.exception("Error while logging process_datasets_response summary")
         return result
 
     def schema_validation(self, dataset, req_timeout=0.5, skip=False):
@@ -549,13 +648,13 @@ Files:
         """
         if skip:
             dataset_id, data_repository, dataset_webpage = dataset.get('dataset_identifier'), dataset.get('data_repository'), 'n/a'
-            if 'http' in data_repository:
+            if data_repository and 'http' in data_repository:
                 str_match = re.search(r"(https?://[^\s<>\"']+|www\.[^\s<>\"']+)", data_repository)
                 dataset_webpage = str_match.group(0) if str_match else dataset_webpage
-            elif 'http' in dataset_id:
+            elif dataset_id and 'http' in dataset_id:
                 str_match = re.search(r"(https?://[^\s<>\"']+|www\.[^\s<>\"']+)", dataset_id)
                 dataset_webpage = str_match.group(0) if str_match else dataset_webpage
-            if '(' in dataset_id:
+            if dataset_id and '(' in dataset_id:
                 dataset_id = re.sub(r"\s*\(.*", '', dataset_id)
         else:
             self.logger.info(f"Schema validation called with dataset: {dataset}")
@@ -834,10 +933,14 @@ Files:
         # Get all the id patterns from the config file. (all the repos in ontology)
         id_patterns = []
         for k, v in self.open_data_repos_ontology['repos'].items():
-            if 'id_pattern' in v.keys():
-                if k in ['zenodo.org']: # avoid adding generic patterns (7 digits can also be something other than a dataset. identifier)
-                    continue
-                id_patterns.append(v['id_pattern'])
+            if 'id_pattern' not in v:
+                continue
+            if k in ['zenodo.org']:  # avoid adding generic patterns (7 digits can also be something other than a dataset identifier)
+                continue
+            # Only include patterns safe for blind chunk scanning (repo-specific prefix, not over-broad)
+            if not v.get('regex_match_eligible', True):
+                continue
+            id_patterns.append(v['id_pattern'])
         self.logger.info(f"# of defined dataset ID patterns: {len(id_patterns)}")
         self.logger.debug(f"All ID patterns: {id_patterns}")
         return id_patterns
@@ -1567,13 +1670,35 @@ Files:
             k=topk_docs_to_retrieve
         )
 
-        self.logger.info(f"Semantic retrieval completed: found {len(result)} relevant sections")
+        self.logger.info(f"Semantic retrieval completed: found {len(result)} relevant sections, with attributes {result[0].keys() if len(result) > 0 else 'n/a'}")
         return result
+
+    def _p_fallback_corpus(self, data) -> list:
+        return []
 
     def retrieve_relevant_content(self, data, semantic_retrieval=True, top_k=5, article_id=None, max_tokens=None, skip_rule_based_retrieved_elm=False,
                                   include_snippets_with_ID_patterns=False, output_format='text', query=None, ID_patterns=None, force_include_DAS=True,
-                                  include_section_title=False):
+                                  include_section_title=False, skip_p_fallback=True):
+        
+        """Given the full text of the article, retrieve the most relevant content related to data availability using a combination
+        of semantic retrieval and rule-based methods.
 
+        :param data: str - the full text of the article to retrieve content from.
+        :param semantic_retrieval: bool - whether to perform semantic retrieval (default: True
+        :param top_k: int - the number of top relevant sections to retrieve (default: 5)
+        :param article_id: str - the identifier for the article (used for logging and caching
+        :param max_tokens: int - the maximum number of tokens to consider for semantic retrieval (default: None, meaning no limit)
+        :param skip_rule_based_retrieved_elm: bool - whether to skip elements that were retrieved by rule-based methods when building the corpus for semantic retrieval (default: False)
+        :param include_snippets_with_ID_patterns: bool - whether to include snippets that match dataset identifier patterns in the final output (default: False)
+        :param output_format: str - the format of the output, either 'text' for concatenated string or 'json' for structured data (default: 'text')
+        :param query: str - the query to use for semantic retrieval (default: None, meaning a predefined query focused on data availability will be used)
+        :param ID_patterns: list - optional list of regex patterns to identify dataset identifiers in the text (default: None, meaning patterns will be loaded from ontology)
+        :param force_include_DAS: bool - whether to force include the data availability statement content in the retrieved content (default: True)
+        :param include_section_title: bool - whether to include section titles in the corpus for semantic retrieval (default: False)
+        :param skip_p_fallback: bool - whether to skip the fallback method of building corpus from <p> tags if semantic retrieval returns an empty corpus (default: True)
+
+        :return: str or list - the retrieved relevant content in the specified output format
+        """
         self.logger.debug(f"Function call: retrieve_relevant_content(semantic_retrieval={semantic_retrieval}, top_k={top_k}, article_id={article_id}, max_tokens={max_tokens}, skip_rule_based_retrieved_elm={skip_rule_based_retrieved_elm}, include_snippets_with_ID_patterns={include_snippets_with_ID_patterns}, output_format={output_format})")
 
         data_avail_cont = self.get_data_availability_text(data) if force_include_DAS else []
@@ -1581,13 +1706,25 @@ Files:
         ret_lst = data_avail_cont.copy()
         top_k_sections, docs_matching_id_ptr = [], []
 
+        _used_p_fallback = False
         if semantic_retrieval:
             self.logger.info(f"Performing semantic retrieval for relevant content")
             all_sections = self.extract_sections_from_text(data)
             corpus = self.from_sections_to_corpus(all_sections, max_tokens=max_tokens, skip_rule_based_retrieved_elm=skip_rule_based_retrieved_elm, include_section_title=include_section_title)
-            top_k_sections = self.semantic_retrieve_from_corpus(corpus, topk_docs_to_retrieve=top_k, src=article_id, query=query, include_section_title=include_section_title)
-            top_k_sections_text = [item['text'] for item in top_k_sections if item['text'] not in ret_lst]
-            ret_lst.extend(top_k_sections_text)  # Use extend() instead of append() to add individual strings
+
+            if not corpus and not skip_p_fallback:
+                corpus = self._p_fallback_corpus(data)
+                if corpus:
+                    _used_p_fallback = True
+                    self.logger.info(f"<p> fallback: built corpus from {len(corpus)} body paragraphs (article_id={article_id})")
+                else:
+                    self.logger.warning(f"Semantic retrieval skipped: corpus empty even after <p> fallback (article_id={article_id})")
+
+            if corpus:
+                effective_top_k = min(top_k, len(corpus))
+                top_k_sections = self.semantic_retrieve_from_corpus(corpus, topk_docs_to_retrieve=effective_top_k, src=article_id, query=query, include_section_title=include_section_title)
+                top_k_sections_text = [item['text'] for item in top_k_sections if item['text'] not in ret_lst]
+                ret_lst.extend(top_k_sections_text)
         
         if include_snippets_with_ID_patterns:
             docs_matching_id_ptr = [item for item in corpus if item.get('contains_id_pattern', False)]
@@ -1603,6 +1740,18 @@ Files:
             normalized_input = data_avail_cont + top_k_sections + docs_matching_id_ptr
         else:
             normalized_input = ret_lst
+
+        if not hasattr(self, 'retrieval_stats'):
+            self.retrieval_stats = {}
+        self.retrieval_stats[article_id] = {
+            'n_all_sections': len(all_sections) if semantic_retrieval else None,
+            'n_corpus_sections': len(corpus) if semantic_retrieval else None,
+            'retrieved_sections_title': [item.get('section_title', 'n/a') for item in top_k_sections] if semantic_retrieval else None,
+            'top_k': top_k,
+            'n_das_sections': len(data_avail_cont),
+            'used_paragraph_fallback': _used_p_fallback,
+        }
+
         return normalized_input
 
     def regex_match_id_patterns(self, document, id_patterns=None):
