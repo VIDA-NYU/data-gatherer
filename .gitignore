@@ -200,3 +200,16 @@ scripts/BioDMS/config_eval/f*
 
 scripts/exp_input/article_ids_REV_full.csv
 scripts/exp_input/article_ids_REV_pmc.csv
+k8s/deterministic-base-job.yaml
+k8s/deterministic-batch-job.yaml
+k8s/deterministic-test-job.yaml
+k8s/process-articles-job.yaml
+k8s/run-integrated-batch-job.yaml
+k8s/scrape-annotations-job.yaml
+scripts/Local_model_finetuning/bart-base-finetune-job.yaml
+scripts/Local_model_finetuning/codet5p-finetune-job.yaml
+scripts/Local_model_finetuning/flan-t5-finetune-job.yaml
+scripts/Local_model_finetuning/long-t5-finetune-job.yaml
+scripts/Local_model_finetuning/train_flan_t5.py
+scripts/Local_model_finetuning/ground_truth/gt_dataset_info_extraction_from_snippet.xlsx
+scripts/Local_model_finetuning/ground_truth/gt_dataset_info_no_dspage_extraction_from_snippet.csv
