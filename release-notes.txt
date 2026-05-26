@@ -1,3 +1,11 @@
+## Release (v0.2.2) - 2026-05-26
+
+- Updated Docker images (Torch install, HF token wiring, VPN/outside-NYU support).
+- Added/updated prompts and model support (Claude prompt/response_format, Gemini 3.5 flash)
+- Refreshed HF datasets/models + finetune jobs, and updated BioDMS results/model comparison.
+- Added/iterated on K8s batch job workflow (prep, integrated batch processing fixes, Fetcher fixes, debug logs) to run large-scale jobs reliably.
+- Added draft for data repos ontology enrichment loop
+
 ## Release (v0.2.1) - 2026-04-22
 
 - Added dataset prompts to modules and new Claude prompt
