@@ -390,17 +390,26 @@ class BatchRequestBuilder:
                               temperature: float = 0.0,
                               response_format: Optional[Dict] = None) -> Dict[str, Any]:
         """
-        Create a batch request in Portkey format.
-        
-        :param custom_id: Unique identifier for the request
-        :param messages: List of message dictionaries
-        :param model: Model name
-        :param temperature: Temperature setting
-        :param response_format: Optional response format schema
-        :return: Formatted batch request
+        Create a batch request in Portkey format (OpenAI chat/completions-compatible).
+        Portkey routes to the configured provider (e.g. Gemini) via its gateway.
         """
-    
-        raise NotImplementedError("This method hasn't been implemented yet.")
+        body: Dict[str, Any] = {
+            "model": model,
+            "messages": messages,
+            "temperature": temperature,
+        }
+        if response_format is not None:
+            if isinstance(response_format, dict):
+                body["response_format"] = response_format
+            else:
+                body["response_format"] = {"type": "json_object"}
+
+        return {
+            "custom_id": custom_id,
+            "method": "POST",
+            "url": "/v1/chat/completions",
+            "body": body,
+        }
     
     def generate_custom_id(self, 
                           model: str, 

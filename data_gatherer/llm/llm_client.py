@@ -30,7 +30,7 @@ class LLMClient_dev:
         
         # Determine full document read capability
         entire_document_models = ["gemini-1.5-flash", "gemini-1.5-pro", "gemini-2.0-flash-exp", "gemini-2.0-flash",
-                                  "gemini-2.5-flash", "gemini-3-flash", "gpt-4o", "gpt-4o-mini", "gpt-5-nano",
+                                  "gemini-2.5-flash", "gemini-3-flash", "gemini-3.5-flash", "gpt-4o", "gpt-4o-mini", "gpt-5-nano",
                                   "gpt-5-mini", "gpt-5", "claude-haiku-4-5-20251001", "claude-sonnet-4-5"]
         self.full_document_read = model in entire_document_models
         
@@ -895,7 +895,47 @@ class LLMClient_dev:
         }
     
     def _submit_portkey_batch(self, batch_file_path: str, batch_description: Optional[str]) -> Dict[str, Any]:
-        raise NotImplementedError ("This method hasn't been implemented yet")
+        """Submit batch to Portkey Batch API (OpenAI-compatible, routes to configured provider)."""
+        cleaned_file_path = batch_file_path.replace('.jsonl', '_cleaned.jsonl')
+        self.logger.info(f"Filtering invalid keys from batch file: {batch_file_path}")
+        with open(batch_file_path, 'r', encoding='utf-8') as infile, \
+             open(cleaned_file_path, 'w', encoding='utf-8') as outfile:
+            for line_num, line in enumerate(infile, 1):
+                if not line.strip():
+                    continue
+                try:
+                    request = json.loads(line)
+                    request.pop('metadata', None)
+                    outfile.write(json.dumps(request) + '\n')
+                except json.JSONDecodeError as e:
+                    self.logger.error(f"Invalid JSON at line {line_num}: {e}")
+                    raise
+
+        self.logger.info(f"Uploading batch file to Portkey: {cleaned_file_path}")
+        with open(cleaned_file_path, 'rb') as f:
+            uploaded_file = self.portkey.files.create(file=f, purpose="batch")
+
+        self.logger.info(f"Creating Portkey batch job with file ID: {uploaded_file.id}")
+        batch_job = self.portkey.batches.create(
+            input_file_id=uploaded_file.id,
+            endpoint="/v1/chat/completions",
+            completion_window="24h",
+            metadata={
+                "description": batch_description or f"LLMClient batch job - {time.strftime('%Y-%m-%d %H:%M:%S')}",
+                "model": self.model,
+            }
+        )
+
+        self.logger.info(f"Portkey batch job created. ID: {batch_job.id}, Status: {batch_job.status}")
+        return {
+            'batch_id': batch_job.id,
+            'status': batch_job.status,
+            'input_file_id': uploaded_file.id,
+            'created_at': batch_job.created_at,
+            'api_provider': 'portkey',
+            'endpoint': batch_job.endpoint,
+            'completion_window': batch_job.completion_window,
+        }
     
     def check_batch_status(self, batch_id: str, api_provider: str = 'portkey') -> Dict[str, Any]:
         """
@@ -924,11 +964,21 @@ class LLMClient_dev:
                 }
                 
             elif api_provider.lower() == 'portkey':
-                raise NotImplementedError("This provider isn't supported yet")
+                batch_job = self.portkey.batches.retrieve(batch_id)
+                return {
+                    'batch_id': batch_job.id,
+                    'status': batch_job.status,
+                    'output_file_id': getattr(batch_job, 'output_file_id', None),
+                    'error_file_id': getattr(batch_job, 'error_file_id', None),
+                    'created_at': getattr(batch_job, 'created_at', None),
+                    'completed_at': getattr(batch_job, 'completed_at', None),
+                    'request_counts': getattr(batch_job, 'request_counts', {}),
+                    'api_provider': api_provider,
+                }
 
             else:
                 raise ValueError(f"Unsupported API provider: {api_provider}")
-                
+
         except Exception as e:
             self.logger.error(f"Error checking batch status: {e}")
             raise
@@ -965,11 +1015,13 @@ class LLMClient_dev:
                     f.write(file_response.content)
                     
             elif api_provider.lower() == 'portkey':
-                raise NotImplementedError ("This provider isn't supported yet")
-            
+                file_response = self.portkey.files.content(status_info['output_file_id'])
+                with open(output_file_path, 'wb') as f:
+                    f.write(file_response.content if hasattr(file_response, 'content') else file_response.read())
+
             else:
                 raise ValueError(f"Unsupported API provider: {api_provider}")
-            
+
             # Validate and get statistics from the downloaded file
             validation_result = self.batch_storage.validate_jsonl_format(output_file_path)
             file_info = self.batch_storage.get_file_info(output_file_path)

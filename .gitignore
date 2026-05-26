@@ -194,3 +194,6 @@ scripts/output/annotations_subset.json
 scripts/output/annotations_accession.json
 scripts/output/f1_comparison.html
 scripts/output/scilite_vs_gold_eval.html
+scripts/BioDMS/biodms2026_paper.tex
+scripts/BioDMS/biodms2026.bib
+scripts/BioDMS/config_eval/f*

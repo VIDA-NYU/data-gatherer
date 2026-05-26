@@ -21,7 +21,7 @@ import logging
 
 import pandas as pd
 import json
-from data_gatherer.llm.response_schema import dataset_response_schema_gpt, dataset_response_schema_claude, Dataset_w_Page
+from data_gatherer.llm.response_schema import dataset_response_schema_gpt, dataset_response_schema_gpt_completions, dataset_response_schema_claude, Dataset_w_Page
 try:
     import boto3
     from botocore.exceptions import BotoCoreError, ClientError
@@ -137,13 +137,21 @@ def upload_to_s3(local_path: str, s3_key: str) -> None:
         logger.error(f"S3 upload failed for {local_path}: {e}")
 
 
-def _default_prompt(model: str) -> str:
+def _default_api_provider(model: str) -> str:
+    return "portkey" if "gemini" in model.lower() else "openai"
+
+
+def _default_use_portkey(model: str) -> bool:
+    return "gemini" in model.lower()
+
+
+def _default_prompt(model: str, portkey: bool=True) -> str:
     m = model.lower()
     if m.startswith(("hf-", "local-")):
         return "T5_primer"
     if "claude" in m:
         return "CLAUDE_RTR_FewShot"
-    if "gemini" in m:
+    if "gemini" in m and not portkey:
         return "GEMINI_RTR_FewShot"
     return "GPT_FewShot"
 
@@ -153,7 +161,8 @@ def _default_response_format(model: str):
     if m.startswith("gpt") or m.startswith("openai"):
         return dataset_response_schema_gpt
     if "gemini" in m:
-        return Dataset_w_Page
+        # Portkey uses OpenAI chat/completions format, not native Gemini params
+        return dataset_response_schema_gpt_completions
     if "claude" in m:
         return dataset_response_schema_claude
     return None
@@ -296,13 +305,14 @@ def main():
                 batch_file_path=batch_file_path,
                 output_file_path=batch_output_path,
                 section_filter=args.section_filter,
-                prompt_name=args.prompt_name or _default_prompt(args.model),
+                prompt_name=args.prompt_name or _default_prompt(args.model, portkey=_default_use_portkey(args.model)),
                 response_format=_default_response_format(args.model),
                 semantic_retrieval=args.semantic_retrieval,
                 top_k=args.top_k,
                 brute_force_RegEx_ID_ptrs=args.brute_force_regex,
-                use_portkey=False,
+                use_portkey=_default_use_portkey(args.model),
                 use_batch_api=args.use_batch_api,
+                api_provider=_default_api_provider(args.model),
             )
         except Exception as e:
             logger.error(f"Batch {batch_num} failed: {e}", exc_info=True)

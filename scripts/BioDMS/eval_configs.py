@@ -36,10 +36,10 @@ CONFIGS = {
     "GPT-5-mini · c1 (no semantic, no regex)":  "k8s/output/rev_test_gpt5mini_c1/dataset_citations.csv",
     "GPT-5-mini · c2 (semantic k=3, no regex)": "k8s/output/rev_test_gpt5mini_c2/dataset_citations.csv",
     "GPT-5-mini · c3 (semantic k=3 + regex)":   "k8s/output/rev_test_gpt5mini_c3/dataset_citations.csv",
-    # Gemini 3 Flash (run locally)
-    "Gemini-3-flash · c1 (no semantic, no regex)":  "k8s/output/rev_test_gemini3_c1/dataset_citations.csv",
-    "Gemini-3-flash · c2 (semantic k=3, no regex)": "k8s/output/rev_test_gemini3_c2/dataset_citations.csv",
-    "Gemini-3-flash · c3 (semantic k=3 + regex)":   "k8s/output/rev_test_gemini3_c3/dataset_citations.csv",
+    # Gemini 3.5 Flash (run locally)
+    "Gemini-3-flash · c1 (no semantic, no regex)":  "k8s/output/rev_test_gemini_c1/dataset_citations.csv",
+    "Gemini-3-flash · c2 (semantic k=3, no regex)": "k8s/output/rev_test_gemini_c2/dataset_citations.csv",
+    "Gemini-3-flash · c3 (semantic k=3 + regex)":   "k8s/output/rev_test_gemini_c3/dataset_citations.csv",
 }
 
 S3_KEYS = {

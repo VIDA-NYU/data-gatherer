@@ -1,7 +1,8 @@
 """
-Download and convert OpenAI Batch API results to CSV files.
+Download and convert Batch API results to CSV files.
 
 Each batch ID maps to its own output directory (one per config run).
+Portkey is used automatically for Gemini models; OpenAI for GPT models.
 
 Usage:
     python k8s/download_batch_results.py \
@@ -37,13 +38,16 @@ def main():
 
     from data_gatherer.data_gatherer import DataGatherer
 
+    use_portkey = "gemini" in args.model.lower()
+    api_provider = "portkey" if use_portkey else "openai"
+
     dg = DataGatherer(llm_name=args.model, save_to_cache=False, load_from_cache=False)
-    dg.init_parser_by_input_type("XML", use_portkey=False)
+    dg.init_parser_by_input_type("XML", use_portkey=use_portkey)
 
     for bid, output_dir in zip(args.batch_ids, args.output_dirs):
         os.makedirs(output_dir, exist_ok=True)
         logger.info(f"Checking status for {bid} → {output_dir}")
-        status_info = dg.parser.llm_client.check_batch_status(bid, api_provider="openai")
+        status_info = dg.parser.llm_client.check_batch_status(bid, api_provider=api_provider)
         status = status_info["status"]
         logger.info(f"  Status: {status}")
 
@@ -53,7 +57,7 @@ def main():
 
         jsonl_path = os.path.join(output_dir, "batch_results.jsonl")
         logger.info(f"  Downloading to {jsonl_path}")
-        dg.parser.llm_client.download_batch_results(bid, jsonl_path, api_provider="openai")
+        dg.parser.llm_client.download_batch_results(bid, jsonl_path, api_provider=api_provider)
 
         logger.info(f"  Converting to DataFrame")
         df = dg.from_batch_resp_file_to_df(jsonl_path, skip_validation=True)
