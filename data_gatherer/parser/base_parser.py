@@ -16,6 +16,13 @@ from json_repair import repair_json
 from data_gatherer.llm.llm_client import LLMClient_dev
 from data_gatherer.llm.response_schema import *
 
+# Regex sub-patterns that are valid in `dataset_webpage_url_ptr` for URL matching
+# but must be stripped before constructing a real URL from the template.
+URL_REGEX_STRIP_PATTERNS = [
+    r'\[[^\]]*\][*+?]?',   # character classes with optional quantifier: [#!]*, [az]+, [0-9]?
+    r'\([^)]*\)[*+?]?',    # non-capturing groups with optional quantifier: (foo|bar)?
+]
+
 DATASET_OUTPUT_COLS = [
     'dataset_identifier', 'repository_reference', 'data_repository', 'dataset_webpage', 'access_mode',
     'link', 'source_url', 'download_link', 'title', 'content_type', 'id', 'caption', 'description',
@@ -1321,6 +1328,13 @@ Files:
         self.logger.info(f"Dataset enhancement completed: {type(datasets)}, {len(datasets)} datasets processed")
         return datasets
 
+    def _clean_url_template(self, template):
+        """Strip regex-only sub-patterns from a url_ptr template before constructing a real URL."""
+        cleaned = template
+        for pattern in URL_REGEX_STRIP_PATTERNS:
+            cleaned = re.sub(pattern, '', cleaned)
+        return cleaned
+
     def _construct_dataset_webpage(self, repo, accession_id, existing_webpage):
         """Helper method to construct dataset webpage URL using ontology patterns."""
         if repo in self.open_data_repos_ontology['repos']:
@@ -1329,15 +1343,17 @@ Files:
             if "dataset_webpage_url_ptr" in repo_config:
                 dataset_page_ptr = repo_config['dataset_webpage_url_ptr']
                 
+                clean_ptr = self._clean_url_template(dataset_page_ptr)
+
                 # Check if existing webpage already matches the pattern
                 if existing_webpage:
-                    pattern_base = dataset_page_ptr.replace('__ID__', '')
+                    pattern_base = clean_ptr.replace('__ID__', '')
                     if re.search(re.escape(pattern_base), existing_webpage, re.IGNORECASE):
                         self.logger.debug(f"Existing webpage {existing_webpage} matches pattern")
                         return existing_webpage
-                
+
                 # Construct new URL using pattern
-                constructed_url = re.sub('__ID__', accession_id, dataset_page_ptr)
+                constructed_url = re.sub('__ID__', accession_id, clean_ptr)
                 self.logger.info(f"Constructed webpage URL: {constructed_url}")
                 return constructed_url
             else:
