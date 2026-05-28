@@ -2068,7 +2068,7 @@ class DataGatherer:
                         status = status_info['status']
                         self.logger.info(f"Batch status: {status}")
                         
-                        if status == 'completed':
+                        if status in ('completed', 'ended'):
                             # Download results
                             if not output_file_path:
                                 output_file_path = batch_file_path.replace('.jsonl', '_results.jsonl')
