@@ -207,8 +207,12 @@ def main():
         help="Enable brute-force regex ID pointer scan (default: true)",
     )
     parser.add_argument(
-        "--top-k", type=int, default=5,
-        help="Top-k sections returned by semantic retrieval (default: 5)",
+        "--top-k", type=lambda x: -1 if str(x).lower() == "all" else int(x), default=5,
+        help="Top-k sections for semantic retrieval (default: 5). Pass 'all' or -1 to process every corpus chunk (chunked document read).",
+    )
+    parser.add_argument(
+        "--sects-required", type=int, default=5,
+        help="Minimum number of sections required for an article to be processed (default: 5).",
     )
     parser.add_argument(
         "--prompt-name", default=None,
@@ -309,6 +313,7 @@ def main():
                 response_format=_default_response_format(args.model),
                 semantic_retrieval=args.semantic_retrieval,
                 top_k=args.top_k,
+                sects_required=args.sects_required,
                 brute_force_RegEx_ID_ptrs=args.brute_force_regex,
                 use_portkey=_default_use_portkey(args.model),
                 use_batch_api=args.use_batch_api,

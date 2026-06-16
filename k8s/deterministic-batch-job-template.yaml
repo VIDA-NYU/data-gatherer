@@ -26,7 +26,8 @@ spec:
             --s3-skip-urls-key input/skip_urls.json \
             --semantic-retrieval ${SEMANTIC_RETRIEVAL} \
             --brute-force-regex ${BRUTE_FORCE_REGEX} \
-            --top-k ${TOP_K}
+            --top-k ${TOP_K} \
+            --sects-required ${SECTS_REQUIRED}
         resources:
           limits:
             nvidia.com/gpu: "1"

@@ -1701,7 +1701,7 @@ Files:
 
         :param data: str - the full text of the article to retrieve content from.
         :param semantic_retrieval: bool - whether to perform semantic retrieval (default: True
-        :param top_k: int - the number of top relevant sections to retrieve (default: 5)
+        :param top_k: int - the number of top relevant sections to retrieve (default: 5). Set to -1 to get all the sections.
         :param article_id: str - the identifier for the article (used for logging and caching
         :param max_tokens: int - the maximum number of tokens to consider for semantic retrieval (default: None, meaning no limit)
         :param skip_rule_based_retrieved_elm: bool - whether to skip elements that were retrieved by rule-based methods when building the corpus for semantic retrieval (default: False)
@@ -1723,7 +1723,27 @@ Files:
         top_k_sections, docs_matching_id_ptr = [], []
 
         _used_p_fallback = False
-        if semantic_retrieval:
+
+        if top_k == -1:
+            self.logger.info(f"top_k=-1: chunked document read — building full corpus, no semantic ranking")
+            all_sections = self.extract_sections_from_text(data)
+            _llm = getattr(self, 'llm_client', None)
+            _max_tokens = max_tokens or (512 if (_llm is None or _llm.model.startswith(('hf-', 'local-'))) else getattr(_llm, 'token_limit', 512))
+            corpus = self.from_sections_to_corpus(all_sections, max_tokens=_max_tokens)
+            normalized_input = [chunk['text'] for chunk in corpus] if corpus else [str(data)]
+            if not hasattr(self, 'retrieval_stats'):
+                self.retrieval_stats = {}
+            self.retrieval_stats[article_id] = {
+                'n_all_sections': len(all_sections),
+                'n_corpus_sections': len(corpus),
+                'retrieved_sections_title': None,
+                'top_k': -1,
+                'n_das_sections': len(data_avail_cont),
+                'used_paragraph_fallback': False,
+            }
+            return normalized_input
+
+        elif semantic_retrieval:
             self.logger.info(f"Performing semantic retrieval for relevant content")
             all_sections = self.extract_sections_from_text(data)
             corpus = self.from_sections_to_corpus(all_sections, max_tokens=max_tokens, skip_rule_based_retrieved_elm=skip_rule_based_retrieved_elm, include_section_title=include_section_title)

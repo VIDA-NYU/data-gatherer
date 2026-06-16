@@ -54,6 +54,7 @@ JOB_SUFFIX=""
 SEMANTIC_RETRIEVAL="true"
 BRUTE_FORCE_REGEX="true"
 TOP_K="5"
+SECTS_REQUIRED="5"
 
 # --- Args ---
 while [[ $# -gt 0 ]]; do
@@ -72,6 +73,7 @@ while [[ $# -gt 0 ]]; do
         --semantic-retrieval)      SEMANTIC_RETRIEVAL="$2";      shift 2 ;;
         --brute-force-regex)       BRUTE_FORCE_REGEX="$2";       shift 2 ;;
         --top-k)                   TOP_K="$2";                   shift 2 ;;
+        --sects-required)          SECTS_REQUIRED="$2";          shift 2 ;;
         --clean)                   CLEAN=1;                      shift   ;;
         --cumulative)              CUMULATIVE=1;                 shift   ;;
         --no-enrich)               NO_ENRICH=1;                  shift   ;;
@@ -80,7 +82,7 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
-export NODE_NAME JOB_SUFFIX SEMANTIC_RETRIEVAL BRUTE_FORCE_REGEX TOP_K
+export NODE_NAME JOB_SUFFIX SEMANTIC_RETRIEVAL BRUTE_FORCE_REGEX TOP_K SECTS_REQUIRED
 
 # --- Helpers ---
 pvc_reader_ready() {

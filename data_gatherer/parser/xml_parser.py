@@ -125,15 +125,17 @@ class XMLParser(LLMParser):
         if not isinstance(xml_root, etree._Element):
             raise TypeError(f"Invalid XML root type: {type(xml_root)}. Expected lxml.etree.Element.")
 
-        # Find all section-like elements (sec, notes, ack, app, fn-group)
+        # Find all section-like elements (sec, notes, ack, app, fn-group, abstract, ref-list)
         sec_elements = xml_root.findall(".//sec")
         notes_elements = xml_root.findall(".//notes")
         ack_elements = xml_root.findall(".//ack")
         app_elements = xml_root.findall(".//app")
         fn_group_elements = xml_root.findall(".//fn-group")
-        
-        all_sections = sec_elements + notes_elements + ack_elements + app_elements + fn_group_elements
-        self.logger.debug(f"Found {len(sec_elements)} <sec>, {len(notes_elements)} <notes>, {len(ack_elements)} <ack>, {len(app_elements)} <app>, {len(fn_group_elements)} <fn-group> blocks")
+        abstract_elements = xml_root.findall(".//abstract")
+        ref_list_elements = xml_root.findall(".//ref-list")
+
+        all_sections = sec_elements + notes_elements + ack_elements + app_elements + fn_group_elements + abstract_elements + ref_list_elements
+        self.logger.debug(f"Found {len(sec_elements)} <sec>, {len(notes_elements)} <notes>, {len(ack_elements)} <ack>, {len(app_elements)} <app>, {len(fn_group_elements)} <fn-group>, {len(abstract_elements)} <abstract>, {len(ref_list_elements)} <ref-list> blocks")
         self.logger.debug(f"Total {len(all_sections)} section-like blocks in XML")
 
         # Iterate over all section blocks
@@ -151,6 +153,10 @@ class XMLParser(LLMParser):
                 sec_type = "appendix"
             elif sec.tag == "fn-group":
                 sec_type = "footnotes"
+            elif sec.tag == "abstract":
+                sec_type = sec.get("abstract-type", "abstract")
+            elif sec.tag == "ref-list":
+                sec_type = "references"
             else:
                 sec_type = sec.tag
                 
@@ -180,7 +186,7 @@ class XMLParser(LLMParser):
                     if grandparent_section is not None and grandparent_section == sec:
                         self.logger.debug(f"Paragraph parent is {parent_section.tag}, but grandparent matches section - continuing")
                     # Otherwise, we've entered a different section-level element - break
-                    elif parent_section.tag in ['sec', 'ack', 'app', 'notes', 'fn-group']:
+                    elif parent_section.tag in ['sec', 'ack', 'app', 'notes', 'fn-group', 'abstract', 'ref-list']:
                         self.logger.debug(f"We've entered a different section: {parent_section} != {sec}, so break out of the loop")
                         break
                     else:

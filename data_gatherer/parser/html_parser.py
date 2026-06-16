@@ -256,7 +256,9 @@ class HTMLParser(LLMParser):
         # Find all <section> elements (just like XML parser finds <sec> elements)
         section_elements = soup.find_all('section')
         self.extracted_tables = []
-        self.logger.debug(f"Found {len(section_elements)} <section> blocks in HTML")
+        self.logger.info(f"Found {len(section_elements)} <section> blocks in HTML (content length: {len(html_content)}, title: {soup.title.string if soup.title else 'n/a'})")
+        if not section_elements:
+            self.logger.info(f"Zero sections — raw HTML dump:\n{html_content[:5000]}")
 
         # Process each section (similar to XML parser)
         for sec_idx, sec in enumerate(section_elements):
@@ -832,9 +834,20 @@ class HTMLParser(LLMParser):
                     chunk_texts = []
                     chunk_token_count = 0
                     chunk_paragraphs = []
-                chunk_texts.append(para_text)
-                chunk_token_count += para_tokens
-                chunk_paragraphs.append(p)
+                if para_tokens > chunk_budget:
+                    for sub_chunk in self._intelligent_chunk_section(para_text, chunk_budget):
+                        chunk_doc = doc_base.copy()
+                        chunk_doc['sec_txt_clean'] = sub_chunk
+                        chunk_doc['sec_txt'] = sub_chunk
+                        chunk_doc['text'] = sub_chunk
+                        chunk_doc['chunk_id'] = chunk_id
+                        chunk_doc['contains_id_pattern'] = any(re.search(pattern, sub_chunk, re.IGNORECASE) for pattern in self.id_patterns)
+                        corpus_documents.append(chunk_doc)
+                        chunk_id += 1
+                else:
+                    chunk_texts.append(para_text)
+                    chunk_token_count += para_tokens
+                    chunk_paragraphs.append(p)
 
             # Save any remaining chunk
             if chunk_texts:

@@ -2,6 +2,7 @@ config,articles,scilite_P,scilite_R,scilite_F1,gold_P,gold_R,gold_F1
 "T5 · c1 (no semantic, no regex)",195,0.138,0.267,0.182,0.278,0.48,0.352
 "T5 · c2 (semantic k=3, no regex)",229,0.276,0.493,0.354,0.404,0.805,0.538
 T5 · c3 (semantic k=3 + regex),235,0.308,0.583,0.404,0.426,0.915,0.581
+T5 · c4 (chunked FDR),238,0.218,0.711,0.334,0.222,0.931,0.358
 "Haiku · c1 (no semantic, no regex)",221,0.053,0.26,0.087,0.1,0.489,0.166
 "Haiku · c2 (semantic k=3, no regex)",228,0.107,0.483,0.176,0.151,0.79,0.253
 Haiku · c3 (semantic k=3 + regex),225,0.116,0.558,0.193,0.155,0.882,0.264

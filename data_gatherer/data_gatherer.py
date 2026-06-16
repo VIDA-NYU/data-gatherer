@@ -1762,6 +1762,7 @@ class DataGatherer:
         article_file_dir='scripts/tmp/raw_files/',
         url2id_mapping=None,
         local_fetch_file=None,
+        sects_required=5,
         ):
         """
         Complete integrated batch processing using LLMClient batch functionality.
@@ -1787,7 +1788,7 @@ class DataGatherer:
 
         :param semantic_retrieval: Enable semantic retrieval
 
-        :param top_k: Number of top results to retrieve
+        :param top_k: Number of top results to retrieve. Set to -1 to run Full Document Chunk
 
         :param embeddings_retriever_model: Model for embeddings retrieval
         
@@ -1826,7 +1827,7 @@ class DataGatherer:
         try:
             # Step 1: Fetch data
             self.logger.info("Step 1: Fetching data...")
-            fetched_data = self.fetch_data(url_list, write_htmls_xmls=write_htmls_xmls, article_file_dir=article_file_dir, local_fetch_file=local_fetch_file)
+            fetched_data = self.fetch_data(url_list, write_htmls_xmls=write_htmls_xmls, article_file_dir=article_file_dir, local_fetch_file=local_fetch_file, sects_required=sects_required)
             
             # Count raw_data_format frequencies and store URLs for parser reuse optimization
             format_counts = {}
@@ -1872,7 +1873,7 @@ class DataGatherer:
                         else:
                             base_custom_id = str(url2id_mapping[url])[:58]
 
-                        if self.full_document_read:
+                        if self.full_document_read and top_k != -1:
                             if url_raw_data_format.upper() == 'XML':
                                 normalized_input = (self.parser.normalize_XML(data['fetched_data']) 
                                                 if hasattr(self.parser, 'normalize_XML') 

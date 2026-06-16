@@ -28,6 +28,7 @@ CONFIGS = {
     "T5 · c1 (no semantic, no regex)":  "k8s/output/rev_test_c1/iter1/dataset_citations.csv",
     "T5 · c2 (semantic k=3, no regex)": "k8s/output/rev_test_c2/iter1/dataset_citations.csv",
     "T5 · c3 (semantic k=3 + regex)":   "k8s/output/rev_test_c3/iter1/dataset_citations.csv",
+    "T5 · c4 (chunked FDR)":            "k8s/output/rev_test_c4/iter1/dataset_citations.csv",
     # Claude Haiku (run locally)
     "Haiku · c1 (no semantic, no regex)":  "k8s/output/rev_test_haiku_c1/dataset_citations.csv",
     "Haiku · c2 (semantic k=3, no regex)": "k8s/output/rev_test_haiku_c2/dataset_citations.csv",

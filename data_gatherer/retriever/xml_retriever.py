@@ -67,9 +67,11 @@ class xmlRetriever(BaseRetriever):
             ack_elements = raw_data.findall(".//ack")
             app_elements = raw_data.findall(".//app")
             fn_group_elements = raw_data.findall(".//fn-group")
-            
-            n_sections_found = len(sec_elements) + len(ack_elements) + len(app_elements) + len(fn_group_elements)
-            self.logger.info(f"Number of sections found: {n_sections_found} (<sec>: {len(sec_elements)}, <ack>: {len(ack_elements)}, <app>: {len(app_elements)}, <fn-group>: {len(fn_group_elements)})")
+            abstract_elements = raw_data.findall(".//abstract")
+            ref_list_elements = raw_data.findall(".//ref-list")
+
+            n_sections_found = len(sec_elements) + len(ack_elements) + len(app_elements) + len(fn_group_elements) + len(abstract_elements) + len(ref_list_elements)
+            self.logger.info(f"Number of sections found: {n_sections_found} (<sec>: {len(sec_elements)}, <ack>: {len(ack_elements)}, <app>: {len(app_elements)}, <fn-group>: {len(fn_group_elements)}, <abstract>: {len(abstract_elements)}, <ref-list>: {len(ref_list_elements)})")
             if n_sections_found < required_sections:
                 self.logger.info(f"Number of sections {n_sections_found} is less than the required threshold of {required_sections}.")
                 return False
