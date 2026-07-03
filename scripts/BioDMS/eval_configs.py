@@ -10,6 +10,7 @@ Usage:
 
 import argparse
 import logging
+import re
 import sys
 import time
 from pathlib import Path
@@ -126,9 +127,15 @@ def load_gold_gt(test_pmcids: set) -> pd.DataFrame:
     return gt
 
 
+def _config_slug(label: str) -> str:
+    """Filename-safe slug that keeps the config tag (c1/c2/...), not just the model name."""
+    return re.sub(r'[^A-Za-z0-9]+', '_', label).strip('_')
+
+
 def run_eval(label, pred_df, gt, gt_base, tag, orchestrator):
-    fp_file = str(OUTPUT_DIR / f"fp_{tag}_{label.split()[0]}.txt")
-    fn_file = str(OUTPUT_DIR / f"fn_{tag}_{label.split()[0]}.txt")
+    slug = _config_slug(label)
+    fp_file = str(OUTPUT_DIR / f"fp_{tag}_{slug}.txt")
+    fn_file = str(OUTPUT_DIR / f"fn_{tag}_{slug}.txt")
     return evaluate_performance(
         pred_df, gt, orchestrator,
         fp_file,
