@@ -24,6 +24,8 @@ spec:
             --s3-input-key input/slice_${SLICE_ID}.csv \
             --s3-ontology-key ontology/open_bio_data_repos.json \
             --s3-skip-urls-key input/skip_urls.json \
+            --s3-backup-key ${S3_BACKUP_KEY} \
+            --skip-already-processed ${SKIP_ALREADY_PROCESSED} \
             --semantic-retrieval ${SEMANTIC_RETRIEVAL} \
             --brute-force-regex ${BRUTE_FORCE_REGEX} \
             --top-k ${TOP_K} \

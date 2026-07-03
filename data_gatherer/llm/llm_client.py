@@ -1137,6 +1137,15 @@ class LLMClient_dev:
                     elif 'body' in batch_response and 'output' in batch_response['body']:
                         # Direct format
                         llm_responses = batch_response['body']['output']
+                    elif 'result' in batch_response:
+                        # Anthropic batch format: {'result': {'type': 'succeeded'/'errored'/..., 'message': {...}, 'error': {...}}}
+                        result = batch_response['result']
+                        if result.get('type') != 'succeeded':
+                            raise ValueError(f"Anthropic batch item did not succeed (type={result.get('type')}): {result.get('error')}")
+                        content_blocks = (result.get('message') or {}).get('content', [])
+                        llm_responses = ''.join(
+                            block.get('text', '') for block in content_blocks if block.get('type') == 'text'
+                        )
                     else:
                         # Fallback - assume the response is the batch_response itself
                         llm_responses = batch_response

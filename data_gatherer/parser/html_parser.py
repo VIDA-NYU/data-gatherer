@@ -704,7 +704,7 @@ class HTMLParser(LLMParser):
                 continue
 
             a_elements = tree.xpath(f".//a[@href='#{href_id}']")
-            self.logger.info(f"Found {len(a_elements)} <a> elements with href='#{href_id}'.")
+            self.logger.debug(f"Found {len(a_elements)} <a> elements with href='#{href_id}'.")
 
             for ref in a_elements:
                 surrounding_text = self.get_surrounding_text(ref)
@@ -712,7 +712,7 @@ class HTMLParser(LLMParser):
                 if text_segment not in context_descr:
                     context_descr += text_segment + "\n"
 
-            self.logger.info(f"Extracted context description (len: {len(context_descr)}) for {href_id}: "
+            self.logger.debug(f"Extracted context description (len: {len(context_descr)}) for {href_id}: "
                              f"{context_descr.strip()}")
             supplementary_material_links.at[i, 'context_description'] = context_descr.strip()
 

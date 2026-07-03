@@ -138,7 +138,12 @@ def upload_to_s3(local_path: str, s3_key: str) -> None:
 
 
 def _default_api_provider(model: str) -> str:
-    return "portkey" if "gemini" in model.lower() else "openai"
+    m = model.lower()
+    if "gemini" in m:
+        return "portkey"
+    if "claude" in m:
+        return "anthropic"
+    return "openai"
 
 
 def _default_use_portkey(model: str) -> bool:
@@ -189,6 +194,14 @@ def main():
     parser.add_argument("--s3-skip-urls-key", default=None,
                         help="S3 key to a JSON file containing a list of source_urls already processed in prior iterations")
     parser.add_argument(
+        "--skip-already-processed",
+        type=lambda v: v.lower() not in ("false", "0", "no", "off"),
+        default=False, metavar="BOOL",
+        help="Skip source_urls already listed in --s3-skip-urls-key (default: false). Set true to avoid reprocessing URLs done in prior iterations.",
+    )
+    parser.add_argument("--s3-backup-key", default=None,
+                        help="S3 key to download the local-fetch backup parquet from (e.g. cache/Local_fetched_data.parquet)")
+    parser.add_argument(
         "--section-filter",
         default=None,
         choices=["data_availability_statement", "supplementary_material"],
@@ -215,6 +228,13 @@ def main():
         help="Minimum number of sections required for an article to be processed (default: 5).",
     )
     parser.add_argument(
+        "--full-document-read",
+        type=lambda v: v.lower() not in ("false", "0", "no", "off"),
+        default=False, metavar="BOOL",
+        help="Feed the entire normalized document to the LLM in one shot instead of retrieving sections "
+             "(default: false). Only takes effect for models in entire_document_models.",
+    )
+    parser.add_argument(
         "--prompt-name", default=None,
         help="Prompt template name (auto-detected from model if not set)",
     )
@@ -223,6 +243,11 @@ def main():
         type=lambda v: v.lower() not in ("false", "0", "no", "off"),
         default=True, metavar="BOOL",
         help="Use async Batch API (default: true). Set false for synchronous commercial API calls.",
+    )
+    # arg backup_file
+    parser.add_argument(
+        "--backup-file", default='scripts/exp_input/Local_fetched_data.parquet',
+        help="Path to backup file for saving intermediate results (default: None). If set, the processor will periodically save the current state to this file.",
     )
     args = parser.parse_args()
 
@@ -240,6 +265,14 @@ def main():
         if download_from_s3(args.s3_ontology_key, ontology_local):
             args.ontology_path = args.output_dir
 
+    # Download local-fetch backup parquet from S3 if provided and not already present
+    if args.s3_backup_key:
+        backup_local = os.path.join(args.output_dir, "Local_fetched_data.parquet")
+        if os.path.exists(backup_local) or download_from_s3(args.s3_backup_key, backup_local):
+            args.backup_file = backup_local
+        else:
+            logger.warning(f"Backup parquet not found at s3://.../{args.s3_backup_key} — proceeding without local-fetch cache")
+
     log_file = os.path.join(args.output_dir, "run.log")
     logging.getLogger("httpx").setLevel(logging.WARNING)
     logging.getLogger("httpcore").setLevel(logging.WARNING)
@@ -256,7 +289,7 @@ def main():
     done_urls = load_checkpoint(output_csv)
 
     # Also skip URLs processed in previous iterations (downloaded from S3)
-    if args.s3_skip_urls_key:
+    if args.skip_already_processed and args.s3_skip_urls_key:
         skip_local = os.path.join(args.output_dir, "skip_urls.json")
         if download_from_s3(args.s3_skip_urls_key, skip_local):
             import json as _json
@@ -288,6 +321,8 @@ def main():
         log_file_override=log_file,
         log_level=logging.INFO,
         user_config_dir=args.ontology_path,
+        raw_data_df_parquet_filepath=args.backup_file,
+        process_entire_document=args.full_document_read,
     )
 
     total = len(pending_urls)
@@ -318,6 +353,7 @@ def main():
                 use_portkey=_default_use_portkey(args.model),
                 use_batch_api=args.use_batch_api,
                 api_provider=_default_api_provider(args.model),
+                local_fetch_file=args.backup_file,
             )
         except Exception as e:
             logger.error(f"Batch {batch_num} failed: {e}", exc_info=True)

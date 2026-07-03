@@ -12,10 +12,18 @@
 # Usage:
 #   bash k8s/run_loop.sh --iterations 2 --gpus 4 --max-articles-per-slice 2500 \
 #                        --input article_ids_REV_pmc.csv --output-dir k8s/output \
+#                        [--model hf-vida-nyu/flan-t5-base-dataref-info-extract] \
+#                        [--prompt-name T5_primer] \
+#                        [--skip-already-processed false] \
 #                        [--clean] [--cumulative] [--plot]
 #
 #   --cumulative  Pass all previous iterations' CSVs to enrich_ontology.py so groups
 #                 are sized by cumulative evidence. Default: marginal (current iter only).
+#
+#   --skip-already-processed  Default false: build/upload a skip list so URLs already
+#                 processed aren't reprocessed. Set true for independent one-off eval
+#                 runs (e.g. comparing configs with --job-suffix) to avoid cross-run
+#                 contamination via the shared S3 skip-urls key.
 #
 # Prerequisites:
 #   - kubectl configured and pointing at the right cluster
@@ -55,6 +63,10 @@ SEMANTIC_RETRIEVAL="true"
 BRUTE_FORCE_REGEX="true"
 TOP_K="5"
 SECTS_REQUIRED="5"
+MODEL="hf-vida-nyu/flan-t5-base-dataref-info-extract"
+PROMPT_NAME="T5_primer"
+S3_BACKUP_KEY="cache/Local_fetched_data.parquet"
+SKIP_ALREADY_PROCESSED="false"
 
 # --- Args ---
 while [[ $# -gt 0 ]]; do
@@ -74,6 +86,10 @@ while [[ $# -gt 0 ]]; do
         --brute-force-regex)       BRUTE_FORCE_REGEX="$2";       shift 2 ;;
         --top-k)                   TOP_K="$2";                   shift 2 ;;
         --sects-required)          SECTS_REQUIRED="$2";          shift 2 ;;
+        --model)                   MODEL="$2";                   shift 2 ;;
+        --prompt-name)             PROMPT_NAME="$2";              shift 2 ;;
+        --s3-backup-key)           S3_BACKUP_KEY="$2";            shift 2 ;;
+        --skip-already-processed) SKIP_ALREADY_PROCESSED="$2";   shift 2 ;;
         --clean)                   CLEAN=1;                      shift   ;;
         --cumulative)              CUMULATIVE=1;                 shift   ;;
         --no-enrich)               NO_ENRICH=1;                  shift   ;;
@@ -82,7 +98,7 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
-export NODE_NAME JOB_SUFFIX SEMANTIC_RETRIEVAL BRUTE_FORCE_REGEX TOP_K SECTS_REQUIRED
+export NODE_NAME JOB_SUFFIX SEMANTIC_RETRIEVAL BRUTE_FORCE_REGEX TOP_K SECTS_REQUIRED MODEL PROMPT_NAME S3_BACKUP_KEY SKIP_ALREADY_PROCESSED
 
 # --- Helpers ---
 pvc_reader_ready() {
@@ -336,8 +352,9 @@ for ITER in $(seq "$START_ITER" "$ITERATIONS"); do
     copy_and_merge_outputs "$ITER_DIR"
 
     # 3b. Build cumulative skip list and upload to S3 so next iteration skips these URLs
-    echo "[loop] Building skip list for next iteration..."
-    python3 - <<PYEOF
+    if [[ "$SKIP_ALREADY_PROCESSED" == "true" ]]; then
+        echo "[loop] Building skip list for next iteration..."
+        python3 - <<PYEOF
 import os, json, pandas as pd
 
 base   = "$OUTPUT_BASE"
@@ -359,9 +376,12 @@ with open(out, "w") as f:
     json.dump(sorted(done), f)
 print(f"  skip list: {len(done):,} URLs → {out}")
 PYEOF
-    aws s3 cp "${OUTPUT_BASE}/iter${ITER}/skip_urls.json" \
-        "s3://${BUCKET}/input/skip_urls.json" \
-        && echo "[loop] Skip list uploaded to S3"
+        aws s3 cp "${OUTPUT_BASE}/iter${ITER}/skip_urls.json" \
+            "s3://${BUCKET}/input/skip_urls.json" \
+            && echo "[loop] Skip list uploaded to S3"
+    else
+        echo "[loop] --skip-already-processed false: not building/uploading skip list"
+    fi
 
     # 4. Run enrichment on merged data (skip if --no-enrich)
     if [[ "$NO_ENRICH" -eq 1 ]]; then

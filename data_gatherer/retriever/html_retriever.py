@@ -124,7 +124,7 @@ class htmlRetriever(BaseRetriever):
         data_availability_elements = []
 
         for selector in self.css_selectors.get('data_availability_sections', []):
-            self.logger.info(f"Using selector: {selector}")
+            self.logger.debug(f"Using selector: {selector}")
             matches = soup.select(selector)
             for match in matches:
                 if match.name in ['h2', 'h3']:  # headings usually don't contain content directly

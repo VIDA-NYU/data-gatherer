@@ -4,6 +4,7 @@ os.environ.setdefault("TOKENIZERS_PARALLELISM", "false")
 import re
 import json
 import time
+import hashlib
 import threading
 import pandas as pd
 import ipywidgets as widgets
@@ -1865,7 +1866,7 @@ class DataGatherer:
                         
                         article_title = ''
                         pmcid = self.data_fetcher.url_to_article_id(url)
-                        article_id = self.url_to_page_id(url)
+                        article_id = self.data_fetcher.url_to_article_id(url)
                         timestamp = int(time.time() * 1000)
                         if url2id_mapping is None:
                             base_custom_id = f"{self.llm}_{article_id}_{timestamp}"
@@ -1873,7 +1874,7 @@ class DataGatherer:
                         else:
                             base_custom_id = str(url2id_mapping[url])[:58]
 
-                        if self.full_document_read and top_k != -1:
+                        if self.full_document_read:
                             if url_raw_data_format.upper() == 'XML':
                                 normalized_input = (self.parser.normalize_XML(data['fetched_data']) 
                                                 if hasattr(self.parser, 'normalize_XML') 
@@ -1918,6 +1919,15 @@ class DataGatherer:
                         if hasattr(self.parser, 'retrieval_stats'):
                             retrieval_stats = self.parser.retrieval_stats.get(pmcid, {})
 
+                        # Supplementary-material extraction is per-URL, not per-chunk — compute once here
+                        # rather than inside the chunk loop below (was previously re-parsing the full
+                        # document once per chunk, producing duplicate rows in supplementary_material_metadata).
+                        data_for_extraction = xml_root if (url_raw_data_format.upper() == 'PDF' and grobid_for_pdf and xml_root is not None) else data['fetched_data']
+                        supplementary_material_links = self.parser.extract_href_from_supplementary_material(data_for_extraction, url)
+                        concat_df = self.parser.extract_supplementary_material_refs(data_for_extraction, supplementary_material_links)
+                        concat_df['url'] = url
+                        supplementary_material_metadata = pd.concat([concat_df, supplementary_material_metadata])
+
                         for idx, item in enumerate(normalized_input):
                             # Each request needs a distinct ID to avoid collisions in batch mode.
                             custom_id = f"{base_custom_id}_{idx}"
@@ -1947,14 +1957,7 @@ class DataGatherer:
                                     'retrieval_stats': retrieval_stats,
                                 }
                             }
-                            
-                            # Use xml_root for PDFs processed with GROBID, otherwise use fetched_data
-                            data_for_extraction = xml_root if (url_raw_data_format.upper() == 'PDF' and grobid_for_pdf and xml_root is not None) else data['fetched_data']
-                            supplementary_material_links = self.parser.extract_href_from_supplementary_material(data_for_extraction, url)
-                            concat_df = self.parser.extract_supplementary_material_refs(data_for_extraction, supplementary_material_links)
-                            concat_df['url'] = url
-                            supplementary_material_metadata = pd.concat([concat_df,supplementary_material_metadata])
-                            
+
                             batch_requests.append(batch_request)
                             
                     except Exception as e:
