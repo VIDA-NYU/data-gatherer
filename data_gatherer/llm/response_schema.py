@@ -637,3 +637,47 @@ supplementary_files_keywords_schema = {
 class SupplementaryFileKeywords(BaseModel):
     supplementary_file_keywords: list[str]
 
+############################# Grant Schema #############################
+
+grant_response_schema_gpt = {
+    "type": "json_schema",
+    "name": "GPT_grant_responses_schema",
+    "schema": {
+        "type": "object",  # Root must be an object
+        "properties": {
+            "grants": {  # Use a property to hold the array
+                "type": "array",
+                "items": {
+                    "type": "object",
+                    "properties": {
+                        "funder_name": {
+                            "type": "string",
+                            "description": "The name of the funding organization or agency that supported the research.",
+                            "maxLength": 256
+                        },
+                        "grant_number": {
+                            "type": "string",
+                            "description": "The grant, award, or contract number associated with this funding. If not found, return 'n/a'.",
+                            "maxLength": 64
+                        },
+                        "funding_context_from_paper": {
+                            "type": "string",
+                            "description": "The text passage from the paper, typically from the Acknowledgments or Funding statement, that mentions this funder and/or grant.",
+                            "maxLength": 1024
+                        },
+                        "recipient": {
+                            "type": "string",
+                            "description": "The author or institution that received the grant, if mentioned. If not found, return 'n/a'.",
+                            "maxLength": 128
+                        }
+                    },
+                    "additionalProperties": False,
+                    "required": ["funder_name", "grant_number", "funding_context_from_paper", "recipient"]
+                },
+                "minItems": 1
+            }
+        },
+        "additionalProperties": False,
+        "required": ["grants"],
+    }
+}

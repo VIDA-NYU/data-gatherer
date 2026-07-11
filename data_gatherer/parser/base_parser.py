@@ -1813,3 +1813,31 @@ Files:
         self.logger.info(f"Total matches found: {len(matches)}")
         return matches
 
+    def extract_grants(self, document_text, prompt_name='GPT_FDR_FewShot_grant', subdir='funding_prompts',
+                        response_schema=grant_response_schema_gpt, temperature=0.0):
+        """
+        Extract grant/funding information from a document's full text.
+
+        :param document_text: str — the already-fetched/normalized publication text.
+        :return: list[dict] — extracted grant records (funder_name, grant_number,
+                 funding_context_from_paper, recipient).
+        """
+        static_prompt = self.llm_client.prompt_manager.load_prompt(prompt_name, subdir=subdir)
+        messages = self.llm_client.prompt_manager.render_prompt(
+            static_prompt,
+            entire_doc=self.llm_client.full_document_read,
+            content=document_text
+        )
+
+        raw_response = self.llm_client.make_llm_call(
+            messages=messages,
+            temperature=temperature,
+            response_format=response_schema,
+            full_document_read=self.llm_client.full_document_read
+        )
+
+        return self.llm_client.process_llm_response(
+            raw_response=raw_response,
+            response_format=response_schema,
+            expected_key='grants'
+        )
