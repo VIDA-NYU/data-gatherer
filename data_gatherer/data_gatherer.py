@@ -1744,7 +1744,7 @@ class DataGatherer:
         api_provider='openai',
         prompt_name='GPT_FewShot',
         response_format=None,
-        relevant_cont_fmt='lst',
+        relevant_cont_fmt=None,
         temperature=0.0,
         semantic_retrieval=False,
         top_k=5,
@@ -1824,7 +1824,16 @@ class DataGatherer:
 
         self.logger.info(f"Starting integrated batch processing for {len(url_list)} URLs")
         self.custom_id_to_source_url = {}
-        
+
+        if relevant_cont_fmt is None:
+            # Match process_articles/parse_data's existing convention:
+            # commercial long-context models get every retrieved snippet concatenated
+            # into a single 'text' prompt per article (one LLM call), instead of the
+            # 'lst' default which fires one separate call per snippet — the latter is
+            # only needed for local/HF models with small context windows.
+            relevant_cont_fmt = 'lst' if ('local' in self.llm.lower() or 'hf-' in self.llm.lower()) else 'text'
+            self.logger.info(f"relevant_cont_fmt not specified; defaulting to '{relevant_cont_fmt}' for model {self.llm}")
+
         try:
             # Step 1: Fetch data
             self.logger.info("Step 1: Fetching data...")

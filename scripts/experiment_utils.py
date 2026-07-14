@@ -5,6 +5,7 @@ import pandas as pd
 from bs4 import BeautifulSoup
 import os
 import re
+from datetime import datetime
 
 def load_pmc_files_from_html_xml_dir_to_dataframe_fetch_file(src_dir,raw_HTML_data_filepath):
     """
@@ -693,3 +694,98 @@ def evaluate_performance(predict_df, ground_truth, orchestrator, false_positives
 # with open(doi_to_pmcid_mapping_file, "w") as f:
 #     json.dump(doi_pmcid_mapping, f, indent=4) # Save to JSON
 # #%% md
+
+def parse_job_duration_from_log(run_log_path):
+    """
+    Get a job's actual wall-clock duration for free from k8s_processor.py's own
+    run.log timestamps (LOG_FMT = "%(asctime)s - ..."), instead of inferring it
+    from how many times a sampler happened to poll during the run.
+
+    Args:
+        run_log_path (str): Path to a run.log file.
+
+    Returns:
+        float: duration in hours, from the first to the last logged timestamp.
+    """
+    ts_pattern = re.compile(r'^(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2},\d{3})')
+    first_ts, last_ts = None, None
+    with open(run_log_path) as f:
+        for line in f:
+            m = ts_pattern.match(line)
+            if not m:
+                continue
+            ts = datetime.strptime(m.group(1), '%Y-%m-%d %H:%M:%S,%f')
+            if first_ts is None:
+                first_ts = ts
+            last_ts = ts
+
+    if first_ts is None or last_ts is None:
+        raise ValueError(f"No timestamped log lines found in {run_log_path}")
+
+    return (last_ts - first_ts).total_seconds() / 3600
+
+
+def compute_gpu_energy_wh(power_log_csv, sample_interval_s=5, duration_hours=None):
+    """
+    Estimate GPU energy consumption from an nvidia-smi power draw log, as produced by
+    k8s/deterministic-batch-job-template.yaml's background sampler:
+    `nvidia-smi --query-gpu=timestamp,power.draw --format=csv -l <sample_interval_s>`.
+
+    By default this integrates power over the sampler's own sample count
+    (n_samples * sample_interval_s), which requires polling often enough to cover
+    the whole job — and frequent polling can itself perturb latency-sensitive GPU
+    workloads (see parse_job_duration_from_log for a lower-overhead alternative).
+
+    If duration_hours is supplied (e.g. from parse_job_duration_from_log, which reads
+    it for free from run.log's own timestamps), energy is instead computed as
+    mean(power) * duration_hours — letting the power log be sampled sparsely (just
+    enough for a representative average) without needing to track wall-clock time
+    via polling frequency at all.
+
+    Args:
+        power_log_csv (str or list[str]): Path to a gpu_power.csv file, or a list of
+            paths (e.g. one per k8s job slice) to sum energy across a multi-GPU run.
+        sample_interval_s (int): Seconds between samples. Only used when duration_hours
+            is not supplied. Must match the -l value used when the log was recorded
+            (default in the job template is 5s).
+        duration_hours (float or list[float], optional): Actual job duration(s) (e.g.
+            from parse_job_duration_from_log). If given, energy = mean(power) *
+            duration_hours per file, summed across files, instead of the sample-count
+            based integration.
+
+    Returns:
+        dict with 'n_samples', 'duration_min', 'energy_wh', 'energy_kwh'.
+    """
+    paths = [power_log_csv] if isinstance(power_log_csv, str) else list(power_log_csv)
+    durations = None
+    if duration_hours is not None:
+        durations = [duration_hours] * len(paths) if isinstance(duration_hours, (int, float)) else list(duration_hours)
+        if len(durations) != len(paths):
+            raise ValueError("duration_hours list must match the number of power_log_csv paths")
+
+    total_energy_wh = 0.0
+    total_samples = 0
+    total_duration_hours = 0.0
+    for i, path in enumerate(paths):
+        df = pd.read_csv(path)
+        df.columns = [c.strip() for c in df.columns]
+        power_col = next((c for c in df.columns if c.startswith('power.draw')), None)
+        if power_col is None:
+            raise ValueError(f"No 'power.draw' column found in {path}. Columns: {list(df.columns)}")
+
+        power_w = df[power_col].astype(str).str.replace(' W', '', regex=False).astype(float)
+        total_samples += len(df)
+
+        if durations is not None:
+            total_energy_wh += power_w.mean() * durations[i]
+            total_duration_hours += durations[i]
+        else:
+            total_energy_wh += power_w.sum() * sample_interval_s / 3600
+            total_duration_hours += len(df) * sample_interval_s / 3600
+
+    return {
+        'n_samples': total_samples,
+        'duration_min': total_duration_hours * 60,
+        'energy_wh': total_energy_wh,
+        'energy_kwh': total_energy_wh / 1000,
+    }

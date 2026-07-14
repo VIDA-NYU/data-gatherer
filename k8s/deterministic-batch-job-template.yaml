@@ -14,9 +14,17 @@ spec:
         - /bin/sh
         - -c
         - |
+          OUTPUT_DIR=/tmp/output/slice_${SLICE_ID}${JOB_SUFFIX}
+          mkdir -p "$OUTPUT_DIR"
+
+          # Zero-dependency GPU power sampling for this job's lifetime (approximate
+          # energy cost — integrate power.draw over time to get watt-hours).
+          nvidia-smi --query-gpu=timestamp,power.draw --format=csv -l 5 > "$OUTPUT_DIR/gpu_power.csv" &
+          GPU_SAMPLER_PID=$!
+
           python3 k8s/k8s_processor.py \
             --input /tmp/slice_${SLICE_ID}.csv \
-            --output-dir /tmp/output/slice_${SLICE_ID}${JOB_SUFFIX} \
+            --output-dir "$OUTPUT_DIR" \
             --model ${MODEL} \
             --prompt-name ${PROMPT_NAME} \
             --batch-size 100 \
@@ -30,6 +38,16 @@ spec:
             --brute-force-regex ${BRUTE_FORCE_REGEX} \
             --top-k ${TOP_K} \
             --sects-required ${SECTS_REQUIRED}
+          JOB_EXIT_CODE=$?
+
+          kill "$GPU_SAMPLER_PID" 2>/dev/null
+          wait "$GPU_SAMPLER_PID" 2>/dev/null
+
+          # Use boto3 (not the aws CLI, which isn't installed in this image — the
+          # rest of this image's S3 I/O goes through k8s_processor.py's boto3 calls).
+          python3 -c "import boto3, os; bucket = os.environ.get('S3_OUTPUT_BUCKET'); gpu_log = '$OUTPUT_DIR/gpu_power.csv'; print('Uploading gpu_power.csv to S3' if (bucket and os.path.exists(gpu_log)) else f'Skipping gpu_power.csv upload (bucket={bucket!r}, exists={os.path.exists(gpu_log)})'); (bucket and os.path.exists(gpu_log)) and boto3.client('s3').upload_file(gpu_log, bucket, 'slice_${SLICE_ID}${JOB_SUFFIX}/gpu_power.csv')"
+
+          exit $JOB_EXIT_CODE
         resources:
           limits:
             nvidia.com/gpu: "1"

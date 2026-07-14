@@ -172,8 +172,13 @@ submit_slice_jobs() {
     release_pvc_reader  # must free PVC before pods can attach
 
     for i in $(seq 1 "$N_GPUS"); do
+        # Restrict envsubst to the template's own placeholders only — otherwise it
+        # would also blank out the job's runtime-only shell variables (OUTPUT_DIR,
+        # GPU_SAMPLER_PID, JOB_EXIT_CODE, S3_OUTPUT_BUCKET) that are meant to be
+        # evaluated inside the pod's container command, not on this host.
         SLICE_ID=$i MAX_ARTICLES=$MAX_ARTICLES_PER_SLICE \
-            envsubst < "$JOB_TEMPLATE" | kubectl apply -f -
+            envsubst '${SLICE_ID} ${JOB_SUFFIX} ${MAX_ARTICLES} ${MODEL} ${PROMPT_NAME} ${S3_BACKUP_KEY} ${SKIP_ALREADY_PROCESSED} ${SEMANTIC_RETRIEVAL} ${BRUTE_FORCE_REGEX} ${TOP_K} ${SECTS_REQUIRED}' \
+            < "$JOB_TEMPLATE" | kubectl apply -f -
         echo "  submitted slice_${i} job"
     done
 }
@@ -239,6 +244,18 @@ copy_and_merge_outputs() {
             "$iter_dir/slice_${i}_articles_log.csv" 2>/dev/null \
             && echo "  downloaded slice_${i} articles_log" \
             || echo "  [warn] slice_${i} articles_log not found — skipping"
+
+        # gpu_power log — best-effort, no retry needed
+        aws s3 cp "s3://${bucket}/slice_${i}${JOB_SUFFIX}/gpu_power.csv" \
+            "$iter_dir/slice_${i}_gpu_power.csv" 2>/dev/null \
+            && echo "  downloaded slice_${i} gpu_power" \
+            || echo "  [warn] slice_${i} gpu_power.csv not found — skipping"
+
+        # run.log — best-effort, no retry needed (used for parse_job_duration_from_log)
+        aws s3 cp "s3://${bucket}/slice_${i}${JOB_SUFFIX}/run.log" \
+            "$iter_dir/slice_${i}_run.log" 2>/dev/null \
+            && echo "  downloaded slice_${i} run.log" \
+            || echo "  [warn] slice_${i} run.log not found — skipping"
     done
 
     echo "[loop] Merging outputs..."

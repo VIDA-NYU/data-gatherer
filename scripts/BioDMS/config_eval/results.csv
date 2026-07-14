@@ -11,7 +11,7 @@ Haiku · c4 (FDR),249,0.642,0.661,0.651,0.837,0.999,0.911
 "GPT-5-mini · c2 (semantic k=3, no regex)",245,0.418,0.62,0.499,0.544,0.939,0.689
 GPT-5-mini · c3 (semantic k=3 + regex),249,0.427,0.682,0.525,0.539,1.0,0.701
 GPT-5-mini · c4 (FDR),249,0.483,0.679,0.564,0.609,0.968,0.748
-"Gemini-3-flash · c1 (no semantic, no regex)",156,0.283,0.319,0.3,0.491,0.569,0.527
-"Gemini-3-flash · c2 (semantic k=3, no regex)",245,0.511,0.622,0.561,0.643,0.939,0.764
-Gemini-3-flash · c3 (semantic k=3 + regex),249,0.53,0.68,0.596,0.652,1.0,0.789
-Gemini-3-flash · c4 (FDR),249,0.646,0.641,0.643,0.863,0.999,0.926
+"Gemini-3.5-flash · c1 (no semantic, no regex)",156,0.283,0.319,0.3,0.491,0.569,0.527
+"Gemini-3.5-flash · c2 (semantic k=3, no regex)",245,0.511,0.622,0.561,0.643,0.939,0.764
+Gemini-3.5-flash · c3 (semantic k=3 + regex),249,0.53,0.68,0.596,0.652,1.0,0.789
+Gemini-3.5-flash · c4 (FDR),249,0.646,0.641,0.643,0.863,0.999,0.926
