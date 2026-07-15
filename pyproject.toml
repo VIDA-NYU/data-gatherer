@@ -79,5 +79,5 @@ data_gatherer = [
     "prompts/prompt_templates/dataset_prompts/*.json",
     "prompts/prompt_templates/metadata_prompts/*.json",
     "prompts/prompt_templates/agent_for_FP_analysis/*.json",
-    "prompts/prompt_templates/funding_prompts*.json",
+    "prompts/prompt_templates/funding_prompts/*.json",
 ]
