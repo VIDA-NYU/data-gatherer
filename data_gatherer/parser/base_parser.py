@@ -418,6 +418,57 @@ Files:
 
         return result
     
+    def intelligent_chunk_paper(self, sections, model, allowance_static_prompt=400, limit=None):
+        """
+        Greedily pack whole sections into token-budget-sized chunks, without ever splitting
+        a single section across a chunk boundary.
+
+        :param sections: list of section dicts, as produced by extract_paragraphs_from_{src_fmt}
+
+        :param model: model name, used to resolve the per-provider token limit via tokens_over_limit.
+
+        :param allowance_static_prompt: tokens reserved for the static prompt overhead
+
+        :param limit: optional explicit token limit override. 
+
+        :return: list of content strings preserving section order and never splitting a section.
+        """
+        over_limit_kwargs = {'allowance_static_prompt': allowance_static_prompt}
+        if limit is not None:
+            over_limit_kwargs['limit'] = limit
+
+        chunks = []
+        current_text = ""
+
+        for section in sections:
+            if isinstance(section, dict):
+                section_text = section.get('sec_txt_clean') or section.get('sec_txt') or section.get('text', '')
+            else:
+                section_text = str(section)
+
+            if not section_text:
+                continue
+
+            candidate_text = f"{current_text}\n{section_text}" if current_text else section_text
+
+            if current_text and self.tokens_over_limit(candidate_text, model, **over_limit_kwargs):
+                chunks.append(current_text)
+                current_text = section_text
+                if self.tokens_over_limit(current_text, model, **over_limit_kwargs):
+                    self.logger.warning(
+                        f"intelligent_chunk_paper: a single section alone ({len(section_text)} chars, "
+                        f"title={section.get('section_title', 'n/a') if isinstance(section, dict) else 'n/a'}) "
+                        f"exceeds the token limit for model {model}; keeping it whole in its own chunk anyway."
+                    )
+            else:
+                current_text = candidate_text
+
+        if current_text:
+            chunks.append(current_text)
+
+        self.logger.info(f"intelligent_chunk_paper: packed {len(sections)} section(s) into {len(chunks)} chunk(s) for model {model}.")
+        return chunks
+
     def extract_datasets_info_from_chunks(self, content, tokens_cnt, repos=None, model=None, temperature=0,
                                         prompt_name=None, full_document_read=None ,response_format=None, token_chunk_size=128000,
                                         subdir='dataset_prompts', **prompt_kwargs):
@@ -643,6 +694,30 @@ Files:
                 self.logger.debug(f"process_datasets_response sample rows: {result[:5]}")
         except Exception:
             self.logger.exception("Error while logging process_datasets_response summary")
+        return result
+
+    def process_grants_response(self, resps):
+        """
+        Process the LLM response containing grants and explode each record's grant_numbers
+        array into one flat record per grant number.
+
+        :param resps: LLM response containing grant records (list of dicts).
+
+        :return: List of flat dicts, each with a singular 'grant_number' key instead of 'grant_numbers'.
+        """
+        result = []
+        for record in resps:
+            if not isinstance(record, dict):
+                continue
+            record = dict(record)
+            grant_numbers = record.pop('grant_numbers', None)
+            if isinstance(grant_numbers, list) and grant_numbers:
+                for grant_number in grant_numbers:
+                    result.append({**record, 'grant_number': grant_number})
+            else:
+                result.append({**record, 'grant_number': grant_numbers or 'n/a'})
+
+        self.logger.info(f"process_grants_response: exploded {len(resps)} record(s) into {len(result)} one-grant-per-row record(s)")
         return result
 
     def schema_validation(self, dataset, req_timeout=0.5, skip=False):
@@ -1692,10 +1767,29 @@ Files:
     def _p_fallback_corpus(self, data) -> list:
         return []
 
+    def rule_based_retrieve(self, data, relevant_content_flag='DAS'):
+        """
+        Generalized rule-based (pattern-driven) retrieval routine for the requested content
+        category, returning combined section text in the same shape regardless of category.
+
+        :param data: parsed document as consumed by get_data_availability_text / get_funding_text.
+
+        :param relevant_content_flag: which category to retrieve — 'DAS' (data Availability) or 'FUND'.
+
+        :return: list of content strings for the requested category.
+        """
+        if relevant_content_flag == 'DAS':
+            return self.get_data_availability_text(data)
+        elif relevant_content_flag == 'FUND':
+            return self.get_funding_text(data)
+        else:
+            self.logger.warning(f"Unknown relevant_content_flag '{relevant_content_flag}' — returning empty list")
+            return []
+
     def retrieve_relevant_content(self, data, semantic_retrieval=True, top_k=5, article_id=None, max_tokens=None, skip_rule_based_retrieved_elm=False,
-                                  include_snippets_with_ID_patterns=False, output_format='text', query=None, ID_patterns=None, force_include_DAS=True,
-                                  include_section_title=False, skip_p_fallback=True):
-        
+                                  include_snippets_with_ID_patterns=False, output_format='text', query=None, ID_patterns=None,
+                                  include_section_title=False, skip_p_fallback=True, relevant_content_flag='DAS'):
+
         """Given the full text of the article, retrieve the most relevant content related to data availability using a combination
         of semantic retrieval and rule-based methods.
 
@@ -1709,17 +1803,17 @@ Files:
         :param output_format: str - the format of the output, either 'text' for concatenated string or 'json' for structured data (default: 'text')
         :param query: str - the query to use for semantic retrieval (default: None, meaning a predefined query focused on data availability will be used)
         :param ID_patterns: list - optional list of regex patterns to identify dataset identifiers in the text (default: None, meaning patterns will be loaded from ontology)
-        :param force_include_DAS: bool - whether to force include the data availability statement content in the retrieved content (default: True)
         :param include_section_title: bool - whether to include section titles in the corpus for semantic retrieval (default: False)
         :param skip_p_fallback: bool - whether to skip the fallback method of building corpus from <p> tags if semantic retrieval returns an empty corpus (default: True)
+        :param relevant_content_flag: str - which rule-based content category to force-include: 'DAS' (data availability, default) or 'FUND' (funding/grants). See rule_based_retrieve.
 
         :return: str or list - the retrieved relevant content in the specified output format
         """
         self.logger.debug(f"Function call: retrieve_relevant_content(semantic_retrieval={semantic_retrieval}, top_k={top_k}, article_id={article_id}, max_tokens={max_tokens}, skip_rule_based_retrieved_elm={skip_rule_based_retrieved_elm}, include_snippets_with_ID_patterns={include_snippets_with_ID_patterns}, output_format={output_format})")
 
-        data_avail_cont = self.get_data_availability_text(data) if force_include_DAS else []
+        relevant_content_rule_based = self.rule_based_retrieve(data, relevant_content_flag)
         self.id_patterns = ID_patterns if ID_patterns is not None else self.id_patterns
-        ret_lst = data_avail_cont.copy()
+        ret_lst = relevant_content_rule_based.copy()
         top_k_sections, docs_matching_id_ptr = [], []
 
         _used_p_fallback = False
@@ -1738,7 +1832,10 @@ Files:
                 'n_corpus_sections': len(corpus),
                 'retrieved_sections_title': None,
                 'top_k': -1,
-                'n_das_sections': len(data_avail_cont),
+                # kept as 'n_das_sections' for backward compat with k8s_processor.py/enrich_ontology.py,
+                # which read this column by name — it now reflects whichever category
+                # relevant_content_flag selected (DAS or FUND), not just data availability.
+                'n_das_sections': len(relevant_content_rule_based),
                 'used_paragraph_fallback': False,
             }
             return normalized_input
@@ -1773,7 +1870,7 @@ Files:
         if output_format == 'text':
             normalized_input = "".join(ret_lst)
         elif output_format == 'json':
-            normalized_input = data_avail_cont + top_k_sections + docs_matching_id_ptr
+            normalized_input = relevant_content_rule_based + top_k_sections + docs_matching_id_ptr
         else:
             normalized_input = ret_lst
 
@@ -1784,7 +1881,8 @@ Files:
             'n_corpus_sections': len(corpus) if semantic_retrieval else None,
             'retrieved_sections_title': [item.get('section_title', 'n/a') for item in top_k_sections] if semantic_retrieval else None,
             'top_k': top_k,
-            'n_das_sections': len(data_avail_cont),
+            # kept as 'n_das_sections' for backward compat — see comment above.
+            'n_das_sections': len(relevant_content_rule_based),
             'used_paragraph_fallback': _used_p_fallback,
         }
 
@@ -1813,3 +1911,31 @@ Files:
         self.logger.info(f"Total matches found: {len(matches)}")
         return matches
 
+    def extract_grants(self, document_text, prompt_name='GPT_FDR_FewShot_grant', subdir='funding_prompts',
+                        response_schema=grant_response_schema_gpt, temperature=0.0):
+        """
+        Extract grant/funding information from a document's full text.
+
+        :param document_text: str — the already-fetched/normalized publication text.
+        :return: list[dict] — extracted grant records (funder_name, grant_number,
+                 funding_context_from_paper, recipient).
+        """
+        static_prompt = self.llm_client.prompt_manager.load_prompt(prompt_name, subdir=subdir)
+        messages = self.llm_client.prompt_manager.render_prompt(
+            static_prompt,
+            entire_doc=self.llm_client.full_document_read,
+            content=document_text
+        )
+
+        raw_response = self.llm_client.make_llm_call(
+            messages=messages,
+            temperature=temperature,
+            response_format=response_schema,
+            full_document_read=self.llm_client.full_document_read
+        )
+
+        return self.llm_client.process_llm_response(
+            raw_response=raw_response,
+            response_format=response_schema,
+            expected_key='grants'
+        )

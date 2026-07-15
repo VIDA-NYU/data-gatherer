@@ -108,12 +108,15 @@ class htmlRetriever(BaseRetriever):
 
         return df_supp
 
-    def get_data_availability_elements_from_webpage(self, preprocessed_html, publisher='PMC'):
+    def get_data_availability_elements_from_webpage(self, preprocessed_html, publisher='PMC',
+                                                     section_category='data_availability_sections'):
         """
-        Given the preprocessed HTML, extract paragraphs or links under data availability sections.
+        Given the preprocessed HTML, extract paragraphs or links under the requested section category
+        (default 'data_availability_sections'; also used with 'funding_sections' for grant/funding
+        extraction — the element-walking logic below is category-agnostic, only the selector lookup key differs).
         """
         self.retrieval_patterns = load_config('retrieval_patterns.json')
-        self.logger.info("Extracting data availability elements from HTML")
+        self.logger.info(f"Extracting '{section_category}' elements from HTML")
 
         # Merge general + publisher-specific selectors
         self.css_selectors = self.retrieval_patterns.get('general', {}).get('css_selectors', {})
@@ -123,7 +126,7 @@ class htmlRetriever(BaseRetriever):
         soup = BeautifulSoup(preprocessed_html, "html.parser")
         data_availability_elements = []
 
-        for selector in self.css_selectors.get('data_availability_sections', []):
+        for selector in self.css_selectors.get(section_category, []):
             self.logger.debug(f"Using selector: {selector}")
             matches = soup.select(selector)
             for match in matches:

@@ -637,3 +637,51 @@ supplementary_files_keywords_schema = {
 class SupplementaryFileKeywords(BaseModel):
     supplementary_file_keywords: list[str]
 
+############################# Grant Schema #############################
+
+grant_response_schema_gpt = {
+    "type": "json_schema",
+    "name": "GPT_grant_responses_schema",
+    "schema": {
+        "type": "object",  # Root must be an object
+        "properties": {
+            "grants": {  # Use a property to hold the array
+                "type": "array",
+                "items": {
+                    "type": "object",
+                    "properties": {
+                        "funder_name": {
+                            "type": "string",
+                            "description": "The name of the single funding organization or agency that supported the research. Every grant_numbers entry in this object must be funded by this SAME funder — never group grants from different funders into one object, even if they share a recipient or appear in the same sentence.",
+                            "maxLength": 256
+                        },
+                        "grant_numbers": {
+                            "type": "array",
+                            "description": "One or more grant/award/contract numbers from this SAME funder, associated with this same recipient and context. Put each distinct grant number as its own array element (never join multiple numbers into one string with commas/semicolons). If no grant number is given, return ['n/a'].",
+                            "items": {
+                                "type": "string",
+                                "maxLength": 32
+                            },
+                            "minItems": 1
+                        },
+                        "funding_context_from_paper": {
+                            "type": "string",
+                            "description": "The text passage from the paper, typically from the Acknowledgments or Funding statement, that mentions this funder and/or grant.",
+                            "maxLength": 1024
+                        },
+                        "recipient": {
+                            "type": "string",
+                            "description": "The single author or institution that received the grant(s) in this object, if mentioned. If not found, return 'n/a'.",
+                            "maxLength": 128
+                        }
+                    },
+                    "additionalProperties": False,
+                    "required": ["funder_name", "grant_numbers", "funding_context_from_paper"]
+                },
+                "minItems": 1
+            }
+        },
+        "additionalProperties": False,
+        "required": ["grants"],
+    }
+}

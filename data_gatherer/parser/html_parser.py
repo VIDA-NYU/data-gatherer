@@ -92,7 +92,7 @@ class HTMLParser(LLMParser):
             write_cache=embeds_cache_write
         )
 
-    def normalize_HTML(self, html, keep_tags=None):
+    def normalize_HTML(self, html, keep_tags=None, remove_reference_tags=False):
         """
         Normalize the HTML content by removing unnecessary tags and attributes.
 
@@ -107,6 +107,12 @@ class HTMLParser(LLMParser):
         try:
             # Parse the HTML content
             soup = BeautifulSoup(html, "html.parser")
+
+            if remove_reference_tags:
+                ref_sections = soup.find_all("section", class_=lambda c: c and "ref-list" in c)
+                for ref_section in ref_sections:
+                    ref_section.decompose()
+                self.logger.info(f"Removed {len(ref_sections)} reference-list section(s) from HTML.")
 
             # 1. Remove script, style, and meta tags
             for tag in ["script", "style", 'img', 'iframe', 'noscript', 'svg', 'button', 'form', 'input']:
@@ -436,6 +442,17 @@ class HTMLParser(LLMParser):
         data_availability_elements = self.retriever.get_data_availability_elements_from_webpage(html_content)
         data_availability_texts = [item['html'] for item in data_availability_elements]
         return data_availability_texts
+
+    def get_funding_text(self, html_content: str) -> list[str]:
+        """
+        Get funding/acknowledgments/grant-support elements and extract text from there.
+        Mirrors get_data_availability_text, using the 'funding_sections' selector category instead.
+        """
+        funding_elements = self.retriever.get_data_availability_elements_from_webpage(
+            html_content, section_category='funding_sections'
+        )
+        funding_texts = [item['html'] for item in funding_elements]
+        return funding_texts
 
     def parse_data(self, html_str, publisher=None, current_url_address=None, raw_data_format='HTML',
         article_file_dir='tmp/raw_files/', section_filter=None, prompt_name='GPT_FewShot', use_portkey=True, 

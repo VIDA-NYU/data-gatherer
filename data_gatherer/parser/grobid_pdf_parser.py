@@ -128,18 +128,19 @@ class GrobidPDFParser(PDFParser):
         if self.grobid_process:
             self.grobid_process.terminate()
 
-    def normalize_XML(self, xml_data):
+    def normalize_XML(self, xml_data, remove_reference_tags=False):
         """
         Normalize TEI XML using the helper TEI_XMLParser.
         This delegates to the cached TEI parser instance for modular XML processing.
-        
+
         Args:
             xml_data: XML data (string, bytes, or Element)
-            
+            remove_reference_tags: If True, strips <ref-list> elements before normalizing (see XMLParser.normalize_XML).
+
         Returns:
             Normalized XML string
         """
-        return self._tei_parser.normalize_XML(xml_data)
+        return self._tei_parser.normalize_XML(xml_data, remove_reference_tags=remove_reference_tags)
 
     def parse_data(
         self, 

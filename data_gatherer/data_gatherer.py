@@ -539,23 +539,69 @@ class DataGatherer:
         else:
             raise ValueError(f"Invalid URL format: {url}. Must start with 'PMC' or 'http' or 10. (doi) or be a valid file path.")
 
-    def retrieve_dataset_context(self, full_paper, dataset_ID_ptrs=None, dataset_info=None, force_include_DAS=False):
+    def retrieve_dataset_context(self, full_paper, dataset_ID_ptrs=None, dataset_info=None, relevant_sect=''):
         """
         Retrieve context for datasets using the parser's retrieval method. Use-case: AutoDDG
         """
-        return self.parser.retrieve_relevant_content(full_paper, ID_patterns=dataset_ID_ptrs, query=dataset_info, force_include_DAS=force_include_DAS)
+        return self.parser.retrieve_relevant_content(full_paper, ID_patterns=dataset_ID_ptrs, query=dataset_info, relevant_content_flag=relevant_sect)
 
-    def normalize_fulltext_input(self, fulltext):
+    def normalize_fulltext_input(self, fulltext, url, article_file_dir, raw_data_format, grobid_for_pdf=False,
+                                  remove_refs=False, enable_chunking=False):
         """
-        Normalize the fulltext input to ensure it's a string.
+        Normalize raw fetched content (XML/HTML/PDF) into full document text.
+
+        :param fulltext: raw content as fetched by the data fetcher.
+
+        :param url: source URL, used for PDF->XML conversion via GROBID.
+
+        :param article_file_dir: directory for intermediate GROBID files.
+
+        :param raw_data_format: str — 'XML', 'HTML', or 'PDF'.
+
+        :param grobid_for_pdf: whether to run PDF through GROBID to XML before normalizing.
+
+        :param remove_refs: If True, strips the references/bibliography section from FDR input.
+
+        :param enable_chunking: If content exceeds self.llm's token limit, split it into multiple chunks.
+
+        :return: (normalized_input, article_title) — normalized_input is a str, or a list[str] of
+            chunks when intelligent_chunking triggers a split. article_title is '' unless
+            extracted via the GROBID PDF path.
         """
-        if self.data_fetcher.raw_data_format.upper() == "XML":
-            fulltext = self.parser.normalize_XML(fulltext)
-        elif self.data_fetcher.raw_data_format.upper() == "HTML":
-            fulltext = self.parser.normalize_HTML(fulltext)
-        elif self.data_fetcher.raw_data_format.upper() == "PDF" and self.grobid_for_pdf:
-            fulltext = self.parser.normalize_XML(self.parser.extract_full_text_xml(fulltext))
-        return fulltext
+        article_title = ''
+        if raw_data_format.upper() == 'XML':
+            normalized_input = (self.parser.normalize_XML(fulltext,  remove_reference_tags=remove_refs)
+                                if hasattr(self.parser, 'normalize_XML')
+                                else fulltext)
+        elif raw_data_format.upper() == 'HTML':
+            normalized_input = (self.parser.normalize_HTML(fulltext, remove_reference_tags=remove_refs)
+                                if hasattr(self.parser, 'normalize_HTML')
+                                else fulltext)
+        elif raw_data_format.upper() == 'PDF':
+            if grobid_for_pdf:
+                self.logger.info("Using GROBID for PDF to XML conversion")
+                xml_root = self.parser.pdf_to_xml(fulltext, url, article_file_dir)
+                normalized_input = (self.parser.normalize_XML(xml_root,  remove_reference_tags=remove_refs))
+                article_title = self.parser._tei_parser.extract_publication_title(xml_root)
+            else:
+                normalized_input = fulltext
+        else:
+            raise ValueError(f"Unsupported raw data format: {raw_data_format}")
+
+        if (enable_chunking and normalized_input
+                and self.parser.tokens_over_limit(normalized_input, self.llm)):
+            self.logger.warning(
+                f"Normalized input for {url} still exceeds the token limit for model {self.llm} after "
+                f"normalization{' and reference stripping' if remove_refs else ''}. Splitting into "
+                f"section-aware chunks via intelligent_chunk_paper."
+            )
+            if raw_data_format.upper() == 'HTML':
+                sections = self.parser.extract_sections_from_html(normalized_input)
+            else:
+                sections = self.parser.extract_paragraphs_from_xml(etree.fromstring(normalized_input.encode('utf-8')))
+            normalized_input = self.parser.intelligent_chunk_paper(sections, model=self.llm)
+
+        return normalized_input, article_title
 
     def process_url(
         self, 
@@ -1743,6 +1789,8 @@ class DataGatherer:
         output_file_path=None,
         api_provider='openai',
         prompt_name='GPT_FewShot',
+        prompts_subdir='dataset_prompts',
+        relevant_content_flag='DAS',
         response_format=None,
         relevant_cont_fmt=None,
         temperature=0.0,
@@ -1764,6 +1812,8 @@ class DataGatherer:
         url2id_mapping=None,
         local_fetch_file=None,
         sects_required=5,
+        remove_reference_tags=False,
+        intelligent_chunking=False,
         ):
         """
         Complete integrated batch processing using LLMClient batch functionality.
@@ -1780,6 +1830,8 @@ class DataGatherer:
         :param api_provider: 'openai' or 'portkey'
 
         :param prompt_name: Name of the prompt template
+
+        :param prompts_subdir: Subdirectory for prompt templates
 
         :param response_format: Response schema
 
@@ -1818,6 +1870,16 @@ class DataGatherer:
         :param url2id_mapping: Optional mapping from URL to custom ID
 
         :param local_fetch_file: Optional local file for fetching data
+
+        :param remove_reference_tags: If True, strips the references/bibliography section from full-document
+            (FDR) input before sending it to the LLM. Off by default. Intended for tasks (e.g. grant/funding
+            extraction) where references are never relevant.
+
+        :param intelligent_chunking: If True, and a document's normalized FDR content (after any
+            reference stripping) still exceeds the target model's token limit, split it into multiple
+            section-aware chunks (via LLMParser.intelligent_chunk_paper) instead of sending one oversized
+            document. Off by default — does not alter extract_datasets_info_from_content's own separate
+            chunking behavior on the sync path.
 
         :return: Dictionary with batch information and results
         """
@@ -1858,9 +1920,15 @@ class DataGatherer:
             supplementary_material_metadata = pd.DataFrame()
             batch_requests, cnt, last_url_raw_data_format = [], 0, False
             for url_raw_data_format, vals in format_counts.items():
-                for url in vals['urls']:
-                    url = self.data_fetcher.redirect_mapping.get(url, url)
-                    try:                        
+                for orig_url in vals['urls']:
+                    # Prefer the canonical/redirected URL when we actually have fetched
+                    # content under it; fall back to the original (guaranteed-valid) key
+                    # since redirect_mapping accumulates entries across the whole session
+                    # and may point at a URL that was never fetched in this batch.
+                    url = self.data_fetcher.redirect_mapping.get(orig_url, orig_url)
+                    if url not in fetched_data:
+                        url = orig_url
+                    try:
                         if cnt != 0 and url_raw_data_format == last_url_raw_data_format:
                             self.logger.info(f"Reusing existing parser of name: {self.parser.__class__.__name__}")
                         else:
@@ -1884,25 +1952,12 @@ class DataGatherer:
                             base_custom_id = str(url2id_mapping[url])[:58]
 
                         if self.full_document_read:
-                            if url_raw_data_format.upper() == 'XML':
-                                normalized_input = (self.parser.normalize_XML(data['fetched_data']) 
-                                                if hasattr(self.parser, 'normalize_XML') 
-                                                else data['fetched_data'])
-                            elif url_raw_data_format.upper() == 'HTML':
-                                normalized_input = (self.parser.normalize_HTML(data['fetched_data']) 
-                                                if hasattr(self.parser, 'normalize_HTML') 
-                                                else data['fetched_data'])
-                            elif url_raw_data_format.upper() == 'PDF':
-                                if grobid_for_pdf:
-                                    self.logger.info("Using GROBID for PDF to XML conversion")
-                                    xml_root = self.parser.pdf_to_xml(data['fetched_data'], url, article_file_dir)
-                                    normalized_input = (self.parser.normalize_XML(xml_root))
-                                    article_title = self.parser._tei_parser.extract_publication_title(xml_root)
-                                else:
-                                    normalized_input = data['fetched_data']
-                            else:
-                                raise ValueError(f"Unsupported raw data format: {url_raw_data_format}")
-                        
+                            normalized_input, article_title = self.normalize_fulltext_input(
+                                data['fetched_data'], url, article_file_dir, data['raw_data_format'],
+                                grobid_for_pdf=grobid_for_pdf, remove_refs=remove_reference_tags,
+                                enable_chunking=intelligent_chunking
+                            )
+
                         else:
                             data_availability_cont = self.parser.retrieve_relevant_content(
                                 data['fetched_data'],
@@ -1911,7 +1966,8 @@ class DataGatherer:
                                 output_format=relevant_cont_fmt,
                                 skip_rule_based_retrieved_elm=dedup,
                                 include_snippets_with_ID_patterns=brute_force_RegEx_ID_ptrs,
-                                article_id=self.data_fetcher.url_to_article_id(url)
+                                article_id=self.data_fetcher.url_to_article_id(url),
+                                relevant_content_flag=relevant_content_flag,
                             )
                             normalized_input = data_availability_cont
 
@@ -1943,7 +1999,7 @@ class DataGatherer:
                             self.custom_id_to_source_url[custom_id] = url
 
                             # Render prompt using the correct parser
-                            static_prompt = self.parser.prompt_manager.load_prompt(prompt_name)
+                            static_prompt = self.parser.prompt_manager.load_prompt(prompt_name, subdir=prompts_subdir)
                             messages = self.parser.prompt_manager.render_prompt(
                                 static_prompt,
                                 entire_doc=self.full_document_read,
@@ -1980,8 +2036,8 @@ class DataGatherer:
                 base = output_file_path.rsplit('.', 1)[0]
                 suppl_path, custom_id_path = f"{base}_suppl.csv", f"{base}_custom_id_src_mapping.json"
             else:
-                suppl_path = 'scripts/NYU_data_catalog/supplementary_materials_metadata.csv'
-                custom_id_path = 'scripts/NYU_data_catalog/custom_id_src_mapping.json'
+                suppl_path = 'scripts/tmp/supplementary_materials_metadata.csv'
+                custom_id_path = 'scripts/tmp/custom_id_src_mapping.json'
 
             supplementary_material_metadata.to_csv(suppl_path, index=False)
             self.logger.info(f"Prepared {len(batch_requests)} batch requests")
@@ -2197,59 +2253,75 @@ class DataGatherer:
         
         return result
 
-    def from_batch_resp_file_to_df(self, batch_results_file: str, output_file_path: str = None, skip_validation: bool = False) -> pd.DataFrame:
+    def from_batch_resp_file_to_df(self, batch_results_file: str, output_file_path: str = None,
+                                    skip_validation: bool = False, expected_key: str = 'datasets') -> pd.DataFrame:
         """
         Convert a batch response JSONL file to a pandas DataFrame.
         This method processes batch API results and converts them to the standard DataFrame format.
 
         :param batch_results_file: Path to the JSONL batch results file.
-        :return: DataFrame containing the processed dataset information.
+
+        :param expected_key: The top-level JSON key the LLM response wraps records in
+               (e.g. 'datasets' or 'grants'). Only 'datasets' goes through the
+               dataset-specific schema_validation/ontology-matching post-processing
+               (process_datasets_response) — other keys are treated as already-flat
+               record dicts.
+
+        :return: DataFrame containing the processed record information.
         """
         self.logger.info(f"Converting batch response file to DataFrame: {batch_results_file}")
-        
+
         try:
             # Step 1: Process batch responses using LLMClient
             batch_raw_resps = self.parser.llm_client.process_batch_responses(
                 batch_results_file=batch_results_file,
-                expected_key="datasets"
+                expected_key=expected_key
             )
-            
+
             # Step 2: Process each response using the parser's post-processing logic
             processed_datasets = []
-            
+
             for batch_item in batch_raw_resps['processed_results']:
                 self.logger.debug(f"Processing batch item: {batch_item.keys()}")
-                
+
                 # Extract metadata
                 custom_id = batch_item.get('custom_id', 'N/A')
                 status = batch_item.get('status', 'unknown')
                 metadata = batch_item.get('metadata', {})
-                
+
                 if status != 'success':
                     self.logger.warning(f"Skipping failed batch item {custom_id}: {batch_item.get('error', 'Unknown error')}")
                     continue
-                
+
                 # Process the LLM response using parser's post-processing method
                 processed_response = batch_item.get('processed_response', [])
-                datasets = self.parser.process_datasets_response(processed_response, skip_validation=skip_validation)
-                
-                # Enhance each dataset with metadata
-                for dataset in datasets:
+                if expected_key == 'datasets':
+                    records = self.parser.process_datasets_response(processed_response, skip_validation=skip_validation)
+                elif expected_key == 'grants':
+                    records = self.parser.process_grants_response(processed_response)
+                else:
+                    # Other extraction tasks don't need dataset/grant-specific post-processing —
+                    # process_llm_response already unwrapped the expected_key array into a flat
+                    # list of record dicts.
+                    records = [r for r in processed_response if isinstance(r, dict)]
+
+                # Enhance each record with metadata
+                for record in records:
                     # Add custom_id to track source
-                    dataset['custom_id'] = custom_id
-                    
+                    record['custom_id'] = custom_id
+
                     for key, value in metadata.items():
-                        dataset[key] = value
-                    
+                        record[key] = value
+
                     # Reconstruct source URL if it's a PMC article
                     if re.search(r'_PMC\d+', custom_id, re.IGNORECASE):
                         pmc_match = re.search(r'PMC(\d+)', custom_id, re.IGNORECASE)
                         if pmc_match:
-                            dataset['source_url'] = f'https://www.ncbi.nlm.nih.gov/pmc/articles/PMC{pmc_match.group(1)}/'
+                            record['source_url'] = f'https://www.ncbi.nlm.nih.gov/pmc/articles/PMC{pmc_match.group(1)}/'
                     elif custom_id in self.custom_id_to_source_url:
-                        dataset['source_url'] = self.custom_id_to_source_url[custom_id]
-                    
-                    processed_datasets.append(dataset)
+                        record['source_url'] = self.custom_id_to_source_url[custom_id]
+
+                    processed_datasets.append(record)
             
             # Step 3: Convert to DataFrame
             if processed_datasets:
