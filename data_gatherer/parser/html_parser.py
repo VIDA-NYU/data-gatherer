@@ -92,7 +92,7 @@ class HTMLParser(LLMParser):
             write_cache=embeds_cache_write
         )
 
-    def normalize_HTML(self, html, keep_tags=None):
+    def normalize_HTML(self, html, keep_tags=None, remove_reference_tags=False):
         """
         Normalize the HTML content by removing unnecessary tags and attributes.
 
@@ -107,6 +107,12 @@ class HTMLParser(LLMParser):
         try:
             # Parse the HTML content
             soup = BeautifulSoup(html, "html.parser")
+
+            if remove_reference_tags:
+                ref_sections = soup.find_all("section", class_=lambda c: c and "ref-list" in c)
+                for ref_section in ref_sections:
+                    ref_section.decompose()
+                self.logger.info(f"Removed {len(ref_sections)} reference-list section(s) from HTML.")
 
             # 1. Remove script, style, and meta tags
             for tag in ["script", "style", 'img', 'iframe', 'noscript', 'svg', 'button', 'form', 'input']:

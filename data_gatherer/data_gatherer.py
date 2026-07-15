@@ -545,7 +545,7 @@ class DataGatherer:
         """
         return self.parser.retrieve_relevant_content(full_paper, ID_patterns=dataset_ID_ptrs, query=dataset_info, force_include_DAS=force_include_DAS)
 
-    def normalize_fulltext_input(self, fulltext, url, article_file_dir, raw_data_format, grobid_for_pdf=False):
+    def normalize_fulltext_input(self, fulltext, url, article_file_dir, raw_data_format, grobid_for_pdf=False,  remove_refs=False):
         """
         Normalize raw fetched content (XML/HTML/PDF) into full document text.
 
@@ -564,23 +564,23 @@ class DataGatherer:
         """
         article_title = ''
         if raw_data_format.upper() == 'XML':
-            normalized_input = (self.parser.normalize_XML(fulltext)
+            normalized_input = (self.parser.normalize_XML(fulltext,  remove_reference_tags=remove_refs)
                                 if hasattr(self.parser, 'normalize_XML')
                                 else fulltext)
         elif raw_data_format.upper() == 'HTML':
-            normalized_input = (self.parser.normalize_HTML(fulltext)
+            normalized_input = (self.parser.normalize_HTML(fulltext, remove_reference_tags=remove_refs)
                                 if hasattr(self.parser, 'normalize_HTML')
                                 else fulltext)
         elif raw_data_format.upper() == 'PDF':
             if grobid_for_pdf:
                 self.logger.info("Using GROBID for PDF to XML conversion")
                 xml_root = self.parser.pdf_to_xml(fulltext, url, article_file_dir)
-                normalized_input = (self.parser.normalize_XML(xml_root))
+                normalized_input = (self.parser.normalize_XML(xml_root,  remove_reference_tags=remove_refs))
                 article_title = self.parser._tei_parser.extract_publication_title(xml_root)
             else:
                 normalized_input = fulltext
         else:
-            raise ValueError(f"Unsupported raw data format: {raw_data_format}")
+            raise ValueError(f"Unsupported raw data format: {raw_data_format}")            
 
         return normalized_input, article_title
 
@@ -1792,6 +1792,7 @@ class DataGatherer:
         url2id_mapping=None,
         local_fetch_file=None,
         sects_required=5,
+        remove_reference_tags=False,
         ):
         """
         Complete integrated batch processing using LLMClient batch functionality.
@@ -1848,6 +1849,10 @@ class DataGatherer:
         :param url2id_mapping: Optional mapping from URL to custom ID
 
         :param local_fetch_file: Optional local file for fetching data
+
+        :param remove_reference_tags: If True, strips the references/bibliography section from full-document
+            (FDR) input before sending it to the LLM. Off by default. Intended for tasks (e.g. grant/funding
+            extraction) where references are never relevant.
 
         :return: Dictionary with batch information and results
         """
@@ -1913,7 +1918,7 @@ class DataGatherer:
                         if self.full_document_read:
                             normalized_input, article_title = self.normalize_fulltext_input(
                                 data['fetched_data'], url, article_file_dir, data['raw_data_format'],
-                                grobid_for_pdf=grobid_for_pdf
+                                grobid_for_pdf=grobid_for_pdf, remove_refs=remove_reference_tags
                             )
 
                         else:

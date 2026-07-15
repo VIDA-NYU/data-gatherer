@@ -597,18 +597,22 @@ class XMLParser(LLMParser):
         else:
             raise TypeError(f"Invalid API data type: {type(api_data)}. Expected lxml.etree.Element.")
 
-    def normalize_XML(self, xml_data):
+    def normalize_XML(self, xml_data, remove_reference_tags=False):
         """
         Normalize XML data by removing unnecessary whitespace and ensuring proper structure.
 
         :param xml_data: The raw XML data to be normalized.
+
+        :param remove_reference_tags: If True, strips all <ref-list> (bibliography/references) elements
+            before normalizing. Off by default — only intended for tasks (e.g. grant/funding extraction)
+            where references are never relevant.
 
         :return: Normalized XML data as a string.
         """
         if isinstance(xml_data, str):
             try:
                 xml_root = etree.fromstring(xml_data)
-                return self.normalize_XML(xml_root)
+                return self.normalize_XML(xml_root, remove_reference_tags=remove_reference_tags)
 
             except etree.XMLSyntaxError as e:
                 self.logger.error(f"Error parsing XML data for normalization: {e}")
@@ -616,6 +620,15 @@ class XMLParser(LLMParser):
 
         elif isinstance(xml_data, etree._Element):
             xml_root = xml_data
+
+            if remove_reference_tags:
+                ref_lists = xml_root.findall(".//ref-list")
+                for ref_list in ref_lists:
+                    parent = ref_list.getparent()
+                    if parent is not None:
+                        parent.remove(ref_list)
+                self.logger.info(f"Removed {len(ref_lists)} <ref-list> element(s) from XML.")
+
             # Remove unnecessary whitespace and normalize text
             for elem in xml_root.iter():
                 if elem.text:
