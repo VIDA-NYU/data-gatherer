@@ -454,6 +454,17 @@ class HTMLParser(LLMParser):
         funding_texts = [item['html'] for item in funding_elements]
         return funding_texts
 
+    def get_code_availability_text(self, html_content: str) -> list[str]:
+        """
+        Get code/software-availability elements and extract text from there.
+        Mirrors get_funding_text, using the 'code_availability_sections' selector category instead.
+        """
+        code_elements = self.retriever.get_data_availability_elements_from_webpage(
+            html_content, section_category='code_availability_sections'
+        )
+        code_texts = [item['html'] for item in code_elements]
+        return code_texts
+
     def parse_data(self, html_str, publisher=None, current_url_address=None, raw_data_format='HTML',
         article_file_dir='tmp/raw_files/', section_filter=None, prompt_name='GPT_FewShot', use_portkey=True, 
         semantic_retrieval=False, top_k=2, response_format=dataset_response_schema_gpt, dedup=True,

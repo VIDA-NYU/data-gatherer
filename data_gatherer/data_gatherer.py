@@ -1814,6 +1814,7 @@ class DataGatherer:
         sects_required=5,
         remove_reference_tags=False,
         intelligent_chunking=False,
+        regex_search_id_patterns=None
         ):
         """
         Complete integrated batch processing using LLMClient batch functionality.
@@ -1968,6 +1969,7 @@ class DataGatherer:
                                 include_snippets_with_ID_patterns=brute_force_RegEx_ID_ptrs,
                                 article_id=self.data_fetcher.url_to_article_id(url),
                                 relevant_content_flag=relevant_content_flag,
+                                ID_patterns=regex_search_id_patterns
                             )
                             normalized_input = data_availability_cont
 

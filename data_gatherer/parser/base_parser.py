@@ -125,6 +125,26 @@ class LLMParser(ABC):
         self.logger.info(f"Function_call: load_patterns_for_tgt_section({section_name})")
         return self.retriever.load_target_sections_ptrs(section_name)
 
+    def load_title_patterns_for_tgt_section(self, section_name):
+        """
+        Load the title-text-matching XPath patterns (the 'xpaths' category in
+        retrieval_patterns.json — e.g. //sec[title[contains(translate(text(),...),'code availability')]])
+        for the target section. These use XPath functions (contains/translate) that lxml's
+        limited findall() (used by load_patterns_for_tgt_section/xml_tags) can't execute at
+        all -- callers must run them via Element.xpath(), not .findall().
+
+        :param section_name: str — name of the section to load.
+
+        :return: list of XPath pattern strings.
+        """
+        self.logger.info(f"Function_call: load_title_patterns_for_tgt_section({section_name})")
+        try:
+            return self.retriever.load_target_sections_xpaths(section_name)
+        except ValueError:
+            # not every category defines title-based fallback patterns -- that's fine, just none to run.
+            self.logger.debug(f"No title-based xpath patterns defined for section: {section_name}")
+            return []
+
     def generate_dataset_description(self, data_file):
         # from data file
         # excel, csv, json, xml, etc.
@@ -1774,7 +1794,8 @@ Files:
 
         :param data: parsed document as consumed by get_data_availability_text / get_funding_text.
 
-        :param relevant_content_flag: which category to retrieve — 'DAS' (data Availability) or 'FUND'.
+        :param relevant_content_flag: which category to retrieve — 'DAS' (data availability),
+            'FUND' (funding/grants), or 'CODE' (code/software availability).
 
         :return: list of content strings for the requested category.
         """
@@ -1782,6 +1803,8 @@ Files:
             return self.get_data_availability_text(data)
         elif relevant_content_flag == 'FUND':
             return self.get_funding_text(data)
+        elif relevant_content_flag == 'CODE':
+            return self.get_code_availability_text(data)
         else:
             self.logger.warning(f"Unknown relevant_content_flag '{relevant_content_flag}' — returning empty list")
             return []
@@ -1818,9 +1841,12 @@ Files:
 
         _used_p_fallback = False
 
+        if top_k == -1 or semantic_retrieval or include_snippets_with_ID_patterns:
+            all_sections = self.extract_sections_from_text(data)
+            corpus = self.from_sections_to_corpus(all_sections, max_tokens=max_tokens, skip_rule_based_retrieved_elm=skip_rule_based_retrieved_elm, include_section_title=include_section_title)
+
         if top_k == -1:
             self.logger.info(f"top_k=-1: chunked document read — building full corpus, no semantic ranking")
-            all_sections = self.extract_sections_from_text(data)
             _llm = getattr(self, 'llm_client', None)
             _max_tokens = max_tokens or (512 if (_llm is None or _llm.model.startswith(('hf-', 'local-'))) else getattr(_llm, 'token_limit', 512))
             corpus = self.from_sections_to_corpus(all_sections, max_tokens=_max_tokens)
@@ -1842,8 +1868,6 @@ Files:
 
         elif semantic_retrieval:
             self.logger.info(f"Performing semantic retrieval for relevant content")
-            all_sections = self.extract_sections_from_text(data)
-            corpus = self.from_sections_to_corpus(all_sections, max_tokens=max_tokens, skip_rule_based_retrieved_elm=skip_rule_based_retrieved_elm, include_section_title=include_section_title)
 
             if not corpus and not skip_p_fallback:
                 corpus = self._p_fallback_corpus(data)

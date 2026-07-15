@@ -85,6 +85,14 @@
         "h2.pmc_sec_title:-soup-contains('Financial Disclosure')": "funding",
         "h2.pmc_sec_title:-soup-contains('Financial Support')": "funding",
         "h2.pmc_sec_title:-soup-contains('Grant Support')": "funding"
+      },
+      "code_availability_sections": {
+        "section.code-availability-statement": "software",
+        "h2.pmc_sec_title:-soup-contains('Code Availability')": "software",
+        "h3.pmc_sec_title:-soup-contains('Code Availability')": "software",
+        "h2.pmc_sec_title:-soup-contains('Software Availability')": "software",
+        "h2.pmc_sec_title:-soup-contains('Data and Code Availability')": "software",
+        "h2.pmc_sec_title:-soup-contains('Availability of Data and Materials')": "software"
       }
     },
     "xpaths": {
@@ -114,6 +122,16 @@
         "//sec[title[contains(translate(text(), 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'acknowledg')]]",
         "//sec[title[contains(translate(text(), 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'financial disclosure')]]",
         "//sec[title[contains(translate(text(), 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'grant support')]]"
+      ],
+      "code_availability_sections": [
+        "//section[h2[contains(text(), 'Code Availability')]]",
+        "//section[h3[contains(text(), 'Code Availability')]]",
+        "//section[h2[contains(text(), 'Software Availability')]]",
+        "//sec[title[contains(translate(text(), 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'code availability')]]",
+        "//sec[title[contains(translate(text(), 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'software availability')]]",
+        "//sec[title[contains(translate(text(), 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'availability of code')]]",
+        "//sec[title[contains(translate(text(), 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'data and code availability')]]",
+        "//sec[title[contains(translate(text(), 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'availability of data and materials')]]"
       ]
     },
     "xml_tags": {
@@ -158,6 +176,10 @@
         ".//funding-group/award-group/funding-source",
         ".//funding-group/award-group/award-id",
         ".//funding-group/award-group/principal-award-recipient"
+      ],
+      "code_availability_sections": [
+        ".//sec[@sec-type='code-availability']",
+        ".//sec[@sec-type='data-availability']"
       ]
     }
   }

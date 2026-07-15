@@ -1081,6 +1081,32 @@ class XMLParser(LLMParser):
         self.data_availability_cont_str = ''.join(data_availability_cont)
         return data_availability_cont
 
+    def _find_sections_by_category(self, api_xml, section_name):
+        """
+        Find all elements matching a pattern category, combining both pattern dialects defined
+        in retrieval_patterns.json:
+        - xml_tags (attribute-based, e.g. .//sec[@sec-type='funding']), and
+        - xpaths (title-text-based, e.g. //sec[title[contains(translate(text(),...),'funding')]]),
+          which need XPath functions (contains/translate) that findall()'s limited ElementPath
+          can't execute at all (raises "invalid predicate") -- both are run via xpath() here,
+          which handles simple attribute predicates just as well as findall() does.
+
+        :param api_xml: lxml.etree.Element — parsed XML root.
+
+        :param section_name: str — pattern category name in retrieval_patterns.json.
+        
+        :return: list of matched elements, deduplicated.
+        """
+        found = []
+        for ptr in self.load_patterns_for_tgt_section(section_name):
+            found.extend(api_xml.xpath(ptr))
+        for ptr in self.load_title_patterns_for_tgt_section(section_name):
+            try:
+                found.extend(api_xml.xpath(ptr))
+            except Exception as e:
+                self.logger.debug(f"Title-xpath {ptr!r} failed for section {section_name}: {e}")
+        return list(dict.fromkeys(found))
+
     def get_funding_text(self, api_xml):
         """
         Retrieve funding/acknowledgments/grant-support content, mirroring get_data_availability_text's
@@ -1093,10 +1119,7 @@ class XMLParser(LLMParser):
         """
         self.logger.debug(f"Function call: get_funding_text(api_xml({type(api_xml)})")
 
-        funding_sections = []
-        for ptr in self.load_patterns_for_tgt_section('funding_sections'):
-            if ptr.startswith('.//'):
-                funding_sections.extend(api_xml.findall(ptr))
+        funding_sections = self._find_sections_by_category(api_xml, 'funding_sections')
 
         self.logger.info(f"Found {len(funding_sections)} funding/acknowledgment sections")
 
@@ -1131,6 +1154,28 @@ class XMLParser(LLMParser):
         self.logger.debug(f"Found funding content: {funding_cont}")
 
         return funding_cont
+
+    def get_code_availability_text(self, api_xml):
+        """
+        Retrieve code/software-availability content for the 'code_availability_sections'
+        pattern category, mirroring get_funding_text's structure.
+
+        :param api_xml: lxml.etree.Element — parsed XML root.
+
+        :return: List of strings — prose from code/software-availability sections.
+        """
+        self.logger.debug(f"Function call: get_code_availability_text(api_xml({type(api_xml)})")
+
+        code_sections = self._find_sections_by_category(api_xml, 'code_availability_sections')
+
+        self.logger.info(f"Found {len(code_sections)} code/software-availability sections")
+
+        code_cont = self._join_section_elements_text(code_sections)
+
+        self.logger.info(f"Code availability content len: {len(code_cont)}, type: {type(code_cont)}")
+        self.logger.debug(f"Found code availability content: {code_cont}")
+
+        return code_cont
 
     def table_to_text(self, table_wrap):
         """
