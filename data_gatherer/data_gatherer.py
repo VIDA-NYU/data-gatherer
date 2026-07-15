@@ -545,7 +545,8 @@ class DataGatherer:
         """
         return self.parser.retrieve_relevant_content(full_paper, ID_patterns=dataset_ID_ptrs, query=dataset_info, force_include_DAS=force_include_DAS)
 
-    def normalize_fulltext_input(self, fulltext, url, article_file_dir, raw_data_format, grobid_for_pdf=False,  remove_refs=False):
+    def normalize_fulltext_input(self, fulltext, url, article_file_dir, raw_data_format, grobid_for_pdf=False,
+                                  remove_refs=False, enable_chunking=False):
         """
         Normalize raw fetched content (XML/HTML/PDF) into full document text.
 
@@ -559,8 +560,13 @@ class DataGatherer:
 
         :param grobid_for_pdf: whether to run PDF through GROBID to XML before normalizing.
 
-        :return: (normalized_input, article_title) — article_title is '' unless
-                 extracted via the GROBID PDF path.
+        :param remove_refs: If True, strips the references/bibliography section from FDR input.
+
+        :param enable_chunking: If content exceeds self.llm's token limit, split it into multiple chunks.
+
+        :return: (normalized_input, article_title) — normalized_input is a str, or a list[str] of
+            chunks when intelligent_chunking triggers a split. article_title is '' unless
+            extracted via the GROBID PDF path.
         """
         article_title = ''
         if raw_data_format.upper() == 'XML':
@@ -580,7 +586,20 @@ class DataGatherer:
             else:
                 normalized_input = fulltext
         else:
-            raise ValueError(f"Unsupported raw data format: {raw_data_format}")            
+            raise ValueError(f"Unsupported raw data format: {raw_data_format}")
+
+        if (enable_chunking and normalized_input
+                and self.parser.tokens_over_limit(normalized_input, self.llm)):
+            self.logger.warning(
+                f"Normalized input for {url} still exceeds the token limit for model {self.llm} after "
+                f"normalization{' and reference stripping' if remove_refs else ''}. Splitting into "
+                f"section-aware chunks via intelligent_chunk_paper."
+            )
+            if raw_data_format.upper() == 'HTML':
+                sections = self.parser.extract_sections_from_html(normalized_input)
+            else:
+                sections = self.parser.extract_paragraphs_from_xml(etree.fromstring(normalized_input.encode('utf-8')))
+            normalized_input = self.parser.intelligent_chunk_paper(sections, model=self.llm)
 
         return normalized_input, article_title
 
@@ -1793,6 +1812,7 @@ class DataGatherer:
         local_fetch_file=None,
         sects_required=5,
         remove_reference_tags=False,
+        intelligent_chunking=False,
         ):
         """
         Complete integrated batch processing using LLMClient batch functionality.
@@ -1853,6 +1873,12 @@ class DataGatherer:
         :param remove_reference_tags: If True, strips the references/bibliography section from full-document
             (FDR) input before sending it to the LLM. Off by default. Intended for tasks (e.g. grant/funding
             extraction) where references are never relevant.
+
+        :param intelligent_chunking: If True, and a document's normalized FDR content (after any
+            reference stripping) still exceeds the target model's token limit, split it into multiple
+            section-aware chunks (via LLMParser.intelligent_chunk_paper) instead of sending one oversized
+            document. Off by default — does not alter extract_datasets_info_from_content's own separate
+            chunking behavior on the sync path.
 
         :return: Dictionary with batch information and results
         """
@@ -1918,7 +1944,8 @@ class DataGatherer:
                         if self.full_document_read:
                             normalized_input, article_title = self.normalize_fulltext_input(
                                 data['fetched_data'], url, article_file_dir, data['raw_data_format'],
-                                grobid_for_pdf=grobid_for_pdf, remove_refs=remove_reference_tags
+                                grobid_for_pdf=grobid_for_pdf, remove_refs=remove_reference_tags,
+                                enable_chunking=intelligent_chunking
                             )
 
                         else:

@@ -418,6 +418,57 @@ Files:
 
         return result
     
+    def intelligent_chunk_paper(self, sections, model, allowance_static_prompt=400, limit=None):
+        """
+        Greedily pack whole sections into token-budget-sized chunks, without ever splitting
+        a single section across a chunk boundary.
+
+        :param sections: list of section dicts, as produced by extract_paragraphs_from_{src_fmt}
+
+        :param model: model name, used to resolve the per-provider token limit via tokens_over_limit.
+
+        :param allowance_static_prompt: tokens reserved for the static prompt overhead
+
+        :param limit: optional explicit token limit override. 
+
+        :return: list of content strings preserving section order and never splitting a section.
+        """
+        over_limit_kwargs = {'allowance_static_prompt': allowance_static_prompt}
+        if limit is not None:
+            over_limit_kwargs['limit'] = limit
+
+        chunks = []
+        current_text = ""
+
+        for section in sections:
+            if isinstance(section, dict):
+                section_text = section.get('sec_txt_clean') or section.get('sec_txt') or section.get('text', '')
+            else:
+                section_text = str(section)
+
+            if not section_text:
+                continue
+
+            candidate_text = f"{current_text}\n{section_text}" if current_text else section_text
+
+            if current_text and self.tokens_over_limit(candidate_text, model, **over_limit_kwargs):
+                chunks.append(current_text)
+                current_text = section_text
+                if self.tokens_over_limit(current_text, model, **over_limit_kwargs):
+                    self.logger.warning(
+                        f"intelligent_chunk_paper: a single section alone ({len(section_text)} chars, "
+                        f"title={section.get('section_title', 'n/a') if isinstance(section, dict) else 'n/a'}) "
+                        f"exceeds the token limit for model {model}; keeping it whole in its own chunk anyway."
+                    )
+            else:
+                current_text = candidate_text
+
+        if current_text:
+            chunks.append(current_text)
+
+        self.logger.info(f"intelligent_chunk_paper: packed {len(sections)} section(s) into {len(chunks)} chunk(s) for model {model}.")
+        return chunks
+
     def extract_datasets_info_from_chunks(self, content, tokens_cnt, repos=None, model=None, temperature=0,
                                         prompt_name=None, full_document_read=None ,response_format=None, token_chunk_size=128000,
                                         subdir='dataset_prompts', **prompt_kwargs):
