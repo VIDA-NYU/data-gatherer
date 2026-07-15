@@ -991,6 +991,39 @@ class XMLParser(LLMParser):
         # Join all the sibling texts into a single string
         return " ".join(sibling_text)
 
+    def _join_section_elements_text(self, sections):
+        """
+        Walk a list of already-located lxml section elements and join each one's own text/tail,
+        plus ext-link hrefs and xref text found inside it, into one content string per section.
+
+        :param sections: list of lxml.etree.Element — sections already found via xpath/pattern lookup.
+
+        :return: list of content strings, one per section, deduplicated.
+        """
+        content = []
+        for sect in sections:
+            cont = ""
+            for elem in sect.iter():
+                if elem.text and elem.text is not None:
+                    cont += ' '
+                    cont += elem.text
+                    cont += ' '
+                if elem.tail and elem.tail is not None:
+                    cont += ' '
+                    cont += elem.tail
+                    cont += ' '
+                # also include the links in the section
+                if elem.tag == 'ext-link' and elem.get('{http://www.w3.org/1999/xlink}href') is not None:
+                    cont += ' '
+                    cont += elem.get('{http://www.w3.org/1999/xlink}href')
+                    cont += ' '
+                if elem.tag == 'xref' and elem.text is not None:
+                    cont += ' '
+                    cont += elem.text
+                    cont += ' '
+            content.append(cont) if cont not in content else None
+        return content
+
     def get_data_availability_text(self, api_xml):
         """
         This function calls the retrieval step. Then it normalizes the results.
@@ -1009,30 +1042,7 @@ class XMLParser(LLMParser):
                 self.logger.error("self.retriever is None. Please check the initialization of xmlRetriever.")
             raise ValueError("self.retriever.get_data_availability_sections(api_xml) returned None. ")
 
-        data_availability_cont = []
-
-        # extract the text from the data availability section
-        for sect in data_availability_sections:
-            cont = ""
-            for elem in sect.iter():
-                if elem.text and elem.text is not None:
-                    cont += ' '
-                    cont += elem.text
-                    cont += ' '
-                if elem.tail and elem.tail is not None:
-                    cont += ' '
-                    cont += elem.tail
-                    cont += ' '
-                # also include the links in the data availability section
-                if elem.tag == 'ext-link' and elem.get('{http://www.w3.org/1999/xlink}href') is not None:
-                    cont += ' '
-                    cont += elem.get('{http://www.w3.org/1999/xlink}href')
-                    cont += ' '
-                if elem.tag == 'xref' and elem.text is not None:
-                    cont += ' '
-                    cont += elem.text
-                    cont += ' '
-            data_availability_cont.append(cont) if cont not in data_availability_cont else None
+        data_availability_cont = self._join_section_elements_text(data_availability_sections)
 
         supplementary_data_sections = []
 
@@ -1070,6 +1080,57 @@ class XMLParser(LLMParser):
 
         self.data_availability_cont_str = ''.join(data_availability_cont)
         return data_availability_cont
+
+    def get_funding_text(self, api_xml):
+        """
+        Retrieve funding/acknowledgments/grant-support content, mirroring get_data_availability_text's
+        structure but for the 'funding_sections' / 'funding_group_metadata' pattern categories.
+
+        :param api_xml: lxml.etree.Element — parsed XML root.
+
+        :return: List of strings — prose from funding/acknowledgment sections, plus one structured
+            "funder | award-id | recipient" line per award-group found in <funding-group> (when present).
+        """
+        self.logger.debug(f"Function call: get_funding_text(api_xml({type(api_xml)})")
+
+        funding_sections = []
+        for ptr in self.load_patterns_for_tgt_section('funding_sections'):
+            if ptr.startswith('.//'):
+                funding_sections.extend(api_xml.findall(ptr))
+
+        self.logger.info(f"Found {len(funding_sections)} funding/acknowledgment sections")
+
+        funding_cont = self._join_section_elements_text(funding_sections)
+
+        def _full_text(elem):
+            return ' '.join(t.strip() for t in elem.itertext() if t.strip()) if elem is not None else None
+
+        for ptr in self.load_patterns_for_tgt_section('funding_group_metadata'):
+            if not ptr.endswith('/funding-statement'):
+                continue
+            for stmt in api_xml.findall(ptr):
+                text = _full_text(stmt)
+                if text:
+                    funding_cont.append(text) if text not in funding_cont else None
+
+        for ptr in self.load_patterns_for_tgt_section('funding_group_metadata'):
+            if not ptr.endswith('/award-group'):
+                continue
+            for award_group in api_xml.findall(ptr):
+                funders = [_full_text(e) for e in award_group.findall('.//funding-source')]
+                award_ids = [_full_text(e) for e in award_group.findall('.//award-id')]
+                recipients = [_full_text(e) for e in award_group.findall('.//principal-award-recipient')]
+                funders, award_ids, recipients = (list(dict.fromkeys(v for v in vals if v)) for vals in (funders, award_ids, recipients))
+                if funders or award_ids or recipients:
+                    line = (f"Funder: {'; '.join(funders) or 'n/a'} | "
+                            f"Award ID: {'; '.join(award_ids) or 'n/a'} | "
+                            f"Recipient: {'; '.join(recipients) or 'n/a'}")
+                    funding_cont.append(line) if line not in funding_cont else None
+
+        self.logger.info(f"Funding content len: {len(funding_cont)}, type: {type(funding_cont)}")
+        self.logger.debug(f"Found funding content: {funding_cont}")
+
+        return funding_cont
 
     def table_to_text(self, table_wrap):
         """

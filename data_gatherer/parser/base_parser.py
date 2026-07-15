@@ -696,6 +696,30 @@ Files:
             self.logger.exception("Error while logging process_datasets_response summary")
         return result
 
+    def process_grants_response(self, resps):
+        """
+        Process the LLM response containing grants and explode each record's grant_numbers
+        array into one flat record per grant number.
+
+        :param resps: LLM response containing grant records (list of dicts).
+
+        :return: List of flat dicts, each with a singular 'grant_number' key instead of 'grant_numbers'.
+        """
+        result = []
+        for record in resps:
+            if not isinstance(record, dict):
+                continue
+            record = dict(record)
+            grant_numbers = record.pop('grant_numbers', None)
+            if isinstance(grant_numbers, list) and grant_numbers:
+                for grant_number in grant_numbers:
+                    result.append({**record, 'grant_number': grant_number})
+            else:
+                result.append({**record, 'grant_number': grant_numbers or 'n/a'})
+
+        self.logger.info(f"process_grants_response: exploded {len(resps)} record(s) into {len(result)} one-grant-per-row record(s)")
+        return result
+
     def schema_validation(self, dataset, req_timeout=0.5, skip=False):
         """
         Validate and extract dataset information based on the schema.
@@ -1743,10 +1767,29 @@ Files:
     def _p_fallback_corpus(self, data) -> list:
         return []
 
+    def rule_based_retrieve(self, data, relevant_content_flag='DAS'):
+        """
+        Generalized rule-based (pattern-driven) retrieval routine for the requested content
+        category, returning combined section text in the same shape regardless of category.
+
+        :param data: parsed document as consumed by get_data_availability_text / get_funding_text.
+
+        :param relevant_content_flag: which category to retrieve — 'DAS' (data Availability) or 'FUND'.
+
+        :return: list of content strings for the requested category.
+        """
+        if relevant_content_flag == 'DAS':
+            return self.get_data_availability_text(data)
+        elif relevant_content_flag == 'FUND':
+            return self.get_funding_text(data)
+        else:
+            self.logger.warning(f"Unknown relevant_content_flag '{relevant_content_flag}' — returning empty list")
+            return []
+
     def retrieve_relevant_content(self, data, semantic_retrieval=True, top_k=5, article_id=None, max_tokens=None, skip_rule_based_retrieved_elm=False,
-                                  include_snippets_with_ID_patterns=False, output_format='text', query=None, ID_patterns=None, force_include_DAS=True,
-                                  include_section_title=False, skip_p_fallback=True):
-        
+                                  include_snippets_with_ID_patterns=False, output_format='text', query=None, ID_patterns=None,
+                                  include_section_title=False, skip_p_fallback=True, relevant_content_flag='DAS'):
+
         """Given the full text of the article, retrieve the most relevant content related to data availability using a combination
         of semantic retrieval and rule-based methods.
 
@@ -1760,17 +1803,17 @@ Files:
         :param output_format: str - the format of the output, either 'text' for concatenated string or 'json' for structured data (default: 'text')
         :param query: str - the query to use for semantic retrieval (default: None, meaning a predefined query focused on data availability will be used)
         :param ID_patterns: list - optional list of regex patterns to identify dataset identifiers in the text (default: None, meaning patterns will be loaded from ontology)
-        :param force_include_DAS: bool - whether to force include the data availability statement content in the retrieved content (default: True)
         :param include_section_title: bool - whether to include section titles in the corpus for semantic retrieval (default: False)
         :param skip_p_fallback: bool - whether to skip the fallback method of building corpus from <p> tags if semantic retrieval returns an empty corpus (default: True)
+        :param relevant_content_flag: str - which rule-based content category to force-include: 'DAS' (data availability, default) or 'FUND' (funding/grants). See rule_based_retrieve.
 
         :return: str or list - the retrieved relevant content in the specified output format
         """
         self.logger.debug(f"Function call: retrieve_relevant_content(semantic_retrieval={semantic_retrieval}, top_k={top_k}, article_id={article_id}, max_tokens={max_tokens}, skip_rule_based_retrieved_elm={skip_rule_based_retrieved_elm}, include_snippets_with_ID_patterns={include_snippets_with_ID_patterns}, output_format={output_format})")
 
-        data_avail_cont = self.get_data_availability_text(data) if force_include_DAS else []
+        relevant_content_rule_based = self.rule_based_retrieve(data, relevant_content_flag)
         self.id_patterns = ID_patterns if ID_patterns is not None else self.id_patterns
-        ret_lst = data_avail_cont.copy()
+        ret_lst = relevant_content_rule_based.copy()
         top_k_sections, docs_matching_id_ptr = [], []
 
         _used_p_fallback = False
@@ -1789,7 +1832,10 @@ Files:
                 'n_corpus_sections': len(corpus),
                 'retrieved_sections_title': None,
                 'top_k': -1,
-                'n_das_sections': len(data_avail_cont),
+                # kept as 'n_das_sections' for backward compat with k8s_processor.py/enrich_ontology.py,
+                # which read this column by name — it now reflects whichever category
+                # relevant_content_flag selected (DAS or FUND), not just data availability.
+                'n_das_sections': len(relevant_content_rule_based),
                 'used_paragraph_fallback': False,
             }
             return normalized_input
@@ -1824,7 +1870,7 @@ Files:
         if output_format == 'text':
             normalized_input = "".join(ret_lst)
         elif output_format == 'json':
-            normalized_input = data_avail_cont + top_k_sections + docs_matching_id_ptr
+            normalized_input = relevant_content_rule_based + top_k_sections + docs_matching_id_ptr
         else:
             normalized_input = ret_lst
 
@@ -1835,7 +1881,8 @@ Files:
             'n_corpus_sections': len(corpus) if semantic_retrieval else None,
             'retrieved_sections_title': [item.get('section_title', 'n/a') for item in top_k_sections] if semantic_retrieval else None,
             'top_k': top_k,
-            'n_das_sections': len(data_avail_cont),
+            # kept as 'n_das_sections' for backward compat — see comment above.
+            'n_das_sections': len(relevant_content_rule_based),
             'used_paragraph_fallback': _used_p_fallback,
         }
 

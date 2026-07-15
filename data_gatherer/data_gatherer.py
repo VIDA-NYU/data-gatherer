@@ -539,11 +539,11 @@ class DataGatherer:
         else:
             raise ValueError(f"Invalid URL format: {url}. Must start with 'PMC' or 'http' or 10. (doi) or be a valid file path.")
 
-    def retrieve_dataset_context(self, full_paper, dataset_ID_ptrs=None, dataset_info=None, force_include_DAS=False):
+    def retrieve_dataset_context(self, full_paper, dataset_ID_ptrs=None, dataset_info=None, relevant_sect=''):
         """
         Retrieve context for datasets using the parser's retrieval method. Use-case: AutoDDG
         """
-        return self.parser.retrieve_relevant_content(full_paper, ID_patterns=dataset_ID_ptrs, query=dataset_info, force_include_DAS=force_include_DAS)
+        return self.parser.retrieve_relevant_content(full_paper, ID_patterns=dataset_ID_ptrs, query=dataset_info, relevant_content_flag=relevant_sect)
 
     def normalize_fulltext_input(self, fulltext, url, article_file_dir, raw_data_format, grobid_for_pdf=False,
                                   remove_refs=False, enable_chunking=False):
@@ -1790,6 +1790,7 @@ class DataGatherer:
         api_provider='openai',
         prompt_name='GPT_FewShot',
         prompts_subdir='dataset_prompts',
+        relevant_content_flag='DAS',
         response_format=None,
         relevant_cont_fmt='lst',
         temperature=0.0,
@@ -1956,7 +1957,8 @@ class DataGatherer:
                                 output_format=relevant_cont_fmt,
                                 skip_rule_based_retrieved_elm=dedup,
                                 include_snippets_with_ID_patterns=brute_force_RegEx_ID_ptrs,
-                                article_id=self.data_fetcher.url_to_article_id(url)
+                                article_id=self.data_fetcher.url_to_article_id(url),
+                                relevant_content_flag=relevant_content_flag,
                             )
                             normalized_input = data_availability_cont
 
@@ -2025,8 +2027,8 @@ class DataGatherer:
                 base = output_file_path.rsplit('.', 1)[0]
                 suppl_path, custom_id_path = f"{base}_suppl.csv", f"{base}_custom_id_src_mapping.json"
             else:
-                suppl_path = 'scripts/NYU_data_catalog/supplementary_materials_metadata.csv'
-                custom_id_path = 'scripts/NYU_data_catalog/custom_id_src_mapping.json'
+                suppl_path = 'scripts/tmp/supplementary_materials_metadata.csv'
+                custom_id_path = 'scripts/tmp/custom_id_src_mapping.json'
 
             supplementary_material_metadata.to_csv(suppl_path, index=False)
             self.logger.info(f"Prepared {len(batch_requests)} batch requests")
@@ -2286,10 +2288,12 @@ class DataGatherer:
                 processed_response = batch_item.get('processed_response', [])
                 if expected_key == 'datasets':
                     records = self.parser.process_datasets_response(processed_response, skip_validation=skip_validation)
+                elif expected_key == 'grants':
+                    records = self.parser.process_grants_response(processed_response)
                 else:
-                    # Non-dataset extraction tasks (e.g. grants) don't need dataset-specific
-                    # schema validation — process_llm_response already unwrapped the
-                    # expected_key array into a flat list of record dicts.
+                    # Other extraction tasks don't need dataset/grant-specific post-processing —
+                    # process_llm_response already unwrapped the expected_key array into a flat
+                    # list of record dicts.
                     records = [r for r in processed_response if isinstance(r, dict)]
 
                 # Enhance each record with metadata

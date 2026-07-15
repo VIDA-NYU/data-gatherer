@@ -676,7 +676,7 @@ grant_response_schema_gpt = {
                         }
                     },
                     "additionalProperties": False,
-                    "required": ["funder_name", "grant_numbers", "funding_context_from_paper", "recipient"]
+                    "required": ["funder_name", "grant_numbers", "funding_context_from_paper"]
                 },
                 "minItems": 1
             }

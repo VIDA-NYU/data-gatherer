@@ -443,6 +443,17 @@ class HTMLParser(LLMParser):
         data_availability_texts = [item['html'] for item in data_availability_elements]
         return data_availability_texts
 
+    def get_funding_text(self, html_content: str) -> list[str]:
+        """
+        Get funding/acknowledgments/grant-support elements and extract text from there.
+        Mirrors get_data_availability_text, using the 'funding_sections' selector category instead.
+        """
+        funding_elements = self.retriever.get_data_availability_elements_from_webpage(
+            html_content, section_category='funding_sections'
+        )
+        funding_texts = [item['html'] for item in funding_elements]
+        return funding_texts
+
     def parse_data(self, html_str, publisher=None, current_url_address=None, raw_data_format='HTML',
         article_file_dir='tmp/raw_files/', section_filter=None, prompt_name='GPT_FewShot', use_portkey=True, 
         semantic_retrieval=False, top_k=2, response_format=dataset_response_schema_gpt, dedup=True,
