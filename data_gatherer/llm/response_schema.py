@@ -652,13 +652,17 @@ grant_response_schema_gpt = {
                     "properties": {
                         "funder_name": {
                             "type": "string",
-                            "description": "The name of the funding organization or agency that supported the research.",
+                            "description": "The name of the single funding organization or agency that supported the research. Every grant_numbers entry in this object must be funded by this SAME funder — never group grants from different funders into one object, even if they share a recipient or appear in the same sentence.",
                             "maxLength": 256
                         },
-                        "grant_number": {
-                            "type": "string",
-                            "description": "The grant, award, or contract number associated with this funding. If not found, return 'n/a'.",
-                            "maxLength": 64
+                        "grant_numbers": {
+                            "type": "array",
+                            "description": "One or more grant/award/contract numbers from this SAME funder, associated with this same recipient and context. Put each distinct grant number as its own array element (never join multiple numbers into one string with commas/semicolons). If no grant number is given, return ['n/a'].",
+                            "items": {
+                                "type": "string",
+                                "maxLength": 32
+                            },
+                            "minItems": 1
                         },
                         "funding_context_from_paper": {
                             "type": "string",
@@ -667,12 +671,12 @@ grant_response_schema_gpt = {
                         },
                         "recipient": {
                             "type": "string",
-                            "description": "The author or institution that received the grant, if mentioned. If not found, return 'n/a'.",
+                            "description": "The single author or institution that received the grant(s) in this object, if mentioned. If not found, return 'n/a'.",
                             "maxLength": 128
                         }
                     },
                     "additionalProperties": False,
-                    "required": ["funder_name", "grant_number", "funding_context_from_paper", "recipient"]
+                    "required": ["funder_name", "grant_numbers", "funding_context_from_paper", "recipient"]
                 },
                 "minItems": 1
             }
