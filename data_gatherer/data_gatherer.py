@@ -2301,10 +2301,12 @@ class DataGatherer:
                     records = self.parser.process_datasets_response(processed_response, skip_validation=skip_validation)
                 elif expected_key == 'grants':
                     records = self.parser.process_grants_response(processed_response)
+                elif expected_key == 'software_mentions':
+                    records = self.parser.process_software_response(processed_response)
                 else:
-                    # Other extraction tasks don't need dataset/grant-specific post-processing —
-                    # process_llm_response already unwrapped the expected_key array into a flat
-                    # list of record dicts.
+                    # Other extraction tasks don't need dataset/grant/software-specific
+                    # post-processing — process_llm_response already unwrapped the expected_key
+                    # array into a flat list of record dicts.
                     records = [r for r in processed_response if isinstance(r, dict)]
 
                 # Enhance each record with metadata

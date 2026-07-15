@@ -740,6 +740,51 @@ Files:
         self.logger.info(f"process_grants_response: exploded {len(resps)} record(s) into {len(result)} one-grant-per-row record(s)")
         return result
 
+    def process_software_response(self, resps):
+        """
+        Process the LLM response containing software mentions (SOMD-style: name, version,
+        mention_type, url, context -- see software_mention_response_schema_gpt).
+
+        :param resps: LLM response containing software mention records (list of dicts).
+
+        :return: List of dicts, cleaned as described above. Records without a usable
+            'software_name' are dropped (that field is the one thing that must be real).
+        """
+        url_like_pattern = re.compile(r'^https?://', re.IGNORECASE)
+        valid_mention_types = {'created', 'used', 'n/a'}
+        result = []
+        dropped = 0
+        cleaned_urls = 0
+        cleaned_types = 0
+        for record in resps:
+            if not isinstance(record, dict):
+                continue
+            record = dict(record)
+            software_name = (record.get('software_name') or '').strip()
+            if not software_name:
+                dropped += 1
+                continue
+
+            url = (record.get('url') or '').strip()
+            if url and url != 'n/a' and not url_like_pattern.match(url):
+                self.logger.debug(f"process_software_response: url {url!r} for {software_name!r} doesn't look like a URL, resetting to 'n/a'")
+                record['url'] = 'n/a'
+                cleaned_urls += 1
+
+            mention_type = (record.get('mention_type') or 'n/a').strip().lower()
+            if mention_type not in valid_mention_types:
+                self.logger.debug(f"process_software_response: unexpected mention_type {mention_type!r} for {software_name!r}, resetting to 'n/a'")
+                record['mention_type'] = 'n/a'
+                cleaned_types += 1
+
+            result.append(record)
+
+        self.logger.info(
+            f"process_software_response: kept {len(result)}/{len(resps)} record(s) "
+            f"({dropped} dropped for missing software_name, {cleaned_urls} url(s) cleaned, {cleaned_types} mention_type(s) cleaned)"
+        )
+        return result
+
     def schema_validation(self, dataset, req_timeout=0.5, skip=False):
         """
         Validate and extract dataset information based on the schema.
@@ -1046,6 +1091,29 @@ Files:
         self.logger.info(f"# of defined dataset ID patterns: {len(id_patterns)}")
         self.logger.debug(f"All ID patterns: {id_patterns}")
         return id_patterns
+
+    def get_code_hosting_id_patterns(self):
+        """
+        Regex patterns for common code-hosting/archival URLs (GitHub, GitLab, Bitbucket, Zenodo
+        code-archive records, SourceForge, PyPI, CRAN). Intended as the `ID_patterns` argument to
+        retrieve_relevant_content(include_snippets_with_ID_patterns=True, ID_patterns=...) -- the
+        deterministic, whole-document Tier-1 half of software mention detection (SOMD), catching
+        URL-bearing mentions with zero hallucination risk regardless of which section (or even
+        which DOM element -- <p>, <li>, footnote, ...) they live in. Tier 2 (the LLM prompt/schema)
+        covers the broader set of mentions that have no URL at all, which is most real mentions
+        per the SOMD/SoMeSci and SoftCite literature.
+
+        :return: list of regex pattern strings.
+        """
+        return [
+            r'github\.com/[\w.-]+/[\w.-]+',
+            r'gitlab\.com/[\w.-]+/[\w.-]+',
+            r'bitbucket\.org/[\w.-]+/[\w.-]+',
+            r'zenodo\.org/record[s]?/\d+',
+            r'sourceforge\.net/(projects|p)/[\w.-]+',
+            r'pypi\.org/project/[\w.-]+',
+            r'cran\.r-project\.org/(web/packages|package)/[\w.-]+',
+        ]
 
     def get_all_repo_names(self, uncased=False):
         # Get the all the repository names from the config file. (all the repos in ontology)
