@@ -1811,10 +1811,11 @@ class DataGatherer:
         article_file_dir='scripts/tmp/raw_files/',
         url2id_mapping=None,
         local_fetch_file=None,
+        write_df_to_path=None,
         sects_required=5,
         remove_reference_tags=False,
         intelligent_chunking=False,
-        regex_search_id_patterns=None
+        regex_search_id_patterns=None,
         ):
         """
         Complete integrated batch processing using LLMClient batch functionality.
@@ -1900,7 +1901,8 @@ class DataGatherer:
         try:
             # Step 1: Fetch data
             self.logger.info("Step 1: Fetching data...")
-            fetched_data = self.fetch_data(url_list, write_htmls_xmls=write_htmls_xmls, article_file_dir=article_file_dir, local_fetch_file=local_fetch_file, sects_required=sects_required)
+            fetched_data = self.fetch_data(url_list, write_htmls_xmls=write_htmls_xmls, article_file_dir=article_file_dir, 
+                local_fetch_file=local_fetch_file, sects_required=sects_required, write_df_to_path=write_df_to_path)
             
             # Count raw_data_format frequencies and store URLs for parser reuse optimization
             format_counts = {}
