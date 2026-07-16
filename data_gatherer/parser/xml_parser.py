@@ -65,14 +65,14 @@ class XMLParser(LLMParser):
 
         return paragraphs
     
-    def extract_sections_from_text(self, xml_content: str) -> list[dict]:
+    def extract_sections_from_text(self, xml_content: str, include_references=False) -> list[dict]:
         """
         alias for extract_sections_from_xml
         """
         if isinstance(xml_content, str):
             xml_content = etree.fromstring(xml_content.encode('utf-8'))
-        
-        return self.extract_sections_from_xml(xml_content)
+
+        return self.extract_sections_from_xml(xml_content, include_references=include_references)
 
     def from_section_to_text_content(self, sect_element) -> str:
         """
@@ -109,12 +109,14 @@ class XMLParser(LLMParser):
 
         return str_cont_ret        
 
-    def extract_sections_from_xml(self, xml_root) -> list[dict]:
+    def extract_sections_from_xml(self, xml_root, include_references=False) -> list[dict]:
         """
         Extract sections from an XML document.
 
         Args:
             xml_root: lxml.etree.Element — parsed XML root.
+
+            include_references: bool — if True, expand <ref-list> 
 
         Returns:
             List of dicts with 'section_title' and 'sec_type'.
@@ -170,8 +172,12 @@ class XMLParser(LLMParser):
             section_text_from_paragraphs = f'{section_title}\n'
             section_rawtxt_from_paragraphs = ''
 
-            # Find all paragraphs in this section
-            paragraphs = sec.findall(".//p")
+            # Find all paragraphs in this section — ref-list entries use <ref>/<mixed-citation>,
+            # not <p>; only switch to per-<ref> chunks when include_references=True (opt-in).
+            if sec.tag == "ref-list" and include_references:
+                paragraphs = sec.findall(".//ref")
+            else:
+                paragraphs = sec.findall(".//p")
             self.logger.debug(f"Found {len(paragraphs)} paragraphs in section '{section_title}'")
 
             for p_idx, p in enumerate(paragraphs):
@@ -279,7 +285,7 @@ class XMLParser(LLMParser):
         effective_max_tokens = int(max_tokens * 0.95)  # 95% of max to be safe
         self.logger.debug(f"Effective max tokens per section: {effective_max_tokens}")
 
-        self.skip_text_matching = self.data_availability_cont_str if skip_rule_based_retrieved_elm else []
+        self.skip_text_matching = getattr(self, 'data_availability_cont_str', '') if skip_rule_based_retrieved_elm else []
         self.logger.debug(f"Skipping rule-based retrieved elements: {len(self.skip_text_matching)}")
         
         corpus_documents = []
@@ -1081,6 +1087,32 @@ class XMLParser(LLMParser):
         self.data_availability_cont_str = ''.join(data_availability_cont)
         return data_availability_cont
 
+    def _find_sections_by_category(self, api_xml, section_name):
+        """
+        Find all elements matching a pattern category, combining both pattern dialects defined
+        in retrieval_patterns.json:
+        - xml_tags (attribute-based, e.g. .//sec[@sec-type='funding']), and
+        - xpaths (title-text-based, e.g. //sec[title[contains(translate(text(),...),'funding')]]),
+          which need XPath functions (contains/translate) that findall()'s limited ElementPath
+          can't execute at all (raises "invalid predicate") -- both are run via xpath() here,
+          which handles simple attribute predicates just as well as findall() does.
+
+        :param api_xml: lxml.etree.Element — parsed XML root.
+
+        :param section_name: str — pattern category name in retrieval_patterns.json.
+
+        :return: list of matched elements, deduplicated.
+        """
+        found = []
+        for ptr in self.load_patterns_for_tgt_section(section_name):
+            found.extend(api_xml.xpath(ptr))
+        for ptr in self.load_title_patterns_for_tgt_section(section_name):
+            try:
+                found.extend(api_xml.xpath(ptr))
+            except Exception as e:
+                self.logger.debug(f"Title-xpath {ptr!r} failed for section {section_name}: {e}")
+        return list(dict.fromkeys(found))
+
     def get_funding_text(self, api_xml):
         """
         Retrieve funding/acknowledgments/grant-support content, mirroring get_data_availability_text's
@@ -1093,10 +1125,7 @@ class XMLParser(LLMParser):
         """
         self.logger.debug(f"Function call: get_funding_text(api_xml({type(api_xml)})")
 
-        funding_sections = []
-        for ptr in self.load_patterns_for_tgt_section('funding_sections'):
-            if ptr.startswith('.//'):
-                funding_sections.extend(api_xml.findall(ptr))
+        funding_sections = self._find_sections_by_category(api_xml, 'funding_sections')
 
         self.logger.info(f"Found {len(funding_sections)} funding/acknowledgment sections")
 
@@ -1131,6 +1160,28 @@ class XMLParser(LLMParser):
         self.logger.debug(f"Found funding content: {funding_cont}")
 
         return funding_cont
+
+    def get_code_availability_text(self, api_xml):
+        """
+        Retrieve code/software-availability content for the 'code_availability_sections'
+        pattern category, mirroring get_funding_text's structure.
+
+        :param api_xml: lxml.etree.Element — parsed XML root.
+
+        :return: List of strings — prose from code/software-availability sections.
+        """
+        self.logger.debug(f"Function call: get_code_availability_text(api_xml({type(api_xml)})")
+
+        code_sections = self._find_sections_by_category(api_xml, 'code_availability_sections')
+
+        self.logger.info(f"Found {len(code_sections)} code/software-availability sections")
+
+        code_cont = self._join_section_elements_text(code_sections)
+
+        self.logger.info(f"Code availability content len: {len(code_cont)}, type: {type(code_cont)}")
+        self.logger.debug(f"Found code availability content: {code_cont}")
+
+        return code_cont
 
     def table_to_text(self, table_wrap):
         """

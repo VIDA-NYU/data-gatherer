@@ -238,19 +238,21 @@ class HTMLParser(LLMParser):
                 })
         return paragraphs
 
-    def extract_sections_from_text(self, html_content: str) -> list[dict]:
+    def extract_sections_from_text(self, html_content: str, include_references: bool = False) -> list[dict]:
         """
         alias for extract_sections_from_html
         """
-        return self.extract_sections_from_html(html_content)
+        return self.extract_sections_from_html(html_content, include_references=include_references)
 
-    def extract_sections_from_html(self, html_content: str) -> list[dict]:
+    def extract_sections_from_html(self, html_content: str, include_references: bool = False) -> list[dict]:
         """
         Extract sections from an HTML document, following the XML parser pattern.
         Only looks for <section> elements, just like XML parser looks for <sec> elements.
 
         Args:
             html_content: str — raw HTML content.
+            include_references: bool — if True, expand the references section into one
+                paragraph-equivalent chunk per <li> citation.
 
         Returns:
             List of dicts with 'section_title', 'sec_type', 'sec_txt', and 'sec_txt_clean'.
@@ -280,14 +282,16 @@ class HTMLParser(LLMParser):
             section_text_from_paragraphs = f'{section_title}\n'
             section_rawtxt_from_paragraphs = ''
 
-            # Find all paragraphs in this section (like XML parser)
-            paragraphs = sec.find_all('p')
+            # Find all paragraphs in this section (like XML parser). A references section has
+            # no <p> tags — citations are <li> — so only switch to <li> when explicitly opted in.
+            is_ref_list_section = include_references and 'ref-list' in (sec.get('class') or [])
+            paragraphs = sec.find_all('li') if is_ref_list_section else sec.find_all('p')
             self.logger.debug(f"Found {len(paragraphs)} paragraphs")
 
             for p_idx, p in enumerate(paragraphs):
                 self.logger.debug(f"Processing paragraph {p_idx + 1} out of {len(paragraphs)}")
                 parent_section = p.find_parent('section')
-                if parent_section is not None and parent_section != sec:
+                if not is_ref_list_section and parent_section is not None and parent_section != sec:
                     self.logger.debug(f"We've entered a different section: {parent_section != sec}, so break out of the loop")
                     break
 
@@ -453,6 +457,17 @@ class HTMLParser(LLMParser):
         )
         funding_texts = [item['html'] for item in funding_elements]
         return funding_texts
+
+    def get_code_availability_text(self, html_content: str) -> list[str]:
+        """
+        Get code/software-availability elements and extract text from there.
+        Mirrors get_funding_text, using the 'code_availability_sections' selector category instead.
+        """
+        code_elements = self.retriever.get_data_availability_elements_from_webpage(
+            html_content, section_category='code_availability_sections'
+        )
+        code_texts = [item['html'] for item in code_elements]
+        return code_texts
 
     def parse_data(self, html_str, publisher=None, current_url_address=None, raw_data_format='HTML',
         article_file_dir='tmp/raw_files/', section_filter=None, prompt_name='GPT_FewShot', use_portkey=True, 
