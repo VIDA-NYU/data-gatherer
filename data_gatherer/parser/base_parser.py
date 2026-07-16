@@ -1911,7 +1911,7 @@ Files:
         _used_p_fallback = False
 
         if top_k == -1 or semantic_retrieval or include_snippets_with_ID_patterns:
-            all_sections = self.extract_sections_from_text(data) if relevant_content_flag != 'CODE' else self.extract_sections_from_text(data, include_references=True)
+            all_sections = self.extract_sections_from_text(data) if relevant_content_flag != 'CODE' else self.extract_sections_from_text(data, include_references=relevant_content_flag=='CODE')
             corpus = self.from_sections_to_corpus(all_sections, max_tokens=max_tokens, skip_rule_based_retrieved_elm=skip_rule_based_retrieved_elm, include_section_title=include_section_title)
 
         if top_k == -1:
