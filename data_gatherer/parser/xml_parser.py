@@ -65,14 +65,14 @@ class XMLParser(LLMParser):
 
         return paragraphs
     
-    def extract_sections_from_text(self, xml_content: str) -> list[dict]:
+    def extract_sections_from_text(self, xml_content: str, include_references=False) -> list[dict]:
         """
         alias for extract_sections_from_xml
         """
         if isinstance(xml_content, str):
             xml_content = etree.fromstring(xml_content.encode('utf-8'))
-        
-        return self.extract_sections_from_xml(xml_content)
+
+        return self.extract_sections_from_xml(xml_content, include_references=include_references)
 
     def from_section_to_text_content(self, sect_element) -> str:
         """
@@ -109,12 +109,14 @@ class XMLParser(LLMParser):
 
         return str_cont_ret        
 
-    def extract_sections_from_xml(self, xml_root) -> list[dict]:
+    def extract_sections_from_xml(self, xml_root, include_references=False) -> list[dict]:
         """
         Extract sections from an XML document.
 
         Args:
             xml_root: lxml.etree.Element — parsed XML root.
+
+            include_references: bool — if True, expand <ref-list> 
 
         Returns:
             List of dicts with 'section_title' and 'sec_type'.
@@ -170,8 +172,12 @@ class XMLParser(LLMParser):
             section_text_from_paragraphs = f'{section_title}\n'
             section_rawtxt_from_paragraphs = ''
 
-            # Find all paragraphs in this section
-            paragraphs = sec.findall(".//p")
+            # Find all paragraphs in this section — ref-list entries use <ref>/<mixed-citation>,
+            # not <p>; only switch to per-<ref> chunks when include_references=True (opt-in).
+            if sec.tag == "ref-list" and include_references:
+                paragraphs = sec.findall(".//ref")
+            else:
+                paragraphs = sec.findall(".//p")
             self.logger.debug(f"Found {len(paragraphs)} paragraphs in section '{section_title}'")
 
             for p_idx, p in enumerate(paragraphs):
@@ -279,7 +285,7 @@ class XMLParser(LLMParser):
         effective_max_tokens = int(max_tokens * 0.95)  # 95% of max to be safe
         self.logger.debug(f"Effective max tokens per section: {effective_max_tokens}")
 
-        self.skip_text_matching = self.data_availability_cont_str if skip_rule_based_retrieved_elm else []
+        self.skip_text_matching = getattr(self, 'data_availability_cont_str', '') if skip_rule_based_retrieved_elm else []
         self.logger.debug(f"Skipping rule-based retrieved elements: {len(self.skip_text_matching)}")
         
         corpus_documents = []
@@ -1094,7 +1100,7 @@ class XMLParser(LLMParser):
         :param api_xml: lxml.etree.Element — parsed XML root.
 
         :param section_name: str — pattern category name in retrieval_patterns.json.
-        
+
         :return: list of matched elements, deduplicated.
         """
         found = []

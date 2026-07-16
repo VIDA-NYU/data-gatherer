@@ -1903,6 +1903,7 @@ Files:
         self.logger.debug(f"Function call: retrieve_relevant_content(semantic_retrieval={semantic_retrieval}, top_k={top_k}, article_id={article_id}, max_tokens={max_tokens}, skip_rule_based_retrieved_elm={skip_rule_based_retrieved_elm}, include_snippets_with_ID_patterns={include_snippets_with_ID_patterns}, output_format={output_format})")
 
         relevant_content_rule_based = self.rule_based_retrieve(data, relevant_content_flag)
+        self.logger.debug(f"Rule-based retrieval found {len(relevant_content_rule_based)} relevant sections for flag '{relevant_content_flag}'")
         self.id_patterns = ID_patterns if ID_patterns is not None else self.id_patterns
         ret_lst = relevant_content_rule_based.copy()
         top_k_sections, docs_matching_id_ptr = [], []
@@ -1910,7 +1911,7 @@ Files:
         _used_p_fallback = False
 
         if top_k == -1 or semantic_retrieval or include_snippets_with_ID_patterns:
-            all_sections = self.extract_sections_from_text(data)
+            all_sections = self.extract_sections_from_text(data) if relevant_content_flag != 'CODE' else self.extract_sections_from_text(data, include_references=True)
             corpus = self.from_sections_to_corpus(all_sections, max_tokens=max_tokens, skip_rule_based_retrieved_elm=skip_rule_based_retrieved_elm, include_section_title=include_section_title)
 
         if top_k == -1:
