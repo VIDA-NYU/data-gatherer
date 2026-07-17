@@ -52,11 +52,21 @@ class BackupDataStore:
             self._timestamp = time.time()
             # The dataframe is keyed by full article URLs (index) or a 'publication'
             # column of URLs, but every caller looks up by bare article ID. Normalize
-            # both sides through DataFetcher.url_to_article_id so lookups actually
-            # match — called unbound (self=this BackupDataStore) since it only touches
-            # self.logger / self.current_article_id, both fine on any object.
+            # both sides so lookups actually match. Vectorized pandas regex handles the
+            # common PMC case for every row at once — calling DataFetcher.url_to_article_id
+            # (3 regex searches + a log line) per row is far too slow on a large cache
+            # file (hundreds of thousands of rows) and floods the log. Only the rare
+            # non-PMC rows (DOI/PMID-keyed) fall back to the real function, unbound
+            # (self=this BackupDataStore) since it only touches self.logger /
+            # self.current_article_id, both fine on any object.
             src = self._dataframe['publication'] if 'publication' in self._dataframe.columns else self._dataframe.index
-            self._article_id_index = pd.Index([DataFetcher.url_to_article_id(self, str(v)) for v in src])
+            src = pd.Series(src, dtype=str).reset_index(drop=True)
+            digits = src.str.extract(r'PMC(\d+)', flags=re.IGNORECASE, expand=False)
+            article_ids = digits.map(lambda d: f"PMC{d}" if pd.notna(d) else None)
+            missing = article_ids.isna()
+            if missing.any():
+                article_ids[missing] = [DataFetcher.url_to_article_id(self, v) for v in src[missing]]
+            self._article_id_index = pd.Index(article_ids)
             return True
         except Exception:
             self._dataframe = None
@@ -248,10 +258,15 @@ class DataFetcher(ABC):
 
         else:
             if not return_only_known_ids:
-                article_id, i = '', 0
-                while len(article_id) < 6:
-                    i+=1
-                    article_id = url.split("/")[-i]
+                parts = url.split("/")
+                article_id = ''
+                for i in range(1, len(parts) + 1):
+                    candidate = parts[-i]
+                    if len(candidate) >= 6:
+                        article_id = candidate
+                        break
+                else:
+                    article_id = url  # no segment long enough — fall back to the whole string
 
                 self.current_article_id = article_id
                 

@@ -30,27 +30,32 @@ CONFIGS = {
     "T5 · c2 (semantic k=3, no regex)": "k8s/output/rev_test_c2/iter1/dataset_citations.csv",
     "T5 · c3 (semantic k=3 + regex)":   "k8s/output/rev_test_c3/iter1/dataset_citations.csv",
     "T5 · c4 (chunked FDR)":            "k8s/output/rev_test_c4/iter1/dataset_citations.csv",
+    "T5 · c5 (no semantic + regex)":    "k8s/output/rev_test_c5/iter1/dataset_citations.csv",
     # Claude Haiku (run locally)
     "Haiku · c1 (no semantic, no regex)":  "k8s/output/rev_test_haiku_c1/dataset_citations.csv",
     "Haiku · c2 (semantic k=3, no regex)": "k8s/output/rev_test_haiku_c2/dataset_citations.csv",
     "Haiku · c3 (semantic k=3 + regex)":   "k8s/output/rev_test_haiku_c3/dataset_citations.csv",
     "Haiku · c4 (FDR)":                    "k8s/output/rev_test_haiku_c4/dataset_citations.csv",
+    "Haiku · c5 (no semantic + regex)":   "k8s/output/rev_test_haiku_c5/dataset_citations.csv",
     # GPT-5-mini (run locally)
     "GPT-5-mini · c1 (no semantic, no regex)":  "k8s/output/rev_test_gpt5mini_c1/dataset_citations.csv",
     "GPT-5-mini · c2 (semantic k=3, no regex)": "k8s/output/rev_test_gpt5mini_c2/dataset_citations.csv",
     "GPT-5-mini · c3 (semantic k=3 + regex)":   "k8s/output/rev_test_gpt5mini_c3/dataset_citations.csv",
     "GPT-5-mini · c4 (FDR)":                    "k8s/output/rev_test_gpt5mini_c4/dataset_citations.csv",
+    "GPT-5-mini · c5 (no semantic + regex)":   "k8s/output/rev_test_gpt5mini_c5/dataset_citations.csv",
     # Gemini 3.5 Flash (run locally)
     "Gemini-3-flash · c1 (no semantic, no regex)":  "k8s/output/rev_test_gemini_c1/dataset_citations.csv",
     "Gemini-3-flash · c2 (semantic k=3, no regex)": "k8s/output/rev_test_gemini_c2/dataset_citations.csv",
     "Gemini-3-flash · c3 (semantic k=3 + regex)":   "k8s/output/rev_test_gemini_c3/dataset_citations.csv",
     "Gemini-3-flash · c4 (FDR)":                    "k8s/output/rev_test_gemini_c4/dataset_citations.csv",
+    "Gemini-3-flash · c5 (no semantic + regex)":   "k8s/output/rev_test_gemini_c5/dataset_citations.csv",
 }
 
 S3_KEYS = {
     "T5 · c1 (no semantic, no regex)":  "slice_1-tc1/dataset_citations.csv",
     "T5 · c2 (semantic k=3, no regex)": "slice_1-tc2/dataset_citations.csv",
     "T5 · c3 (semantic k=3 + regex)":   "slice_1-tc3/dataset_citations.csv",
+    "T5 · c5 (no semantic + regex)":   "slice_1-tc5/dataset_citations.csv",
 }
 
 TEST_PMCID_CSV = "k8s/input/article_ids_REV_test.csv"

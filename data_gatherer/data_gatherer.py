@@ -1239,22 +1239,29 @@ class DataGatherer:
 
                 structured_metadata = row[pass_cols_to_prompt].to_dict() | metadata_schema_org
 
-                if add_sitemap_to_prompt and sitemap and len(sitemap) > 0:
-                    metadata = self.two_hop_extract(html, row['dataset_webpage'], structured_metadata, use_portkey,
-                        response_format=response_format,
-                        max_k=4,
-                        sitemap=sitemap
-                    )
-
-                else:
-                    metadata = self.metadata_parser.parse_datasets_metadata(
-                        html,
-                        structured_metadata=structured_metadata,
-                        model=self.llm, 
-                        use_portkey=use_portkey,
-                        prompt_name=prompt_name,
-                        response_format=response_format
+                try:
+                    if add_sitemap_to_prompt and sitemap and len(sitemap) > 0:
+                        metadata = self.two_hop_extract(html, row['dataset_webpage'], structured_metadata, use_portkey,
+                            response_format=response_format,
+                            max_k=4,
+                            sitemap=sitemap
                         )
+
+                    else:
+                        metadata = self.metadata_parser.parse_datasets_metadata(
+                            html,
+                            structured_metadata=structured_metadata,
+                            model=self.llm,
+                            use_portkey=use_portkey,
+                            prompt_name=prompt_name,
+                            response_format=response_format
+                            )
+                except Exception as e:
+                    # A single blocked/flagged/malformed LLM response must not discard every
+                    # already-processed row in ret_list — log, skip this row, keep going.
+                    self.logger.error(f"LLM metadata extraction failed for row {i} ({row.get('dataset_webpage', 'unknown')}): {e}")
+                    continue
+
                 if isinstance(metadata, list):
                     metadata = metadata[0] if metadata else {}
                 metadata['source_url_for_metadata'] = row['dataset_webpage']

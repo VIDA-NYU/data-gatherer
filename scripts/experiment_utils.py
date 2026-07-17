@@ -476,12 +476,15 @@ def evaluate_performance(predict_df, ground_truth, orchestrator, false_positives
 
     # Pre-build predict index: pmcid → (set of identifiers, subset df for FP lookup)
     predict_df = predict_df.copy()
+    # .astype(str) first — an empty predict_df (a config with zero predictions) leaves
+    # these columns as float64, and .str accessor raises on non-string dtype regardless
+    # of row count; casting up front keeps this correct for both the empty and non-empty case.
     predict_df['_pub_id'] = (
-        predict_df['source_url'].fillna('')
+        predict_df['source_url'].astype(str).replace('nan', '')
         .str.lower()
         .str.extract(r'(pmc\d+)', expand=False)
     )
-    predict_df['_id_lower'] = predict_df['dataset_identifier'].fillna('').str.lower()
+    predict_df['_id_lower'] = predict_df['dataset_identifier'].astype(str).replace('nan', '').str.lower()
     predict_index = {
         pub_id: grp
         for pub_id, grp in predict_df.groupby('_pub_id', sort=False)
