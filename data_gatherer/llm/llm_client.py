@@ -92,8 +92,12 @@ class LLMClient_dev:
         elif model.startswith('hf-'):
             self.logger.debug(f"Initializing Hugging Face model client for model: {model}")
             hf_model_name = model[len('hf-'):]
+            revision = None
+            if '@' in hf_model_name:
+                hf_model_name, revision = hf_model_name.rsplit('@', 1)
             from data_gatherer.llm.hf_model_client import HFModelClient
-            self.llm_client = HFModelClient(hf_model_name, logger=self.logger, use_auth_token=HF_TOKEN or True)
+            self.llm_client = HFModelClient(hf_model_name, logger=self.logger, use_auth_token=HF_TOKEN or True,
+                                             revision=revision)
             self.llm_client.load_model()
 
         else:
