@@ -45,11 +45,11 @@ CONFIGS = {
     "GPT-5-mini · c4 (FDR)":                    "k8s/output/rev_test_gpt5mini_c4/dataset_citations.csv",
     "GPT-5-mini · c5 (no semantic + regex)":   "k8s/output/rev_test_gpt5mini_c5/dataset_citations.csv",
     # Gemini 3.5 Flash (run locally)
-    "Gemini-3-flash · c1 (no semantic, no regex)":  "k8s/output/rev_test_gemini_c1/dataset_citations.csv",
-    "Gemini-3-flash · c2 (semantic k=3, no regex)": "k8s/output/rev_test_gemini_c2/dataset_citations.csv",
-    "Gemini-3-flash · c3 (semantic k=3 + regex)":   "k8s/output/rev_test_gemini_c3/dataset_citations.csv",
-    "Gemini-3-flash · c4 (FDR)":                    "k8s/output/rev_test_gemini_c4/dataset_citations.csv",
-    "Gemini-3-flash · c5 (no semantic + regex)":   "k8s/output/rev_test_gemini_c5/dataset_citations.csv",
+    "Gemini-3.5-flash · c1 (no semantic, no regex)":  "k8s/output/rev_test_gemini_c1/dataset_citations.csv",
+    "Gemini-3.5-flash · c2 (semantic k=3, no regex)": "k8s/output/rev_test_gemini_c2/dataset_citations.csv",
+    "Gemini-3.5-flash · c3 (semantic k=3 + regex)":   "k8s/output/rev_test_gemini_c3/dataset_citations.csv",
+    "Gemini-3.5-flash · c4 (FDR)":                    "k8s/output/rev_test_gemini_c4/dataset_citations.csv",
+    "Gemini-3.5-flash · c5 (no semantic + regex)":   "k8s/output/rev_test_gemini_c5/dataset_citations.csv",
 }
 
 S3_KEYS = {

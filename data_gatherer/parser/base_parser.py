@@ -1277,7 +1277,12 @@ Files:
             return url
         
         try:
-            response = requests.get(url, allow_redirects=True, timeout=req_timeout)
+            # HEAD (not GET)
+            response = requests.head(url, allow_redirects=True, timeout=req_timeout)
+            if response.status_code in (405, 501):
+                response.close()
+                response = requests.get(url, allow_redirects=True, timeout=req_timeout, stream=True)
+                response.close()
             self.logger.info(f"Resolved URL: {response.url}")
             return response.url
         except requests.RequestException as e:

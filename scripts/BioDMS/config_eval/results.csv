@@ -10,13 +10,13 @@ T5 · c5 (no semantic + regex),249,0.349,0.635,0.45,0.511,0.979,0.671
 Haiku · c3 (semantic k=3 + regex),249,0.211,0.693,0.324,0.23,1.0,0.374
 Haiku · c4 (FDR),249,0.642,0.661,0.651,0.837,0.999,0.911
 Haiku · c5 (no semantic + regex),248,0.643,0.635,0.639,0.856,0.996,0.921
+GPT-4o-mini · c4 (FDR),245,0.634,0.598,0.615,0.87,0.942,0.904
 "GPT-5-mini · c1 (no semantic, no regex)",208,0.276,0.319,0.295,0.483,0.569,0.522
 "GPT-5-mini · c2 (semantic k=3, no regex)",246,0.516,0.6,0.555,0.703,0.939,0.804
 GPT-5-mini · c3 (semantic k=3 + regex),249,0.54,0.653,0.591,0.717,1.0,0.835
-GPT-5-mini · c4 (FDR),249,0.483,0.679,0.564,0.609,0.968,0.748
 GPT-5-mini · c5 (no semantic + regex),249,0.588,0.64,0.613,0.798,1.0,0.888
-"Gemini-3-flash · c1 (no semantic, no regex)",156,0.283,0.319,0.3,0.491,0.569,0.527
-"Gemini-3-flash · c2 (semantic k=3, no regex)",245,0.511,0.622,0.561,0.643,0.939,0.764
-Gemini-3-flash · c3 (semantic k=3 + regex),249,0.53,0.68,0.596,0.652,1.0,0.789
-Gemini-3-flash · c4 (FDR),249,0.646,0.641,0.643,0.863,0.999,0.926
-Gemini-3-flash · c5 (no semantic + regex),245,0.629,0.628,0.628,0.843,0.984,0.908
+"Gemini-3.5-flash · c1 (no semantic, no regex)",156,0.283,0.319,0.3,0.491,0.569,0.527
+"Gemini-3.5-flash · c2 (semantic k=3, no regex)",245,0.511,0.622,0.561,0.643,0.939,0.764
+Gemini-3.5-flash · c3 (semantic k=3 + regex),249,0.53,0.68,0.596,0.652,1.0,0.789
+Gemini-3.5-flash · c4 (FDR),249,0.646,0.641,0.643,0.863,0.999,0.926
+Gemini-3.5-flash · c5 (no semantic + regex),245,0.629,0.628,0.628,0.843,0.984,0.908
