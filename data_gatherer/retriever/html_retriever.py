@@ -253,11 +253,26 @@ class htmlRetriever(BaseRetriever):
         compiled = [re.compile(p) for p in raw_patterns]
         found = set()
         for pattern in compiled:
-            self.logger.info(f"Using pattern: {pattern.pattern} to search for publication IDs.")
+            self.logger.debug(f"Using pattern: {pattern.pattern} to search for publication IDs.")
             for match in pattern.findall(html):
                 self.logger.info(f"Found publication ID match: {match}")
                 found.add(match.strip().rstrip(".,;)"))
+        self.logger.info(f"Total unique publication IDs found: {len(found)}")
         return sorted(found)
+    
+    def extract_pubmed_search_terms(self, html: str) -> list:
+        """Extract PubMed search terms from raw HTML using patterns from retrieval_patterns.json."""
+        self.logger.info("Extracting PubMed search terms from HTML")
+        raw_patterns = self.retrieval_patterns.get('general', {}).get('pubmed_search_patterns', [])
+        compiled = [re.compile(p) for p in raw_patterns]
+        found_terms = set()
+        for pattern in compiled:
+            self.logger.debug(f"Using pattern: {pattern.pattern} to search for PubMed terms.")
+            for match in pattern.findall(html):
+                self.logger.info(f"Found PubMed search term match: {match}")
+                found_terms.add(match.strip())
+        self.logger.info(f"Total unique PubMed search terms found: {len(found_terms)}")
+        return sorted(found_terms)
 
     def is_html_data_complete(self, raw_data, url,
                              required_sections=("data_availability_sections", "supplementary_data_sections")) -> bool:

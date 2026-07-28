@@ -22,6 +22,10 @@
       "pubmed\\.ncbi\\.nlm\\.nih\\.gov/(\\d{7,8})",
       "(10\\.\\d{4,}/[^\\s<>\"']{4,})",
       "doi\\.org/(10\\.[^\\s<>\"']{4,})"
+    ],
+    "pubmed_search_patterns": [
+      "pubmed\\.ncbi\\.nlm\\.nih\\.gov/\\?term=([^\\s<>\"']+)",
+      "pubmed\\.ncbi\\.nlm\\.nih\\.gov/\\?term=([^\\s<>\"']+)&"
     ]
   },
   "nature": {

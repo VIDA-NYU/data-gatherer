@@ -1452,7 +1452,15 @@ class HTMLParser(LLMParser):
     def extract_publication_corpus_from_webpage(self, html: str) -> list:
         """Extract publication identifiers (PMIDs, PMCIDs, DOIs) from a study HTML page."""
         self.logger.info("Extracting publication identifiers from HTML webpage")
-        return self.retriever.extract_publication_ids(html)
+        pub_ids = []
+        pubmed_searches = self.retriever.extract_pubmed_search_terms(html)
+        for search in pubmed_searches:
+            try:
+                pub_ids += self.retriever.extract_publication_ids(requests.get(search).text)
+            except Exception as e:
+                self.logger.warning(f"Error occurred while fetching PubMed search results: {e}")
+        base = self.retriever.extract_publication_ids(html)
+        return base + pubmed_searches
 
     def extract_normalized_dataset_urls(self, row):
         self.logger.info("Extracting normalized dataset URL from row data")

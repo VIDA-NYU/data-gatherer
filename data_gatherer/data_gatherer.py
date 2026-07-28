@@ -1275,7 +1275,7 @@ class DataGatherer:
                 self.already_previewed.append(row['dataset_webpage'])
 
                 if sitemap and from_metadata_to_publication_corpus:
-                    metadata['new_corpus'] = self.create_publication_corpus(metadata, sitemap)
+                    metadata['new_corpus'] = self.create_publication_corpus(metadata, sitemap, html=html)
 
             metadata['paper_with_dataset_citation'] = row.get('source_url', None)
 
@@ -1284,7 +1284,10 @@ class DataGatherer:
                 self.save_func_output_to_cache(metadata, process_id, 'process_metadata')
 
             if return_metadata:
-                flat_metadata = self.metadata_parser.flatten_metadata_dict(metadata)
+                metadata_to_flatten = {k: v for k, v in metadata.items() if k != 'new_corpus'}
+                flat_metadata = self.metadata_parser.flatten_metadata_dict(metadata_to_flatten)
+                if 'new_corpus' in metadata:
+                    flat_metadata['new_corpus'] = metadata['new_corpus']
                 ret_list.append(flat_metadata)
             
             self.logger.info(f"Processed metadata from dataset page {dataset_webpage}")
@@ -1349,13 +1352,15 @@ class DataGatherer:
             hop1_draft=json.dumps(hop1_result),
         )
 
-    def create_publication_corpus(self, metadata, sitemap: str):
+    def create_publication_corpus(self, metadata, sitemap: str, html=None):
         """
         Create a corpus of publications from the dataset/study page and sitemap.
 
         :param metadata: Extracted metadata for the dataset.
 
         :param sitemap: Sitemap of the dataset/study website containing internal links.
+
+        :param html: Already-fetched HTML of the dataset/study page itself. Hard-scraped pub ids
 
         :return: A corpus of publications related to the dataset.
         """
@@ -1368,16 +1373,24 @@ class DataGatherer:
             self.logger.info(f"Base URL is a publication page, skipping corpus search: {base_url}")
             return {base_url: [base_url]}
 
-        # 1. Find publication-related pages from sitemap by path-segment keyword match
+        result = dict()
+
+        # 1. Hard-scrape the dataset page's own HTML for publication identifiers
+        if html:
+            base_page_ids = self.metadata_parser.extract_publication_corpus_from_webpage(html)
+            if base_page_ids:
+                result[base_url] = base_page_ids
+            else:
+                self.logger.info(f"No publication identifiers found on the base page itself: {base_url}")
+
+        # 2. Find publication-related pages from sitemap by path-segment keyword match
         pub_urls = self.metadata_parser.retriever.filter_publication_urls(sitemap.splitlines(), base_url=base_url)
         self.logger.info(f"Matched {len(pub_urls)} publication pages: {pub_urls}")
 
         if not pub_urls:
             self.logger.info("No publication pages found in sitemap")
-            return []
 
-        # 2. Fetch each publication page and extract identifiers
-        result = dict()
+        # 3. Fetch each candidate publication page and extract identifiers
         for url in pub_urls:
             self.logger.info(f"Processing candidate publication page: {url}")
             sanitized = self.data_fetcher.is_url_reachable(url)
