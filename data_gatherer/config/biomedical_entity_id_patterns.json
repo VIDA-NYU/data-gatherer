@@ -1,0 +1,438 @@
+{
+  "meta": {
+    "name": "Biomedical Entity Identifier Patterns",
+    "version": "1.0",
+    "namespace": "https://github.com/VIDA-NYU/data-gatherer/ontology/entity-ids#",
+    "description": "Identifier patterns for biomedical entities that are NOT dataset repositories: ontologies/controlled vocabularies (GO, EFO, HGNC, ChEBI), classification/annotation databases (Pfam, InterPro, CATH, Reactome, interaction DBs), generic cross-cutting identifier schemes (DOI, RRID), sub-record identifiers within a repository rather than dataset-level accessions (dbSNP, UniProt, UniParc, Ensembl), and clinical trial registries (ClinicalTrials.gov, EudraCT). Kept separate from data_repositories_ontology.json so that dataset-citation extraction/validation isn't polluted by non-dataset entity mentions -- mirrors the SciLite non-data-subtype filtering (GO terms, RefSNP, etc.) used in evaluation.",
+    "sources": [
+      "europepmc_whatizit-ana_accession_patterns_2018-12-10.mwt"
+    ]
+  },
+  "repos": {
+    "go": {
+      "name": "Gene Ontology (GO)",
+      "domains": [
+        "www.ebi.ac.uk",
+        "geneontology.org"
+      ],
+      "accessions": {
+        "term": {
+          "id_pattern": "GO:\\d{7}",
+          "level": "record",
+          "scan_eligible": true,
+          "url_template": "https://www.ebi.ac.uk/QuickGO/term/__ID__"
+        }
+      }
+    },
+    "efo": {
+      "name": "Experimental Factor Ontology (EFO)",
+      "domains": [
+        "www.ebi.ac.uk"
+      ],
+      "accessions": {
+        "term_underscore": {
+          "id_pattern": "EFO_\\d+",
+          "level": "record",
+          "scan_eligible": true,
+          "url_template": "https://www.ebi.ac.uk/efo/__ID__"
+        },
+        "term_colon": {
+          "id_pattern": "EFO:\\d+",
+          "level": "record",
+          "scan_eligible": true
+        }
+      }
+    },
+    "hgnc": {
+      "name": "HGNC (HUGO Gene Nomenclature Committee)",
+      "domains": [
+        "www.genenames.org"
+      ],
+      "accessions": {
+        "gene": {
+          "id_pattern": "HGNC:\\d+",
+          "level": "record",
+          "scan_eligible": true,
+          "url_template": "https://www.genenames.org/data/gene-symbol-report/#!/hgnc_id/__ID__"
+        }
+      }
+    },
+    "chebi": {
+      "name": "ChEBI (Chemical Entities of Biological Interest)",
+      "domains": [
+        "www.ebi.ac.uk"
+      ],
+      "accessions": {
+        "compound": {
+          "id_pattern": "CHEBI:\\d+",
+          "level": "record",
+          "scan_eligible": true,
+          "url_template": "https://www.ebi.ac.uk/chebi/searchId.do?chebiId=__ID__"
+        }
+      }
+    },
+    "pfam": {
+      "name": "Pfam",
+      "domains": [
+        "www.ebi.ac.uk"
+      ],
+      "accessions": {
+        "family": {
+          "id_pattern": "PF(AM)?\\d{5}",
+          "level": "record",
+          "scan_eligible": true,
+          "url_template": "https://www.ebi.ac.uk/interpro/entry/pfam/__ID__/"
+        }
+      }
+    },
+    "interpro": {
+      "name": "InterPro",
+      "domains": [
+        "www.ebi.ac.uk"
+      ],
+      "accessions": {
+        "entry": {
+          "id_pattern": "IPR\\d{6}",
+          "level": "record",
+          "scan_eligible": true,
+          "url_template": "https://www.ebi.ac.uk/interpro/entry/InterPro/__ID__/"
+        }
+      }
+    },
+    "cath": {
+      "name": "CATH Protein Structure Classification",
+      "accessions": {
+        "domain": {
+          "id_pattern": "[0-9][a-zA-Z0-9]{4}[0-9]{2}",
+          "level": "record",
+          "scan_eligible": false
+        },
+        "superfamily": {
+          "id_pattern": "[1-4]\\.\\d+\\.\\d+\\.\\d+",
+          "level": "record",
+          "scan_eligible": false
+        }
+      }
+    },
+    "reactome": {
+      "name": "Reactome",
+      "domains": [
+        "reactome.org"
+      ],
+      "accessions": {
+        "pathway_human": {
+          "id_pattern": "R-HSA-\\d+",
+          "level": "dataset",
+          "scan_eligible": true,
+          "url_template": "https://reactome.org/content/detail/__ID__"
+        }
+      }
+    },
+    "complexportal": {
+      "name": "Complex Portal",
+      "domains": [
+        "www.ebi.ac.uk"
+      ],
+      "accessions": {
+        "complex": {
+          "id_pattern": "CPX-\\d+",
+          "level": "record",
+          "scan_eligible": true,
+          "url_template": "https://www.ebi.ac.uk/complexportal/complex/__ID__"
+        }
+      }
+    },
+    "intact": {
+      "name": "IntAct Molecular Interaction Database",
+      "domains": [
+        "www.ebi.ac.uk"
+      ],
+      "accessions": {
+        "interaction": {
+          "id_pattern": "EBI-\\d+",
+          "level": "record",
+          "scan_eligible": false,
+          "url_template": "https://www.ebi.ac.uk/intact/interaction/__ID__"
+        }
+      }
+    },
+    "mint": {
+      "name": "MINT (Molecular INTeraction database, merged into IntAct)",
+      "accessions": {
+        "interaction": {
+          "id_pattern": "MINT-\\d+|IM-\\d+",
+          "level": "record",
+          "scan_eligible": false
+        }
+      }
+    },
+    "doi": {
+      "name": "DOI (Digital Object Identifier)",
+      "domains": [
+        "doi.org"
+      ],
+      "accessions": {
+        "generic": {
+          "id_pattern": "10\\.\\d{4,}/[^ ()\"<>]+",
+          "level": "dataset",
+          "scan_eligible": false,
+          "url_template": "https://doi.org/__ID__"
+        }
+      }
+    },
+    "rrid": {
+      "name": "RRID (Research Resource Identifiers)",
+      "domains": [
+        "scicrunch.org"
+      ],
+      "accessions": {
+        "antibody": {
+          "id_pattern": "RRID:AB_\\d{6,9}",
+          "level": "record",
+          "scan_eligible": true,
+          "url_template": "https://scicrunch.org/resolver/__ID__"
+        },
+        "tool_software": {
+          "id_pattern": "RRID:SCR_\\d{6}",
+          "level": "record",
+          "scan_eligible": true,
+          "url_template": "https://scicrunch.org/resolver/__ID__"
+        },
+        "cell_line": {
+          "id_pattern": "RRID:CVCL_[A-Z0-9]{4}",
+          "level": "record",
+          "scan_eligible": true,
+          "url_template": "https://scicrunch.org/resolver/__ID__"
+        }
+      }
+    },
+    "refsnp": {
+      "name": "dbSNP",
+      "accessions": {
+        "variant": {
+          "id_pattern": "[rs]s\\d{1,9}",
+          "level": "record",
+          "scan_eligible": false,
+          "url_template": "https://www.ncbi.nlm.nih.gov/snp/__ID__"
+        }
+      }
+    },
+    "uniprot": {
+      "name": "UniProtKB",
+      "domains": [
+        "www.uniprot.org"
+      ],
+      "accessions": {
+        "entry": {
+          "id_pattern": "([A-NR-Z][0-9][A-Z][A-Z0-9]{2}[0-9]|[OPQ][0-9][A-Z0-9]{3}[0-9])(-\\d+)?",
+          "level": "record",
+          "scan_eligible": false,
+          "url_template": "https://www.uniprot.org/uniprotkb/__ID__"
+        }
+      }
+    },
+    "uniparc": {
+      "name": "UniParc",
+      "domains": [
+        "www.uniprot.org"
+      ],
+      "accessions": {
+        "entry": {
+          "id_pattern": "UPI[A-F0-9]{10}",
+          "level": "record",
+          "scan_eligible": true,
+          "url_template": "https://www.uniprot.org/uniparc/__ID__"
+        }
+      }
+    },
+    "ensembl": {
+      "name": "Ensembl",
+      "domains": [
+        "www.ensembl.org"
+      ],
+      "accessions": {
+        "gene": {
+          "id_pattern": "ENS[A-Za-z]*G\\d{11,}",
+          "level": "record",
+          "scan_eligible": true
+        },
+        "transcript_protein": {
+          "id_pattern": "ENS[A-Za-z]*[PT]\\d{11,}",
+          "level": "record",
+          "scan_eligible": true
+        }
+      }
+    },
+    "nct": {
+      "name": "ClinicalTrials.gov",
+      "domains": [
+        "clinicaltrials.gov"
+      ],
+      "accessions": {
+        "trial": {
+          "id_pattern": "NCT\\d{8}",
+          "level": "dataset",
+          "scan_eligible": true,
+          "url_template": "https://clinicaltrials.gov/study/__ID__"
+        }
+      }
+    },
+    "eudract": {
+      "name": "EudraCT (EU Clinical Trials Register)",
+      "domains": [
+        "www.clinicaltrialsregister.eu"
+      ],
+      "accessions": {
+        "trial": {
+          "id_pattern": "\\d{4}-\\d{6}-\\d{2}",
+          "level": "dataset",
+          "scan_eligible": false,
+          "url_template": "https://www.clinicaltrialsregister.eu/ctr-search/search?query=__ID__"
+        }
+      }
+    },
+    "omim": {
+      "name": "OMIM (Online Mendelian Inheritance in Man)",
+      "domains": [
+        "omim.org"
+      ],
+      "accessions": {
+        "entry": {
+          "id_pattern": "\\d{6}",
+          "level": "record",
+          "scan_eligible": false,
+          "url_template": "https://omim.org/entry/__ID__"
+        }
+      }
+    },
+    "refseq": {
+      "name": "NCBI RefSeq",
+      "accessions": {
+        "accession": {
+          "id_pattern": "(AC|AP|NC|NG|NM|NP|NR|NT|NW|NZ|XM|XP|XR|YP|ZP|NS)_([A-Z]{4})*\\d{6,9}(\\.\\d+)?",
+          "level": "record",
+          "scan_eligible": true
+        }
+      }
+    },
+    "chembl": {
+      "name": "ChEMBL",
+      "domains": [
+        "www.ebi.ac.uk"
+      ],
+      "accessions": {
+        "compound": {
+          "id_pattern": "CHEMBL\\d+",
+          "level": "record",
+          "scan_eligible": true
+        }
+      }
+    },
+    "trace_archive": {
+      "name": "NCBI Trace Archive",
+      "accessions": {
+        "trace": {
+          "id_pattern": "TI\\d+",
+          "level": "record",
+          "scan_eligible": false
+        }
+      }
+    },
+    "hpa": {
+      "name": "Human Protein Atlas",
+      "domains": [
+        "www.proteinatlas.org"
+      ],
+      "accessions": {
+        "antibody": {
+          "id_pattern": "(HPA|hpa)\\d{6}",
+          "level": "record",
+          "scan_eligible": true
+        },
+        "antibody_cab": {
+          "id_pattern": "(CAB|cab)\\d{6}",
+          "level": "record",
+          "scan_eligible": true
+        }
+      }
+    },
+    "igsr": {
+      "name": "International Genome Sample Resource (1000 Genomes)",
+      "domains": [
+        "www.internationalgenome.org"
+      ],
+      "accessions": {
+        "sample_hg": {
+          "id_pattern": "HG0[0-4]\\d{4}",
+          "level": "record",
+          "scan_eligible": false,
+          "url_template": "https://www.internationalgenome.org/data-portal/sample/__ID__"
+        },
+        "sample_na_gm": {
+          "id_pattern": "(NA|GM)[0-2]\\d{4}",
+          "level": "record",
+          "scan_eligible": false,
+          "url_template": "https://www.internationalgenome.org/data-portal/sample/__ID__"
+        }
+      }
+    },
+    "rfam": {
+      "name": "Rfam",
+      "domains": [
+        "rfam.org"
+      ],
+      "accessions": {
+        "family": {
+          "id_pattern": "RF\\d{5}",
+          "level": "record",
+          "scan_eligible": true,
+          "url_template": "https://rfam.org/family/__ID__"
+        }
+      }
+    },
+    "rnacentral": {
+      "name": "RNAcentral",
+      "domains": [
+        "rnacentral.org"
+      ],
+      "accessions": {
+        "sequence": {
+          "id_pattern": "URS[0-9A-Z]+_\\d+",
+          "level": "record",
+          "scan_eligible": true,
+          "url_template": "https://rnacentral.org/rna/__ID__"
+        }
+      }
+    },
+    "ebisc": {
+      "name": "European Bank for induced pluripotent Stem Cells (EBiSC)",
+      "accessions": {
+        "cell_line": {
+          "id_pattern": "[A-Z]{2,}i\\d{3}-[A-Z]",
+          "level": "record",
+          "scan_eligible": false
+        }
+      }
+    },
+    "hipsci": {
+      "name": "HipSci (Human Induced Pluripotent Stem Cell Initiative)",
+      "accessions": {
+        "cell_line": {
+          "id_pattern": "HPSI\\d{4}(i|pf)-[a-z]+_\\d+",
+          "level": "record",
+          "scan_eligible": true
+        }
+      }
+    },
+    "treefam": {
+      "name": "TreeFam",
+      "accessions": {
+        "family": {
+          "id_pattern": "TF\\d{6}",
+          "level": "record",
+          "scan_eligible": false
+        }
+      }
+    }
+  }
+}
