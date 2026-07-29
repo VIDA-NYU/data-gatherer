@@ -7,6 +7,8 @@ import logging
 import pandas as pd
 from bs4 import BeautifulSoup, Comment, NavigableString, CData
 from lxml import html
+from html import unescape as html_unescape
+from urllib.parse import urlparse, parse_qs
 from data_gatherer.retriever.embeddings_retriever import EmbeddingsRetriever
 
 
@@ -1449,18 +1451,32 @@ class HTMLParser(LLMParser):
             return [self._normalize_person_org(e) for e in entity]
         return None
 
-    def extract_publication_corpus_from_webpage(self, html: str) -> list:
-        """Extract publication identifiers (PMIDs, PMCIDs, DOIs) from a study HTML page."""
+    def extract_publication_corpus_from_webpage(self, html: str, mindate: str = '2023') -> list:
+        """
+        Extract publication identifiers (PMIDs, PMCIDs, DOIs) from a study HTML page.
+
+        :param mindate: Optional earliest publication date to include (e.g. '2023', '2023/01/01')
+        """
         self.logger.info("Extracting publication identifiers from HTML webpage")
         pub_ids = []
         pubmed_searches = self.retriever.extract_pubmed_search_terms(html)
         for search in pubmed_searches:
             try:
-                pub_ids += self.retriever.extract_publication_ids(requests.get(search).text)
+                search_url = html_unescape(search)
+                term = parse_qs(urlparse(search_url).query)['term'][0]
+                params = {'db': 'pubmed', 'term': term, 'retmode': 'json', 'retmax': 10000}
+                if mindate:
+                    # NCBI esearch ignores mindate unless maxdate is also present
+                    params['datetype'] = 'pdat'
+                    params['mindate'] = mindate
+                    params['maxdate'] = '3000'
+                self.logger.info(f"Querying PubMed esearch for term: {term} (mindate={mindate})")
+                resp = requests.get('https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi', params=params)
+                pub_ids += resp.json().get('esearchresult', {}).get('idlist', [])
             except Exception as e:
                 self.logger.warning(f"Error occurred while fetching PubMed search results: {e}")
         base = self.retriever.extract_publication_ids(html)
-        return base + pubmed_searches
+        return base + pubmed_searches + pub_ids
 
     def extract_normalized_dataset_urls(self, row):
         self.logger.info("Extracting normalized dataset URL from row data")
