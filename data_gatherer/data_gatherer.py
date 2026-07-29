@@ -1064,6 +1064,7 @@ class DataGatherer:
         timeout=1,
         profile_dir=None,
         browser='Firefox',
+        headless=True,
         add_sitemap_to_prompt=False,
         redirect_url=None,
         from_metadata_to_publication_corpus=False,
@@ -1095,12 +1096,11 @@ class DataGatherer:
 
         :param timeout: Timeout for requests to fetch dataset webpages.
 
-        :param profile_dir: Path to a persistent Firefox profile directory. If set, the browser
-            session (cookies, auth tokens) is saved to disk so that login only needs to happen
-            once. On subsequent runs with the same profile_dir, headless mode is maintained
-            automatically once the session is still valid.
+        :param profile_dir: Path to a persistent Firefox profile directory. keeps browser session (cookies, auth tokens) is saved to disk so that login only needs to happen
         
         :param add_sitemap_to_prompt: If True, adds a sitemap of the dataset webpage to the prompt for navigation.
+
+        :param headless: Whether to run the Selenium browser in headless mode. 
 
         :return: If return_metadata is True, returns a list of metadata dictionaries. Otherwise, displays the data preview.
         """
@@ -1110,7 +1110,7 @@ class DataGatherer:
         self.already_previewed = []
 
         self.data_fetcher = self.data_fetcher.update_DataFetcher_settings(
-            'any_url', HTML_fallback='Selenium', profile_dir=profile_dir, browser=browser
+            'any_url', HTML_fallback='Selenium', profile_dir=profile_dir, browser=browser, headless=headless
         )
 
         self.metadata_parser = HTMLParser(self.open_data_repos_ontology, self.logger, full_document_read=True,
