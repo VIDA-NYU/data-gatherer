@@ -24,7 +24,7 @@
       "doi\\.org/(10\\.[^\\s<>\"']{4,})"
     ],
     "pubmed_search_patterns": [
-      "((?:https?://)?(?:www\\.)?pubmed\\.ncbi\\.nlm\\.nih\\.gov/\\?term=[^\\s<>\"']+)"
+      "((?:https?://)?(?:www\\.)?pubmed\\.ncbi\\.nlm\\.nih\\.gov/\\?term=[^\\s<>\"]+)"
     ]
   },
   "nature": {
