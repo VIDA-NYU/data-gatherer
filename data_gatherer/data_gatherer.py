@@ -1193,8 +1193,6 @@ class DataGatherer:
                     if html and self.data_fetcher.detect_login_required(html, url=row['dataset_webpage']):
                         self.logger.warning(f"⚠ Login may be required for {row['dataset_webpage']} — HTML contains auth/login indicators")
                         if hasattr(self.data_fetcher, 'handle_login_and_fetch'):
-                            # update DataFetcher settings to handle login and fetch HTML with Selenium Non-Headless
-                            self.data_fetcher = self.data_fetcher.update_DataFetcher_settings(row['dataset_webpage'], HTML_fallback='Selenium', headless=False)
                             html = self.data_fetcher.handle_login_and_fetch(row['dataset_webpage'], delay=5)
                     if "informative_html_metadata_tags" in repo_dict:
                         keep_tags = repo_dict['informative_html_metadata_tags']
