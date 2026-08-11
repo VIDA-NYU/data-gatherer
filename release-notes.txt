@@ -1,3 +1,16 @@
+## Release (v0.3.0) - 2026-08-11
+
+- Grant extraction (#34) and Software Mention Detection (#35): new FDR/RTR few-shot prompts and response schema support for GPT/Claude
+- Full-Document-Read (FDR) batch support across GPT/Claude/Gemini, plus Full-Document-Chunk to process entire documents in smaller pieces; Anthropic Batch API calls now managed by llm_client
+- Integrated Whatizit/ANA pipeline: new biomedical entity ID patterns, accession pattern dictionary, and expanded data repositories ontology
+- CARD Catalog use case: fixed BackupDataStore ID matching and added per-row extraction robustness
+- Data fetcher fixes: conformed local parquet read/write keys around a single url_to_article_id normalization point; batch and local fetch now avoid duplicate fetches across concurrent stages
+- Added Synapse dataset input support and fixed URL template cleanup for reconstructed Synapse links
+- K8s: added streaming batch job workflow (run_streaming.sh, watch_and_enrich.sh, streaming-batch-job-template.yaml) alongside processor/loop updates
+- Retrieval pattern refinements for matching full URLs and URLs without path issues; explicit headless parameter for Selenium fetcher, keeping non-headless sessions alive without re-init
+- Study page extraction: added PubMed esearch-based lookup (extract_pubmed_search_terms) to catch more publication IDs, removed metadata flattening for 'new_corpus'
+- Added HF revision support; fixed ground truth corrections and eval config for the dataset-page model, with updated BioDMS results
+
 ## Release (v0.2.2) - 2026-05-26
 
 - Updated Docker images (Torch install, HF token wiring, VPN/outside-NYU support).
