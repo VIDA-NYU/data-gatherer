@@ -1,13 +1,13 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: sequential-finetune
+  name: t5-finetune
   namespace: data-gatherer
 spec:
   template:
     spec:
       containers:
-      - name: sequential-finetune
+      - name: t5-finetune
         image: pietromarini/data-gatherer-nvidia:20260501
         imagePullPolicy: Always
         command:
@@ -16,10 +16,14 @@ spec:
         - |
           set -e
 
-          echo "=== [1/4] flan-t5-base ===" && \
+          echo "=== fetching latest ground truth from HF ===" && \
+          mkdir -p /app/scripts/Local_model_finetuning/ground_truth && \
+          python3 -c "import urllib.request; urllib.request.urlretrieve('https://huggingface.co/datasets/vida-nyu/pmc-articles-dataset-mentions-snippets/resolve/main/gt_dataset_info_extraction_from_snippet.xlsx', '/app/scripts/Local_model_finetuning/ground_truth/gt_dataset_info_extraction_from_snippet.xlsx')"
+
+          echo "=== [1/1] flan-t5-base ===" && \
           python3 /app/scripts/Local_model_finetuning/train_seq2seq.py \
             --pmc_links    /app/scripts/exp_input/REV.txt \
-            --ground_truth /app/scripts/Local_model_finetuning/ground_truth/gt_dataset_info_no_dspage_extraction_from_snippet.xlsx \
+            --ground_truth /app/scripts/Local_model_finetuning/ground_truth/gt_dataset_info_extraction_from_snippet.xlsx \
             --output_dir   /data/flan-t5-models \
             --epochs       5 \
             --lr           3e-4 \
@@ -27,44 +31,7 @@ spec:
             --eval_batch   2 \
             --grad_accum   8
 
-          echo "=== [2/4] facebook/bart-base ===" && \
-          python3 /app/scripts/Local_model_finetuning/train_seq2seq.py \
-            --model_name   facebook/bart-base \
-            --pmc_links    /app/scripts/exp_input/REV.txt \
-            --ground_truth /app/scripts/Local_model_finetuning/ground_truth/gt_dataset_info_no_dspage_extraction_from_snippet.xlsx \
-            --output_dir   /data/bart-base-models \
-            --epochs       5 \
-            --lr           3e-4 \
-            --train_batch  2 \
-            --eval_batch   2 \
-            --grad_accum   8
-
-          echo "=== [3/4] Salesforce/codet5p-220m ===" && \
-          python3 /app/scripts/Local_model_finetuning/train_seq2seq.py \
-            --model_name   Salesforce/codet5p-220m \
-            --pmc_links    /app/scripts/exp_input/REV.txt \
-            --ground_truth /app/scripts/Local_model_finetuning/ground_truth/gt_dataset_info_no_dspage_extraction_from_snippet.xlsx \
-            --output_dir   /data/codet5p-220m-models \
-            --epochs       5 \
-            --lr           3e-4 \
-            --train_batch  2 \
-            --eval_batch   2 \
-            --grad_accum   8
-
-          echo "=== [4/4] google/long-t5-local-base ===" && \
-          python3 /app/scripts/Local_model_finetuning/train_seq2seq.py \
-            --model_name   google/long-t5-local-base \
-            --pmc_links    /app/scripts/exp_input/REV.txt \
-            --ground_truth /app/scripts/Local_model_finetuning/ground_truth/gt_dataset_info_no_dspage_extraction_from_snippet.xlsx \
-            --output_dir   /data/long-t5-local-base-models \
-            --epochs       5 \
-            --lr           3e-4 \
-            --train_batch  2 \
-            --eval_batch   2 \
-            --grad_accum   8 \
-            --max_input    1024
-
-          echo "=== All fine-tuning jobs complete ==="
+          echo "=== fine-tuning job complete ==="
         resources:
           limits:
             nvidia.com/gpu: "1"
@@ -93,4 +60,26 @@ spec:
         emptyDir:
           medium: Memory
           sizeLimit: 8Gi
+      tolerations:
+      - key: "nvidia.com/gpu"
+        operator: "Exists"
+        effect: "NoSchedule"
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: nvidia.com/gpu.product
+                operator: In
+                values:
+                - NVIDIA-H100-NVL
+                - NVIDIA-A100-80GB-PCIe
+                - NVIDIA-A100-PCIE-40GB
+                - NVIDIA-RTX-A6000
+                - Quadro-RTX-8000
+                - Tesla-V100-SXM2-16GB
+              - key: nvidia.com/gpu.compute.major
+                operator: NotIn
+                values:
+                - "7"
       restartPolicy: Never

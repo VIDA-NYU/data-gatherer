@@ -637,3 +637,106 @@ supplementary_files_keywords_schema = {
 class SupplementaryFileKeywords(BaseModel):
     supplementary_file_keywords: list[str]
 
+############################# Grant Schema #############################
+
+grant_response_schema_gpt = {
+    "type": "json_schema",
+    "name": "GPT_grant_responses_schema",
+    "schema": {
+        "type": "object",  # Root must be an object
+        "properties": {
+            "grants": {  # Use a property to hold the array
+                "type": "array",
+                "items": {
+                    "type": "object",
+                    "properties": {
+                        "funder_name": {
+                            "type": "string",
+                            "description": "The name of the single funding organization or agency that supported the research. Every grant_numbers entry in this object must be funded by this SAME funder — never group grants from different funders into one object, even if they share a recipient or appear in the same sentence.",
+                            "maxLength": 256
+                        },
+                        "grant_numbers": {
+                            "type": "array",
+                            "description": "One or more grant/award/contract numbers from this SAME funder, associated with this same recipient and context. Put each distinct grant number as its own array element (never join multiple numbers into one string with commas/semicolons). If no grant number is given, return ['n/a'].",
+                            "items": {
+                                "type": "string",
+                                "maxLength": 32
+                            },
+                            "minItems": 1
+                        },
+                        "funding_context_from_paper": {
+                            "type": "string",
+                            "description": "The text passage from the paper, typically from the Acknowledgments or Funding statement, that mentions this funder and/or grant.",
+                            "maxLength": 1024
+                        },
+                        "recipient": {
+                            "type": "string",
+                            "description": "The single author or institution that received the grant(s) in this object, if mentioned. If not found, return 'n/a'.",
+                            "maxLength": 128
+                        }
+                    },
+                    "additionalProperties": False,
+                    "required": ["funder_name", "grant_numbers", "funding_context_from_paper"]
+                },
+                "minItems": 1
+            }
+        },
+        "additionalProperties": False,
+        "required": ["grants"],
+    }
+}
+
+############################# Software Mention Detection (SOMD) Schema #############################
+# Aligned with the SOMD/SoMeSci and SoftCite shared-task conventions (NSLP 2024/2025; Howison Lab's
+# SoftCite dataset): a software mention is any named tool/package/application, whether or not it has
+# a URL -- most real mentions (e.g. "analyzed with SPSS", "implemented in Python") have none. URL,
+# version, and creator are optional attributes of a mention, not what defines one. "mention_type"
+# mirrors SoMeSci's usage-vs-creation relation: did the paper USE this software, or CREATE/release it.
+
+software_mention_response_schema_gpt = {
+    "type": "json_schema",
+    "name": "GPT_software_mention_responses_schema",
+    "schema": {
+        "type": "object",  # Root must be an object
+        "properties": {
+            "software_mentions": {  # Use a property to hold the array
+                "type": "array",
+                "items": {
+                    "type": "object",
+                    "properties": {
+                        "software_name": {
+                            "type": "string",
+                            "description": "The name of the software/tool/package/application as it appears in the paper (e.g. 'Python', 'SPSS', 'Scanpy', 'BLAST'). Required for every mention, even when no URL or version is given.",
+                            "maxLength": 128
+                        },
+                        "version": {
+                            "type": "string",
+                            "description": "The version number of the software, if stated (e.g. '3.9', 'v2.1.0'). Otherwise 'n/a'.",
+                            "maxLength": 32
+                        },
+                        "mention_type": {
+                            "type": "string",
+                            "enum": ["created", "used", "n/a"],
+                            "description": "'created' if this software is the paper's own new tool/release being introduced; 'used' if it's an existing/third-party tool the authors used; 'n/a' if unclear."
+                        },
+                        "url": {
+                            "type": "string",
+                            "description": "The URL/repository link for this software, if given (GitHub, GitLab, Bitbucket, Zenodo, PyPI, CRAN, a lab homepage, etc. -- any kind, not just GitHub). Otherwise 'n/a'.",
+                            "maxLength": 256
+                        },
+                        "context_from_paper": {
+                            "type": "string",
+                            "description": "The text passage from the paper mentioning this software.",
+                            "maxLength": 1024
+                        }
+                    },
+                    "additionalProperties": False,
+                    "required": ["software_name", "version", "mention_type", "url", "context_from_paper"]
+                },
+                "minItems": 1
+            }
+        },
+        "additionalProperties": False,
+        "required": ["software_mentions"],
+    }
+}

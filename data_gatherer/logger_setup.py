@@ -45,5 +45,7 @@ def setup_logging(logger_name, log_file=None, level=logging.WARNING, clear_previ
     # Suppress noisy third-party loggers
     logging.getLogger("usp.helpers").setLevel(logging.ERROR)
     logging.getLogger("usp.tree").setLevel(logging.ERROR)
+    logging.getLogger("usp.objects.sitemap").setLevel(logging.ERROR)
+    logging.getLogger("usp.fetch_parse").setLevel(logging.ERROR)
 
     return logger

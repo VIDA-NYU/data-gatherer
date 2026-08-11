@@ -4,6 +4,7 @@ os.environ.setdefault("TOKENIZERS_PARALLELISM", "false")
 import re
 import json
 import time
+import hashlib
 import threading
 import pandas as pd
 import ipywidgets as widgets
@@ -538,23 +539,69 @@ class DataGatherer:
         else:
             raise ValueError(f"Invalid URL format: {url}. Must start with 'PMC' or 'http' or 10. (doi) or be a valid file path.")
 
-    def retrieve_dataset_context(self, full_paper, dataset_ID_ptrs=None, dataset_info=None, force_include_DAS=False):
+    def retrieve_dataset_context(self, full_paper, dataset_ID_ptrs=None, dataset_info=None, relevant_sect=''):
         """
         Retrieve context for datasets using the parser's retrieval method. Use-case: AutoDDG
         """
-        return self.parser.retrieve_relevant_content(full_paper, ID_patterns=dataset_ID_ptrs, query=dataset_info, force_include_DAS=force_include_DAS)
+        return self.parser.retrieve_relevant_content(full_paper, ID_patterns=dataset_ID_ptrs, query=dataset_info, relevant_content_flag=relevant_sect)
 
-    def normalize_fulltext_input(self, fulltext):
+    def normalize_fulltext_input(self, fulltext, url, article_file_dir, raw_data_format, grobid_for_pdf=False,
+                                  remove_refs=False, enable_chunking=False):
         """
-        Normalize the fulltext input to ensure it's a string.
+        Normalize raw fetched content (XML/HTML/PDF) into full document text.
+
+        :param fulltext: raw content as fetched by the data fetcher.
+
+        :param url: source URL, used for PDF->XML conversion via GROBID.
+
+        :param article_file_dir: directory for intermediate GROBID files.
+
+        :param raw_data_format: str — 'XML', 'HTML', or 'PDF'.
+
+        :param grobid_for_pdf: whether to run PDF through GROBID to XML before normalizing.
+
+        :param remove_refs: If True, strips the references/bibliography section from FDR input.
+
+        :param enable_chunking: If content exceeds self.llm's token limit, split it into multiple chunks.
+
+        :return: (normalized_input, article_title) — normalized_input is a str, or a list[str] of
+            chunks when intelligent_chunking triggers a split. article_title is '' unless
+            extracted via the GROBID PDF path.
         """
-        if self.data_fetcher.raw_data_format.upper() == "XML":
-            fulltext = self.parser.normalize_XML(fulltext)
-        elif self.data_fetcher.raw_data_format.upper() == "HTML":
-            fulltext = self.parser.normalize_HTML(fulltext)
-        elif self.data_fetcher.raw_data_format.upper() == "PDF" and self.grobid_for_pdf:
-            fulltext = self.parser.normalize_XML(self.parser.extract_full_text_xml(fulltext))
-        return fulltext
+        article_title = ''
+        if raw_data_format.upper() == 'XML':
+            normalized_input = (self.parser.normalize_XML(fulltext,  remove_reference_tags=remove_refs)
+                                if hasattr(self.parser, 'normalize_XML')
+                                else fulltext)
+        elif raw_data_format.upper() == 'HTML':
+            normalized_input = (self.parser.normalize_HTML(fulltext, remove_reference_tags=remove_refs)
+                                if hasattr(self.parser, 'normalize_HTML')
+                                else fulltext)
+        elif raw_data_format.upper() == 'PDF':
+            if grobid_for_pdf:
+                self.logger.info("Using GROBID for PDF to XML conversion")
+                xml_root = self.parser.pdf_to_xml(fulltext, url, article_file_dir)
+                normalized_input = (self.parser.normalize_XML(xml_root,  remove_reference_tags=remove_refs))
+                article_title = self.parser._tei_parser.extract_publication_title(xml_root)
+            else:
+                normalized_input = fulltext
+        else:
+            raise ValueError(f"Unsupported raw data format: {raw_data_format}")
+
+        if (enable_chunking and normalized_input
+                and self.parser.tokens_over_limit(normalized_input, self.llm)):
+            self.logger.warning(
+                f"Normalized input for {url} still exceeds the token limit for model {self.llm} after "
+                f"normalization{' and reference stripping' if remove_refs else ''}. Splitting into "
+                f"section-aware chunks via intelligent_chunk_paper."
+            )
+            if raw_data_format.upper() == 'HTML':
+                sections = self.parser.extract_sections_from_html(normalized_input)
+            else:
+                sections = self.parser.extract_paragraphs_from_xml(etree.fromstring(normalized_input.encode('utf-8')))
+            normalized_input = self.parser.intelligent_chunk_paper(sections, model=self.llm)
+
+        return normalized_input, article_title
 
     def process_url(
         self, 
@@ -1017,6 +1064,7 @@ class DataGatherer:
         timeout=1,
         profile_dir=None,
         browser='Firefox',
+        headless=True,
         add_sitemap_to_prompt=False,
         redirect_url=None,
         from_metadata_to_publication_corpus=False,
@@ -1048,12 +1096,11 @@ class DataGatherer:
 
         :param timeout: Timeout for requests to fetch dataset webpages.
 
-        :param profile_dir: Path to a persistent Firefox profile directory. If set, the browser
-            session (cookies, auth tokens) is saved to disk so that login only needs to happen
-            once. On subsequent runs with the same profile_dir, headless mode is maintained
-            automatically once the session is still valid.
+        :param profile_dir: Path to a persistent Firefox profile directory. keeps browser session (cookies, auth tokens) is saved to disk so that login only needs to happen
         
         :param add_sitemap_to_prompt: If True, adds a sitemap of the dataset webpage to the prompt for navigation.
+
+        :param headless: Whether to run the Selenium browser in headless mode. 
 
         :return: If return_metadata is True, returns a list of metadata dictionaries. Otherwise, displays the data preview.
         """
@@ -1063,7 +1110,7 @@ class DataGatherer:
         self.already_previewed = []
 
         self.data_fetcher = self.data_fetcher.update_DataFetcher_settings(
-            'any_url', HTML_fallback='Selenium', profile_dir=profile_dir, browser=browser
+            'any_url', HTML_fallback='Selenium', profile_dir=profile_dir, browser=browser, headless=headless
         )
 
         self.metadata_parser = HTMLParser(self.open_data_repos_ontology, self.logger, full_document_read=True,
@@ -1146,8 +1193,6 @@ class DataGatherer:
                     if html and self.data_fetcher.detect_login_required(html, url=row['dataset_webpage']):
                         self.logger.warning(f"⚠ Login may be required for {row['dataset_webpage']} — HTML contains auth/login indicators")
                         if hasattr(self.data_fetcher, 'handle_login_and_fetch'):
-                            # update DataFetcher settings to handle login and fetch HTML with Selenium Non-Headless
-                            self.data_fetcher = self.data_fetcher.update_DataFetcher_settings(row['dataset_webpage'], HTML_fallback='Selenium', headless=False)
                             html = self.data_fetcher.handle_login_and_fetch(row['dataset_webpage'], delay=5)
                     if "informative_html_metadata_tags" in repo_dict:
                         keep_tags = repo_dict['informative_html_metadata_tags']
@@ -1192,22 +1237,29 @@ class DataGatherer:
 
                 structured_metadata = row[pass_cols_to_prompt].to_dict() | metadata_schema_org
 
-                if add_sitemap_to_prompt and sitemap and len(sitemap) > 0:
-                    metadata = self.two_hop_extract(html, row['dataset_webpage'], structured_metadata, use_portkey,
-                        response_format=response_format,
-                        max_k=4,
-                        sitemap=sitemap
-                    )
-
-                else:
-                    metadata = self.metadata_parser.parse_datasets_metadata(
-                        html,
-                        structured_metadata=structured_metadata,
-                        model=self.llm, 
-                        use_portkey=use_portkey,
-                        prompt_name=prompt_name,
-                        response_format=response_format
+                try:
+                    if add_sitemap_to_prompt and sitemap and len(sitemap) > 0:
+                        metadata = self.two_hop_extract(html, row['dataset_webpage'], structured_metadata, use_portkey,
+                            response_format=response_format,
+                            max_k=4,
+                            sitemap=sitemap
                         )
+
+                    else:
+                        metadata = self.metadata_parser.parse_datasets_metadata(
+                            html,
+                            structured_metadata=structured_metadata,
+                            model=self.llm,
+                            use_portkey=use_portkey,
+                            prompt_name=prompt_name,
+                            response_format=response_format
+                            )
+                except Exception as e:
+                    # A single blocked/flagged/malformed LLM response must not discard every
+                    # already-processed row in ret_list — log, skip this row, keep going.
+                    self.logger.error(f"LLM metadata extraction failed for row {i} ({row.get('dataset_webpage', 'unknown')}): {e}")
+                    continue
+
                 if isinstance(metadata, list):
                     metadata = metadata[0] if metadata else {}
                 metadata['source_url_for_metadata'] = row['dataset_webpage']
@@ -1221,7 +1273,7 @@ class DataGatherer:
                 self.already_previewed.append(row['dataset_webpage'])
 
                 if sitemap and from_metadata_to_publication_corpus:
-                    metadata['new_corpus'] = self.create_publication_corpus(metadata, sitemap)
+                    metadata['new_corpus'] = self.create_publication_corpus(metadata, sitemap, html=html)
 
             metadata['paper_with_dataset_citation'] = row.get('source_url', None)
 
@@ -1230,7 +1282,10 @@ class DataGatherer:
                 self.save_func_output_to_cache(metadata, process_id, 'process_metadata')
 
             if return_metadata:
-                flat_metadata = self.metadata_parser.flatten_metadata_dict(metadata)
+                metadata_to_flatten = {k: v for k, v in metadata.items() if k != 'new_corpus'}
+                flat_metadata = self.metadata_parser.flatten_metadata_dict(metadata_to_flatten)
+                if 'new_corpus' in metadata:
+                    flat_metadata['new_corpus'] = metadata['new_corpus']
                 ret_list.append(flat_metadata)
             
             self.logger.info(f"Processed metadata from dataset page {dataset_webpage}")
@@ -1295,13 +1350,15 @@ class DataGatherer:
             hop1_draft=json.dumps(hop1_result),
         )
 
-    def create_publication_corpus(self, metadata, sitemap: str):
+    def create_publication_corpus(self, metadata, sitemap: str, html=None):
         """
         Create a corpus of publications from the dataset/study page and sitemap.
 
         :param metadata: Extracted metadata for the dataset.
 
         :param sitemap: Sitemap of the dataset/study website containing internal links.
+
+        :param html: Already-fetched HTML of the dataset/study page itself. Hard-scraped pub ids
 
         :return: A corpus of publications related to the dataset.
         """
@@ -1314,16 +1371,24 @@ class DataGatherer:
             self.logger.info(f"Base URL is a publication page, skipping corpus search: {base_url}")
             return {base_url: [base_url]}
 
-        # 1. Find publication-related pages from sitemap by path-segment keyword match
+        result = dict()
+
+        # 1. Hard-scrape the dataset page's own HTML for publication identifiers
+        if html:
+            base_page_ids = self.metadata_parser.extract_publication_corpus_from_webpage(html)
+            if base_page_ids:
+                result[base_url] = base_page_ids
+            else:
+                self.logger.info(f"No publication identifiers found on the base page itself: {base_url}")
+
+        # 2. Find publication-related pages from sitemap by path-segment keyword match
         pub_urls = self.metadata_parser.retriever.filter_publication_urls(sitemap.splitlines(), base_url=base_url)
         self.logger.info(f"Matched {len(pub_urls)} publication pages: {pub_urls}")
 
         if not pub_urls:
             self.logger.info("No publication pages found in sitemap")
-            return []
 
-        # 2. Fetch each publication page and extract identifiers
-        result = dict()
+        # 3. Fetch each candidate publication page and extract identifiers
         for url in pub_urls:
             self.logger.info(f"Processing candidate publication page: {url}")
             sanitized = self.data_fetcher.is_url_reachable(url)
@@ -1742,8 +1807,10 @@ class DataGatherer:
         output_file_path=None,
         api_provider='openai',
         prompt_name='GPT_FewShot',
+        prompts_subdir='dataset_prompts',
+        relevant_content_flag='DAS',
         response_format=None,
-        relevant_cont_fmt='lst',
+        relevant_cont_fmt=None,
         temperature=0.0,
         semantic_retrieval=False,
         top_k=5,
@@ -1762,6 +1829,11 @@ class DataGatherer:
         article_file_dir='scripts/tmp/raw_files/',
         url2id_mapping=None,
         local_fetch_file=None,
+        write_df_to_path=None,
+        sects_required=5,
+        remove_reference_tags=False,
+        intelligent_chunking=False,
+        regex_search_id_patterns=None,
         ):
         """
         Complete integrated batch processing using LLMClient batch functionality.
@@ -1779,6 +1851,8 @@ class DataGatherer:
 
         :param prompt_name: Name of the prompt template
 
+        :param prompts_subdir: Subdirectory for prompt templates
+
         :param response_format: Response schema
 
         :param relevant_cont_fmt: Format for relevant content retrieval (e.g., 'json', 'lst', 'text')
@@ -1787,7 +1861,7 @@ class DataGatherer:
 
         :param semantic_retrieval: Enable semantic retrieval
 
-        :param top_k: Number of top results to retrieve
+        :param top_k: Number of top results to retrieve. Set to -1 to run Full Document Chunk
 
         :param embeddings_retriever_model: Model for embeddings retrieval
         
@@ -1817,16 +1891,36 @@ class DataGatherer:
 
         :param local_fetch_file: Optional local file for fetching data
 
+        :param remove_reference_tags: If True, strips the references/bibliography section from full-document
+            (FDR) input before sending it to the LLM. Off by default. Intended for tasks (e.g. grant/funding
+            extraction) where references are never relevant.
+
+        :param intelligent_chunking: If True, and a document's normalized FDR content (after any
+            reference stripping) still exceeds the target model's token limit, split it into multiple
+            section-aware chunks (via LLMParser.intelligent_chunk_paper) instead of sending one oversized
+            document. Off by default — does not alter extract_datasets_info_from_content's own separate
+            chunking behavior on the sync path.
+
         :return: Dictionary with batch information and results
         """
 
         self.logger.info(f"Starting integrated batch processing for {len(url_list)} URLs")
         self.custom_id_to_source_url = {}
-        
+
+        if relevant_cont_fmt is None:
+            # Match process_articles/parse_data's existing convention:
+            # commercial long-context models get every retrieved snippet concatenated
+            # into a single 'text' prompt per article (one LLM call), instead of the
+            # 'lst' default which fires one separate call per snippet — the latter is
+            # only needed for local/HF models with small context windows.
+            relevant_cont_fmt = 'lst' if ('local' in self.llm.lower() or 'hf-' in self.llm.lower()) else 'text'
+            self.logger.info(f"relevant_cont_fmt not specified; defaulting to '{relevant_cont_fmt}' for model {self.llm}")
+
         try:
             # Step 1: Fetch data
             self.logger.info("Step 1: Fetching data...")
-            fetched_data = self.fetch_data(url_list, write_htmls_xmls=write_htmls_xmls, article_file_dir=article_file_dir, local_fetch_file=local_fetch_file)
+            fetched_data = self.fetch_data(url_list, write_htmls_xmls=write_htmls_xmls, article_file_dir=article_file_dir, 
+                local_fetch_file=local_fetch_file, sects_required=sects_required, write_df_to_path=write_df_to_path)
             
             # Count raw_data_format frequencies and store URLs for parser reuse optimization
             format_counts = {}
@@ -1847,9 +1941,15 @@ class DataGatherer:
             supplementary_material_metadata = pd.DataFrame()
             batch_requests, cnt, last_url_raw_data_format = [], 0, False
             for url_raw_data_format, vals in format_counts.items():
-                for url in vals['urls']:
-                    url = self.data_fetcher.redirect_mapping.get(url, url)
-                    try:                        
+                for orig_url in vals['urls']:
+                    # Prefer the canonical/redirected URL when we actually have fetched
+                    # content under it; fall back to the original (guaranteed-valid) key
+                    # since redirect_mapping accumulates entries across the whole session
+                    # and may point at a URL that was never fetched in this batch.
+                    url = self.data_fetcher.redirect_mapping.get(orig_url, orig_url)
+                    if url not in fetched_data:
+                        url = orig_url
+                    try:
                         if cnt != 0 and url_raw_data_format == last_url_raw_data_format:
                             self.logger.info(f"Reusing existing parser of name: {self.parser.__class__.__name__}")
                         else:
@@ -1864,7 +1964,7 @@ class DataGatherer:
                         
                         article_title = ''
                         pmcid = self.data_fetcher.url_to_article_id(url)
-                        article_id = self.url_to_page_id(url)
+                        article_id = self.data_fetcher.url_to_article_id(url)
                         timestamp = int(time.time() * 1000)
                         if url2id_mapping is None:
                             base_custom_id = f"{self.llm}_{article_id}_{timestamp}"
@@ -1873,25 +1973,12 @@ class DataGatherer:
                             base_custom_id = str(url2id_mapping[url])[:58]
 
                         if self.full_document_read:
-                            if url_raw_data_format.upper() == 'XML':
-                                normalized_input = (self.parser.normalize_XML(data['fetched_data']) 
-                                                if hasattr(self.parser, 'normalize_XML') 
-                                                else data['fetched_data'])
-                            elif url_raw_data_format.upper() == 'HTML':
-                                normalized_input = (self.parser.normalize_HTML(data['fetched_data']) 
-                                                if hasattr(self.parser, 'normalize_HTML') 
-                                                else data['fetched_data'])
-                            elif url_raw_data_format.upper() == 'PDF':
-                                if grobid_for_pdf:
-                                    self.logger.info("Using GROBID for PDF to XML conversion")
-                                    xml_root = self.parser.pdf_to_xml(data['fetched_data'], url, article_file_dir)
-                                    normalized_input = (self.parser.normalize_XML(xml_root))
-                                    article_title = self.parser._tei_parser.extract_publication_title(xml_root)
-                                else:
-                                    normalized_input = data['fetched_data']
-                            else:
-                                raise ValueError(f"Unsupported raw data format: {url_raw_data_format}")
-                        
+                            normalized_input, article_title = self.normalize_fulltext_input(
+                                data['fetched_data'], url, article_file_dir, data['raw_data_format'],
+                                grobid_for_pdf=grobid_for_pdf, remove_refs=remove_reference_tags,
+                                enable_chunking=intelligent_chunking
+                            )
+
                         else:
                             data_availability_cont = self.parser.retrieve_relevant_content(
                                 data['fetched_data'],
@@ -1900,7 +1987,9 @@ class DataGatherer:
                                 output_format=relevant_cont_fmt,
                                 skip_rule_based_retrieved_elm=dedup,
                                 include_snippets_with_ID_patterns=brute_force_RegEx_ID_ptrs,
-                                article_id=self.data_fetcher.url_to_article_id(url)
+                                article_id=self.data_fetcher.url_to_article_id(url),
+                                relevant_content_flag=relevant_content_flag,
+                                ID_patterns=regex_search_id_patterns
                             )
                             normalized_input = data_availability_cont
 
@@ -1917,13 +2006,22 @@ class DataGatherer:
                         if hasattr(self.parser, 'retrieval_stats'):
                             retrieval_stats = self.parser.retrieval_stats.get(pmcid, {})
 
+                        # Supplementary-material extraction is per-URL, not per-chunk — compute once here
+                        # rather than inside the chunk loop below (was previously re-parsing the full
+                        # document once per chunk, producing duplicate rows in supplementary_material_metadata).
+                        data_for_extraction = xml_root if (url_raw_data_format.upper() == 'PDF' and grobid_for_pdf and xml_root is not None) else data['fetched_data']
+                        supplementary_material_links = self.parser.extract_href_from_supplementary_material(data_for_extraction, url)
+                        concat_df = self.parser.extract_supplementary_material_refs(data_for_extraction, supplementary_material_links)
+                        concat_df['url'] = url
+                        supplementary_material_metadata = pd.concat([concat_df, supplementary_material_metadata])
+
                         for idx, item in enumerate(normalized_input):
                             # Each request needs a distinct ID to avoid collisions in batch mode.
                             custom_id = f"{base_custom_id}_{idx}"
                             self.custom_id_to_source_url[custom_id] = url
 
                             # Render prompt using the correct parser
-                            static_prompt = self.parser.prompt_manager.load_prompt(prompt_name)
+                            static_prompt = self.parser.prompt_manager.load_prompt(prompt_name, subdir=prompts_subdir)
                             messages = self.parser.prompt_manager.render_prompt(
                                 static_prompt,
                                 entire_doc=self.full_document_read,
@@ -1946,14 +2044,7 @@ class DataGatherer:
                                     'retrieval_stats': retrieval_stats,
                                 }
                             }
-                            
-                            # Use xml_root for PDFs processed with GROBID, otherwise use fetched_data
-                            data_for_extraction = xml_root if (url_raw_data_format.upper() == 'PDF' and grobid_for_pdf and xml_root is not None) else data['fetched_data']
-                            supplementary_material_links = self.parser.extract_href_from_supplementary_material(data_for_extraction, url)
-                            concat_df = self.parser.extract_supplementary_material_refs(data_for_extraction, supplementary_material_links)
-                            concat_df['url'] = url
-                            supplementary_material_metadata = pd.concat([concat_df,supplementary_material_metadata])
-                            
+
                             batch_requests.append(batch_request)
                             
                     except Exception as e:
@@ -1967,8 +2058,8 @@ class DataGatherer:
                 base = output_file_path.rsplit('.', 1)[0]
                 suppl_path, custom_id_path = f"{base}_suppl.csv", f"{base}_custom_id_src_mapping.json"
             else:
-                suppl_path = 'scripts/NYU_data_catalog/supplementary_materials_metadata.csv'
-                custom_id_path = 'scripts/NYU_data_catalog/custom_id_src_mapping.json'
+                suppl_path = 'scripts/tmp/supplementary_materials_metadata.csv'
+                custom_id_path = 'scripts/tmp/custom_id_src_mapping.json'
 
             supplementary_material_metadata.to_csv(suppl_path, index=False)
             self.logger.info(f"Prepared {len(batch_requests)} batch requests")
@@ -2068,7 +2159,7 @@ class DataGatherer:
                         status = status_info['status']
                         self.logger.info(f"Batch status: {status}")
                         
-                        if status == 'completed':
+                        if status in ('completed', 'ended'):
                             # Download results
                             if not output_file_path:
                                 output_file_path = batch_file_path.replace('.jsonl', '_results.jsonl')
@@ -2184,59 +2275,77 @@ class DataGatherer:
         
         return result
 
-    def from_batch_resp_file_to_df(self, batch_results_file: str, output_file_path: str = None, skip_validation: bool = False) -> pd.DataFrame:
+    def from_batch_resp_file_to_df(self, batch_results_file: str, output_file_path: str = None,
+                                    skip_validation: bool = False, expected_key: str = 'datasets') -> pd.DataFrame:
         """
         Convert a batch response JSONL file to a pandas DataFrame.
         This method processes batch API results and converts them to the standard DataFrame format.
 
         :param batch_results_file: Path to the JSONL batch results file.
-        :return: DataFrame containing the processed dataset information.
+
+        :param expected_key: The top-level JSON key the LLM response wraps records in
+               (e.g. 'datasets' or 'grants'). Only 'datasets' goes through the
+               dataset-specific schema_validation/ontology-matching post-processing
+               (process_datasets_response) — other keys are treated as already-flat
+               record dicts.
+
+        :return: DataFrame containing the processed record information.
         """
         self.logger.info(f"Converting batch response file to DataFrame: {batch_results_file}")
-        
+
         try:
             # Step 1: Process batch responses using LLMClient
             batch_raw_resps = self.parser.llm_client.process_batch_responses(
                 batch_results_file=batch_results_file,
-                expected_key="datasets"
+                expected_key=expected_key
             )
-            
+
             # Step 2: Process each response using the parser's post-processing logic
             processed_datasets = []
-            
+
             for batch_item in batch_raw_resps['processed_results']:
                 self.logger.debug(f"Processing batch item: {batch_item.keys()}")
-                
+
                 # Extract metadata
                 custom_id = batch_item.get('custom_id', 'N/A')
                 status = batch_item.get('status', 'unknown')
                 metadata = batch_item.get('metadata', {})
-                
+
                 if status != 'success':
                     self.logger.warning(f"Skipping failed batch item {custom_id}: {batch_item.get('error', 'Unknown error')}")
                     continue
-                
+
                 # Process the LLM response using parser's post-processing method
                 processed_response = batch_item.get('processed_response', [])
-                datasets = self.parser.process_datasets_response(processed_response, skip_validation=skip_validation)
-                
-                # Enhance each dataset with metadata
-                for dataset in datasets:
+                if expected_key == 'datasets':
+                    records = self.parser.process_datasets_response(processed_response, skip_validation=skip_validation)
+                elif expected_key == 'grants':
+                    records = self.parser.process_grants_response(processed_response)
+                elif expected_key == 'software_mentions':
+                    records = self.parser.process_software_response(processed_response)
+                else:
+                    # Other extraction tasks don't need dataset/grant/software-specific
+                    # post-processing — process_llm_response already unwrapped the expected_key
+                    # array into a flat list of record dicts.
+                    records = [r for r in processed_response if isinstance(r, dict)]
+
+                # Enhance each record with metadata
+                for record in records:
                     # Add custom_id to track source
-                    dataset['custom_id'] = custom_id
-                    
+                    record['custom_id'] = custom_id
+
                     for key, value in metadata.items():
-                        dataset[key] = value
-                    
+                        record[key] = value
+
                     # Reconstruct source URL if it's a PMC article
                     if re.search(r'_PMC\d+', custom_id, re.IGNORECASE):
                         pmc_match = re.search(r'PMC(\d+)', custom_id, re.IGNORECASE)
                         if pmc_match:
-                            dataset['source_url'] = f'https://www.ncbi.nlm.nih.gov/pmc/articles/PMC{pmc_match.group(1)}/'
+                            record['source_url'] = f'https://www.ncbi.nlm.nih.gov/pmc/articles/PMC{pmc_match.group(1)}/'
                     elif custom_id in self.custom_id_to_source_url:
-                        dataset['source_url'] = self.custom_id_to_source_url[custom_id]
-                    
-                    processed_datasets.append(dataset)
+                        record['source_url'] = self.custom_id_to_source_url[custom_id]
+
+                    processed_datasets.append(record)
             
             # Step 3: Convert to DataFrame
             if processed_datasets:

@@ -20,7 +20,7 @@ import os
 from collections import defaultdict
 
 CORRECTIONS_FILE = os.path.join(os.path.dirname(__file__), 'training_data_corrections.jsonl')
-GT_DIR           = os.path.join(os.path.dirname(__file__), 'Local_model_finetuning', 'ground_truth')
+GT_DIR           = os.path.join(os.path.dirname(__file__), 'ground_truth')
 GT_CSV           = os.path.join(GT_DIR, 'gt_dataset_info_no_dspage_extraction_from_snippet.csv')
 GT_XLSX          = os.path.join(GT_DIR, 'gt_dataset_info_no_dspage_extraction_from_snippet.xlsx')
 

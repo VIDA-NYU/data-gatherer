@@ -28,6 +28,7 @@ class BackupDataStore:
     """
     _instance = None
     _dataframe = None
+    _article_id_index = None
     _filepath = None
     _timestamp = None
     _ttl = 1800  # 30 minutes
@@ -49,42 +50,56 @@ class BackupDataStore:
             self._dataframe = pd.read_parquet(filepath)
             self._filepath = filepath
             self._timestamp = time.time()
+            # The dataframe is keyed by full article URLs (index) or a 'publication'
+            # column of URLs, but every caller looks up by bare article ID. Normalize
+            # both sides so lookups actually match. Vectorized pandas regex handles the
+            # common PMC case for every row at once — calling DataFetcher.url_to_article_id
+            # (3 regex searches + a log line) per row is far too slow on a large cache
+            # file (hundreds of thousands of rows) and floods the log. Only the rare
+            # non-PMC rows (DOI/PMID-keyed) fall back to the real function, unbound
+            # (self=this BackupDataStore) since it only touches self.logger /
+            # self.current_article_id, both fine on any object.
+            src = self._dataframe['publication'] if 'publication' in self._dataframe.columns else self._dataframe.index
+            src = pd.Series(src, dtype=str).reset_index(drop=True)
+            digits = src.str.extract(r'PMC(\d+)', flags=re.IGNORECASE, expand=False)
+            article_ids = digits.map(lambda d: f"PMC{d}" if pd.notna(d) else None)
+            missing = article_ids.isna()
+            if missing.any():
+                article_ids[missing] = [DataFetcher.url_to_article_id(self, v) for v in src[missing]]
+            self._article_id_index = pd.Index(article_ids)
             return True
         except Exception:
             self._dataframe = None
             self._filepath = None
             self._timestamp = None
+            self._article_id_index = None
             return False
-    
+
     def _is_valid(self):
         """Check if cached data is still valid."""
-        return (self._dataframe is not None and 
+        return (self._dataframe is not None and
                 self._timestamp is not None and
                 (time.time() - self._timestamp) < self._ttl)
-    
+
     def has_publication(self, identifier):
         """Check if publication exists in backup store."""
         if not self._is_valid() or self._dataframe is None:
             return False
-        if 'publication' in self._dataframe.keys():
-            return identifier.lower() in self._dataframe['publication'].str.lower().values
-        else:
-            return identifier.lower() in self._dataframe.index.str.lower().values
-    
+        article_id = DataFetcher.url_to_article_id(self, identifier)
+        return article_id is not None and article_id in self._article_id_index
+
     def get_publication_data(self, identifier):
         """Retrieve publication data if available."""
         if not self.has_publication(identifier):
             return None
         self.logger.debug(f"Fetching publication {identifier} from backup store")
-        if 'publication' in self._dataframe.columns:
-            row = self._dataframe[self._dataframe['publication'].str.lower() == identifier.lower()]
-        else:
-            row = self._dataframe[self._dataframe.index.str.lower() == identifier.lower()]
+        article_id = DataFetcher.url_to_article_id(self, identifier)
+        row = self._dataframe[self._article_id_index == article_id]
         self.logger.info(f"Fetched {len(row)} records from backup store")
         if len(row) > 0:
             return {
-                'content': row.iloc[0]['raw_cont'],
-                'format': row.iloc[0]['format'].upper()  # Ensure format is uppercase (HTML/XML)
+                'content': row.iloc[0]['fetched_data'],
+                'format': row.iloc[0]['raw_data_format'].upper()  # Ensure format is uppercase (HTML/XML)
             }
         return None
     
@@ -243,10 +258,15 @@ class DataFetcher(ABC):
 
         else:
             if not return_only_known_ids:
-                article_id, i = '', 0
-                while len(article_id) < 6:
-                    i+=1
-                    article_id = url.split("/")[-i]
+                parts = url.split("/")
+                article_id = ''
+                for i in range(1, len(parts) + 1):
+                    candidate = parts[-i]
+                    if len(candidate) >= 6:
+                        article_id = candidate
+                        break
+                else:
+                    article_id = url  # no segment long enough — fall back to the whole string
 
                 self.current_article_id = article_id
                 
@@ -414,9 +434,9 @@ class DataFetcher(ABC):
             return False
         
         if idx == 'pmcid':
-            pmcid = re.search(r'PMC\d+', url, re.IGNORECASE)
-            if pmcid:
-                return self.backup_store.has_publication(pmcid.group(0))
+            article_id = self.url_to_article_id(url, return_only_known_ids=True)
+            if article_id:
+                return self.backup_store.has_publication(article_id)
         elif idx == 'doi':
             doi = re.search(r'(10\.\d{4,9}/[-._;()/:A-Z0-9]+)', url, re.IGNORECASE)
             if doi:
@@ -1211,9 +1231,8 @@ class DatabaseFetcher(DataFetcher):
         :param url_key: The key to identify the data in the database.
         :returns: The raw HTML content of the page.
         """
-        split_source_url = url_key.split('/')
-        key = (split_source_url[-1] if len(split_source_url[-1]) > 0 else split_source_url[-2]).lower()
-        
+        key = self.url_to_article_id(url_key)
+
         self.logger.info(f"Fetching data for {key}")
         
         # Use the backup store directly
@@ -1269,8 +1288,11 @@ class EntrezFetcher(DataFetcher):
         self.raw_data_format = 'XML'
 
         try:
-            # Extract the PMC ID from the article URL, ignore case
-            pmcid = re.search(r'PMC\d+', article_id, re.IGNORECASE).group(0)
+            # Extract the PMC ID from the article URL. Entrez only accepts PMC IDs, so
+            # reject anything url_to_article_id resolved to a DOI/PMID/other fallback.
+            pmcid = self.url_to_article_id(article_id, return_only_known_ids=True)
+            if not pmcid or not pmcid.upper().startswith('PMC'):
+                raise ValueError(f"No PMC ID found in article_id: {article_id}")
             self.article_id = pmcid
             
             if hasattr(self, 'backup_store') and self.backup_store is not None:

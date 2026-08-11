@@ -411,7 +411,28 @@ class BatchRequestBuilder:
             "body": body,
         }
     
-    def generate_custom_id(self, 
+    def create_anthropic_request(self,
+                               custom_id: str,
+                               messages: List[Dict[str, str]],
+                               model: str,
+                               temperature: float = 0.0,
+                               max_tokens: int = 2048,
+                               response_format: Optional[Dict] = None) -> Dict[str, Any]:
+        """
+        Create a batch request in Anthropic Message Batches format.
+        """
+        params: Dict[str, Any] = {
+            "model": model,
+            "max_tokens": max_tokens,
+            "messages": messages,
+            "temperature": temperature,
+        }
+        return {
+            "custom_id": custom_id,
+            "params": params,
+        }
+
+    def generate_custom_id(self,
                           model: str, 
                           identifier: str, 
                           timestamp: Optional[int] = None) -> str:

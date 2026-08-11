@@ -108,12 +108,15 @@ class htmlRetriever(BaseRetriever):
 
         return df_supp
 
-    def get_data_availability_elements_from_webpage(self, preprocessed_html, publisher='PMC'):
+    def get_data_availability_elements_from_webpage(self, preprocessed_html, publisher='PMC',
+                                                     section_category='data_availability_sections'):
         """
-        Given the preprocessed HTML, extract paragraphs or links under data availability sections.
+        Given the preprocessed HTML, extract paragraphs or links under the requested section category
+        (default 'data_availability_sections'; also used with 'funding_sections' for grant/funding
+        extraction — the element-walking logic below is category-agnostic, only the selector lookup key differs).
         """
         self.retrieval_patterns = load_config('retrieval_patterns.json')
-        self.logger.info("Extracting data availability elements from HTML")
+        self.logger.info(f"Extracting '{section_category}' elements from HTML")
 
         # Merge general + publisher-specific selectors
         self.css_selectors = self.retrieval_patterns.get('general', {}).get('css_selectors', {})
@@ -123,8 +126,8 @@ class htmlRetriever(BaseRetriever):
         soup = BeautifulSoup(preprocessed_html, "html.parser")
         data_availability_elements = []
 
-        for selector in self.css_selectors.get('data_availability_sections', []):
-            self.logger.info(f"Using selector: {selector}")
+        for selector in self.css_selectors.get(section_category, []):
+            self.logger.debug(f"Using selector: {selector}")
             matches = soup.select(selector)
             for match in matches:
                 if match.name in ['h2', 'h3']:  # headings usually don't contain content directly
@@ -250,11 +253,26 @@ class htmlRetriever(BaseRetriever):
         compiled = [re.compile(p) for p in raw_patterns]
         found = set()
         for pattern in compiled:
-            self.logger.info(f"Using pattern: {pattern.pattern} to search for publication IDs.")
+            self.logger.debug(f"Using pattern: {pattern.pattern} to search for publication IDs.")
             for match in pattern.findall(html):
                 self.logger.info(f"Found publication ID match: {match}")
                 found.add(match.strip().rstrip(".,;)"))
+        self.logger.info(f"Total unique publication IDs found: {len(found)}")
         return sorted(found)
+    
+    def extract_pubmed_search_terms(self, html: str) -> list:
+        """Extract PubMed search terms from raw HTML using patterns from retrieval_patterns.json."""
+        self.logger.info("Extracting PubMed search terms from HTML")
+        raw_patterns = self.retrieval_patterns.get('general', {}).get('pubmed_search_patterns', [])
+        compiled = [re.compile(p) for p in raw_patterns]
+        found_terms = set()
+        for pattern in compiled:
+            self.logger.debug(f"Using pattern: {pattern.pattern} to search for PubMed terms.")
+            for match in pattern.findall(html):
+                self.logger.info(f"Found PubMed search term match: {match}")
+                found_terms.add(match.strip())
+        self.logger.info(f"Total unique PubMed search terms found: {len(found_terms)}")
+        return sorted(found_terms)
 
     def is_html_data_complete(self, raw_data, url,
                              required_sections=("data_availability_sections", "supplementary_data_sections")) -> bool:

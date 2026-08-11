@@ -7,6 +7,8 @@ import logging
 import pandas as pd
 from bs4 import BeautifulSoup, Comment, NavigableString, CData
 from lxml import html
+from html import unescape as html_unescape
+from urllib.parse import urlparse, parse_qs
 from data_gatherer.retriever.embeddings_retriever import EmbeddingsRetriever
 
 
@@ -92,7 +94,7 @@ class HTMLParser(LLMParser):
             write_cache=embeds_cache_write
         )
 
-    def normalize_HTML(self, html, keep_tags=None):
+    def normalize_HTML(self, html, keep_tags=None, remove_reference_tags=False):
         """
         Normalize the HTML content by removing unnecessary tags and attributes.
 
@@ -107,6 +109,12 @@ class HTMLParser(LLMParser):
         try:
             # Parse the HTML content
             soup = BeautifulSoup(html, "html.parser")
+
+            if remove_reference_tags:
+                ref_sections = soup.find_all("section", class_=lambda c: c and "ref-list" in c)
+                for ref_section in ref_sections:
+                    ref_section.decompose()
+                self.logger.info(f"Removed {len(ref_sections)} reference-list section(s) from HTML.")
 
             # 1. Remove script, style, and meta tags
             for tag in ["script", "style", 'img', 'iframe', 'noscript', 'svg', 'button', 'form', 'input']:
@@ -232,19 +240,21 @@ class HTMLParser(LLMParser):
                 })
         return paragraphs
 
-    def extract_sections_from_text(self, html_content: str) -> list[dict]:
+    def extract_sections_from_text(self, html_content: str, include_references: bool = False) -> list[dict]:
         """
         alias for extract_sections_from_html
         """
-        return self.extract_sections_from_html(html_content)
+        return self.extract_sections_from_html(html_content, include_references=include_references)
 
-    def extract_sections_from_html(self, html_content: str) -> list[dict]:
+    def extract_sections_from_html(self, html_content: str, include_references: bool = False) -> list[dict]:
         """
         Extract sections from an HTML document, following the XML parser pattern.
         Only looks for <section> elements, just like XML parser looks for <sec> elements.
 
         Args:
             html_content: str — raw HTML content.
+            include_references: bool — if True, expand the references section into one
+                paragraph-equivalent chunk per <li> citation.
 
         Returns:
             List of dicts with 'section_title', 'sec_type', 'sec_txt', and 'sec_txt_clean'.
@@ -256,7 +266,9 @@ class HTMLParser(LLMParser):
         # Find all <section> elements (just like XML parser finds <sec> elements)
         section_elements = soup.find_all('section')
         self.extracted_tables = []
-        self.logger.debug(f"Found {len(section_elements)} <section> blocks in HTML")
+        self.logger.info(f"Found {len(section_elements)} <section> blocks in HTML (content length: {len(html_content)}, title: {soup.title.string if soup.title else 'n/a'})")
+        if not section_elements:
+            self.logger.info(f"Zero sections — raw HTML dump:\n{html_content[:5000]}")
 
         # Process each section (similar to XML parser)
         for sec_idx, sec in enumerate(section_elements):
@@ -272,14 +284,16 @@ class HTMLParser(LLMParser):
             section_text_from_paragraphs = f'{section_title}\n'
             section_rawtxt_from_paragraphs = ''
 
-            # Find all paragraphs in this section (like XML parser)
-            paragraphs = sec.find_all('p')
+            # Find all paragraphs in this section (like XML parser). A references section has
+            # no <p> tags — citations are <li> — so only switch to <li> when explicitly opted in.
+            is_ref_list_section = include_references and 'ref-list' in (sec.get('class') or [])
+            paragraphs = sec.find_all('li') if is_ref_list_section else sec.find_all('p')
             self.logger.debug(f"Found {len(paragraphs)} paragraphs")
 
             for p_idx, p in enumerate(paragraphs):
                 self.logger.debug(f"Processing paragraph {p_idx + 1} out of {len(paragraphs)}")
                 parent_section = p.find_parent('section')
-                if parent_section is not None and parent_section != sec:
+                if not is_ref_list_section and parent_section is not None and parent_section != sec:
                     self.logger.debug(f"We've entered a different section: {parent_section != sec}, so break out of the loop")
                     break
 
@@ -434,6 +448,28 @@ class HTMLParser(LLMParser):
         data_availability_elements = self.retriever.get_data_availability_elements_from_webpage(html_content)
         data_availability_texts = [item['html'] for item in data_availability_elements]
         return data_availability_texts
+
+    def get_funding_text(self, html_content: str) -> list[str]:
+        """
+        Get funding/acknowledgments/grant-support elements and extract text from there.
+        Mirrors get_data_availability_text, using the 'funding_sections' selector category instead.
+        """
+        funding_elements = self.retriever.get_data_availability_elements_from_webpage(
+            html_content, section_category='funding_sections'
+        )
+        funding_texts = [item['html'] for item in funding_elements]
+        return funding_texts
+
+    def get_code_availability_text(self, html_content: str) -> list[str]:
+        """
+        Get code/software-availability elements and extract text from there.
+        Mirrors get_funding_text, using the 'code_availability_sections' selector category instead.
+        """
+        code_elements = self.retriever.get_data_availability_elements_from_webpage(
+            html_content, section_category='code_availability_sections'
+        )
+        code_texts = [item['html'] for item in code_elements]
+        return code_texts
 
     def parse_data(self, html_str, publisher=None, current_url_address=None, raw_data_format='HTML',
         article_file_dir='tmp/raw_files/', section_filter=None, prompt_name='GPT_FewShot', use_portkey=True, 
@@ -702,7 +738,7 @@ class HTMLParser(LLMParser):
                 continue
 
             a_elements = tree.xpath(f".//a[@href='#{href_id}']")
-            self.logger.info(f"Found {len(a_elements)} <a> elements with href='#{href_id}'.")
+            self.logger.debug(f"Found {len(a_elements)} <a> elements with href='#{href_id}'.")
 
             for ref in a_elements:
                 surrounding_text = self.get_surrounding_text(ref)
@@ -710,7 +746,7 @@ class HTMLParser(LLMParser):
                 if text_segment not in context_descr:
                     context_descr += text_segment + "\n"
 
-            self.logger.info(f"Extracted context description (len: {len(context_descr)}) for {href_id}: "
+            self.logger.debug(f"Extracted context description (len: {len(context_descr)}) for {href_id}: "
                              f"{context_descr.strip()}")
             supplementary_material_links.at[i, 'context_description'] = context_descr.strip()
 
@@ -832,9 +868,20 @@ class HTMLParser(LLMParser):
                     chunk_texts = []
                     chunk_token_count = 0
                     chunk_paragraphs = []
-                chunk_texts.append(para_text)
-                chunk_token_count += para_tokens
-                chunk_paragraphs.append(p)
+                if para_tokens > chunk_budget:
+                    for sub_chunk in self._intelligent_chunk_section(para_text, chunk_budget):
+                        chunk_doc = doc_base.copy()
+                        chunk_doc['sec_txt_clean'] = sub_chunk
+                        chunk_doc['sec_txt'] = sub_chunk
+                        chunk_doc['text'] = sub_chunk
+                        chunk_doc['chunk_id'] = chunk_id
+                        chunk_doc['contains_id_pattern'] = any(re.search(pattern, sub_chunk, re.IGNORECASE) for pattern in self.id_patterns)
+                        corpus_documents.append(chunk_doc)
+                        chunk_id += 1
+                else:
+                    chunk_texts.append(para_text)
+                    chunk_token_count += para_tokens
+                    chunk_paragraphs.append(p)
 
             # Save any remaining chunk
             if chunk_texts:
@@ -1404,10 +1451,32 @@ class HTMLParser(LLMParser):
             return [self._normalize_person_org(e) for e in entity]
         return None
 
-    def extract_publication_corpus_from_webpage(self, html: str) -> list:
-        """Extract publication identifiers (PMIDs, PMCIDs, DOIs) from a study HTML page."""
+    def extract_publication_corpus_from_webpage(self, html: str, mindate: str = '2023') -> list:
+        """
+        Extract publication identifiers (PMIDs, PMCIDs, DOIs) from a study HTML page.
+
+        :param mindate: Optional earliest publication date to include (e.g. '2023', '2023/01/01')
+        """
         self.logger.info("Extracting publication identifiers from HTML webpage")
-        return self.retriever.extract_publication_ids(html)
+        pub_ids = []
+        pubmed_searches = self.retriever.extract_pubmed_search_terms(html)
+        for search in pubmed_searches:
+            try:
+                search_url = html_unescape(search)
+                term = parse_qs(urlparse(search_url).query)['term'][0]
+                params = {'db': 'pubmed', 'term': term, 'retmode': 'json', 'retmax': 10000}
+                if mindate:
+                    # NCBI esearch ignores mindate unless maxdate is also present
+                    params['datetype'] = 'pdat'
+                    params['mindate'] = mindate
+                    params['maxdate'] = '3000'
+                self.logger.info(f"Querying PubMed esearch for term: {term} (mindate={mindate})")
+                resp = requests.get('https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi', params=params)
+                pub_ids += resp.json().get('esearchresult', {}).get('idlist', [])
+            except Exception as e:
+                self.logger.warning(f"Error occurred while fetching PubMed search results: {e}")
+        base = self.retriever.extract_publication_ids(html)
+        return base + pubmed_searches + pub_ids
 
     def extract_normalized_dataset_urls(self, row):
         self.logger.info("Extracting normalized dataset URL from row data")

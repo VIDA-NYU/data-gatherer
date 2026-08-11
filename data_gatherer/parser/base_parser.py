@@ -16,6 +16,13 @@ from json_repair import repair_json
 from data_gatherer.llm.llm_client import LLMClient_dev
 from data_gatherer.llm.response_schema import *
 
+# Regex sub-patterns that are valid in `dataset_webpage_url_ptr` for URL matching
+# but must be stripped before constructing a real URL from the template.
+URL_REGEX_STRIP_PATTERNS = [
+    r'\[[^\]]*\][*+?]?',   # character classes with optional quantifier: [#!]*, [az]+, [0-9]?
+    r'\([^)]*\)[*+?]?',    # non-capturing groups with optional quantifier: (foo|bar)?
+]
+
 DATASET_OUTPUT_COLS = [
     'dataset_identifier', 'repository_reference', 'data_repository', 'dataset_webpage', 'access_mode',
     'link', 'source_url', 'download_link', 'title', 'content_type', 'id', 'caption', 'description',
@@ -117,6 +124,26 @@ class LLMParser(ABC):
 
         self.logger.info(f"Function_call: load_patterns_for_tgt_section({section_name})")
         return self.retriever.load_target_sections_ptrs(section_name)
+
+    def load_title_patterns_for_tgt_section(self, section_name):
+        """
+        Load the title-text-matching XPath patterns (the 'xpaths' category in
+        retrieval_patterns.json — e.g. //sec[title[contains(translate(text(),...),'code availability')]])
+        for the target section. These use XPath functions (contains/translate) that lxml's
+        limited findall() (used by load_patterns_for_tgt_section/xml_tags) can't execute at
+        all -- callers must run them via Element.xpath(), not .findall().
+
+        :param section_name: str — name of the section to load.
+
+        :return: list of XPath pattern strings.
+        """
+        self.logger.info(f"Function_call: load_title_patterns_for_tgt_section({section_name})")
+        try:
+            return self.retriever.load_target_sections_xpaths(section_name)
+        except ValueError:
+            # not every category defines title-based fallback patterns -- that's fine, just none to run.
+            self.logger.debug(f"No title-based xpath patterns defined for section: {section_name}")
+            return []
 
     def generate_dataset_description(self, data_file):
         # from data file
@@ -411,6 +438,57 @@ Files:
 
         return result
     
+    def intelligent_chunk_paper(self, sections, model, allowance_static_prompt=400, limit=None):
+        """
+        Greedily pack whole sections into token-budget-sized chunks, without ever splitting
+        a single section across a chunk boundary.
+
+        :param sections: list of section dicts, as produced by extract_paragraphs_from_{src_fmt}
+
+        :param model: model name, used to resolve the per-provider token limit via tokens_over_limit.
+
+        :param allowance_static_prompt: tokens reserved for the static prompt overhead
+
+        :param limit: optional explicit token limit override. 
+
+        :return: list of content strings preserving section order and never splitting a section.
+        """
+        over_limit_kwargs = {'allowance_static_prompt': allowance_static_prompt}
+        if limit is not None:
+            over_limit_kwargs['limit'] = limit
+
+        chunks = []
+        current_text = ""
+
+        for section in sections:
+            if isinstance(section, dict):
+                section_text = section.get('sec_txt_clean') or section.get('sec_txt') or section.get('text', '')
+            else:
+                section_text = str(section)
+
+            if not section_text:
+                continue
+
+            candidate_text = f"{current_text}\n{section_text}" if current_text else section_text
+
+            if current_text and self.tokens_over_limit(candidate_text, model, **over_limit_kwargs):
+                chunks.append(current_text)
+                current_text = section_text
+                if self.tokens_over_limit(current_text, model, **over_limit_kwargs):
+                    self.logger.warning(
+                        f"intelligent_chunk_paper: a single section alone ({len(section_text)} chars, "
+                        f"title={section.get('section_title', 'n/a') if isinstance(section, dict) else 'n/a'}) "
+                        f"exceeds the token limit for model {model}; keeping it whole in its own chunk anyway."
+                    )
+            else:
+                current_text = candidate_text
+
+        if current_text:
+            chunks.append(current_text)
+
+        self.logger.info(f"intelligent_chunk_paper: packed {len(sections)} section(s) into {len(chunks)} chunk(s) for model {model}.")
+        return chunks
+
     def extract_datasets_info_from_chunks(self, content, tokens_cnt, repos=None, model=None, temperature=0,
                                         prompt_name=None, full_document_read=None ,response_format=None, token_chunk_size=128000,
                                         subdir='dataset_prompts', **prompt_kwargs):
@@ -636,6 +714,75 @@ Files:
                 self.logger.debug(f"process_datasets_response sample rows: {result[:5]}")
         except Exception:
             self.logger.exception("Error while logging process_datasets_response summary")
+        return result
+
+    def process_grants_response(self, resps):
+        """
+        Process the LLM response containing grants and explode each record's grant_numbers
+        array into one flat record per grant number.
+
+        :param resps: LLM response containing grant records (list of dicts).
+
+        :return: List of flat dicts, each with a singular 'grant_number' key instead of 'grant_numbers'.
+        """
+        result = []
+        for record in resps:
+            if not isinstance(record, dict):
+                continue
+            record = dict(record)
+            grant_numbers = record.pop('grant_numbers', None)
+            if isinstance(grant_numbers, list) and grant_numbers:
+                for grant_number in grant_numbers:
+                    result.append({**record, 'grant_number': grant_number})
+            else:
+                result.append({**record, 'grant_number': grant_numbers or 'n/a'})
+
+        self.logger.info(f"process_grants_response: exploded {len(resps)} record(s) into {len(result)} one-grant-per-row record(s)")
+        return result
+
+    def process_software_response(self, resps):
+        """
+        Process the LLM response containing software mentions (SOMD-style: name, version,
+        mention_type, url, context -- see software_mention_response_schema_gpt).
+
+        :param resps: LLM response containing software mention records (list of dicts).
+
+        :return: List of dicts, cleaned as described above. Records without a usable
+            'software_name' are dropped (that field is the one thing that must be real).
+        """
+        url_like_pattern = re.compile(r'^https?://', re.IGNORECASE)
+        valid_mention_types = {'created', 'used', 'n/a'}
+        result = []
+        dropped = 0
+        cleaned_urls = 0
+        cleaned_types = 0
+        for record in resps:
+            if not isinstance(record, dict):
+                continue
+            record = dict(record)
+            software_name = (record.get('software_name') or '').strip()
+            if not software_name:
+                dropped += 1
+                continue
+
+            url = (record.get('url') or '').strip()
+            if url and url != 'n/a' and not url_like_pattern.match(url):
+                self.logger.debug(f"process_software_response: url {url!r} for {software_name!r} doesn't look like a URL, resetting to 'n/a'")
+                record['url'] = 'n/a'
+                cleaned_urls += 1
+
+            mention_type = (record.get('mention_type') or 'n/a').strip().lower()
+            if mention_type not in valid_mention_types:
+                self.logger.debug(f"process_software_response: unexpected mention_type {mention_type!r} for {software_name!r}, resetting to 'n/a'")
+                record['mention_type'] = 'n/a'
+                cleaned_types += 1
+
+            result.append(record)
+
+        self.logger.info(
+            f"process_software_response: kept {len(result)}/{len(resps)} record(s) "
+            f"({dropped} dropped for missing software_name, {cleaned_urls} url(s) cleaned, {cleaned_types} mention_type(s) cleaned)"
+        )
         return result
 
     def schema_validation(self, dataset, req_timeout=0.5, skip=False):
@@ -945,6 +1092,29 @@ Files:
         self.logger.debug(f"All ID patterns: {id_patterns}")
         return id_patterns
 
+    def get_code_hosting_id_patterns(self):
+        """
+        Regex patterns for common code-hosting/archival URLs (GitHub, GitLab, Bitbucket, Zenodo
+        code-archive records, SourceForge, PyPI, CRAN). Intended as the `ID_patterns` argument to
+        retrieve_relevant_content(include_snippets_with_ID_patterns=True, ID_patterns=...) -- the
+        deterministic, whole-document Tier-1 half of software mention detection (SOMD), catching
+        URL-bearing mentions with zero hallucination risk regardless of which section (or even
+        which DOM element -- <p>, <li>, footnote, ...) they live in. Tier 2 (the LLM prompt/schema)
+        covers the broader set of mentions that have no URL at all, which is most real mentions
+        per the SOMD/SoMeSci and SoftCite literature.
+
+        :return: list of regex pattern strings.
+        """
+        return [
+            r'github\.com/[\w.-]+/[\w.-]+',
+            r'gitlab\.com/[\w.-]+/[\w.-]+',
+            r'bitbucket\.org/[\w.-]+/[\w.-]+',
+            r'zenodo\.org/record[s]?/\d+',
+            r'sourceforge\.net/(projects|p)/[\w.-]+',
+            r'pypi\.org/project/[\w.-]+',
+            r'cran\.r-project\.org/(web/packages|package)/[\w.-]+',
+        ]
+
     def get_all_repo_names(self, uncased=False):
         # Get the all the repository names from the config file. (all the repos in ontology)
         repo_names = []
@@ -1107,7 +1277,12 @@ Files:
             return url
         
         try:
-            response = requests.get(url, allow_redirects=True, timeout=req_timeout)
+            # HEAD (not GET)
+            response = requests.head(url, allow_redirects=True, timeout=req_timeout)
+            if response.status_code in (405, 501):
+                response.close()
+                response = requests.get(url, allow_redirects=True, timeout=req_timeout, stream=True)
+                response.close()
             self.logger.info(f"Resolved URL: {response.url}")
             return response.url
         except requests.RequestException as e:
@@ -1321,6 +1496,13 @@ Files:
         self.logger.info(f"Dataset enhancement completed: {type(datasets)}, {len(datasets)} datasets processed")
         return datasets
 
+    def _clean_url_template(self, template):
+        """Strip regex-only sub-patterns from a url_ptr template before constructing a real URL."""
+        cleaned = template
+        for pattern in URL_REGEX_STRIP_PATTERNS:
+            cleaned = re.sub(pattern, '', cleaned)
+        return cleaned
+
     def _construct_dataset_webpage(self, repo, accession_id, existing_webpage):
         """Helper method to construct dataset webpage URL using ontology patterns."""
         if repo in self.open_data_repos_ontology['repos']:
@@ -1329,15 +1511,17 @@ Files:
             if "dataset_webpage_url_ptr" in repo_config:
                 dataset_page_ptr = repo_config['dataset_webpage_url_ptr']
                 
+                clean_ptr = self._clean_url_template(dataset_page_ptr)
+
                 # Check if existing webpage already matches the pattern
                 if existing_webpage:
-                    pattern_base = dataset_page_ptr.replace('__ID__', '')
+                    pattern_base = clean_ptr.replace('__ID__', '')
                     if re.search(re.escape(pattern_base), existing_webpage, re.IGNORECASE):
                         self.logger.debug(f"Existing webpage {existing_webpage} matches pattern")
                         return existing_webpage
-                
+
                 # Construct new URL using pattern
-                constructed_url = re.sub('__ID__', accession_id, dataset_page_ptr)
+                constructed_url = re.sub('__ID__', accession_id, clean_ptr)
                 self.logger.info(f"Constructed webpage URL: {constructed_url}")
                 return constructed_url
             else:
@@ -1676,16 +1860,38 @@ Files:
     def _p_fallback_corpus(self, data) -> list:
         return []
 
+    def rule_based_retrieve(self, data, relevant_content_flag='DAS'):
+        """
+        Generalized rule-based (pattern-driven) retrieval routine for the requested content
+        category, returning combined section text in the same shape regardless of category.
+
+        :param data: parsed document as consumed by get_data_availability_text / get_funding_text.
+
+        :param relevant_content_flag: which category to retrieve — 'DAS' (data availability),
+            'FUND' (funding/grants), or 'CODE' (code/software availability).
+
+        :return: list of content strings for the requested category.
+        """
+        if relevant_content_flag == 'DAS':
+            return self.get_data_availability_text(data)
+        elif relevant_content_flag == 'FUND':
+            return self.get_funding_text(data)
+        elif relevant_content_flag == 'CODE':
+            return self.get_code_availability_text(data)
+        else:
+            self.logger.warning(f"Unknown relevant_content_flag '{relevant_content_flag}' — returning empty list")
+            return []
+
     def retrieve_relevant_content(self, data, semantic_retrieval=True, top_k=5, article_id=None, max_tokens=None, skip_rule_based_retrieved_elm=False,
-                                  include_snippets_with_ID_patterns=False, output_format='text', query=None, ID_patterns=None, force_include_DAS=True,
-                                  include_section_title=False, skip_p_fallback=True):
-        
+                                  include_snippets_with_ID_patterns=False, output_format='text', query=None, ID_patterns=None,
+                                  include_section_title=False, skip_p_fallback=True, relevant_content_flag='DAS'):
+
         """Given the full text of the article, retrieve the most relevant content related to data availability using a combination
         of semantic retrieval and rule-based methods.
 
         :param data: str - the full text of the article to retrieve content from.
         :param semantic_retrieval: bool - whether to perform semantic retrieval (default: True
-        :param top_k: int - the number of top relevant sections to retrieve (default: 5)
+        :param top_k: int - the number of top relevant sections to retrieve (default: 5). Set to -1 to get all the sections.
         :param article_id: str - the identifier for the article (used for logging and caching
         :param max_tokens: int - the maximum number of tokens to consider for semantic retrieval (default: None, meaning no limit)
         :param skip_rule_based_retrieved_elm: bool - whether to skip elements that were retrieved by rule-based methods when building the corpus for semantic retrieval (default: False)
@@ -1693,24 +1899,49 @@ Files:
         :param output_format: str - the format of the output, either 'text' for concatenated string or 'json' for structured data (default: 'text')
         :param query: str - the query to use for semantic retrieval (default: None, meaning a predefined query focused on data availability will be used)
         :param ID_patterns: list - optional list of regex patterns to identify dataset identifiers in the text (default: None, meaning patterns will be loaded from ontology)
-        :param force_include_DAS: bool - whether to force include the data availability statement content in the retrieved content (default: True)
         :param include_section_title: bool - whether to include section titles in the corpus for semantic retrieval (default: False)
         :param skip_p_fallback: bool - whether to skip the fallback method of building corpus from <p> tags if semantic retrieval returns an empty corpus (default: True)
+        :param relevant_content_flag: str - which rule-based content category to force-include: 'DAS' (data availability, default) or 'FUND' (funding/grants). See rule_based_retrieve.
 
         :return: str or list - the retrieved relevant content in the specified output format
         """
         self.logger.debug(f"Function call: retrieve_relevant_content(semantic_retrieval={semantic_retrieval}, top_k={top_k}, article_id={article_id}, max_tokens={max_tokens}, skip_rule_based_retrieved_elm={skip_rule_based_retrieved_elm}, include_snippets_with_ID_patterns={include_snippets_with_ID_patterns}, output_format={output_format})")
 
-        data_avail_cont = self.get_data_availability_text(data) if force_include_DAS else []
+        relevant_content_rule_based = self.rule_based_retrieve(data, relevant_content_flag)
+        self.logger.debug(f"Rule-based retrieval found {len(relevant_content_rule_based)} relevant sections for flag '{relevant_content_flag}'")
         self.id_patterns = ID_patterns if ID_patterns is not None else self.id_patterns
-        ret_lst = data_avail_cont.copy()
+        ret_lst = relevant_content_rule_based.copy()
         top_k_sections, docs_matching_id_ptr = [], []
 
         _used_p_fallback = False
-        if semantic_retrieval:
-            self.logger.info(f"Performing semantic retrieval for relevant content")
-            all_sections = self.extract_sections_from_text(data)
+
+        if top_k == -1 or semantic_retrieval or include_snippets_with_ID_patterns:
+            all_sections = self.extract_sections_from_text(data) if relevant_content_flag != 'CODE' else self.extract_sections_from_text(data, include_references=relevant_content_flag=='CODE')
             corpus = self.from_sections_to_corpus(all_sections, max_tokens=max_tokens, skip_rule_based_retrieved_elm=skip_rule_based_retrieved_elm, include_section_title=include_section_title)
+
+        if top_k == -1:
+            self.logger.info(f"top_k=-1: chunked document read — building full corpus, no semantic ranking")
+            _llm = getattr(self, 'llm_client', None)
+            _max_tokens = max_tokens or (512 if (_llm is None or _llm.model.startswith(('hf-', 'local-'))) else getattr(_llm, 'token_limit', 512))
+            corpus = self.from_sections_to_corpus(all_sections, max_tokens=_max_tokens)
+            normalized_input = [chunk['text'] for chunk in corpus] if corpus else [str(data)]
+            if not hasattr(self, 'retrieval_stats'):
+                self.retrieval_stats = {}
+            self.retrieval_stats[article_id] = {
+                'n_all_sections': len(all_sections),
+                'n_corpus_sections': len(corpus),
+                'retrieved_sections_title': None,
+                'top_k': -1,
+                # kept as 'n_das_sections' for backward compat with k8s_processor.py/enrich_ontology.py,
+                # which read this column by name — it now reflects whichever category
+                # relevant_content_flag selected (DAS or FUND), not just data availability.
+                'n_das_sections': len(relevant_content_rule_based),
+                'used_paragraph_fallback': False,
+            }
+            return normalized_input
+
+        elif semantic_retrieval:
+            self.logger.info(f"Performing semantic retrieval for relevant content")
 
             if not corpus and not skip_p_fallback:
                 corpus = self._p_fallback_corpus(data)
@@ -1737,7 +1968,7 @@ Files:
         if output_format == 'text':
             normalized_input = "".join(ret_lst)
         elif output_format == 'json':
-            normalized_input = data_avail_cont + top_k_sections + docs_matching_id_ptr
+            normalized_input = relevant_content_rule_based + top_k_sections + docs_matching_id_ptr
         else:
             normalized_input = ret_lst
 
@@ -1748,7 +1979,8 @@ Files:
             'n_corpus_sections': len(corpus) if semantic_retrieval else None,
             'retrieved_sections_title': [item.get('section_title', 'n/a') for item in top_k_sections] if semantic_retrieval else None,
             'top_k': top_k,
-            'n_das_sections': len(data_avail_cont),
+            # kept as 'n_das_sections' for backward compat — see comment above.
+            'n_das_sections': len(relevant_content_rule_based),
             'used_paragraph_fallback': _used_p_fallback,
         }
 
@@ -1777,3 +2009,31 @@ Files:
         self.logger.info(f"Total matches found: {len(matches)}")
         return matches
 
+    def extract_grants(self, document_text, prompt_name='GPT_FDR_FewShot_grant', subdir='funding_prompts',
+                        response_schema=grant_response_schema_gpt, temperature=0.0):
+        """
+        Extract grant/funding information from a document's full text.
+
+        :param document_text: str — the already-fetched/normalized publication text.
+        :return: list[dict] — extracted grant records (funder_name, grant_number,
+                 funding_context_from_paper, recipient).
+        """
+        static_prompt = self.llm_client.prompt_manager.load_prompt(prompt_name, subdir=subdir)
+        messages = self.llm_client.prompt_manager.render_prompt(
+            static_prompt,
+            entire_doc=self.llm_client.full_document_read,
+            content=document_text
+        )
+
+        raw_response = self.llm_client.make_llm_call(
+            messages=messages,
+            temperature=temperature,
+            response_format=response_schema,
+            full_document_read=self.llm_client.full_document_read
+        )
+
+        return self.llm_client.process_llm_response(
+            raw_response=raw_response,
+            response_format=response_schema,
+            expected_key='grants'
+        )

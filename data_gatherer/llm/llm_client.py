@@ -92,8 +92,12 @@ class LLMClient_dev:
         elif model.startswith('hf-'):
             self.logger.debug(f"Initializing Hugging Face model client for model: {model}")
             hf_model_name = model[len('hf-'):]
+            revision = None
+            if '@' in hf_model_name:
+                hf_model_name, revision = hf_model_name.rsplit('@', 1)
             from data_gatherer.llm.hf_model_client import HFModelClient
-            self.llm_client = HFModelClient(hf_model_name, logger=self.logger, use_auth_token=HF_TOKEN or True)
+            self.llm_client = HFModelClient(hf_model_name, logger=self.logger, use_auth_token=HF_TOKEN or True,
+                                             revision=revision)
             self.llm_client.load_model()
 
         else:
@@ -772,25 +776,44 @@ class LLMClient_dev:
                         temperature=temperature,
                         response_format=response_format
                     )
+                elif api_provider.lower() == 'anthropic':
+                    formatted_request = self.batch_builder.create_anthropic_request(
+                        custom_id=custom_id,
+                        messages=messages,
+                        model=self.model,
+                        temperature=temperature,
+                        response_format=response_format
+                    )
                 else:
                     raise ValueError(f"Unsupported API provider: {api_provider}")
                 
                 formatted_requests.append(formatted_request)
-            
+
+            # Anthropic submits requests directly — keep in memory, skip file I/O
+            if api_provider.lower() == 'anthropic':
+                self._anthropic_pending_requests = formatted_requests
+                return {
+                    'total_requests': len(formatted_requests),
+                    'skipped_requests': len(batch_requests) - len(formatted_requests),
+                    'api_provider': 'anthropic',
+                    'model': self.model,
+                    'created_at': time.strftime('%Y-%m-%d %H:%M:%S'),
+                }
+
             # Create JSONL file
             file_stats = self.batch_storage.create_jsonl_batch_file(
                 requests=formatted_requests,
                 output_path=batch_file_path
             )
-            
+
             # Validate the created file
             validation_result = self.batch_storage.validate_jsonl_format(batch_file_path)
-            
+
             # Determine the actual model used for batch processing
             actual_model = self.model
             if api_provider.lower() == 'openai' and 'gemini' in self.model.lower():
                 actual_model = 'gpt-4o-mini'
-            
+
             result = {
                 'batch_file_path': batch_file_path,
                 'total_requests': len(formatted_requests),
@@ -826,6 +849,8 @@ class LLMClient_dev:
                 return self._submit_openai_batch(batch_file_path, batch_description)
             elif api_provider.lower() == 'portkey':
                 return self._submit_portkey_batch(batch_file_path, batch_description)
+            elif api_provider.lower() == 'anthropic':
+                return self._submit_anthropic_batch(batch_file_path, batch_description)
             else:
                 raise ValueError(f"Unsupported API provider: {api_provider}")
                 
@@ -936,7 +961,22 @@ class LLMClient_dev:
             'endpoint': batch_job.endpoint,
             'completion_window': batch_job.completion_window,
         }
-    
+
+    def _submit_anthropic_batch(self, batch_file_path: str, batch_description: Optional[str]) -> Dict[str, Any]:
+        """Submit batch to Anthropic Message Batches API."""
+        requests = getattr(self, '_anthropic_pending_requests', [])
+        if not requests:
+            raise RuntimeError("No pending Anthropic batch requests. Call _handle_batch_mode first.")
+        self.logger.info(f"Submitting {len(requests)} requests to Anthropic Batch API")
+        batch_job = self.llm_client.beta.messages.batches.create(requests=requests)
+        self.logger.info(f"Anthropic batch job created. ID: {batch_job.id}, Status: {batch_job.processing_status}")
+        return {
+            'batch_id': batch_job.id,
+            'status': batch_job.processing_status,
+            'created_at': str(batch_job.created_at),
+            'api_provider': 'anthropic',
+        }
+
     def check_batch_status(self, batch_id: str, api_provider: str = 'portkey') -> Dict[str, Any]:
         """
         Check the status of a batch job.
@@ -976,6 +1016,17 @@ class LLMClient_dev:
                     'api_provider': api_provider,
                 }
 
+            elif api_provider.lower() == 'anthropic':
+                batch_job = self.llm_client.beta.messages.batches.retrieve(batch_id)
+                return {
+                    'batch_id': batch_job.id,
+                    'status': batch_job.processing_status,
+                    'output_file_id': None,
+                    'created_at': str(batch_job.created_at),
+                    'ended_at': str(batch_job.ended_at) if batch_job.ended_at else None,
+                    'request_counts': vars(batch_job.request_counts) if batch_job.request_counts else {},
+                    'api_provider': api_provider,
+                }
             else:
                 raise ValueError(f"Unsupported API provider: {api_provider}")
 
@@ -999,10 +1050,10 @@ class LLMClient_dev:
             # Check batch status first
             status_info = self.check_batch_status(batch_id, api_provider)
             
-            if status_info['status'] not in ['completed', 'cancelled']:
+            if status_info['status'] not in ['completed', 'cancelled', 'ended']:
                 raise ValueError(f"Batch {batch_id} is not completed. Status: {status_info['status']}")
-            
-            if not status_info.get('output_file_id'):
+
+            if api_provider.lower() != 'anthropic' and not status_info.get('output_file_id'):
                 raise ValueError(f"No output file available for batch {batch_id}")
             
             # Download the results file
@@ -1018,6 +1069,18 @@ class LLMClient_dev:
                 file_response = self.portkey.files.content(status_info['output_file_id'])
                 with open(output_file_path, 'wb') as f:
                     f.write(file_response.content if hasattr(file_response, 'content') else file_response.read())
+
+            elif api_provider.lower() == 'anthropic':
+                with open(output_file_path, 'w', encoding='utf-8') as f:
+                    for result in self.llm_client.beta.messages.batches.results(batch_id):
+                        f.write(json.dumps({
+                            'custom_id': result.custom_id,
+                            'result': {
+                                'type': result.result.type,
+                                'message': result.result.message.model_dump() if result.result.type == 'succeeded' else None,
+                                'error': vars(result.result.error) if result.result.type == 'errored' else None,
+                            }
+                        }) + '\n')
 
             else:
                 raise ValueError(f"Unsupported API provider: {api_provider}")
@@ -1078,6 +1141,15 @@ class LLMClient_dev:
                     elif 'body' in batch_response and 'output' in batch_response['body']:
                         # Direct format
                         llm_responses = batch_response['body']['output']
+                    elif 'result' in batch_response:
+                        # Anthropic batch format: {'result': {'type': 'succeeded'/'errored'/..., 'message': {...}, 'error': {...}}}
+                        result = batch_response['result']
+                        if result.get('type') != 'succeeded':
+                            raise ValueError(f"Anthropic batch item did not succeed (type={result.get('type')}): {result.get('error')}")
+                        content_blocks = (result.get('message') or {}).get('content', [])
+                        llm_responses = ''.join(
+                            block.get('text', '') for block in content_blocks if block.get('type') == 'text'
+                        )
                     else:
                         # Fallback - assume the response is the batch_response itself
                         llm_responses = batch_response

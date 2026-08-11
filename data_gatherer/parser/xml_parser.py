@@ -65,14 +65,14 @@ class XMLParser(LLMParser):
 
         return paragraphs
     
-    def extract_sections_from_text(self, xml_content: str) -> list[dict]:
+    def extract_sections_from_text(self, xml_content: str, include_references=False) -> list[dict]:
         """
         alias for extract_sections_from_xml
         """
         if isinstance(xml_content, str):
             xml_content = etree.fromstring(xml_content.encode('utf-8'))
-        
-        return self.extract_sections_from_xml(xml_content)
+
+        return self.extract_sections_from_xml(xml_content, include_references=include_references)
 
     def from_section_to_text_content(self, sect_element) -> str:
         """
@@ -109,12 +109,14 @@ class XMLParser(LLMParser):
 
         return str_cont_ret        
 
-    def extract_sections_from_xml(self, xml_root) -> list[dict]:
+    def extract_sections_from_xml(self, xml_root, include_references=False) -> list[dict]:
         """
         Extract sections from an XML document.
 
         Args:
             xml_root: lxml.etree.Element — parsed XML root.
+
+            include_references: bool — if True, expand <ref-list> 
 
         Returns:
             List of dicts with 'section_title' and 'sec_type'.
@@ -125,15 +127,17 @@ class XMLParser(LLMParser):
         if not isinstance(xml_root, etree._Element):
             raise TypeError(f"Invalid XML root type: {type(xml_root)}. Expected lxml.etree.Element.")
 
-        # Find all section-like elements (sec, notes, ack, app, fn-group)
+        # Find all section-like elements (sec, notes, ack, app, fn-group, abstract, ref-list)
         sec_elements = xml_root.findall(".//sec")
         notes_elements = xml_root.findall(".//notes")
         ack_elements = xml_root.findall(".//ack")
         app_elements = xml_root.findall(".//app")
         fn_group_elements = xml_root.findall(".//fn-group")
-        
-        all_sections = sec_elements + notes_elements + ack_elements + app_elements + fn_group_elements
-        self.logger.debug(f"Found {len(sec_elements)} <sec>, {len(notes_elements)} <notes>, {len(ack_elements)} <ack>, {len(app_elements)} <app>, {len(fn_group_elements)} <fn-group> blocks")
+        abstract_elements = xml_root.findall(".//abstract")
+        ref_list_elements = xml_root.findall(".//ref-list")
+
+        all_sections = sec_elements + notes_elements + ack_elements + app_elements + fn_group_elements + abstract_elements + ref_list_elements
+        self.logger.debug(f"Found {len(sec_elements)} <sec>, {len(notes_elements)} <notes>, {len(ack_elements)} <ack>, {len(app_elements)} <app>, {len(fn_group_elements)} <fn-group>, {len(abstract_elements)} <abstract>, {len(ref_list_elements)} <ref-list> blocks")
         self.logger.debug(f"Total {len(all_sections)} section-like blocks in XML")
 
         # Iterate over all section blocks
@@ -151,6 +155,10 @@ class XMLParser(LLMParser):
                 sec_type = "appendix"
             elif sec.tag == "fn-group":
                 sec_type = "footnotes"
+            elif sec.tag == "abstract":
+                sec_type = sec.get("abstract-type", "abstract")
+            elif sec.tag == "ref-list":
+                sec_type = "references"
             else:
                 sec_type = sec.tag
                 
@@ -164,8 +172,12 @@ class XMLParser(LLMParser):
             section_text_from_paragraphs = f'{section_title}\n'
             section_rawtxt_from_paragraphs = ''
 
-            # Find all paragraphs in this section
-            paragraphs = sec.findall(".//p")
+            # Find all paragraphs in this section — ref-list entries use <ref>/<mixed-citation>,
+            # not <p>; only switch to per-<ref> chunks when include_references=True (opt-in).
+            if sec.tag == "ref-list" and include_references:
+                paragraphs = sec.findall(".//ref")
+            else:
+                paragraphs = sec.findall(".//p")
             self.logger.debug(f"Found {len(paragraphs)} paragraphs in section '{section_title}'")
 
             for p_idx, p in enumerate(paragraphs):
@@ -180,7 +192,7 @@ class XMLParser(LLMParser):
                     if grandparent_section is not None and grandparent_section == sec:
                         self.logger.debug(f"Paragraph parent is {parent_section.tag}, but grandparent matches section - continuing")
                     # Otherwise, we've entered a different section-level element - break
-                    elif parent_section.tag in ['sec', 'ack', 'app', 'notes', 'fn-group']:
+                    elif parent_section.tag in ['sec', 'ack', 'app', 'notes', 'fn-group', 'abstract', 'ref-list']:
                         self.logger.debug(f"We've entered a different section: {parent_section} != {sec}, so break out of the loop")
                         break
                     else:
@@ -273,7 +285,7 @@ class XMLParser(LLMParser):
         effective_max_tokens = int(max_tokens * 0.95)  # 95% of max to be safe
         self.logger.debug(f"Effective max tokens per section: {effective_max_tokens}")
 
-        self.skip_text_matching = self.data_availability_cont_str if skip_rule_based_retrieved_elm else []
+        self.skip_text_matching = getattr(self, 'data_availability_cont_str', '') if skip_rule_based_retrieved_elm else []
         self.logger.debug(f"Skipping rule-based retrieved elements: {len(self.skip_text_matching)}")
         
         corpus_documents = []
@@ -591,18 +603,22 @@ class XMLParser(LLMParser):
         else:
             raise TypeError(f"Invalid API data type: {type(api_data)}. Expected lxml.etree.Element.")
 
-    def normalize_XML(self, xml_data):
+    def normalize_XML(self, xml_data, remove_reference_tags=False):
         """
         Normalize XML data by removing unnecessary whitespace and ensuring proper structure.
 
         :param xml_data: The raw XML data to be normalized.
+
+        :param remove_reference_tags: If True, strips all <ref-list> (bibliography/references) elements
+            before normalizing. Off by default — only intended for tasks (e.g. grant/funding extraction)
+            where references are never relevant.
 
         :return: Normalized XML data as a string.
         """
         if isinstance(xml_data, str):
             try:
                 xml_root = etree.fromstring(xml_data)
-                return self.normalize_XML(xml_root)
+                return self.normalize_XML(xml_root, remove_reference_tags=remove_reference_tags)
 
             except etree.XMLSyntaxError as e:
                 self.logger.error(f"Error parsing XML data for normalization: {e}")
@@ -610,6 +626,15 @@ class XMLParser(LLMParser):
 
         elif isinstance(xml_data, etree._Element):
             xml_root = xml_data
+
+            if remove_reference_tags:
+                ref_lists = xml_root.findall(".//ref-list")
+                for ref_list in ref_lists:
+                    parent = ref_list.getparent()
+                    if parent is not None:
+                        parent.remove(ref_list)
+                self.logger.info(f"Removed {len(ref_lists)} <ref-list> element(s) from XML.")
+
             # Remove unnecessary whitespace and normalize text
             for elem in xml_root.iter():
                 if elem.text:
@@ -972,6 +997,39 @@ class XMLParser(LLMParser):
         # Join all the sibling texts into a single string
         return " ".join(sibling_text)
 
+    def _join_section_elements_text(self, sections):
+        """
+        Walk a list of already-located lxml section elements and join each one's own text/tail,
+        plus ext-link hrefs and xref text found inside it, into one content string per section.
+
+        :param sections: list of lxml.etree.Element — sections already found via xpath/pattern lookup.
+
+        :return: list of content strings, one per section, deduplicated.
+        """
+        content = []
+        for sect in sections:
+            cont = ""
+            for elem in sect.iter():
+                if elem.text and elem.text is not None:
+                    cont += ' '
+                    cont += elem.text
+                    cont += ' '
+                if elem.tail and elem.tail is not None:
+                    cont += ' '
+                    cont += elem.tail
+                    cont += ' '
+                # also include the links in the section
+                if elem.tag == 'ext-link' and elem.get('{http://www.w3.org/1999/xlink}href') is not None:
+                    cont += ' '
+                    cont += elem.get('{http://www.w3.org/1999/xlink}href')
+                    cont += ' '
+                if elem.tag == 'xref' and elem.text is not None:
+                    cont += ' '
+                    cont += elem.text
+                    cont += ' '
+            content.append(cont) if cont not in content else None
+        return content
+
     def get_data_availability_text(self, api_xml):
         """
         This function calls the retrieval step. Then it normalizes the results.
@@ -990,30 +1048,7 @@ class XMLParser(LLMParser):
                 self.logger.error("self.retriever is None. Please check the initialization of xmlRetriever.")
             raise ValueError("self.retriever.get_data_availability_sections(api_xml) returned None. ")
 
-        data_availability_cont = []
-
-        # extract the text from the data availability section
-        for sect in data_availability_sections:
-            cont = ""
-            for elem in sect.iter():
-                if elem.text and elem.text is not None:
-                    cont += ' '
-                    cont += elem.text
-                    cont += ' '
-                if elem.tail and elem.tail is not None:
-                    cont += ' '
-                    cont += elem.tail
-                    cont += ' '
-                # also include the links in the data availability section
-                if elem.tag == 'ext-link' and elem.get('{http://www.w3.org/1999/xlink}href') is not None:
-                    cont += ' '
-                    cont += elem.get('{http://www.w3.org/1999/xlink}href')
-                    cont += ' '
-                if elem.tag == 'xref' and elem.text is not None:
-                    cont += ' '
-                    cont += elem.text
-                    cont += ' '
-            data_availability_cont.append(cont) if cont not in data_availability_cont else None
+        data_availability_cont = self._join_section_elements_text(data_availability_sections)
 
         supplementary_data_sections = []
 
@@ -1051,6 +1086,102 @@ class XMLParser(LLMParser):
 
         self.data_availability_cont_str = ''.join(data_availability_cont)
         return data_availability_cont
+
+    def _find_sections_by_category(self, api_xml, section_name):
+        """
+        Find all elements matching a pattern category, combining both pattern dialects defined
+        in retrieval_patterns.json:
+        - xml_tags (attribute-based, e.g. .//sec[@sec-type='funding']), and
+        - xpaths (title-text-based, e.g. //sec[title[contains(translate(text(),...),'funding')]]),
+          which need XPath functions (contains/translate) that findall()'s limited ElementPath
+          can't execute at all (raises "invalid predicate") -- both are run via xpath() here,
+          which handles simple attribute predicates just as well as findall() does.
+
+        :param api_xml: lxml.etree.Element — parsed XML root.
+
+        :param section_name: str — pattern category name in retrieval_patterns.json.
+
+        :return: list of matched elements, deduplicated.
+        """
+        found = []
+        for ptr in self.load_patterns_for_tgt_section(section_name):
+            found.extend(api_xml.xpath(ptr))
+        for ptr in self.load_title_patterns_for_tgt_section(section_name):
+            try:
+                found.extend(api_xml.xpath(ptr))
+            except Exception as e:
+                self.logger.debug(f"Title-xpath {ptr!r} failed for section {section_name}: {e}")
+        return list(dict.fromkeys(found))
+
+    def get_funding_text(self, api_xml):
+        """
+        Retrieve funding/acknowledgments/grant-support content, mirroring get_data_availability_text's
+        structure but for the 'funding_sections' / 'funding_group_metadata' pattern categories.
+
+        :param api_xml: lxml.etree.Element — parsed XML root.
+
+        :return: List of strings — prose from funding/acknowledgment sections, plus one structured
+            "funder | award-id | recipient" line per award-group found in <funding-group> (when present).
+        """
+        self.logger.debug(f"Function call: get_funding_text(api_xml({type(api_xml)})")
+
+        funding_sections = self._find_sections_by_category(api_xml, 'funding_sections')
+
+        self.logger.info(f"Found {len(funding_sections)} funding/acknowledgment sections")
+
+        funding_cont = self._join_section_elements_text(funding_sections)
+
+        def _full_text(elem):
+            return ' '.join(t.strip() for t in elem.itertext() if t.strip()) if elem is not None else None
+
+        for ptr in self.load_patterns_for_tgt_section('funding_group_metadata'):
+            if not ptr.endswith('/funding-statement'):
+                continue
+            for stmt in api_xml.findall(ptr):
+                text = _full_text(stmt)
+                if text:
+                    funding_cont.append(text) if text not in funding_cont else None
+
+        for ptr in self.load_patterns_for_tgt_section('funding_group_metadata'):
+            if not ptr.endswith('/award-group'):
+                continue
+            for award_group in api_xml.findall(ptr):
+                funders = [_full_text(e) for e in award_group.findall('.//funding-source')]
+                award_ids = [_full_text(e) for e in award_group.findall('.//award-id')]
+                recipients = [_full_text(e) for e in award_group.findall('.//principal-award-recipient')]
+                funders, award_ids, recipients = (list(dict.fromkeys(v for v in vals if v)) for vals in (funders, award_ids, recipients))
+                if funders or award_ids or recipients:
+                    line = (f"Funder: {'; '.join(funders) or 'n/a'} | "
+                            f"Award ID: {'; '.join(award_ids) or 'n/a'} | "
+                            f"Recipient: {'; '.join(recipients) or 'n/a'}")
+                    funding_cont.append(line) if line not in funding_cont else None
+
+        self.logger.info(f"Funding content len: {len(funding_cont)}, type: {type(funding_cont)}")
+        self.logger.debug(f"Found funding content: {funding_cont}")
+
+        return funding_cont
+
+    def get_code_availability_text(self, api_xml):
+        """
+        Retrieve code/software-availability content for the 'code_availability_sections'
+        pattern category, mirroring get_funding_text's structure.
+
+        :param api_xml: lxml.etree.Element — parsed XML root.
+
+        :return: List of strings — prose from code/software-availability sections.
+        """
+        self.logger.debug(f"Function call: get_code_availability_text(api_xml({type(api_xml)})")
+
+        code_sections = self._find_sections_by_category(api_xml, 'code_availability_sections')
+
+        self.logger.info(f"Found {len(code_sections)} code/software-availability sections")
+
+        code_cont = self._join_section_elements_text(code_sections)
+
+        self.logger.info(f"Code availability content len: {len(code_cont)}, type: {type(code_cont)}")
+        self.logger.debug(f"Found code availability content: {code_cont}")
+
+        return code_cont
 
     def table_to_text(self, table_wrap):
         """

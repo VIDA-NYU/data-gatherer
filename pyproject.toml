@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "data_gatherer"
-version = "0.2.2"
+version = "0.3.0"
 description = "DataGatherer Library"
 readme = "README.rst"
 license = {text = "MIT"}
@@ -79,4 +79,6 @@ data_gatherer = [
     "prompts/prompt_templates/dataset_prompts/*.json",
     "prompts/prompt_templates/metadata_prompts/*.json",
     "prompts/prompt_templates/agent_for_FP_analysis/*.json",
+    "prompts/prompt_templates/funding_prompts/*.json",
+    "prompts/prompt_templates/software_prompts/*.json",
 ]

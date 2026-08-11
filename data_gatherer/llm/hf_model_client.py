@@ -4,14 +4,15 @@ import logging
 import os
 
 class HFModelClient:
-    def __init__(self, model_id, device='auto', logger=None, use_auth_token=None):
+    def __init__(self, model_id, device='auto', logger=None, use_auth_token=None, revision=None):
         """
         Initialize HuggingFace model client for loading models from HuggingFace Hub.
-        
+
         :param model_id: HuggingFace model ID (e.g., 'vida-nyu/flan-t5-base-dataref-info-extract')
         :param device: Device specification ('auto', 'mps', 'cuda', 'cpu')
         :param logger: Logger instance
         :param use_auth_token: HuggingFace auth token for private models (or True to use stored token)
+        :param revision: Optional git revision (branch, tag, or commit sha) to load from. Defaults to 'main'.
         """
         self.model_id = model_id
         self.logger = logger or logging.getLogger(__name__)
@@ -19,8 +20,9 @@ class HFModelClient:
         self.model = None
         self.tokenizer = None
         self.use_auth_token = use_auth_token
-        
-        self.logger.info(f"HFModelClient initialized with model_id: {model_id}, device: {self.device}")
+        self.revision = revision
+
+        self.logger.info(f"HFModelClient initialized with model_id: {model_id}, revision: {revision or 'main'}, device: {self.device}")
     
     def _setup_device(self, device):
         """
@@ -56,16 +58,18 @@ class HFModelClient:
     def load_model(self):
         """Load the model and tokenizer from HuggingFace Hub."""
         try:
-            self.logger.info(f"Loading tokenizer from HuggingFace Hub: {self.model_id}")
+            self.logger.info(f"Loading tokenizer from HuggingFace Hub: {self.model_id} (revision={self.revision or 'main'})")
             self.tokenizer = AutoTokenizer.from_pretrained(
                 self.model_id,
-                token=self.use_auth_token
+                token=self.use_auth_token,
+                revision=self.revision
             )
-            
-            self.logger.info(f"Loading model from HuggingFace Hub: {self.model_id}")
+
+            self.logger.info(f"Loading model from HuggingFace Hub: {self.model_id} (revision={self.revision or 'main'})")
             self.model = AutoModelForSeq2SeqLM.from_pretrained(
                 self.model_id,
-                token=self.use_auth_token
+                token=self.use_auth_token,
+                revision=self.revision
             )
             
             self.logger.info(f"Moving model to device: {self.device}")

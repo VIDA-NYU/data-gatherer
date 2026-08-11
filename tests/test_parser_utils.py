@@ -249,7 +249,7 @@ def test_semantic_retrieve_from_corpus(get_test_data_path):
     accession_ids = ['GSE269782', 'GSE31210', 'GSE106765', 'GSE60189', 'GSE59239', 'GSE122005', 'GSE38121', 'GSE71587',
                      'GSE37699', 'PXD051771']
     #print(f"top_k_sections: {[sect['L2_distance'] for sect in top_k_sections]}")
-    scores = [1.5200263261795044, 1.5799630880355835, 1.5926913022994995, 1.6268982887268066, 1.6333708763122559]
+    scores = [1.3002493381500244, 1.520026445388794, 1.579963207244873, 1.5926916599273682, 1.5937237739562988]
     print(f"Top-k sections: {top_k_sections[0]}")
     DAS_text = ".\n".join([item['text'] for item in top_k_sections])
     assert isinstance(top_k_sections, list)
@@ -272,7 +272,7 @@ def test_sections_to_corpus_for_HTML_RTR(get_test_data_path):
     assert all(isinstance(s, dict) for s in sections)
     corpus = parser.from_sections_to_corpus(sections)
     assert isinstance(corpus, list)
-    assert len(corpus) == 31
+    assert len(corpus) == 32
     query = "Datasets used, or downloaded, or deposited, or created, or available online"
     top_k_sections = parser.semantic_retrieve_from_corpus(corpus, topk_docs_to_retrieve=3, query=query)
     assert isinstance(top_k_sections, list)
@@ -290,10 +290,10 @@ def test_from_section_to_corpus(get_test_data_path):
         xml_root = etree.fromstring(f.read())
     sections = parser.extract_sections_from_xml(xml_root)
     assert isinstance(sections, list)
-    assert len(sections) == 34  # Updated: now extracts <ack>, <app>, <fn-group> sections
+    assert len(sections) == 36  # Updated: now also extracts <abstract> and <ref-list> sections
     corpus = parser.from_sections_to_corpus(sections)
     assert isinstance(corpus, list)
-    assert len(corpus) == 94  # Updated: deduplication now effective since title no longer baked into sec_txt
+    assert len(corpus) == 96  # Updated: now also extracts <abstract> and <ref-list> sections
     print('\n')
 
 def test_normalize_text_from_pdf(get_test_data_path):

@@ -22,6 +22,9 @@
       "pubmed\\.ncbi\\.nlm\\.nih\\.gov/(\\d{7,8})",
       "(10\\.\\d{4,}/[^\\s<>\"']{4,})",
       "doi\\.org/(10\\.[^\\s<>\"']{4,})"
+    ],
+    "pubmed_search_patterns": [
+      "((?:https?://)?(?:www\\.)?pubmed\\.ncbi\\.nlm\\.nih\\.gov/\\?term=[^\\s<>\"]+)"
     ]
   },
   "nature": {
@@ -74,6 +77,25 @@
       "supplementary_material_sections": {
         "section.supplementary-material": "supplementary",
         "h2.pmc_sec_title:-soup-contains('Supplementary Material')": "supplementary"
+      },
+      "funding_sections": {
+        "section.funding": "funding",
+        "section.acknowledgments": "funding",
+        "h2.pmc_sec_title:-soup-contains('Funding')": "funding",
+        "h3.pmc_sec_title:-soup-contains('Funding')": "funding",
+        "h2.pmc_sec_title:-soup-contains('Acknowledgments')": "funding",
+        "h2.pmc_sec_title:-soup-contains('Acknowledgements')": "funding",
+        "h2.pmc_sec_title:-soup-contains('Financial Disclosure')": "funding",
+        "h2.pmc_sec_title:-soup-contains('Financial Support')": "funding",
+        "h2.pmc_sec_title:-soup-contains('Grant Support')": "funding"
+      },
+      "code_availability_sections": {
+        "section.code-availability-statement": "software",
+        "h2.pmc_sec_title:-soup-contains('Code Availability', 'Code availability')": "software",
+        "h3.pmc_sec_title:-soup-contains('Code Availability', 'Code availability')": "software",
+        "h2.pmc_sec_title:-soup-contains('Software Availability', 'Software availability')": "software",
+        "h2.pmc_sec_title:-soup-contains('Data and Code Availability', 'Data and code availability')": "software",
+        "h2.pmc_sec_title:-soup-contains('Availability of Data and Materials', 'Availability of data and materials')": "software"
       }
     },
     "xpaths": {
@@ -90,6 +112,29 @@
         "//section[h3[contains(text(), 'Clinical Data')]]",
         "//section[h3[contains(text(), 'Associated Data')]]",
         "//section[h2[contains(text(), 'Footnotes')]]"
+      ],
+      "funding_sections": [
+        "//section[h2[contains(text(), 'Funding')]]",
+        "//section[h3[contains(text(), 'Funding')]]",
+        "//section[h2[contains(text(), 'Acknowledgments')]]",
+        "//section[h2[contains(text(), 'Acknowledgements')]]",
+        "//section[h2[contains(text(), 'Financial Disclosure')]]",
+        "//section[h2[contains(text(), 'Financial Support')]]",
+        "//section[h2[contains(text(), 'Grant Support')]]",
+        "//sec[title[contains(translate(text(), 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'funding')]]",
+        "//sec[title[contains(translate(text(), 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'acknowledg')]]",
+        "//sec[title[contains(translate(text(), 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'financial disclosure')]]",
+        "//sec[title[contains(translate(text(), 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'grant support')]]"
+      ],
+      "code_availability_sections": [
+        "//section[h2[contains(text(), 'Code Availability')]]",
+        "//section[h3[contains(text(), 'Code Availability')]]",
+        "//section[h2[contains(text(), 'Software Availability')]]",
+        "//sec[title[contains(translate(text(), 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'code availability')]]",
+        "//sec[title[contains(translate(text(), 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'software availability')]]",
+        "//sec[title[contains(translate(text(), 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'availability of code')]]",
+        "//sec[title[contains(translate(text(), 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'data and code availability')]]",
+        "//sec[title[contains(translate(text(), 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'availability of data and materials')]]"
       ]
     },
     "xml_tags": {
@@ -114,6 +159,29 @@
       ],
       "methods_sections": [
         ".//sec[@sec-type='STAR★Methods']"
+      ],
+      "funding_sections": [
+        ".//ack",
+        ".//sec[@sec-type='funding']",
+        ".//sec[@sec-type='acknowledgment']",
+        ".//sec[@sec-type='acknowledgments']",
+        ".//sec[@sec-type='financial-disclosure']",
+        ".//sec[@sec-type='COI-statement']",
+        ".//fn-group/fn[@fn-type='financial-disclosure']",
+        ".//fn-group/fn[@fn-type='supported-by']",
+        ".//notes[@notes-type='financial-disclosure']",
+        ".//notes[@notes-type='COI-statement']"
+      ],
+      "funding_group_metadata": [
+        ".//funding-group",
+        ".//funding-group/funding-statement",
+        ".//funding-group/award-group",
+        ".//funding-group/award-group/funding-source",
+        ".//funding-group/award-group/award-id",
+        ".//funding-group/award-group/principal-award-recipient"
+      ],
+      "code_availability_sections": [
+        ".//sec[contains(concat('|', translate(@sec-type, ' ', '|'), '|'), '|code-availability|')]"
       ]
     }
   }
