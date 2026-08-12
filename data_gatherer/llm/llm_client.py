@@ -345,6 +345,12 @@ class LLMClient_dev:
         elif 'claude' in self.model:
             return self._call_anthropic(messages, response_format, temperature=temperature)
 
+        elif self.model.startswith('local-flan-t5') or self.model.startswith('hf-'):
+            return self._call_ft_model(messages, temperature=temperature)
+
+        elif self.model.startswith('vllm-'):
+            return self._call_vllm(messages, response_format=response_format, temperature=temperature)
+
         elif 'gpt' in self.model:
             response = None
             if 'gpt-5' in self.model:
@@ -426,15 +432,6 @@ class LLMClient_dev:
                 except Exception as e:
                     self.logger.error(f"Error processing Gemini response: {e}")
                     raise RuntimeError(f"Gemini response processing failed: {e}")
-        
-        elif self.model.startswith('local-flan-t5'):
-            return self._call_ft_model(messages, temperature=temperature)
-
-        elif self.model.startswith('hf-'):
-            return self._call_ft_model(messages, temperature=temperature)
-
-        elif self.model.startswith('vllm-'):
-            return self._call_vllm(messages, response_format=response_format, temperature=temperature)
 
         else:
             raise ValueError(f"Unsupported model: {self.model}. Please use a supported LLM model.")
@@ -474,7 +471,24 @@ class LLMClient_dev:
                 result = self.normalize_response_format(parsed_resp)
             self.logger.debug(f"Final result for {self.model}: {result}")
             return result
-                
+
+        elif self.model.startswith('local-flan-t5'):
+            parsed_response = self.safe_parse_json(raw_response)
+            self.logger.debug(f"Processing local Flan-T5 model response: {parsed_response}")
+            return parsed_response
+
+        elif self.model.startswith('hf-'):
+            parsed_response = self.safe_parse_json(raw_response)
+            self.logger.debug(f"Processing Hugging Face model response: {parsed_response}")
+            return parsed_response
+
+        elif self.model.startswith('vllm-'):
+            parsed_response = self.safe_parse_json(raw_response)
+            self.logger.debug(f"Processing vLLM model response: {parsed_response}")
+            if self.full_document_read and isinstance(parsed_response, dict) and expected_key in parsed_response:
+                return self.normalize_response_format(parsed_response.get(expected_key, []))
+            return parsed_response
+
         elif 'gpt' in self.model:
             self.logger.debug(f"Processing GPT model response")
             self.logger.debug(f"raw_response type: {type(raw_response)}, length: {len(str(raw_response))}, response: {raw_response}")
@@ -546,23 +560,6 @@ class LLMClient_dev:
             final_result = self.normalize_response_format(result)
             self.logger.debug(f"Claude final normalized result: {final_result}")
             return final_result
-        
-        elif self.model.startswith('local-flan-t5'):
-            parsed_response = self.safe_parse_json(raw_response)
-            self.logger.debug(f"Processing local Flan-T5 model response: {parsed_response}")
-            return parsed_response
-
-        elif self.model.startswith('hf-'):
-            parsed_response = self.safe_parse_json(raw_response)
-            self.logger.debug(f"Processing Hugging Face model response: {parsed_response}")
-            return parsed_response
-
-        elif self.model.startswith('vllm-'):
-            parsed_response = self.safe_parse_json(raw_response)
-            self.logger.debug(f"Processing vLLM model response: {parsed_response}")
-            if self.full_document_read and isinstance(parsed_response, dict) and expected_key in parsed_response:
-                return self.normalize_response_format(parsed_response.get(expected_key, []))
-            return parsed_response
 
         else:
             self.logger.debug(f"Unsupported model: {self.model}")
