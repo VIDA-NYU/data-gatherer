@@ -29,7 +29,8 @@ class PromptManager:
         self.logger.info(f"Prompt saved to {prompt_file}")
 
     def load_prompt(self, prompt_name, user_prompt_dir=None, subdir="dataset_prompts"):
-        """Load a static prompt template."""
+        """Load a static prompt template. Falls back to self.prompt_dir (set at init) as the user override dir."""
+        user_prompt_dir = user_prompt_dir or self.prompt_dir
         self.logger.info(f"Loading prompt: {prompt_name} from user_prompt_dir: {user_prompt_dir}, subdir: {subdir}")
         return load_prompt(prompt_name, user_prompt_dir=user_prompt_dir, subdir=subdir)
 

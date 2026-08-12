@@ -85,7 +85,8 @@ class DataGatherer:
         data_repos_config='open_bio_data_repos.json',
         user_config_dir=None,
         grobid_for_pdf=False,
-        raw_data_df_parquet_filepath=None
+        raw_data_df_parquet_filepath=None,
+        prompt_dir="data_gatherer/prompts/prompt_templates"
         ):
 
         self.open_data_repos_ontology = load_config(data_repos_config, user_config_dir=user_config_dir)
@@ -109,6 +110,7 @@ class DataGatherer:
             'PDF_GROBID': None
         }
 
+        self.prompt_dir = prompt_dir
         self.write_htmls_xmls = write_htmls_xmls
         self.article_file_dir = article_file_dir
         self.load_from_cache = load_from_cache
@@ -361,27 +363,28 @@ class DataGatherer:
             if raw_data is not None:
                 router = XMLRouter(self.open_data_repos_ontology, self.logger, full_document_read=self.full_document_read,
                                 llm_name=self.llm, use_portkey=use_portkey, save_dynamic_prompts=self.save_dynamic_prompts,
-                                     embeddings_model_name=embeddings_retriever_model, embeds_cache_read=self.embeds_cache_read, 
-                                     embeds_cache_write=self.embeds_cache_write)
+                                     embeddings_model_name=embeddings_retriever_model, embeds_cache_read=self.embeds_cache_read,
+                                     embeds_cache_write=self.embeds_cache_write, prompt_dir=self.prompt_dir)
                 self.parser = router.get_parser(raw_data)
             else:
                 self.parser = XMLParser(self.open_data_repos_ontology, self.logger, full_document_read=self.full_document_read,
                                 llm_name=self.llm, use_portkey=use_portkey, save_dynamic_prompts=self.save_dynamic_prompts,
-                                     embeddings_model_name=embeddings_retriever_model, embeds_cache_read=self.embeds_cache_read, 
-                                     embeds_cache_write=self.embeds_cache_write)
+                                     embeddings_model_name=embeddings_retriever_model, embeds_cache_read=self.embeds_cache_read,
+                                     embeds_cache_write=self.embeds_cache_write, prompt_dir=self.prompt_dir)
         elif raw_data_format.upper() == "HTML":
             self.parser = HTMLParser(self.open_data_repos_ontology, self.logger, full_document_read=self.full_document_read,
                                llm_name=self.llm, use_portkey=use_portkey, save_dynamic_prompts=self.save_dynamic_prompts,
-                                     embeddings_model_name=embeddings_retriever_model, embeds_cache_read=self.embeds_cache_read, 
-                                     embeds_cache_write=self.embeds_cache_write)
+                                     embeddings_model_name=embeddings_retriever_model, embeds_cache_read=self.embeds_cache_read,
+                                     embeds_cache_write=self.embeds_cache_write, prompt_dir=self.prompt_dir)
         elif raw_data_format.upper() == "PDF" and grobid_for_pdf:
             self.parser = GrobidPDFParser(self.open_data_repos_ontology, self.logger, full_document_read=self.full_document_read,
-                               llm_name=self.llm, use_portkey=use_portkey, save_dynamic_prompts=self.save_dynamic_prompts, 
-                               write_XML=self.write_htmls_xmls)
+                               llm_name=self.llm, use_portkey=use_portkey, save_dynamic_prompts=self.save_dynamic_prompts,
+                               write_XML=self.write_htmls_xmls, prompt_dir=self.prompt_dir)
 
         elif raw_data_format.upper() == "PDF":
             self.parser = PDFParser(self.open_data_repos_ontology, self.logger, full_document_read=self.full_document_read,
-                               llm_name=self.llm, use_portkey=use_portkey, save_dynamic_prompts=self.save_dynamic_prompts)
+                               llm_name=self.llm, use_portkey=use_portkey, save_dynamic_prompts=self.save_dynamic_prompts,
+                               prompt_dir=self.prompt_dir)
         else:
             raise ValueError(f"Unsupported raw data format: {raw_data_format}")
         

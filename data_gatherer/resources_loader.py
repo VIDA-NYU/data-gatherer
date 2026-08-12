@@ -34,7 +34,8 @@ def load_prompt(prompt_name, user_prompt_dir=None, subdir = 'dataset_prompts'):
     """
     # 1. Check user override
     if user_prompt_dir:
-        user_prompt_path = os.path.join(user_prompt_dir, prompt_name + '.json')
+        user_prompt_path = os.path.join(user_prompt_dir, subdir, prompt_name + '.json') if subdir \
+            else os.path.join(user_prompt_dir, prompt_name + '.json')
         if os.path.exists(user_prompt_path):
             with open(user_prompt_path, 'r') as f:
                 return json.load(f)
