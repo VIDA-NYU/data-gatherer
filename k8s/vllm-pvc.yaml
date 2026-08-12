@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: vllm-gptoss-pvc
+  namespace: data-gatherer
+spec:
+  accessModes: [ReadWriteOnce]
+  storageClassName: csi-rbd-3-sc
+  resources:
+    requests:
+      storage: 50Gi
