@@ -467,7 +467,10 @@ class LLMClient_dev:
                 self.logger.debug(f"Found expected key '{expected_key}' in parsed response")
                 result = self.normalize_response_format(parsed_resp[expected_key])
             else:
-                self.logger.debug(f"Expected key '{expected_key}' not found or not dict, using full response")
+                if expected_key is None:
+                    self.logger.debug(f"No expected key provided, using full parsed response")
+                else:
+                    self.logger.debug(f"Expected key '{expected_key}' not found in parsed response, using full response")
                 result = self.normalize_response_format(parsed_resp)
             self.logger.debug(f"Final result for {self.model}: {result}")
             return result

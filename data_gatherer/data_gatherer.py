@@ -567,9 +567,7 @@ class DataGatherer:
 
         :param enable_chunking: If content exceeds self.llm's token limit, split it into multiple chunks.
 
-        :return: (normalized_input, article_title) — normalized_input is a str, or a list[str] of
-            chunks when intelligent_chunking triggers a split. article_title is '' unless
-            extracted via the GROBID PDF path.
+        :return: (normalized_input, article_title) — normalized_input is a str, or a list[str] of chunks when intelligent_chunking triggers a split; article_title is '' unless extracted via the GROBID PDF path.
         """
         article_title = ''
         if raw_data_format.upper() == 'XML':
@@ -1837,6 +1835,7 @@ class DataGatherer:
         remove_reference_tags=False,
         intelligent_chunking=False,
         regex_search_id_patterns=None,
+        expected_key='datasets',
         ):
         """
         Complete integrated batch processing using LLMClient batch functionality.
@@ -1894,15 +1893,11 @@ class DataGatherer:
 
         :param local_fetch_file: Optional local file for fetching data
 
-        :param remove_reference_tags: If True, strips the references/bibliography section from full-document
-            (FDR) input before sending it to the LLM. Off by default. Intended for tasks (e.g. grant/funding
-            extraction) where references are never relevant.
+        :param remove_reference_tags: If True, strips the references/bibliography section from full-document (FDR) input before sending it to the LLM. Off by default.
 
-        :param intelligent_chunking: If True, and a document's normalized FDR content (after any
-            reference stripping) still exceeds the target model's token limit, split it into multiple
-            section-aware chunks (via LLMParser.intelligent_chunk_paper) instead of sending one oversized
-            document. Off by default — does not alter extract_datasets_info_from_content's own separate
-            chunking behavior on the sync path.
+        :param intelligent_chunking: If True, splits FDR content exceeding the target model's token limit into section-aware chunks via LLMParser.intelligent_chunk_paper instead of sending it oversized. Off by default.
+
+        :param expected_key: Top-level JSON key to unwrap on the sync path (use_batch_api=False); process_datasets_response right after still assumes dataset-shaped records regardless.
 
         :return: Dictionary with batch information and results
         """
@@ -2095,7 +2090,7 @@ class DataGatherer:
                         resps = self.parser.llm_client.process_llm_response(
                             raw_response=raw_output,
                             response_format=response_format,
-                            expected_key='datasets'
+                            expected_key=expected_key
                         )
                         resps = self.parser.normalize_response_type(resps)
                         datasets = self.parser.process_datasets_response(resps, skip_validation=True)
