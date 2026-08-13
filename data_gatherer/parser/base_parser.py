@@ -1566,15 +1566,15 @@ Files:
     def tokens_over_limit(self, html_cont: str, model="gpt-4", limit=128000, allowance_static_prompt=400):
         tokens_cnt = self.count_tokens(html_cont, model=model)
         if 'gpt' in model:
-            self.logger.info(f"Number of tokens: {tokens_cnt}")
+            self.logger.debug(f"Number of tokens: {tokens_cnt}")
             return tokens_cnt + int(allowance_static_prompt * 1.5) > limit - 2000
         elif 'claude' in model:
             limit = 200000
-            self.logger.info(f"Number of tokens: {tokens_cnt}")
+            self.logger.debug(f"Number of tokens: {tokens_cnt}")
             return tokens_cnt + int(allowance_static_prompt * 1.5) > limit - 2000
         elif 'gemini' in model:
             limit = 1000000
-        self.logger.info(f"Estimated number of tokens for model '{model}': {tokens_cnt}")
+        self.logger.debug(f"Estimated number of tokens for model '{model}': {tokens_cnt}")
         return tokens_cnt + int(allowance_static_prompt * 1.5) > limit - 2000
 
     def count_tokens(self, prompt, model="gpt-4o-mini") -> int:
@@ -1592,7 +1592,7 @@ Files:
 
         # **Ensure `prompt` is a string**
         if isinstance(prompt, list):
-            self.logger.info(f"Expected string but got list. Converting list to string.")
+            self.logger.debug(f"Expected string but got list. Converting list to string.")
             prompt = " ".join([msg["content"] for msg in prompt if isinstance(msg, dict) and "content" in msg])
 
         elif not isinstance(prompt, str):

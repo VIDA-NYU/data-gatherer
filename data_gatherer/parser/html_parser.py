@@ -344,11 +344,11 @@ class HTMLParser(LLMParser):
                 self.extracted_tables.append(table)
 
             if section_text_from_paragraphs.strip() == f'{section_title}':
-                self.logger.info(f"Section '{section_title}' is empty after processing. Skipping.")
+                self.logger.debug(f"Section '{section_title}' is empty after processing. Skipping.")
                 continue
 
             elif section_text_from_paragraphs in [sect['sec_txt_clean'] for sect in sections]:
-                self.logger.info(f"Section '{section_title}' is a duplicate after processing. Skipping.")
+                self.logger.debug(f"Section '{section_title}' is a duplicate after processing. Skipping.")
                 continue
 
             # Create section dictionary (matching XML parser structure)
