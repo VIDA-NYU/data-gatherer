@@ -32,6 +32,7 @@ class BackupDataStore:
     _filepath = None
     _timestamp = None
     _ttl = 1800  # 30 minutes
+    _pending = None  # buffered entries awaiting flush to disk
     
     def __new__(cls, filepath=None, logger=None):
         if cls._instance is None:
@@ -50,23 +51,7 @@ class BackupDataStore:
             self._dataframe = pd.read_parquet(filepath)
             self._filepath = filepath
             self._timestamp = time.time()
-            # The dataframe is keyed by full article URLs (index) or a 'publication'
-            # column of URLs, but every caller looks up by bare article ID. Normalize
-            # both sides so lookups actually match. Vectorized pandas regex handles the
-            # common PMC case for every row at once — calling DataFetcher.url_to_article_id
-            # (3 regex searches + a log line) per row is far too slow on a large cache
-            # file (hundreds of thousands of rows) and floods the log. Only the rare
-            # non-PMC rows (DOI/PMID-keyed) fall back to the real function, unbound
-            # (self=this BackupDataStore) since it only touches self.logger /
-            # self.current_article_id, both fine on any object.
-            src = self._dataframe['publication'] if 'publication' in self._dataframe.columns else self._dataframe.index
-            src = pd.Series(src, dtype=str).reset_index(drop=True)
-            digits = src.str.extract(r'PMC(\d+)', flags=re.IGNORECASE, expand=False)
-            article_ids = digits.map(lambda d: f"PMC{d}" if pd.notna(d) else None)
-            missing = article_ids.isna()
-            if missing.any():
-                article_ids[missing] = [DataFetcher.url_to_article_id(self, v) for v in src[missing]]
-            self._article_id_index = pd.Index(article_ids)
+            self._build_article_id_index()
             return True
         except Exception:
             self._dataframe = None
@@ -74,6 +59,61 @@ class BackupDataStore:
             self._timestamp = None
             self._article_id_index = None
             return False
+
+    def _build_article_id_index(self):
+        """Normalize the dataframe's URL/'publication' column into bare article IDs for lookup (vectorized; per-row fallback only for non-PMC rows)."""
+        src = self._dataframe['publication'] if 'publication' in self._dataframe.columns else self._dataframe.index
+        src = pd.Series(src, dtype=str).reset_index(drop=True)
+        digits = src.str.extract(r'PMC(\d+)', flags=re.IGNORECASE, expand=False)
+        article_ids = digits.map(lambda d: f"PMC{d}" if pd.notna(d) else None)
+        missing = article_ids.isna()
+        if missing.any():
+            article_ids[missing] = [DataFetcher.url_to_article_id(self, v) for v in src[missing]]
+        self._article_id_index = pd.Index(article_ids)
+
+    def persist(self, url, fetched_data, raw_data_format, filepath=None, flush_every=200):
+        """Buffer a fetched publication; flush() to disk every `flush_every` entries (parquet has no append mode, so each flush rewrites the whole file)."""
+        filepath = filepath or self._filepath
+        if not filepath:
+            self.logger.warning("BackupDataStore.persist called without a filepath; skipping persist.")
+            return
+
+        serialized = fetched_data
+        if hasattr(fetched_data, 'tag'):  # lxml Element
+            serialized = ET.tostring(fetched_data, encoding='unicode', method='xml', pretty_print=True)
+
+        if self._pending is None:
+            self._pending = {}
+        self._pending[url] = {'fetched_data': serialized, 'raw_data_format': raw_data_format}
+
+        if len(self._pending) >= flush_every:
+            self.flush(filepath)
+
+    def flush(self, filepath=None):
+        """Merge any buffered entries into the on-disk backup store and clear the buffer."""
+        filepath = filepath or self._filepath
+        if not filepath or not self._pending:
+            return
+
+        new_rows = pd.DataFrame.from_dict(self._pending, orient='index')
+        new_rows.index.name = None
+
+        on_disk = None
+        if os.path.exists(filepath):
+            try:
+                on_disk = pd.read_parquet(filepath)
+            except Exception as e:
+                self.logger.warning(f"Could not read existing backup store at {filepath}, will not merge: {e}")
+
+        combined = pd.concat([on_disk, new_rows]) if on_disk is not None and len(on_disk) > 0 else new_rows
+        combined = combined[~combined.index.duplicated(keep='last')]
+        combined.to_parquet(filepath, index=True)
+
+        self._dataframe = combined
+        self._filepath = filepath
+        self._timestamp = time.time()
+        self._build_article_id_index()
+        self._pending = {}
 
     def _is_valid(self):
         """Check if cached data is still valid."""
@@ -130,13 +170,15 @@ class DataFetcher(ABC):
         
         if hasattr(self, 'backup_store') and self.backup_store is not None:
             self.logger.debug("Using existing BackupDataStore instance.")
+        elif backup_file and os.path.exists(backup_file):
+            self.backup_store = BackupDataStore(filepath=backup_file, logger=self.logger)
+            stats = self.backup_store.get_stats()
+            self.logger.info(f"Backup data store initialized: {stats['size']} publications, valid: {stats['valid']}")
         else:
-            if backup_file and os.path.exists(backup_file):
-                self.backup_store = BackupDataStore(filepath=backup_file, logger=self.logger)
-                stats = self.backup_store.get_stats()
-                self.logger.info(f"Backup data store initialized: {stats['size']} publications, valid: {stats['valid']}")
-            else:
-                self.logger.info(f"No backup data available at {backup_file}")
+            # No on-disk backup yet, but still grab a BackupDataStore instance so newly
+            # fetched publications can be persisted to backup_file as they come in.
+            self.backup_store = BackupDataStore(logger=self.logger)
+            self.logger.info(f"No backup data available at {backup_file}")
     
     def try_backup_fetch(self, identifier):
         """

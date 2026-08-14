@@ -194,6 +194,10 @@ class DataGatherer:
             urls = [urls]
             single_article = True
 
+        if write_df_to_path and not write_df_to_path.endswith('.parquet'):
+            self.logger.info("Dataframe must be written to parquet file. Please provide a valid path ending with .parquet")
+            write_df_to_path = False
+
         complete_publication_fetches = {}
         batch_results = {}
         i = 0
@@ -285,7 +289,14 @@ class DataGatherer:
                                 }
                     else:
                         self.logger.warning(f"Unsupported raw data format: {self.data_fetcher.raw_data_format}.")
-            
+
+                # Buffer this publication for the backup store (see BackupDataStore.persist).
+                if write_df_to_path and pub_link in complete_publication_fetches:
+                    entry = complete_publication_fetches[pub_link]
+                    self.data_fetcher.backup_store.persist(
+                        pub_link, entry['fetched_data'], entry['raw_data_format'], filepath=write_df_to_path
+                    )
+
             # Move to next fallback method
             i += 1
 
@@ -293,33 +304,9 @@ class DataGatherer:
         if hasattr(self.data_fetcher, 'scraper_tool'):
             self.data_fetcher.scraper_tool.quit()
 
+        # Flush any remaining buffered fetches (fewer than the batch size) to the backup store.
         if write_df_to_path:
-            if write_df_to_path.endswith('.parquet'):
-                # Convert XML elements to strings for Parquet serialization
-                serialized_data = {}
-                for url, data in complete_publication_fetches.items():
-                    serialized_entry = data.copy()
-                    fetched = data['fetched_data']
-                    
-                    # Check if fetched_data is an lxml Element and convert to string
-                    if hasattr(fetched, 'tag'):  # It's an XML Element
-                        from lxml import etree
-                        serialized_entry['fetched_data'] = etree.tostring(
-                            fetched, 
-                            encoding='unicode', 
-                            method='xml',
-                            pretty_print=True
-                        )
-                    # Otherwise keep as is (for HTML strings, etc.)
-                    
-                    serialized_data[url] = serialized_entry
-                
-                df = pd.DataFrame.from_dict(serialized_data, orient='index')
-                df.index.name = None
-                df.to_parquet(write_df_to_path, index=True)
-
-            else:
-                self.logger.info("Dataframe must be written to parquet file. Please provide a valid path ending with .parquet")
+            self.data_fetcher.backup_store.flush(write_df_to_path)
 
         if single_article and urls[0] in complete_publication_fetches:
             return complete_publication_fetches[urls[0]]['fetched_data']
