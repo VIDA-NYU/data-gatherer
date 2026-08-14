@@ -633,7 +633,7 @@ class XMLParser(LLMParser):
                     parent = ref_list.getparent()
                     if parent is not None:
                         parent.remove(ref_list)
-                self.logger.info(f"Removed {len(ref_lists)} <ref-list> element(s) from XML.")
+                self.logger.debug(f"Removed {len(ref_lists)} <ref-list> element(s) from XML.")
 
             # Remove unnecessary whitespace and normalize text
             for elem in xml_root.iter():
