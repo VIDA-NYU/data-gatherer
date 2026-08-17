@@ -453,12 +453,19 @@ Files:
 
         :return: list of content strings preserving section order and never splitting a section.
         """
-        over_limit_kwargs = {'allowance_static_prompt': allowance_static_prompt}
-        if limit is not None:
-            over_limit_kwargs['limit'] = limit
+        # Resolve the effective token limit once, mirroring tokens_over_limit's per-model
+        # branching (claude/gemini ignore an explicit `limit` override; gpt/default honor it).
+        if 'claude' in model:
+            effective_limit = 200000
+        elif 'gemini' in model:
+            effective_limit = 1000000
+        else:
+            effective_limit = limit if limit is not None else 128000
+        threshold = effective_limit - 2000 - int(allowance_static_prompt * 1.5)
 
         chunks = []
-        current_text = ""
+        current_parts = []
+        current_tokens = 0
 
         for section in sections:
             if isinstance(section, dict):
@@ -469,22 +476,27 @@ Files:
             if not section_text:
                 continue
 
-            candidate_text = f"{current_text}\n{section_text}" if current_text else section_text
+            # Count each section's tokens once and track a running total for the chunk being
+            # built, instead of re-tokenizing the whole (ever-growing) accumulated chunk text
+            # on every section - the latter is O(n^2) and hangs for section-heavy documents.
+            section_tokens = self.count_tokens(section_text, model=model)
 
-            if current_text and self.tokens_over_limit(candidate_text, model, **over_limit_kwargs):
-                chunks.append(current_text)
-                current_text = section_text
-                if self.tokens_over_limit(current_text, model, **over_limit_kwargs):
+            if current_parts and current_tokens + section_tokens > threshold:
+                chunks.append("\n".join(current_parts))
+                current_parts = [section_text]
+                current_tokens = section_tokens
+                if section_tokens > threshold:
                     self.logger.warning(
                         f"intelligent_chunk_paper: a single section alone ({len(section_text)} chars, "
                         f"title={section.get('section_title', 'n/a') if isinstance(section, dict) else 'n/a'}) "
                         f"exceeds the token limit for model {model}; keeping it whole in its own chunk anyway."
                     )
             else:
-                current_text = candidate_text
+                current_parts.append(section_text)
+                current_tokens += section_tokens
 
-        if current_text:
-            chunks.append(current_text)
+        if current_parts:
+            chunks.append("\n".join(current_parts))
 
         self.logger.info(f"intelligent_chunk_paper: packed {len(sections)} section(s) into {len(chunks)} chunk(s) for model {model}.")
         return chunks
