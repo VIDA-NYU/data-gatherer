@@ -740,3 +740,59 @@ software_mention_response_schema_gpt = {
         "required": ["software_mentions"],
     }
 }
+
+############################# Model Mention Detection Schema #############################
+# Same task shape as software_mention_response_schema_gpt above, specialized to pretrained-model
+# mentions (Hugging Face Hub, TensorFlow Hub, PyTorch Hub, ModelScope, Civitai, etc.): a model
+# mention is any named pretrained model/checkpoint referenced in the paper, whether or not it has
+# a URL. "mention_type" adds 'fine-tuned' alongside SOMD's created/used -- fine-tuning an existing
+# checkpoint is the dominant way papers use pretrained models and is a materially different
+# relationship to the paper than using a tool as-is or releasing a new one from scratch.
+
+model_mention_response_schema_gpt = {
+    "type": "json_schema",
+    "name": "GPT_model_mention_responses_schema",
+    "schema": {
+        "type": "object",  # Root must be an object
+        "properties": {
+            "model_mentions": {  # Use a property to hold the array
+                "type": "array",
+                "items": {
+                    "type": "object",
+                    "properties": {
+                        "model_name": {
+                            "type": "string",
+                            "description": "The name of the pretrained model/checkpoint as it appears in the paper (e.g. 'BERT-base', 'ResNet-50', 'Llama-2-7b'). Required for every mention, even when no URL or version is given.",
+                            "maxLength": 128
+                        },
+                        "version": {
+                            "type": "string",
+                            "description": "The version/checkpoint tag of the model, if stated (e.g. 'v1.0', 'large', '7b'). Otherwise 'n/a'.",
+                            "maxLength": 32
+                        },
+                        "mention_type": {
+                            "type": "string",
+                            "enum": ["created", "used", "fine-tuned", "n/a"],
+                            "description": "'created' if this model is the paper's own new model/checkpoint being introduced; 'used' if it's an existing pretrained model used as-is (e.g. for inference or as a frozen backbone); 'fine-tuned' if an existing pretrained model was fine-tuned/adapted on the paper's own data; 'n/a' if unclear."
+                        },
+                        "url": {
+                            "type": "string",
+                            "description": "The URL/repository link for this model, if given (Hugging Face Hub, TensorFlow Hub, PyTorch Hub, ModelScope, Civitai, a lab homepage, etc. -- any kind, not just Hugging Face). Otherwise 'n/a'.",
+                            "maxLength": 256
+                        },
+                        "context_from_paper": {
+                            "type": "string",
+                            "description": "The text passage from the paper mentioning this model.",
+                            "maxLength": 1024
+                        }
+                    },
+                    "additionalProperties": False,
+                    "required": ["model_name", "version", "mention_type", "url", "context_from_paper"]
+                },
+                "minItems": 1
+            }
+        },
+        "additionalProperties": False,
+        "required": ["model_mentions"],
+    }
+}

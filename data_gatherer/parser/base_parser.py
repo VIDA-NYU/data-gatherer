@@ -797,6 +797,53 @@ Files:
         )
         return result
 
+    def process_model_response(self, resps):
+        """
+        Process the LLM response containing (pretrained) model mentions: name, version/checkpoint,
+        mention_type, url, context -- see model_mention_response_schema_gpt. Mirrors
+        process_software_response(); models get a distinct 'fine-tuned' mention_type since
+        that's a materially different relationship to the paper than 'used' as-is.
+
+        :param resps: LLM response containing model mention records (list of dicts).
+
+        :return: List of dicts, cleaned as described above. Records without a usable
+            'model_name' are dropped (that field is the one thing that must be real).
+        """
+        url_like_pattern = re.compile(r'^https?://', re.IGNORECASE)
+        valid_mention_types = {'created', 'used', 'fine-tuned', 'n/a'}
+        result = []
+        dropped = 0
+        cleaned_urls = 0
+        cleaned_types = 0
+        for record in resps:
+            if not isinstance(record, dict):
+                continue
+            record = dict(record)
+            model_name = (record.get('model_name') or '').strip()
+            if not model_name:
+                dropped += 1
+                continue
+
+            url = (record.get('url') or '').strip()
+            if url and url != 'n/a' and not url_like_pattern.match(url):
+                self.logger.debug(f"process_model_response: url {url!r} for {model_name!r} doesn't look like a URL, resetting to 'n/a'")
+                record['url'] = 'n/a'
+                cleaned_urls += 1
+
+            mention_type = (record.get('mention_type') or 'n/a').strip().lower()
+            if mention_type not in valid_mention_types:
+                self.logger.debug(f"process_model_response: unexpected mention_type {mention_type!r} for {model_name!r}, resetting to 'n/a'")
+                record['mention_type'] = 'n/a'
+                cleaned_types += 1
+
+            result.append(record)
+
+        self.logger.info(
+            f"process_model_response: kept {len(result)}/{len(resps)} record(s) "
+            f"({dropped} dropped for missing model_name, {cleaned_urls} url(s) cleaned, {cleaned_types} mention_type(s) cleaned)"
+        )
+        return result
+
     def schema_validation(self, dataset, req_timeout=0.5, skip=False):
         """
         Validate and extract dataset information based on the schema.
@@ -1125,6 +1172,26 @@ Files:
             r'sourceforge\.net/(projects|p)/[\w.-]+',
             r'pypi\.org/project/[\w.-]+',
             r'cran\.r-project\.org/(web/packages|package)/[\w.-]+',
+        ]
+
+    def get_model_hosting_id_patterns(self):
+        """
+        Regex patterns for common model-hosting URLs (Hugging Face Hub, TensorFlow Hub,
+        PyTorch Hub, Model Zoo variants, ModelScope, Civitai). Same role as
+        get_code_hosting_id_patterns() but for pretrained-model mentions (SOMD's model-mention
+        analogue): intended as the `ID_patterns` argument to
+        retrieve_relevant_content(include_snippets_with_ID_patterns=True, ID_patterns=...), the
+        deterministic Tier-1 half of model-mention detection. Tier 2 (the LLM prompt/schema)
+        covers model mentions with no URL at all (e.g. "we fine-tuned BERT-base").
+
+        :return: list of regex pattern strings.
+        """
+        return [
+            r'huggingface\.co/[\w.-]+/[\w.-]+',
+            r'tfhub\.dev/[\w.-]+/[\w.-]+',
+            r'pytorch\.org/hub/[\w.\-/]+',
+            r'modelscope\.cn/models/[\w.-]+/[\w.-]+',
+            r'civitai\.com/models/\d+',
         ]
 
     def get_all_repo_names(self, uncased=False):
