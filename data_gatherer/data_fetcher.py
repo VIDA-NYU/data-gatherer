@@ -165,6 +165,7 @@ class DataFetcher(ABC):
         self.src = src
         self.local_data_used = False
         self.redirect_mapping = {}
+        self.backup_file = backup_file
 
         self.logger.debug(f"Setting up BackupDataStore with file: {backup_file}")
         
@@ -872,7 +873,6 @@ class WebScraper(DataFetcher):
         self.driver_path = driver_path
         self.browser = browser
         self.headless = headless
-        self.backup_file = backup_file
         self.logged_in_domains = set()  # domains where login was already completed this run
         self.logger.debug("WebScraper initialized.")
 

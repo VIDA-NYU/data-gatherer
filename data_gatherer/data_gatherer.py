@@ -669,7 +669,8 @@ class DataGatherer:
         self.full_document_read = full_document_read or self.full_document_read or (self.parser is not None and self.parser.full_document_read)
 
         self.data_fetcher = self.data_fetcher.update_DataFetcher_settings(url, driver_path=driver_path, browser=browser,
-                                                                          headless=headless, HTML_fallback=HTML_fallback)
+                                                                          headless=headless, HTML_fallback=HTML_fallback,
+                                                                          local_fetch_file=self.data_fetcher.backup_file)
         self.logger.info(f"Type of data_fetcher {self.data_fetcher.__class__.__name__}")
 
         article_id = self.data_fetcher.url_to_article_id(url)
