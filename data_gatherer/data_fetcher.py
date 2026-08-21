@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 import re
 import logging
+import threading
 import numpy as np
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
@@ -33,17 +34,23 @@ class BackupDataStore:
     _timestamp = None
     _ttl = 1800  # 30 minutes
     _pending = None  # buffered entries awaiting flush to disk
-    
+    _lock = threading.Lock()  # guards singleton creation and dataframe (re)loads across threads
+
     def __new__(cls, filepath=None, logger=None):
         if cls._instance is None:
-            cls._instance = super().__new__(cls)
+            with cls._lock:
+                if cls._instance is None:
+                    cls._instance = super().__new__(cls)
         return cls._instance
-    
+
     def __init__(self, filepath=None, logger=None):
         self.logger = logger or logging.getLogger(__name__)
-        if filepath and (self._filepath != filepath or not self._is_valid()):
-            self._load_dataframe(filepath)
-            self.logger.debug(f"BackupDataStore loaded from {filepath}, entries: {len(self._dataframe) if self._dataframe is not None else 0}")
+        if filepath:
+            with self._lock:
+                # re-check inside the lock: another thread may have already loaded this filepath
+                if self._filepath != filepath or not self._is_valid():
+                    self._load_dataframe(filepath)
+                    self.logger.debug(f"BackupDataStore loaded from {filepath}, entries: {len(self._dataframe) if self._dataframe is not None else 0}")
     
     def _load_dataframe(self, filepath):
         """Load DataFrame from file with error handling."""
@@ -71,7 +78,7 @@ class BackupDataStore:
             article_ids[missing] = [DataFetcher.url_to_article_id(self, v) for v in src[missing]]
         self._article_id_index = pd.Index(article_ids)
 
-    def persist(self, url, fetched_data, raw_data_format, filepath=None, flush_every=200):
+    def persist(self, url, fetched_data, raw_data_format, filepath=None, flush_every=30000):
         """Buffer a fetched publication; flush() to disk every `flush_every` entries (parquet has no append mode, so each flush rewrites the whole file)."""
         filepath = filepath or self._filepath
         if not filepath:
