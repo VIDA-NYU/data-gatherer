@@ -737,9 +737,11 @@ Files:
 
         :return: List of flat dicts, each with a singular 'grant_number' key instead of 'grant_numbers'.
         """
+        expected_grant_keys = {'funder_name', 'grant_numbers', 'funding_context_from_paper', 'recipient'}
         result = []
         for record in resps:
-            if not isinstance(record, dict):
+            if not isinstance(record, dict) or not expected_grant_keys & record.keys():
+                self.logger.warning(f"process_grants_response: dropping malformed grant record: {record}")
                 continue
             record = dict(record)
             grant_numbers = record.pop('grant_numbers', None)

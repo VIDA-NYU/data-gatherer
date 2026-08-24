@@ -515,12 +515,12 @@ class LLMClient_dev:
 
             parsed_response = self.safe_parse_json(raw_response)
             self.logger.info(f"GPT parsed response: {parsed_response}, type: {type(parsed_response)}")
-            if self.full_document_read and isinstance(parsed_response, dict) and expected_key in parsed_response:
-                result = parsed_response.get(expected_key, []) if expected_key else parsed_response
-                self.logger.debug(f"GPT full_document_read=True, extracted result: {result}")
+            if isinstance(parsed_response, dict) and expected_key and expected_key in parsed_response:
+                result = parsed_response.get(expected_key, [])
+                self.logger.debug(f"GPT extracted key '{expected_key}': {result}")
             else:
                 result = parsed_response or []
-                self.logger.debug(f"GPT full_document_read=False, result: {result}")
+                self.logger.debug(f"GPT result: {result}")
             final_result = self.normalize_response_format(result)
             self.logger.debug(f"GPT final normalized result: {final_result}")
             return final_result
@@ -531,8 +531,10 @@ class LLMClient_dev:
                 # For Portkey, raw_response is already the response object
                 parsed_response = self.safe_parse_json(raw_response)
                 self.logger.debug(f"Gemini Portkey parsed response: {parsed_response}")
-                if self.full_document_read and isinstance(parsed_response, dict):
-                    result = parsed_response.get(expected_key, []) if expected_key else parsed_response
+                if isinstance(parsed_response, dict) and expected_key and expected_key in parsed_response:
+                    result = parsed_response.get(expected_key, [])
+                elif isinstance(parsed_response, dict):
+                    result = parsed_response
                 else:
                     result = parsed_response if isinstance(parsed_response, list) else []
                 self.logger.debug(f"Gemini Portkey result: {result}")
@@ -1129,7 +1131,7 @@ class LLMClient_dev:
                             'result': {
                                 'type': result.result.type,
                                 'message': result.result.message.model_dump() if result.result.type == 'succeeded' else None,
-                                'error': vars(result.result.error) if result.result.type == 'errored' else None,
+                                'error': result.result.error.model_dump() if result.result.type == 'errored' else None,
                             }
                         }) + '\n')
 
