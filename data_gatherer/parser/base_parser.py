@@ -811,6 +811,8 @@ Files:
 
         :return: List of dicts, cleaned as described above. Records without a usable
             'model_name' are dropped (that field is the one thing that must be real).
+            'url' is normalized to a list of strings (one model mention can carry multiple
+            hosting links, e.g. a GitHub repo and a Hugging Face page for the same checkpoint).
         """
         url_like_pattern = re.compile(r'^https?://', re.IGNORECASE)
         valid_mention_types = {'created', 'used', 'fine-tuned', 'n/a'}
@@ -827,11 +829,23 @@ Files:
                 dropped += 1
                 continue
 
-            url = (record.get('url') or '').strip()
-            if url and url != 'n/a' and not url_like_pattern.match(url):
-                self.logger.debug(f"process_model_response: url {url!r} for {model_name!r} doesn't look like a URL, resetting to 'n/a'")
-                record['url'] = 'n/a'
-                cleaned_urls += 1
+            raw_url = record.get('url')
+            if isinstance(raw_url, str):
+                raw_url = [raw_url]
+            elif not isinstance(raw_url, list):
+                raw_url = []
+
+            urls = []
+            for u in raw_url:
+                u = (u or '').strip() if isinstance(u, str) else ''
+                if not u or u == 'n/a':
+                    continue
+                if url_like_pattern.match(u):
+                    urls.append(u)
+                else:
+                    self.logger.debug(f"process_model_response: url {u!r} for {model_name!r} doesn't look like a URL, dropping")
+                    cleaned_urls += 1
+            record['url'] = urls if urls else ['n/a']
 
             mention_type = (record.get('mention_type') or 'n/a').strip().lower()
             if mention_type not in valid_mention_types:

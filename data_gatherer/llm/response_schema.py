@@ -776,9 +776,13 @@ model_mention_response_schema_gpt = {
                             "description": "'created' if this model is the paper's own new model/checkpoint being introduced; 'used' if it's an existing pretrained model used as-is (e.g. for inference or as a frozen backbone); 'fine-tuned' if an existing pretrained model was fine-tuned/adapted on the paper's own data; 'n/a' if unclear."
                         },
                         "url": {
-                            "type": "string",
-                            "description": "The URL/repository link for this model, if given (Hugging Face Hub, TensorFlow Hub, PyTorch Hub, ModelScope, Civitai, a lab homepage, etc. -- any kind, not just Hugging Face). Otherwise 'n/a'.",
-                            "maxLength": 256
+                            "type": "array",
+                            "items": {
+                                "type": "string",
+                                "maxLength": 256
+                            },
+                            "description": "URL(s)/repository link(s) for this model, if given (Hugging Face Hub, TensorFlow Hub, PyTorch Hub, ModelScope, Civitai, a lab homepage, GitHub, etc. -- any kind, not just Hugging Face). A single model mention can have more than one link (e.g. a GitHub repo and a Hugging Face page for the same checkpoint) -- list all of them here rather than splitting into separate mentions. Otherwise ['n/a'].",
+                            "minItems": 1
                         },
                         "context_from_paper": {
                             "type": "string",
