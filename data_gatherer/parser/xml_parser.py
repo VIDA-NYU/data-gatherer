@@ -352,7 +352,8 @@ class XMLParser(LLMParser):
                     chunk_doc['sec_txt_clean'] = chunk_text
                     chunk_doc['text'] = chunk_text
                     chunk_doc['chunk_id'] = len(chunks_created) + 1
-                    chunk_doc['contains_id_pattern'] = any(re.search(pattern, chunk_text, re.IGNORECASE) for pattern in self.id_patterns)
+                    chunk_doc['matched_id_patterns'] = self.matched_id_patterns(chunk_text)
+                    chunk_doc['contains_id_pattern'] = bool(chunk_doc['matched_id_patterns'])
                     chunks_created.append(chunk_doc)
                     self.logger.debug(f"chunks_created now has {len(chunks_created)} items")
 
@@ -1232,6 +1233,7 @@ class XMLParser(LLMParser):
                         'section_title': 'body-paragraph',
                         'sec_type': 'p-fallback',
                         'contains_id_pattern': False,
+                        'matched_id_patterns': [],
                         'chunk_id': i,
                     })
             return corpus

@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from collections import Counter
 import re
 import logging
 import pandas as pd
@@ -1153,6 +1154,19 @@ Files:
         self.logger.debug(f"All ID patterns: {id_patterns}")
         return id_patterns
 
+    def matched_id_patterns(self, text, id_patterns=None):
+        """
+        Return the subset of id_patterns (default: self.id_patterns) that match text. Used both
+        to set contains_id_pattern on corpus chunks and, in retrieve_relevant_content, to compute
+        each pattern's per-article match rate for broad-pattern suppression.
+
+        :param text: str - the chunk text to search.
+        :param id_patterns: list - patterns to check (default: self.id_patterns).
+        :return: list of the pattern strings that matched.
+        """
+        patterns = id_patterns if id_patterns is not None else self.id_patterns
+        return [pattern for pattern in patterns if re.search(pattern, text, re.IGNORECASE)]
+
     def get_code_hosting_id_patterns(self):
         """
         Regex patterns for common code-hosting/archival URLs (GitHub, GitLab, Bitbucket, Zenodo
@@ -1186,14 +1200,22 @@ Files:
         deterministic Tier-1 half of model-mention detection. Tier 2 (the LLM prompt/schema)
         covers model mentions with no URL at all (e.g. "we fine-tuned BERT-base").
 
+        Bare "pytorch"/"tensorflow" name the training framework far more often than a hosted
+        checkpoint, so on their own they'd flood the model-mention signal with noise. Rather than
+        hand-gating them behind "hub" here, they're left broad and retrieve_relevant_content's
+        broad_ID_ptr_threshold check suppresses force-inclusion when a pattern turns out to cover
+        too much of a given article's corpus (see there for the per-article match-rate logic).
+
         :return: list of regex pattern strings.
         """
         return [
-            r'huggingface\.co/[\w.-]+/[\w.-]+',
-            r'tfhub\.dev/[\w.-]+/[\w.-]+',
-            r'pytorch\.org/hub/[\w.\-/]+',
-            r'modelscope\.cn/models/[\w.-]+/[\w.-]+',
-            r'civitai\.com/models/\d+',
+            r'hugging[\s-]?face',
+            r'tfhub\.dev(?:/[\w.-]+)*|tensorflow[\s-]?hub|tf[\s-]?hub\b',
+            r'pytorch\.org/hub(?:/[\w.\-/]+)?|pytorch[\s-]?hub|torch[\s-]?hub',
+            r'\bpytorch\b',
+            r'\btensorflow\b',
+            r'modelscope(?:\.cn(?:/[\w.-]+)*)?',
+            r'civitai(?:\.com(?:/[\w.-]+)*)?',
         ]
 
     def get_all_repo_names(self, uncased=False):
@@ -1970,7 +1992,7 @@ Files:
 
     def retrieve_relevant_content(self, data, semantic_retrieval=True, top_k=5, article_id=None, max_tokens=None, skip_rule_based_retrieved_elm=False,
                                   include_snippets_with_ID_patterns=False, output_format='text', query=None, ID_patterns=None,
-                                  include_section_title=False, skip_p_fallback=True, relevant_content_flag='DAS'):
+                                  include_section_title=False, skip_p_fallback=True, relevant_content_flag='DAS', broad_ID_ptr_threshold=0.2):
 
         """Given the full text of the article, retrieve the most relevant content related to data availability using a combination
         of semantic retrieval and rule-based methods.
@@ -1988,6 +2010,7 @@ Files:
         :param include_section_title: bool - whether to include section titles in the corpus for semantic retrieval (default: False)
         :param skip_p_fallback: bool - whether to skip the fallback method of building corpus from <p> tags if semantic retrieval returns an empty corpus (default: True)
         :param relevant_content_flag: str - which rule-based content category to force-include: 'DAS' (data availability, default) or 'FUND' (funding/grants). See rule_based_retrieve.
+        :param broad_ID_ptr_threshold: float - per-article match-rate cutoff (matches / corpus sections) above which an ID pattern is treated as too broad for this article and its matches are excluded from forced inclusion (they can still surface via semantic retrieval). Lets patterns that are broad in general (e.g. bare "pytorch") stay in the pattern list without flooding every article's context.
 
         :return: str or list - the retrieved relevant content in the specified output format
         """
@@ -2044,8 +2067,24 @@ Files:
                 ret_lst.extend(top_k_sections_text)
         
         if include_snippets_with_ID_patterns:
-            docs_matching_id_ptr = [item for item in corpus if item.get('contains_id_pattern', False)]
-            self.logger.info(f"Number of documents matching ID patterns: {len(docs_matching_id_ptr)}")
+            corpus_size = len(corpus)
+            broad_patterns = set()
+            if corpus_size:
+                pattern_counts = Counter(p for item in corpus for p in item.get('matched_id_patterns', []))
+                for pattern, count in pattern_counts.items():
+                    rate = count / corpus_size
+                    if rate > broad_ID_ptr_threshold:
+                        self.logger.warning(f"ID pattern {pattern!r} matched {count}/{corpus_size} = {rate:.2%} of corpus sections (article_id={article_id}); treating as too broad for this article and excluding its matches from forced inclusion.")
+                        broad_patterns.add(pattern)
+
+            # A chunk is still force-included if it matches at least one non-broad pattern; a
+            # chunk whose only matches are broad-for-this-article patterns is dropped from forced
+            # inclusion (it can still surface through semantic retrieval on its own merits).
+            docs_matching_id_ptr = [
+                item for item in corpus
+                if item.get('contains_id_pattern', False) and set(item.get('matched_id_patterns', [])) - broad_patterns
+            ]
+            self.logger.info(f"Number of documents matching ID patterns: {len(docs_matching_id_ptr)}" + (f" ({len(broad_patterns)} pattern(s) suppressed as overly broad)" if broad_patterns else ""))
             ret_lst.extend([item['text'] for item in docs_matching_id_ptr if item['text'] not in ret_lst])  # Use extend() instead of append()
         
         self.logger.debug(f"Prepare output as {output_format} from list of length {len(ret_lst)}")
