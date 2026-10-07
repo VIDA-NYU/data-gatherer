@@ -215,3 +215,12 @@ scripts/Local_model_finetuning/ground_truth/gt_dataset_info_extraction_from_snip
 scripts/Local_model_finetuning/ground_truth/gt_dataset_info_no_dspage_extraction_from_snippet.csv
 docs/archive/
 scripts/BioDMS/config_eval/gold_recall_chart.png
+
+# OpenAIRE Marine Science benchmark (Zenodo 7464120, ~800MB unpacked)
+scripts/OpenAIRE/data/
+scripts/OpenAIRE/eval/**.txt
+scripts/OpenAIRE/eval/**.csv
+scripts/OpenAIRE/gt/**.parquet
+scripts/OpenAIRE/gt/**.json
+scripts/OpenAIRE/input/**.csv
+scripts/OpenAIRE/output/_smoke/**.csv
