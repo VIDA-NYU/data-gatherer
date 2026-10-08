@@ -15,6 +15,27 @@ from data_gatherer.env import PORTKEY_GATEWAY_URL, PORTKEY_API_KEY, PORTKEY_ROUT
 from data_gatherer.llm.response_schema import *
 from data_gatherer.llm.batch_storage import BatchStorageManager, BatchRequestBuilder
 
+# Claude models with adaptive thinking on by default: temperature/top_p/top_k must be omitted,
+# responses may start with thinking blocks, and thinking tokens count toward max_tokens.
+CLAUDE_ADAPTIVE_THINKING_MODELS = ("claude-haiku-5-5",)
+CLAUDE_ADAPTIVE_THINKING_MAX_TOKENS = 16000
+CLAUDE_CONTEXT_WINDOWS = {"claude-haiku-5-5": 1000000}
+
+
+def claude_context_window(model: str) -> int:
+    return CLAUDE_CONTEXT_WINDOWS.get(model, 200000)
+
+
+def claude_messages_params(model: str, messages, temperature: float = 0.0, max_tokens: int = 2048) -> dict:
+    """Messages API params shared by the sync and batch paths."""
+    params = {"model": model, "max_tokens": max_tokens, "messages": messages}
+    if model in CLAUDE_ADAPTIVE_THINKING_MODELS:
+        params["max_tokens"] = max(max_tokens, CLAUDE_ADAPTIVE_THINKING_MAX_TOKENS)
+    else:
+        params["temperature"] = temperature
+    return params
+
+
 class LLMClient_dev:
     def __init__(self, model: str, logger=None, save_prompts: bool = False, use_portkey: bool = True, 
                  save_dynamic_prompts: bool = False, save_responses_to_cache: bool = False, 
@@ -31,7 +52,8 @@ class LLMClient_dev:
         # Determine full document read capability
         entire_document_models = ["gemini-1.5-flash", "gemini-1.5-pro", "gemini-2.0-flash-exp", "gemini-2.0-flash",
                                   "gemini-2.5-flash", "gemini-3-flash", "gemini-3.5-flash", "gpt-4o", "gpt-4o-mini", "gpt-5-nano",
-                                  "gpt-5-mini", "gpt-5", "claude-haiku-4-5-20251001", "claude-sonnet-4-5", "vllm-openai/gpt-oss-20b"]
+                                  "gpt-5-mini", "gpt-5", "claude-haiku-4-5-20251001", "claude-haiku-5-5", "claude-sonnet-4-5",
+                                  "vllm-openai/gpt-oss-20b"]
         self.full_document_read = model in entire_document_models
         
         self._initialize_client(model)
@@ -70,7 +92,7 @@ class LLMClient_dev:
         elif 'claude' in model:
             self.logger.debug(f"Initializing Anthropic: {model}")
             self.llm_client = Anthropic()
-            self.token_limit = 200000
+            self.token_limit = claude_context_window(model)
 
         elif model.startswith('gpt'):
             self.logger.debug(f"Initializing OpenAI client for model: {model}")
@@ -225,16 +247,16 @@ class LLMClient_dev:
         if self.save_prompts:
             self.prompt_manager.save_prompt(prompt_id='abc', prompt_content=messages)
         response = self.llm_client.messages.create(
-            model=self.model,
-            max_tokens=max_tokens,
-            messages=messages,
-            temperature=temperature,
+            **claude_messages_params(self.model, messages, temperature=temperature, max_tokens=max_tokens),
             output_config={
                 "format": response_format
             }
         )
         self.logger.info(f"Anthropic response: {response}")
-        return response.content[0].text
+        if response.stop_reason in ("refusal", "max_tokens"):
+            self.logger.warning(f"Anthropic response stopped with stop_reason={response.stop_reason}")
+        # Adaptive-thinking models may lead with thinking blocks: select text blocks by type
+        return "".join(block.text for block in response.content if block.type == "text")
 
     def _call_ollama(self, messages, response_format, temperature=0.0):
         self.logger.info(f"Calling Ollama with messages: {messages}")
@@ -245,7 +267,9 @@ class LLMClient_dev:
         self.logger.info(f"Ollama response: {response['message']['content']}")
         return response['message']['content']
 
-    def _call_vllm(self, messages, response_format=None, temperature=0.0, max_tokens=1024):
+    def _call_vllm(self, messages, response_format=None, temperature=0.0, max_tokens=16384):
+        # gpt-oss reasons before answering and reasoning counts toward max_output_tokens:
+        # 1024 truncated full-document answers. Input + max_tokens must fit --max-model-len (131072).
         # Responses API (not Chat Completions) to match _call_openai's pattern elsewhere in
         # this file -- vLLM's OpenAI-compatible server exposes /v1/responses too.
         self.logger.info(f"Calling vLLM-served model: {self.model}")
@@ -832,10 +856,7 @@ class LLMClient_dev:
                 elif api_provider.lower() == 'anthropic':
                     formatted_request = self.batch_builder.create_anthropic_request(
                         custom_id=custom_id,
-                        messages=messages,
-                        model=self.model,
-                        temperature=temperature,
-                        response_format=response_format
+                        params=claude_messages_params(self.model, messages, temperature=temperature)
                     )
                 else:
                     raise ValueError(f"Unsupported API provider: {api_provider}")

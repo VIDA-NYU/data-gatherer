@@ -22,6 +22,7 @@ import logging
 import pandas as pd
 import json
 from data_gatherer.llm.response_schema import dataset_response_schema_gpt, dataset_response_schema_gpt_completions, dataset_response_schema_claude, Dataset_w_Page
+from data_gatherer.llm import response_schema
 try:
     import boto3
     from botocore.exceptions import BotoCoreError, ClientError
@@ -163,7 +164,8 @@ def _default_prompt(model: str, portkey: bool=True) -> str:
 
 def _default_response_format(model: str):
     m = model.lower()
-    if m.startswith("gpt") or m.startswith("openai"):
+    if m.startswith("gpt") or m.startswith("openai") or m.startswith("vllm-"):
+        # vLLM serves the OpenAI Responses API, so it takes the same json_schema format
         return dataset_response_schema_gpt
     if "gemini" in m:
         # Portkey uses OpenAI chat/completions format, not native Gemini params
@@ -242,8 +244,20 @@ def main():
              "(default: false). Only takes effect for models in entire_document_models.",
     )
     parser.add_argument(
+        "--intelligent-chunking",
+        type=lambda v: v.lower() not in ("false", "0", "no", "off"),
+        default=False, metavar="BOOL",
+        help="With --full-document-read, split documents over the model's token limit into section-aware "
+             "chunks (one request each) instead of sending them oversized (default: false).",
+    )
+    parser.add_argument(
         "--prompt-name", default=None,
         help="Prompt template name (auto-detected from model if not set)",
+    )
+    parser.add_argument(
+        "--response-format", default=None,
+        help="Name of a response schema in data_gatherer/llm/response_schema.py "
+             "(e.g. dataset_response_schema_with_use_description_and_short); auto-detected from model if not set",
     )
     parser.add_argument(
         "--use-batch-api",
@@ -257,6 +271,13 @@ def main():
         help="Path to backup file for saving intermediate results (default: None). If set, the processor will periodically save the current state to this file.",
     )
     args = parser.parse_args()
+
+    if args.response_format:
+        if not hasattr(response_schema, args.response_format):
+            parser.error(f"--response-format: no schema named {args.response_format!r} in data_gatherer/llm/response_schema.py")
+        response_format = getattr(response_schema, args.response_format)
+    else:
+        response_format = _default_response_format(args.model)
 
     os.makedirs(args.output_dir, exist_ok=True)
     setup_logging(args.output_dir)
@@ -380,7 +401,7 @@ def main():
                     output_file_path=batch_output_path,
                     section_filter=args.section_filter,
                     prompt_name=args.prompt_name or _default_prompt(args.model, portkey=_default_use_portkey(args.model)),
-                    response_format=_default_response_format(args.model),
+                    response_format=response_format,
                     semantic_retrieval=args.semantic_retrieval,
                     top_k=args.top_k,
                     sects_required=args.sects_required,
@@ -389,6 +410,7 @@ def main():
                     use_batch_api=args.use_batch_api,
                     api_provider=_default_api_provider(args.model),
                     local_fetch_file=args.backup_file,
+                    intelligent_chunking=args.intelligent_chunking,
                 )
             except Exception as e:
                 logger.error(f"Batch {batch_num} failed: {e}", exc_info=True)

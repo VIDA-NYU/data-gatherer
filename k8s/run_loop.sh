@@ -14,6 +14,7 @@
 #                        --input article_ids_REV_pmc.csv --output-dir k8s/output \
 #                        [--model hf-vida-nyu/flan-t5-base-dataref-info-extract] \
 #                        [--prompt-name T5_primer] \
+#                        [--image pietromarini/data-gatherer-nvidia:20260501] \
 #                        [--skip-already-processed false] \
 #                        [--clean] [--cumulative] [--plot]
 #
@@ -65,6 +66,7 @@ TOP_K="5"
 SECTS_REQUIRED="5"
 MODEL="hf-vida-nyu/flan-t5-base-dataref-info-extract"
 PROMPT_NAME="T5_primer"
+IMAGE="pietromarini/data-gatherer-nvidia:20260501"
 S3_BACKUP_KEY="cache/Local_fetched_data.parquet"
 SKIP_ALREADY_PROCESSED="false"
 
@@ -88,6 +90,7 @@ while [[ $# -gt 0 ]]; do
         --sects-required)          SECTS_REQUIRED="$2";          shift 2 ;;
         --model)                   MODEL="$2";                   shift 2 ;;
         --prompt-name)             PROMPT_NAME="$2";              shift 2 ;;
+        --image)                   IMAGE="$2";                    shift 2 ;;
         --s3-backup-key)           S3_BACKUP_KEY="$2";            shift 2 ;;
         --skip-already-processed) SKIP_ALREADY_PROCESSED="$2";   shift 2 ;;
         --clean)                   CLEAN=1;                      shift   ;;
@@ -98,7 +101,7 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
-export NODE_NAME JOB_SUFFIX SEMANTIC_RETRIEVAL BRUTE_FORCE_REGEX TOP_K SECTS_REQUIRED MODEL PROMPT_NAME S3_BACKUP_KEY SKIP_ALREADY_PROCESSED
+export NODE_NAME JOB_SUFFIX SEMANTIC_RETRIEVAL BRUTE_FORCE_REGEX TOP_K SECTS_REQUIRED MODEL PROMPT_NAME S3_BACKUP_KEY SKIP_ALREADY_PROCESSED IMAGE
 
 # --- Helpers ---
 pvc_reader_ready() {
@@ -177,7 +180,7 @@ submit_slice_jobs() {
         # GPU_SAMPLER_PID, JOB_EXIT_CODE, S3_OUTPUT_BUCKET) that are meant to be
         # evaluated inside the pod's container command, not on this host.
         SLICE_ID=$i MAX_ARTICLES=$MAX_ARTICLES_PER_SLICE \
-            envsubst '${SLICE_ID} ${JOB_SUFFIX} ${MAX_ARTICLES} ${MODEL} ${PROMPT_NAME} ${S3_BACKUP_KEY} ${SKIP_ALREADY_PROCESSED} ${SEMANTIC_RETRIEVAL} ${BRUTE_FORCE_REGEX} ${TOP_K} ${SECTS_REQUIRED}' \
+            envsubst '${SLICE_ID} ${JOB_SUFFIX} ${MAX_ARTICLES} ${IMAGE} ${MODEL} ${PROMPT_NAME} ${S3_BACKUP_KEY} ${SKIP_ALREADY_PROCESSED} ${SEMANTIC_RETRIEVAL} ${BRUTE_FORCE_REGEX} ${TOP_K} ${SECTS_REQUIRED}' \
             < "$JOB_TEMPLATE" | kubectl apply -f -
         echo "  submitted slice_${i} job"
     done

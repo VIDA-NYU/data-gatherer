@@ -14,7 +14,7 @@ from data_gatherer.retriever.embeddings_retriever import EmbeddingsRetriever
 import requests
 from json_repair import repair_json
 
-from data_gatherer.llm.llm_client import LLMClient_dev
+from data_gatherer.llm.llm_client import LLMClient_dev, claude_context_window
 from data_gatherer.llm.response_schema import *
 
 # Regex sub-patterns that are valid in `dataset_webpage_url_ptr` for URL matching
@@ -61,7 +61,8 @@ class LLMParser(ABC):
         self.llm_name = llm_name
         entire_document_models = ["gemini-1.5-flash", "gemini-1.5-pro", "gemini-2.0-flash-exp", "gemini-2.0-flash",
                                   "gemini-2.5-flash", "gemini-3-flash", "gemini-3.5-flash", "gpt-4o", "gpt-4o-mini", "gpt-5-nano",
-                                  "gpt-5-mini", "gpt-5", "claude-haiku-4-5-20251001", "claude-sonnet-4-5", "vllm-openai/gpt-oss-20b"]
+                                  "gpt-5-mini", "gpt-5", "claude-haiku-4-5-20251001", "claude-haiku-5-5", "claude-sonnet-4-5",
+                                  "vllm-openai/gpt-oss-20b"]
 
         self.full_document_read = full_document_read and self.llm_name in entire_document_models
         self.title = None
@@ -339,11 +340,11 @@ Files:
             while self.tokens_over_limit(content, model, allowance_static_prompt=n_tokens_static_prompt):
                 content = content[:-2000]
         
-        # Claude models have a 200k token limit
+        # Claude models: 200k token limit, 1M for claude-haiku-5-5
         elif 'claude' in model:
             tokens_cnt = self.count_tokens(content, model)
             self.logger.info(f"Initial content tokens count for Claude model: {tokens_cnt} tokens")
-            if tokens_cnt > int(1.25 * 200000):
+            if tokens_cnt > int(1.25 * claude_context_window(model)):
                 return self.extract_datasets_info_from_chunks(
                     content, tokens_cnt, repos=repos, model=model, temperature=temperature, prompt_name=prompt_name, subdir=subdir,
                     full_document_read=full_document_read, response_format=response_format, token_chunk_size=150000, **kwargs)
@@ -457,7 +458,9 @@ Files:
         # Resolve the effective token limit once, mirroring tokens_over_limit's per-model
         # branching (claude/gemini ignore an explicit `limit` override; gpt/default honor it).
         if 'claude' in model:
-            effective_limit = 200000
+            effective_limit = claude_context_window(model)
+        elif model.startswith('vllm-'):
+            effective_limit = 131072 - 16384  # vLLM --max-model-len minus _call_vllm's output tokens
         elif 'gemini' in model:
             effective_limit = 1000000
         else:
@@ -1682,11 +1685,17 @@ Files:
 
     def tokens_over_limit(self, html_cont: str, model="gpt-4", limit=128000, allowance_static_prompt=400):
         tokens_cnt = self.count_tokens(html_cont, model=model)
-        if 'gpt' in model:
+        if model.startswith('vllm-'):
+            # checked before 'gpt': vllm-openai/gpt-oss-20b also contains 'gpt'.
+            # vLLM --max-model-len (131072) bounds prompt + output; reserve _call_vllm's 16384 output tokens.
+            limit = 131072 - 16384
+            self.logger.debug(f"Number of tokens: {tokens_cnt}")
+            return tokens_cnt + int(allowance_static_prompt * 1.5) > limit - 2000
+        elif 'gpt' in model:
             self.logger.debug(f"Number of tokens: {tokens_cnt}")
             return tokens_cnt + int(allowance_static_prompt * 1.5) > limit - 2000
         elif 'claude' in model:
-            limit = 200000
+            limit = claude_context_window(model)
             self.logger.debug(f"Number of tokens: {tokens_cnt}")
             return tokens_cnt + int(allowance_static_prompt * 1.5) > limit - 2000
         elif 'gemini' in model:

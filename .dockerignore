@@ -39,3 +39,21 @@ __pycache__/
 pip-wheel-metadata/
 dist/
 build/
+
+# Mirrors .gitignore additions since v0.2.2 (already covered by docs/ and scripts/ above; listed explicitly so they stay excluded if those rules change)
+docs/archive/
+scripts/BioDMS/config_eval/gold_recall_chart.png
+
+# OpenAIRE Marine Science benchmark (Zenodo 7464120, ~800MB unpacked)
+scripts/OpenAIRE/data/
+scripts/OpenAIRE/eval/**.txt
+scripts/OpenAIRE/eval/**.csv
+scripts/OpenAIRE/gt/**.parquet
+scripts/OpenAIRE/gt/**.json
+scripts/OpenAIRE/input/**.csv
+scripts/OpenAIRE/output/_smoke/**.csv
+scripts/OpenAIRE/output/dev**
+
+# k8s run inputs/outputs: pods read input from and write results to S3
+k8s/output/
+k8s/input/
