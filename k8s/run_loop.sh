@@ -14,7 +14,7 @@
 #                        --input article_ids_REV_pmc.csv --output-dir k8s/output \
 #                        [--model hf-vida-nyu/flan-t5-base-dataref-info-extract] \
 #                        [--prompt-name T5_primer] \
-#                        [--image pietromarini/data-gatherer-nvidia:20260501] \
+#                        [--image pietromarini/data-gatherer-nvidia:20261008] \
 #                        [--skip-already-processed false] \
 #                        [--clean] [--cumulative] [--plot]
 #
@@ -66,7 +66,7 @@ TOP_K="5"
 SECTS_REQUIRED="5"
 MODEL="hf-vida-nyu/flan-t5-base-dataref-info-extract"
 PROMPT_NAME="T5_primer"
-IMAGE="pietromarini/data-gatherer-nvidia:20260501"
+IMAGE="pietromarini/data-gatherer-nvidia:20261008"
 S3_BACKUP_KEY="cache/Local_fetched_data.parquet"
 SKIP_ALREADY_PROCESSED="false"
 

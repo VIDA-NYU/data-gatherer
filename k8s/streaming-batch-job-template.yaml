@@ -8,7 +8,7 @@ spec:
     spec:
       containers:
       - name: data-gatherer
-        image: pietromarini/data-gatherer-nvidia:20260501
+        image: pietromarini/data-gatherer-nvidia:20261008
         imagePullPolicy: Always
         command:
         - /bin/sh
