@@ -5,6 +5,8 @@ import re
 import os
 import json
 
+TEI_NS = "http://www.tei-c.org/ns/1.0"
+
 
 class xmlRetriever(BaseRetriever):
     """
@@ -61,7 +63,15 @@ class xmlRetriever(BaseRetriever):
                     self.logger.info(f"Missing section in XML: {section}")
                     return False
         
-        if isinstance(required_sections, int):
+        if isinstance(required_sections, int) and ET.QName(raw_data).namespace == TEI_NS:
+            # GROBID TEI: every body/back section is a <div>
+            n_sections_found = len(raw_data.findall(f".//{{{TEI_NS}}}div")) + len(raw_data.findall(f".//{{{TEI_NS}}}abstract"))
+            self.logger.info(f"Number of TEI sections found: {n_sections_found}")
+            if n_sections_found < required_sections:
+                self.logger.info(f"Number of sections {n_sections_found} is less than the required threshold of {required_sections}.")
+                return False
+
+        elif isinstance(required_sections, int):
             # find all sections and count them (including various section types in PMC XML)
             sec_elements = raw_data.findall(".//sec")
             ack_elements = raw_data.findall(".//ack")

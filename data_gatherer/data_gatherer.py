@@ -343,7 +343,10 @@ class DataGatherer:
         format_key = raw_data_format.upper()
         if grobid_for_pdf and format_key == "PDF":
             format_key = "PDF_GROBID"
-        
+        # JATS and TEI (e.g. cached GROBID output) both arrive as XML but need different parsers
+        if format_key == "XML" and XMLParser.is_tei_xml_static(raw_data):
+            format_key = "XML_TEI"
+
         if self._cached_parsers.get(format_key) is not None and not force_reinit:
             self.logger.debug(f"Reusing cached parser for format: {format_key}")
             self.parser = self._cached_parsers[format_key]
@@ -1931,7 +1934,7 @@ class DataGatherer:
             
             # Step 2: Prepare batch requests for LLMClient (parser per URL)
             supplementary_material_metadata = pd.DataFrame()
-            batch_requests, cnt, last_url_raw_data_format = [], 0, False
+            batch_requests = []
             for url_raw_data_format, vals in format_counts.items():
                 for orig_url in vals['urls']:
                     # Prefer the canonical/redirected URL when we actually have fetched
@@ -1942,12 +1945,10 @@ class DataGatherer:
                     if url not in fetched_data:
                         url = orig_url
                     try:
-                        if cnt != 0 and url_raw_data_format == last_url_raw_data_format:
-                            self.logger.info(f"Reusing existing parser of name: {self.parser.__class__.__name__}")
-                        else:
-                            self.logger.info(f"Creating new parser for format: {url_raw_data_format}")
-                            self.init_parser_by_input_type(url_raw_data_format, fetched_data[url], embeddings_retriever_model, 
-                            use_portkey, grobid_for_pdf, self.full_document_read)
+                        # init_parser_by_input_type reuses cached parsers; it is called per URL because an XML
+                        # group can mix JATS and TEI, which need different parsers
+                        self.init_parser_by_input_type(url_raw_data_format, fetched_data[url]['fetched_data'], embeddings_retriever_model,
+                        use_portkey, grobid_for_pdf, self.full_document_read)
                         
                         self.parser.publisher = self.data_fetcher.url_to_publisher_domain(url)
 
@@ -2043,8 +2044,6 @@ class DataGatherer:
                         self.logger.error(f"Error preparing request for {url}: {e}")
                         continue
 
-                    last_url_raw_data_format = url_raw_data_format
-                    cnt+=1
             
             if output_file_path:
                 base = output_file_path.rsplit('.', 1)[0]

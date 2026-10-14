@@ -139,11 +139,12 @@ df = pd.read_csv("k8s/input/$INPUT_FILE")
 if "pmcid" not in df.columns and "citing_publication_link" in df.columns:
     df["pmcid"] = df["citing_publication_link"].str.extract(r"(PMC\d+)")
 
-pmcids = df["pmcid"].dropna().reset_index(drop=True)
+# keep DOI-only rows too: k8s_processor.py reads a pmcid and/or doi column
+articles = df[[c for c in ("pmcid", "doi") if c in df.columns]].dropna(how="all").reset_index(drop=True)
 n = $N_GPUS
-size = math.ceil(len(pmcids) / n)
+size = math.ceil(len(articles) / n)
 for i in range(n):
-    slc = pmcids.iloc[i*size:(i+1)*size]
+    slc = articles.iloc[i*size:(i+1)*size]
     path = f"k8s/input/slice_{i+1}.csv"
     slc.to_csv(path, index=False)
     print(f"  slice_{i+1}.csv: {len(slc)} articles")

@@ -49,6 +49,7 @@ def setup_logging(output_dir):
 logger = logging.getLogger(__name__)
 
 PMC_URL_TEMPLATE = "https://pmc.ncbi.nlm.nih.gov/articles/{pmcid}/"
+DOI_URL_TEMPLATE = "https://doi.org/{doi}"
 
 
 def pmcid_to_url(pmcid: str) -> str:
@@ -56,6 +57,21 @@ def pmcid_to_url(pmcid: str) -> str:
     if not pmcid.upper().startswith("PMC"):
         pmcid = f"PMC{pmcid}"
     return PMC_URL_TEMPLATE.format(pmcid=pmcid)
+
+
+def input_to_urls(input_df: pd.DataFrame) -> list:
+    """One URL per row: the PMC URL when the row has a pmcid, otherwise https://doi.org/<doi>."""
+    if "pmcid" not in input_df.columns and "doi" not in input_df.columns:
+        raise ValueError(f"Input CSV must have a 'pmcid' and/or 'doi' column. Found: {input_df.columns.tolist()}")
+    urls = []
+    for row in input_df.itertuples(index=False):
+        pmcid = str(getattr(row, "pmcid", "") or "").strip()
+        doi = str(getattr(row, "doi", "") or "").strip()
+        if pmcid and pmcid.lower() != "nan":
+            urls.append(pmcid_to_url(pmcid))
+        elif doi and doi.lower() != "nan":
+            urls.append(DOI_URL_TEMPLATE.format(doi=doi))
+    return urls
 
 
 def load_checkpoint(output_csv: str) -> set:
@@ -177,7 +193,7 @@ def _default_response_format(model: str):
 
 def main():
     parser = argparse.ArgumentParser(description="Run data-gatherer batch extraction on k8s")
-    parser.add_argument("--input", required=True, help="Path to CSV with 'pmcid' column")
+    parser.add_argument("--input", required=True, help="Path to CSV with a 'pmcid' and/or 'doi' column (pmcid wins when a row has both)")
     parser.add_argument("--output-dir", required=True, help="Output directory (PVC mount)")
     parser.add_argument(
         "--model",
@@ -315,12 +331,9 @@ def main():
     logging.getLogger("httpx").setLevel(logging.WARNING)
     logging.getLogger("httpcore").setLevel(logging.WARNING)
 
-    # Load input PMCIDs
-    input_df = pd.read_csv(args.input)
-    if "pmcid" not in input_df.columns:
-        raise ValueError(f"Input CSV must have a 'pmcid' column. Found: {input_df.columns.tolist()}")
-    pmcids = input_df["pmcid"].dropna().astype(str).str.strip().tolist()
-    all_urls = [pmcid_to_url(p) for p in pmcids]
+    # Load input articles: a PMCID where available, otherwise a DOI
+    input_df = pd.read_csv(args.input, dtype=str)
+    all_urls = input_to_urls(input_df)
     logger.info(f"Loaded {len(all_urls)} URLs from {args.input}")
 
     # Cross-run skip-list (prior iterations' completed URLs), loaded once — used
