@@ -1,0 +1,18 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: vllm-gptoss-restrict-ingress
+  namespace: data-gatherer
+spec:
+  podSelector:
+    matchLabels:
+      app: vllm-gptoss
+  policyTypes:
+  - Ingress
+  ingress:
+  - from:
+    # No namespaceSelector means "same namespace as this policy" (data-gatherer only).
+    - podSelector: {}
+    ports:
+    - protocol: TCP
+      port: 8000

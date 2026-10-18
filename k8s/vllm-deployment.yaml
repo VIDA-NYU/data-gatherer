@@ -1,0 +1,76 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vllm-gptoss
+  namespace: data-gatherer
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: vllm-gptoss
+  template:
+    metadata:
+      labels:
+        app: vllm-gptoss
+    spec:
+      containers:
+      - name: vllm
+        image: pietromarini/vllm-gptoss:20260812
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8000
+        env:
+        - name: HF_HOME
+          value: /cache/huggingface
+        resources:
+          limits:
+            nvidia.com/gpu: "1"
+            memory: "48Gi"
+            cpu: "8"
+          requests:
+            nvidia.com/gpu: "1"
+            memory: "48Gi"
+            cpu: "8"
+        volumeMounts:
+        - name: cache
+          mountPath: /cache
+        - name: shm
+          mountPath: /dev/shm
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 60
+          periodSeconds: 15
+          failureThreshold: 40  # first-run model download/load can take several minutes
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 120
+          periodSeconds: 30
+      tolerations:
+      - key: "nvidia.com/gpu"
+        operator: "Exists"
+        effect: "NoSchedule"
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: nvidia.com/gpu.product
+                # H100-NVL only for now -- gpt-oss's vLLM kernel path hasn't been confirmed
+                # to work on Ampere (A100); broaden this once that's actually verified.
+                operator: In
+                values:
+                - NVIDIA-H100-NVL
+      volumes:
+      - name: cache
+        persistentVolumeClaim:
+          claimName: vllm-gptoss-pvc
+      - name: shm
+        emptyDir:
+          medium: Memory
+          sizeLimit: 4Gi

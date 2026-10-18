@@ -11,9 +11,30 @@ from portkey_ai import Portkey
 from anthropic import Anthropic
 from json_repair import repair_json
 from data_gatherer.prompts.prompt_manager import PromptManager
-from data_gatherer.env import PORTKEY_GATEWAY_URL, PORTKEY_API_KEY, PORTKEY_ROUTE, PORTKEY_CONFIG, OLLAMA_CLIENT, GPT_API_KEY, GEMINI_KEY, DATA_GATHERER_USER_NAME, HF_TOKEN
+from data_gatherer.env import PORTKEY_GATEWAY_URL, PORTKEY_API_KEY, PORTKEY_ROUTE, PORTKEY_CONFIG, OLLAMA_CLIENT, VLLM_CLIENT, GPT_API_KEY, GEMINI_KEY, DATA_GATHERER_USER_NAME, HF_TOKEN
 from data_gatherer.llm.response_schema import *
 from data_gatherer.llm.batch_storage import BatchStorageManager, BatchRequestBuilder
+
+# Claude models with adaptive thinking on by default: temperature/top_p/top_k must be omitted,
+# responses may start with thinking blocks, and thinking tokens count toward max_tokens.
+CLAUDE_ADAPTIVE_THINKING_MODELS = ("claude-haiku-5-5",)
+CLAUDE_ADAPTIVE_THINKING_MAX_TOKENS = 16000
+CLAUDE_CONTEXT_WINDOWS = {"claude-haiku-5-5": 1000000}
+
+
+def claude_context_window(model: str) -> int:
+    return CLAUDE_CONTEXT_WINDOWS.get(model, 200000)
+
+
+def claude_messages_params(model: str, messages, temperature: float = 0.0, max_tokens: int = 2048) -> dict:
+    """Messages API params shared by the sync and batch paths."""
+    params = {"model": model, "max_tokens": max_tokens, "messages": messages}
+    if model in CLAUDE_ADAPTIVE_THINKING_MODELS:
+        params["max_tokens"] = max(max_tokens, CLAUDE_ADAPTIVE_THINKING_MAX_TOKENS)
+    else:
+        params["temperature"] = temperature
+    return params
+
 
 class LLMClient_dev:
     def __init__(self, model: str, logger=None, save_prompts: bool = False, use_portkey: bool = True, 
@@ -31,7 +52,8 @@ class LLMClient_dev:
         # Determine full document read capability
         entire_document_models = ["gemini-1.5-flash", "gemini-1.5-pro", "gemini-2.0-flash-exp", "gemini-2.0-flash",
                                   "gemini-2.5-flash", "gemini-3-flash", "gemini-3.5-flash", "gpt-4o", "gpt-4o-mini", "gpt-5-nano",
-                                  "gpt-5-mini", "gpt-5", "claude-haiku-4-5-20251001", "claude-sonnet-4-5"]
+                                  "gpt-5-mini", "gpt-5", "claude-haiku-4-5-20251001", "claude-haiku-5-5", "claude-sonnet-4-5",
+                                  "vllm-openai/gpt-oss-20b"]
         self.full_document_read = model in entire_document_models
         
         self._initialize_client(model)
@@ -70,7 +92,7 @@ class LLMClient_dev:
         elif 'claude' in model:
             self.logger.debug(f"Initializing Anthropic: {model}")
             self.llm_client = Anthropic()
-            self.token_limit = 200000
+            self.token_limit = claude_context_window(model)
 
         elif model.startswith('gpt'):
             self.logger.debug(f"Initializing OpenAI client for model: {model}")
@@ -99,6 +121,13 @@ class LLMClient_dev:
             self.llm_client = HFModelClient(hf_model_name, logger=self.logger, use_auth_token=HF_TOKEN or True,
                                              revision=revision)
             self.llm_client.load_model()
+
+        elif model.startswith('vllm-'):
+            # Served by a standalone vLLM instance (k8s or port-forwarded to localhost) --
+            # OpenAI-compatible API, so the same OpenAI client works with a custom base_url.
+            self.logger.debug(f"Initializing vLLM-backed client for model: {model}")
+            self.llm_client = OpenAI(base_url=VLLM_CLIENT, api_key="not-needed")
+            self.token_limit = 128000
 
         else:
             self.logger.debug(f"Unsupported model: {model}")
@@ -170,6 +199,8 @@ class LLMClient_dev:
             return self._call_anthropic(content, response_format)
         elif self.model.startswith('gemma') or "qwen" in self.model:
             return self._call_ollama(content, response_format, temperature=temperature)
+        elif self.model.startswith('vllm-'):
+            return self._call_vllm(content, response_format=response_format, temperature=temperature, **kwargs)
         else:
             raise ValueError(f"Unsupported model: {self.model}")
 
@@ -216,16 +247,16 @@ class LLMClient_dev:
         if self.save_prompts:
             self.prompt_manager.save_prompt(prompt_id='abc', prompt_content=messages)
         response = self.llm_client.messages.create(
-            model=self.model,
-            max_tokens=max_tokens,
-            messages=messages,
-            temperature=temperature,
+            **claude_messages_params(self.model, messages, temperature=temperature, max_tokens=max_tokens),
             output_config={
                 "format": response_format
             }
         )
         self.logger.info(f"Anthropic response: {response}")
-        return response.content[0].text
+        if response.stop_reason in ("refusal", "max_tokens"):
+            self.logger.warning(f"Anthropic response stopped with stop_reason={response.stop_reason}")
+        # Adaptive-thinking models may lead with thinking blocks: select text blocks by type
+        return "".join(block.text for block in response.content if block.type == "text")
 
     def _call_ollama(self, messages, response_format, temperature=0.0):
         self.logger.info(f"Calling Ollama with messages: {messages}")
@@ -235,6 +266,40 @@ class LLMClient_dev:
                                     format=response_format)
         self.logger.info(f"Ollama response: {response['message']['content']}")
         return response['message']['content']
+
+    def _call_vllm(self, messages, response_format=None, temperature=0.0, max_tokens=16384):
+        # gpt-oss reasons before answering and reasoning counts toward max_output_tokens:
+        # 1024 truncated full-document answers. Input + max_tokens must fit --max-model-len (131072).
+        # Responses API (not Chat Completions) to match _call_openai's pattern elsewhere in
+        # this file -- vLLM's OpenAI-compatible server exposes /v1/responses too.
+        self.logger.info(f"Calling vLLM-served model: {self.model}")
+        if self.save_prompts:
+            self.prompt_manager.save_prompt(prompt_id='abc', prompt_content=messages)
+
+        kwargs = {}
+        if response_format is not None:
+            if hasattr(response_format, 'model_json_schema'):
+                # Pydantic model -- vLLM's OpenAI-compatible endpoint does real guided decoding
+                # against the schema, unlike the raw-generate path we tried with transformers.
+                kwargs['text'] = {
+                    "format": {
+                        "type": "json_schema",
+                        "name": response_format.__name__,
+                        "schema": response_format.model_json_schema(),
+                    }
+                }
+            else:
+                kwargs['text'] = {"format": response_format}
+
+        response = self.llm_client.responses.create(
+            model=self.model[len('vllm-'):],
+            input=messages,
+            temperature=temperature,
+            max_output_tokens=max_tokens,
+            **kwargs,
+        )
+        self.logger.info(f"vLLM response: {response}")
+        return response.output
 
     def _call_portkey_gemini(self, messages, temperature=0.0, **kwargs):
         self.logger.info(f"Calling Gemini via Portkey")
@@ -303,6 +368,12 @@ class LLMClient_dev:
 
         elif 'claude' in self.model:
             return self._call_anthropic(messages, response_format, temperature=temperature)
+
+        elif self.model.startswith('local-flan-t5') or self.model.startswith('hf-'):
+            return self._call_ft_model(messages, temperature=temperature)
+
+        elif self.model.startswith('vllm-'):
+            return self._call_vllm(messages, response_format=response_format, temperature=temperature)
 
         elif 'gpt' in self.model:
             response = None
@@ -385,12 +456,6 @@ class LLMClient_dev:
                 except Exception as e:
                     self.logger.error(f"Error processing Gemini response: {e}")
                     raise RuntimeError(f"Gemini response processing failed: {e}")
-        
-        elif self.model.startswith('local-flan-t5'):
-            return self._call_ft_model(messages, temperature=temperature)
-
-        elif self.model.startswith('hf-'):
-            return self._call_ft_model(messages, temperature=temperature)
 
         else:
             raise ValueError(f"Unsupported model: {self.model}. Please use a supported LLM model.")
@@ -426,11 +491,31 @@ class LLMClient_dev:
                 self.logger.debug(f"Found expected key '{expected_key}' in parsed response")
                 result = self.normalize_response_format(parsed_resp[expected_key])
             else:
-                self.logger.debug(f"Expected key '{expected_key}' not found or not dict, using full response")
+                if expected_key is None:
+                    self.logger.debug(f"No expected key provided, using full parsed response")
+                else:
+                    self.logger.debug(f"Expected key '{expected_key}' not found in parsed response, using full response")
                 result = self.normalize_response_format(parsed_resp)
             self.logger.debug(f"Final result for {self.model}: {result}")
             return result
-                
+
+        elif self.model.startswith('local-flan-t5'):
+            parsed_response = self.safe_parse_json(raw_response)
+            self.logger.debug(f"Processing local Flan-T5 model response: {parsed_response}")
+            return parsed_response
+
+        elif self.model.startswith('hf-'):
+            parsed_response = self.safe_parse_json(raw_response)
+            self.logger.debug(f"Processing Hugging Face model response: {parsed_response}")
+            return parsed_response
+
+        elif self.model.startswith('vllm-'):
+            parsed_response = self.safe_parse_json(raw_response)
+            self.logger.debug(f"Processing vLLM model response: {parsed_response}")
+            if self.full_document_read and isinstance(parsed_response, dict) and expected_key in parsed_response:
+                return self.normalize_response_format(parsed_response.get(expected_key, []))
+            return parsed_response
+
         elif 'gpt' in self.model:
             self.logger.debug(f"Processing GPT model response")
             self.logger.debug(f"raw_response type: {type(raw_response)}, length: {len(str(raw_response))}, response: {raw_response}")
@@ -454,12 +539,12 @@ class LLMClient_dev:
 
             parsed_response = self.safe_parse_json(raw_response)
             self.logger.info(f"GPT parsed response: {parsed_response}, type: {type(parsed_response)}")
-            if self.full_document_read and isinstance(parsed_response, dict) and expected_key in parsed_response:
-                result = parsed_response.get(expected_key, []) if expected_key else parsed_response
-                self.logger.debug(f"GPT full_document_read=True, extracted result: {result}")
+            if isinstance(parsed_response, dict) and expected_key and expected_key in parsed_response:
+                result = parsed_response.get(expected_key, [])
+                self.logger.debug(f"GPT extracted key '{expected_key}': {result}")
             else:
                 result = parsed_response or []
-                self.logger.debug(f"GPT full_document_read=False, result: {result}")
+                self.logger.debug(f"GPT result: {result}")
             final_result = self.normalize_response_format(result)
             self.logger.debug(f"GPT final normalized result: {final_result}")
             return final_result
@@ -470,8 +555,10 @@ class LLMClient_dev:
                 # For Portkey, raw_response is already the response object
                 parsed_response = self.safe_parse_json(raw_response)
                 self.logger.debug(f"Gemini Portkey parsed response: {parsed_response}")
-                if self.full_document_read and isinstance(parsed_response, dict):
-                    result = parsed_response.get(expected_key, []) if expected_key else parsed_response
+                if isinstance(parsed_response, dict) and expected_key and expected_key in parsed_response:
+                    result = parsed_response.get(expected_key, [])
+                elif isinstance(parsed_response, dict):
+                    result = parsed_response
                 else:
                     result = parsed_response if isinstance(parsed_response, list) else []
                 self.logger.debug(f"Gemini Portkey result: {result}")
@@ -502,16 +589,6 @@ class LLMClient_dev:
             final_result = self.normalize_response_format(result)
             self.logger.debug(f"Claude final normalized result: {final_result}")
             return final_result
-        
-        elif self.model.startswith('local-flan-t5'):
-            parsed_response = self.safe_parse_json(raw_response)
-            self.logger.debug(f"Processing local Flan-T5 model response: {parsed_response}")
-            return parsed_response
-
-        elif self.model.startswith('hf-'):
-            parsed_response = self.safe_parse_json(raw_response)
-            self.logger.debug(f"Processing Hugging Face model response: {parsed_response}")
-            return parsed_response
 
         else:
             self.logger.debug(f"Unsupported model: {self.model}")
@@ -779,10 +856,7 @@ class LLMClient_dev:
                 elif api_provider.lower() == 'anthropic':
                     formatted_request = self.batch_builder.create_anthropic_request(
                         custom_id=custom_id,
-                        messages=messages,
-                        model=self.model,
-                        temperature=temperature,
-                        response_format=response_format
+                        params=claude_messages_params(self.model, messages, temperature=temperature)
                     )
                 else:
                     raise ValueError(f"Unsupported API provider: {api_provider}")
@@ -1078,7 +1152,7 @@ class LLMClient_dev:
                             'result': {
                                 'type': result.result.type,
                                 'message': result.result.message.model_dump() if result.result.type == 'succeeded' else None,
-                                'error': vars(result.result.error) if result.result.type == 'errored' else None,
+                                'error': result.result.error.model_dump() if result.result.type == 'errored' else None,
                             }
                         }) + '\n')
 

@@ -344,11 +344,11 @@ class HTMLParser(LLMParser):
                 self.extracted_tables.append(table)
 
             if section_text_from_paragraphs.strip() == f'{section_title}':
-                self.logger.info(f"Section '{section_title}' is empty after processing. Skipping.")
+                self.logger.debug(f"Section '{section_title}' is empty after processing. Skipping.")
                 continue
 
             elif section_text_from_paragraphs in [sect['sec_txt_clean'] for sect in sections]:
-                self.logger.info(f"Section '{section_title}' is a duplicate after processing. Skipping.")
+                self.logger.debug(f"Section '{section_title}' is a duplicate after processing. Skipping.")
                 continue
 
             # Create section dictionary (matching XML parser structure)
@@ -862,7 +862,8 @@ class HTMLParser(LLMParser):
                     chunk_doc['sec_txt'] = "\n".join(chunk_texts)
                     chunk_doc['text'] = "\n".join(chunk_texts)
                     chunk_doc['chunk_id'] = chunk_id
-                    chunk_doc['contains_id_pattern'] = any(re.search(pattern, chunk_doc['text'], re.IGNORECASE) for pattern in self.id_patterns)
+                    chunk_doc['matched_id_patterns'] = self.matched_id_patterns(chunk_doc['text'])
+                    chunk_doc['contains_id_pattern'] = bool(chunk_doc['matched_id_patterns'])
                     corpus_documents.append(chunk_doc)
                     chunk_id += 1
                     chunk_texts = []
@@ -875,7 +876,8 @@ class HTMLParser(LLMParser):
                         chunk_doc['sec_txt'] = sub_chunk
                         chunk_doc['text'] = sub_chunk
                         chunk_doc['chunk_id'] = chunk_id
-                        chunk_doc['contains_id_pattern'] = any(re.search(pattern, sub_chunk, re.IGNORECASE) for pattern in self.id_patterns)
+                        chunk_doc['matched_id_patterns'] = self.matched_id_patterns(sub_chunk)
+                        chunk_doc['contains_id_pattern'] = bool(chunk_doc['matched_id_patterns'])
                         corpus_documents.append(chunk_doc)
                         chunk_id += 1
                 else:
@@ -890,7 +892,8 @@ class HTMLParser(LLMParser):
                 chunk_doc['sec_txt'] = "\n".join(chunk_texts)
                 chunk_doc['text'] = "\n".join(chunk_texts)
                 chunk_doc['chunk_id'] = chunk_id
-                chunk_doc['contains_id_pattern'] = any(re.search(pattern, chunk_doc['text'], re.IGNORECASE) for pattern in self.id_patterns)
+                chunk_doc['matched_id_patterns'] = self.matched_id_patterns(chunk_doc['text'])
+                chunk_doc['contains_id_pattern'] = bool(chunk_doc['matched_id_patterns'])
                 corpus_documents.append(chunk_doc)
 
             # Process tables separately with chunking
@@ -903,7 +906,8 @@ class HTMLParser(LLMParser):
                     chunk_doc['text'] = chunk
                     chunk_doc['chunk_id'] = chunk_id
                     chunk_doc['is_table_chunk'] = True
-                    chunk_doc['contains_id_pattern'] = any(re.search(pattern, chunk, re.IGNORECASE) for pattern in self.id_patterns)
+                    chunk_doc['matched_id_patterns'] = self.matched_id_patterns(chunk)
+                    chunk_doc['contains_id_pattern'] = bool(chunk_doc['matched_id_patterns'])
                     corpus_documents.append(chunk_doc)
                     chunk_id += 1
 
@@ -1510,6 +1514,7 @@ class HTMLParser(LLMParser):
                         'section_title': 'body-paragraph',
                         'sec_type': 'p-fallback',
                         'contains_id_pattern': False,
+                        'matched_id_patterns': [],
                         'chunk_id': i,
                     })
             return corpus

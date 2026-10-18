@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from collections import Counter
 import re
 import logging
 import pandas as pd
@@ -13,7 +14,7 @@ from data_gatherer.retriever.embeddings_retriever import EmbeddingsRetriever
 import requests
 from json_repair import repair_json
 
-from data_gatherer.llm.llm_client import LLMClient_dev
+from data_gatherer.llm.llm_client import LLMClient_dev, claude_context_window
 from data_gatherer.llm.response_schema import *
 
 # Regex sub-patterns that are valid in `dataset_webpage_url_ptr` for URL matching
@@ -60,7 +61,8 @@ class LLMParser(ABC):
         self.llm_name = llm_name
         entire_document_models = ["gemini-1.5-flash", "gemini-1.5-pro", "gemini-2.0-flash-exp", "gemini-2.0-flash",
                                   "gemini-2.5-flash", "gemini-3-flash", "gemini-3.5-flash", "gpt-4o", "gpt-4o-mini", "gpt-5-nano",
-                                  "gpt-5-mini", "gpt-5", "claude-haiku-4-5-20251001", "claude-sonnet-4-5"]
+                                  "gpt-5-mini", "gpt-5", "claude-haiku-4-5-20251001", "claude-haiku-5-5", "claude-sonnet-4-5",
+                                  "vllm-openai/gpt-oss-20b"]
 
         self.full_document_read = full_document_read and self.llm_name in entire_document_models
         self.title = None
@@ -338,11 +340,11 @@ Files:
             while self.tokens_over_limit(content, model, allowance_static_prompt=n_tokens_static_prompt):
                 content = content[:-2000]
         
-        # Claude models have a 200k token limit
+        # Claude models: 200k token limit, 1M for claude-haiku-5-5
         elif 'claude' in model:
             tokens_cnt = self.count_tokens(content, model)
             self.logger.info(f"Initial content tokens count for Claude model: {tokens_cnt} tokens")
-            if tokens_cnt > int(1.25 * 200000):
+            if tokens_cnt > int(1.25 * claude_context_window(model)):
                 return self.extract_datasets_info_from_chunks(
                     content, tokens_cnt, repos=repos, model=model, temperature=temperature, prompt_name=prompt_name, subdir=subdir,
                     full_document_read=full_document_read, response_format=response_format, token_chunk_size=150000, **kwargs)
@@ -453,12 +455,21 @@ Files:
 
         :return: list of content strings preserving section order and never splitting a section.
         """
-        over_limit_kwargs = {'allowance_static_prompt': allowance_static_prompt}
-        if limit is not None:
-            over_limit_kwargs['limit'] = limit
+        # Resolve the effective token limit once, mirroring tokens_over_limit's per-model
+        # branching (claude/gemini ignore an explicit `limit` override; gpt/default honor it).
+        if 'claude' in model:
+            effective_limit = claude_context_window(model)
+        elif model.startswith('vllm-'):
+            effective_limit = 131072 - 16384  # vLLM --max-model-len minus _call_vllm's output tokens
+        elif 'gemini' in model:
+            effective_limit = 1000000
+        else:
+            effective_limit = limit if limit is not None else 128000
+        threshold = effective_limit - 2000 - int(allowance_static_prompt * 1.5)
 
         chunks = []
-        current_text = ""
+        current_parts = []
+        current_tokens = 0
 
         for section in sections:
             if isinstance(section, dict):
@@ -469,22 +480,27 @@ Files:
             if not section_text:
                 continue
 
-            candidate_text = f"{current_text}\n{section_text}" if current_text else section_text
+            # Count each section's tokens once and track a running total for the chunk being
+            # built, instead of re-tokenizing the whole (ever-growing) accumulated chunk text
+            # on every section - the latter is O(n^2) and hangs for section-heavy documents.
+            section_tokens = self.count_tokens(section_text, model=model)
 
-            if current_text and self.tokens_over_limit(candidate_text, model, **over_limit_kwargs):
-                chunks.append(current_text)
-                current_text = section_text
-                if self.tokens_over_limit(current_text, model, **over_limit_kwargs):
+            if current_parts and current_tokens + section_tokens > threshold:
+                chunks.append("\n".join(current_parts))
+                current_parts = [section_text]
+                current_tokens = section_tokens
+                if section_tokens > threshold:
                     self.logger.warning(
                         f"intelligent_chunk_paper: a single section alone ({len(section_text)} chars, "
                         f"title={section.get('section_title', 'n/a') if isinstance(section, dict) else 'n/a'}) "
                         f"exceeds the token limit for model {model}; keeping it whole in its own chunk anyway."
                     )
             else:
-                current_text = candidate_text
+                current_parts.append(section_text)
+                current_tokens += section_tokens
 
-        if current_text:
-            chunks.append(current_text)
+        if current_parts:
+            chunks.append("\n".join(current_parts))
 
         self.logger.info(f"intelligent_chunk_paper: packed {len(sections)} section(s) into {len(chunks)} chunk(s) for model {model}.")
         return chunks
@@ -725,9 +741,11 @@ Files:
 
         :return: List of flat dicts, each with a singular 'grant_number' key instead of 'grant_numbers'.
         """
+        expected_grant_keys = {'funder_name', 'grant_numbers', 'funding_context_from_paper', 'recipient'}
         result = []
         for record in resps:
-            if not isinstance(record, dict):
+            if not isinstance(record, dict) or not expected_grant_keys & record.keys():
+                self.logger.warning(f"process_grants_response: dropping malformed grant record: {record}")
                 continue
             record = dict(record)
             grant_numbers = record.pop('grant_numbers', None)
@@ -782,6 +800,67 @@ Files:
         self.logger.info(
             f"process_software_response: kept {len(result)}/{len(resps)} record(s) "
             f"({dropped} dropped for missing software_name, {cleaned_urls} url(s) cleaned, {cleaned_types} mention_type(s) cleaned)"
+        )
+        return result
+
+    def process_model_response(self, resps):
+        """
+        Process the LLM response containing (pretrained) model mentions: name, version/checkpoint,
+        mention_type, url, context -- see model_mention_response_schema_gpt. Mirrors
+        process_software_response(); models get a distinct 'fine-tuned' mention_type since
+        that's a materially different relationship to the paper than 'used' as-is.
+
+        :param resps: LLM response containing model mention records (list of dicts).
+
+        :return: List of dicts, cleaned as described above. Records without a usable
+            'model_name' are dropped (that field is the one thing that must be real).
+            'url' is normalized to a list of strings (one model mention can carry multiple
+            hosting links, e.g. a GitHub repo and a Hugging Face page for the same checkpoint).
+        """
+        url_like_pattern = re.compile(r'^https?://', re.IGNORECASE)
+        valid_mention_types = {'created', 'used', 'fine-tuned', 'n/a'}
+        result = []
+        dropped = 0
+        cleaned_urls = 0
+        cleaned_types = 0
+        for record in resps:
+            if not isinstance(record, dict):
+                continue
+            record = dict(record)
+            model_name = (record.get('model_name') or '').strip()
+            if not model_name:
+                dropped += 1
+                continue
+
+            raw_url = record.get('url')
+            if isinstance(raw_url, str):
+                raw_url = [raw_url]
+            elif not isinstance(raw_url, list):
+                raw_url = []
+
+            urls = []
+            for u in raw_url:
+                u = (u or '').strip() if isinstance(u, str) else ''
+                if not u or u == 'n/a':
+                    continue
+                if url_like_pattern.match(u):
+                    urls.append(u)
+                else:
+                    self.logger.debug(f"process_model_response: url {u!r} for {model_name!r} doesn't look like a URL, dropping")
+                    cleaned_urls += 1
+            record['url'] = urls if urls else ['n/a']
+
+            mention_type = (record.get('mention_type') or 'n/a').strip().lower()
+            if mention_type not in valid_mention_types:
+                self.logger.debug(f"process_model_response: unexpected mention_type {mention_type!r} for {model_name!r}, resetting to 'n/a'")
+                record['mention_type'] = 'n/a'
+                cleaned_types += 1
+
+            result.append(record)
+
+        self.logger.info(
+            f"process_model_response: kept {len(result)}/{len(resps)} record(s) "
+            f"({dropped} dropped for missing model_name, {cleaned_urls} url(s) cleaned, {cleaned_types} mention_type(s) cleaned)"
         )
         return result
 
@@ -1092,6 +1171,19 @@ Files:
         self.logger.debug(f"All ID patterns: {id_patterns}")
         return id_patterns
 
+    def matched_id_patterns(self, text, id_patterns=None):
+        """
+        Return the subset of id_patterns (default: self.id_patterns) that match text. Used both
+        to set contains_id_pattern on corpus chunks and, in retrieve_relevant_content, to compute
+        each pattern's per-article match rate for broad-pattern suppression.
+
+        :param text: str - the chunk text to search.
+        :param id_patterns: list - patterns to check (default: self.id_patterns).
+        :return: list of the pattern strings that matched.
+        """
+        patterns = id_patterns if id_patterns is not None else self.id_patterns
+        return [pattern for pattern in patterns if re.search(pattern, text, re.IGNORECASE)]
+
     def get_code_hosting_id_patterns(self):
         """
         Regex patterns for common code-hosting/archival URLs (GitHub, GitLab, Bitbucket, Zenodo
@@ -1113,6 +1205,34 @@ Files:
             r'sourceforge\.net/(projects|p)/[\w.-]+',
             r'pypi\.org/project/[\w.-]+',
             r'cran\.r-project\.org/(web/packages|package)/[\w.-]+',
+        ]
+
+    def get_model_hosting_id_patterns(self):
+        """
+        Regex patterns for common model-hosting URLs (Hugging Face Hub, TensorFlow Hub,
+        PyTorch Hub, Model Zoo variants, ModelScope, Civitai). Same role as
+        get_code_hosting_id_patterns() but for pretrained-model mentions (SOMD's model-mention
+        analogue): intended as the `ID_patterns` argument to
+        retrieve_relevant_content(include_snippets_with_ID_patterns=True, ID_patterns=...), the
+        deterministic Tier-1 half of model-mention detection. Tier 2 (the LLM prompt/schema)
+        covers model mentions with no URL at all (e.g. "we fine-tuned BERT-base").
+
+        Bare "pytorch"/"tensorflow" name the training framework far more often than a hosted
+        checkpoint, so on their own they'd flood the model-mention signal with noise. Rather than
+        hand-gating them behind "hub" here, they're left broad and retrieve_relevant_content's
+        broad_ID_ptr_threshold check suppresses force-inclusion when a pattern turns out to cover
+        too much of a given article's corpus (see there for the per-article match-rate logic).
+
+        :return: list of regex pattern strings.
+        """
+        return [
+            r'hugging[\s-]?face',
+            r'tfhub\.dev(?:/[\w.-]+)*|tensorflow[\s-]?hub|tf[\s-]?hub\b',
+            r'pytorch\.org/hub(?:/[\w.\-/]+)?|pytorch[\s-]?hub|torch[\s-]?hub',
+            r'\bpytorch\b',
+            r'\btensorflow\b',
+            r'modelscope(?:\.cn(?:/[\w.-]+)*)?',
+            r'civitai(?:\.com(?:/[\w.-]+)*)?',
         ]
 
     def get_all_repo_names(self, uncased=False):
@@ -1565,21 +1685,28 @@ Files:
 
     def tokens_over_limit(self, html_cont: str, model="gpt-4", limit=128000, allowance_static_prompt=400):
         tokens_cnt = self.count_tokens(html_cont, model=model)
-        if 'gpt' in model:
-            self.logger.info(f"Number of tokens: {tokens_cnt}")
+        if model.startswith('vllm-'):
+            # checked before 'gpt': vllm-openai/gpt-oss-20b also contains 'gpt'.
+            # vLLM --max-model-len (131072) bounds prompt + output; reserve _call_vllm's 16384 output tokens.
+            limit = 131072 - 16384
+            self.logger.debug(f"Number of tokens: {tokens_cnt}")
+            return tokens_cnt + int(allowance_static_prompt * 1.5) > limit - 2000
+        elif 'gpt' in model:
+            self.logger.debug(f"Number of tokens: {tokens_cnt}")
             return tokens_cnt + int(allowance_static_prompt * 1.5) > limit - 2000
         elif 'claude' in model:
-            limit = 200000
-            self.logger.info(f"Number of tokens: {tokens_cnt}")
+            limit = claude_context_window(model)
+            self.logger.debug(f"Number of tokens: {tokens_cnt}")
             return tokens_cnt + int(allowance_static_prompt * 1.5) > limit - 2000
         elif 'gemini' in model:
             limit = 1000000
-        self.logger.info(f"Estimated number of tokens for model '{model}': {tokens_cnt}")
+        self.logger.debug(f"Estimated number of tokens for model '{model}': {tokens_cnt}")
         return tokens_cnt + int(allowance_static_prompt * 1.5) > limit - 2000
 
     def count_tokens(self, prompt, model="gpt-4o-mini") -> int:
         """
         Count the number of tokens in a given prompt for a specific model.
+        --> consider moving this functino to prompt_manager
 
         :param prompt: str — the prompt to be tokenized.
 
@@ -1591,7 +1718,7 @@ Files:
 
         # **Ensure `prompt` is a string**
         if isinstance(prompt, list):
-            self.logger.info(f"Expected string but got list. Converting list to string.")
+            self.logger.debug(f"Expected string but got list. Converting list to string.")
             prompt = " ".join([msg["content"] for msg in prompt if isinstance(msg, dict) and "content" in msg])
 
         elif not isinstance(prompt, str):
@@ -1601,7 +1728,11 @@ Files:
         self.logger.debug(f"Counting tokens for model: {model}, prompt length: {len(prompt)} char")
         # **Token count based on model**
         if 'gpt' in model:
-            encoding = tiktoken.encoding_for_model(model)
+            # tiktoken only: vllm-openai/gpt-oss-20b assimilated to gpt-4's encoding.
+            try:
+                encoding = tiktoken.encoding_for_model(model)
+            except KeyError:
+                encoding = tiktoken.encoding_for_model('gpt-4')
             n_tokens = len(encoding.encode(prompt))
         
         elif 'claude' in model:
@@ -1884,7 +2015,7 @@ Files:
 
     def retrieve_relevant_content(self, data, semantic_retrieval=True, top_k=5, article_id=None, max_tokens=None, skip_rule_based_retrieved_elm=False,
                                   include_snippets_with_ID_patterns=False, output_format='text', query=None, ID_patterns=None,
-                                  include_section_title=False, skip_p_fallback=True, relevant_content_flag='DAS'):
+                                  include_section_title=False, skip_p_fallback=True, relevant_content_flag='DAS', broad_ID_ptr_threshold=0.2):
 
         """Given the full text of the article, retrieve the most relevant content related to data availability using a combination
         of semantic retrieval and rule-based methods.
@@ -1902,6 +2033,7 @@ Files:
         :param include_section_title: bool - whether to include section titles in the corpus for semantic retrieval (default: False)
         :param skip_p_fallback: bool - whether to skip the fallback method of building corpus from <p> tags if semantic retrieval returns an empty corpus (default: True)
         :param relevant_content_flag: str - which rule-based content category to force-include: 'DAS' (data availability, default) or 'FUND' (funding/grants). See rule_based_retrieve.
+        :param broad_ID_ptr_threshold: float - per-article match-rate cutoff (matches / corpus sections) above which an ID pattern is treated as too broad for this article and its matches are excluded from forced inclusion (they can still surface via semantic retrieval). Lets patterns that are broad in general (e.g. bare "pytorch") stay in the pattern list without flooding every article's context.
 
         :return: str or list - the retrieved relevant content in the specified output format
         """
@@ -1958,8 +2090,24 @@ Files:
                 ret_lst.extend(top_k_sections_text)
         
         if include_snippets_with_ID_patterns:
-            docs_matching_id_ptr = [item for item in corpus if item.get('contains_id_pattern', False)]
-            self.logger.info(f"Number of documents matching ID patterns: {len(docs_matching_id_ptr)}")
+            corpus_size = len(corpus)
+            broad_patterns = set()
+            if corpus_size:
+                pattern_counts = Counter(p for item in corpus for p in item.get('matched_id_patterns', []))
+                for pattern, count in pattern_counts.items():
+                    rate = count / corpus_size
+                    if rate > broad_ID_ptr_threshold:
+                        self.logger.warning(f"ID pattern {pattern!r} matched {count}/{corpus_size} = {rate:.2%} of corpus sections (article_id={article_id}); treating as too broad for this article and excluding its matches from forced inclusion.")
+                        broad_patterns.add(pattern)
+
+            # A chunk is still force-included if it matches at least one non-broad pattern; a
+            # chunk whose only matches are broad-for-this-article patterns is dropped from forced
+            # inclusion (it can still surface through semantic retrieval on its own merits).
+            docs_matching_id_ptr = [
+                item for item in corpus
+                if item.get('contains_id_pattern', False) and set(item.get('matched_id_patterns', [])) - broad_patterns
+            ]
+            self.logger.info(f"Number of documents matching ID patterns: {len(docs_matching_id_ptr)}" + (f" ({len(broad_patterns)} pattern(s) suppressed as overly broad)" if broad_patterns else ""))
             ret_lst.extend([item['text'] for item in docs_matching_id_ptr if item['text'] not in ret_lst])  # Use extend() instead of append()
         
         self.logger.debug(f"Prepare output as {output_format} from list of length {len(ret_lst)}")

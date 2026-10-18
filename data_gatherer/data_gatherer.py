@@ -85,7 +85,8 @@ class DataGatherer:
         data_repos_config='open_bio_data_repos.json',
         user_config_dir=None,
         grobid_for_pdf=False,
-        raw_data_df_parquet_filepath=None
+        raw_data_df_parquet_filepath=None,
+        prompt_dir="data_gatherer/prompts/prompt_templates"
         ):
 
         self.open_data_repos_ontology = load_config(data_repos_config, user_config_dir=user_config_dir)
@@ -109,6 +110,7 @@ class DataGatherer:
             'PDF_GROBID': None
         }
 
+        self.prompt_dir = prompt_dir
         self.write_htmls_xmls = write_htmls_xmls
         self.article_file_dir = article_file_dir
         self.load_from_cache = load_from_cache
@@ -122,7 +124,13 @@ class DataGatherer:
 
         entire_document_models = ["gemini-1.5-flash", "gemini-1.5-pro", "gemini-2.0-flash-exp", "gemini-2.0-flash",
                                   "gemini-2.5-flash", "gemini-3-flash", "gemini-3.5-flash", "gpt-4o", "gpt-4o-mini", "gpt-5-nano",
-                                  "gpt-5-mini", "gpt-5", "claude-haiku-4-5-20251001", "claude-sonnet-4-5"]
+                                  "gpt-5-mini", "gpt-5", "claude-haiku-4-5-20251001", "claude-haiku-5-5", "claude-sonnet-4-5",
+                                  "vllm-openai/gpt-oss-20b"]
+        if process_entire_document and llm_name not in entire_document_models:
+            self.logger.warning(
+                f"process_entire_document=True requested but {llm_name} isn't in entire_document_models — "
+                f"falling back to retrieval mode"
+            )
         self.full_document_read = llm_name in entire_document_models and process_entire_document
         self.llm = llm_name
 
@@ -191,6 +199,10 @@ class DataGatherer:
         if isinstance(urls, str):
             urls = [urls]
             single_article = True
+
+        if write_df_to_path and not write_df_to_path.endswith('.parquet'):
+            self.logger.info("Dataframe must be written to parquet file. Please provide a valid path ending with .parquet")
+            write_df_to_path = False
 
         complete_publication_fetches = {}
         batch_results = {}
@@ -283,7 +295,14 @@ class DataGatherer:
                                 }
                     else:
                         self.logger.warning(f"Unsupported raw data format: {self.data_fetcher.raw_data_format}.")
-            
+
+                # Buffer this publication for the backup store (see BackupDataStore.persist).
+                if write_df_to_path and pub_link in complete_publication_fetches:
+                    entry = complete_publication_fetches[pub_link]
+                    self.data_fetcher.backup_store.persist(
+                        pub_link, entry['fetched_data'], entry['raw_data_format'], filepath=write_df_to_path
+                    )
+
             # Move to next fallback method
             i += 1
 
@@ -291,33 +310,9 @@ class DataGatherer:
         if hasattr(self.data_fetcher, 'scraper_tool'):
             self.data_fetcher.scraper_tool.quit()
 
+        # Flush any remaining buffered fetches (fewer than the batch size) to the backup store.
         if write_df_to_path:
-            if write_df_to_path.endswith('.parquet'):
-                # Convert XML elements to strings for Parquet serialization
-                serialized_data = {}
-                for url, data in complete_publication_fetches.items():
-                    serialized_entry = data.copy()
-                    fetched = data['fetched_data']
-                    
-                    # Check if fetched_data is an lxml Element and convert to string
-                    if hasattr(fetched, 'tag'):  # It's an XML Element
-                        from lxml import etree
-                        serialized_entry['fetched_data'] = etree.tostring(
-                            fetched, 
-                            encoding='unicode', 
-                            method='xml',
-                            pretty_print=True
-                        )
-                    # Otherwise keep as is (for HTML strings, etc.)
-                    
-                    serialized_data[url] = serialized_entry
-                
-                df = pd.DataFrame.from_dict(serialized_data, orient='index')
-                df.index.name = None
-                df.to_parquet(write_df_to_path, index=True)
-
-            else:
-                self.logger.info("Dataframe must be written to parquet file. Please provide a valid path ending with .parquet")
+            self.data_fetcher.backup_store.flush(write_df_to_path)
 
         if single_article and urls[0] in complete_publication_fetches:
             return complete_publication_fetches[urls[0]]['fetched_data']
@@ -348,7 +343,10 @@ class DataGatherer:
         format_key = raw_data_format.upper()
         if grobid_for_pdf and format_key == "PDF":
             format_key = "PDF_GROBID"
-        
+        # JATS and TEI (e.g. cached GROBID output) both arrive as XML but need different parsers
+        if format_key == "XML" and XMLParser.is_tei_xml_static(raw_data):
+            format_key = "XML_TEI"
+
         if self._cached_parsers.get(format_key) is not None and not force_reinit:
             self.logger.debug(f"Reusing cached parser for format: {format_key}")
             self.parser = self._cached_parsers[format_key]
@@ -361,27 +359,28 @@ class DataGatherer:
             if raw_data is not None:
                 router = XMLRouter(self.open_data_repos_ontology, self.logger, full_document_read=self.full_document_read,
                                 llm_name=self.llm, use_portkey=use_portkey, save_dynamic_prompts=self.save_dynamic_prompts,
-                                     embeddings_model_name=embeddings_retriever_model, embeds_cache_read=self.embeds_cache_read, 
-                                     embeds_cache_write=self.embeds_cache_write)
+                                     embeddings_model_name=embeddings_retriever_model, embeds_cache_read=self.embeds_cache_read,
+                                     embeds_cache_write=self.embeds_cache_write, prompt_dir=self.prompt_dir)
                 self.parser = router.get_parser(raw_data)
             else:
                 self.parser = XMLParser(self.open_data_repos_ontology, self.logger, full_document_read=self.full_document_read,
                                 llm_name=self.llm, use_portkey=use_portkey, save_dynamic_prompts=self.save_dynamic_prompts,
-                                     embeddings_model_name=embeddings_retriever_model, embeds_cache_read=self.embeds_cache_read, 
-                                     embeds_cache_write=self.embeds_cache_write)
+                                     embeddings_model_name=embeddings_retriever_model, embeds_cache_read=self.embeds_cache_read,
+                                     embeds_cache_write=self.embeds_cache_write, prompt_dir=self.prompt_dir)
         elif raw_data_format.upper() == "HTML":
             self.parser = HTMLParser(self.open_data_repos_ontology, self.logger, full_document_read=self.full_document_read,
                                llm_name=self.llm, use_portkey=use_portkey, save_dynamic_prompts=self.save_dynamic_prompts,
-                                     embeddings_model_name=embeddings_retriever_model, embeds_cache_read=self.embeds_cache_read, 
-                                     embeds_cache_write=self.embeds_cache_write)
+                                     embeddings_model_name=embeddings_retriever_model, embeds_cache_read=self.embeds_cache_read,
+                                     embeds_cache_write=self.embeds_cache_write, prompt_dir=self.prompt_dir)
         elif raw_data_format.upper() == "PDF" and grobid_for_pdf:
             self.parser = GrobidPDFParser(self.open_data_repos_ontology, self.logger, full_document_read=self.full_document_read,
-                               llm_name=self.llm, use_portkey=use_portkey, save_dynamic_prompts=self.save_dynamic_prompts, 
-                               write_XML=self.write_htmls_xmls)
+                               llm_name=self.llm, use_portkey=use_portkey, save_dynamic_prompts=self.save_dynamic_prompts,
+                               write_XML=self.write_htmls_xmls, prompt_dir=self.prompt_dir)
 
         elif raw_data_format.upper() == "PDF":
             self.parser = PDFParser(self.open_data_repos_ontology, self.logger, full_document_read=self.full_document_read,
-                               llm_name=self.llm, use_portkey=use_portkey, save_dynamic_prompts=self.save_dynamic_prompts)
+                               llm_name=self.llm, use_portkey=use_portkey, save_dynamic_prompts=self.save_dynamic_prompts,
+                               prompt_dir=self.prompt_dir)
         else:
             raise ValueError(f"Unsupported raw data format: {raw_data_format}")
         
@@ -564,9 +563,7 @@ class DataGatherer:
 
         :param enable_chunking: If content exceeds self.llm's token limit, split it into multiple chunks.
 
-        :return: (normalized_input, article_title) — normalized_input is a str, or a list[str] of
-            chunks when intelligent_chunking triggers a split. article_title is '' unless
-            extracted via the GROBID PDF path.
+        :return: (normalized_input, article_title) — normalized_input is a str, or a list[str] of chunks when intelligent_chunking triggers a split; article_title is '' unless extracted via the GROBID PDF path.
         """
         article_title = ''
         if raw_data_format.upper() == 'XML':
@@ -681,7 +678,8 @@ class DataGatherer:
         self.full_document_read = full_document_read or self.full_document_read or (self.parser is not None and self.parser.full_document_read)
 
         self.data_fetcher = self.data_fetcher.update_DataFetcher_settings(url, driver_path=driver_path, browser=browser,
-                                                                          headless=headless, HTML_fallback=HTML_fallback)
+                                                                          headless=headless, HTML_fallback=HTML_fallback,
+                                                                          local_fetch_file=self.data_fetcher.backup_file)
         self.logger.info(f"Type of data_fetcher {self.data_fetcher.__class__.__name__}")
 
         article_id = self.data_fetcher.url_to_article_id(url)
@@ -1834,6 +1832,7 @@ class DataGatherer:
         remove_reference_tags=False,
         intelligent_chunking=False,
         regex_search_id_patterns=None,
+        expected_key='datasets',
         ):
         """
         Complete integrated batch processing using LLMClient batch functionality.
@@ -1891,15 +1890,11 @@ class DataGatherer:
 
         :param local_fetch_file: Optional local file for fetching data
 
-        :param remove_reference_tags: If True, strips the references/bibliography section from full-document
-            (FDR) input before sending it to the LLM. Off by default. Intended for tasks (e.g. grant/funding
-            extraction) where references are never relevant.
+        :param remove_reference_tags: If True, strips the references/bibliography section from full-document (FDR) input before sending it to the LLM. Off by default.
 
-        :param intelligent_chunking: If True, and a document's normalized FDR content (after any
-            reference stripping) still exceeds the target model's token limit, split it into multiple
-            section-aware chunks (via LLMParser.intelligent_chunk_paper) instead of sending one oversized
-            document. Off by default — does not alter extract_datasets_info_from_content's own separate
-            chunking behavior on the sync path.
+        :param intelligent_chunking: If True, splits FDR content exceeding the target model's token limit into section-aware chunks via LLMParser.intelligent_chunk_paper instead of sending it oversized. Off by default.
+
+        :param expected_key: Top-level JSON key to unwrap on the sync path (use_batch_api=False); process_datasets_response right after still assumes dataset-shaped records regardless.
 
         :return: Dictionary with batch information and results
         """
@@ -1939,7 +1934,7 @@ class DataGatherer:
             
             # Step 2: Prepare batch requests for LLMClient (parser per URL)
             supplementary_material_metadata = pd.DataFrame()
-            batch_requests, cnt, last_url_raw_data_format = [], 0, False
+            batch_requests = []
             for url_raw_data_format, vals in format_counts.items():
                 for orig_url in vals['urls']:
                     # Prefer the canonical/redirected URL when we actually have fetched
@@ -1950,12 +1945,10 @@ class DataGatherer:
                     if url not in fetched_data:
                         url = orig_url
                     try:
-                        if cnt != 0 and url_raw_data_format == last_url_raw_data_format:
-                            self.logger.info(f"Reusing existing parser of name: {self.parser.__class__.__name__}")
-                        else:
-                            self.logger.info(f"Creating new parser for format: {url_raw_data_format}")
-                            self.init_parser_by_input_type(url_raw_data_format, fetched_data[url], embeddings_retriever_model, 
-                            use_portkey, grobid_for_pdf, self.full_document_read)
+                        # init_parser_by_input_type reuses cached parsers; it is called per URL because an XML
+                        # group can mix JATS and TEI, which need different parsers
+                        self.init_parser_by_input_type(url_raw_data_format, fetched_data[url]['fetched_data'], embeddings_retriever_model,
+                        use_portkey, grobid_for_pdf, self.full_document_read)
                         
                         self.parser.publisher = self.data_fetcher.url_to_publisher_domain(url)
 
@@ -2051,8 +2044,6 @@ class DataGatherer:
                         self.logger.error(f"Error preparing request for {url}: {e}")
                         continue
 
-                    last_url_raw_data_format = url_raw_data_format
-                    cnt+=1
             
             if output_file_path:
                 base = output_file_path.rsplit('.', 1)[0]
@@ -2092,7 +2083,7 @@ class DataGatherer:
                         resps = self.parser.llm_client.process_llm_response(
                             raw_response=raw_output,
                             response_format=response_format,
-                            expected_key='datasets'
+                            expected_key=expected_key
                         )
                         resps = self.parser.normalize_response_type(resps)
                         datasets = self.parser.process_datasets_response(resps, skip_validation=True)
@@ -2188,12 +2179,12 @@ class DataGatherer:
                     result['final_status'] = status_info
             
             return result
-            
+
         except Exception as e:
             self.logger.error(f"Error in integrated batch processing: {e}", exc_info=True)
             raise
 
-    def split_jsonl_and_submit(self, 
+    def split_jsonl_and_submit(self,
                               batch_file_path: str,
                               max_file_size_mb: float = 200.0,
                               api_provider: str = 'openai',

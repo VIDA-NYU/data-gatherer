@@ -454,9 +454,23 @@ def extract_all_elements_with_UID(source_html, uid):
 
     return [None]  # No match found
 
+def url_to_pub_id(url) -> str:
+    """Article key of a source URL: 'pmc123' for PMC URLs, the lowercased DOI for doi.org URLs, else the last path segment."""
+    url = str(url).strip().rstrip('/')
+    pmc = re.search(r'pmc\d+', url, re.I)
+    if pmc:
+        return pmc.group(0).lower()
+    if 'doi.org/' in url:
+        return url.split('doi.org/', 1)[1].lower()
+    return url.split('/')[-1].lower()
+
+
 def evaluate_performance(predict_df, ground_truth, orchestrator, false_positives_file, false_negatives_file=None,
-                         repo_return=False, gt_base=None):
-    """ Evaluates dataset extraction performance using precision, recall, and F1-score. """
+                         repo_return=False, gt_base=None, gt_id_col='pmcid'):
+    """ Evaluates dataset extraction performance using precision, recall, and F1-score.
+
+    gt_id_col: ground-truth column holding the article key (PMCID, or DOI for articles fetched via doi.org).
+    """
 
     recall_list, false_positives_output, false_negatives_output = [], [], []
     total_precision, total_recall, num_sources = 0, 0, 0
@@ -466,7 +480,7 @@ def evaluate_performance(predict_df, ground_truth, orchestrator, false_positives
 
     # Pre-build GT index: pmcid (lower) → set of identifiers — avoids O(n) scan per article
     gt_index = {}
-    for pmcid, identifier in zip(ground_truth['pmcid'].str.lower(), ground_truth['identifier'].fillna('').str.lower()):
+    for pmcid, identifier in zip(ground_truth[gt_id_col].str.lower(), ground_truth['identifier'].fillna('').str.lower()):
         if pmcid not in gt_index:
             gt_index[pmcid] = set()
         for id_part in identifier.split(','):
@@ -479,11 +493,7 @@ def evaluate_performance(predict_df, ground_truth, orchestrator, false_positives
     # .astype(str) first — an empty predict_df (a config with zero predictions) leaves
     # these columns as float64, and .str accessor raises on non-string dtype regardless
     # of row count; casting up front keeps this correct for both the empty and non-empty case.
-    predict_df['_pub_id'] = (
-        predict_df['source_url'].astype(str).replace('nan', '')
-        .str.lower()
-        .str.extract(r'(pmc\d+)', expand=False)
-    )
+    predict_df['_pub_id'] = predict_df['source_url'].astype(str).replace('nan', '').map(url_to_pub_id)
     predict_df['_id_lower'] = predict_df['dataset_identifier'].astype(str).replace('nan', '').str.lower()
     predict_index = {
         pub_id: grp
@@ -494,7 +504,7 @@ def evaluate_performance(predict_df, ground_truth, orchestrator, false_positives
     n_total = len(gt_base)
 
     for i, source_page in enumerate(gt_base):
-        pub_id = source_page.split('/')[-1].lower() if not source_page.endswith('/') else source_page.split('/')[-2].lower()
+        pub_id = url_to_pub_id(source_page)
 
         if i % 500 == 0:
             elapsed = time.time() - t_start
