@@ -1,4 +1,16 @@
-## Release (v0.3.1dev) - 2026-08-11
+## Release (v0.3.1) - 2026-10-18
+
+- Model mention extraction: new pipeline mirroring the SOMD software pipeline, with model_prompts and support for multiple hosting URLs per model mention
+- gpt-oss / vLLM support (#37) and Claude Haiku 5.5 support
+- OpenAIRE Marine Science benchmark: dev/test workflow, tests, and graph
+- Prompt templates: explicit handling of articles with no dataset mention; broadened prompts and regex patterns, with an adaptive gate that drops overly general ID matches
+- Backup data store: file locking for multi-threaded runs, persist appends rows instead of rewriting, backup parquet path now propagates to process_url fetchers
+- Fixes: batch download crash, silent fallback from full-document-read, grants response parsing
+- Intelligent chunking calls tiktoken less often; run_integrated_batch_processing no longer depends on expected_key
+- Prompt directory can be passed as an argument (CARD application)
+- K8s: default image data-gatherer-nvidia:20261008
+
+## Release (v0.3.0) - 2026-08-11
 
 - Grant extraction (#34) and Software Mention Detection (#35): new FDR/RTR few-shot prompts and response schema support for GPT/Claude
 - Full-Document-Read (FDR) batch support across GPT/Claude/Gemini, plus Full-Document-Chunk to process entire documents in smaller pieces; Anthropic Batch API calls now managed by llm_client
