@@ -14,16 +14,34 @@ What It Does
 
 - Parses scientific articles from open-access sources like PubMed Central (PMC).
 - Extracts dataset mentions from structured sections (e.g., Data Availability, Supplementary Material).
-- Supports two main strategies:
+- Supports three strategies:
 
-  - **Retrieve-Then-Read (RTR)**: First retrieves relevant sections using hand-crafted rules, then applies LLMs.
-  - **Full-Document Read (FDR)**: Applies LLMs to the full text without section filtering.
+  - **Full-Document Read (FDR)**: Applies a large-context LLM to the full parsed document.
+  - **Full-Document Chunks (FDC)**: Splits the full document into chunks that fit the model's context and reads
+    each of them, for small models such as the fine-tuned Flan-T5.
+  - **Retrieve-Then-Read (RTR)**: First retrieves the relevant sections (Data Availability sections via XPath
+    patterns, top-k semantic search, and accession ID patterns from the repository registry), then reads only those.
 
-- Outputs structured results in JSON format.
-- Includes support for known repositories (e.g., GEO, PRIDE, MassIVE) via a configurable ontology.
+- Outputs structured dataset references; when passages are read one at a time (FDC, and RTR with small models),
+  each reference also records the section it was extracted from.
+- Includes support for known repositories (e.g., GEO, PRIDE, MassIVE) via a configurable repository registry
+  (accession ID patterns and dataset page templates).
 
-.. image:: docs/H_Flowchart.png
-   :alt: Flowchart illustrating the main passages in the process_url function.
+.. image:: docs/extraction_modes.png
+   :alt: The three extraction strategies (FDR, FDC, RTR), from input articles to structured dataset references.
+
+Supported inputs
+----------------
+
+Articles can be given as PMCIDs, DOIs, URLs or PDF files, and are parsed from whichever raw text is available:
+
+- **XML**: JATS XML for PMC articles, from the Entrez E-utilities API.
+- **HTML**: PMC and publisher web pages (DOIs are resolved through doi.org).
+- **TEI**: PDFs converted to TEI XML with GROBID.
+- **Plain text**: text extracted directly from PDFs, without GROBID.
+
+Already fetched full texts can also be read from a local or S3 parquet cache (``--backup-file`` /
+``--s3-backup-key`` in ``k8s/k8s_processor.py``).
 
 Use Cases
 ---------
