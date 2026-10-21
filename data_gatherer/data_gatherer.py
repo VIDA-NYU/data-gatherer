@@ -17,6 +17,7 @@ from data_gatherer.parser.html_parser import *
 from data_gatherer.parser.xml_parser import *
 from data_gatherer.parser.pdf_parser import *
 from data_gatherer.parser.grobid_pdf_parser import *
+from data_gatherer.parser.base_parser import passage_fields, row_stats, collapse_empty_rows
 from data_gatherer.llm.response_schema import *
 from data_gatherer.classifier import LLMClassifier
 from data_gatherer.env import CACHE_BASE_DIR
@@ -1901,6 +1902,8 @@ class DataGatherer:
 
         self.logger.info(f"Starting integrated batch processing for {len(url_list)} URLs")
         self.custom_id_to_source_url = {}
+        # url -> article-level retrieval stats (incl. all retrieved section titles), for the articles log
+        self.retrieval_stats_by_url = {}
 
         if relevant_cont_fmt is None:
             # Match process_articles/parse_data's existing convention:
@@ -1998,6 +2001,7 @@ class DataGatherer:
                         retrieval_stats = {}
                         if hasattr(self.parser, 'retrieval_stats'):
                             retrieval_stats = self.parser.retrieval_stats.get(pmcid, {})
+                        self.retrieval_stats_by_url[url] = {k: v for k, v in retrieval_stats.items() if k != 'passages'}
 
                         # Supplementary-material extraction is per-URL, not per-chunk — compute once here
                         # rather than inside the chunk loop below (was previously re-parsing the full
@@ -2034,7 +2038,8 @@ class DataGatherer:
                                     'page_id': article_id,
                                     'raw_data_format': url_raw_data_format,
                                     'title': article_title,
-                                    'retrieval_stats': retrieval_stats,
+                                    'retrieval_stats': row_stats(retrieval_stats),
+                                    'passage': passage_fields(retrieval_stats, idx),
                                 }
                             }
 
@@ -2093,10 +2098,11 @@ class DataGatherer:
                             ds['pub_title'] = metadata.get('title', '')
                             ds['raw_data_format'] = metadata.get('raw_data_format', 'XML')
                             ds.update(stats)
+                            ds.update(metadata.get('passage') or {})
                             all_rows.append(ds)
                     except Exception as e:
                         self.logger.error(f"Sync call failed for {req.get('custom_id')}: {e}", exc_info=True)
-                df = pd.DataFrame(all_rows) if all_rows else pd.DataFrame()
+                df = collapse_empty_rows(pd.DataFrame(all_rows)) if all_rows else pd.DataFrame()
                 if output_file_path:
                     df.to_csv(output_file_path, index=False)
                     self.logger.info(f"Sync results saved to: {output_file_path}")
@@ -2326,7 +2332,10 @@ class DataGatherer:
                     record['custom_id'] = custom_id
 
                     for key, value in metadata.items():
-                        record[key] = value
+                        if key in ('retrieval_stats', 'passage'):
+                            record.update(value or {})
+                        else:
+                            record[key] = value
 
                     # Reconstruct source URL if it's a PMC article
                     if re.search(r'_PMC\d+', custom_id, re.IGNORECASE):
@@ -2340,7 +2349,7 @@ class DataGatherer:
             
             # Step 3: Convert to DataFrame
             if processed_datasets:
-                df = pd.DataFrame(processed_datasets)
+                df = collapse_empty_rows(pd.DataFrame(processed_datasets))
                 self.logger.info(f"Successfully converted batch results to DataFrame with {len(df)} rows")
                 
                 if output_file_path:

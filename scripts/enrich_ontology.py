@@ -349,7 +349,11 @@ def build_group_summaries(df: pd.DataFrame) -> list[dict]:
         # top_sections: most frequent section types where these identifiers appeared.
         # "Data Availability Statement" dominance confirms a data repository.
         top_sections: list[str] = []
-        if "retrieved_sections_title" in grp.columns:
+        if "source_section" in grp.columns and grp["source_section"].notna().any():
+            # the section of the passage each identifier was extracted from
+            tops = grp["source_section"].dropna().astype(str).str.split(" > ").str[0].str.strip()
+            top_sections = tops.value_counts().head(5).index.tolist()
+        elif "retrieved_sections_title" in grp.columns:
             counts: dict[str, int] = {}
             for val in grp["retrieved_sections_title"].dropna():
                 try:

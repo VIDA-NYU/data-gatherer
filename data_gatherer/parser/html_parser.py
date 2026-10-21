@@ -554,10 +554,15 @@ class HTMLParser(LLMParser):
             
             augmented_dataset_links = []
             if isinstance(data_availability_cont, list):
-                for das_content in data_availability_cont:
-                    augmented_dataset_links.extend(self.extract_datasets_info_from_content(
+                passage_stats = getattr(self, 'retrieval_stats', {}).get(article_id, {})
+                for idx, das_content in enumerate(data_availability_cont):
+                    passage_links = self.extract_datasets_info_from_content(
                         das_content, self.open_data_repos_ontology['repos'], model=self.llm_name,
-                        temperature=0, prompt_name=prompt_name, response_format=response_format))
+                        temperature=0, prompt_name=prompt_name, response_format=response_format)
+                    for link in passage_links:
+                        if isinstance(link, dict):
+                            link.update(passage_fields(passage_stats, idx))
+                    augmented_dataset_links.extend(passage_links)
 
             else:
                 augmented_dataset_links = self.extract_datasets_info_from_content(data_availability_cont,

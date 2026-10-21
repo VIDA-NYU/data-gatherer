@@ -432,8 +432,13 @@ def main():
             if isinstance(batch_df, pd.DataFrame):
                 append_to_csv(batch_df, output_csv)
                 log_cols = ['source_url', 'pub_title', 'raw_data_format', 'n_all_sections', 'n_corpus_sections', 'retrieved_sections_title', 'top_k', 'n_das_sections']
-                article_info = batch_df[[c for c in log_cols if c in batch_df.columns]].drop_duplicates('source_url') if not batch_df.empty else pd.DataFrame(columns=log_cols)
+                # retrieval stats are article-level: take them per URL (rows only carry their own passage's section)
+                stats = pd.DataFrame([{'source_url': u, **s} for u, s in getattr(dg, 'retrieval_stats_by_url', {}).items() if u in batch])
+                row_cols = [c for c in log_cols if c in batch_df.columns and (c == 'source_url' or c not in stats.columns)]
+                article_info = batch_df[row_cols].drop_duplicates('source_url') if not batch_df.empty else pd.DataFrame(columns=['source_url'])
                 log_df = pd.DataFrame({'source_url': batch}).merge(article_info, on='source_url', how='left')
+                if not stats.empty:
+                    log_df = log_df.merge(stats[[c for c in log_cols if c in stats.columns]], on='source_url', how='left')
                 append_to_csv(log_df, articles_log_csv)
             else:
                 logger.warning(f"Batch {batch_num} returned unexpected type: {type(batch_df)}")

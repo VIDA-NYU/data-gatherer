@@ -27,8 +27,39 @@ URL_REGEX_STRIP_PATTERNS = [
 DATASET_OUTPUT_COLS = [
     'dataset_identifier', 'repository_reference', 'data_repository', 'dataset_webpage', 'access_mode',
     'link', 'source_url', 'download_link', 'title', 'content_type', 'id', 'caption', 'description',
-    'source_section', 'retrieval_pattern', 'context_description', 'file_extension', 'pub_title', 'raw_data_format',
+    'source_section', 'retrieval_source', 'chunk_idx', 'retrieval_pattern', 'context_description', 'file_extension',
+    'pub_title', 'raw_data_format',
 ]
+
+# source_section of passages found by rule_based_retrieve, which returns text without section titles
+RULE_BASED_SECTION_LABELS = {'DAS': 'Data Availability', 'FUND': 'Funding', 'CODE': 'Code Availability'}
+
+# Article-level retrieval stats that are not copied onto extracted rows: 'passages' is split per passage
+# (see passage_fields) and the list of all retrieved section titles belongs in the articles log.
+ARTICLE_ONLY_STATS = ('passages', 'retrieved_sections_title')
+
+
+def passage_fields(retrieval_stats, idx):
+    """Row fields for the passage at position idx of an article's retrieved content."""
+    passages = (retrieval_stats or {}).get('passages') or []
+    return {'chunk_idx': idx, **(passages[idx] if idx < len(passages) else {})}
+
+
+def row_stats(retrieval_stats):
+    """Article-level retrieval stats to copy onto each extracted row."""
+    return {k: v for k, v in (retrieval_stats or {}).items() if k not in ARTICLE_ONLY_STATS}
+
+
+def collapse_empty_rows(df):
+    """Passages with no extraction yield rows without an identifier, now distinct per passage. Keep one such
+    row per article that has no extraction at all (it marks the article as processed), and none otherwise."""
+    if df.empty or 'dataset_identifier' not in df or 'source_url' not in df:
+        return df
+    ids = df['dataset_identifier'].astype(str).str.strip().str.lower()
+    has_id = df['dataset_identifier'].notna() & ~ids.isin(('', 'n/a', 'none', 'nan', 'null'))
+    empty = df[~has_id & ~df['source_url'].isin(df.loc[has_id, 'source_url'])].drop_duplicates('source_url')
+    empty = empty.drop(columns=[c for c in ('chunk_idx', 'source_section', 'retrieval_source') if c in empty])
+    return pd.concat([df[has_id], empty], ignore_index=True)
 
 # Abstract base class for parsing data
 class LLMParser(ABC):
@@ -599,7 +630,7 @@ Files:
                 pub_title = metadata.get('title', '')
                 raw_data_format = metadata.get('raw_data_format', 'XML')
                 article_id = metadata.get('article_id')
-                stats = metadata.get('retrieval_stats') or getattr(self, 'retrieval_stats', {}).get(article_id, {})
+                stats = metadata.get('retrieval_stats') or row_stats(getattr(self, 'retrieval_stats', {}).get(article_id, {}))
 
                 resps = self.llm_client.process_llm_response(
                     raw_response=raw_output,
@@ -614,6 +645,7 @@ Files:
                     ds['pub_title'] = pub_title
                     ds['raw_data_format'] = raw_data_format
                     ds.update(stats)
+                    ds.update(metadata.get('passage') or {})
                     all_rows.append(ds)
 
         # Log aggregation diagnostics
@@ -631,7 +663,7 @@ Files:
         except Exception:
             self.logger.exception("Error while logging batch aggregation summary")
 
-        return pd.DataFrame(all_rows) if all_rows else pd.DataFrame()
+        return collapse_empty_rows(pd.DataFrame(all_rows)) if all_rows else pd.DataFrame()
 
     def process_datasets_response(self, resps, skip_validation=False):
         """
@@ -2043,6 +2075,10 @@ Files:
         self.logger.debug(f"Rule-based retrieval found {len(relevant_content_rule_based)} relevant sections for flag '{relevant_content_flag}'")
         self.id_patterns = ID_patterns if ID_patterns is not None else self.id_patterns
         ret_lst = relevant_content_rule_based.copy()
+        # One entry per ret_lst item: the section each passage comes from and how it was retrieved,
+        # so every extracted row can be traced to its own passage (see retrieval_stats['passages']).
+        rule_based_section = RULE_BASED_SECTION_LABELS.get(relevant_content_flag, relevant_content_flag)
+        passages = [{'source_section': rule_based_section, 'retrieval_source': 'rule_based'} for _ in ret_lst]
         top_k_sections, docs_matching_id_ptr = [], []
 
         _used_p_fallback = False
@@ -2063,6 +2099,8 @@ Files:
                 'n_all_sections': len(all_sections),
                 'n_corpus_sections': len(corpus),
                 'retrieved_sections_title': None,
+                'passages': [{'source_section': chunk.get('section_title'), 'retrieval_source': 'full_document'} for chunk in corpus]
+                            or [{'source_section': None, 'retrieval_source': 'full_document'}],
                 'top_k': -1,
                 # kept as 'n_das_sections' for backward compat with k8s_processor.py/enrich_ontology.py,
                 # which read this column by name — it now reflects whichever category
@@ -2086,8 +2124,10 @@ Files:
             if corpus:
                 effective_top_k = min(top_k, len(corpus))
                 top_k_sections = self.semantic_retrieve_from_corpus(corpus, topk_docs_to_retrieve=effective_top_k, src=article_id, query=query, include_section_title=include_section_title)
-                top_k_sections_text = [item['text'] for item in top_k_sections if item['text'] not in ret_lst]
-                ret_lst.extend(top_k_sections_text)
+                for item in top_k_sections:
+                    if item['text'] not in ret_lst:
+                        ret_lst.append(item['text'])
+                        passages.append({'source_section': item.get('section_title'), 'retrieval_source': 'semantic'})
         
         if include_snippets_with_ID_patterns:
             corpus_size = len(corpus)
@@ -2108,7 +2148,10 @@ Files:
                 if item.get('contains_id_pattern', False) and set(item.get('matched_id_patterns', [])) - broad_patterns
             ]
             self.logger.info(f"Number of documents matching ID patterns: {len(docs_matching_id_ptr)}" + (f" ({len(broad_patterns)} pattern(s) suppressed as overly broad)" if broad_patterns else ""))
-            ret_lst.extend([item['text'] for item in docs_matching_id_ptr if item['text'] not in ret_lst])  # Use extend() instead of append()
+            for item in docs_matching_id_ptr:
+                if item['text'] not in ret_lst:
+                    ret_lst.append(item['text'])
+                    passages.append({'source_section': item.get('section_title'), 'retrieval_source': 'id_pattern'})
         
         self.logger.debug(f"Prepare output as {output_format} from list of length {len(ret_lst)}")
         # Before passing this to an LLM check the attributes of the source obj we are puttin in data_availability_cont.
@@ -2126,6 +2169,8 @@ Files:
             'n_all_sections': len(all_sections) if semantic_retrieval else None,
             'n_corpus_sections': len(corpus) if semantic_retrieval else None,
             'retrieved_sections_title': [item.get('section_title', 'n/a') for item in top_k_sections] if semantic_retrieval else None,
+            # aligned with the returned list only for output_format='list'; 'text' concatenates all passages into one
+            'passages': passages if output_format not in ('text', 'json') else None,
             'top_k': top_k,
             # kept as 'n_das_sections' for backward compat — see comment above.
             'n_das_sections': len(relevant_content_rule_based),

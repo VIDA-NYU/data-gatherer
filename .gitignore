@@ -223,7 +223,5 @@ scripts/OpenAIRE/eval/**.csv
 scripts/OpenAIRE/gt/**.parquet
 scripts/OpenAIRE/gt/**.json
 scripts/OpenAIRE/input/**.csv
-scripts/OpenAIRE/output/_smoke/**.csv
-scripts/OpenAIRE/output/dev**
+scripts/OpenAIRE/output/**
 scripts/OpenAIRE/ontology/open_bio_data_repos.json
-scripts/OpenAIRE/output/gptoss_c4/**
