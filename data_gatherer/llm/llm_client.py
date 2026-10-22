@@ -854,10 +854,10 @@ class LLMClient_dev:
                         response_format=response_format
                     )
                 elif api_provider.lower() == 'anthropic':
-                    formatted_request = self.batch_builder.create_anthropic_request(
-                        custom_id=custom_id,
-                        params=claude_messages_params(self.model, messages, temperature=temperature)
-                    )
+                    params = claude_messages_params(self.model, messages, temperature=temperature)
+                    if response_format:  # same structured output as the sync path (_call_anthropic)
+                        params["output_config"] = {"format": response_format}
+                    formatted_request = self.batch_builder.create_anthropic_request(custom_id=custom_id, params=params)
                 else:
                     raise ValueError(f"Unsupported API provider: {api_provider}")
                 

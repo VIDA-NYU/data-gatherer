@@ -372,6 +372,50 @@ dataset_response_schema_claude = {
     }
 }
 
+# Claude version of dataset_response_schema_with_use_description_and_short (Anthropic output_config.format:
+# no 'name' key, length limits stated in the descriptions). No minItems, so papers citing no dataset return [].
+dataset_response_schema_claude_with_use_description_and_short = {
+    "type": "json_schema",
+    "schema": {
+        "type": "object",
+        "properties": {
+            "datasets": {
+                "type": "array",
+                "items": {
+                    "type": "object",
+                    "properties": {
+                        "dataset_identifier": {
+                            "type": "string",
+                            "description": "A unique identifier or accession code for the dataset (at most 64 characters)."
+                        },
+                        "data_repository": {
+                            "type": "string",
+                            "description": "A valid URI or string referring to the repository where the dataset can be found (at most 128 characters)."
+                        },
+                        "dataset_context_from_paper": {
+                            "type": "string",
+                            "description": "Relevant text passages from the paper that either describe this dataset and provide context of its use or refer to it more implicitly (at most 1024 characters)."
+                        },
+                        "dataset_keywords": {
+                            "type": "string",
+                            "description": "Two or three keywords to help user understand if they want to reuse this dataset (about content and scope)."
+                        },
+                        "citation_type": {
+                            "type": "string",
+                            "enum": ["Primary", "Secondary"],
+                            "description": "Primary: firsthand information collected by the researchers of this paper. Secondary: pre-existing information collected by someone else and reused here."
+                        }
+                    },
+                    "required": ["dataset_identifier", "data_repository", "dataset_context_from_paper", "dataset_keywords", "citation_type"],
+                    "additionalProperties": False
+                }
+            }
+        },
+        "required": ["datasets"],
+        "additionalProperties": False
+    }
+}
+
 study_response_schema_claude = {
     "type": "json_schema",
     "schema": {
