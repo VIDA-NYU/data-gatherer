@@ -309,3 +309,53 @@ def tier_table(pairs: pd.DataFrame) -> pd.DataFrame:
     """Pairs per tier and the share of each tier in the scored ground truth."""
     n = pairs["tier"].value_counts().reindex(TIERS, fill_value=0)
     return pd.DataFrame({"pairs": n, "share_of_scored": (n / n[SCORED_TIERS].sum()).where(n.index.isin(SCORED_TIERS))})
+
+
+# Evidence groups for the predictions, from supported to unsupported (diverging blue -> gray -> red)
+EVIDENCE_GROUPS = {
+    "Matches ground truth": ["tp"],
+    "Identifier in article, not in graph": ["out_of_graph_in_text"],
+    "Other (own suppl. files, names, other graph links)": ["suppl_label", "name_in_text", "in_graph_other", "removed",
+                                                           "not_dataset"],
+    "Not in article": ["not_in_text"],
+}
+EVIDENCE_COLORS = ["#184f95", "#5598e7", "#d3d1cb", "#d03b3b"]  # validated as an adjacent set on a light surface
+EVIDENCE_INK = ["#ffffff", "#0b0b0b", "#0b0b0b", "#ffffff"]
+
+
+def precision_table(triage: dict) -> pd.DataFrame:
+    """Share of each config's predictions per evidence group (rows: configs, columns: groups, plus `predictions`)."""
+    rows = {}
+    for label, pr in triage.items():
+        counts = pr["cls"].value_counts()
+        rows[label] = {g: counts.reindex(cls, fill_value=0).sum() / max(len(pr), 1) for g, cls in EVIDENCE_GROUPS.items()}
+        rows[label]["predictions"] = len(pr)
+    return pd.DataFrame.from_dict(rows, orient="index")
+
+
+def plot_precision(table: pd.DataFrame, ax=None):
+    """100% stacked bars: where each config's predictions stand against the graph and the article text."""
+    import matplotlib.pyplot as plt
+
+    groups = list(EVIDENCE_GROUPS)
+    if ax is None:
+        _, ax = plt.subplots(figsize=(10, 0.6 * len(table) + 1.6))
+    labels = [f"{c}  (n={int(n):,})" for c, n in zip(table.index, table["predictions"])]
+    y = range(len(table))[::-1]
+    left = pd.Series(0.0, index=table.index)
+    for g, color, ink in zip(groups, EVIDENCE_COLORS, EVIDENCE_INK):
+        ax.barh(list(y), table[g], left=left, height=0.55, color=color, edgecolor="white", linewidth=2, label=g)
+        for yi, l, w in zip(y, left, table[g]):
+            if w >= 0.06:
+                ax.text(l + w / 2, yi, f"{w:.0%}", ha="center", va="center", fontsize=9, color=ink)
+        left += table[g]
+    ax.set_yticks(list(y), labels)
+    ax.set_xlim(0, 1)
+    ax.xaxis.set_major_formatter(plt.FuncFormatter(lambda v, _: f"{v:.0%}"))
+    ax.tick_params(colors="#52514e", length=0)
+    for side in ("top", "right", "left"):
+        ax.spines[side].set_visible(False)
+    ax.spines["bottom"].set_color("#d3d1cb")
+    ax.set_title("Predictions by evidence: graph match, article text, or neither", loc="left", fontsize=11, color="#0b0b0b")
+    ax.legend(ncols=2, loc="upper left", bbox_to_anchor=(0, -0.12), frameon=False, fontsize=9)
+    return ax
