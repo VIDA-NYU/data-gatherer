@@ -144,7 +144,8 @@
         ".//notes[@notes-type='data-availability']"
       ],
       "supplementary_material_sections": [
-        ".//supplementary-material"
+        ".//supplementary-material",
+        ".//app-group"
       ],
       "supplementary_data_sections": [
         ".//sec[@sec-type='supplementary-material']",

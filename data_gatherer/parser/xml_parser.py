@@ -810,20 +810,29 @@ class XMLParser(LLMParser):
 
                     # Get the parent <supplementary-material> to extract more info (like content-type, id, etc.)
                     supplementary_material_parent = media.getparent()
+                    # BMC/Springer list files as <app-group>…<p><media/></p> with no <supplementary-material>
+                    # wrapper: the shared <p> holds every file, so id/label/caption are read from <media> itself
+                    standalone_media = supplementary_material_parent.tag != 'supplementary-material'
+                    if standalone_media:
+                        supplementary_material_parent = media
 
                     # Extract attributes from <supplementary-material>
                     content_type = supplementary_material_parent.get('content-type', 'Unknown content type')
 
-                    download_link = self.reconstruct_download_link(href, content_type, current_url_address)
+                    # standalone <media> carry no content-type; they are PMC-hosted files like local-data
+                    download_link = self.reconstruct_download_link(
+                        href, 'local-data' if standalone_media else content_type, current_url_address)
 
                     media_id = supplementary_material_parent.get('id', 'No ID')
 
                     # Extract the <title> within <caption> for the supplementary material title
                     title_element = supplementary_material_parent.find(".//caption/title")
-                    title = title_element.text if title_element is not None else "No Title"
+                    if title_element is None:
+                        title_element = supplementary_material_parent.find("label")  # e.g. "Additional file 1:"
+                    title = title_element.text.strip().rstrip(':') if title_element is not None and title_element.text else "No Title"
 
                     # Extract the surrounding text (e.g., description within <p> tag)
-                    parent_p = media.getparent()  # Assuming the media element is within a <p> tag
+                    parent_p = media if standalone_media else media.getparent()  # Assuming the media element is within a <p> tag
                     if parent_p is not None:
                         surrounding_text = re.sub(r"[\s\n]+", "  ", " ".join(
                             parent_p.itertext()).strip())  # Gets all text within the <p> tag
