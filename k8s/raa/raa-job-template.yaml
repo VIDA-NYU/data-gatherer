@@ -1,0 +1,98 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: scinobo-raa-slice-${SLICE_ID}${JOB_SUFFIX}
+  namespace: data-gatherer
+  labels:
+    app: scinobo-raa
+    raa-run: ${S3_PREFIX}
+spec:
+  backoffLimit: 3
+  template:
+    metadata:
+      labels:
+        app: scinobo-raa
+        raa-run: ${S3_PREFIX}
+    spec:
+      containers:
+      - name: scinobo-raa
+        image: ${IMAGE}
+        imagePullPolicy: IfNotPresent
+        workingDir: /app/src
+        command:
+        - /bin/sh
+        - -c
+        - |
+          # GPU power for the job's lifetime (same sampling as deterministic-batch-job-template.yaml)
+          nvidia-smi --query-gpu=timestamp,power.draw --format=csv -l 5 > /tmp/gpu_power.csv &
+          GPU_SAMPLER_PID=$!
+          # the public image has no boto3; raa_worker.py comes from this run's ConfigMap (run_raa.sh)
+          pip install --quiet --no-cache-dir boto3 || exit 1
+          # optional: RAA code from another commit (e.g. a fork), copied over the image's pipeline files
+          if [ -n "${RAA_COMMIT}" ]; then
+            python -c "import urllib.request as u; [u.urlretrieve('${RAA_REPO_RAW}/${RAA_COMMIT}/src/raa/pipeline/' + f, '/app/src/raa/pipeline/' + f) for f in ('model.py', 'inference.py')]" || exit 1
+          fi
+          # PROCS_PER_GPU workers share the GPU (RAA leaves it mostly idle): worker k of this pod takes slice
+          # (SLICE_ID-1)*PROCS_PER_GPU+k of N_SLICES*PROCS_PER_GPU; only worker 1 uploads the GPU power log
+          PIDS=""
+          for k in $(seq 1 ${PROCS_PER_GPU}); do
+            GPU_LOG=/tmp/gpu_power.csv
+            [ "$k" -gt 1 ] && GPU_LOG=/tmp/no_gpu_log
+            python /opt/raa/raa_worker.py --slice $(( (${SLICE_ID} - 1) * ${PROCS_PER_GPU} + k )) \
+              --n-slices $(( ${N_SLICES} * ${PROCS_PER_GPU} )) --prefix ${S3_PREFIX} \
+              --gpu-log $GPU_LOG --work-dir /tmp/raa_$k &
+            PIDS="$PIDS $!"
+          done
+          JOB_EXIT_CODE=0
+          for p in $PIDS; do wait $p || JOB_EXIT_CODE=1; done
+          kill "$GPU_SAMPLER_PID" 2>/dev/null
+          exit $JOB_EXIT_CODE
+        resources:
+          limits:
+            nvidia.com/gpu: "1"
+            memory: "${MEMORY}"
+            cpu: "${CPU}"
+          requests:
+            nvidia.com/gpu: "1"
+            memory: "${MEMORY}"
+            cpu: "${CPU}"
+        env:
+        - name: PYTHONPATH
+          value: /app/src
+        - name: RAA_BATCH_SIZE
+          value: "${BATCH_SIZE}"
+        - name: RAA_COMMIT
+          value: "${RAA_COMMIT}"
+        envFrom:
+        - secretRef:
+            name: data-gatherer-s3-secret
+        volumeMounts:
+        - name: raa-worker
+          mountPath: /opt/raa
+      tolerations:
+      - key: "nvidia.com/gpu"
+        operator: "Exists"
+        effect: "NoSchedule"
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: nvidia.com/gpu.product
+                operator: In
+                values:
+                - NVIDIA-H100-NVL
+                - NVIDIA-A100-80GB-PCIe
+                - NVIDIA-A100-PCIE-40GB
+                - NVIDIA-RTX-A6000
+                - Quadro-RTX-8000
+                - Tesla-V100-SXM2-16GB
+              - key: nvidia.com/gpu.compute.major
+                operator: NotIn
+                values:
+                - "7"
+      volumes:
+      - name: raa-worker
+        configMap:
+          name: raa-worker${JOB_SUFFIX}
+      restartPolicy: OnFailure
