@@ -512,7 +512,7 @@ class LLMClient_dev:
         elif self.model.startswith('vllm-'):
             parsed_response = self.safe_parse_json(raw_response)
             self.logger.debug(f"Processing vLLM model response: {parsed_response}")
-            if self.full_document_read and isinstance(parsed_response, dict) and expected_key in parsed_response:
+            if isinstance(parsed_response, dict) and expected_key and expected_key in parsed_response:
                 return self.normalize_response_format(parsed_response.get(expected_key, []))
             return parsed_response
 
